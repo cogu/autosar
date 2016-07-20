@@ -84,6 +84,12 @@ class Workspace(object):
       self.version=None
       self.packageParser=None      
       self.xmlroot = None
+   
+   def __getitem__(self,key):
+      if isinstance(key,str):
+         return self.find(key)
+      else:
+         raise ValueError('expected string')
 
    def openXML(self,filename):
       version = None

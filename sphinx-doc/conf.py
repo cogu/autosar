@@ -31,7 +31,6 @@
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.githubpages',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -128,7 +127,10 @@ html_theme = 'alabaster'
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-# html_theme_options = {}
+html_theme_options = {
+    'page_width': '1040px',
+    'sidebar_width':'280px'
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []

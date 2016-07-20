@@ -30,9 +30,9 @@ class PortInterfacePackageParser(object):
                for xmlItem in xmlRoot.findall('./DATA-ELEMENTS/DATA-ELEMENT-PROTOTYPE'):
                   name = xmlItem.find("./SHORT-NAME")
                   if name is not None:
-                     dataElem = DataElement(name.text,parent=portInterface)
-                     if xmlItem.find("./IS-QUEUED").text=='true': dataElem.isQueued = True
-                     dataElem.typeRef = xmlItem.find("./TYPE-TREF").text
+                     isQueued = True if xmlItem.find("./IS-QUEUED").text=='true' else False
+                     typeRef=xmlItem.find("./TYPE-TREF").text
+                     dataElem = DataElement(name.text,typeRef,isQueued,parent=portInterface)
                      portInterface.dataElements.append(dataElem)
                if xmlRoot.find('MODE-GROUPS') is not None:
                   portInterface.modeGroups=[]
@@ -52,8 +52,8 @@ class PortInterfacePackageParser(object):
             for xmlElem in xmlRoot.findall('./CALPRM-ELEMENTS/CALPRM-ELEMENT-PROTOTYPE'):
                xmlElemName = xmlElem.find("./SHORT-NAME")
                if xmlElemName is not None:
-                  dataElem = DataElement(xmlElemName.text,parent=portInterface)
-                  dataElem.typeRef = xmlElem.find("./TYPE-TREF").text
+                  typeRef=xmlElem.find("./TYPE-TREF").text
+                  dataElem = DataElement(xmlElemName.text,typeRef,parent=portInterface)                  
                   if hasAdminData(xmlElem):
                      dataElem.adminData=parseAdminDataNode(xmlElem.find('ADMIN-DATA'))
                   if xmlElem.find('SW-DATA-DEF-PROPS'):
@@ -143,6 +143,9 @@ class SenderReceiverInterface(PortInterface):
       self.dataElements=[]
       self.modeGroups=None
    
+   def __iter__(self):
+      return iter(self.dataElements)
+   
    def dir(self):
       return [x.name for x in self.dataElements]         
    
@@ -156,13 +159,25 @@ class SenderReceiverInterface(PortInterface):
             retval['modeGroups'].append(elem.asdict())
       return retval
    
-   def findByRef(self,ref):
+   def find(self,ref):
       ref = ref.partition('/')
       name = ref[0]
       for elem in self.dataElements:
          if elem.name==name:
             return elem      
       return None
+
+   def append(self,elem):
+      """
+      adds elem to the self.dataElements list and sets elem.parent to self (the port interface)
+      """
+      if not isinstance(elem,DataElement):
+         raise ValueError("expected elem variable to be of type DataElement")
+      self.dataElements.append(elem)
+      elem.parent=self
+   
+
+   
 
 class ParameterInterface(PortInterface):
    def __init__(self,name):
@@ -174,6 +189,16 @@ class ParameterInterface(PortInterface):
       for elem in self.dataElements:
          retval['dataElements'].append(elem.asdict())
       return retval
+
+   def append(self,elem):
+      """
+      adds elem to the self.dataElements list and sets elem.parent to self (the port interface)
+      """
+      if not isinstance(elem,DataElement):
+         raise ValueError("expected elem variable to be of type DataElement")
+      self.dataElements.append(elem)
+      elem.parent=self      
+   
 
 class ClientServerInterface(PortInterface):
    def __init__(self,name):
@@ -197,10 +222,17 @@ class ClientServerInterface(PortInterface):
 
 
 class DataElement(object):
-   def __init__(self,name,parent=None):
+   def __init__(self,name,typeRef, isQueued=False, parent=None):
       self.name = name
-      self.isQueued=False
-      self.typeRef=None
+      if isinstance(typeRef,str):
+         self.typeRef=typeRef
+      elif hasattr(typeRef,'ref'):
+         assert(isinstance(typeRef.ref,str))
+         self.typeRef=typeRef.ref
+      else:
+         raise ValueError("unsupported type for argument: typeRef")
+      assert(isinstance(isQueued,bool))
+      self.isQueued=isQueued
       self.adminData=None
       self.swAddrMethodRef=[]
       self.parent=parent
@@ -218,6 +250,7 @@ class DataElement(object):
       if len(self.swAddrMethodRef)>0:
          data['swAddrMethodRef']=self.swAddrMethodRef
       return data
+   
 
 class ModeGroup(Element):
    def __init__(self,name):

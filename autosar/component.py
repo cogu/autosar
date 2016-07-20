@@ -55,40 +55,16 @@ class ComponentType(Element):
             return port
       return None
    
-   def createRequirePort(self,name,portInterface,initValue=None,dataElem=None,aliveTimeout=None,queueLength=None):
-      if not isinstance(name,str): raise ValueError(name)      
-      if initValue is not None:
-         if not isinstance(initValue,autosar.constant.Constant): raise ValueError(initValue)
-      if dataElem is not None:
-         if not isinstance(dataElem,str): raise ValueError(dataElem)
-
-      ws=self.findWS()
-      assert(ws is not None)
-      
-      if isinstance(portInterface,autosar.portinterface.SenderReceiverInterface):
-         if dataElem is None:
-            if len(portInterface.dataElements)==1:
-               dataElem=portInterface.dataElements[0]
-               portAttributes=DataElementAttributes(dataElem.name)
-               if initValue is not None:
-                  if initValue.typeRef != dataElem.typeRef:
-                     raise ValueError('incompatible initValue type (%s)'%initValue.typeRef)
-                  portAttributes.initValueRef=initValue.ref
-               if aliveTimeout is not None:
-                  portAttributes.aliveTimeout=aliveTimeout
-               if queueLength is not None:
-                  portAttributes.queueLength=queueLength
-               port=RequirePort(name,portInterface.ref,parent=self)
-               port.attributes.append(portAttributes)               
-               self.requirePorts.append(port)               
-            else:
-               raise NotImplementedError('support for multiple data elements not yet implemented')
-            
-      elif isinstance(portInterface,autosar.portinterface.ClientServerInterface):
-         pass
+   def append(self, elem):
+      if isinstance(elem,RequirePort):
+         self.requirePorts.append(elem)
+         elem.parent=self
+      elif isinstance(elem,ProvidePort):
+         self.providePorts.append(elem)
+         elem.parent=self
       else:
-         raise ValueError(portInterface)
-         
+         raise ValueError("unexpected type:" + str(type(elem)))
+   
 
 class ApplicationSoftwareComponent(ComponentType):
    def __init__(self,name,parent=None):
@@ -104,7 +80,7 @@ class Port(object):
       if portInterfaceRef is not None and not isinstance(portInterfaceRef,str):
          raise ValueError('portInterfaceRef needs to be of type None or str')
       self.portInterfaceRef = portInterfaceRef
-      self.attributes=[] #It feels more natural to call it port attributes. AUTOSAR itself calls it comspec
+      self.comspec=[] 
       self.parent=parent
    @property
    def ref(self):
@@ -121,17 +97,64 @@ class Port(object):
       if len(data['attributes'])==0: del data['attributes']
       return data
    
+   def createComSpecFromDict(self,ws,portInterfaceRef,comspec):
+      assert(ws is not None)
+      assert(isinstance(comspec,dict))
+      portInterface=ws.find(portInterfaceRef)
+      if portInterface is None:
+         raise ValueError("port interface not found: "+portInterfaceRef)
+      if isinstance(portInterface,autosar.portinterface.SenderReceiverInterface):
+         name=None
+         initValueRef=None
+         aliveTimeout=None
+         queueLength=None
+         if 'name' in comspec: name=str(comspec['name'])
+         if 'initValueRef' in comspec: initValueRef=str(comspec['initValueRef'])
+         if 'aliveTimeout' in comspec: aliveTimeout=int(comspec['aliveTimeout'])
+         if 'queueLength' in comspec: queueLength=int(comspec['queueLength'])
+         if name is None:
+            name=portInterface.dataElements[0].name #pick the name of the first available data element in portInterface
+         #verify (user-supplied) name
+         dataElement=portInterface.find(name)
+         if dataElement is None:
+            raise ValueError("unknown element '%s' of portInterface '%s'"%(name,portInterface.name))
+         #verify compatibility of initValueRef
+         if initValueRef is not None:
+            initValue = ws.find(initValueRef)
+            if initValue is None:
+               raise ValueError("invalid reference detected: '%s'"%initValueRef)
+            if isinstance(initValue,autosar.Constant):
+               if dataElement.typeRef != initValue.value.typeRef:
+                  raise ValueError("constant value has different type from data element, expected '%s', found '%s'"%(dataElement.typeRef,initValue.value.typeRef))
+            else:
+               raise ValueError("reference is not a Constant object: '%s'"%initValueRef)
+         self.comspec.append(DataElementComSpec(name,initValueRef,aliveTimeout,queueLength))
+            
       
 class RequirePort(Port):
-   def __init__(self,name,portInterfaceRef=None,parent=None):
+   def __init__(self,name,portInterfaceRef=None,comspec=None,parent=None):
       super().__init__(name,portInterfaceRef,parent)
+      if comspec is not None:
+         ws = autosar.getCurrentWS()
+         assert(ws is not None)
+         if isinstance(comspec,dict):
+            self.createComSpecFromDict(ws,portInterfaceRef,comspec)               
+         else:
+            raise NotImplementedError("not yet supported")
 
 class ProvidePort(Port):
-   def __init__(self,name,portInterfaceRef=None,parent=None):
+   def __init__(self,name,portInterfaceRef=None,comspec=None,parent=None):
       super().__init__(name,portInterfaceRef,parent)
+      if comspec is not None:
+         ws = autosar.getCurrentWS()
+         assert(ws is not None)
+         if isinstance(comspec,dict):
+            self.createComSpecFromDict(ws,comspec)               
+         else:
+            raise NotImplementedError("not yet supported")
 
-class OperationAttributes(object):
-   def __init__(self,name):
+class OperationComSpec(object):
+   def __init__(self,name=None,queueLength=None):
       self.name = name
       self.queueLength=None
    def asdict(self):
@@ -139,12 +162,12 @@ class OperationAttributes(object):
       if self.queueLength is not None:
          data['queueLength']=self.queueLength
 
-class DataElementAttributes(object):
-   def __init__(self,name):
+class DataElementComSpec(object):
+   def __init__(self,name=None,initValueRef=None,aliveTimeout=None,queueLength=None):
       self.name = name
-      self.initValueRef = None
-      self._aliveTimeout = None
-      self._queueLength = None
+      self.initValueRef = initValueRef
+      self._aliveTimeout = aliveTimeout
+      self._queueLength = queueLength
    @property
    def aliveTimeout(self):
       return self._aliveTimeout
@@ -319,11 +342,11 @@ class ComponentTypeParser(object):
                for xmlItem in xmlPort.findall('./REQUIRED-COM-SPECS/*'):
                   if xmlItem.tag == 'CLIENT-COM-SPEC':
                      operationName=_getOperationNameFromComSpec(xmlItem,portInterfaceRef)
-                     attrib=OperationAttributes(operationName)
+                     attrib=OperationComSpec(operationName)
                      port.attributes.append(attrib)
                   elif xmlItem.tag == 'UNQUEUED-RECEIVER-COM-SPEC':
                      dataElemName = _getDataElemNameFromComSpec(xmlItem,portInterfaceRef)
-                     attrib = DataElementAttributes(dataElemName)
+                     attrib = DataElementComSpec(dataElemName)
                      if xmlItem.find('./ALIVE-TIMEOUT') != None:
                         attrib.aliveTimeout = xmlItem.find('./ALIVE-TIMEOUT').text
                      if xmlItem.find('./INIT-VALUE-REF') != None:
@@ -331,7 +354,7 @@ class ComponentTypeParser(object):
                      port.attributes.append(attrib)
                   elif xmlItem.tag == 'QUEUED-RECEIVER-COM-SPEC':
                      dataElemName = _getDataElemNameFromComSpec(xmlItem,portInterfaceRef)
-                     attrib = DataElementAttributes(dataElemName)
+                     attrib = DataElementComSpec(dataElemName)
                      if xmlItem.find('./QUEUE-LENGTH') != None:
                         attrib.queueLength = parseTextNode(xmlItem.find('./QUEUE-LENGTH'))
                      port.attributes.append(attrib)
@@ -346,18 +369,18 @@ class ComponentTypeParser(object):
                for xmlItem in xmlPort.findall('./PROVIDED-COM-SPECS/*'):
                   if xmlItem.tag == 'SERVER-COM-SPEC':
                      operationName=_getOperationNameFromComSpec(xmlItem,portInterfaceRef)
-                     attrib=OperationAttributes(operationName)
+                     attrib=OperationComSpec(operationName)
                      attrib.queueLength=parseIntNode(xmlItem.find('QUEUE-LENGTH'))
                      port.attributes.append(attrib)
                   elif xmlItem.tag == 'UNQUEUED-SENDER-COM-SPEC':
                      dataElemName = _getDataElemNameFromComSpec(xmlItem,portInterfaceRef)
-                     attrib = DataElementAttributes(dataElemName)
+                     attrib = DataElementComSpec(dataElemName)
                      if xmlItem.find('./INIT-VALUE-REF') != None:
                         attrib.initValueRef = xmlItem.find('./INIT-VALUE-REF').text
                      port.attributes.append(attrib)
                   elif xmlItem.tag == 'QUEUED-SENDER-COM-SPEC':
                      dataElemName = _getDataElemNameFromComSpec(xmlItem,portInterfaceRef)
-                     attrib = DataElementAttributes(dataElemName)
+                     attrib = DataElementComSpec(dataElemName)
                      port.attributes.append(attrib)
                   else:
                      raise NotImplementedError(xmlItem.tag)
