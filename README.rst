@@ -10,4 +10,4 @@ A set of python modules for working with AUTOSAR XML files
     >>> import autosar
     >>> ws = autosar.workspace()
     >>> ws.append(autosar.Package('DataType'))
-    >>> printf(ws.toXML())
+    >>> print(ws.toXML())
