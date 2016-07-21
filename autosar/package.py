@@ -16,19 +16,19 @@ class Package(object):
       else:
          return None      
 
-   def findByRef(self,ref):
+   def find(self,ref):
       ref = ref.partition('/')      
       name = ref[0]
       for package in self.subPackages:
          if package.name == name:
             if len(ref[2])>0:
-               return package.findByRef(ref[2])
+               return package.find(ref[2])
             else:
                return package
       for elem in self.elements:
          if elem.name == name:
             if len(ref[2])>0:
-               return elem.findByRef(ref[2])
+               return elem.find(ref[2])
             else:
                return elem
       return None
@@ -38,7 +38,7 @@ class Package(object):
          return [_prefix+x.name for x in self.subPackages]+[_prefix+x.name for x in self.elements]      
       else:
          ref = ref.partition('/')
-         result=self.findByRef(ref[0])
+         result=self.find(ref[0])
          if result is not None:
             return result.dir(ref[2] if len(ref[2])>0 else None,_prefix+ref[0]+'/')
          else:

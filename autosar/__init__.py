@@ -1,6 +1,6 @@
 from autosar.workspace import Workspace
 from autosar.component import ApplicationSoftwareComponent,ComponentType,RequirePort,ProvidePort,DataElementComSpec
-from autosar.behavior import InternalBehavior
+from autosar.behavior import InternalBehavior,RunnableEntity,DataReceivePoint
 from autosar.portinterface import ParameterInterface,SenderReceiverInterface,ClientServerInterface,DataElement
 from autosar.datatype import RecordDataType,BooleanDataType,IntegerDataType,CompuMethodConst,CompuMethodRational,StringDataType,ArrayDataType
 from autosar.constant import ArrayValue,IntegerValue,StringValue,BooleanValue,RecordValue,Constant

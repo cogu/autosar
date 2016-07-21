@@ -1,10 +1,7 @@
 import autosar.datatype
-
-def destXMLTag(obj):
-   if isinstance(obj,autosar.datatype.IntegerDataType):
-      return "INTEGER-TYPE"
-   else:
-      raise NotImplementedError(str(type(obj)))
+import autosar.portinterface
+import autosar.behavior
+from autosar.base import splitref
 
 class WriterBase(object):
    def __init__(self,version=3):
@@ -72,16 +69,18 @@ class PackageWriter(WriterBase):
       super().__init__(version)
       self.dataTypeWriter = DataTypeWriter(version)
       self.constantWriter = ConstantWriter(version)
-      if self.version == 3:
-         self.switcher = {'ARRAY-TYPE': None,
+      self.componentTypeWriter = ComponentTypeWriter(version)
+      self.behaviorWriter = BehaviorWriter(version)
+      if self.version >= 3.0:
+         self.switcherXML = {'ARRAY-TYPE': None,
                           'BOOLEAN-TYPE': None,
                           'IntegerDataType': self.dataTypeWriter.writeIntegerTypeXML,
                           'REAL-TYPE': None,
                           'RECORD-TYPE': None,
                           'STRING-TYPE': None,
-                          'APPLICATION-SOFTWARE-COMPONENT-TYPE': None,
+                          'ApplicationSoftwareComponent': self.componentTypeWriter.writeApplicationSoftwareComponentXML,
                           'COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE': None,
-                          'INTERNAL-BEHAVIOR': None,
+                          'InternalBehavior': self.behaviorWriter.writeInternalBehaviorXML,
                           'SWC-IMPLEMENTATION': None,
                           'CompuMethodConst': self.dataTypeWriter.writeCompuMethodXML,
                           'UNIT': None,
@@ -106,7 +105,7 @@ class PackageWriter(WriterBase):
          #fullname=elem.__class__.__module__+'.'+elem.__class__.__name__
          #print(fullname)
          #writerFunc = self.switcher.get(fullname)
-         writerFunc = self.switcher.get(elem.__class__.__name__)
+         writerFunc = self.switcherXML.get(elem.__class__.__name__)
          if writerFunc is not None:            
             lines.extend(self.indent(writerFunc(elem),2))
          else:
@@ -181,9 +180,156 @@ class ConstantWriter(WriterBase):
          lines.append('<VALUE>')
          lines.append(self.indent('<INTEGER-LITERAL>',1))
          lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,2))
-         tag = destXMLTag(elem.findWS().find(elem.typeRef))
+         tag = elem.findWS().find(elem.typeRef).tag
          lines.append(self.indent('<TYPE-TREF DEST="%s">%s</TYPE-TREF>'%(tag,elem.typeRef),2))
          lines.append(self.indent('<VALUE>%d</VALUE>'%elem.value,2))
          lines.append(self.indent('</INTEGER-LITERAL>',1))
          lines.append('</VALUE>')
+      return lines
+
+class ComponentTypeWriter(WriterBase):
+   def __init__(self,version):
+      super().__init__(version)
+   
+   def writeApplicationSoftwareComponentXML(self,swc):
+      lines=[]
+      assert(isinstance(swc,autosar.component.ApplicationSoftwareComponent))
+      lines.append('<APPLICATION-SOFTWARE-COMPONENT-TYPE>')
+      lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%swc.name,1))
+      lines.append(self.indent('<PORTS>',1))
+      for port in swc.providePorts:
+         lines.extend(self.indent(self.writeProvidePortXML(port),2))
+      for port in swc.requirePorts:
+         lines.extend(self.indent(self.writeRequirePortXML(port),2))
+      lines.append(self.indent('</PORTS>',1))
+      lines.append('</APPLICATION-SOFTWARE-COMPONENT-TYPE>')
+      return lines
+   
+   def writeRequirePortXML(self, port):
+      lines=[]
+      assert(port.ref is not None)
+      ws=port.findWS()
+      assert(ws is not None)
+      portInterface=ws.find(port.portInterfaceRef)
+      lines.append('<R-PORT-PROTOTYPE>')
+      lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%port.name,1))
+      if len(port.comspec)==0:
+         lines.append(self.indent('<REQUIRED-COM-SPECS></REQUIRED-COM-SPECS>',1))
+      else:
+         lines.append(self.indent('<REQUIRED-COM-SPECS>',1))
+         if portInterface is None:
+            raise ValueError("%s: invalid reference detected: '%s'"%(port.ref,port.portInterfaceRef))
+         for comspec in port.comspec:
+            elem=portInterface.find(comspec.name)
+            if elem is None:
+               raise ValueError("%s: invalid comspec name '%s'"%(port.ref,comspec.name))
+            if isinstance(elem,autosar.portinterface.DataElement):                              
+               if elem.isQueued:
+                  if self.version<4.0:
+                     lines.append(self.indent('<QUEUED-RECEIVER-COM-SPEC>',2))
+                     lines.append(self.indent('</QUEUED-RECEIVER-COM-SPEC>',2))
+               else:
+                  if self.version<4.0:
+                     lines.append(self.indent('<UNQUEUED-RECEIVER-COM-SPEC>',2))
+                     lines.append(self.indent('<DATA-ELEMENT-REF DEST="%s">%s</DATA-ELEMENT-REF>'%(elem.tag,elem.ref),3))
+                     lines.append(self.indent('<ALIVE-TIMEOUT>%d</ALIVE-TIMEOUT>'%(comspec.aliveTimeout),3))
+                     if comspec.initValueRef is not None:
+                        tag = ws.find(comspec.initValueRef).tag
+                        lines.append(self.indent('<INIT-VALUE-REF DEST="%s">%s</INIT-VALUE-REF>'%(tag,comspec.initValueRef),3))
+                     lines.append(self.indent('</UNQUEUED-RECEIVER-COM-SPEC>',2))
+            else:
+               raise NotImplementedError(str(type(elem)))
+         lines.append(self.indent('</REQUIRED-COM-SPECS>',1))
+      lines.append(self.indent('<REQUIRED-INTERFACE-TREF DEST="%s">%s</REQUIRED-INTERFACE-TREF>'%(portInterface.tag,portInterface.ref),1))
+      lines.append('</R-PORT-PROTOTYPE>')
+      return lines
+   
+   def writeProvidePortXML(self, port):
+      lines=[]
+      assert(port.ref is not None)
+      ws=port.findWS()
+      assert(ws is not None)
+      portInterface=ws.find(port.portInterfaceRef)
+      lines.append('<%s>'%port.tag)
+      lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%port.name,1))
+      if len(port.comspec)==0:
+         lines.append(self.indent('<PROVIDED-COM-SPECS></PROVIDED-COM-SPECS>',1))
+      else:
+         lines.append(self.indent('<PROVIDED-COM-SPECS>',1))
+         if portInterface is None:
+            raise ValueError("%s: invalid reference detected: '%s'"%(port.ref,port.portInterfaceRef))
+         for comspec in port.comspec:         
+            elem=portInterface.find(comspec.name)
+            if elem is None:
+               raise ValueError("%s: invalid comspec name '%s'"%(port.ref,comspec.name))
+            if isinstance(elem,autosar.portinterface.DataElement):                              
+               if elem.isQueued:
+                  if self.version<4.0:
+                     lines.append(self.indent('<QUEUED-SENDER-COM-SPEC>',2))
+                     lines.append(self.indent('</QUEUED-SENDER-COM-SPEC>',2))
+               else:
+                  if self.version<4.0:
+                     lines.append(self.indent('<UNQUEUED-SENDER-COM-SPEC>',2))                  
+                     lines.append(self.indent('<DATA-ELEMENT-REF DEST="%s">%s</DATA-ELEMENT-REF>'%(elem.tag,elem.ref),3))
+                     if isinstance(comspec.canInvalidate,bool):
+                        lines.append(self.indent('<CAN-INVALIDATE>%s</CAN-INVALIDATE>'%('true' if comspec.canInvalidate else 'false'),3))                     
+                     if comspec.initValueRef is not None:
+                        tag = ws.find(comspec.initValueRef).tag
+                        lines.append(self.indent('<INIT-VALUE-REF DEST="%s">%s</INIT-VALUE-REF>'%(tag,comspec.initValueRef),3))                  
+                     lines.append(self.indent('</UNQUEUED-SENDER-COM-SPEC>',2))
+            else:
+               raise NotImplementedError(str(type(elem)))
+         lines.append(self.indent('</PROVIDED-COM-SPECS>',1))      
+      lines.append(self.indent('<PROVIDED-INTERFACE-TREF DEST="%s">%s</PROVIDED-INTERFACE-TREF>'%(portInterface.tag,portInterface.ref),1))
+      lines.append('</%s>'%port.tag)      
+      return lines
+
+class BehaviorWriter(WriterBase):
+   def __init__(self,version):
+      super().__init__(version)
+   
+   def writeInternalBehaviorXML(self,elem):
+      assert(isinstance(elem,autosar.behavior.InternalBehavior))
+      lines=[]
+      ws = elem.findWS()
+      assert(ws is not None)
+      lines.append('<%s>'%elem.tag)
+      lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
+      componentType=ws.find(elem.componentRef)
+      assert(componentType is not None)
+      lines.append(self.indent('<COMPONENT-REF DEST="%s">%s</COMPONENT-REF>'%(componentType.tag,componentType.ref),1))      
+      if len(elem.runnables)>0:
+         lines.append(self.indent('<RUNNABLES>',1))
+         for runnable in elem.runnables:
+            lines.extend(self.indent(self.writeRunnableXML(runnable),2))
+         lines.append(self.indent('</RUNNABLES>',1))
+      lines.append(self.indent('<SUPPORTS-MULTIPLE-INSTANTIATION>%s</SUPPORTS-MULTIPLE-INSTANTIATION>'%('true' if elem.multipleInstance else 'false'),1))
+      lines.append('</%s>'%elem.tag)
+      return lines
+   
+   def writeRunnableXML(self,runnable):
+      ws=runnable.findWS()
+      assert(ws is not None)
+      lines=['<RUNNABLE-ENTITY>',
+             self.indent('<SHORT-NAME>%s</SHORT-NAME>'%runnable.name,1),
+             self.indent('<CAN-BE-INVOKED-CONCURRENTLY>%s</CAN-BE-INVOKED-CONCURRENTLY>'%('true' if runnable.invokeConcurrently else 'false'),1),
+            ]
+      if len(runnable.dataReceivePoints)>0:
+         lines.append(self.indent('<DATA-RECEIVE-POINTS>',1))
+         for dataReceivePoint in runnable.dataReceivePoints:
+            lines.append(self.indent('<DATA-RECEIVE-POINT>',2))
+            lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%dataReceivePoint.name,3))
+            lines.append(self.indent('<DATA-ELEMENT-IREF>',3))
+            assert(dataReceivePoint.portRef is not None) and (dataReceivePoint.dataElemRef is not None)
+            port = ws.find(dataReceivePoint.portRef)
+            assert(port is not None)
+            dataElement = ws.find(dataReceivePoint.dataElemRef)
+            assert(port is not dataElement)            
+            lines.append(self.indent('<R-PORT-PROTOTYPE-REF DEST="%s">%s</R-PORT-PROTOTYPE-REF>'%(port.tag,port.ref),4))
+            lines.append(self.indent('<DATA-ELEMENT-PROTOTYPE-REF DEST="%s">%s</DATA-ELEMENT-PROTOTYPE-REF>'%(dataElement.tag,dataElement.ref),4))
+            lines.append(self.indent('</DATA-ELEMENT-IREF>',3))
+            lines.append(self.indent('</DATA-RECEIVE-POINT>',2))
+         lines.append(self.indent('</DATA-RECEIVE-POINTS>',1))
+      lines.append(self.indent('<SYMBOL>%s</SYMBOL>'%runnable.symbol,1))
+      lines.append('</RUNNABLE-ENTITY>')
       return lines
