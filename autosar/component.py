@@ -1,8 +1,10 @@
 from autosar.element import Element
 import autosar.portinterface
 import autosar.constant
+import copy
 
 class ComponentType(Element):
+   
    def __init__(self,name,parent=None):
       super().__init__(name,parent)      
       self.requirePorts=[]
@@ -126,28 +128,48 @@ class Port(object):
 class RequirePort(Port):
    @property
    def tag(self): return "R-PORT-PROTOTYPE"
-   def __init__(self,name,portInterfaceRef=None,comspec=None,parent=None):
-      super().__init__(name,portInterfaceRef,parent)
-      if comspec is not None:
-         ws = autosar.getCurrentWS()
-         assert(ws is not None)
-         if isinstance(comspec,dict):
-            self.createComSpecFromDict(ws,portInterfaceRef,comspec)               
-         else:
-            raise NotImplementedError("not yet supported")
+   def __init__(self,name,portInterfaceRef=None,comspec=None,parent=None):      
+      if isinstance(name,str):
+         #normal constructor
+         super().__init__(name,portInterfaceRef,parent)
+         if comspec is not None:
+            ws = autosar.getCurrentWS()
+            assert(ws is not None)
+            if isinstance(comspec,dict):
+               self.createComSpecFromDict(ws,portInterfaceRef,comspec)               
+            else:
+               raise NotImplementedError("not yet supported")
+      elif isinstance(name,RequirePort):
+         other=name #alias
+         #copy constructor
+         super().__init__(other.name,other.portInterfaceRef,None)
+         self.comspec=copy.deepcopy(other.comspec)
+      else:
+         raise NotImplementedError(type(name))
 
 class ProvidePort(Port):
    @property
    def tag(self): return "P-PORT-PROTOTYPE"
+   
    def __init__(self,name,portInterfaceRef=None,comspec=None,parent=None):
-      super().__init__(name,portInterfaceRef,parent)
-      if comspec is not None:
-         ws = autosar.getCurrentWS()
-         assert(ws is not None)
-         if isinstance(comspec,dict):
-            self.createComSpecFromDict(ws,portInterfaceRef,comspec)
-         else:
-            raise NotImplementedError("not yet supported")
+      if isinstance(name,str):
+      #normal constructor      
+         super().__init__(name,portInterfaceRef,parent)
+         if comspec is not None:
+            ws = autosar.getCurrentWS()
+            assert(ws is not None)
+            if isinstance(comspec,dict):
+               self.createComSpecFromDict(ws,portInterfaceRef,comspec)
+            else:
+               raise NotImplementedError("not yet supported")
+      elif isinstance(name,ProvidePort):
+         other=name #alias
+         #copy constructor
+         super().__init__(other.name,other.portInterfaceRef,None)
+         self.comspec=copy.deepcopy(other.comspec)
+      else:
+         raise NotImplementedError(type(name))
+            
 
 class OperationComSpec(object):
    def __init__(self,name=None,queueLength=None):
@@ -196,7 +218,10 @@ class SwcImplementation(Element):
       super().__init__(name,parent)
       self.behaviorRef=behaviorRef
 
-class CompositionType(Element):
+class Composition(Element):
+   @property
+   def tag(self): return "COMPOSITION-TYPE"
+   
    def __init__(self,name,parent=None):
       super().__init__(name,parent) 
       self.requirePorts=[]

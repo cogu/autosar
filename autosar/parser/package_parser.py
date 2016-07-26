@@ -73,5 +73,6 @@ class PackageParser(object):
                subPackage = autosar.package.Package(name)           
                self.loadXML(subPackage,xmlPackage)
                package.subPackages.append(subPackage)
+               subPackage.parent=package
       else:
          raise NotImplementedError('Version of ARXML not supported')

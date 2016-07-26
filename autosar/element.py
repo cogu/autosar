@@ -33,7 +33,12 @@ class Element(object):
       return data
    
    def findWS(self):
+      """depcrecated, use root() instead"""
+      return self.root()
+         
+   def root(self):
       if self.parent is None:
          return None
       else:
-         return self.parent.findWS()
+         return self.parent.root()
+      

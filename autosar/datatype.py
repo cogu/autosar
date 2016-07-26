@@ -10,36 +10,73 @@ import json
 #DataTypeUnitElement = namedtuple('DataTypeUnitElement','name displayName')
 
 class ConstElement(object):
+   def __init__(self,parent=None):
+      self.parent=parent
+   
    def asdict(self):
       data={'type': self.__class__.__name__}
       data.update(self.__dict__)
       return data
+   def find(self,ref):
+      if ref.startswith('/'):
+         return self.root().find(ref)
+      return None
+   def root(self):
+      if self.parent is None: return None
+      return self.parent.root()
+   
 
 
 class RecordTypeElement(ConstElement):
-   def __init__(self,name,typeRef):
+   def __init__(self,name,typeRef,parent=None):
+      super().__init__(parent)
       self.name=name
       self.typeRef=typeRef
+   def __eq__(self,other):
+      if self is other: return True
+      if type(self) == type(other):
+         if self.name == other.name:
+            lhs = None if self.typeRef is None else self.find(self.typeRef)
+            rhs = None if other.typeRef is None else other.find(other.typeRef)
+            if lhs != rhs:
+               print(self.name,self.typeRef)
+            return lhs==rhs
+      return False
 
 class CompuConstElement(ConstElement):
    def __init__(self,minvalue,maxvalue,textvalue):
       self.minval=minvalue
       self.maxval=maxvalue
       self.textval=textvalue
+   def __eq__(self,other):
+      if self is other: return True
+      if type(self) is type(other):
+         return (self.minval == other.minval) and (self.maxval == other.maxval) and (self.textval == self.textval)      
+      return False
+      
 
 class CompuRationalElement(ConstElement):
    def __init__(self,offset,numerator,denominator):
       self.offset=offset
       self.numerator=numerator
       self.denominator=denominator
+   def __eq__(self,other):
+      if self is other: return True
+      if type(self) is type(other):
+         return (self.offset == other.offset) and (self.numerator == other.numerator) and (self.denominator == self.denominator)      
+      return False      
 
 class DataTypeUnitElement(Element):
    def __init__(self,name,displayName):
       super().__init__(name)
       self.displayName=displayName
+   def __eq__(self,other):
+      if self is other: return True
+      if type(self) is type(other):
+         return (self.name==other.name) and (self.displayName == other.displayName)
+      return False       
 
 class DataType(Element):
-   name = None
    def __init__(self,name):
       super().__init__(name)      
 
@@ -57,7 +94,15 @@ class IntegerDataType(DataType):
          self.compuMethodRef=compuMethodRef.ref
       else:
          self.compuMethodRef=None
-      
+   def __eq__(self,other):
+      if self is other: return True
+      if type(other) is type(self):
+         if (self.name==other.name) and (self.minval == other.minval) and (self.maxval==other.maxval):
+            if (self.compuMethodRef is not None) and (other.compuMethodRef is not None):
+               return self.findWS().find(self.compuMethodRef) == other.findWS().find(other.compuMethodRef)
+            elif (self.compuMethodRef is None) and (other.compuMethodRef is None):
+               return True
+            
 class RecordDataType(DataType):
    @property
    def tag(self): return 'RECORD-TYPE'      
@@ -65,7 +110,7 @@ class RecordDataType(DataType):
       super().__init__(name)
       self.elements = []
       for elem in _elements:
-         self.elements.append(RecordTypeElement(elem['name'],elem['typeRef']))
+         self.elements.append(RecordTypeElement(elem['name'],elem['typeRef'],self))
    def asdict(self):         
       data={'type': self.__class__.__name__,'name':self.name,'elements':[]}
       if self.adminData is not None:
@@ -73,6 +118,14 @@ class RecordDataType(DataType):
       for elem in self.elements:
          data['elements'].append(elem.asdict())
       return data
+   def __eq__(self, other):
+      if self is other: return True
+      if (self.name == other.name) and (len(self.elements)==len(other.elements)):
+         for i in range(len(self.elements)):
+            if self.elements[i] != other.elements[i]: return False
+         return True
+      return False
+   
 
 class ArrayDataType(DataType):
    @property
@@ -102,6 +155,12 @@ class StringDataType(DataType):
    def asdict(self):
       data={'type': self.__class__.__name__,'name':self.name,'encoding':self.encoding,'length':self.length}
       return data
+   def __eq__(self,other):
+      if self is other: return False
+      if type(self) == type(other):
+         if (self.name==other.name) and (self.length == other.length) and (self.encoding == other.encoding):
+            return True
+      return False
 
       
 class RealDataType(DataType):
@@ -130,6 +189,24 @@ class CompuMethodRational(Element):
       for element in self.elements:
          data['elements'].append(element.asdict())
       return data
+   
+   def find(self,ref):
+      if ref.startswith('/'):
+         root=self.root()
+         return root.find(ref)
+      return None
+   
+   def __eq__(self,other):
+      if self is other: return True
+      if self.name == other.name:
+         lhs = None if self.unitRef is None else self.find(self.unitRef)
+         rhs = None if other.unitRef is None else other.find(other.unitRef)      
+         if lhs == rhs:         
+            if len(self.elements)!=len(other.elements): return False
+            for i in range(len(self.elements)):
+               if self.elements[i] != other.elements[i]: return False
+            return True
+      return False
 
       
 class CompuMethodConst(Element):
@@ -169,39 +246,46 @@ class CompuMethodConst(Element):
          i+=1      
       return retval if len(retval)>0 else None
 
+   def __eq__(self,other):
+      if self is other: return True
+      if self.name == other.name:
+         if len(self.elements)!=len(other.elements): return False
+         for i in range(len(self.elements)):
+            if self.elements[i] != other.elements[i]: return False
+         return True
+      return False
 
-
    
    
-
-class DataTypeSemanticsPackage(object):
-   def __init__(self):      
-      self.elements=[]      
-   def loadFromXML(self,root,version=3):
-      parser = DataTypeSemanticsParser(self,version)
-      parser.parse(root)
-   
-   def addCompuMethod(self,method):
-      if isinstance(method,(CompuMethodConst,CompuMethodRational)):
-         self.elements.append(method)
-      else:
-         raise ValueError('invalid type detected')
-   
-   def findCompuMethod(self,name):
-      for elem in self.elements:
-         if name==elem.name:
-            return elem
-      return None
-
-class DataTypeUnitsPackage(object):
-   def __init__(self):
-      self.elements=[]
-   
-   def loadFromXML(self,root,version=3):
-      parser = DataTypeUnitsParser(self,version)
-      parser.parse(root)
-      
-   def addUnit(self,name,displayName):
-      self.elements.append(DataTypeUnitElement(name,displayName))
+#
+#class DataTypeSemanticsPackage(object):
+#   def __init__(self):      
+#      self.elements=[]      
+#   def loadFromXML(self,root,version=3):
+#      parser = DataTypeSemanticsParser(self,version)
+#      parser.parse(root)
+#   
+#   def addCompuMethod(self,method):
+#      if isinstance(method,(CompuMethodConst,CompuMethodRational)):
+#         self.elements.append(method)
+#      else:
+#         raise ValueError('invalid type detected')
+#   
+#   def findCompuMethod(self,name):
+#      for elem in self.elements:
+#         if name==elem.name:
+#            return elem
+#      return None
+#
+#class DataTypeUnitsPackage(object):
+#   def __init__(self):
+#      self.elements=[]
+#   
+#   def loadFromXML(self,root,version=3):
+#      parser = DataTypeUnitsParser(self,version)
+#      parser.parse(root)
+#      
+#   def addUnit(self,name,displayName):
+#      self.elements.append(DataTypeUnitElement(name,displayName))
 
    

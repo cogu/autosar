@@ -25,7 +25,8 @@ class SignalParser(object):
          elif elem.tag=='LENGTH':
             length=parseIntNode(elem)
          elif elem.tag=='DESC':
-            desc=parseTextNode(elem)
+            desc=parseTextNode(elem).strip()
+            if len(desc)==0: desc=None
          else:
             raise NotImplementedError(elem.tag)
       if (name is not None) and (dataTypeRef is not None) and (initValueRef is not None) and length is not None:         

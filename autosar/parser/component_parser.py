@@ -52,7 +52,8 @@ class ComponentTypeParser(object):
          componentType=ComplexDeviceDriverSoftwareComponent(parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
       else:
          raise NotImplementedError(xmlRoot.tag)
-      self.parseComponentPorts(componentType,xmlRoot)
+      if xmlRoot.find('PORTS') is not None:
+         self.parseComponentPorts(componentType,xmlRoot)
       return componentType
    
    def parseComponentPorts(self,componentType,xmlRoot):
@@ -124,7 +125,7 @@ class ComponentTypeParser(object):
       parses COMPOSITION-TYPE
       """
       assert(xmlRoot.tag=='COMPOSITION-TYPE')
-      swc=CompositionType(parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
+      swc=Composition(parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
       for elem in xmlRoot.findall('./*'):
          if elem.tag=='SHORT-NAME':
             continue

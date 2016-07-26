@@ -40,10 +40,6 @@ class ConstantPackageParser(object):
             typeRef = xmlValue.find('./TYPE-TREF').text
             innerValue = xmlValue.find('./VALUE').text
             constantValue = BooleanValue(name,typeRef,innerValue)
-         elif xmlValue.tag=='BOOLEAN-LITERAL':
-            typeRef = xmlValue.find('./TYPE-TREF').text
-            innerValue = xmlValue.find('./VALUE').text
-            constantValue = BooleanValue(name,typeRef,innerValue)
          elif xmlValue.tag == 'RECORD-SPECIFICATION' or xmlValue.tag == 'ARRAY-SPECIFICATION':
             typeRef = xmlValue.find('./TYPE-TREF').text
             if xmlValue.tag == 'RECORD-SPECIFICATION':

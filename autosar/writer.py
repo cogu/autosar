@@ -62,6 +62,16 @@ class WorkspaceWriter(WriterBase):
             result+='\n'.join(lines)+'\n'
       lines=self.endFile()
       return result+'\n'.join(lines)+'\n'
+   
+   def toCode(self,ws,packages=None):
+      lines=['import autosar as ar','','ws=ar.workspace()']
+      result='\n'.join(lines)+'\n'
+      for package in ws.packages:
+         if (isinstance(packages,list) and package.name in packages) or (packages is None):
+            lines=self.packageWriter.toCode(package)
+            result+='\n'.join(lines)+'\n'
+      return result
+      
       
 
 class PackageWriter(WriterBase):
@@ -94,6 +104,28 @@ class PackageWriter(WriterBase):
                           'SYSTEM-SIGNAL': None,
                           'SYSTEM': None
                           }
+         self.switcherCode = {'ARRAY-TYPE': None,
+                          'BOOLEAN-TYPE': None,
+                          'IntegerDataType': None,
+                          'REAL-TYPE': None,
+                          'RECORD-TYPE': None,
+                          'STRING-TYPE': None,
+                          'ApplicationSoftwareComponent': self.componentTypeWriter.writeApplicationSoftwareComponentCode,
+                          'COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE': None,
+                          'InternalBehavior': None,
+                          'SWC-IMPLEMENTATION': None,
+                          'CompuMethodConst': None,
+                          'UNIT': None,
+                          'SW-ADDR-METHOD': None,
+                          'MODE-DECLARATION-GROUP': None,
+                          'SENDER-RECEIVER-INTERFACE': None,
+                          'CALPRM-INTERFACE': None,
+                          'CLIENT-SERVER-INTERFACE': None,
+                          'Constant': None,
+                          'COMPOSITION-TYPE': None,
+                          'SYSTEM-SIGNAL': None,
+                          'SYSTEM': None
+                          }
       else:
          raise NotImplementedError("AUTOSAR version not yet supported")
    
@@ -102,9 +134,6 @@ class PackageWriter(WriterBase):
       lines.extend(self.beginPackage(package.name))
       lines.append(self.indent("<ELEMENTS>",1))
       for elem in package.elements:
-         #fullname=elem.__class__.__module__+'.'+elem.__class__.__name__
-         #print(fullname)
-         #writerFunc = self.switcher.get(fullname)
          writerFunc = self.switcherXML.get(elem.__class__.__name__)
          if writerFunc is not None:            
             lines.extend(self.indent(writerFunc(elem),2))
@@ -117,6 +146,17 @@ class PackageWriter(WriterBase):
             lines.extend(self.indent(self.toXML(subPackage),2))
          lines.append(self.indent("</SUB-PACKAGES>",1))
       lines.extend(self.endPackage())
+      return lines
+   
+   def toCode(self,package):
+      lines=[]
+      lines.append("ws.append(ar.Package('%s'))"%package.name)
+      for elem in package.elements:
+         writerFunc = self.switcherCode.get(elem.__class__.__name__)
+         if writerFunc is not None:
+            lines.extend(writerFunc(elem,package))
+         else:
+            raise NotImplementedError(type(elem))
       return lines
 
 class DataTypeWriter(WriterBase):
@@ -242,7 +282,7 @@ class ComponentTypeWriter(WriterBase):
          lines.append(self.indent('</REQUIRED-COM-SPECS>',1))
       lines.append(self.indent('<REQUIRED-INTERFACE-TREF DEST="%s">%s</REQUIRED-INTERFACE-TREF>'%(portInterface.tag,portInterface.ref),1))
       lines.append('</R-PORT-PROTOTYPE>')
-      return lines
+      return lines   
    
    def writeProvidePortXML(self, port):
       lines=[]
@@ -282,6 +322,14 @@ class ComponentTypeWriter(WriterBase):
          lines.append(self.indent('</PROVIDED-COM-SPECS>',1))      
       lines.append(self.indent('<PROVIDED-INTERFACE-TREF DEST="%s">%s</PROVIDED-INTERFACE-TREF>'%(portInterface.tag,portInterface.ref),1))
       lines.append('</%s>'%port.tag)      
+      return lines
+   
+   
+   def writeApplicationSoftwareComponentCode(self,swc,package):
+      lines=[]
+      lines.append("ws['%s'].append(ar.ApplicationSoftwareComponent('%s'))"%(package.name,swc.name))
+      lines.append("swc=ws['%s/%s']"%(package.name,swc.name))
+      lines.append("print(swc.name)")
       return lines
 
 class BehaviorWriter(WriterBase):
@@ -333,3 +381,6 @@ class BehaviorWriter(WriterBase):
       lines.append(self.indent('<SYMBOL>%s</SYMBOL>'%runnable.symbol,1))
       lines.append('</RUNNABLE-ENTITY>')
       return lines
+   
+
+

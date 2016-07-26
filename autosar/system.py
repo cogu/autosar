@@ -51,9 +51,9 @@ class SenderReceiverToSignalGroupMapping:
    """
    <SENDER-RECEIVER-TO-SIGNAL-GROUP-MAPPING>
    """
-   def __init__(self,dataElemInstanceRef,signalRef,typeMapping):      
+   def __init__(self,dataElemInstanceRef,signalGroupRef,typeMapping):      
       self.dataElemInstanceRef=dataElemInstanceRef
-      self.signalRef=signalRef
+      self.signalGroupRef=signalGroupRef
       self.typeMapping=typeMapping
 
 class TypeMapping:

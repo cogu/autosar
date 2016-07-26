@@ -22,13 +22,14 @@ class Value(object):
          return self.parent.findWS()
 
 class IntegerValue(Value):
+   @property
+   def tag(self): return "INTEGER-LITERAL"   
+
    def __init__(self,name,typeRef=None,value=None):
       super().__init__(name)
       self.typeRef=typeRef
       self.value=value
    
-   @property
-   def tag(self): return "INTEGER-LITERAL"   
    
    @property
    def value(self):      
@@ -42,6 +43,10 @@ class IntegerValue(Value):
          self._value=None
 
 class StringValue(Value):
+   @property
+   def tag(self): return "STRING-LITERAL"
+
+
    def __init__(self,name,typeRef=None,value=None):
       super().__init__(name)
       if value is None:
@@ -62,6 +67,9 @@ class StringValue(Value):
          self._value=None
 
 class BooleanValue(Value):
+   @property
+   def tag(self): return "BOOLEAN-LITERAL"
+
    def __init__(self,name,typeRef=None,value=None):
       super().__init__(name)
       self.typeRef=typeRef
@@ -79,6 +87,9 @@ class BooleanValue(Value):
          self._value=None
 
 class RecordValue(Value):
+   @property
+   def tag(self): return "RECORD-SPECIFICATION"
+   
    def __init__(self,name,typeRef=None):
       super().__init__(name)
       self.typeRef=typeRef
@@ -91,6 +102,9 @@ class RecordValue(Value):
       
    
 class ArrayValue(Value):
+   @property
+   def tag(self): return "ARRAY-SPECIFICATION"
+
    def __init__(self,name,typeRef=None):
       super().__init__(name)
       self.typeRef=typeRef

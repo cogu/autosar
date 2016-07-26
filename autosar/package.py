@@ -17,6 +17,7 @@ class Package(object):
          return None      
 
    def find(self,ref):
+      if ref.startswith('/'): return self.root().find(ref)
       ref = ref.partition('/')      
       name = ref[0]
       for package in self.subPackages:
@@ -32,6 +33,26 @@ class Package(object):
             else:
                return elem
       return None
+   
+   def findall(self,ref):
+      """
+      experimental find-method that has some rudimentary support for globs.      
+      """
+      if ref is None: return None
+      if ref[0]=='/': ref=ref[1:] #removes initial '/' if it exists
+      ref = ref.partition('/')
+      if ref[0]=='*' and len(ref[2])==0:
+         result=list(self.elements)
+         result.extend(self.subPackages)
+      else:
+         result=[]
+         for item in (self.packages+self.subPackages):
+            if item.name == ref[0] or ref[0]=='*':
+               if len(ref[2])>0:
+                  result.extend(item.findall(ref[2]))
+               else:
+                  result.append(item)
+      return result      
    
    def dir(self,ref=None,_prefix=''):
       if ref==None:
@@ -75,10 +96,14 @@ class Package(object):
       return swc
    
    def findWS(self):
+      """depcrecated, use root() instead"""
+      return self.root()
+         
+   def root(self):
       if self.parent is None:
          return None
       else:
-         return self.parent.findWS()
+         return self.parent.root()
       
    def append(self,elem):
       if isinstance(elem,autosar.element.Element):         
