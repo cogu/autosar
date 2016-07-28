@@ -1,5 +1,5 @@
 Constant
-***************
+--------
 
 class Constant
 
