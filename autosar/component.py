@@ -45,6 +45,15 @@ class ComponentType(Element):
    def __getitem__(self,key):
       return self.find(key)
 
+   def createProvidePort(self,name,portInterfaceRef,elemName=None,initValueRef=None,canInvalidate=False):
+      comspec={'canInvalidate':canInvalidate}
+      if initValueRef is not None:
+         comspec['initValueRef']=initValueRef
+      if elemName is not None:
+         comspec['name']=elemName
+      port = ProvidePort(name,portInterfaceRef,comspec,parent=self)
+      self.providePorts.append(port)
+
 class ApplicationSoftwareComponent(ComponentType):
    @property
    def tag(self): return "APPLICATION-SOFTWARE-COMPONENT-TYPE"
@@ -115,13 +124,15 @@ class Port(object):
             initValue = ws.find(initValueRef)
             if initValue is None:
                raise ValueError("invalid reference detected: '%s'"%initValueRef)
-            if isinstance(initValue,autosar.Constant):
+            if isinstance(initValue,autosar.constant.Constant):
                #this is a convenience implementation for the user. Actually initValueRef needs to point to the value inside the Constant
                if dataElement.typeRef != initValue.value.typeRef:
                   raise ValueError("constant value has different type from data element, expected '%s', found '%s'"%(dataElement.typeRef,initValue.value.typeRef))
                initValueRef=initValue.value.ref #correct the reference to the actual value
-            else:
-               raise ValueError("reference is not a Constant object: '%s'"%initValueRef)
+            elif isinstance(initValue,autosar.constant.Value):
+               initValueRef=initValue.ref
+            else:               
+               raise ValueError("reference is not a Constant or Value object: '%s'"%initValueRef)
          self.comspec.append(DataElementComSpec(name,initValueRef,aliveTimeout,queueLength,canInvalidate))
             
       

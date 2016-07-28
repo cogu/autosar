@@ -4,7 +4,7 @@ from autosar.behavior import InternalBehavior,RunnableEntity,DataReceivePoint
 from autosar.portinterface import ParameterInterface,SenderReceiverInterface,ClientServerInterface,DataElement
 from autosar.datatype import RecordDataType,BooleanDataType,IntegerDataType,CompuMethodConst,CompuMethodRational,StringDataType,ArrayDataType
 from autosar.constant import ArrayValue,IntegerValue,StringValue,BooleanValue,RecordValue,Constant
-from autosar.base import splitref
+from autosar.base import splitRef
 from autosar.signal import SystemSignal
 from autosar.package import Package
 import ntpath
@@ -63,3 +63,6 @@ def dcfImport(filename):
    for elem in dcf['fileRef']:
       prj.loadXML(elem['path'])
    return prj
+
+def splitRef(ref):
+   return autosar.base.splitRef(ref)

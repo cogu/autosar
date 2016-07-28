@@ -1,13 +1,8 @@
 from autosar.package import Package
 from autosar.element import Element
-from autosar.base import parseXMLFile,splitref,parseTextNode
 import math
 import json
-
-#RecordTypeElement=namedtuple('RecordTypeElement',['name','typeRef'])
-#CompuConstElement=namedtuple('CompuConstElement','minvalue maxvalue textvalue')
-#CompuRationalElement=namedtuple('CompuRationalElement','offset numerator denominator')
-#DataTypeUnitElement = namedtuple('DataTypeUnitElement','name displayName')
+import copy
 
 class ConstElement(object):
    def __init__(self,parent=None):
@@ -21,9 +16,9 @@ class ConstElement(object):
       if ref.startswith('/'):
          return self.root().find(ref)
       return None
-   def root(self):
+   def rootWS(self):
       if self.parent is None: return None
-      return self.parent.root()
+      return self.parent.rootWS()
    
 
 
@@ -78,7 +73,9 @@ class DataTypeUnitElement(Element):
 
 class DataType(Element):
    def __init__(self,name):
-      super().__init__(name)      
+      super().__init__(name)
+   
+    
 
 
 class IntegerDataType(DataType):
@@ -102,15 +99,21 @@ class IntegerDataType(DataType):
                return self.findWS().find(self.compuMethodRef) == other.findWS().find(other.compuMethodRef)
             elif (self.compuMethodRef is None) and (other.compuMethodRef is None):
                return True
+   
+   def __deepcopy__(self,memo):
+      obj=type(self)(self.name,self.minval,self.maxval,self.compuMethodRef)
+      if self.adminData is not None: obj.adminData=copy.deepcopy(self.adminData,memo)
+      return obj
             
 class RecordDataType(DataType):
    @property
    def tag(self): return 'RECORD-TYPE'      
-   def __init__(self,name,_elements):
+   def __init__(self,name,elements=None):
       super().__init__(name)
       self.elements = []
-      for elem in _elements:
-         self.elements.append(RecordTypeElement(elem['name'],elem['typeRef'],self))
+      if elements is not None:
+         for elem in elements:
+            self.elements.append(RecordTypeElement(elem['name'],elem['typeRef'],self))
    def asdict(self):         
       data={'type': self.__class__.__name__,'name':self.name,'elements':[]}
       if self.adminData is not None:
@@ -125,6 +128,15 @@ class RecordDataType(DataType):
             if self.elements[i] != other.elements[i]: return False
          return True
       return False
+
+   def __deepcopy__(self,memo):
+      obj=type(self)(self.name)      
+      if self.adminData is not None: obj.adminData=copy.deepcopy(self.adminData,memo)
+      for elem in self.elements:
+         obj.elements.append(RecordTypeElement(elem.name,elem.typeRef,self))
+      return obj
+      
+   
    
 
 class ArrayDataType(DataType):
@@ -161,6 +173,10 @@ class StringDataType(DataType):
          if (self.name==other.name) and (self.length == other.length) and (self.encoding == other.encoding):
             return True
       return False
+   
+   def __deepcopy__(self,memo):
+      obj=type(self)(self.name,self.length,self.encoding)
+      return obj
 
       
 class RealDataType(DataType):
@@ -192,7 +208,7 @@ class CompuMethodRational(Element):
    
    def find(self,ref):
       if ref.startswith('/'):
-         root=self.root()
+         root=self.rootWS()
          return root.find(ref)
       return None
    
@@ -254,38 +270,4 @@ class CompuMethodConst(Element):
             if self.elements[i] != other.elements[i]: return False
          return True
       return False
-
-   
-   
-#
-#class DataTypeSemanticsPackage(object):
-#   def __init__(self):      
-#      self.elements=[]      
-#   def loadFromXML(self,root,version=3):
-#      parser = DataTypeSemanticsParser(self,version)
-#      parser.parse(root)
-#   
-#   def addCompuMethod(self,method):
-#      if isinstance(method,(CompuMethodConst,CompuMethodRational)):
-#         self.elements.append(method)
-#      else:
-#         raise ValueError('invalid type detected')
-#   
-#   def findCompuMethod(self,name):
-#      for elem in self.elements:
-#         if name==elem.name:
-#            return elem
-#      return None
-#
-#class DataTypeUnitsPackage(object):
-#   def __init__(self):
-#      self.elements=[]
-#   
-#   def loadFromXML(self,root,version=3):
-#      parser = DataTypeUnitsParser(self,version)
-#      parser.parse(root)
-#      
-#   def addUnit(self,name,displayName):
-#      self.elements.append(DataTypeUnitElement(name,displayName))
-
    

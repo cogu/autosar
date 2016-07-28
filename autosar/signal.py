@@ -1,4 +1,4 @@
-from autosar.base import splitref
+from autosar.base import splitRef
 from autosar.element import Element
 import sys
 
@@ -19,5 +19,15 @@ class SystemSignal(Element):
             }
       if self.desc is not None: data['desc']=self.desc
       return data
+
+class SystemSignalGroup(Element):
+   def __init__(self, name, systemSignalRefs=None,parent=None):
+      super().__init__(name,parent)
+      if isinstance(systemSignalRefs,list):
+         self.systemSignalRefs=systemSignalRefs
+      else:
+         self.systemSignalRefs=[]
+      
+
    
 

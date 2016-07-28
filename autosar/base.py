@@ -41,7 +41,7 @@ def getXMLNamespace(element):
     m = re.match(r'\{(.*)\}', element.tag)
     return m.group(1) if m else None
 
-def splitref(ref):
+def splitRef(ref):
    """splits an autosar url string into an array"""
    if isinstance(ref,str):
       if ref[0]=='/': return ref[1:].split('/')
@@ -86,3 +86,12 @@ def parseBoolean(value):
       if value == 'true': return True
       elif value =='false': return False
    raise ValueError(value)   
+
+def indexByName(lst,name):
+   assert(isinstance(lst,list))
+   assert(isinstance(name,str))
+   for i,item in enumerate(lst):
+      if item.name == name: return i
+   raise ValueError('%s not in list'%name)
+      
+   

@@ -1,5 +1,5 @@
 import autosar.package
-import autosar.parser.package_parser
+import autosar.parser
 import autosar.writer
 from autosar.base import parseXMLFile,getXMLNamespace,removeNamespace
 import json
@@ -129,11 +129,13 @@ class Workspace(object):
    def saveXML(self,filename,packages=None):
       writer=autosar.writer.WorkspaceWriter()
       with open(filename,'w') as fp:
-         writer.saveXML(fp,self,packages)
+         if isinstance(packages,str): packages=[packages]
+         writer.saveXML(self,fp,list(packages))
 
    def toXML(self,packages=None):
       writer=autosar.writer.WorkspaceWriter()
-      return writer.toXML(self,packages)
+      if isinstance(packages,str): packages=[packages]
+      return writer.toXML(self,list(packages))
 
    def append(self,elem):
       if isinstance(elem,autosar.package.Package):
@@ -149,7 +151,18 @@ class Workspace(object):
    def saveJSON(self,filename,packages=None,indent=3):
       data=self.asdict(packages)
       with open(filename,'w') as fp:
-         json.dump(data,fp,indent=indent)      
+         json.dump(data,fp,indent=indent)
+         
+   def toCode(self, packages=None, header=None):
+      writer=autosar.writer.WorkspaceWriter()
+      if isinstance(packages,str): packages=[packages]
+      return writer.toCode(self,list(packages),str(header))
+         
+   def saveCode(self,filename,packages=None,header=None):
+      writer=autosar.writer.WorkspaceWriter()
+      if isinstance(packages,str): packages=[packages]
+      with open(filename,'w') as fp:
+         writer.saveCode(self,fp,list(packages),str(header))
 
    @property
    def ref(self):
@@ -173,9 +186,6 @@ class Workspace(object):
       return packageList
    
    
-   def toCode(self, packages=None):
-      writer=autosar.writer.WorkspaceWriter()
-      return writer.toCode(self,packages)
    
 
 if __name__ == '__main__':

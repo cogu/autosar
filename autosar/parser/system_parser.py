@@ -1,4 +1,4 @@
-from autosar.base import parseXMLFile,splitref,parseTextNode,parseIntNode,hasAdminData,parseAdminDataNode
+from autosar.base import parseXMLFile,splitRef,parseTextNode,parseIntNode,hasAdminData,parseAdminDataNode
 from autosar.system import *
 
 class SystemParser(object):

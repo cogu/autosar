@@ -1,6 +1,8 @@
 import autosar.component
 import autosar.behavior
 import autosar.element
+import copy
+import autosar.base
 
 class Package(object):
    packageName = None
@@ -95,17 +97,18 @@ class Package(object):
       self.elements.append(implementation)
       return swc
    
-   def findWS(self):
-      """depcrecated, use root() instead"""
-      return self.root()
+   # def findWS(self):
+   #    """depcrecated, use rootWS() instead"""
+   #    return self.rootWS()
          
-   def root(self):
+   def rootWS(self):
       if self.parent is None:
          return None
       else:
          return self.parent.root()
       
    def append(self,elem):
+      """appends elem to the self.elements list"""
       if isinstance(elem,autosar.element.Element):         
          self.elements.append(elem)
          elem.parent=self
@@ -115,10 +118,31 @@ class Package(object):
       else:
          raise ValueError('unexpected value type %s'%str(type(elem)))
 
-   
-   
+   def update(self,other):
+      """copies/clones each element from other into self.elements"""
+      if type(self) == type(other):
+         for otherElem in other.elements:            
+            newElem=copy.deepcopy(otherElem)
+            assert(newElem is not None)
+            try:
+               i=self.index('elements',otherElem.name)
+               oldElem=self.elements[i]
+               self.elements[i]=newElem
+               oldElem.parent=None               
+            except ValueError:
+               self.elements.append(newElem)
+            newElem.parent=self
+      else:
+         raise ValueError('cannot update from object of different type')
 
-
+   def index(self,container,name):
+      if container=='elements':
+         lst=self.elements
+      elif container=='subPackages':
+         lst=self.subPackages
+      else:
+         raise KeyError("%s not in %s"%(container,self.__class__.__name__))
+      return autosar.base.indexByName(lst,name)
 
 
 

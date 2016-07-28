@@ -1,9 +1,9 @@
-from autosar.base import parseXMLFile,splitref,parseTextNode,parseIntNode
+from autosar.base import parseXMLFile,splitRef,parseTextNode,parseIntNode
 from autosar.component import *
 
 def _getDataElemNameFromComSpec(xmlElem,portInterfaceRef):
    if xmlElem.find('./DATA-ELEMENT-REF') is not None:
-      dataElemRef = splitref(xmlElem.find('./DATA-ELEMENT-REF').text)
+      dataElemRef = splitRef(xmlElem.find('./DATA-ELEMENT-REF').text)
       assert(dataElemRef is not None)
       dataElemName = dataElemRef.pop()
       tmp = '/'+'/'.join(dataElemRef)
@@ -14,7 +14,7 @@ def _getDataElemNameFromComSpec(xmlElem,portInterfaceRef):
 def _getOperationNameFromComSpec(xmlElem,portInterfaceRef):
    xmlOperation=xmlElem.find('./OPERATION-REF')
    if xmlOperation is not None:
-      operationRef = splitref(xmlOperation.text)
+      operationRef = splitRef(xmlOperation.text)
       assert(operationRef is not None)
       operationName = operationRef.pop()
       tmp = '/'+'/'.join(operationRef)

@@ -1,7 +1,7 @@
 import copy
 import autosar.component
 import autosar.portinterface
-from autosar.base import splitref,parseBoolean
+from autosar.base import splitRef,parseBoolean
 from autosar.element import Element
 
 

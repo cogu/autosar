@@ -1,3 +1,4 @@
+from autosar.base import parseXMLFile,splitRef,parseTextNode
 from autosar.datatype import *
 
 class DataTypeParser(object):

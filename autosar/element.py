@@ -32,13 +32,15 @@ class Element(object):
                   data[key]=value
       return data
    
-   def findWS(self):
-      """depcrecated, use root() instead"""
-      return self.root()
+   # def findWS(self):
+   #    """depcrecated, use root() instead"""
+   #    return self.root()
          
-   def root(self):
+   def rootWS(self):
       if self.parent is None:
          return None
       else:
-         return self.parent.root()
-      
+         return self.parent.rootWS()
+   
+   def __deepcopy__(self,memo):
+      raise NotImplementedError(type(self))

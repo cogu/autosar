@@ -51,7 +51,8 @@ class PackageParser(object):
                           'CONSTANT-SPECIFICATION': constantPackageParser.parseConstantSpecification,
                           'COMPOSITION-TYPE': componentTypeParser.parseCompositionType,
                           'SYSTEM-SIGNAL': signalParser.parseSystemSignal,
-                          'SYSTEM': systemParser.parseSystem
+                          'SYSTEM-SIGNAL-GROUP': signalParser.parseSystemSignalGroup,
+                          'SYSTEM': systemParser.parseSystem                          
                           }
          
          if xmlRoot.find('ELEMENTS'):
