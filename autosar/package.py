@@ -11,6 +11,7 @@ class Package(object):
       self.elements = []
       self.subPackages = []
       self.parent=parent
+      self.role=None
    @property
    def ref(self):
       if self.parent is not None:
@@ -96,10 +97,43 @@ class Package(object):
       self.elements.append(internalBehavior)
       self.elements.append(implementation)
       return swc
+
+   def createIntegerDataType(self,name,min=None,max=None,valueTable=None,offset=None, scaling=None):
+      """
+      Convenience method for creating integer datatypes in a package.
+      In order to use this function you must have a subpackage present with role='CompuMethod'
+      """
+      if (valueTable is not None) and (min is None) and (max is None):
+         #used for enumeration types using valueTables with implicitly calculated min and max
+         compuMethod=autosar.CompuMethodConst(str(name),list(valueTable))
+         semanticsPackage=None
+         for pkg in self.subPackages:
+            if pkg.role == 'CompuMethod':
+               semanticsPackage=pkg
+               break
+         if (semanticsPackage is not None):
+            semanticsPackage.append(compuMethod)
+            newType=autosar.IntegerDataType(name,0,len(valueTable)-1,compuMethodRef=compuMethod.ref)
+            self.append(newType)
+         else:
+            raise RuntimeError("no package found with role='CompuMethod'")
+
    
-   # def findWS(self):
-   #    """depcrecated, use rootWS() instead"""
-   #    return self.rootWS()
+   def setRole(self,role):
+         role=str(role)
+         if role=='CompuMethod':
+            self.role=role
+         else:
+            raise ValueError("unknown role type: '%s'"%role)
+      
+   
+   def createSubPackage(self, name, role=None):
+      pkg = Package(name)
+      if role is not None:
+         pkg.setRole(role)
+      self.append(pkg)
+   
+   
          
    def rootWS(self):
       if self.parent is None:

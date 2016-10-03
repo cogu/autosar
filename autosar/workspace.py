@@ -103,7 +103,7 @@ class Workspace(object):
       return retval
 
    def createPackage(self,name):
-      package = Package(name,self)
+      package = autosar.Package(name,self)
       self.packages.append(package)
       return package
 
@@ -130,12 +130,18 @@ class Workspace(object):
       writer=autosar.writer.WorkspaceWriter()
       with open(filename,'w') as fp:
          if isinstance(packages,str): packages=[packages]
-         writer.saveXML(self,fp,list(packages))
+         if packages is not None:
+            writer.saveXML(self,fp,list(packages))
+         else:
+            writer.saveXML(self,fp,None)
 
    def toXML(self,packages=None):
       writer=autosar.writer.WorkspaceWriter()
       if isinstance(packages,str): packages=[packages]
-      return writer.toXML(self,list(packages))
+      if packages is not None:
+         return writer.toXML(self,list(packages))
+      else:
+         return writer.toXML(self,None)
 
    def append(self,elem):
       if isinstance(elem,autosar.package.Package):
@@ -158,11 +164,11 @@ class Workspace(object):
       if isinstance(packages,str): packages=[packages]
       return writer.toCode(self,list(packages),str(header))
          
-   def saveCode(self,filename,packages=None,header=None):
+   def saveCode(self,filename,packages=None,head=None,tail=None):
       writer=autosar.writer.WorkspaceWriter()
       if isinstance(packages,str): packages=[packages]
       with open(filename,'w') as fp:
-         writer.saveCode(self,fp,list(packages),str(header))
+         writer.saveCode(self,fp,list(packages),head,tail)
 
    @property
    def ref(self):

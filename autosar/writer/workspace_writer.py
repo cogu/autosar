@@ -19,18 +19,20 @@ class WorkspaceWriter(WriterBase):
       lines=self.endFile()
       return result+'\n'.join(lines)+'\n'
    
-   def toCode(self,ws,packages=None, header=None):
-      if header is None:
+   def toCode(self,ws,packages=None, head=None, tail=None):
+      if head is None:
          lines=['import autosar as ar','','ws=ar.workspace()']
          result='\n'.join(lines)+'\n'
       else:
-         assert(isinstance(header,str))
-         result = header+'\n'
+         assert(isinstance(head,str))
+         result = head+'\n'
       for package in ws.packages:
          if (isinstance(packages,list) and package.name in packages) or (packages is None):
             lines=self.packageWriter.toCode(package)
             result+='\n'.join(lines)+'\n'
+      if tail is not None:
+         result+='\n'+tail
       return result
       
-   def saveCode(self,ws,fp,packages=None,header=None):
-      fp.write(self.toCode(ws,packages,header))
+   def saveCode(self,ws,fp,packages=None,head=None,tail=None):
+      fp.write(self.toCode(ws,packages,head,tail))

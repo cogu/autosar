@@ -54,6 +54,17 @@ class ComponentType(Element):
       port = ProvidePort(name,portInterfaceRef,comspec,parent=self)
       self.providePorts.append(port)
 
+   def createRequirePort(self,name,portInterfaceRef,elemName=None,initValueRef=None,aliveTimeout=0,canInvalidate=False):
+      comspec={'canInvalidate':canInvalidate,'aliveTimeout':aliveTimeout}
+      if initValueRef is not None:
+         comspec['initValueRef']=initValueRef
+      if elemName is not None:
+         comspec['name']=elemName
+      port = RequirePort(name,portInterfaceRef,comspec,parent=self)
+      self.requirePorts.append(port)
+
+
+
 class ApplicationSoftwareComponent(ComponentType):
    @property
    def tag(self): return "APPLICATION-SOFTWARE-COMPONENT-TYPE"
@@ -83,11 +94,11 @@ class Port(object):
       else:
          return '/%s'%self.name
 
-   def findWS(self):
+   def rootWS(self):
       if self.parent is None:
          return None
       else:
-         return self.parent.findWS()
+         return self.parent.rootWS()
    
    def asdict(self):
       data={'type': self.__class__.__name__,'name':self.name, 'portInterfaceRef':self.portInterfaceRef, 'attributes':[]}

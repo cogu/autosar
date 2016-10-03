@@ -1,5 +1,6 @@
 from autosar.writer.writer_base import WriterBase
 from autosar.base import splitRef
+import autosar.workspace
 
 
 class ComponentTypeWriter(WriterBase):
@@ -23,7 +24,7 @@ class ComponentTypeWriter(WriterBase):
    def writeRequirePortXML(self, port):
       lines=[]
       assert(port.ref is not None)
-      ws=port.findWS()
+      ws=port.rootWS()
       assert(ws is not None)
       portInterface=ws.find(port.portInterfaceRef)
       lines.append('<R-PORT-PROTOTYPE>')
@@ -62,7 +63,7 @@ class ComponentTypeWriter(WriterBase):
    def writeProvidePortXML(self, port):
       lines=[]
       assert(port.ref is not None)
-      ws=port.findWS()
+      ws=port.rootWS()
       assert(ws is not None)
       portInterface=ws.find(port.portInterfaceRef)
       lines.append('<%s>'%port.tag)
@@ -106,7 +107,10 @@ class ComponentTypeWriter(WriterBase):
       lines.append("swc=ws['%s/%s']"%(package.name,swc.name))
       if len(swc.providePorts)>0:
          lines.extend(self.writeSWCProvidePortsCode(swc))      
+      if len(swc.requirePorts)>0:
+         lines.extend(self.writeSWCRequirePortsCode(swc))      
       return lines
+   
    def writeSWCProvidePortsCode(self,swc):
       lines=[]
       ws=swc.rootWS()
@@ -131,6 +135,36 @@ class ComponentTypeWriter(WriterBase):
                else:
                   raise NotImplementedError('multiple comspecs not yet supported')                        
             lines.append('swc.createProvidePort(%s)'%(','.join(args)))
+         else:
+            raise NotImplementedError(type(portInterface))
+      return lines
+
+   def writeSWCRequirePortsCode(self,swc):
+      lines=[]
+      ws=swc.rootWS()
+      assert(isinstance(ws,autosar.Workspace))
+      for port in swc.requirePorts:
+         args=[]
+         args.append("'%s'"%port.name)
+         portInterface=ws.find(port.portInterfaceRef)
+         assert(portInterface is not None)
+         if isinstance(portInterface,autosar.portinterface.SenderReceiverInterface):
+            args.append("'%s'"%port.portInterfaceRef)
+            if len(port.comspec)>0:
+               if len(port.comspec)==1:
+                  comspec=port.comspec[0]
+                  if comspec.initValueRef is not None:
+                     tmp=splitRef(comspec.initValueRef)
+                     if len(tmp)==3:
+                        valueRef='/'+'/'.join(tmp[:-1])
+                     else:
+                        valueRef=comspec.initValueRef
+                     args.append("initValueRef='%s'"%valueRef)
+                  if comspec.aliveTimeout is not None:
+                     args.append("aliveTimeout=%d"%int(comspec.aliveTimeout))
+               else:
+                  raise NotImplementedError('multiple comspecs not yet supported')                        
+            lines.append('swc.createRequirePort(%s)'%(','.join(args)))
          else:
             raise NotImplementedError(type(portInterface))
       return lines

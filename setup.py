@@ -18,5 +18,5 @@ setup(name='autosar',
       author='Conny Gustafsson',
       author_email='congus8@gmail.com',
       license='MIT',
-      packages=['autosar','autosar.parser'],
+      packages=['autosar','autosar.parser','autosar.writer'],
       zip_safe=False)
