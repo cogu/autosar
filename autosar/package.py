@@ -3,6 +3,7 @@ import autosar.behavior
 import autosar.element
 import copy
 import autosar.base
+from fractions import Fraction
 
 class Package(object):
    packageName = None
@@ -98,7 +99,7 @@ class Package(object):
       self.elements.append(implementation)
       return swc
 
-   def createIntegerDataType(self,name,min=None,max=None,valueTable=None,offset=None, scaling=None):
+   def createIntegerDataType(self,name,min=None,max=None,valueTable=None,offset=None, scaling=None, unit=None):
       """
       Convenience method for creating integer datatypes in a package.
       In order to use this function you must have a subpackage present with role='CompuMethod'
@@ -117,11 +118,42 @@ class Package(object):
             self.append(newType)
          else:
             raise RuntimeError("no package found with role='CompuMethod'")
+      elif (min is not None) and (max is not None) and (offset is not None) and (scaling is not None):
+         #creates an integer data type with rational scaling
+         f=Fraction.from_float(scaling)
+         if f.denominator > 1000: #use the float version in case its not a rational number
+            semanticElements=[{'offset':offset, 'numerator':scaling, 'denominator':1}]
+         else:
+            semanticElements=[{'offset':offset, 'numerator':f.numerator, 'denominator':f.denominator}]
+         compuMethod=autosar.CompuMethodRational(name,None,semanticElements)
+         for pkg in self.subPackages:
+            if pkg.role == 'CompuMethod':
+               semanticsPackage=pkg
+            elif pkg.role == 'Unit':
+               unitPackage = pkg
+            
+         if (semanticsPackage is not None):
+            semanticsPackage.append(compuMethod)
+            newType=autosar.IntegerDataType(name,min,max,compuMethodRef=compuMethod.ref)
+            self.append(newType)
+         else:
+            raise RuntimeError("no package found with role='CompuMethod'")
+         if unit is not None:
+            if unitPackage is not None:
+                result = unitPackage.find(str(unit))
+                if result == None:
+                  unitElem = autosar.datatype.DataTypeUnitElement(unit,unit)
+                  unitPackage.append(unitElem)
+                  compuMethod.unitRef=unitElem.ref
+            else:
+               raise RuntimeError("no package found with role='Unit'")
+      else:         
+         raise NotImplementedError("not implemented")         
 
    
    def setRole(self,role):
          role=str(role)
-         if role=='CompuMethod':
+         if role in ['CompuMethod','Unit']:
             self.role=role
          else:
             raise ValueError("unknown role type: '%s'"%role)

@@ -193,11 +193,14 @@ class RealDataType(DataType):
       self.encoding=encoding
       
 
-class CompuMethodRational(Element):   
+class CompuMethodRational(Element):
+   @property
+   def tag(self): return 'COMPU-INTERNAL-TO-PHYS'
    def __init__(self,name,unitRef,elements):      
       super().__init__(name)
       self.unitRef = unitRef
       self.elements = []
+      
       for elem in elements:
          self.elements.append(CompuRationalElement(**elem))
    def asdict(self):

@@ -58,11 +58,11 @@ def setCurrentWS(ws):
 def dcfImport(filename):
    parser = DcfParser()
    dcf = parser.readFile(filename)
-   prj = project()
+   ws = workspace()
    result = {}
    for elem in dcf['fileRef']:
-      prj.loadXML(elem['path'])
-   return prj
+      ws.loadXML(elem['path'])
+   return ws
 
 def splitRef(ref):
    return autosar.base.splitRef(ref)

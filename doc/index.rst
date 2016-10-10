@@ -4,16 +4,17 @@
    contain the root `toctree` directive.
 
 The `AUTOSAR <https://www.autosar.org/>`_ Python Package
-=====================
+========================================================
 
 .. toctree::
    :maxdepth: 2
    :hidden:
       
    start
-   examples/index
+   tutorial/index
    constant/index
    component/index
+   
 
 What is it?
 -----------
@@ -57,7 +58,7 @@ install using::
 Getting Started
 ---------------
 
-First Read the :doc:`start` guide. After that you should read some of the :doc:`examples/index`.
+First Read the :doc:`start` guide. After that you should read some of the :doc:`tutorial/index`.
 
 Current Limitations
 -------------------
