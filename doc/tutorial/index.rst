@@ -78,8 +78,7 @@ At the end I added a line which prints our work so far to the console. You shoul
 
 .. code-block:: xml
 
-   <?xml version="1.0" encoding="UTF-8"?>
-   <AUTOSAR xsi:schemaLocation="http://autosar.org/3.0.2 autosar_302_ext.xsd" xmlns="http://autosar.org/3.0.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <AUTOSAR>
       <TOP-LEVEL-PACKAGES>
          <AR-PACKAGE>
             <SHORT-NAME>DataType</SHORT-NAME>
