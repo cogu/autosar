@@ -102,8 +102,24 @@ class Workspace(object):
             retval['packages'].append(package.asdict())
       return retval
 
-   def createPackage(self,name):
+   def findRolePackage(self,roleName):
+      """
+      finds a package with role set to roleName
+      """
+      if roleName is None: return None
+      for pkg in self.packages:
+         if pkg.role == roleName:
+            return pkg
+         elif len(pkg.subPackages)>0:
+            for childPkg in pkg.subPackages:
+               if childPkg.role == roleName:
+                  return childPkg
+      return None
+   
+   def createPackage(self,name,role=None):
       package = autosar.Package(name,self)
+      if role is not None:
+         package.role=role
       self.packages.append(package)
       return package
 

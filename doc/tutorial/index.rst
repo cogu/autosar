@@ -23,7 +23,7 @@ Our physical data types for this tutorial:
    +----------------+-----+-------+-----------+--------+---------+
    | Percent_T      | 0   | 255   | Percent   |   0    |   0.4   |
    +----------------+-----+-------+-----------+--------+---------+
-   | CoolantTempt_T | 0   | 255   | Degrees C |   -40  |   1/2   |
+   | CoolantTemp_T  | 0   | 255   | Degrees C |   -40  |   1/2   |
    +----------------+-----+-------+-----------+--------+---------+
 
 |
@@ -71,7 +71,7 @@ It is always recommended to use these helper functions instead of creating the c
    dataTypes.createIntegerDataType('EngineSpeed_T',min=0,max=65535,offset=0,scaling=1/8,unit='rpm')
    dataTypes.createIntegerDataType('VehicleSpeed_T',min=0,max=65535,offset=0,scaling=1/64,unit='kph')
    dataTypes.createIntegerDataType('Percent_T',min=0,max=255,offset=0,scaling=0.4,unit='Percent')
-   dataTypes.createIntegerDataType('CoolantTempt_T',min=0,max=255,offset=-40, scaling=0.5,unit='DegreeC')
+   dataTypes.createIntegerDataType('CoolantTemp_T',min=0,max=255,offset=-40, scaling=0.5,unit='DegreeC')
    print(ws.toXML())
 
 At the end I added a line which prints our work so far to the console. You should get an output like this:
@@ -108,9 +108,9 @@ At the end I added a line which prints our work so far to the console. You shoul
                   <UPPER-LIMIT INTERVAL-TYPE="CLOSED">255</UPPER-LIMIT>
                </INTEGER-TYPE>
                <INTEGER-TYPE>
-                  <SHORT-NAME>CoolantTempt_T</SHORT-NAME>
+                  <SHORT-NAME>CoolantTemp_T</SHORT-NAME>
                   <SW-DATA-DEF-PROPS>
-                     <COMPU-METHOD-REF DEST="COMPU-METHOD">/DataType/DataTypeSemantics/CoolantTempt_T</COMPU-METHOD-REF>
+                     <COMPU-METHOD-REF DEST="COMPU-METHOD">/DataType/DataTypeSemantics/CoolantTemp_T</COMPU-METHOD-REF>
                   </SW-DATA-DEF-PROPS>
                   <LOWER-LIMIT INTERVAL-TYPE="CLOSED">0</LOWER-LIMIT>
                   <UPPER-LIMIT INTERVAL-TYPE="CLOSED">255</UPPER-LIMIT>
@@ -178,7 +178,7 @@ At the end I added a line which prints our work so far to the console. You shoul
                         </COMPU-INTERNAL-TO-PHYS>
                      </COMPU-METHOD>
                      <COMPU-METHOD>
-                        <SHORT-NAME>CoolantTempt_T</SHORT-NAME>
+                        <SHORT-NAME>CoolantTemp_T</SHORT-NAME>
                         <UNIT-REF DEST="UNIT">/DataType/DataTypeUnits/DegreeC</UNIT-REF>
                         <COMPU-INTERNAL-TO-PHYS>
                            <COMPU-SCALES>
@@ -258,7 +258,7 @@ Below you will find all the parts we written so far in one single script:
    dataTypes.createIntegerDataType('EngineSpeed_T',min=0,max=65535,offset=0,scaling=1/8,unit='rpm')
    dataTypes.createIntegerDataType('VehicleSpeed_T',min=0,max=65535,offset=0,scaling=1/64,unit='kph')
    dataTypes.createIntegerDataType('Percent_T',min=0,max=255,offset=0,scaling=0.4,unit='Percent')
-   dataTypes.createIntegerDataType('CoolantTempt_T',min=0,max=255,offset=-40, scaling=0.5,unit='DegreeC')
+   dataTypes.createIntegerDataType('CoolantTemp_T',min=0,max=255,offset=-40, scaling=0.5,unit='DegreeC')
    dataTypes.createIntegerDataType('InactiveActive_T',valueTable=[
         'InactiveActive_Inactive',
         'InactiveActive_Active',
@@ -291,7 +291,7 @@ Output:
    EngineSpeed_T: <class 'autosar.datatype.IntegerDataType'>
    VehicleSpeed_T: <class 'autosar.datatype.IntegerDataType'>
    Percent_T: <class 'autosar.datatype.IntegerDataType'>
-   CoolantTempt_T: <class 'autosar.datatype.IntegerDataType'>
+   CoolantTemp_T: <class 'autosar.datatype.IntegerDataType'>
    InactiveActive_T: <class 'autosar.datatype.IntegerDataType'>
    OnOff_T: <class 'autosar.datatype.IntegerDataType'>
 

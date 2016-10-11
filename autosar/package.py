@@ -150,6 +150,20 @@ class Package(object):
       else:         
          raise NotImplementedError("not implemented")         
 
+   def createSenderReceiverInterface(self,name,dataElements=None,modeDeclarationGroups=None, isService=False):
+      """
+      creates a new sender-receiver port interface. dataElements can either be a single instance of DataElement or a list of DataElements.
+      The same applies to modeDeclarationGroups. isService must be boolean
+      """
+      portInterface = autosar.SenderReceiverInterface(str(name))
+      if isinstance(dataElements,list):
+         for elem in dataElements:
+            portInterface.append(elem)
+      elif isinstance(dataElements,autosar.portinterface.DataElement):         
+         portInterface.append(dataElements)
+      else:
+         raise ValueError("dataElements: expected autosar.DataElement instance or list")
+      self.append(portInterface)
    
    def setRole(self,role):
          role=str(role)
