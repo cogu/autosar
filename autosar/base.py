@@ -3,11 +3,11 @@ import re
 
 class AdminData(object):
    def __init__(self):
-      self.data = []
+      self.specialDataGroups = []
    def asdict(self):
-      retval={'type': self.__class__.__name__, 'data':[]}
-      for elem in self.data:
-         retval['data'].append(elem.asdict())
+      retval={'type': self.__class__.__name__, 'specialDataGroups':[]}
+      for elem in self.specialDataGroups:
+         retval['specialDataGroups'].append(elem.asdict())
       return retval
 
 class SpecialDataGroup(object):
@@ -67,7 +67,7 @@ def parseAdminDataNode(xmlRoot):
             try:
                SD_GID=xmlSD.attrib['GID']
             except KeyError: pass
-         adminData.data.append(SpecialDataGroup(GID,SD,SD_GID))
+         adminData.specialDataGroups.append(SpecialDataGroup(GID,SD,SD_GID))
    return adminData
 
 def parseTextNode(xmlElem):
@@ -94,4 +94,9 @@ def indexByName(lst,name):
       if item.name == name: return i
    raise ValueError('%s not in list'%name)
       
-   
+class ChildElement:
+   def rootWS(self):
+      if self.parent is None:
+         return None
+      else:
+         return self.parent.rootWS()

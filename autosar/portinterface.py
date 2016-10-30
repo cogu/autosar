@@ -1,6 +1,6 @@
 #from collections import namedtuple
 from autosar.element import Element
-
+from autosar.base import ChildElement
 
 
 class PortInterface(Element):
@@ -47,15 +47,13 @@ class SenderReceiverInterface(PortInterface):
       self.dataElements.append(elem)
       elem.parent=self
    
-   @property
-   def tag(self):
+   def tag(self,version=None):
       return 'SENDER-RECEIVER-INTERFACE'
 
    
 
 class ParameterInterface(PortInterface):
-   @property
-   def tag(self):
+   def tag(self,version=None):
       return 'CALPRM-INTERFACE'
 
    def __init__(self,name):
@@ -97,6 +95,16 @@ class ClientServerInterface(PortInterface):
             retval['applicationErrors'].append(applicationError.asdict())         
       return retval
 
+   def find(self,ref):
+      ref = ref.partition('/')
+      name = ref[0]
+      for elem in self.operations:
+         if elem.name==name:
+            return elem      
+      for elem in self.applicationErrors:
+         if elem.name==name:
+            return elem      
+      return None
 
 
 class DataElement(object):
@@ -112,7 +120,7 @@ class DataElement(object):
       assert(isinstance(isQueued,bool))
       self.isQueued=isQueued
       self.adminData=None
-      self.swAddrMethodRef=[]
+      self.swAddrMethodRefList=[]
       self.parent=parent
    @property
    def ref(self):
@@ -120,8 +128,11 @@ class DataElement(object):
          return self.parent.ref+'/%s'%self.name
       else:
          return '/%s'%self.name
-   @property
-   def tag(self): return "DATA-ELEMENT-PROTOTYPE"
+   def tag(self,version=None): return "DATA-ELEMENT-PROTOTYPE"
+   
+   def rootWS(self):
+      if self.parent is not None: return self.parent.rootWS()
+      return None
    
    def asdict(self):
       data = {'type': self.__class__.__name__, 'name': self.name, 'isQueued': self.isQueued, 'typeRef': self.typeRef}
@@ -132,19 +143,24 @@ class DataElement(object):
    
 
 class ModeGroup(Element):
-   def __init__(self,name):
-      super().__init__(name)
+   def __init__(self,name,parent=None):
+      super().__init__(name,parent)
       self.typeRef=None
+   
+   def tag(self,version=None): return "MODE-DECLARATION-GROUP-PROTOTYPE"
    
    def asdict(self):
       return {'type': self.__class__.__name__, 'name':self.name, 'typeRef':self.typeRef}
 
-class Operation(object):
-   def __init__(self,name):
-      self.name = name
+class Operation(Element):
+   def __init__(self,name,parent=None):
+      super().__init__(name,parent)
       self.description = None
       self.arguments=[]
       self.errorRefs=[]
+   
+   def tag(self,version=None):
+      return 'OPERATION-PROTOTYPE'
 
    def asdict(self):
       data = {'type': self.__class__.__name__, 'name':self.name, 'arguments':[]}
@@ -163,25 +179,40 @@ class Argument(object):
       if (direction != 'IN') and (direction != 'OUT') and (direction != 'INOUT'):
          raise ValueError('invalid value :%s'%direction)
       self.direction=direction
+   
+   def tag(self,version=None):
+      return 'ARGUMENT-PROTOTYPE'      
+   
    def asdict(self):
       return {'type': self.__class__.__name__, 'name':self.name, 'typeRef':self.typeRef, 'direction': self.direction}
 
-class ApplicationError(object):
-   def __init__(self,name,errorCode):
-      self.name=name
-      self.errorCode=errorCode
+class ApplicationError(Element):
+   def __init__(self,name,errorCode,parent=None):
+      super().__init__(name,parent)
+      self.errorCode=int(errorCode)
+
+   def tag(self,version=None):
+      return 'APPLICATION-ERROR'
+
    def asdict(self):
       return {'type': self.__class__.__name__, 'name':self.name,'errorCode':self.errorCode}
+
+
 
 class SoftwareAddressMethod(Element):
    def __init__(self,name):
       super().__init__(name)
+   
+   def tag(self,version=None):
+      return 'SW-ADDR-METHOD'
 
 class ModeDeclarationGroup(Element):
    def __init__(self,name,initialModeRef=None,modeDeclarations=None):
       super().__init__(name)
       self.initialModeRef = initialModeRef
       self.modeDeclarations = modeDeclarations
+   
+   def tag(self,version=None): return "MODE-DECLARATION-GROUP"
 
 
 

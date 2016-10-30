@@ -3,6 +3,7 @@ from autosar.writer.datatype_writer import DataTypeWriter
 from autosar.writer.constant_writer import ConstantWriter
 from autosar.writer.component_writer import ComponentTypeWriter
 from autosar.writer.behavior_writer import BehaviorWriter
+from autosar.writer.portinterface_writer import PortInterfaceWriter
 
 
 class PackageWriter(WriterBase):
@@ -12,6 +13,7 @@ class PackageWriter(WriterBase):
       self.constantWriter = ConstantWriter(version)
       self.componentTypeWriter = ComponentTypeWriter(version)
       self.behaviorWriter = BehaviorWriter(version)
+      self.portInterfaceWriter = PortInterfaceWriter(version)
       if self.version >= 3.0:
          self.switcherXML = {'ARRAY-TYPE': None,
                           'BOOLEAN-TYPE': None,
@@ -28,9 +30,9 @@ class PackageWriter(WriterBase):
                           'DataTypeUnitElement': self.dataTypeWriter.writeDataTypeUnitElementXML,
                           'SW-ADDR-METHOD': None,
                           'MODE-DECLARATION-GROUP': None,
-                          'SENDER-RECEIVER-INTERFACE': None,
-                          'CALPRM-INTERFACE': None,
-                          'CLIENT-SERVER-INTERFACE': None,
+                          'SenderReceiverInterface': self.portInterfaceWriter.writeSenderReceiverInterfaceXML,
+                          'ParameterInterface': self.portInterfaceWriter.writeParameterInterfaceXML,
+                          'ClientServerInterface': self.portInterfaceWriter.writeClientServerInterfaceXML,
                           'Constant': self.constantWriter.writeConstantXML,
                           'COMPOSITION-TYPE': None,
                           'SYSTEM-SIGNAL': None,
@@ -50,9 +52,9 @@ class PackageWriter(WriterBase):
                           'UNIT': None,
                           'SW-ADDR-METHOD': None,
                           'MODE-DECLARATION-GROUP': None,
-                          'SENDER-RECEIVER-INTERFACE': None,
-                          'CALPRM-INTERFACE': None,
-                          'CLIENT-SERVER-INTERFACE': None,
+                          'SenderReceiverInterface': self.portInterfaceWriter.writeSenderReceiverInterfaceCode,
+                          'ParameterInterface': self.portInterfaceWriter.writeParameterInterfaceCode,
+                          'ClientServerInterface': self.portInterfaceWriter.writeClientServerInterfaceCode,
                           'Constant': None,
                           'COMPOSITION-TYPE': None,
                           'SYSTEM-SIGNAL': None,
@@ -68,7 +70,7 @@ class PackageWriter(WriterBase):
       for elem in package.elements:
          writerFunc = self.switcherXML.get(elem.__class__.__name__)
          if writerFunc is not None:            
-            lines.extend(self.indent(writerFunc(elem),2))
+            lines.extend(self.indent(writerFunc(elem,package),2))
          else:
             print("skipped: %s"%str(type(elem)))
       lines.append(self.indent("</ELEMENTS>",1))
@@ -82,7 +84,7 @@ class PackageWriter(WriterBase):
    
    def toCode(self,package):
       lines=[]
-      lines.append("ws.append(ar.Package('%s'))"%package.name)
+      lines.append('%s=ws.createPackage("%s")'%(package.name,package.name))
       for elem in package.elements:
          writerFunc = self.switcherCode.get(elem.__class__.__name__)
          if writerFunc is not None:

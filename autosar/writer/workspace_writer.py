@@ -21,16 +21,18 @@ class WorkspaceWriter(WriterBase):
    
    def toCode(self,ws,packages=None, head=None, tail=None):
       if head is None:
-         lines=['import autosar as ar','','ws=ar.workspace()']
-         result='\n'.join(lines)+'\n'
+         lines=['import autosar','','ws=autosar.workspace()']
+         result='\n'.join(lines)+'\n'         
       else:
          assert(isinstance(head,str))
-         result = head+'\n'
+         result = head+'\n'         
       for package in ws.packages:
          if (isinstance(packages,list) and package.name in packages) or (packages is None):
             lines=self.packageWriter.toCode(package)
             result+='\n'.join(lines)+'\n'
-      if tail is not None:
+      if tail is None:
+         result+='\n'+'print(ws.toXML())\n'
+      else:
          result+='\n'+tail
       return result
       

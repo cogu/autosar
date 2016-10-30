@@ -79,8 +79,8 @@ class DataType(Element):
 
 
 class IntegerDataType(DataType):
-   @property
-   def tag(self): return 'INTEGER-TYPE'
+   
+   def tag(self,version=None): return 'INTEGER-TYPE'
    def __init__(self,name,minval=0,maxval=0,compuMethodRef=None):
       super().__init__(name)
       self.minval = minval
@@ -106,8 +106,8 @@ class IntegerDataType(DataType):
       return obj
             
 class RecordDataType(DataType):
-   @property
-   def tag(self): return 'RECORD-TYPE'      
+   
+   def tag(self,version=None): return 'RECORD-TYPE'      
    def __init__(self,name,elements=None):
       super().__init__(name)
       self.elements = []
@@ -140,8 +140,8 @@ class RecordDataType(DataType):
    
 
 class ArrayDataType(DataType):
-   @property
-   def tag(self): return 'ARRAY-TYPE'
+   
+   def tag(self,version=None): return 'ARRAY-TYPE'
    
    def __init__(self,name,typeRef,length):
       super().__init__(name)
@@ -149,16 +149,15 @@ class ArrayDataType(DataType):
       self.length = length
 
 class BooleanDataType(DataType):
-   @property
-   def tag(self): return 'BOOLEAN-TYPE'
+   
+   def tag(self,version=None): return 'BOOLEAN-TYPE'
    
    def __init__(self,name):
       super().__init__(name)
 
 
 class StringDataType(DataType):
-   @property
-   def tag(self): return 'STRING-TYPE'
+   def tag(self,version=None): return 'STRING-TYPE'
    
    def __init__(self,name,length,encoding):
       super().__init__(name)
@@ -180,8 +179,7 @@ class StringDataType(DataType):
 
       
 class RealDataType(DataType):
-   @property
-   def tag(self): return 'REAL-TYPE'
+   def tag(self,version=None): return 'REAL-TYPE'
    
    def __init__(self,name,minval,maxval,minvalType='CLOSED',maxvalType='CLOSED',hasNaN=False,encoding='single'):
       super().__init__(name)
@@ -194,8 +192,7 @@ class RealDataType(DataType):
       
 
 class CompuMethodRational(Element):
-   @property
-   def tag(self): return 'COMPU-INTERNAL-TO-PHYS'
+   def tag(self,version=None): return 'COMPU-INTERNAL-TO-PHYS'
    def __init__(self,name,unitRef,elements):      
       super().__init__(name)
       self.unitRef = unitRef

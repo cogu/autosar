@@ -1,3 +1,4 @@
+import autosar.base
 class WriterBase():
    def __init__(self,version=3.0):
       self.version=version
@@ -39,3 +40,39 @@ class WriterBase():
       lines = []
       lines.append('</AR-PACKAGE>')
       return lines
+   
+   def toBoolean(self,value):
+      if value: return 'true'
+      return 'false'
+   
+   def writeAdminDataXML(self,elem):
+      assert(isinstance(elem,autosar.base.AdminData))
+      lines = []
+      lines.append('<ADMIN-DATA>')
+      if len(elem.specialDataGroups)>0:
+         lines.append(self.indent('<SDGS>',1))
+         for sdg in elem.specialDataGroups:
+            if sdg.GID is not None:
+               lines.append(self.indent('<SDG GID="%s">'%sdg.GID,2))
+            else:
+               lines.append(self.indent('<SDG>',2))
+            if (sdg.SD is not None) and (sdg.SD_GID is not None):
+               lines.append(self.indent('<SD GID="%s">%s</SD>'%(sdg.SD_GID,sdg.SD),3))
+            elif (sdg.SD is None) and (sdg.SD_GID is not None):
+               lines.append(self.indent('<SD GID="%s"></SD>'%(sdg.SD_GID),3))
+            elif (sdg.SD is not None) and (sdg.SD_GID is None):
+               lines.append(self.indent('<SD>%s</SD>'%(sdg.SD),3))
+            lines.append(self.indent('</SDG>',2))
+         lines.append(self.indent('</SDGS>',1))
+      else:
+         lines.append('<SDGS/>')
+      lines.append('</ADMIN-DATA>')
+      return lines
+      
+      # 							<ADMIN-DATA>
+# 								<SDGS>
+# 									<SDG GID="edve:InitValueRef">
+# 										<SD GID="edve:ValRef"></SD>
+# 									</SDG>
+# 								</SDGS>
+# 							</ADMIN-DATA>

@@ -23,6 +23,8 @@ class PortInterfacePackageParser(object):
          if name is not None:
             if self.version==3:
                portInterface = SenderReceiverInterface(name.text)
+               if hasAdminData(xmlRoot):
+                  portInterface.adminData=parseAdminDataNode(xmlRoot.find('ADMIN-DATA'))               
                if xmlRoot.find("./IS-SERVICE").text == 'true': portInterface.isService = True
                for xmlItem in xmlRoot.findall('./DATA-ELEMENTS/DATA-ELEMENT-PROTOTYPE'):
                   name = xmlItem.find("./SHORT-NAME")
@@ -34,7 +36,7 @@ class PortInterfacePackageParser(object):
                if xmlRoot.find('MODE-GROUPS') is not None:
                   portInterface.modeGroups=[]
                   for xmlItem in xmlRoot.findall('./MODE-GROUPS/MODE-DECLARATION-GROUP-PROTOTYPE'):
-                     modeGroup = ModeGroup(xmlItem.find("./SHORT-NAME").text)
+                     modeGroup = ModeGroup(xmlItem.find("./SHORT-NAME").text,portInterface)
                      modeGroup.typeRef = xmlItem.find("./TYPE-TREF").text
                      portInterface.modeGroups.append(modeGroup)
                return portInterface
@@ -54,8 +56,8 @@ class PortInterfacePackageParser(object):
                   if hasAdminData(xmlElem):
                      dataElem.adminData=parseAdminDataNode(xmlElem.find('ADMIN-DATA'))
                   if xmlElem.find('SW-DATA-DEF-PROPS'):
-                     for xmlItem in xmlElem.find('SW-DATA-DEF-PROPS/SW-ADDR-METHOD-REF'):
-                        dataElem.swAddrMethodRef.append(xmlItem.text)
+                     for xmlItem in xmlElem.findall('SW-DATA-DEF-PROPS/SW-ADDR-METHOD-REF'):
+                        dataElem.swAddrMethodRefList.append(xmlItem.text)
                   portInterface.dataElements.append(dataElem)
             return portInterface
          
@@ -65,11 +67,13 @@ class PortInterfacePackageParser(object):
       if xmlName is not None:
          if self.version==3:
             portInterface = ClientServerInterface(xmlName.text)
+            if hasAdminData(xmlRoot):
+                  portInterface.adminData=parseAdminDataNode(xmlRoot.find('ADMIN-DATA'))
             if xmlRoot.find("./IS-SERVICE").text == 'true': portInterface.isService = True
             for xmlOperation in xmlRoot.findall('./OPERATIONS/OPERATION-PROTOTYPE'):
                xmlOperationName = xmlOperation.find("./SHORT-NAME")
                if xmlOperationName is not None:
-                  operation = Operation(xmlOperationName.text)
+                  operation = Operation(xmlOperationName.text,portInterface)
                   if xmlOperation.find('./ARGUMENTS') is not None:
                      for xmlArgument in xmlOperation.findall('./ARGUMENTS/ARGUMENT-PROTOTYPE'):
                         name=xmlArgument.find("./SHORT-NAME").text
@@ -84,7 +88,7 @@ class PortInterfacePackageParser(object):
                for xmlError in xmlRoot.findall('./POSSIBLE-ERRORS/APPLICATION-ERROR'):
                   name=xmlError.find("./SHORT-NAME").text
                   errorCode=xmlError.find("./ERROR-CODE").text
-                  portInterface.applicationErrors.append(ApplicationError(name,errorCode))
+                  portInterface.applicationErrors.append(ApplicationError(name,errorCode,portInterface))
             return portInterface
 
 class CEPParameterGroupPackageParser(object):

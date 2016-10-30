@@ -184,7 +184,10 @@ class Workspace(object):
       writer=autosar.writer.WorkspaceWriter()
       if isinstance(packages,str): packages=[packages]
       with open(filename,'w') as fp:
-         writer.saveCode(self,fp,list(packages),head,tail)
+         if packages is not None:
+            writer.saveCode(self,fp,list(packages),head,tail)
+         else:
+            writer.saveCode(self,fp,None,head,tail)
 
    @property
    def ref(self):
