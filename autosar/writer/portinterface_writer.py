@@ -164,6 +164,54 @@ class PortInterfaceWriter(WriterBase):
          lines.append(self.indent('<TYPE-TREF DEST="%s">%s</TYPE-TREF>'%(typeElem.tag(self.version),typeElem.ref),1))      
       lines.append('</%s>'%modeGroup.tag(self.version))
       return lines
+   
+   def writeSoftwareAddressMethodXML(self, addressMethod,package):
+      assert(isinstance(addressMethod,autosar.portinterface.SoftwareAddressMethod))
+      lines=[]
+      lines.append('<%s>'%addressMethod.tag(self.version))
+      lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%addressMethod.name,1))      
+      lines.append('</%s>'%addressMethod.tag(self.version))
+      return lines
+   
+   def writeModeDeclarationGroupXML(self, modeDeclGroup,package):
+      assert(isinstance(modeDeclGroup,autosar.portinterface.ModeDeclarationGroup))
+      lines=[]
+      ws = modeDeclGroup.rootWS()
+      assert(ws is not None)
+
+      lines.append('<%s>'%modeDeclGroup.tag(self.version))
+      lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%modeDeclGroup.name,1))
+      if modeDeclGroup.adminData is not None:
+         lines.extend(self.indent(self.writeAdminDataXML(modeDeclGroup.adminData),1))
+      if modeDeclGroup.initialModeRef is not None:
+         modeElem = ws.find(modeDeclGroup.initialModeRef)					
+         if (modeElem is None):
+            raise ValueError("invalid mode reference: '%s'"%modeDeclGroup.typeRef)
+         else:
+            lines.append(self.indent('<INITIAL-MODE-REF DEST="%s">%s</INITIAL-MODE-REF>'%(modeElem.tag(self.version),modeElem.ref),1))
+      if len(modeDeclGroup.modeDeclarations)>0:
+         lines.append(self.indent('<MODE-DECLARATIONS>',1))
+         for elem in modeDeclGroup.modeDeclarations:         
+            lines.append(self.indent('<%s>'%elem.tag(self.version),2))
+            lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,3))
+            lines.append(self.indent('</%s>'%elem.tag(self.version),2))
+         lines.append(self.indent('</MODE-DECLARATIONS>',1))
+      lines.append('</%s>'%modeDeclGroup.tag(self.version))
+      return lines
+
+
+					# 
+					# <MODE-DECLARATIONS>
+					# 	<MODE-DECLARATION>
+					# 		<SHORT-NAME>FULL_COMMUNICATION</SHORT-NAME>
+					# 	</MODE-DECLARATION>
+					# 	<MODE-DECLARATION>
+					# 		<SHORT-NAME>NO_COMMUNICATION</SHORT-NAME>
+					# 	</MODE-DECLARATION>
+					# 	<MODE-DECLARATION>
+					# 		<SHORT-NAME>SILENT_COMMUNICATION</SHORT-NAME>
+					# 	</MODE-DECLARATION>
+					# </MODE-DECLARATIONS>
 
 #### CODE GENERATOTS ####
 

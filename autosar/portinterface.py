@@ -207,13 +207,25 @@ class SoftwareAddressMethod(Element):
       return 'SW-ADDR-METHOD'
 
 class ModeDeclarationGroup(Element):
-   def __init__(self,name,initialModeRef=None,modeDeclarations=None):
-      super().__init__(name)
+   def __init__(self,name,initialModeRef=None,modeDeclarations=None,parent=None):
+      super().__init__(name,parent)
       self.initialModeRef = initialModeRef
-      self.modeDeclarations = modeDeclarations
-   
+      if modeDeclarations is None:
+         self.modeDeclarations = []
+      else:
+         self.modeDeclarations = list(modeDeclarations)   
    def tag(self,version=None): return "MODE-DECLARATION-GROUP"
 
+   def find(self,ref):
+      ref = ref.partition('/')
+      name = ref[0]
+      for elem in self.modeDeclarations:
+         if elem.name==name:
+            return elem      
+      return None
 
-
-
+class ModeDeclaration(Element):
+   def __init__(self,name,parent=None):
+      super().__init__(name,parent)
+   
+   def tag(self,version=None): return "MODE-DECLARATION"
