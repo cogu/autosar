@@ -7,7 +7,7 @@ class ComponentTypeWriter(WriterBase):
    def __init__(self,version):
       super().__init__(version)
    
-   def writeApplicationSoftwareComponentXML(self,swc):
+   def writeApplicationSoftwareComponentXML(self,swc,package):
       lines=[]
       assert(isinstance(swc,autosar.component.ApplicationSoftwareComponent))
       lines.append('<APPLICATION-SOFTWARE-COMPONENT-TYPE>')

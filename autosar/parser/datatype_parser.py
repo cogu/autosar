@@ -1,21 +1,22 @@
 from autosar.base import parseXMLFile,splitRef,parseTextNode
 from autosar.datatype import *
+from autosar.parser.parser_base import ElementParser
 
-class DataTypeParser(object):
+class DataTypeParser(ElementParser):
    def __init__(self,handler,version=3.0):
-      if version==3.0:
-         self.version=version
-      else:
+      super().__init__(version)
+      if version!=3.0:
          raise NotImplementedError('Version of ARXML not supported')
       self.handler=handler
          
-   def parseIntegerType(self,root,rootProject=None,parent=None):      
-      if self.version==3:
+   def parseIntegerType(self,root,rootProject=None,parent=None):    
+      if self.version==3:         
          name=root.find("./SHORT-NAME").text
          minval = int(root.find("./LOWER-LIMIT").text)
          maxval = int(root.find("./UPPER-LIMIT").text)
          dataDefXML = root.find('./SW-DATA-DEF-PROPS')
          dataType = IntegerDataType(name,minval,maxval)
+         self.parseDesc(root,dataType)
          if dataDefXML is not None:
             for elem in dataDefXML.findall('./*'):
                if elem.tag=='COMPU-METHOD-REF':
@@ -27,33 +28,43 @@ class DataTypeParser(object):
    def parseRecordType(self,root,rootProject=None,parent=None):
       if self.version==3.0:
          elements = []
-         name=root.find("./SHORT-NAME").text
+         name=root.find("./SHORT-NAME").text         
          for elem in root.findall('./ELEMENTS/RECORD-ELEMENT'):
             elements.append({"name":elem.find("./SHORT-NAME").text,"typeRef":elem.find("./TYPE-TREF").text})
-         return RecordDataType(name,elements);
+         dataType=RecordDataType(name,elements);
+         self.parseDesc(root,dataType)   
+         return dataType
       
    def parseArrayType(self,root,rootProject=None,parent=None):
       if self.version==3.0:
-         name=root.find("./SHORT-NAME").text
+         name=root.find("./SHORT-NAME").text         
          length=int(root.find('ELEMENT/MAX-NUMBER-OF-ELEMENTS').text)
          typeRef=root.find('ELEMENT/TYPE-TREF').text
-         return ArrayDataType(name,typeRef,length);
+         dataType=ArrayDataType(name,typeRef,length)
+         self.parseDesc(root,dataType)
+         return dataType;
 
    def parseBooleanType(self,root,rootProject=None,parent=None):
       if self.version==3:
-         name=root.find("./SHORT-NAME").text
-         return BooleanDataType(name)
+         name=root.find("./SHORT-NAME").text         
+         dataType=BooleanDataType(name)
+         self.parseDesc(root,dataType)
+         return dataType
 
    def parseStringType(self,root,rootProject=None,parent=None):
       if self.version==3.0:
          name=root.find("./SHORT-NAME").text
+         
          length=int(root.find('MAX-NUMBER-OF-CHARS').text)
          encoding=root.find('ENCODING').text
-         return StringDataType(name,length,encoding)
+         dataType=StringDataType(name,length,encoding)
+         self.parseDesc(root,dataType)
+         return dataType
 
    def parseRealType(self,root,rootProject=None,parent=None):
       if self.version==3.0:
          name=root.find("./SHORT-NAME").text
+         
          elem = root.find("./LOWER-LIMIT")
          if elem is not None:
             minval = elem.text
@@ -63,8 +74,10 @@ class DataTypeParser(object):
             maxval = elem.text
             maxvalType = elem.attrib['INTERVAL-TYPE']
          hasNaN = True if root.find("./ALLOW-NAN").text == 'true' else False
-         encoding = root.find("./ENCODING").text         
-         return RealDataType(name,minval,maxval,minvalType,maxvalType,hasNaN,encoding)
+         encoding = root.find("./ENCODING").text
+         dataType=RealDataType(name,minval,maxval,minvalType,maxvalType,hasNaN,encoding)
+         self.parseDesc(root,dataType)
+         return dataType
 
 
 class DataTypeSemanticsParser(object):

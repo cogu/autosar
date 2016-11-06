@@ -1,5 +1,6 @@
 from autosar.element import Element
 from autosar.constant import *
+from autosar.base import hasAdminData,parseAdminDataNode
 
 class ConstantPackageParser(object):
    """
@@ -12,6 +13,7 @@ class ConstantPackageParser(object):
          raise NotImplementedError('Version %d of ARXML not supported'%version)      
                   
    def parseConstantSpecification(self,xmlRoot,rootProject=None,parent=None):
+      assert(xmlRoot.tag == 'CONSTANT-SPECIFICATION')
       xmlName = xmlRoot.find('SHORT-NAME')
       if xmlName is not None:
          name = xmlName.text         
@@ -20,7 +22,10 @@ class ConstantPackageParser(object):
             constantValue = self.parseConstantValue(xmlValue)
          else:
             constantValue = None
-         return Constant(name,constantValue)
+         constant = Constant(name,constantValue)
+         if hasAdminData(xmlRoot):
+            constant.adminData=parseAdminDataNode(xmlRoot.find('ADMIN-DATA'))
+         return constant
       return None
                
    def parseConstantValue(self,xmlValue):
@@ -50,4 +55,5 @@ class ConstantPackageParser(object):
                innerConstant = self.parseConstantValue(innerElem)
                if innerConstant is not None:
                   constantValue.elements.append(innerConstant)
+                  innerConstant.parent=constantValue
       return constantValue

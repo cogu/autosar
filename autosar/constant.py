@@ -15,11 +15,11 @@ class Value(object):
       else:
          return '/%s'%self.name
    
-   def findWS(self):
+   def rootWS(self):
       if self.parent is None:
          return None
       else:
-         return self.parent.findWS()
+         return self.parent.rootWS()
 
 class IntegerValue(Value):
    @property
@@ -80,9 +80,12 @@ class BooleanValue(Value):
       return self._value
    
    @value.setter
-   def value(self,val):      
+   def value(self,val):               
       if val is not None:
-         self._value=bool(val)
+         if isinstance(val,str):            
+            self._value = True if val=='true' else 'false'
+         else:
+            self._value=bool(val)
       else:
          self._value=None
 

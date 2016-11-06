@@ -15,12 +15,12 @@ class PackageWriter(WriterBase):
       self.behaviorWriter = BehaviorWriter(version)
       self.portInterfaceWriter = PortInterfaceWriter(version)
       if self.version >= 3.0:
-         self.switcherXML = {'ARRAY-TYPE': None,
-                          'BOOLEAN-TYPE': None,
+         self.switcherXML = {'ArrayDataType': self.dataTypeWriter.writeArrayDataTypeXml,
+                          'BooleanDataType': self.dataTypeWriter.writeBooleanDataTypeXml,
                           'IntegerDataType': self.dataTypeWriter.writeIntegerTypeXML,
-                          'REAL-TYPE': None,
+                          'RealDataType': self.dataTypeWriter.writeRealDataTypeXML,
                           'RecordDataType': self.dataTypeWriter.writeRecordDataTypeXML,
-                          'STRING-TYPE': None,
+                          'StringDataType': self.dataTypeWriter.writeStringTypeXml,
                           'ApplicationSoftwareComponent': self.componentTypeWriter.writeApplicationSoftwareComponentXML,
                           'COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE': None,
                           'InternalBehavior': self.behaviorWriter.writeInternalBehaviorXML,
@@ -66,14 +66,17 @@ class PackageWriter(WriterBase):
    def toXML(self,package):      
       lines=[]
       lines.extend(self.beginPackage(package.name))
-      lines.append(self.indent("<ELEMENTS>",1))
-      for elem in package.elements:
-         writerFunc = self.switcherXML.get(elem.__class__.__name__)
-         if writerFunc is not None:            
-            lines.extend(self.indent(writerFunc(elem,package),2))
-         else:
-            print("skipped: %s"%str(type(elem)))
-      lines.append(self.indent("</ELEMENTS>",1))
+      if len(package.elements)>0:
+         lines.append(self.indent("<ELEMENTS>",1))
+         for elem in package.elements:
+            writerFunc = self.switcherXML.get(elem.__class__.__name__)
+            if writerFunc is not None:            
+               lines.extend(self.indent(writerFunc(elem,package),2))
+            else:
+               print("skipped: %s"%str(type(elem)))
+         lines.append(self.indent("</ELEMENTS>",1))
+      else:
+         lines.append(self.indent("<ELEMENTS/>",1))
       if len(package.subPackages)>0:
          lines.append(self.indent("<SUB-PACKAGES>",1))
          for subPackage in package.subPackages:

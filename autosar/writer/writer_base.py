@@ -1,4 +1,5 @@
 import autosar.base
+import xml.sax.saxutils
 class WriterBase():
    def __init__(self,version=3.0):
       self.version=version
@@ -69,10 +70,15 @@ class WriterBase():
       lines.append('</ADMIN-DATA>')
       return lines
       
-      # 							<ADMIN-DATA>
-# 								<SDGS>
-# 									<SDG GID="edve:InitValueRef">
-# 										<SD GID="edve:ValRef"></SD>
-# 									</SDG>
-# 								</SDGS>
-# 							</ADMIN-DATA>
+   def writeDescXML(self,elem):
+      if hasattr(elem,'desc'):
+         if hasattr(elem,'descType'):
+            descType=elem.descType
+         else:
+            descType='FOR-ALL'
+         lines = []
+         lines.append('<DESC>')
+         lines.append(self.indent('<L-2 L="%s">%s</L-2>'%(descType,xml.sax.saxutils.escape(elem.desc)),1))
+         lines.append('</DESC>')
+         return lines
+      return None
