@@ -80,7 +80,7 @@ class BehaviorParser(object):
                         if dataElementInstanceRef is not None: runnableEntity.dataSendPoints.append(dataElementInstanceRef)
                   if xmlServerCallPoints is not None:
                      for xmlServerCallPoint in xmlServerCallPoints.findall('./SYNCHRONOUS-SERVER-CALL-POINT'):
-                        syncServerCallPoint = self.parseSyncServerCallPoint(xmlServerCallPoint,rootProject)
+                        syncServerCallPoint = self.parseSyncServerCallPoint(xmlServerCallPoint)
                         if syncServerCallPoint is not None: runnableEntity.syncServerCallPoints.append(syncServerCallPoint)
                   if xmlCanEnterExclusiveAreas is not None:
                      for xmlCanEnterExclusiveAreaRef in xmlCanEnterExclusiveAreas.findall('./CAN-ENTER-EXCLUSIVE-AREA-REF'):
@@ -93,14 +93,14 @@ class BehaviorParser(object):
             elif xmlNode.tag == 'SERVICE-NEEDSS':
                for xmlElem in xmlNode.findall('./*'):
                   if xmlElem.tag=='SWC-NV-BLOCK-NEEDS':
-                     swcNvBlockNeeds=self.parseSwcNvBlockNeeds(xmlElem,rootProject)
+                     swcNvBlockNeeds=self.parseSwcNvBlockNeeds(xmlElem)
                      if swcNvBlockNeeds is not None: internalBehavior.swcNvBlockNeeds.append(swcNvBlockNeeds)
                   else:
                      raise NotImplementedError(xmlElem.tag)
             elif xmlNode.tag == 'SHARED-CALPRMS':
                for xmlElem in xmlNode.findall('./*'):
                   if xmlElem.tag=='CALPRM-ELEMENT-PROTOTYPE':
-                     calPrmElemPrototype=self.parseCalPrmElemPrototype(xmlElem,rootProject)
+                     calPrmElemPrototype=self.parseCalPrmElemPrototype(xmlElem)
                      assert(calPrmElemPrototype is not None)
                      internalBehavior.sharedCalPrms.append(calPrmElemPrototype)
                   else:
@@ -169,48 +169,48 @@ class BehaviorParser(object):
       return timingEvent
 
    
-   def parseDataReceivedEvent(self,xmlRoot,rootProject=None):
+   def parseDataReceivedEvent(self,xmlRoot,parent=None):
       name = parseTextNode(xmlRoot.find('SHORT-NAME'))      
       startOnEventRef = parseTextNode(xmlRoot.find('START-ON-EVENT-REF'))
       dataInstanceRef=self.parseDataInstanceRef(xmlRoot.find('DATA-IREF'),'R-PORT-PROTOTYPE-REF')
       dataReceivedEvent=DataReceivedEvent(name,startOnEventRef)
       xmlModeDependency = xmlRoot.find('MODE-DEPENDENCY')
       if xmlModeDependency is not None:
-         dataReceivedEvent.modeDependency = self.parseModeDependency(xmlModeDependency,rootProject)
+         dataReceivedEvent.modeDependency = self.parseModeDependency(xmlModeDependency)
       dataReceivedEvent.dataInstanceRef=dataInstanceRef
       return dataReceivedEvent
 
-   def parseOperationInvokedEvent(self,xmlRoot,rootProject=None):
+   def parseOperationInvokedEvent(self,xmlRoot,parent=None):
       name = parseTextNode(xmlRoot.find('SHORT-NAME'))      
       startOnEventRef = parseTextNode(xmlRoot.find('START-ON-EVENT-REF'))
       operationInstanceRef=self.parseOperationInstanceRef(xmlRoot.find('OPERATION-IREF'),'P-PORT-PROTOTYPE-REF')
       operationInvokedEvent=OperationInvokedEvent(name,startOnEventRef)
       xmlModeDependency = xmlRoot.find('MODE-DEPENDENCY')
       if xmlModeDependency is not None:
-         operationInvokedEvent.modeDependency = self.parseModeDependency(xmlModeDependency,rootProject)
+         operationInvokedEvent.modeDependency = self.parseModeDependency(xmlModeDependency)
       operationInvokedEvent.operationInstanceRef=operationInstanceRef
       return operationInvokedEvent
 
    
-   def parseDataInstanceRef(self,xmlRoot,portTag,rootProject=None):
+   def parseDataInstanceRef(self,xmlRoot,portTag):
       """parses <DATA-IREF>"""
       assert(xmlRoot.tag=='DATA-IREF')
       assert(xmlRoot.find(portTag) is not None)      
       return DataInstanceRef(parseTextNode(xmlRoot.find(portTag)),parseTextNode(xmlRoot.find('DATA-ELEMENT-PROTOTYPE-REF')))
 
-   def parseOperationInstanceRef(self,xmlRoot,portTag,rootProject=None):
+   def parseOperationInstanceRef(self,xmlRoot,portTag):
       """parses <OPERATION-IREF>"""
       assert(xmlRoot.tag=='OPERATION-IREF')
       assert(xmlRoot.find(portTag) is not None)      
       return OperationInstanceRef(parseTextNode(xmlRoot.find(portTag)),parseTextNode(xmlRoot.find('OPERATION-PROTOTYPE-REF')))
 
-   def parseDataElementInstanceRef(self,xmlRoot,portTag,rootProject=None):
+   def parseDataElementInstanceRef(self,xmlRoot,portTag):
       """parses <DATA-ELEMENT-IREF>"""
       assert(xmlRoot.tag=='DATA-ELEMENT-IREF')
       assert(xmlRoot.find(portTag) is not None)      
       return DataElementInstanceRef(parseTextNode(xmlRoot.find(portTag)),parseTextNode(xmlRoot.find('DATA-ELEMENT-PROTOTYPE-REF')))
 
-   def parseSwcNvBlockNeeds(self,xmlRoot,rootProject=None):
+   def parseSwcNvBlockNeeds(self,xmlRoot):
       name=parseTextNode(xmlRoot.find('SHORT-NAME'))
       numberOfDataSets=parseIntNode(xmlRoot.find('N-DATA-SETS'))
       readonly=parseBooleanNode(xmlRoot.find('READONLY'))
@@ -221,14 +221,14 @@ class BehaviorParser(object):
       writingFrequency=parseIntNode(xmlRoot.find('WRITING-FREQUENCY'))
       defaultBlockRef=parseTextNode(xmlRoot.find('DEFAULT-BLOCK-REF'))
       mirrorBlockref=parseTextNode(xmlRoot.find('MIRROR-BLOCK-REF'))      
-      serviceCallPorts=self.parseServiceCallPorts(xmlRoot.find('SERVICE-CALL-PORTS'),rootProject)
+      serviceCallPorts=self.parseServiceCallPorts(xmlRoot.find('SERVICE-CALL-PORTS'))
       assert(len(serviceCallPorts)>0)
       swcNvBlockNeeds=SwcNvBlockNeeds(name,numberOfDataSets,readonly,reliability,resistantToChangedSW,restoreAtStart,
                                       writeOnlyOnce,writingFrequency,defaultBlockRef,mirrorBlockref)
       swcNvBlockNeeds.serviceCallPorts=serviceCallPorts
       return swcNvBlockNeeds
 
-   def parseServiceCallPorts(self,xmlRoot,rootProjet=None):
+   def parseServiceCallPorts(self,xmlRoot):
       """parses <SERVICE-CALL-PORTS>"""
       assert(xmlRoot.tag=='SERVICE-CALL-PORTS')
       serviceCallPorts=[]
@@ -237,7 +237,7 @@ class BehaviorParser(object):
          serviceCallPorts.append(roleBasedRPortAssignment)
       return serviceCallPorts
    
-   def parseCalPrmElemPrototype(self, xmlRoot,rootProjet=None):
+   def parseCalPrmElemPrototype(self, xmlRoot):
       """
       parses <CALPRM-ELEMENT-PROTOTYPE>
       """
@@ -252,7 +252,7 @@ class BehaviorParser(object):
             raise NotImplementedError(xmlElem.tag)
       return calPrmElemPrototype
    
-   def parseSyncServerCallPoint(self, xmlRoot,rootProjet=None):
+   def parseSyncServerCallPoint(self, xmlRoot):
       """
       parses <SYNCHRONOUS-SERVER-CALL-POINT>
       """
@@ -264,7 +264,7 @@ class BehaviorParser(object):
             operationInstanceRefs=[]
             for xmlOperation in xmlElem.findall('*'):
                if xmlOperation.tag=='OPERATION-IREF':
-                  operationInstanceRefs.append(self.parseOperationInstanceRef(xmlOperation,'R-PORT-PROTOTYPE-REF',rootProjet))
+                  operationInstanceRefs.append(self.parseOperationInstanceRef(xmlOperation,'R-PORT-PROTOTYPE-REF'))
                else:
                   raise NotImplementedError(xmlElem.tag)
          elif xmlElem.tag=='TIMEOUT':

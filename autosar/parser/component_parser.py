@@ -69,7 +69,7 @@ class ComponentTypeParser(object):
                   if xmlItem.tag == 'CLIENT-COM-SPEC':
                      operationName=_getOperationNameFromComSpec(xmlItem,portInterfaceRef)
                      comspec=OperationComSpec(operationName)
-                     port.attributes.append(comspec)
+                     port.comspec.append(comspec)
                   elif xmlItem.tag == 'UNQUEUED-RECEIVER-COM-SPEC':
                      dataElemName = _getDataElemNameFromComSpec(xmlItem,portInterfaceRef)
                      comspec = DataElementComSpec(dataElemName)
@@ -97,7 +97,7 @@ class ComponentTypeParser(object):
                      operationName=_getOperationNameFromComSpec(xmlItem,portInterfaceRef)
                      comspec=OperationComSpec(operationName)
                      comspec.queueLength=parseIntNode(xmlItem.find('QUEUE-LENGTH'))
-                     port.attributes.append(comspec)
+                     port.comspec.append(comspec)
                   elif xmlItem.tag == 'UNQUEUED-SENDER-COM-SPEC':
                      dataElemName = _getDataElemNameFromComSpec(xmlItem,portInterfaceRef)
                      comspec = DataElementComSpec(dataElemName)
