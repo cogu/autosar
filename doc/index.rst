@@ -12,8 +12,12 @@ The `AUTOSAR <https://www.autosar.org/>`_ Python Package
       
    start
    tutorial/index
+   workspace
+   datatype/index
+   portinterface/index
    constant/index
    component/index
+   
    
 
 What is it?

@@ -7,15 +7,16 @@ class SenderReceiverInterface
 
 .. code-block:: python
    
-   import autosar as ar
+   import autosar
    
-   ws = ar.workspace()
-   ws.append(ar.Package('PortInterface'))
+   ws = autosar.workspace()
    ws.loadXML('DataTypes.arxml') #reads an existing DataType package
-
-   portInterface = ar.SenderReceiverInterface('WheelBasedVehicleSpeed_I')
-   element=ar.DataElement('WheelBasedVehicleSpeed','/DataType/Speed16bit_T')
-   portInterface.append(element) #adds the new data element to the port interface
-   ws['/PortInterface'].append(portInterface) #adds the new port interface the the PortInterface package
-
-   print(ws.toXML(packages=['PortInterface']))
+   portInterfacePackage = ws.createPackage('PortInterface')
+   
+   portInterface = autosar.SenderReceiverInterface('LaneKeepSystemActive_I') #creates a new port interface
+   element=autosar.DataElement('LaneKeepSystemActive','/DataType/InactiveActiveSpare_T')
+   portInterface.append(element) #adds the new data element to our new port interface
+   portInterfacePackage.append(portInterface) #adds the new port interface to the PortInterface package
+   
+   ws.saveXML('PortInterfaces.arxml',packages=['PortInterface'])
+   

@@ -1,9 +1,8 @@
-Constants
------------------------
-.. toctree::
-   :hidden:
+Constant
+=========
+
+.. toctree::   
    
    Constant
-   
    
 
