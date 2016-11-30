@@ -5,23 +5,23 @@ class BehaviorWriter(WriterBase):
    def __init__(self,version):
       super().__init__(version)
    
-   def writeInternalBehaviorXML(self,elem):
+   def writeInternalBehaviorXML(self,elem,package):
       assert(isinstance(elem,autosar.behavior.InternalBehavior))
       lines=[]
-      ws = elem.findWS()
+      ws = elem.rootWS()
       assert(ws is not None)
-      lines.append('<%s>'%elem.tag)
+      lines.append('<%s>'%elem.tag(self.version))
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
       componentType=ws.find(elem.componentRef)
       assert(componentType is not None)
-      lines.append(self.indent('<COMPONENT-REF DEST="%s">%s</COMPONENT-REF>'%(componentType.tag,componentType.ref),1))      
+      lines.append(self.indent('<COMPONENT-REF DEST="%s">%s</COMPONENT-REF>'%(componentType.tag(self.version),componentType.ref),1))      
       if len(elem.runnables)>0:
          lines.append(self.indent('<RUNNABLES>',1))
          for runnable in elem.runnables:
             lines.extend(self.indent(self.writeRunnableXML(runnable),2))
          lines.append(self.indent('</RUNNABLES>',1))
       lines.append(self.indent('<SUPPORTS-MULTIPLE-INSTANTIATION>%s</SUPPORTS-MULTIPLE-INSTANTIATION>'%('true' if elem.multipleInstance else 'false'),1))
-      lines.append('</%s>'%elem.tag)
+      lines.append('</%s>'%elem.tag(self.version))
       return lines
    
    def writeRunnableXML(self,runnable):

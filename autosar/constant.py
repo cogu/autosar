@@ -22,8 +22,8 @@ class Value(object):
          return self.parent.rootWS()
 
 class IntegerValue(Value):
-   @property
-   def tag(self): return "INTEGER-LITERAL"   
+   
+   def tag(self,version=None): return "INTEGER-LITERAL"   
 
    def __init__(self,name,typeRef=None,value=None):
       super().__init__(name)
@@ -43,8 +43,8 @@ class IntegerValue(Value):
          self._value=None
 
 class StringValue(Value):
-   @property
-   def tag(self): return "STRING-LITERAL"
+   
+   def tag(self,version=None): return "STRING-LITERAL"
 
 
    def __init__(self,name,typeRef=None,value=None):
@@ -67,8 +67,8 @@ class StringValue(Value):
          self._value=None
 
 class BooleanValue(Value):
-   @property
-   def tag(self): return "BOOLEAN-LITERAL"
+   
+   def tag(self,version=None): return "BOOLEAN-LITERAL"
 
    def __init__(self,name,typeRef=None,value=None):
       super().__init__(name)
@@ -90,8 +90,8 @@ class BooleanValue(Value):
          self._value=None
 
 class RecordValue(Value):
-   @property
-   def tag(self): return "RECORD-SPECIFICATION"
+   
+   def tag(self,version=None): return "RECORD-SPECIFICATION"
    
    def __init__(self,name,typeRef=None):
       super().__init__(name)
@@ -105,8 +105,8 @@ class RecordValue(Value):
       
    
 class ArrayValue(Value):
-   @property
-   def tag(self): return "ARRAY-SPECIFICATION"
+   
+   def tag(self,version=None): return "ARRAY-SPECIFICATION"
 
    def __init__(self,name,typeRef=None):
       super().__init__(name)

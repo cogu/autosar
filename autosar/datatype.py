@@ -1,4 +1,3 @@
-from autosar.package import Package
 from autosar.element import Element
 import math
 import json

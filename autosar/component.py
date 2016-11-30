@@ -66,15 +66,15 @@ class ComponentType(Element):
 
 
 class ApplicationSoftwareComponent(ComponentType):
-   @property
-   def tag(self): return "APPLICATION-SOFTWARE-COMPONENT-TYPE"
+   
+   def tag(self,version=None): return "APPLICATION-SOFTWARE-COMPONENT-TYPE"
    
    def __init__(self,name,parent=None):
       super().__init__(name,parent)
 
 class ComplexDeviceDriverSoftwareComponent(ComponentType):
-   @property
-   def tag(self): return "COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE"
+   
+   def tag(self,version=None): return "COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE"
    
    def __init__(self,name,parent=None):
       super().__init__(name,parent)
@@ -148,8 +148,8 @@ class Port(object):
             
       
 class RequirePort(Port):
-   @property
-   def tag(self): return "R-PORT-PROTOTYPE"
+   
+   def tag(self,version=None): return "R-PORT-PROTOTYPE"
    def __init__(self,name,portInterfaceRef=None,comspec=None,parent=None):      
       if isinstance(name,str):
          #normal constructor
@@ -170,8 +170,8 @@ class RequirePort(Port):
          raise NotImplementedError(type(name))
 
 class ProvidePort(Port):
-   @property
-   def tag(self): return "P-PORT-PROTOTYPE"
+   
+   def tag(self,version=None): return "P-PORT-PROTOTYPE"
    
    def __init__(self,name,portInterfaceRef=None,comspec=None,parent=None):
       if isinstance(name,str):
@@ -241,8 +241,8 @@ class SwcImplementation(Element):
       self.behaviorRef=behaviorRef
 
 class Composition(Element):
-   @property
-   def tag(self): return "COMPOSITION-TYPE"
+   
+   def tag(self,version=None): return "COMPOSITION-TYPE"
    
    def __init__(self,name,parent=None):
       super().__init__(name,parent) 

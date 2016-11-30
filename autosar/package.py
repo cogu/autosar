@@ -1,8 +1,11 @@
 import autosar.component
 import autosar.behavior
 import autosar.element
+import autosar.portinterface
+import autosar.datatype
 import copy
 import autosar.base
+import re
 from fractions import Fraction
 
 class Package(object):
@@ -50,12 +53,21 @@ class Package(object):
          result.extend(self.subPackages)
       else:
          result=[]
-         for item in (self.packages+self.subPackages):
+         for item in (self.elements+self.subPackages):
             if item.name == ref[0] or ref[0]=='*':
                if len(ref[2])>0:
                   result.extend(item.findall(ref[2]))
                else:
                   result.append(item)
+         if (len(result)==0) and ('*' in ref[0]):
+            p = re.compile(ref[0].replace('*','.*'))
+            for item in (self.elements+self.subPackages):
+               m = p.match(item.name)
+               if m is not None:
+                  if len(ref[2])>0:
+                     result.extend(item.findall(ref[2]))
+                  else:
+                     result.append(item)
       return result      
    
    def dir(self,ref=None,_prefix=''):
@@ -225,7 +237,26 @@ class Package(object):
       return autosar.base.indexByName(lst,name)
 
 
-
+   def createApplicationSoftwareComponent(self,swcName,behaviorName=None,multipleInstance=False):
+      """
+      creates an instante of autosar.component.ApplicationSoftwareComponent and adds it to the package.
+      It also creates a behavior object of type autosar.behavior.InternalBehavior.
+      If behaviorName is None (default) the name of the InteralBehavior object is {swcName}_InternalBehavior
+      
+      Returns the tuple (swc: object,behavior: object).
+      
+      Usage:
+      (swc,behavior) = Package.createApplicationSoftwareComponent(swcName)
+      """
+      
+      if behaviorName is None:
+         behaviorName = str(swcName)+'_InternalBehavior'
+      swc = autosar.component.ApplicationSoftwareComponent(swcName,self)      
+      behavior = autosar.behavior.InternalBehavior(behaviorName,swc.ref,multipleInstance,self)
+      self.append(swc)
+      self.append(behavior)
+      return (swc,behavior)
+      
 
 
 

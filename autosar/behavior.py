@@ -71,8 +71,8 @@ class DataReceivePoint(object):
       self.portRef=portRef
       self.dataElemRef=dataElemRef
       self.name=name
-   @property
-   def tag(self): return "DATA-RECEIVE-POINT"
+   
+   def tag(self,version=None): return "DATA-RECEIVE-POINT"
       
 class RunnableEntity(object):
    def __init__(self,name,invokeConcurrently=False,symbol=None,parent=None):
@@ -328,8 +328,8 @@ class InternalBehavior(Element):
       if len(data['exclusiveAreas'])==0: del data['exclusiveAreas']
       return data
    
-   @property
-   def tag(self): return "INTERNAL-BEHAVIOR"
+   
+   def tag(self,version=None): return "INTERNAL-BEHAVIOR"
 
    def append(self,elem):
       if isinstance(elem,RunnableEntity):

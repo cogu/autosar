@@ -47,16 +47,16 @@ class ComponentTypeWriter(WriterBase):
                else:
                   if self.version<4.0:
                      lines.append(self.indent('<UNQUEUED-RECEIVER-COM-SPEC>',2))
-                     lines.append(self.indent('<DATA-ELEMENT-REF DEST="%s">%s</DATA-ELEMENT-REF>'%(elem.tag,elem.ref),3))
+                     lines.append(self.indent('<DATA-ELEMENT-REF DEST="%s">%s</DATA-ELEMENT-REF>'%(elem.tag(self.version),elem.ref),3))
                      lines.append(self.indent('<ALIVE-TIMEOUT>%d</ALIVE-TIMEOUT>'%(comspec.aliveTimeout),3))
                      if comspec.initValueRef is not None:
-                        tag = ws.find(comspec.initValueRef).tag
+                        tag = ws.find(comspec.initValueRef).tag(self.version)
                         lines.append(self.indent('<INIT-VALUE-REF DEST="%s">%s</INIT-VALUE-REF>'%(tag,comspec.initValueRef),3))
                      lines.append(self.indent('</UNQUEUED-RECEIVER-COM-SPEC>',2))
             else:
                raise NotImplementedError(str(type(elem)))
          lines.append(self.indent('</REQUIRED-COM-SPECS>',1))
-      lines.append(self.indent('<REQUIRED-INTERFACE-TREF DEST="%s">%s</REQUIRED-INTERFACE-TREF>'%(portInterface.tag,portInterface.ref),1))
+      lines.append(self.indent('<REQUIRED-INTERFACE-TREF DEST="%s">%s</REQUIRED-INTERFACE-TREF>'%(portInterface.tag(self.version),portInterface.ref),1))
       lines.append('</R-PORT-PROTOTYPE>')
       return lines   
    
@@ -66,7 +66,7 @@ class ComponentTypeWriter(WriterBase):
       ws=port.rootWS()
       assert(ws is not None)
       portInterface=ws.find(port.portInterfaceRef)
-      lines.append('<%s>'%port.tag)
+      lines.append('<%s>'%port.tag(self.version))
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%port.name,1))
       if len(port.comspec)==0:
          lines.append(self.indent('<PROVIDED-COM-SPECS></PROVIDED-COM-SPECS>',1))
@@ -86,18 +86,18 @@ class ComponentTypeWriter(WriterBase):
                else:
                   if self.version<4.0:
                      lines.append(self.indent('<UNQUEUED-SENDER-COM-SPEC>',2))                  
-                     lines.append(self.indent('<DATA-ELEMENT-REF DEST="%s">%s</DATA-ELEMENT-REF>'%(elem.tag,elem.ref),3))
+                     lines.append(self.indent('<DATA-ELEMENT-REF DEST="%s">%s</DATA-ELEMENT-REF>'%(elem.tag(self.version),elem.ref),3))
                      if isinstance(comspec.canInvalidate,bool):
                         lines.append(self.indent('<CAN-INVALIDATE>%s</CAN-INVALIDATE>'%('true' if comspec.canInvalidate else 'false'),3))                     
                      if comspec.initValueRef is not None:
-                        tag = ws.find(comspec.initValueRef).tag
+                        tag = ws.find(comspec.initValueRef).tag(self.version)
                         lines.append(self.indent('<INIT-VALUE-REF DEST="%s">%s</INIT-VALUE-REF>'%(tag,comspec.initValueRef),3))                  
                      lines.append(self.indent('</UNQUEUED-SENDER-COM-SPEC>',2))
             else:
                raise NotImplementedError(str(type(elem)))
          lines.append(self.indent('</PROVIDED-COM-SPECS>',1))      
-      lines.append(self.indent('<PROVIDED-INTERFACE-TREF DEST="%s">%s</PROVIDED-INTERFACE-TREF>'%(portInterface.tag,portInterface.ref),1))
-      lines.append('</%s>'%port.tag)      
+      lines.append(self.indent('<PROVIDED-INTERFACE-TREF DEST="%s">%s</PROVIDED-INTERFACE-TREF>'%(portInterface.tag(self.version),portInterface.ref),1))
+      lines.append('</%s>'%port.tag(self.version))      
       return lines
    
    

@@ -24,6 +24,8 @@ class WorkspaceWriter(WriterBase):
          lines=['import autosar','','ws=autosar.workspace()']
          result='\n'.join(lines)+'\n'         
       else:
+         if isinstance(head,list):
+            head = '\n'.join(head)
          assert(isinstance(head,str))
          result = head+'\n'         
       for package in ws.packages:
@@ -33,6 +35,9 @@ class WorkspaceWriter(WriterBase):
       if tail is None:
          result+='\n'+'print(ws.toXML())\n'
       else:
+         if isinstance(tail,list):
+            tail = '\n'.join(tail)
+         assert(isinstance(tail,str))
          result+='\n'+tail
       return result
       

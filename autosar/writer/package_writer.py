@@ -93,5 +93,6 @@ class PackageWriter(WriterBase):
          if writerFunc is not None:
             lines.extend(writerFunc(elem,package))
          else:
-            raise NotImplementedError(type(elem))
+            #raise NotImplementedError(type(elem))
+            lines.append("")
       return lines

@@ -8,6 +8,9 @@ Workspace
    import autosar
    
    ws=autosar.workspace()
+   ws.loadXML('datatypes.arxml')
+   for elem in ws.find('/DataType').elements:
+      print(elem.name)
 
 .. _Workspace:
 
