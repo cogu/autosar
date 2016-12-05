@@ -13,6 +13,7 @@ The `AUTOSAR <https://www.autosar.org/>`_ Python Package
    start
    tutorial/index
    workspace
+   package
    datatype/index
    portinterface/index
    constant/index

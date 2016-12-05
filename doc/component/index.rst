@@ -6,6 +6,7 @@ Component
    
    ApplicationSoftwareComponent
    Composition
+   behavior
    
 
 As of this writing the following component types are supported:

@@ -76,5 +76,13 @@ Loading and saving XML Files
       ws.saveXML("Constants.arxml", packages=['Constant'])
       ws.saveXML("DataTypes.arxml", packages=['DataType'])
       ws.saveXML("PortInterfaces.arxml", packages=['PortInterface'])
+
+.. _workspace-createPackage:
+
+Creating Packages
+-----------------
+
+.. py:method:: Workspace.createPackage(name : str)
    
+   creates a new package and inserts it into the list of packages known to the workspace.
    
