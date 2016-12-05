@@ -25,7 +25,7 @@ class BehaviorWriter(WriterBase):
       return lines
    
    def writeRunnableXML(self,runnable):
-      ws=runnable.root()
+      ws=runnable.rootWS()
       assert(ws is not None)
       lines=['<RUNNABLE-ENTITY>',
              self.indent('<SHORT-NAME>%s</SHORT-NAME>'%runnable.name,1),
@@ -41,12 +41,28 @@ class BehaviorWriter(WriterBase):
             port = ws.find(dataReceivePoint.portRef)
             assert(port is not None)
             dataElement = ws.find(dataReceivePoint.dataElemRef)
-            assert(port is not dataElement)            
-            lines.append(self.indent('<R-PORT-PROTOTYPE-REF DEST="%s">%s</R-PORT-PROTOTYPE-REF>'%(port.tag,port.ref),4))
-            lines.append(self.indent('<DATA-ELEMENT-PROTOTYPE-REF DEST="%s">%s</DATA-ELEMENT-PROTOTYPE-REF>'%(dataElement.tag,dataElement.ref),4))
+            assert(port is not None)            
+            lines.append(self.indent('<R-PORT-PROTOTYPE-REF DEST="%s">%s</R-PORT-PROTOTYPE-REF>'%(port.tag(self.version),port.ref),4))
+            lines.append(self.indent('<DATA-ELEMENT-PROTOTYPE-REF DEST="%s">%s</DATA-ELEMENT-PROTOTYPE-REF>'%(dataElement.tag(self.version),dataElement.ref),4))
             lines.append(self.indent('</DATA-ELEMENT-IREF>',3))
             lines.append(self.indent('</DATA-RECEIVE-POINT>',2))
          lines.append(self.indent('</DATA-RECEIVE-POINTS>',1))
+      if len(runnable.dataSendPoints)>0:
+         lines.append(self.indent('<DATA-SEND-POINTS>',1))
+         for dataSendPoint in runnable.dataSendPoints:
+            lines.append(self.indent('<%s>'%dataSendPoint.tag(self.version),2))
+            lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%dataSendPoint.name,3))
+            lines.append(self.indent('<DATA-ELEMENT-IREF>',3))
+            assert(dataSendPoint.portRef is not None) and (dataSendPoint.dataElemRef is not None)
+            port = ws.find(dataSendPoint.portRef)
+            assert(port is not None)
+            dataElement = ws.find(dataSendPoint.dataElemRef)
+            assert(port is not None)            
+            lines.append(self.indent('<P-PORT-PROTOTYPE-REF DEST="%s">%s</P-PORT-PROTOTYPE-REF>'%(port.tag(self.version),port.ref),4))
+            lines.append(self.indent('<DATA-ELEMENT-PROTOTYPE-REF DEST="%s">%s</DATA-ELEMENT-PROTOTYPE-REF>'%(dataElement.tag(self.version),dataElement.ref),4))
+            lines.append(self.indent('</DATA-ELEMENT-IREF>',3))
+            lines.append(self.indent('</%s>'%dataSendPoint.tag(self.version),2))
+         lines.append(self.indent('</DATA-SEND-POINTS>',1))
       lines.append(self.indent('<SYMBOL>%s</SYMBOL>'%runnable.symbol,1))
       lines.append('</RUNNABLE-ENTITY>')
       return lines

@@ -237,13 +237,11 @@ class Package(object):
       return autosar.base.indexByName(lst,name)
 
 
-   def createApplicationSoftwareComponent(self,swcName,behaviorName=None,multipleInstance=False):
+   def createApplicationSoftwareComponent(self,swcName,behaviorName=None,implementationName=None,multipleInstance=False):
       """
       creates an instante of autosar.component.ApplicationSoftwareComponent and adds it to the package.
       It also creates a behavior object of type autosar.behavior.InternalBehavior.
-      If behaviorName is None (default) the name of the InteralBehavior object is {swcName}_InternalBehavior
-      
-      Returns the tuple (swc: object,behavior: object).
+      If behaviorName is None (default) the name of the InteralBehavior object is {swcName}_InternalBehavior           
       
       Usage:
       (swc,behavior) = Package.createApplicationSoftwareComponent(swcName)
@@ -251,12 +249,19 @@ class Package(object):
       
       if behaviorName is None:
          behaviorName = str(swcName)+'_InternalBehavior'
+      if implementationName is None:
+         implementationName = str(swcName)+'_Implementation'
       swc = autosar.component.ApplicationSoftwareComponent(swcName,self)      
-      behavior = autosar.behavior.InternalBehavior(behaviorName,swc.ref,multipleInstance,self)
+      internalBehavior = autosar.behavior.InternalBehavior(behaviorName,swc.ref,multipleInstance,self)
+      implementation=autosar.component.SwcImplementation(implementationName,internalBehavior.ref,parent=self)
+      swc.behavior=internalBehavior
+      swc.implementation=implementation
       self.append(swc)
-      self.append(behavior)
-      return (swc,behavior)
+      self.append(internalBehavior)
+      self.append(implementation)
+      return swc
       
+
 
 
 

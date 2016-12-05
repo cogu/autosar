@@ -72,12 +72,14 @@ class BehaviorParser(object):
                         dataElementInstanceRef = self.parseDataElementInstanceRef(xmlDataPoint.find('DATA-ELEMENT-IREF'),'R-PORT-PROTOTYPE-REF')                        
                         if dataElementInstanceRef is not None:
                            dataReceivePoint=DataReceivePoint(dataElementInstanceRef.portRef,dataElementInstanceRef.dataElemRef,name)
-                           runnableEntity.dataReceivePoints.append(dataReceivePoint)
+                           runnableEntity.append(dataReceivePoint)
                   if xmlDataSendPoints is not None:
                      for xmlDataPoint in xmlDataSendPoints.findall('./DATA-SEND-POINT'):
-                        #TODO: Fix this
+                        name=parseTextNode(xmlDataPoint.find('SHORT-NAME'))
                         dataElementInstanceRef = self.parseDataElementInstanceRef(xmlDataPoint.find('DATA-ELEMENT-IREF'),'P-PORT-PROTOTYPE-REF')
-                        if dataElementInstanceRef is not None: runnableEntity.dataSendPoints.append(dataElementInstanceRef)
+                        if dataElementInstanceRef is not None:
+                           dataSendPoint=DataSendPoint(dataElementInstanceRef.portRef,dataElementInstanceRef.dataElemRef,name)
+                           runnableEntity.append(dataSendPoint)
                   if xmlServerCallPoints is not None:
                      for xmlServerCallPoint in xmlServerCallPoints.findall('./SYNCHRONOUS-SERVER-CALL-POINT'):
                         syncServerCallPoint = self.parseSyncServerCallPoint(xmlServerCallPoint)

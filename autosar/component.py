@@ -55,11 +55,24 @@ class ComponentType(Element):
       self.providePorts.append(port)
 
    def createRequirePort(self,name,portInterfaceRef,elemName=None,initValueRef=None,aliveTimeout=0,canInvalidate=False):
-      comspec={'canInvalidate':canInvalidate,'aliveTimeout':aliveTimeout}
-      if initValueRef is not None:
-         comspec['initValueRef']=initValueRef
-      if elemName is not None:
-         comspec['name']=elemName
+      """
+      creates a require port on this ComponentType
+      The ComponentType must have a valid ref (must belong to a valid package in a valid workspace).
+      """
+      comspec = None
+      assert (self.ref is not None)
+      ws = self.rootWS()      
+      assert(ws is not None)
+      portInterface = ws.find(portInterfaceRef)
+      if portInterface is None:
+         raise ValueError('invalid reference'+portInterfaceRef)      
+      if isinstance(portInterface,autosar.portinterface.SenderReceiverInterface):
+         if len(portInterface.dataElements)>0:
+            comspec={'canInvalidate':canInvalidate,'aliveTimeout':aliveTimeout}
+            if initValueRef is not None:
+               comspec['initValueRef']=initValueRef
+            if elemName is not None:
+               comspec['name']=elemName
       port = RequirePort(name,portInterfaceRef,comspec,parent=self)
       self.requirePorts.append(port)
 

@@ -66,13 +66,23 @@ class PortAPIOption(object):
       data={'type': self.__class__.__name__,'takeAddress':self.takeAddress, 'indirectAPI':self.indirectAPI, 'portRef':self.portRef}
       return data
    
-class DataReceivePoint(object):
-   def __init__(self,portRef,dataElemRef=None,name=None):
+class DataReceivePoint:
+   def __init__(self,portRef,dataElemRef=None,name=None,parent=None):
       self.portRef=portRef
       self.dataElemRef=dataElemRef
       self.name=name
+      self.parent=parent
    
    def tag(self,version=None): return "DATA-RECEIVE-POINT"
+
+class DataSendPoint:
+   def __init__(self,portRef,dataElemRef=None,name=None,parent=None):
+      self.portRef=portRef
+      self.dataElemRef=dataElemRef
+      self.name=name
+      self.parent=parent
+   
+   def tag(self,version=None): return "DATA-SEND-POINT"
       
 class RunnableEntity(object):
    def __init__(self,name,invokeConcurrently=False,symbol=None,parent=None):
@@ -111,11 +121,15 @@ class RunnableEntity(object):
          dataReceivePoint=self._verifyDataReceivePoint(copy.copy(elem))
          self.dataReceivePoints.append(dataReceivePoint)
          dataReceivePoint.parent=self
+      if isinstance(elem,DataSendPoint):
+         dataSendPoint=self._verifyDataSendPoint(copy.copy(elem))
+         self.dataSendPoints.append(dataSendPoint)
+         dataSendPoint.parent=self
       else:
          raise NotImplementedError(str(type(elem)))
    
    def _verifyDataReceivePoint(self,dataReceivePoint):
-      ws=self.findWS()
+      ws=self.rootWS()
       assert(ws is not None)
       assert(dataReceivePoint.portRef is not None)
       if isinstance(dataReceivePoint.portRef,autosar.component.Port):
@@ -138,13 +152,38 @@ class RunnableEntity(object):
       else:
          raise ValueError('%s: portRef must be of type string'%self.ref)
       return dataReceivePoint
+   
+   def _verifyDataSendPoint(self,dataSendPoint):
+      ws=self.rootWS()
+      assert(ws is not None)
+      assert(dataSendPoint.portRef is not None)
+      if isinstance(dataSendPoint.portRef,autosar.component.Port):
+         dataSendPoint.portRef=dataSendPoint.portRef.ref
+      if isinstance(dataSendPoint.portRef,str):
+         port=ws.find(dataSendPoint.portRef)
+         if dataSendPoint.dataElemRef is None:
+            #default rule: set dataElemRef to ref of first dataElement in the portinterface
+            portInterface=ws.find(port.portInterfaceRef)
+            assert(portInterface is not None)
+            if isinstance(portInterface,(autosar.portinterface.SenderReceiverInterface,autosar.portinterface.ParameterInterface)):
+               dataSendPoint.dataElemRef=portInterface.dataElements[0].ref
+            else:
+               raise ValueError('invalid interface type:%s'%(str(type(portInterface))))
+         assert(isinstance(dataSendPoint.dataElemRef,str))
+         dataElement = ws.find(dataSendPoint.dataElemRef)
+         if dataSendPoint.name is None:
+            #default rule: set the name to SEND_<port.name>_<dataElement.name>
+            dataSendPoint.name="SEND_{0.name}_{1.name}".format(port,dataElement)
+      else:
+         raise ValueError('%s: portRef must be of type string'%self.ref)
+      return dataSendPoint   
 
    
-   def findWS(self):
+   def rootWS(self):
       if self.parent is None:
          return autosar.getCurrentWS()
       else:
-         return self.parent.findWS()
+         return self.parent.rootWS()
 
    @property
    def ref(self):
@@ -301,6 +340,7 @@ class InternalBehavior(Element):
       self.swcNvBlockNeeds = []
       self.sharedCalPrms=[]
       self.exclusiveAreas=[]
+      self.swc = None
    def asdict(self):
       data={'type': self.__class__.__name__,'name':self.name, 'multipleInstance':self.multipleInstance,
             'componentRef':self.componentRef, 'events':[],'portAPIOptions':[],'runnables':[],'perInstanceMemories':[],
@@ -351,6 +391,57 @@ class InternalBehavior(Element):
    def __getitem__(self,key):
       return self.find(key)
    
+   def createRunnable(self,name,invokeConcurrently=False,symbol=None, portAccess=None):
+      runnable = RunnableEntity(name,invokeConcurrently,symbol,self)
+      self.runnables.append(runnable)
+      if portAccess is not None:
+         if self.swc is None:
+            ws = self.rootWS()
+            assert(ws is not None)
+            self.swc = ws.find(self.componentRef)
+         assert(self.swc is not None)
+         for elem in portAccess:
+            ref = elem.partition('/')
+            if len(ref[1])==0:
+               port = self.swc.find(ref[0])               
+               if port is None:
+                  raise ValueError('invalid port reference: '+str(elem))
+               portInterface = ws.find(port.portInterfaceRef)
+               if portInterface is None:
+                  raise ValueError('invalid portinterface reference: '+str(port.portInterfaceRef))
+               if isinstance(portInterface, autosar.portinterface.SenderReceiverInterface):
+                  if len(portInterface.dataElements)==0:
+                     continue
+                  elif len(portInterface.dataElements)==1:
+                     dataElem=portInterface.dataElements[0]
+                     self._createSendReceivePoint(port,dataElem,runnable)
+                  else:
+                     raise NotImplementedError('port interfaces with multiple data elements not supported')
+               else:
+                  raise NotImplementedError(type(portInterface))
+            else:
+               port = self.swc.find(ref[0])               
+               if port is None:
+                  raise ValueError('invalid port reference: '+str(elem))
+               portInterface = ws.find(port.portInterfaceRef)
+               if portInterface is None:
+                  raise ValueError('invalid portinterface reference: '+str(port.portInterfaceRef))
+               if isinstance(portInterface, autosar.portinterface.SenderReceiverInterface):
+                  dataElem=portInterface.find(ref[2])
+                  if dataElem is None:
+                     raise ValueError('invalid data element reference: '+str(elem))
+                  self._createSendReceivePoint(port,dataElem,runnable)
+               else:
+                  raise NotImplementedError(type(portInterface))
 
+      return runnable
 
-
+   def _createSendReceivePoint(self,port,dataElement,runnable):
+      if isinstance(port,autosar.component.RequirePort):
+         receivePoint=DataReceivePoint(port.ref,dataElement.ref,'REC_{0.name}_{1.name}'.format(port,dataElement),runnable)
+         runnable.dataReceivePoints.append(receivePoint)
+      elif isinstance(port,autosar.component.ProvidePort):
+         sendPoint=DataSendPoint(port.ref,dataElement.ref,'SEND_{0.name}_{1.name}'.format(port,dataElement),runnable)
+         runnable.dataSendPoints.append(sendPoint)
+      else:
+         raise ValueError('unexpected type: '+str(type(port)))
