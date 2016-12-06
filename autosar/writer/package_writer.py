@@ -24,7 +24,7 @@ class PackageWriter(WriterBase):
                           'ApplicationSoftwareComponent': self.componentTypeWriter.writeApplicationSoftwareComponentXML,
                           'COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE': None,
                           'InternalBehavior': self.behaviorWriter.writeInternalBehaviorXML,
-                          'SWC-IMPLEMENTATION': None,
+                          'SwcImplementation': self.componentTypeWriter.writeSwcImplementationXML,
                           'CompuMethodConst': self.dataTypeWriter.writeCompuMethodXML,
                           'CompuMethodRational': self.dataTypeWriter.writeCompuMethodXML,
                           'DataTypeUnitElement': self.dataTypeWriter.writeDataTypeUnitElementXML,
@@ -93,6 +93,5 @@ class PackageWriter(WriterBase):
          if writerFunc is not None:
             lines.extend(writerFunc(elem,package))
          else:
-            #raise NotImplementedError(type(elem))
-            lines.append("")
+            raise NotImplementedError(type(elem))            
       return lines

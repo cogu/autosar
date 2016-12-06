@@ -5,23 +5,27 @@ class BehaviorWriter(WriterBase):
    def __init__(self,version):
       super().__init__(version)
    
-   def writeInternalBehaviorXML(self,elem,package):
-      assert(isinstance(elem,autosar.behavior.InternalBehavior))
+   def writeInternalBehaviorXML(self,internalBehavior,package):      
+      assert(isinstance(internalBehavior,autosar.behavior.InternalBehavior))
       lines=[]
-      ws = elem.rootWS()
+      ws = internalBehavior.rootWS()
       assert(ws is not None)
-      lines.append('<%s>'%elem.tag(self.version))
-      lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
-      componentType=ws.find(elem.componentRef)
-      assert(componentType is not None)
-      lines.append(self.indent('<COMPONENT-REF DEST="%s">%s</COMPONENT-REF>'%(componentType.tag(self.version),componentType.ref),1))      
-      if len(elem.runnables)>0:
+      lines.append('<%s>'%internalBehavior.tag(self.version))
+      lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%internalBehavior.name,1))
+      swc=ws.find(internalBehavior.componentRef)
+      assert(swc is not None)
+      lines.append(self.indent('<COMPONENT-REF DEST="%s">%s</COMPONENT-REF>'%(swc.tag(self.version),swc.ref),1))
+      if len(internalBehavior.portAPIOptions)==0:         
+         internalBehavior.createPortAPIOptionDefaults() #try to automatically create PortAPIOption objects on behavior object
+      if len(internalBehavior.portAPIOptions)>0:
+            lines.extend(self.indent(self._writePortAPIOptionsXML(internalBehavior),1))
+      if len(internalBehavior.runnables)>0:
          lines.append(self.indent('<RUNNABLES>',1))
-         for runnable in elem.runnables:
+         for runnable in internalBehavior.runnables:
             lines.extend(self.indent(self.writeRunnableXML(runnable),2))
          lines.append(self.indent('</RUNNABLES>',1))
-      lines.append(self.indent('<SUPPORTS-MULTIPLE-INSTANTIATION>%s</SUPPORTS-MULTIPLE-INSTANTIATION>'%('true' if elem.multipleInstance else 'false'),1))
-      lines.append('</%s>'%elem.tag(self.version))
+      lines.append(self.indent('<SUPPORTS-MULTIPLE-INSTANTIATION>%s</SUPPORTS-MULTIPLE-INSTANTIATION>'%('true' if internalBehavior.multipleInstance else 'false'),1))
+      lines.append('</%s>'%internalBehavior.tag(self.version))
       return lines
    
    def writeRunnableXML(self,runnable):
@@ -66,3 +70,25 @@ class BehaviorWriter(WriterBase):
       lines.append(self.indent('<SYMBOL>%s</SYMBOL>'%runnable.symbol,1))
       lines.append('</RUNNABLE-ENTITY>')
       return lines
+   
+   def _writePortAPIOptionsXML(self,internalBehavior):
+      ws=internalBehavior.rootWS()
+      assert(ws is not None)
+      assert(isinstance(internalBehavior,autosar.behavior.InternalBehavior))
+      lines=['<PORT-API-OPTIONS>']
+      for option in internalBehavior.portAPIOptions:
+         lines.extend(self.indent(self._writePortAPIOption(ws,option),1))         
+      lines.append('</PORT-API-OPTIONS>')
+      return lines
+      
+   def _writePortAPIOption(self, ws,option):
+      lines=['<%s>'%option.tag(self.version)]
+      lines.append(self.indent('<ENABLE-TAKE-ADDRESS>%s</ENABLE-TAKE-ADDRESS>'%('true' if option.takeAddress else 'false'),1))
+      lines.append(self.indent('<INDIRECT-API>%s</INDIRECT-API>'%('true' if option.indirectAPI else 'false'),1))
+      port = ws.find(option.portRef)
+      if port is None:
+         raise ValueError('invalid reference: '+option.portRef)
+      lines.append(self.indent('<PORT-REF DEST="%s">%s</PORT-REF>'%(port.tag(self.version),port.ref),1))
+      lines.append('</%s>'%option.tag(self.version))
+      return lines
+   

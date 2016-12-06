@@ -57,14 +57,16 @@ class ModeInstanceRef(object):
          data[key]=value
       return data
 
-class PortAPIOption(object):
-   def __init__(self,takeAddress,indirectAPI,portRef):
-      self.takeAddress = parseBoolean(takeAddress)
-      self.indirectAPI = parseBoolean(indirectAPI)
+class PortAPIOption():
+   def __init__(self,portRef,takeAddress=False,indirectAPI=False):
       self.portRef = portRef
+      self.takeAddress = bool(takeAddress)
+      self.indirectAPI = bool(indirectAPI)      
    def asdict(self):
       data={'type': self.__class__.__name__,'takeAddress':self.takeAddress, 'indirectAPI':self.indirectAPI, 'portRef':self.portRef}
       return data
+   
+   def tag(self,version=None): return "PORT-API-OPTION"
    
 class DataReceivePoint:
    def __init__(self,portRef,dataElemRef=None,name=None,parent=None):
@@ -435,6 +437,20 @@ class InternalBehavior(Element):
                   raise NotImplementedError(type(portInterface))
 
       return runnable
+
+
+   def createPortAPIOptionDefaults(self):
+      self.portAPIOptions = []
+      if self.swc is None:
+         ws = self.rootWS()
+         assert(ws is not None)
+         self.swc = ws.find(self.componentRef)
+      assert(self.swc is not None)
+      tmp = self.swc.providePorts+self.swc.requirePorts
+      for port in sorted(tmp,key=lambda x: x.name):
+         self.portAPIOptions.append(PortAPIOption(port.ref))
+      
+         
 
    def _createSendReceivePoint(self,port,dataElement,runnable):
       if isinstance(port,autosar.component.RequirePort):

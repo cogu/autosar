@@ -168,3 +168,24 @@ class ComponentTypeWriter(WriterBase):
          else:
             raise NotImplementedError(type(portInterface))
       return lines
+
+   def writeSwcImplementationXML(self,elem,package):
+      assert(isinstance(elem,autosar.component.SwcImplementation))
+      lines=[]
+      ws = elem.rootWS()
+      assert(ws is not None)
+      behavior = ws.find(elem.behaviorRef)
+      if behavior is None:
+         raise ValueError('invalid reference: '+str(elem.behaviorRef))
+      lines=['<SWC-IMPLEMENTATION>',
+             self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1)        
+            ]
+      lines.append(self.indent('<CODE-DESCRIPTORS>',1))
+      lines.append(self.indent('<CODE>',2))
+      lines.append(self.indent('<SHORT-NAME>Code</SHORT-NAME>',3))
+      lines.append(self.indent('<TYPE>SRC</TYPE>',3))
+      lines.append(self.indent('</CODE>',2))
+      lines.append(self.indent('</CODE-DESCRIPTORS>',1))
+      lines.append(self.indent('<BEHAVIOR-REF DEST="%s">%s</BEHAVIOR-REF>'%(behavior.tag(self.version),elem.behaviorRef),1))
+      lines.append('</SWC-IMPLEMENTATION>')
+      return lines
