@@ -40,7 +40,7 @@ class BehaviorParser(object):
                      raise ValueError('event')
             elif xmlNode.tag == 'PORT-API-OPTIONS':
                for xmlOption in xmlNode.findall('./PORT-API-OPTION'):                  
-                  portAPIOption = PortAPIOption(parseTextNode(xmlOption.find('PORT-REF')),parseBooleanNode(xmlOption.find('ENABLE-TAKE-ADDRESS')),parseBooleanNode(xmlOption.find('INDIRECT-API')))
+                  portAPIOption = PortAPIOption(parseTextNode(xmlOption.find('PORT-REF'),parseBooleanNode(xmlOption.find('ENABLE-TAKE-ADDRESS')),parseBooleanNode(xmlOption.find('INDIRECT-API'))))
                   if portAPIOption is not None: internalBehavior.portAPIOptions.append(portAPIOption)
             elif xmlNode.tag == 'RUNNABLES':
                for xmRunnable in xmlNode.findall('./RUNNABLE-ENTITY'):
