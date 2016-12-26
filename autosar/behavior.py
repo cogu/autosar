@@ -9,29 +9,37 @@ class Event(Element):
    def __init__(self,name,startOnEventRef=None):
       super().__init__(name)
       self.startOnEventRef = startOnEventRef
+      self.modeDependency=None
 
 class ModeSwitchEvent(Event):
-   def __init__(self,name,startOnEventRef=None):
+   def __init__(self,name,startOnEventRef=None, activationType='ENTRY'):
       super().__init__(name,startOnEventRef)
-      self.modeInstRef=None
+      self.modeInstRef=None      
+      if (activationType!='ENTRY') and (activationType != 'EXIT'):
+         raise ValueError('activationType argument must be either "ENTRY" or "EXIT"')
+      self.activationType = activationType
+      
+   def tag(self,version=None):
+      return 'MODE-SWITCH-EVENT'
 
 class TimingEvent(Event):
-   def __init__(self,name,startOnEventRef=None):
+   def __init__(self,name,startOnEventRef=None, period=None):
       super().__init__(name,startOnEventRef)
-      self.modeDependency=None
-      self.period=None
+      self.period=int(period)
+   
+   def tag(self, version=None):
+      return 'TIMING-EVENT'
+   
 
 class DataReceivedEvent(Event):
    def __init__(self,name,startOnEventRef=None):
       super().__init__(name,startOnEventRef)
-      self.modeDependency=None
       self.dataInstanceRef=None
       self.swDataDefsProps=[]
 
 class OperationInvokedEvent(Event):
    def __init__(self,name,startOnEventRef=None):
       super().__init__(name,startOnEventRef)
-      self.modeDependency=None
       self.operationInstanceRef=None
       self.swDataDefsProps=[]
    
@@ -45,7 +53,6 @@ class ModeDependency(object):
          data['modeInstanceRefs'].append(modeInstanceRef.asdict())
       if len(data['modeInstanceRefs'])==0: del data['modeInstanceRefs']
 
-#used for both DEPENDENT-ON-MODE-IREF and MODE-IREF (do they have the same complex type definition in xsd?)
 class ModeInstanceRef(object):
    def __init__(self,modeDeclarationRef,modeDeclarationGroupPrototypeRef=None,requirePortPrototypeRef=None):      
       self.modeDeclarationRef=modeDeclarationRef #MODE-DECLARATION-REF
@@ -56,6 +63,25 @@ class ModeInstanceRef(object):
       for key, value in self.__dict__.items():
          data[key]=value
       return data
+   
+   def tag(self,version=None):
+      return 'MODE-IREF'
+
+class ModeDependencyRef(object):
+   def __init__(self,modeDeclarationRef,modeDeclarationGroupPrototypeRef=None,requirePortPrototypeRef=None):      
+      self.modeDeclarationRef=modeDeclarationRef #MODE-DECLARATION-REF
+      self.modeDeclarationGroupPrototypeRef=modeDeclarationGroupPrototypeRef #MODE-DECLARATION-GROUP-PROTOTYPE-REF
+      self.requirePortPrototypeRef=requirePortPrototypeRef #R-PORT-PROTOTYPE-REF
+   def asdict(self):
+      data={'type': self.__class__.__name__}
+      for key, value in self.__dict__.items():
+         data[key]=value
+      return data
+   
+   def tag(self,version=None):
+      return 'DEPENDENT-ON-MODE-IREF'
+
+
 
 class PortAPIOption():
    def __init__(self,portRef,takeAddress=False,indirectAPI=False):
@@ -99,6 +125,10 @@ class RunnableEntity(object):
       self.dataSendPoints=[]
       self.syncServerCallPoints=[]
       self.canEnterExclusiveAreas=[]
+   
+   def tag(self,version=None):
+      return 'RUNNABLE-ENTITY'
+   
    def asdict(self):
       data={'type': self.__class__.__name__,
             'name':self.name,
@@ -461,3 +491,124 @@ class InternalBehavior(Element):
          runnable.dataSendPoints.append(sendPoint)
       else:
          raise ValueError('unexpected type: '+str(type(port)))
+   
+   
+   def calcModeInstanceComponents(self, portName, modeValue):
+      if self.swc is None:
+         ws = self.rootWS()
+         assert(ws is not None)
+         self.swc = ws.find(self.componentRef)
+      assert(self.swc is not None)
+      ws = self.rootWS()
+      for port in self.swc.requirePorts:
+         if (port.name == portName):            
+            portInterface = ws.find(port.portInterfaceRef)
+            if (portInterface is None):
+               raise ValueError('invalid port interface reference: '+port.portInterfaceRef)
+            if (portInterface.modeGroups is None) or (len(portInterface.modeGroups)==0):
+               raise ValueError('port interface %s has no valid mode groups'%portInterface.name)
+            if len(portInterface.modeGroups)>1:
+               raise NotImplementedError('port interfaces with only one mode group is currently supported')
+            modeGroup = portInterface.modeGroups[0]
+            dataType = ws.find(modeGroup.typeRef)
+            if (portInterface is None):
+               raise ValueError('%s has invalid typeRef: %s'%(modeGroup.name, modeGroup.typeRef))
+            assert(isinstance(dataType,autosar.portinterface.ModeDeclarationGroup))
+            modeDeclarationRef = None
+            modeDeclarationGroupRef = modeGroup.ref
+            for modeDeclaration in dataType.modeDeclarations:
+               if modeDeclaration.name == modeValue:
+                  modeDeclarationRef = modeDeclaration.ref
+                  return (modeDeclarationRef,modeDeclarationGroupRef,port.ref)
+            raise ValueError('"%s" did not match any of the mode declarations in %s'%(modeValue,dataType.ref))
+         
+   def createModeSwitchEvent(self, modeRef, runnableRef, activationType='ENTRY', ):
+      if self.swc is None:
+         ws = self.rootWS()
+         assert(ws is not None)
+         self.swc = ws.find(self.componentRef)
+      assert(self.swc is not None)
+      ws = self.rootWS()
+      runnable=ws.find(runnableRef)
+      assert(isinstance(runnable, autosar.behavior.RunnableEntity))
+      nameBase = "MST_"+runnable.name
+      index = 0
+      #try to find a suitable name for the event
+      eventName = None
+      while(True):
+         eventName= "%s_%d"%(nameBase,index)
+         found = False
+         for event in self.events:
+            if event.name == eventName:
+               found = True
+               break
+         if found:
+            index+=1
+         else:
+            break      
+
+      result = modeRef.partition('/')
+      if result[1]!='/':
+         raise ValueError('invalid modeRef, expected "portName/modeValue", got "%s"'%dependency)         
+      portName=result[0]
+      modeValue=result[2]
+      event = autosar.behavior.ModeSwitchEvent(eventName,runnableRef,activationType)
+      (modeDeclarationRef,modeDeclarationGroupRef,portRef) = self.calcModeInstanceComponents(portName,modeValue)
+      event.modeInstRef = ModeInstanceRef(modeDeclarationRef, modeDeclarationGroupRef, portRef)
+      assert(isinstance(event.modeInstRef, autosar.behavior.ModeInstanceRef))
+      self.events.append(event)
+      return event
+
+   def createTimingEvent(self, period, runnableRef, modeDependency=None ):
+      if self.swc is None:
+         ws = self.rootWS()
+         assert(ws is not None)
+         self.swc = ws.find(self.componentRef)
+      assert(self.swc is not None)
+      ws = self.rootWS()
+
+      runnable=ws.find(runnableRef)
+      assert(isinstance(runnable, autosar.behavior.RunnableEntity))
+      #try to find a suitable name for the event
+      baseName = "TMT_"+runnable.name
+      found = None
+      for event in self.events:
+         if event.name == baseName:
+            found = event
+            break
+      if found:
+         event.name=event.name+'_0'
+         index = 1     
+         eventName = None
+         while(True):
+            eventName= "%s_%d"%(baseName,index)
+            found = None
+            for event in self.events:
+               if event.name == eventName:
+                  found = event
+                  break
+            if found:
+               index+=1
+            else:
+               break
+      else:
+         eventName = baseName
+      
+      event = autosar.behavior.TimingEvent(eventName,runnableRef,period)
+      
+      if modeDependency is not None:
+         for dependency in list(modeDependency):
+            result = dependency.partition('/')
+            if result[1]=='/':
+               portName=result[0]
+               modeValue=result[2]
+               (modeDeclarationRef,modeDeclarationGroupRef,portRef) = self.calcModeInstanceComponents(portName,modeValue)               
+            else:
+               raise ValueError('invalid modeRef, expected "portName/modeValue", got "%s"'%dependency)
+            if event.modeDependency is None:
+               event.modeDependency = []
+            event.modeDependency.append(ModeDependencyRef(modeDeclarationRef, modeDeclarationGroupRef, portRef))
+      self.events.append(event)
+      return event
+
+      

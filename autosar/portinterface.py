@@ -35,7 +35,12 @@ class SenderReceiverInterface(PortInterface):
       name = ref[0]
       for elem in self.dataElements:
          if elem.name==name:
-            return elem      
+            return elem
+      if self.modeGroups is not None:
+         for elem in self.modeGroups:
+            if elem.name==name:
+               return elem
+         
       return None
 
    def append(self,elem):

@@ -13,8 +13,13 @@ class BehaviorWriter(WriterBase):
       lines.append('<%s>'%internalBehavior.tag(self.version))
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%internalBehavior.name,1))
       swc=ws.find(internalBehavior.componentRef)
-      assert(swc is not None)
+      assert(swc is not None)      
       lines.append(self.indent('<COMPONENT-REF DEST="%s">%s</COMPONENT-REF>'%(swc.tag(self.version),swc.ref),1))
+      if len(internalBehavior.events):
+         lines.append(self.indent('<EVENTS>',1))
+         for event in internalBehavior.events:
+            lines.extend(self.indent(self._writeEventXML(ws,event),2))
+         lines.append(self.indent('</EVENTS>',1))
       if len(internalBehavior.portAPIOptions)==0:         
          internalBehavior.createPortAPIOptionDefaults() #try to automatically create PortAPIOption objects on behavior object
       if len(internalBehavior.portAPIOptions)>0:
@@ -22,13 +27,13 @@ class BehaviorWriter(WriterBase):
       if len(internalBehavior.runnables)>0:
          lines.append(self.indent('<RUNNABLES>',1))
          for runnable in internalBehavior.runnables:
-            lines.extend(self.indent(self.writeRunnableXML(runnable),2))
+            lines.extend(self.indent(self._writeRunnableXML(runnable),2))
          lines.append(self.indent('</RUNNABLES>',1))
       lines.append(self.indent('<SUPPORTS-MULTIPLE-INSTANTIATION>%s</SUPPORTS-MULTIPLE-INSTANTIATION>'%('true' if internalBehavior.multipleInstance else 'false'),1))
       lines.append('</%s>'%internalBehavior.tag(self.version))
       return lines
    
-   def writeRunnableXML(self,runnable):
+   def _writeRunnableXML(self,runnable):
       ws=runnable.rootWS()
       assert(ws is not None)
       lines=['<RUNNABLE-ENTITY>',
@@ -90,5 +95,48 @@ class BehaviorWriter(WriterBase):
          raise ValueError('invalid reference: '+option.portRef)
       lines.append(self.indent('<PORT-REF DEST="%s">%s</PORT-REF>'%(port.tag(self.version),port.ref),1))
       lines.append('</%s>'%option.tag(self.version))
+      return lines
+
+   def _writeEventXML(self, ws, event):
+      lines = []
+      tag = event.tag(self.version)
+      lines.append('<%s>'%tag)
+      lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%event.name,1))
+      if event.modeDependency is not None:
+         lines.append(self.indent('<MODE-DEPENDENCY>',1))
+         lines.append(self.indent('<DEPENDENT-ON-MODE-IREFS>',2))
+         for item in event.modeDependency:
+            lines.extend(self.indent(self._writeModeInstanceRefXML(ws, item),3))         
+         lines.append(self.indent('</DEPENDENT-ON-MODE-IREFS>',2))         
+         lines.append(self.indent('</MODE-DEPENDENCY>',1))
+      runnableEntity = ws.find(event.startOnEventRef)
+      assert(runnableEntity is not None)
+      lines.append(self.indent('<START-ON-EVENT-REF DEST="%s">%s</START-ON-EVENT-REF>'%(runnableEntity.tag(self.version),runnableEntity.ref),1))
+      if isinstance(event, autosar.behavior.ModeSwitchEvent):         
+         lines.append(self.indent('<ACTIVATION>%s</ACTIVATION>'%(event.activationType),1))
+         lines.extend(self.indent(self._writeModeInstanceRefXML(ws,event.modeInstRef),1))
+      elif isinstance(event, autosar.behavior.TimingEvent):
+         period = float(event.period)/1000.0
+         lines.append(self.indent('<PERIOD>%.9f</PERIOD>'%(period),1))
+      lines.append('</%s>'%tag)      
+      return lines
+   
+   def _writeModeInstanceRefXML(self,ws,modeInstRef):
+      lines = []
+      tag = modeInstRef.tag(self.version)
+      lines.append('<%s>'%tag)
+      port = ws.find(modeInstRef.requirePortPrototypeRef)
+      if port is None:
+         raise ValueError('%s has invalid requirePortPrototypeRef: %s'%(modeInstRef,modeInstRef.requirePortPrototypeRef))
+      modeDeclarationGroup = ws.find(modeInstRef.modeDeclarationGroupPrototypeRef)
+      if modeDeclarationGroup is None:
+         raise ValueError('%s has invalid modeDeclarationGroupPrototypeRef: %s'%(modeInstRef,modeInstRef.modeDeclarationGroupPrototypeRef))
+      modeDeclaration = ws.find(modeInstRef.modeDeclarationRef)
+      if modeDeclaration is None:
+         raise ValueError('%s has invalid modeDeclarationRef: %s'%(modeInstRef,modeInstRef.modeDeclarationRef))
+      lines.append(self.indent('<R-PORT-PROTOTYPE-REF DEST="R-PORT-PROTOTYPE">%s</R-PORT-PROTOTYPE-REF>'%(port.ref),1))
+      lines.append(self.indent('<MODE-DECLARATION-GROUP-PROTOTYPE-REF DEST="%s">%s</MODE-DECLARATION-GROUP-PROTOTYPE-REF>'%(modeDeclarationGroup.tag(self.version), modeDeclarationGroup.ref),1))
+      lines.append(self.indent('<MODE-DECLARATION-REF DEST="%s">%s</MODE-DECLARATION-REF>'%(modeDeclaration.tag(self.version) ,modeDeclaration.ref),1))
+      lines.append('</%s>'%tag)            
       return lines
    
