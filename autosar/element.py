@@ -1,18 +1,24 @@
 import xml.etree.ElementTree as ElementTree
-
+import autosar.base
 
 class Element(object):
-   def __init__(self,name,parent=None):
+   def __init__(self, name, parent=None, adminData=None):
+      if isinstance(adminData, dict):
+         adminDataObj=autosar.base.createAdminData(adminData)
+      else:
+         adminDataObj = adminData
+      if (adminDataObj is not None) and not isinstance(adminDataObj, autosar.base.AdminData):
+         raise ValueError("adminData must be of type dict or autosar.base.AdminData")
       self.name=name
-      self.adminData=None
+      self.adminData=adminDataObj
       self.parent=parent
+      
    @property
    def ref(self):
       if self.parent is not None:
          return self.parent.ref+'/%s'%self.name
       else:
          return None
-         
    
    def asdict(self):
       data={'type': self.__class__.__name__}

@@ -2,6 +2,7 @@ from autosar.element import Element
 import math
 import json
 import copy
+import collections
 
 class ConstElement(object):
    def __init__(self,parent=None):
@@ -38,14 +39,14 @@ class RecordTypeElement(ConstElement):
       return False
 
 class CompuConstElement(ConstElement):
-   def __init__(self,minvalue,maxvalue,textvalue):
-      self.minval=minvalue
-      self.maxval=maxvalue
-      self.textval=textvalue
+   def __init__(self,lowerLimit,upperLimit,textValue):
+      self.lowerLimit=lowerLimit
+      self.upperLimit=upperLimit
+      self.textValue=textValue
    def __eq__(self,other):
       if self is other: return True
       if type(self) is type(other):
-         return (self.minval == other.minval) and (self.maxval == other.maxval) and (self.textval == self.textval)      
+         return (self.lowerLimit == other.lowerLimit) and (self.upperLimit == other.upperLimit) and (self.textValue == self.textValue)      
       return False
       
 
@@ -71,8 +72,8 @@ class DataTypeUnitElement(Element):
       return False       
 
 class DataType(Element):
-   def __init__(self,name):
-      super().__init__(name)
+   def __init__(self, name, parent=None, adminData=None):
+      super().__init__(name, parent, adminData)
    
     
 
@@ -80,39 +81,68 @@ class DataType(Element):
 class IntegerDataType(DataType):
    
    def tag(self,version=None): return 'INTEGER-TYPE'
-   def __init__(self,name,minval=0,maxval=0,compuMethodRef=None):
-      super().__init__(name)
-      self.minval = minval
-      self.maxval = maxval
+   def __init__(self, name, minVal=0, maxVal=0, compuMethodRef=None, parent=None, adminData=None):
+      super().__init__(name, parent, adminData)
+      self.minVal = int(minVal)
+      self.maxVal = int(maxVal)
+      self._minValType = 'CLOSED'
+      self._maxValType = 'CLOSED'
+      
       if isinstance(compuMethodRef,str):
          self.compuMethodRef=compuMethodRef
       elif hasattr(compuMethodRef,'ref'):
          self.compuMethodRef=compuMethodRef.ref
       else:
          self.compuMethodRef=None
+   @property
+   def minValType(self):
+      return self._minValType
+   @minValType.setter
+   def minValueType(self, value):
+      if (value != "CLOSED") and (value != "OPEN"):
+         raise ValueError('value must be either "CLOSED" or "OPEN"')
+      self._minValType=value
+
+   @property
+   def maxValType(self):
+      return self._maxValType
+   @maxValType.setter
+   def maxValueType(self, value):
+      if (value != "CLOSED") and (value != "OPEN"):
+         raise ValueError('value must be either "CLOSED" or "OPEN"')
+      self._minValType=value
+
+   
    def __eq__(self,other):
       if self is other: return True
       if type(other) is type(self):
-         if (self.name==other.name) and (self.minval == other.minval) and (self.maxval==other.maxval):
+         if (self.name==other.name) and (self.minVal == other.minVal) and (self.maxVal==other.maxVal):
             if (self.compuMethodRef is not None) and (other.compuMethodRef is not None):
                return self.findWS().find(self.compuMethodRef) == other.findWS().find(other.compuMethodRef)
             elif (self.compuMethodRef is None) and (other.compuMethodRef is None):
                return True
    
    def __deepcopy__(self,memo):
-      obj=type(self)(self.name,self.minval,self.maxval,self.compuMethodRef)
+      obj=type(self)(self.name,self.minVal,self.maxVal,self.compuMethodRef)
       if self.adminData is not None: obj.adminData=copy.deepcopy(self.adminData,memo)
       return obj
             
-class RecordDataType(DataType):
-   
+class RecordDataType(DataType):   
    def tag(self,version=None): return 'RECORD-TYPE'      
-   def __init__(self,name,elements=None):
-      super().__init__(name)
+   def __init__(self, name, elements=None,  parent=None, adminData=None):
+      super().__init__(name, parent, adminData)
       self.elements = []
       if elements is not None:
          for elem in elements:
-            self.elements.append(RecordTypeElement(elem['name'],elem['typeRef'],self))
+            if isinstance(elem, RecordTypeElement):
+               self.elements.append(elem)
+               elem.parent=self
+            elif isinstance(elem, tuple):
+               self.elements.append(RecordTypeElement(elem[0],elem[1],self))
+            elif isinstance(elem, collections.Mapping):
+               self.elements.append(RecordTypeElement(elem['name'],elem['typeRef'],self))
+            else:
+               raise ValueError('element must be either Mapping, RecordTypeElement or tuple')
    def asdict(self):         
       data={'type': self.__class__.__name__,'name':self.name,'elements':[]}
       if self.adminData is not None:
@@ -142,8 +172,8 @@ class ArrayDataType(DataType):
    
    def tag(self,version=None): return 'ARRAY-TYPE'
    
-   def __init__(self,name,typeRef,length):
-      super().__init__(name)
+   def __init__(self, name, typeRef, length, parent=None, adminData=None):
+      super().__init__(name, parent, adminData)
       self.typeRef = typeRef
       self.length = length
 
@@ -151,15 +181,15 @@ class BooleanDataType(DataType):
    
    def tag(self,version=None): return 'BOOLEAN-TYPE'
    
-   def __init__(self,name):
-      super().__init__(name)
+   def __init__(self,name, parent=None, adminData=None):
+      super().__init__(name, parent, adminData)
 
 
 class StringDataType(DataType):
    def tag(self,version=None): return 'STRING-TYPE'
    
-   def __init__(self,name,length,encoding):
-      super().__init__(name)
+   def __init__(self,name,length,encoding, parent=None, adminData=None):
+      super().__init__(name, parent, adminData)
       self.length=length
       self.encoding=encoding
    def asdict(self):
@@ -180,12 +210,12 @@ class StringDataType(DataType):
 class RealDataType(DataType):
    def tag(self,version=None): return 'REAL-TYPE'
    
-   def __init__(self,name,minval,maxval,minvalType='CLOSED',maxvalType='CLOSED',hasNaN=False,encoding='single'):
-      super().__init__(name)
-      self.minval=minval
-      self.maxval=maxval
-      self.minvalType = minvalType
-      self.maxvalType = maxvalType
+   def __init__(self, name, minVal, maxVal, minValType='CLOSED', maxValType='CLOSED', hasNaN=False, encoding='SINGLE', parent=None, adminData=None):
+      super().__init__(name, parent, adminData)
+      self.minVal=minVal
+      self.maxVal=maxVal
+      self.minValType = minValType
+      self.maxValType = maxValType
       self.hasNaN=hasNaN
       self.encoding=encoding
       
@@ -225,19 +255,19 @@ class CompuMethodRational(Element):
 
       
 class CompuMethodConst(Element):
-   def __init__(self,name,elements):
-      super().__init__(name)
+   def __init__(self, name, elements, parent=None, adminData=None):
+      super().__init__(name, parent, adminData)
       self.elements = []
       for elem in elements:
          if isinstance(elem,str):
             index=len(self.elements)
-            self.elements.append(CompuConstElement(minvalue=index,maxvalue=index,textvalue=elem))
+            self.elements.append(CompuConstElement(lowerLimit=index,upperLimit=index,textValue=elem))
          elif isinstance(elem,dict):
             self.elements.append(CompuConstElement(**elem))
          elif isinstance(elem,tuple):
-            if len(elem==2):
-               self.elements.append(CompuConstElement(minvalue=elem[0],maxvalue=elem[0],textvalue=elem[1]))
-            elif len(elem==3):
+            if len(elem)==2:
+               self.elements.append(CompuConstElement(lowerLimit=elem[0],upperLimit=elem[0],textValue=elem[1]))
+            elif len(elem)==3:
                self.elements.append(CompuConstElement(*elem))
             else:
                raise ValueError('invalid length: %d'%len(elem))

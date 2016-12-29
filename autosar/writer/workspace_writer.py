@@ -1,5 +1,6 @@
 from autosar.writer.writer_base import WriterBase
 from autosar.writer.package_writer import PackageWriter
+import collections
 
 class WorkspaceWriter(WriterBase):
    def __init__(self,version=3):
@@ -20,17 +21,19 @@ class WorkspaceWriter(WriterBase):
       return result+'\n'.join(lines)+'\n'
    
    def toCode(self,ws,packages=None, head=None, tail=None):
+      localvars = collections.OrderedDict()
       if head is None:
-         lines=['import autosar','','ws=autosar.workspace()']
-         result='\n'.join(lines)+'\n'         
+         lines=['import autosar', 'ws=autosar.workspace()']
+         result='\n'.join(lines)+'\n\n'
       else:
          if isinstance(head,list):
             head = '\n'.join(head)
          assert(isinstance(head,str))
-         result = head+'\n'         
+         result = head+'\n\n'      
+      localvars['ws']=ws
       for package in ws.packages:
          if (isinstance(packages,list) and package.name in packages) or (packages is None):
-            lines=self.packageWriter.toCode(package)
+            lines=self.packageWriter.toCode(package, localvars)
             result+='\n'.join(lines)+'\n'
       if tail is None:
          result+='\n'+'print(ws.toXML())\n'

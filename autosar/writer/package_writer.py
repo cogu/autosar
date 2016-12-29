@@ -38,24 +38,25 @@ class PackageWriter(WriterBase):
                           'SYSTEM-SIGNAL': None,
                           'SYSTEM': None
                           }
-         self.switcherCode = {'ARRAY-TYPE': None,
-                          'BOOLEAN-TYPE': None,
-                          'IntegerDataType': None,
-                          'REAL-TYPE': None,
-                          'RECORD-TYPE': None,
-                          'STRING-TYPE': None,
+         self.switcherCode = {'ArrayDataType': self.dataTypeWriter.writeArrayDataTypeCode,
+                          'BooleanDataType': self.dataTypeWriter.writeBooleanDataTypeCode,
+                          'IntegerDataType': self.dataTypeWriter.writeIntegerTypeCode,
+                          'RealDataType': self.dataTypeWriter.writeRealDataTypeCode,
+                          'RecordDataType': self.dataTypeWriter.writeRecordDataTypeCode,
+                          'StringDataType': self.dataTypeWriter.writeStringTypeCode,
                           'ApplicationSoftwareComponent': self.componentTypeWriter.writeApplicationSoftwareComponentCode,
                           'COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE': None,
-                          'InternalBehavior': None,
-                          'SWC-IMPLEMENTATION': None,
-                          'CompuMethodConst': None,
-                          'UNIT': None,
-                          'SW-ADDR-METHOD': None,
-                          'MODE-DECLARATION-GROUP': None,
+                          'InternalBehavior': self.behaviorWriter.writeInternalBehaviorCode,
+                          'SwcImplementation': self.componentTypeWriter.writeSwcImplementationCode,
+                          'CompuMethodConst': self.dataTypeWriter.writeCompuMethodCode,
+                          'CompuMethodRational': self.dataTypeWriter.writeCompuMethodCode,
+                          'DataTypeUnitElement': self.dataTypeWriter.writeDataTypeUnitElementCode,
+                          'SoftwareAddressMethod': self.portInterfaceWriter.writeSoftwareAddressMethodCode,
+                          'ModeDeclarationGroup': self.portInterfaceWriter.writeModeDeclarationGroupCode,
                           'SenderReceiverInterface': self.portInterfaceWriter.writeSenderReceiverInterfaceCode,
                           'ParameterInterface': self.portInterfaceWriter.writeParameterInterfaceCode,
                           'ClientServerInterface': self.portInterfaceWriter.writeClientServerInterfaceCode,
-                          'Constant': None,
+                          'Constant': self.constantWriter.writeConstantCode,
                           'COMPOSITION-TYPE': None,
                           'SYSTEM-SIGNAL': None,
                           'SYSTEM': None
@@ -85,13 +86,22 @@ class PackageWriter(WriterBase):
       lines.extend(self.endPackage())
       return lines
    
-   def toCode(self,package):
+   def toCode(self, package, localvars):
       lines=[]
-      lines.append('%s=ws.createPackage("%s")'%(package.name,package.name))
+      if package.role is not None:
+         lines.append('package=ws.createPackage("%s", role="%s")'%(package.name, package.role))
+      else:
+         lines.append('package=ws.createPackage("%s")'%(package.name))
+      localvars['package']=package
+      for subPackage in package.subPackages:
+         if subPackage.role is not None:
+            lines.append('package.createSubPackage("%s", role="%s")'%(subPackage.name, subPackage.role))
+         else:
+            lines.append('package.createSubPackage("%s")'%(subPackage.name))            
       for elem in package.elements:
          writerFunc = self.switcherCode.get(elem.__class__.__name__)
          if writerFunc is not None:
-            lines.extend(writerFunc(elem,package))
+            lines.extend(writerFunc(elem, localvars))
          else:
             raise NotImplementedError(type(elem))            
       return lines

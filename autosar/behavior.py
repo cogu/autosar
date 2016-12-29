@@ -6,14 +6,14 @@ from autosar.element import Element
 
 
 class Event(Element):
-   def __init__(self,name,startOnEventRef=None):
-      super().__init__(name)
+   def __init__(self,name,startOnEventRef=None, parent=None):
+      super().__init__(name,parent)
       self.startOnEventRef = startOnEventRef
       self.modeDependency=None
 
 class ModeSwitchEvent(Event):
-   def __init__(self,name,startOnEventRef=None, activationType='ENTRY'):
-      super().__init__(name,startOnEventRef)
+   def __init__(self,name,startOnEventRef=None, activationType='ENTRY', parent=None):
+      super().__init__(name, startOnEventRef, parent)
       self.modeInstRef=None      
       if (activationType!='ENTRY') and (activationType != 'EXIT'):
          raise ValueError('activationType argument must be either "ENTRY" or "EXIT"')
@@ -23,8 +23,8 @@ class ModeSwitchEvent(Event):
       return 'MODE-SWITCH-EVENT'
 
 class TimingEvent(Event):
-   def __init__(self,name,startOnEventRef=None, period=None):
-      super().__init__(name,startOnEventRef)
+   def __init__(self,name,startOnEventRef=None, period=0, parent=None):
+      super().__init__(name, startOnEventRef, parent)
       self.period=int(period)
    
    def tag(self, version=None):
@@ -32,16 +32,23 @@ class TimingEvent(Event):
    
 
 class DataReceivedEvent(Event):
-   def __init__(self,name,startOnEventRef=None):
-      super().__init__(name,startOnEventRef)
+   def __init__(self, name, startOnEventRef=None, parent=None):
+      super().__init__(name, startOnEventRef, parent)
       self.dataInstanceRef=None
       self.swDataDefsProps=[]
+   def tag(self, version=None):
+      return "DATA-RECEIVED-EVENT"
+
 
 class OperationInvokedEvent(Event):
-   def __init__(self,name,startOnEventRef=None):
-      super().__init__(name,startOnEventRef)
+   def __init__(self, name, startOnEventRef=None, parent=None):
+      super().__init__(name, startOnEventRef, parent)
       self.operationInstanceRef=None
       self.swDataDefsProps=[]
+      
+   def tag(self, version=None):
+      return "OPERATION-INVOKED-EVENT"
+   
    
 
 class ModeDependency(object):
@@ -120,10 +127,11 @@ class RunnableEntity(object):
          self.symbol=name
       else:
          self.symbol = symbol
+      self.adminData=None
       self.parent=parent
       self.dataReceivePoints=[]
       self.dataSendPoints=[]
-      self.syncServerCallPoints=[]
+      self.serverCallPoints=[]
       self.canEnterExclusiveAreas=[]
    
    def tag(self,version=None):
@@ -149,11 +157,11 @@ class RunnableEntity(object):
       return data
    
    def append(self,elem):
-      if isinstance(elem,DataReceivePoint):
+      if isinstance(elem, autosar.behavior.DataReceivePoint):
          dataReceivePoint=self._verifyDataReceivePoint(copy.copy(elem))
          self.dataReceivePoints.append(dataReceivePoint)
          dataReceivePoint.parent=self
-      if isinstance(elem,DataSendPoint):
+      elif isinstance(elem, autosar.behavior.DataSendPoint):
          dataSendPoint=self._verifyDataSendPoint(copy.copy(elem))
          self.dataSendPoints.append(dataSendPoint)
          dataSendPoint.parent=self
@@ -236,6 +244,10 @@ class DataElementInstanceRef(object):
    def asdict(self):
       data={'type': self.__class__.__name__,'portRef':self.portRef, 'dataElemRef':self.dataElemRef}
       return data
+   def tag(self, version=None):
+      return 'DATA-ELEMENT-IREF'
+
+
 
 class DataInstanceRef(object):
    """
@@ -248,6 +260,10 @@ class DataInstanceRef(object):
    def asdict(self):
       data={'type': self.__class__.__name__,'portRef':self.portRef, 'dataElemRef':self.dataElemRef}
       return data
+   
+   def tag(self, version=None):
+      return 'DATA-IREF'
+   
 
 class OperationInstanceRef(object):
    """
@@ -256,28 +272,38 @@ class OperationInstanceRef(object):
    def __init__(self,portRef,operationRef):
       self.portRef = portRef
       self.operationRef = operationRef
+   
    def asdict(self):
       data={'type': self.__class__.__name__,'portRef':self.portRef, 'operationRef':self.operationRef}
       return data
+   
+   def tag(self, version=None):
+      return 'OPERATION-IREF'
+   
+   
 
 
-class PerInstanceMemory(object):
+class PerInstanceMemory(Element):
    """
    <PER-INSTANCE-MEMORY>
    Note: I don't know why this XML object has both <TYPE> and <TYPE-DEFINITION> where a simple TYPE-TREF should suffice.
    Internally use a typeRef for PerInstanceMemory. We can transform it back to <TYPE> and <TYPE-DEFINITION> when serializing to XML
    """
-   def __init__(self,name,typeRef):
-      self.name=name
+   def __init__(self, name, typeRef, parent=None):
+      super().__init__(name, parent)
       self.typeRef=typeRef
    def asdict(self):
       data={'type': self.__class__.__name__,'name':self.name, 'typeRef':self.typeRef}
       return data
+   
+   def tag(self, version = None):
+      return 'PER-INSTANCE-MEMORY'
+   
 
 class SwcNvBlockNeeds(object):
    def __init__(self,name,numberOfDataSets,readOnly,reliability,resistantToChangedSW,
-                writeOnlyOnce,writingFrequency,writingPriority,defaultBlockRef,
-                mirrorBlockRef):
+                restoreAtStart,writeOnlyOnce,writingFrequency,writingPriority,
+                defaultBlockRef,mirrorBlockRef):
       self.name=name      
       self.numberOfDataSets=numberOfDataSets
       assert(isinstance(readOnly,bool))
@@ -285,6 +311,8 @@ class SwcNvBlockNeeds(object):
       self.reliability=reliability
       assert(isinstance(resistantToChangedSW,bool))
       self.resistantToChangedSW=resistantToChangedSW
+      assert(isinstance(restoreAtStart,bool))
+      self.restoreAtStart=restoreAtStart
       assert(isinstance(writeOnlyOnce,bool))
       self.writeOnlyOnce=writeOnlyOnce
       self.writingFrequency=writingFrequency
@@ -301,6 +329,10 @@ class SwcNvBlockNeeds(object):
             data[key]=value
       if len(data['serviceCallPorts'])==0: del data['serviceCallPorts']
       return data
+   
+   def tag(self, version=None):
+      return 'SWC-NV-BLOCK-NEEDS'
+   
 
 class RoleBasedRPortAssignment(object):
    def __init__(self,portRef,role):
@@ -311,14 +343,17 @@ class RoleBasedRPortAssignment(object):
       for key, value in self.__dict__.items():
          data[key]=value
       return data
+   
+   def tag(self, version=None):
+      return 'ROLE-BASED-R-PORT-ASSIGNMENT'
 
-class CalPrmElemPrototype(object):
+
+class CalPrmElemPrototype(Element):
    """
    <CALPRM-ELEMENT-PROTOTYPE>
    """
-   def __init__(self,name,adminData,typeRef):
-      self.name=name
-      self.adminData=adminData
+   def __init__(self,name, typeRef, adminData=None, parent=None):
+      super().__init__(name, parent, adminData)
       self.typeRef=typeRef
       self.swDataDefsProps=[]
    def asdict(self):
@@ -328,6 +363,10 @@ class CalPrmElemPrototype(object):
       for elem in self.swDataDefsProps:
          data['swDataDefsProps'].append(elem)         
       return data
+   
+   def tag(self, version=None):
+      return 'CALPRM-ELEMENT-PROTOTYPE'
+   
 
 class ExclusiveArea(object):
    def __init__(self,name):
@@ -336,6 +375,10 @@ class ExclusiveArea(object):
    def asdict(self):
       data={'type': self.__class__.__name__,'name':self.name}
       return data
+   
+   def tag(self, version=None):
+      return 'EXCLUSIVE-AREA'
+
       
  
 class SyncServerCallPoint(object):
@@ -370,7 +413,7 @@ class InternalBehavior(Element):
       self.runnables = []
       self.perInstanceMemories = []
       self.swcNvBlockNeeds = []
-      self.sharedCalPrms=[]
+      self.sharedCalParams=[]
       self.exclusiveAreas=[]
       self.swc = None
    def asdict(self):
@@ -417,14 +460,20 @@ class InternalBehavior(Element):
       name=ref[0]
       for runnable in self.runnables:
          if runnable.name == name:
-            return runnable
+            return runnable      
+      for elem in self.sharedCalParams:
+         if elem.name == name:
+            return elem         
+      for elem in self.perInstanceMemories:
+         if elem.name == name:
+            return elem         
       return None
    
    def __getitem__(self,key):
       return self.find(key)
    
    def createRunnable(self,name,invokeConcurrently=False,symbol=None, portAccess=None):
-      runnable = RunnableEntity(name,invokeConcurrently,symbol,self)
+      runnable = RunnableEntity(name, invokeConcurrently, symbol, self)
       self.runnables.append(runnable)
       if portAccess is not None:
          if self.swc is None:
@@ -432,9 +481,14 @@ class InternalBehavior(Element):
             assert(ws is not None)
             self.swc = ws.find(self.componentRef)
          assert(self.swc is not None)
+         ws = self.rootWS()
+         assert (ws is not None)
          for elem in portAccess:
             ref = elem.partition('/')
             if len(ref[1])==0:
+               #this section is for portAccess where only the port name is mentioned.
+               #This method only works if the port interface has only 1 data element,
+               # i.e. no ambiguity as to what data element is meant
                port = self.swc.find(ref[0])               
                if port is None:
                   raise ValueError('invalid port reference: '+str(elem))
@@ -452,6 +506,8 @@ class InternalBehavior(Element):
                else:
                   raise NotImplementedError(type(portInterface))
             else:
+               #this section is for portAccess where both port name and dataelement is represented as "portName/dataElementName"
+               #this is all we need to find and build an actual 
                port = self.swc.find(ref[0])               
                if port is None:
                   raise ValueError('invalid port reference: '+str(elem))
@@ -483,6 +539,8 @@ class InternalBehavior(Element):
          
 
    def _createSendReceivePoint(self,port,dataElement,runnable):
+      #internal function that create a DataReceivePoint of the the port is a require port or
+      # a DataSendPoint if the port is a provide port
       if isinstance(port,autosar.component.RequirePort):
          receivePoint=DataReceivePoint(port.ref,dataElement.ref,'REC_{0.name}_{1.name}'.format(port,dataElement),runnable)
          runnable.dataReceivePoints.append(receivePoint)
@@ -522,7 +580,7 @@ class InternalBehavior(Element):
                   return (modeDeclarationRef,modeDeclarationGroupRef,port.ref)
             raise ValueError('"%s" did not match any of the mode declarations in %s'%(modeValue,dataType.ref))
          
-   def createModeSwitchEvent(self, modeRef, runnableRef, activationType='ENTRY', ):
+   def createModeSwitchEvent(self, runnableRef, modeRef, activationType='ENTRY', name=None):
       if self.swc is None:
          ws = self.rootWS()
          assert(ws is not None)
@@ -534,22 +592,23 @@ class InternalBehavior(Element):
       nameBase = "MST_"+runnable.name
       index = 0
       #try to find a suitable name for the event
-      eventName = None
-      while(True):
-         eventName= "%s_%d"%(nameBase,index)
-         found = False
-         for event in self.events:
-            if event.name == eventName:
-               found = True
+      eventName = name
+      if eventName is None:
+         while(True):
+            eventName= "%s_%d"%(nameBase,index)
+            found = False
+            for event in self.events:
+               if event.name == eventName:
+                  found = True
+                  break
+            if found:
+               index+=1
+            else:
                break
-         if found:
-            index+=1
-         else:
-            break      
 
       result = modeRef.partition('/')
       if result[1]!='/':
-         raise ValueError('invalid modeRef, expected "portName/modeValue", got "%s"'%dependency)         
+         raise ValueError('invalid modeRef, expected "portName/modeValue", got "%s"'%modeRef)         
       portName=result[0]
       modeValue=result[2]
       event = autosar.behavior.ModeSwitchEvent(eventName,runnableRef,activationType)
@@ -559,7 +618,7 @@ class InternalBehavior(Element):
       self.events.append(event)
       return event
 
-   def createTimingEvent(self, period, runnableRef, modeDependency=None ):
+   def createTimingEvent(self, runnableRef, period, modeDependency=None, name=None ):
       if self.swc is None:
          ws = self.rootWS()
          assert(ws is not None)
@@ -569,30 +628,32 @@ class InternalBehavior(Element):
 
       runnable=ws.find(runnableRef)
       assert(isinstance(runnable, autosar.behavior.RunnableEntity))
-      #try to find a suitable name for the event
-      baseName = "TMT_"+runnable.name
-      found = None
-      for event in self.events:
-         if event.name == baseName:
-            found = event
-            break
-      if found:
-         event.name=event.name+'_0'
-         index = 1     
-         eventName = None
-         while(True):
-            eventName= "%s_%d"%(baseName,index)
-            found = None
-            for event in self.events:
-               if event.name == eventName:
-                  found = event
-                  break
-            if found:
-               index+=1
-            else:
+      eventName=name
+      if eventName is None:
+         #try to find a suitable name for the event
+         baseName = "TMT_"+runnable.name
+         found = None
+         for event in self.events:
+            if event.name == baseName:
+               found = event
                break
-      else:
-         eventName = baseName
+         if found:
+            event.name=event.name+'_0'
+            index = 1     
+            eventName = None
+            while(True):
+               eventName= "%s_%d"%(baseName,index)
+               found = None
+               for event in self.events:
+                  if event.name == eventName:
+                     found = event
+                     break
+               if found:
+                  index+=1
+               else:
+                  break
+         else:
+            eventName = baseName
       
       event = autosar.behavior.TimingEvent(eventName,runnableRef,period)
       

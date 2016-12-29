@@ -1,8 +1,8 @@
 from autosar.base import parseXMLFile,splitRef,parseTextNode
 from autosar.datatype import *
-from autosar.parser.parser_base import ElementParser
+from autosar.parser.parser_base import BaseParser
 
-class DataTypeParser(ElementParser):
+class DataTypeParser(BaseParser):
    def __init__(self,handler,version=3.0):
       super().__init__(version)
       if version!=3.0:
@@ -129,10 +129,10 @@ class DataTypeSemanticsParser(object):
                   raise NotImplementedError('mixed compuscales not supported, item=%s'%name)
                else:
                   semanticsType='compuConst'
-                  minvalue = xmlItem.find('./LOWER-LIMIT').text
-                  maxvalue = xmlItem.find('./UPPER-LIMIT').text
-                  textValue = const.find('./VT').text
-                  semanticElements.append({'minvalue':int(minvalue),'maxvalue':int(maxvalue), 'textvalue': textValue})
+                  lowerLimit = parseTextNode(xmlItem.find('./LOWER-LIMIT'))
+                  upperLimit = parseTextNode(xmlItem.find('./UPPER-LIMIT'))
+                  textValue = parseTextNode(const.find('./VT'))
+                  semanticElements.append({'lowerLimit':int(lowerLimit),'upperLimit':int(upperLimit), 'textValue': textValue})
       if semanticsType == 'compuRational':
          if unitRef is not None: unitRef=unitRef.text
          method=CompuMethodRational(name,unitRef,semanticElements)

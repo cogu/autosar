@@ -1,7 +1,8 @@
 from autosar.base import hasAdminData,parseAdminDataNode,parseTextNode
 import autosar.portinterface
+from autosar.parser.parser_base import BaseParser
 
-class PortInterfacePackageParser(object):
+class PortInterfacePackageParser(BaseParser):
    def __init__(self,handler,version=3):
       if version == 3:
          self.version=version
@@ -36,8 +37,7 @@ class PortInterfacePackageParser(object):
                if xmlRoot.find('MODE-GROUPS') is not None:
                   portInterface.modeGroups=[]
                   for xmlItem in xmlRoot.findall('./MODE-GROUPS/MODE-DECLARATION-GROUP-PROTOTYPE'):
-                     modeGroup = autosar.portinterface.ModeGroup(xmlItem.find("./SHORT-NAME").text,portInterface)
-                     modeGroup.typeRef = xmlItem.find("./TYPE-TREF").text
+                     modeGroup = autosar.portinterface.ModeGroup(xmlItem.find("./SHORT-NAME").text,xmlItem.find("./TYPE-TREF").text,portInterface)                     
                      portInterface.modeGroups.append(modeGroup)
                return portInterface
 
@@ -74,6 +74,7 @@ class PortInterfacePackageParser(object):
                xmlOperationName = xmlOperation.find("./SHORT-NAME")
                if xmlOperationName is not None:
                   operation = autosar.portinterface.Operation(xmlOperationName.text,portInterface)
+                  self.parseDesc(xmlOperation,operation)          
                   if xmlOperation.find('./ARGUMENTS') is not None:
                      for xmlArgument in xmlOperation.findall('./ARGUMENTS/ARGUMENT-PROTOTYPE'):
                         name=xmlArgument.find("./SHORT-NAME").text
@@ -83,12 +84,12 @@ class PortInterfacePackageParser(object):
                   if xmlOperation.find('./POSSIBLE-ERROR-REFS'):
                      for xmlErrorRef in xmlOperation.findall('./POSSIBLE-ERROR-REFS/POSSIBLE-ERROR-REF'):
                         operation.errorRefs.append(xmlErrorRef.text)            
-                  portInterface.operations.append(operation)
+                  portInterface.operations.append(operation)                  
             if xmlRoot.find('./POSSIBLE-ERRORS'):
                for xmlError in xmlRoot.findall('./POSSIBLE-ERRORS/APPLICATION-ERROR'):
                   name=xmlError.find("./SHORT-NAME").text
                   errorCode=xmlError.find("./ERROR-CODE").text
-                  portInterface.applicationErrors.append(autosar.portinterface.ApplicationError(name,errorCode,portInterface))
+                  portInterface.applicationErrors.append(autosar.portinterface.ApplicationError(name,errorCode,portInterface))            
             return portInterface
 
 class CEPParameterGroupPackageParser(object):
@@ -117,17 +118,17 @@ class ModeDeclarationGroupPackageParser(object):
       initialModeRef = parseTextNode(xmlRoot.find('./INITIAL-MODE-REF'))      
       modeDclrGroup = autosar.portinterface.ModeDeclarationGroup(name,initialModeRef,None,parent)
       if xmlRoot.find('./MODE-DECLARATIONS') is not None:
-         self.parseModeDeclarations(xmlRoot.find('./MODE-DECLARATIONS'),modeDclrGroup,rootProject)
+         self.parseModeDeclarations(xmlRoot.find('./MODE-DECLARATIONS'), modeDclrGroup)
       
       if hasAdminData(xmlRoot):
          adminData = parseAdminDataNode(xmlRoot.find('ADMIN-DATA'))
          modeDclrGroup.adminData = adminData         
       return modeDclrGroup
    
-   def parseModeDeclarations(self,xmlRoot,parent,rootProject=None):
+   def parseModeDeclarations(self,xmlRoot,parent):
       assert(xmlRoot.tag=="MODE-DECLARATIONS")
-      assert(isinstance(parent,autosar.portinterface.ModeDeclarationGroup))
+      assert(isinstance(parent, autosar.portinterface.ModeDeclarationGroup))
       result = []
       for mode in xmlRoot.findall("./MODE-DECLARATION"):
-         parent.modeDeclarations.append(autosar.portinterface.ModeDeclaration(parseTextNode(mode.find("./SHORT-NAME")),parent))
+         parent.modeDeclarations.append(autosar.portinterface.ModeDeclaration(parseTextNode(mode.find("./SHORT-NAME")), parent))
       return result

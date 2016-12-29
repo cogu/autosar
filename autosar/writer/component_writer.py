@@ -39,10 +39,12 @@ class ComponentTypeWriter(WriterBase):
             elem=portInterface.find(comspec.name)
             if elem is None:
                raise ValueError("%s: invalid comspec name '%s'"%(port.ref,comspec.name))
-            if isinstance(elem,autosar.portinterface.DataElement):                              
+            if isinstance(elem,autosar.portinterface.DataElement):
                if elem.isQueued:
                   if self.version<4.0:
                      lines.append(self.indent('<QUEUED-RECEIVER-COM-SPEC>',2))
+                     lines.append(self.indent('<DATA-ELEMENT-REF DEST="%s">%s</DATA-ELEMENT-REF>'%(elem.tag(self.version),elem.ref),3))
+                     lines.append(self.indent('<QUEUE-LENGTH>%d</QUEUE-LENGTH>'%(int(comspec.queueLength)),3))
                      lines.append(self.indent('</QUEUED-RECEIVER-COM-SPEC>',2))
                else:
                   if self.version<4.0:
@@ -53,6 +55,10 @@ class ComponentTypeWriter(WriterBase):
                         tag = ws.find(comspec.initValueRef).tag(self.version)
                         lines.append(self.indent('<INIT-VALUE-REF DEST="%s">%s</INIT-VALUE-REF>'%(tag,comspec.initValueRef),3))
                      lines.append(self.indent('</UNQUEUED-RECEIVER-COM-SPEC>',2))
+            elif isinstance(elem,autosar.portinterface.Operation):
+               lines.append(self.indent('<CLIENT-COM-SPEC>',2))
+               lines.append(self.indent('<OPERATION-REF DEST="%s">%s</OPERATION-REF>'%(elem.tag(self.version),elem.ref),3))
+               lines.append(self.indent('</CLIENT-COM-SPEC>',2))
             else:
                raise NotImplementedError(str(type(elem)))
          lines.append(self.indent('</REQUIRED-COM-SPECS>',1))
@@ -82,6 +88,7 @@ class ComponentTypeWriter(WriterBase):
                if elem.isQueued:
                   if self.version<4.0:
                      lines.append(self.indent('<QUEUED-SENDER-COM-SPEC>',2))
+                     lines.append(self.indent('<DATA-ELEMENT-REF DEST="%s">%s</DATA-ELEMENT-REF>'%(elem.tag(self.version),elem.ref),3))
                      lines.append(self.indent('</QUEUED-SENDER-COM-SPEC>',2))
                else:
                   if self.version<4.0:
@@ -93,6 +100,11 @@ class ComponentTypeWriter(WriterBase):
                         tag = ws.find(comspec.initValueRef).tag(self.version)
                         lines.append(self.indent('<INIT-VALUE-REF DEST="%s">%s</INIT-VALUE-REF>'%(tag,comspec.initValueRef),3))                  
                      lines.append(self.indent('</UNQUEUED-SENDER-COM-SPEC>',2))
+            elif isinstance(elem,autosar.portinterface.Operation):
+               lines.append(self.indent('<SERVER-COM-SPEC>',2))
+               lines.append(self.indent('<OPERATION-REF DEST="%s">%s</OPERATION-REF>'%(elem.tag(self.version),elem.ref),3))
+               lines.append(self.indent('<QUEUE-LENGTH>%d</QUEUE-LENGTH>'%(int(comspec.queueLength)),3))
+               lines.append(self.indent('</SERVER-COM-SPEC>',2))
             else:
                raise NotImplementedError(str(type(elem)))
          lines.append(self.indent('</PROVIDED-COM-SPECS>',1))      
@@ -101,12 +113,13 @@ class ComponentTypeWriter(WriterBase):
       return lines
    
    
-   def writeApplicationSoftwareComponentCode(self,swc,package):
+   def writeApplicationSoftwareComponentCode(self, swc, localvars):
       lines=[]
-      lines.append("ws['%s'].append(ar.ApplicationSoftwareComponent('%s'))"%(package.name,swc.name))
-      lines.append("swc=ws['%s/%s']"%(package.name,swc.name))
+      package=localvars['package']      
+      lines.append("swc = %s.createApplicationSoftwareComponent('%s')"%('package', swc.name))
+      localvars['swc']=swc
       if len(swc.providePorts)>0:
-         lines.extend(self.writeSWCProvidePortsCode(swc))      
+         lines.extend(self.writeSWCProvidePortsCode(swc))
       if len(swc.requirePorts)>0:
          lines.extend(self.writeSWCRequirePortsCode(swc))      
       return lines
@@ -134,7 +147,7 @@ class ComponentTypeWriter(WriterBase):
                      args.append("initValueRef='%s'"%valueRef)
                else:
                   raise NotImplementedError('multiple comspecs not yet supported')                        
-            lines.append('swc.createProvidePort(%s)'%(','.join(args)))
+            lines.append('swc.createProvidePort(%s)'%(', '.join(args)))
          else:
             raise NotImplementedError(type(portInterface))
       return lines
@@ -144,27 +157,31 @@ class ComponentTypeWriter(WriterBase):
       ws=swc.rootWS()
       assert(isinstance(ws,autosar.Workspace))
       for port in swc.requirePorts:
-         args=[]
-         args.append("'%s'"%port.name)
+         params=[]
+         params.append('"%s"'%port.name)
          portInterface=ws.find(port.portInterfaceRef)
          assert(portInterface is not None)
          if isinstance(portInterface,autosar.portinterface.SenderReceiverInterface):
-            args.append("'%s'"%port.portInterfaceRef)
+#            params.append("'%s'"%port.portInterfaceRef)
+            params.append('"%s"'%portInterface.name)
             if len(port.comspec)>0:
                if len(port.comspec)==1:
                   comspec=port.comspec[0]
                   if comspec.initValueRef is not None:
                      tmp=splitRef(comspec.initValueRef)
-                     if len(tmp)==3:
-                        valueRef='/'+'/'.join(tmp[:-1])
-                     else:
-                        valueRef=comspec.initValueRef
-                     args.append("initValueRef='%s'"%valueRef)
-                  if comspec.aliveTimeout is not None:
-                     args.append("aliveTimeout=%d"%int(comspec.aliveTimeout))
+#                     if len(tmp)==3:
+#                        valueRef='/'+'/'.join(tmp[:-1])
+#                     else:
+#                        valueRef=comspec.initValueRef
+                     params.append('initValueRef="%s"'%tmp[-1])
+                  if (comspec.aliveTimeout is not None) and int(comspec.aliveTimeout)>0:
+                     params.append("aliveTimeout=%d"%int(comspec.aliveTimeout))
                else:
                   raise NotImplementedError('multiple comspecs not yet supported')                        
-            lines.append('swc.createRequirePort(%s)'%(','.join(args)))
+            lines.append('swc.createRequirePort(%s)'%(', '.join(params)))
+         elif isinstance(portInterface,autosar.portinterface.ClientServerInterface):
+            params.append('"%s"'%port.portInterfaceRef)
+            lines.append('swc.createRequirePort(%s)'%(', '.join(params)))
          else:
             raise NotImplementedError(type(portInterface))
       return lines
@@ -188,4 +205,9 @@ class ComponentTypeWriter(WriterBase):
       lines.append(self.indent('</CODE-DESCRIPTORS>',1))
       lines.append(self.indent('<BEHAVIOR-REF DEST="%s">%s</BEHAVIOR-REF>'%(behavior.tag(self.version),elem.behaviorRef),1))
       lines.append('</SWC-IMPLEMENTATION>')
+      return lines
+   
+   def writeSwcImplementationCode(self, elem, localvars):
+      lines=[]
+      print(type(localvars['swc'].implementation))
       return lines

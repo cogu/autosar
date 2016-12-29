@@ -1,9 +1,12 @@
 from autosar.workspace import Workspace
 from autosar.component import ApplicationSoftwareComponent,ComponentType,RequirePort,ProvidePort,DataElementComSpec
 from autosar.behavior import InternalBehavior,RunnableEntity,DataReceivePoint
-from autosar.portinterface import ParameterInterface,SenderReceiverInterface,ClientServerInterface,DataElement
-from autosar.datatype import RecordDataType,BooleanDataType,IntegerDataType,CompuMethodConst,CompuMethodRational,StringDataType,ArrayDataType
-from autosar.constant import ArrayValue,IntegerValue,StringValue,BooleanValue,RecordValue,Constant
+#from autosar.portinterface import ParameterInterface,SenderReceiverInterface,ClientServerInterface,DataElement
+import autosar.portinterface
+#from autosar.datatype import RecordDataType,BooleanDataType,IntegerDataType,CompuMethodConst,CompuMethodRational,StringDataType,ArrayDataType
+import autosar.datatype
+
+import autosar.constant
 from autosar.base import splitRef
 from autosar.signal import SystemSignal
 from autosar.package import Package
@@ -66,3 +69,15 @@ def dcfImport(filename):
 
 def splitRef(ref):
    return autosar.base.splitRef(ref)
+
+def DataElement(name, typeRef, isQueued=False, softwareAddressMethodRef=None, parent=None, adminData=None):
+   return autosar.portinterface.DataElement(name, typeRef, isQueued, softwareAddressMethodRef, parent, adminData)
+
+def ApplicationError(name, errorCode, parent=None, adminData=None):
+   return autosar.portinterface.ApplicationError(name, errorCode, parent, adminData)
+
+def ModeGroup(name, typeRef, parent=None, adminData=None):
+   return autosar.portinterface.ModeGroup(name, typeRef, parent, adminData)
+
+def CompuMethodConst(name, elements, parent=None, adminData=None):
+   return autosar.datatype.CompuMethodConst(name, elements, parent, adminData)

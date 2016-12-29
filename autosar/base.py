@@ -11,12 +11,14 @@ class AdminData(object):
       return retval
 
 class SpecialDataGroup(object):
-   def __init__(self,GID,SD=None,SD_GID=None):
-      self.GID=GID
+   def __init__(self,SDG_GID,SD=None,SD_GID=None):
+      self.SDG_GID=SDG_GID
       self.SD=SD
       self.SD_GID=SD_GID
+      
    def asdict(self):
-      data = {'type': self.__class__.__name__, 'GID':self.GID}
+      data = {'type': self.__class__.__name__}
+      if self.SDG_GID is not None: data['SDG_GID']=self.SDG_GID
       if self.SD is not None: data['SD']=self.SD
       if self.SD_GID is not None: data['SD_GID']=self.SD_GID
       return data
@@ -93,10 +95,21 @@ def indexByName(lst,name):
    for i,item in enumerate(lst):
       if item.name == name: return i
    raise ValueError('%s not in list'%name)
+
+def createAdminData(data):
+   if isinstance(data, dict):
+      data=[data]
+   adminData = AdminData()
+   for item in data:
+      SDG_GID = item.get('SDG_GID',None)
+      SD_GID = item.get('SD_GID',None)
+      SD = item.get('SD',None)         
+      adminData.specialDataGroups.append(SpecialDataGroup(SDG_GID,SD,SD_GID))
+   return adminData
       
-class ChildElement:
-   def rootWS(self):
-      if self.parent is None:
-         return None
-      else:
-         return self.parent.rootWS()
+# class ChildElement:
+#    def rootWS(self):
+#       if self.parent is None:
+#          return None
+#       else:
+#          return self.parent.rootWS()

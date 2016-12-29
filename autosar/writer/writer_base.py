@@ -1,5 +1,8 @@
 import autosar.base
 import xml.sax.saxutils
+import json
+import collections
+
 class WriterBase():
    def __init__(self,version=3.0):
       self.version=version
@@ -53,8 +56,8 @@ class WriterBase():
       if len(elem.specialDataGroups)>0:
          lines.append(self.indent('<SDGS>',1))
          for sdg in elem.specialDataGroups:
-            if sdg.GID is not None:
-               lines.append(self.indent('<SDG GID="%s">'%sdg.GID,2))
+            if sdg.SDG_GID is not None:
+               lines.append(self.indent('<SDG GID="%s">'%sdg.SDG_GID,2))
             else:
                lines.append(self.indent('<SDG>',2))
             if (sdg.SD is not None) and (sdg.SD_GID is not None):
@@ -72,13 +75,87 @@ class WriterBase():
       
    def writeDescXML(self,elem):
       if hasattr(elem,'desc'):
-         if hasattr(elem,'descType'):
-            descType=elem.descType
+         if hasattr(elem,'descAttr'):
+            descAttr=elem.descAttr
          else:
-            descType='FOR-ALL'
+            descAttr='FOR-ALL'
          lines = []
          lines.append('<DESC>')
-         lines.append(self.indent('<L-2 L="%s">%s</L-2>'%(descType,xml.sax.saxutils.escape(elem.desc)),1))
+         lines.append(self.indent('<L-2 L="%s">%s</L-2>'%(descAttr,xml.sax.saxutils.escape(elem.desc)),1))
          lines.append('</DESC>')
          return lines
       return None
+   
+   def writeDescCode(self, elem):
+      if hasattr(elem,'desc'):
+         if hasattr(elem,'descAttr') and (elem.descAttr != "FOR-ALL"):
+            descAttr=elem.descAttr
+         else:
+            descAttr=None
+         return elem.desc,descAttr
+      return None,None
+   
+   
+   def writeQuoteListCode(self, varname, data):
+      """
+      writes data as as an array where each element is encapsulated in string quotes ("")
+      """
+      lines=['%s = ['%varname]
+      indent=' '*(len(varname)+6)
+      for i,elem in enumerate(data):         
+         if i+1==len(data):
+            lines.append('%s"%s"'%(indent,str(elem)))
+         else:
+            lines.append('%s"%s",'%(indent,str(elem)))
+      indent=' '*(len(varname)+3)
+      lines.append('%s]'%indent)
+      return lines
+   
+   def writeListCode(self, varname, data):
+      """
+      same as writeQuoteListCode but without adding quote characters
+      """
+      lines=['%s = ['%varname]
+      indent=' '*(len(varname)+6)
+      for i,elem in enumerate(data):         
+         if i+1==len(data):
+            lines.append('%s%s'%(indent,str(elem)))
+         else:
+            lines.append('%s%s,'%(indent,str(elem)))
+      indent=' '*(len(varname)+3)
+      lines.append('%s]'%indent)
+      return lines
+
+   def writeDictCode(self, varname, data):
+      """
+      same as writeListCode but replaces surrounding [] with {}
+      """
+      lines=['%s = {'%varname]
+      indent=' '*(len(varname)+6)
+      for i,elem in enumerate(data):         
+         if i+1==len(data):
+            lines.append('%s%s'%(indent,str(elem)))
+         else:
+            lines.append('%s%s,'%(indent,str(elem)))
+      indent=' '*(len(varname)+3)
+      lines.append('%s}'%indent)
+      return lines
+
+   
+   def writeAdminDataCode(self, adminData, localvars):
+      """
+      turns an autosar.base.AdminData object into a create call from ws
+      """
+      items=[]
+      for sdg in adminData.specialDataGroups:
+         data=collections.OrderedDict()
+         if sdg.SDG_GID is not None: data['SDG_GID']=sdg.SDG_GID
+         if sdg.SD_GID is not None: data['SD_GID']=sdg.SD_GID
+         if sdg.SD is not None: data['SD']=sdg.SD
+         items.append(data)
+      if len(items)==0:
+         raise ValueError("adminData doesn't seem to contain any SpecialDataGroups")
+      elif len(items)==1:
+         return json.dumps(items[0])
+      else:
+         return json.dumps(items)

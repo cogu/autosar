@@ -10,14 +10,19 @@ class BehaviorParser(object):
       self.pkg=pkg
 
    def parseInternalBehavior(self,xmlRoot,dummy,parent=None):
-      xmlName = xmlRoot.find('SHORT-NAME')
-      xmlComponentRef = xmlRoot.find('COMPONENT-REF')
-      xmlSupportMultipleInst = xmlRoot.find('SUPPORTS-MULTIPLE-INSTANTIATION')      
+      xmlName = parseTextNode(xmlRoot.find('SHORT-NAME'))
+      xmlComponentRef = parseTextNode(xmlRoot.find('COMPONENT-REF'))
+      xmlSupportMultipleInst = xmlRoot.find('SUPPORTS-MULTIPLE-INSTANTIATION')
+      ws = parent.rootWS()
+      assert(ws is not None)
       if (xmlName is not None) and (xmlComponentRef is not None):
          multipleInstance = False
          if (xmlSupportMultipleInst is not None) and (xmlSupportMultipleInst.text == 'true'):
             multipleInstance = True
-         internalBehavior = InternalBehavior(xmlName.text,xmlComponentRef.text,multipleInstance)
+         internalBehavior = InternalBehavior(xmlName, xmlComponentRef, multipleInstance, parent)
+         swc = ws.find(xmlComponentRef)
+         if swc is not None:
+            swc.behavior=internalBehavior
          for xmlNode in xmlRoot.findall('./*'):
             if (xmlNode.tag == 'SHORT-NAME') or (xmlNode.tag == 'COMPONENT-REF') or (xmlNode.tag == 'SUPPORTS-MULTIPLE-INSTANTIATION'):
                continue
@@ -25,13 +30,13 @@ class BehaviorParser(object):
                for xmlEvent in xmlNode.findall('./*'):
                   event = None
                   if xmlEvent.tag == 'MODE-SWITCH-EVENT':
-                     event = self.parseModeSwitchEvent(xmlEvent,parent)
+                     event = self.parseModeSwitchEvent(xmlEvent,internalBehavior)
                   elif xmlEvent.tag == 'TIMING-EVENT':
-                     event = self.parseTimingEvent(xmlEvent,parent)
+                     event = self.parseTimingEvent(xmlEvent,internalBehavior)
                   elif xmlEvent.tag == 'DATA-RECEIVED-EVENT':
-                     event = self.parseDataReceivedEvent(xmlEvent,parent)
+                     event = self.parseDataReceivedEvent(xmlEvent,internalBehavior)
                   elif xmlEvent.tag == 'OPERATION-INVOKED-EVENT':
-                     event = self.parseOperationInvokedEvent(xmlEvent,parent)
+                     event = self.parseOperationInvokedEvent(xmlEvent,internalBehavior)
                   else:
                      raise NotImplementedError(xmlEvent.tag)
                   if event is not None:
@@ -48,6 +53,7 @@ class BehaviorParser(object):
                   xmlDataSendPoints=None
                   xmlServerCallPoints=None
                   xmlCanEnterExclusiveAreas=None
+                  adminData = None
                   for xmlElem in xmRunnable.findall('*'):
                      if xmlElem.tag=='SHORT-NAME':
                         name=parseTextNode(xmlElem)
@@ -63,9 +69,11 @@ class BehaviorParser(object):
                         symbol=parseTextNode(xmlElem)
                      elif xmlElem.tag=='CAN-ENTER-EXCLUSIVE-AREA-REFS':
                         xmlCanEnterExclusiveAreas=xmlElem
+                     elif xmlElem.tag=='ADMIN-DATA':
+                        adminData=parseAdminDataNode(xmlElem)
                      else:
                         raise NotImplementedError(xmlElem.tag)
-                  runnableEntity = RunnableEntity(name,canBeInvokedConcurrently,symbol)                                     
+                  runnableEntity = RunnableEntity(name, canBeInvokedConcurrently, symbol, parent=internalBehavior)
                   if xmlDataReceivePoints is not None:
                      for xmlDataPoint in xmlDataReceivePoints.findall('./DATA-RECEIVE-POINT'):                        
                         name=parseTextNode(xmlDataPoint.find('SHORT-NAME'))
@@ -83,14 +91,16 @@ class BehaviorParser(object):
                   if xmlServerCallPoints is not None:
                      for xmlServerCallPoint in xmlServerCallPoints.findall('./SYNCHRONOUS-SERVER-CALL-POINT'):
                         syncServerCallPoint = self.parseSyncServerCallPoint(xmlServerCallPoint)
-                        if syncServerCallPoint is not None: runnableEntity.syncServerCallPoints.append(syncServerCallPoint)
+                        if syncServerCallPoint is not None: runnableEntity.serverCallPoints.append(syncServerCallPoint)
                   if xmlCanEnterExclusiveAreas is not None:
                      for xmlCanEnterExclusiveAreaRef in xmlCanEnterExclusiveAreas.findall('./CAN-ENTER-EXCLUSIVE-AREA-REF'):
                         runnableEntity.canEnterExclusiveAreas.append(parseTextNode(xmlCanEnterExclusiveAreaRef))                        
-                  if runnableEntity is not None: internalBehavior.runnables.append(runnableEntity)
+                  if runnableEntity is not None:
+                     runnableEntity.adminData = adminData
+                     internalBehavior.runnables.append(runnableEntity)
             elif xmlNode.tag == 'PER-INSTANCE-MEMORYS':               
                for xmlElem in xmlNode.findall('./PER-INSTANCE-MEMORY'):
-                 perInstanceMemory = PerInstanceMemory(parseTextNode(xmlElem.find('SHORT-NAME')),parseTextNode(xmlElem.find('TYPE-DEFINITION')))
+                 perInstanceMemory = PerInstanceMemory(parseTextNode(xmlElem.find('SHORT-NAME')),parseTextNode(xmlElem.find('TYPE-DEFINITION')), internalBehavior)
                  if perInstanceMemory is not None: internalBehavior.perInstanceMemories.append(perInstanceMemory)
             elif xmlNode.tag == 'SERVICE-NEEDSS':
                for xmlElem in xmlNode.findall('./*'):
@@ -102,9 +112,9 @@ class BehaviorParser(object):
             elif xmlNode.tag == 'SHARED-CALPRMS':
                for xmlElem in xmlNode.findall('./*'):
                   if xmlElem.tag=='CALPRM-ELEMENT-PROTOTYPE':
-                     calPrmElemPrototype=self.parseCalPrmElemPrototype(xmlElem)
+                     calPrmElemPrototype=self.parseCalPrmElemPrototype(xmlElem, internalBehavior)
                      assert(calPrmElemPrototype is not None)
-                     internalBehavior.sharedCalPrms.append(calPrmElemPrototype)
+                     internalBehavior.sharedCalParams.append(calPrmElemPrototype)
                   else:
                      raise NotImplementedError(xmlElem.tag)
             elif xmlNode.tag == 'EXCLUSIVE-AREAS':
@@ -144,7 +154,7 @@ class BehaviorParser(object):
       modeDeclarationRef=parseTextNode(xmlRoot.find('MODE-DECLARATION-REF'))
       modeDeclarationGroupPrototypeRef = parseTextNode(xmlRoot.find('MODE-DECLARATION-GROUP-PROTOTYPE-REF'))
       requirePortPrototypeRef = parseTextNode(xmlRoot.find('R-PORT-PROTOTYPE-REF'))
-      return ModeInstanceRef(modeDeclarationRef,modeDeclarationGroupPrototypeRef,requirePortPrototypeRef)    
+      return ModeDependencyRef(modeDeclarationRef,modeDeclarationGroupPrototypeRef,requirePortPrototypeRef)    
       
       
    def parseModeSwitchEvent(self,xmlNode,parent=None):
@@ -154,20 +164,20 @@ class BehaviorParser(object):
       modeInstRef = self.parseModeInstanceRef(xmlNode.find('MODE-IREF'))
       startOnEventRef = parseTextNode(xmlNode.find('START-ON-EVENT-REF'))
       activation = parseTextNode(xmlNode.find('ACTIVATION'))
-      modeSwitchEvent=ModeSwitchEvent(name,startOnEventRef)
+      modeSwitchEvent=ModeSwitchEvent(name, startOnEventRef, activation, parent)
       modeSwitchEvent.modeInstRef=modeInstRef
       return modeSwitchEvent
 
    def parseTimingEvent(self,xmlNode,parent=None):
       name = parseTextNode(xmlNode.find('SHORT-NAME'))      
       startOnEventRef = parseTextNode(xmlNode.find('START-ON-EVENT-REF'))
-      period=parseTextNode(xmlNode.find('PERIOD'))      
-      timingEvent=TimingEvent(name,startOnEventRef)
+      period=parseTextNode(xmlNode.find('PERIOD'))
+      if period is None:
+         period=0.0
+      timingEvent=TimingEvent(name, startOnEventRef, float(period)*1000, parent)
       xmlModeDependency = xmlNode.find('MODE-DEPENDENCY')
       if xmlModeDependency is not None:
-         timingEvent.modeDependency = self.parseModeDependency(xmlModeDependency,parent)
-      if period is not None:
-         timingEvent.period = float(period)
+         timingEvent.modeDependency = self.parseModeDependency(xmlModeDependency, parent)
       return timingEvent
 
    
@@ -175,7 +185,7 @@ class BehaviorParser(object):
       name = parseTextNode(xmlRoot.find('SHORT-NAME'))      
       startOnEventRef = parseTextNode(xmlRoot.find('START-ON-EVENT-REF'))
       dataInstanceRef=self.parseDataInstanceRef(xmlRoot.find('DATA-IREF'),'R-PORT-PROTOTYPE-REF')
-      dataReceivedEvent=DataReceivedEvent(name,startOnEventRef)
+      dataReceivedEvent=DataReceivedEvent(name, startOnEventRef, parent)
       xmlModeDependency = xmlRoot.find('MODE-DEPENDENCY')
       if xmlModeDependency is not None:
          dataReceivedEvent.modeDependency = self.parseModeDependency(xmlModeDependency)
@@ -186,7 +196,7 @@ class BehaviorParser(object):
       name = parseTextNode(xmlRoot.find('SHORT-NAME'))      
       startOnEventRef = parseTextNode(xmlRoot.find('START-ON-EVENT-REF'))
       operationInstanceRef=self.parseOperationInstanceRef(xmlRoot.find('OPERATION-IREF'),'P-PORT-PROTOTYPE-REF')
-      operationInvokedEvent=OperationInvokedEvent(name,startOnEventRef)
+      operationInvokedEvent=OperationInvokedEvent(name, startOnEventRef, parent)
       xmlModeDependency = xmlRoot.find('MODE-DEPENDENCY')
       if xmlModeDependency is not None:
          operationInvokedEvent.modeDependency = self.parseModeDependency(xmlModeDependency)
@@ -221,12 +231,13 @@ class BehaviorParser(object):
       restoreAtStart=parseBooleanNode(xmlRoot.find('RESTORE-AT-START'))
       writeOnlyOnce=parseBooleanNode(xmlRoot.find('WRITE-ONLY-ONCE'))
       writingFrequency=parseIntNode(xmlRoot.find('WRITING-FREQUENCY'))
+      writingPriority=parseTextNode(xmlRoot.find('WRITING-PRIORITY'))
       defaultBlockRef=parseTextNode(xmlRoot.find('DEFAULT-BLOCK-REF'))
       mirrorBlockref=parseTextNode(xmlRoot.find('MIRROR-BLOCK-REF'))      
       serviceCallPorts=self.parseServiceCallPorts(xmlRoot.find('SERVICE-CALL-PORTS'))
       assert(len(serviceCallPorts)>0)
       swcNvBlockNeeds=SwcNvBlockNeeds(name,numberOfDataSets,readonly,reliability,resistantToChangedSW,restoreAtStart,
-                                      writeOnlyOnce,writingFrequency,defaultBlockRef,mirrorBlockref)
+                                      writeOnlyOnce,writingFrequency,writingPriority,defaultBlockRef,mirrorBlockref)
       swcNvBlockNeeds.serviceCallPorts=serviceCallPorts
       return swcNvBlockNeeds
 
@@ -239,17 +250,17 @@ class BehaviorParser(object):
          serviceCallPorts.append(roleBasedRPortAssignment)
       return serviceCallPorts
    
-   def parseCalPrmElemPrototype(self, xmlRoot):
+   def parseCalPrmElemPrototype(self, xmlRoot, parent):
       """
       parses <CALPRM-ELEMENT-PROTOTYPE>
       """
       name = parseTextNode(xmlRoot.find('SHORT-NAME'))
       adminData=parseAdminDataNode(xmlRoot.find('ADMIN-DATA'))
       typeRef = parseTextNode(xmlRoot.find('TYPE-TREF'))
-      calPrmElemPrototype = CalPrmElemPrototype(name,adminData,typeRef)
+      calPrmElemPrototype = CalPrmElemPrototype(name, typeRef, adminData, parent)
       for xmlElem in xmlRoot.findall('./SW-DATA-DEF-PROPS/*'):
          if xmlElem.tag=='SW-ADDR-METHOD-REF':
-            calPrmElemPrototype.swDataDefsProps.append({'type':'SwAddrMethodRef','value':parseTextNode(xmlElem)})
+            calPrmElemPrototype.swDataDefsProps.append(parseTextNode(xmlElem))
          else:
             raise NotImplementedError(xmlElem.tag)
       return calPrmElemPrototype

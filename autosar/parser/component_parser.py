@@ -115,10 +115,17 @@ class ComponentTypeParser(object):
             componentType.providePorts.append(port)      
 
    def parseSwcImplementation(self,xmlRoot,dummy,parent=None):
+      ws = parent.rootWS()
+      assert(ws is not None)
       name = parseTextNode(xmlRoot.find('SHORT-NAME'))
       behaviorRef = parseTextNode(xmlRoot.find('BEHAVIOR-REF'))      
-      impl = SwcImplementation(name,behaviorRef,parent=parent)
-      return impl
+      implementation = SwcImplementation(name,behaviorRef,parent=parent)
+      behavior = ws.find(behaviorRef)
+      if behavior is not None:
+         swc = ws.find(behavior.componentRef)
+         if swc is not None:
+            swc.implementation=implementation
+      return implementation
    
    def parseCompositionType(self,xmlRoot,dummy,parent=None):
       """

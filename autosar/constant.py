@@ -25,8 +25,8 @@ class IntegerValue(Value):
    
    def tag(self,version=None): return "INTEGER-LITERAL"   
 
-   def __init__(self,name,typeRef=None,value=None):
-      super().__init__(name)
+   def __init__(self, name, typeRef=None, value=None, parent=None):
+      super().__init__(name, parent)
       self.typeRef=typeRef
       self.value=value
    
@@ -47,8 +47,8 @@ class StringValue(Value):
    def tag(self,version=None): return "STRING-LITERAL"
 
 
-   def __init__(self,name,typeRef=None,value=None):
-      super().__init__(name)
+   def __init__(self, name, typeRef=None, value=None, parent=None):
+      super().__init__(name, parent)
       if value is None:
          value=''
       assert(isinstance(value,str))
@@ -70,8 +70,8 @@ class BooleanValue(Value):
    
    def tag(self,version=None): return "BOOLEAN-LITERAL"
 
-   def __init__(self,name,typeRef=None,value=None):
-      super().__init__(name)
+   def __init__(self, name, typeRef=None, value=None, parent=None):
+      super().__init__(name, parent)
       self.typeRef=typeRef
       self.value=value
       
@@ -83,7 +83,7 @@ class BooleanValue(Value):
    def value(self,val):               
       if val is not None:
          if isinstance(val,str):            
-            self._value = True if val=='true' else 'false'
+            self._value = True if val=='true' else False
          else:
             self._value=bool(val)
       else:
@@ -93,8 +93,8 @@ class RecordValue(Value):
    
    def tag(self,version=None): return "RECORD-SPECIFICATION"
    
-   def __init__(self,name,typeRef=None):
-      super().__init__(name)
+   def __init__(self, name, typeRef=None, parent=None):
+      super().__init__(name, parent)
       self.typeRef=typeRef
       self.elements=[]
    def asdict(self):
@@ -108,8 +108,8 @@ class ArrayValue(Value):
    
    def tag(self,version=None): return "ARRAY-SPECIFICATION"
 
-   def __init__(self,name,typeRef=None):
-      super().__init__(name)
+   def __init__(self, name, typeRef=None, parent=None):
+      super().__init__(name, parent)
       self.typeRef=typeRef
       self.elements=[]
    def asdict(self):
@@ -120,8 +120,8 @@ class ArrayValue(Value):
 
 
 class Constant(Element):
-   def __init__(self,name,value=None):
-      super().__init__(name)
+   def __init__(self, name, value=None, parent=None, adminData=None):
+      super().__init__(name, parent, adminData)
       self.value=value
       if value is not None:
          value.parent=self

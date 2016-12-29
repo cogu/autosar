@@ -1,1 +1,0 @@
-from autosar.parser.package_parser import PackageParser

@@ -102,4 +102,107 @@ class ConstantWriter(WriterBase):
      
       lines.append('</ARRAY-SPECIFICATION>')
       return lines
-      
+   
+   ###code generators
+   
+   def writeConstantCode(self, constant, localvars):
+      lines=[]      
+      ws=localvars['ws']      
+      if not isinstance(constant, autosar.constant.Constant):
+         raise ValueError('expected type autosar.constant.Constant')
+      if constant.value is not None:
+         dataType = ws.find(constant.value.typeRef, role='DataType')
+         constructor=None
+         if dataType is None:
+            raise ValueError('invalid reference: '+constant.value.typeRef)
+         if isinstance(constant.value, autosar.constant.ArrayValue):
+            initValue = self._writeArrayValueConstantCode(constant.value, localvars)            
+         elif isinstance(constant.value, autosar.constant.IntegerValue):
+            initValue = self._writeIntegerValueConstantCode(constant.value, localvars)            
+         elif isinstance(constant.value, autosar.constant.StringValue):
+            initValue = self._writeStringValueConstantCode(constant.value, localvars)            
+         elif isinstance(constant.value, autosar.constant.BooleanValue):
+            initValue = self._writeBooleanValueConstantCode(constant.value, localvars)            
+         elif isinstance(constant.value, autosar.constant.RecordValue):
+            initValue = self._writeRecordValueConstantCode(constant.value, localvars)            
+         else:
+            raise ValueError('unknown value type: '+type(constant.value))
+         params=[repr(constant.name)]
+         if ws.roles['DataType'] is not None:
+            params.append(repr(dataType.name)) #use name only
+         else:
+            params.append(repr(dataType.ref)) #use full reference
+         if initValue is not None:
+            if isinstance(initValue, list):
+               lines.extend(self.writeDictCode('initValue', initValue))
+               params.append('initValue')
+            else:
+               params.append(initValue)
+         else:
+            print(constant.name)
+         if constant.adminData is not None:
+            param = self.writeAdminDataCode(constant.adminData, localvars)
+            assert(len(param)>0)
+            params.append('adminData='+param)
+         lines.append("package.createConstant(%s)"%(', '.join(params)))
+      return lines
+   
+   def _writeArrayValueConstantCode(self, value, localvars):
+      ws=localvars['ws']
+      assert(isinstance(value, autosar.constant.ArrayValue))      
+      params=[]
+      for elem in value.elements:
+         if isinstance(elem, autosar.constant.ArrayValue):
+            initValue = self._writeArrayValueConstantCode(elem, localvars)
+         elif isinstance(elem, autosar.constant.IntegerValue):
+            initValue = self._writeIntegerValueConstantCode(elem, localvars)
+         elif isinstance(elem, autosar.constant.StringValue):
+            initValue = self._writeStringValueConstantCode(elem, localvars)
+         elif isinstance(elem, autosar.constant.BooleanValue):
+            initValue = self._writeBooleanValueConstantCode(elem, localvars)
+         elif isinstance(elem, autosar.constant.RecordValue):
+            initValue = self._writeRecordValueConstantCode(elem, localvars)
+            if isinstance(initValue, list): initValue="{%s}"%(', '.join(initValue)) #join any inner record init values
+         else:
+            raise ValueError('unknown value type: '+type(constant.value))
+         params.append(initValue)
+      if len(params)>0:
+         return "[%s]"%(', '.join(params))
+      return None
+
+   def _writeIntegerValueConstantCode(self, value, localvars):
+      return str(value.value)
+
+   def _writeStringValueConstantCode(self, value, localvars):
+      return repr(value.value)      
+
+   def _writeBooleanValueConstantCode(self, value, localvars):
+      return str(value.value)
+   
+   def _writeRecordValueConstantCode(self, value, localvars):
+      ws=localvars['ws']
+      assert(isinstance(value, autosar.constant.RecordValue))      
+      params=[]
+      for elem in value.elements:
+         if isinstance(elem, autosar.constant.ArrayValue):
+            initValue = self._writeArrayValueConstantCode(elem, localvars)
+         elif isinstance(elem, autosar.constant.IntegerValue):
+            initValue = self._writeIntegerValueConstantCode(elem, localvars)
+         elif isinstance(elem, autosar.constant.StringValue):
+            initValue = self._writeStringValueConstantCode(elem, localvars)
+         elif isinstance(elem, autosar.constant.BooleanValue):
+            initValue = self._writeBooleanValueConstantCode(elem, localvars)
+         elif isinstance(elem, autosar.constant.RecordValue):
+            initValue = self._writeRecordValueConstantCode(elem, localvars)
+            if isinstance(initValue, list): initValue="{%s}"%(', '.join(initValue)) #join any inner record init values
+         else:
+            raise ValueError('unknown value type: '+type(constant.value))
+         params.append('"%s": %s'%(elem.name, initValue))
+      if len(params)>0:
+         text = "{%s}"%(', '.join(params))
+         if len(text)>200: #line will be way too long
+            return params
+         else:
+            return text
+      return None
+

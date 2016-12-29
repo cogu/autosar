@@ -34,7 +34,7 @@ class PortInterfaceWriter(WriterBase):
       lines.append('<DATA-ELEMENT-PROTOTYPE>')
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
       ws = elem.rootWS()
-      typeElem = ws.find(elem.typeRef)
+      typeElem = ws.find(elem.typeRef, role="DataType")
       if (typeElem is None):
          raise ValueError("invalid type reference: '%s'"%elem.typeRef)
       else:
@@ -77,7 +77,7 @@ class PortInterfaceWriter(WriterBase):
             else:
                lines.append(self.indent('<SW-ADDR-METHOD-REF DEST="%s">%s</SW-ADDR-METHOD-REF>'%(swAddrMethodElem.tag(self.version),ref),2))
          lines.append(self.indent('</SW-DATA-DEF-PROPS>',1))
-      typeElem = ws.find(elem.typeRef)					
+      typeElem = ws.find(elem.typeRef, role="DataType")					
       if (typeElem is None):
          raise ValueError("invalid type reference: '%s'"%elem.typeRef)
       else:
@@ -116,12 +116,15 @@ class PortInterfaceWriter(WriterBase):
       lines=[]
       lines.append('<%s>'%operation.tag(self.version))
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%operation.name,1))
+      descLines = self.writeDescXML(operation)
+      if descLines is not None:
+         lines.extend(self.indent(descLines,1))
       if len(operation.arguments)>0:
          lines.append(self.indent('<ARGUMENTS>',1))
          for argument in operation.arguments:
             lines.append(self.indent('<%s>'%argument.tag(),2))
             lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%argument.name,3))
-            typeElem = ws.find(argument.typeRef)					
+            typeElem = ws.find(argument.typeRef, role="DataType")					
             if (typeElem is None):
                raise ValueError("invalid type reference: '%s'"%argument.typeRef)
             else:
@@ -199,47 +202,168 @@ class PortInterfaceWriter(WriterBase):
       lines.append('</%s>'%modeDeclGroup.tag(self.version))
       return lines
 
-
-					# 
-					# <MODE-DECLARATIONS>
-					# 	<MODE-DECLARATION>
-					# 		<SHORT-NAME>FULL_COMMUNICATION</SHORT-NAME>
-					# 	</MODE-DECLARATION>
-					# 	<MODE-DECLARATION>
-					# 		<SHORT-NAME>NO_COMMUNICATION</SHORT-NAME>
-					# 	</MODE-DECLARATION>
-					# 	<MODE-DECLARATION>
-					# 		<SHORT-NAME>SILENT_COMMUNICATION</SHORT-NAME>
-					# 	</MODE-DECLARATION>
-					# </MODE-DECLARATIONS>
-
 #### CODE GENERATOTS ####
 
-   def writeSenderReceiverInterfaceCode(self, portInterface,package):
+   def writeSenderReceiverInterfaceCode(self, portInterface, localvars):
       assert(isinstance(portInterface,autosar.portinterface.SenderReceiverInterface))
       lines=[]
-      if len(portInterface.dataElements)==1:
-         dataElementCode=self.writeDataElementCode(portInterface.dataElements[0])
-         lines.append('%s.createSenderReceiverInterface("%s",%s)'%(package.name,portInterface.name,dataElementCode))
-      elif len(portInterface.dataElements)>1:
+      params=['"%s"'%portInterface.name]      
+      if len(portInterface.dataElements)>1:
          raise NotImplementedError('more than one data element in an interface not yet supported')      
+      elif len(portInterface.dataElements)==1:
+         params.append(self.writeDataElementCode(portInterface.dataElements[0], localvars))
+      
+      if portInterface.modeGroups is not None:
+         if len(portInterface.modeGroups)>1:
+            raise NotImplementedError("more then one modegroup not yet supported")
+         elif len(portInterface.modeGroups)==1:
+            params.append('modeGroups='+self.writeModeGroupCode(portInterface.modeGroups[0], localvars))            
+      
+      if portInterface.isService:
+         params.append('isService=True')
+      if portInterface.adminData is not None:
+         param = self.writeAdminDataCode(portInterface.adminData, localvars)
+         assert(len(param)>0)
+         params.append('adminData='+param)
+      lines.append('package.createSenderReceiverInterface(%s)'%(', '.join(params)))
       return lines
    
-   def writeDataElementCode(self,elem):            
-      return 'autosar.DataElement("%s","%s")'%(elem.name,elem.typeRef)
+   def writeDataElementCode(self, elem, localvars):
+      ws = elem.rootWS()
+      assert(ws is not None)
+      dataType = ws.find(elem.typeRef, role="DataType")
+      if dataType is None:
+         raise ValueError('invalid reference: '+elem.typeRef)
+      #name
+      params=[repr(elem.name)]
+      #typeRef
+      if ws.roles['DataType'] is not None:
+         params.append(repr(dataType.name)) #use name only
+      else:
+         params.append(repr(dataType.ref)) #use full reference
+      if elem.isQueued:
+         params.append('True')
+      if len(elem.swAddrMethodRefList)>1:
+         raise NotImplementedError("data elements with more than one SoftwareAddressMethod reference not supported")
+      if len(elem.swAddrMethodRefList)==1:
+         params.append('softwareAddressMethodRef="%s"'%elem.swAddrMethodRefList[0])
+      if elem.adminData is not None:
+         param = self.writeAdminDataCode(elem.adminData, localvars)
+         assert(len(param)>0)
+         params.append('adminData='+param)
+      return 'autosar.DataElement(%s)'%(', '.join(params))   
+   
+   def writeModeGroupCode(self, modeGroup, localvars):
+      ws = modeGroup.rootWS()
+      assert(ws is not None)
+      dataType = ws.find(modeGroup.typeRef, role="ModeDclrGroup")
+      if dataType is None:
+         raise ValueError('invalid reference: '+modeGroup.typeRef)
+      params=['"%s"'%modeGroup.name, '"%s"'%dataType.ref]
+      return 'autosar.ModeGroup(%s)'%(', '.join(params))      
    
    
-   def writeParameterInterfaceCode(self, portInterface,package):
+   
+   def writeParameterInterfaceCode(self, portInterface, localvars):
       assert(isinstance(portInterface,autosar.portinterface.ParameterInterface))
       lines=[]
+      params=['"%s"'%portInterface.name]      
       if len(portInterface.dataElements)==1:
-         dataElementCode=self.writeDataElementCode(portInterface.dataElements[0])
-         lines.append('%s.createParameterInterface("%s",%s)'%(package.name,portInterface.name,dataElementCode))
+         code=self.writeDataElementCode(portInterface.dataElements[0], localvars)
+         if (portInterface.dataElements[0].adminData is not None) or len(portInterface.dataElements[0].swAddrMethodRefList)>0:
+            #this is going to be a long line, create separate dataElement variable
+            lines.append('dataElement=%s'%code)
+            params.append('dataElement')
+         else:
+            params.append(code)
       elif len(portInterface.dataElements)>1:
          raise NotImplementedError('more than one data element in an interface not yet supported')      
+      if portInterface.isService:
+         params.append('isService=True')      
+      if portInterface.adminData is not None:
+         param = self.writeAdminDataCode(portInterface.adminData, localvars)
+         assert(len(param)>0)
+         params.append('adminData='+param)
+      lines.append('package.createParameterInterface(%s)'%(', '.join(params)))
       return lines
 
-   def writeClientServerInterfaceCode(self, portInterface,package):
+   def writeClientServerInterfaceCode(self, portInterface, localvars):
       lines=[]
-      lines.append('%s.createClientServerInterface("%s")'%(package.name,portInterface.name))
+      ws = portInterface.rootWS()
+      assert(ws is not None)
+      params=['"%s"'%portInterface.name]
+      params2=[]
+      for operation in portInterface.operations:
+         params2.append('"%s"'%operation.name)
+      if len(params2)>3:
+         lines.extend(self.writeListCode("operationsList",params2))
+         params.append('operationsList')        
+      else:
+         params.append('['+', '.join(params2)+']')      
+      params2=[]      
+      for error in portInterface.applicationErrors:
+         params2.append('autosar.ApplicationError("%s", %d)'%(error.name,error.errorCode))
+      if len(params2)>1:
+         lines.extend(self.writeListCode("errorsList",params2))
+         params.append('errorsList')
+      elif len(params2)==1:
+         params.append(params2[0])
+      
+      if portInterface.isService:
+         params.append('isService=True')
+      if portInterface.adminData is not None:
+         param = self.writeAdminDataCode(portInterface.adminData, localvars)
+         assert(len(param)>0)
+         params.append('adminData='+param)
+      lines.append('portInterface=package.createClientServerInterface(%s)'%(', '.join(params)))
+      localvars['portInterface']=portInterface
+      for operation in portInterface.operations:
+         for argument in operation.arguments:
+            methodLookup={"IN": "createInArgument", "OUT": "createOutArgument", "INOUT": "createInOutArgument"}
+            dataType = ws.find(argument.typeRef)
+            if dataType is None:
+               raise ValueError("invalid reference: "+argument.typeRef)
+            lines.append('portInterface["%s"].%s("%s", "%s")'%(operation.name, methodLookup[argument.direction], argument.name, dataType.name))
+         params=[]
+         if len(operation.errorRefs)>0:
+            for ref in operation.errorRefs:
+               error = ws.find(ref)
+               if error is None:
+                  raise ValueError("invalid reference: "+ref)
+               params.append('"%s"'%error.name)
+            lines.append('portInterface["%s"].possibleErrors = %s'%(operation.name, ', '.join(params)))
+         desc,descAttr=self.writeDescCode(operation)
+         if desc is not None:
+            lines.append('portInterface["%s"].desc = "%s"'%(operation.name, desc))
+         if descAttr is not None:
+            lines.append('portInterface["%s"].descAttr = "%s"'%(operation.name, descAttr))
       return lines
+   
+   def writeSoftwareAddressMethodCode(self, method, localvars):
+      lines=[]
+      lines.append('%s.createSoftwareAddressMethod("%s")'%('package', method.name))
+      return lines
+   
+   def writeModeDeclarationGroupCode(self, declarationGroup, localvars):
+      lines=[]
+      params=['"%s"'%declarationGroup.name]
+      params2=[]
+      for item in declarationGroup.modeDeclarations:
+         params2.append('"%s"'%item.name)
+      if len(params2)>6:
+         lines.extend(self.writeListCode("modeDeclarationsList",params2))
+         params.append('modeDeclarationsList')        
+      else:
+         params.append('['+', '.join(params2)+']')      
+      assert(declarationGroup.initialModeRef is not None)
+      tmp=autosar.base.splitRef(declarationGroup.initialModeRef)      
+      params.append('"%s"'%tmp[-1])
+         
+      if declarationGroup.adminData is not None:
+         param = self.writeAdminDataCode(declarationGroup.adminData, localvars)
+         assert(len(param)>0)
+         params.append('adminData='+param)
+         
+      lines.append('package.createModeDeclarationGroup(%s)'%(', '.join(params)))
+      return lines
+   

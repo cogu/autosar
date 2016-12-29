@@ -1,8 +1,12 @@
 import autosar.package
-import autosar.parser
+import autosar.parser.package_parser
 import autosar.writer
 from autosar.base import parseXMLFile,getXMLNamespace,removeNamespace
 import json
+import os
+import ntpath
+
+_validWSRoles = ['DataType', 'Constant', 'PortInterface', 'ModeDclrGroup', 'CompuMethod', 'Unit']
 
 class Workspace(object):
    def __init__(self,version=3.0):
@@ -10,12 +14,34 @@ class Workspace(object):
       self.version=version
       self.packageParser=None
       self.xmlroot = None
+      self.roles = {'DataType': None, 'Constant': None, 'PortInterface': None, 'ModeDclrGroup': None,
+                    'CompuMethod': None, 'Unit': None} #stores references to the actor (i.e. package) that acts the role
 
    def __getitem__(self,key):
       if isinstance(key,str):
          return self.find(key)
       else:
          raise ValueError('expected string')
+
+   def _adjustFileRef(self,fileRef,basedir):
+      basename = ntpath.basename(fileRef['path'])
+      dirname=ntpath.normpath(ntpath.join(basedir,ntpath.dirname(fileRef['path'])))
+      retval=ntpath.join(dirname,basename)
+      if os.path.sep == '/': #are we running in cygwin/Linux?
+         retval = retval.replace(r'\\','/')
+      return retval
+
+   def setRole(self, ref, role):
+      if (role is not None) and (role not in _validWSRoles):
+         raise ValueError('invalid role name: '+role)
+      package = self.find(ref)
+      if package is None:
+         raise ValueError('invalid reference: '+ref)
+      if not isinstance(package, autosar.package.Package):
+         raise ValueError('only packages can be assigned roles in the workspace')
+      package.role=role
+      self.roles[role]=package.ref
+
 
    def openXML(self,filename):
       version = None
@@ -31,12 +57,14 @@ class Workspace(object):
       self.version=version
       self.xmlroot = xmlroot
 
-   def loadXML(self,filename):
+   def loadXML(self, filename):
+      global _validWSRoles
       self.openXML(filename)
       self.loadPackage('*')
-
-   def loadPackage(self,packagename):
+      
+   def loadPackage(self, packagename, role=None):
       found=False
+      result=[]
       if self.xmlroot is None:
          raise ValueError("xmlroot is None, did you call loadXML() or openXML()?")
       if self.version >= 3.0 and self.version < 4.0:
@@ -47,9 +75,12 @@ class Workspace(object):
                   found=True
                   package = self.find(name)
                   if package is None:
-                     package = autosar.package.Package(name,parent=self)
+                     package = autosar.package.Package(name, parent=self)
                      self.packages.append(package)
+                     result.append(package)
                   self.packageParser.loadXML(package,xmlPackage)
+                  if (packagename==name) and (role is not None):
+                     self.setRole(package.ref, role)
       elif self.version>=4.0:
          if self.xmlroot.find('AR-PACKAGES'):
             for xmlPackage in self.xmlroot.findall('.AR-PACKAGES/AR-PACKAGE'):
@@ -59,14 +90,41 @@ class Workspace(object):
                   package = Package(name)
                   self.packageParser.loadXML(package,xmlPackage)
                   self.packages.append(package)
+                  result.append(package)
+                  if (packagename==name) and (role is not None):
+                     self.setRole(package.ref, role)
+
       else:
          raise NotImplementedError('Version %s of ARXML not supported'%version)
       if found==False:
          raise KeyError('package not found: '+packagename)
+      return result
 
+   def loadJSON(self, filename):      
+      with open(filename) as fp:
+         basedir = ntpath.dirname(filename)
+         data = json.load(fp)         
+         if data is not None:
+            for item in data:
+               if item['type']=='fileRef':
+                  adjustedPath = self._adjustFileRef(item, basedir)
+                  if adjustedPath.endswith('.arxml'):
+                     self.loadXML(adjustedPath)
+                  else:
+                     raise NotImplementedError(adjustedPath)
+               else:
+                  raise ValueError('Unknown type: %s'%item['type'])
+   
 
-   def find(self,ref):
-      if ref is None: return None
+   def find(self, ref, role=None):
+      global _validWSRoles
+      if ref is None: return None      
+      if (role is not None) and ( ref[0] != '/'):
+         if role not in _validWSRoles:
+            raise ValueError("unknown role name: "+role)
+         if self.roles[role] is not None:
+            ref=self.roles[role]+'/'+ref #appends the role packet name in front of ref
+      
       if ref[0]=='/': ref=ref[1:] #removes initial '/' if it exists
       ref = ref.partition('/')
       for pkg in self.packages:
@@ -118,9 +176,9 @@ class Workspace(object):
    
    def createPackage(self,name,role=None):
       package = autosar.Package(name,self)
-      if role is not None:
-         package.role=role
       self.packages.append(package)
+      if role is not None:
+         self.setRole(package.ref, role)      
       return package
 
    def dir(self,ref=None,_prefix='/'):
@@ -141,10 +199,10 @@ class Workspace(object):
    
    def root(self):
       return self
-
+   
    def saveXML(self,filename,packages=None):
       writer=autosar.writer.WorkspaceWriter()
-      with open(filename,'w') as fp:
+      with open(filename, 'w', encoding="utf-8") as fp:
          if isinstance(packages,str): packages=[packages]
          if packages is not None:
             writer.saveXML(self,fp,list(packages))
@@ -183,7 +241,7 @@ class Workspace(object):
    def saveCode(self,filename,packages=None,head=None,tail=None):
       writer=autosar.writer.WorkspaceWriter()
       if isinstance(packages,str): packages=[packages]
-      with open(filename,'w') as fp:
+      with open(filename,'w', encoding="utf-8") as fp:
          if packages is not None:
             writer.saveCode(self,fp,list(packages),head,tail)
          else:
@@ -210,8 +268,20 @@ class Workspace(object):
          raise NotImplementedError('Version %s of ARXML not supported'%version)
       return packageList
    
-   
-   
+   def delete(self, ref):
+      if ref is None: return
+      if ref[0]=='/': ref=ref[1:] #removes initial '/' if it exists
+      ref = ref.partition('/')
+      for i,pkg in enumerate(self.packages):
+         if pkg.name == ref[0]:
+            if len(ref[2])>0:
+               return pkg.delete(ref[2])
+            else:
+               del self.packages[i]
+               break      
 
+   def createAdminData(self, data):
+      return autosar.base.createAdminData(data)
+   
 if __name__ == '__main__':
    print("done")
