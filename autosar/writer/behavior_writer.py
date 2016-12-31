@@ -319,12 +319,17 @@ class BehaviorWriter(WriterBase):
       localvars['swc.behavior']=behavior
       for exclusiveArea in behavior.exclusiveAreas:
          lines.extend(self._writeExclusiveAreaCode(exclusiveArea, localvars))
+      for perInstanceMemory in behavior.perInstanceMemories:
+         lines.extend(self._writePerInstanceMemoryCode(perInstanceMemory, localvars))
+      for sharedCalParam in behavior.sharedCalParams:
+         lines.extend(self._writeSharedCalParamCode(sharedCalParam, localvars))
+      for swcNvBlockNeed in behavior.swcNvBlockNeeds:
+         lines.extend(self._writeSwcNvBlockNeedCode(swcNvBlockNeed, localvars))      
       for runnable in behavior.runnables:
          lines.extend(self._writeRunnableCode(runnable, localvars))
       for event in behavior.events:
          lines.extend(self._writeEventCode(event, localvars))
-      return lines  
-         
+      return lines           
 
    def _writeRunnableCode(self, runnable, localvars):
       ws=localvars['ws']
@@ -465,6 +470,95 @@ class BehaviorWriter(WriterBase):
 
    def _writeExclusiveAreaCode(self, exclusiveArea, localvars):
       """
-      creates a call to create an ExclusiveArea
+      creates a call to create an ExclusiveArea object
       """      
       return [('swc.behavior.createExclusiveArea(%s)'%(repr(exclusiveArea.name)))]
+   
+   def _writePerInstanceMemoryCode(self, perInstanceMemory, localvars):
+      """
+      create a call to create a PerInstanceMemory object
+      """
+      lines=[]
+      ws = localvars['ws']
+      #name
+      params=[repr(perInstanceMemory.name)]
+      #typeref
+      dataType = ws.find(perInstanceMemory.typeRef)
+      if dataType is None:
+         raise ValueError('invalid reference: '+perInstanceMemory.typeRef)
+      if ws.roles['DataType'] is not None:
+         params.append(repr(dataType.name)) #use name only
+      else:
+         params.append(repr(dataType.ref)) #use full reference
+      lines.append('swc.behavior.createPerInstanceMemory(%s)'%(', '.join(params)))
+      return lines
+   
+   def _writeSharedCalParamCode(self, sharedCalParam, localvars):      
+      lines=[]
+      ws = localvars['ws']
+      #name
+      params=[repr(sharedCalParam.name)]
+      #typeref
+      dataType = ws.find(sharedCalParam.typeRef)
+      if dataType is None:
+         raise ValueError('invalid reference: '+perInstanceMemory.typeRef)
+      if ws.roles['DataType'] is not None:
+         params.append(repr(dataType.name)) #use name only
+      else:
+         params.append(repr(dataType.ref)) #use full reference
+      if len(sharedCalParam.swDataDefsProps)!=1:
+         raise NotImplementedError('expected one element in swDataDefsProps')
+      params.append(repr(sharedCalParam.swDataDefsProps[0]))
+      if sharedCalParam.adminData is not None:
+         param = self.writeAdminDataCode(sharedCalParam.adminData, localvars)
+         assert(len(param)>0)
+         params.append('adminData='+param)      
+      lines.append('swc.behavior.createSharedCalParam(%s)'%(', '.join(params)))
+      return lines
+
+   def _writeSwcNvBlockNeedCode(self, swcNvBlockNeed, localvars):
+      lines=[]
+      ws = localvars['ws']
+      #name
+      params=[repr(swcNvBlockNeed.name)]
+      params2=self._createNvmBlockOpts(swcNvBlockNeed, localvars)
+      lines.extend(self.writeDictCode('blockParams',params2))
+      params.append('blockParams')
+      lines.append('swc.behavior.createNvmBlock(%s)'%(', '.join(params)))
+      return lines
+   
+   def _createNvmBlockOpts(self, swcNvBlockNeed, localvars):
+      lines=[]
+      ws = localvars['ws']
+      behavior=localvars['swc.behavior']
+      assert((ws is not None) and (behavior is not None))
+      lines.append("'numberOfDataSets': "+(repr(swcNvBlockNeed.numberOfDataSets)))
+      lines.append("'readOnly': "+(repr(swcNvBlockNeed.readOnly)))
+      lines.append("'reliability': "+(repr(swcNvBlockNeed.reliability)))
+      lines.append("'resistantToChangedSW': "+(repr(swcNvBlockNeed.resistantToChangedSW)))
+      lines.append("'restoreAtStart': "+(repr(swcNvBlockNeed.restoreAtStart)))
+      lines.append("'writeOnlyOnce': "+(repr(swcNvBlockNeed.writeOnlyOnce)))
+      lines.append("'writingFrequency': "+(repr(swcNvBlockNeed.writingFrequency)))
+      lines.append("'writingPriority': "+(repr(swcNvBlockNeed.writingPriority)))
+      defaultBlock = ws.find(swcNvBlockNeed.defaultBlockRef)
+      if (defaultBlock is not None) and (defaultBlock.parent is behavior):
+         lines.append("'defaultBlock': "+(repr(defaultBlock.name)))
+      else:
+         lines.append("'defaultBlock': "+(repr(swcNvBlockNeed.defaultBlockRef)))
+      mirrorBlock = ws.find(swcNvBlockNeed.mirrorBlockRef)
+      if (defaultBlock is not None) and (defaultBlock.parent is behavior):
+         lines.append("'mirrorBlock': "+(repr(mirrorBlock.name)))
+      else:
+         lines.append("'mirrorBlock': "+(repr(swcNvBlockNeed.mirrorBlockRef)))            
+      params=[]
+      for roleBasedRPortAssignment in swcNvBlockNeed.serviceCallPorts:
+         port = ws.find(roleBasedRPortAssignment.portRef)
+         if port is None:
+            raise ValueError('invalid port reference: '+roleBasedRPortAssignment.portRef)         
+         params.append("'%s/%s'"%(port.name, roleBasedRPortAssignment.role )) #it seems like the ClientServer operation is in this part of the XML is called "role" for some inexplicable reason
+      if len(params)>0:
+         if len(params)==1:
+            lines.append("'serviceCallPorts': %s"%(params[0]))
+         else:
+            lines.append("'serviceCallPorts': [%s]"%(', '.join(params)))
+      return lines

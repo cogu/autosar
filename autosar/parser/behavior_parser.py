@@ -225,7 +225,7 @@ class BehaviorParser(object):
    def parseSwcNvBlockNeeds(self,xmlRoot):
       name=parseTextNode(xmlRoot.find('SHORT-NAME'))
       numberOfDataSets=parseIntNode(xmlRoot.find('N-DATA-SETS'))
-      readonly=parseBooleanNode(xmlRoot.find('READONLY'))
+      readOnly=parseBooleanNode(xmlRoot.find('READONLY'))
       reliability=parseTextNode(xmlRoot.find('RELIABILITY'))
       resistantToChangedSW=parseBooleanNode(xmlRoot.find('RESISTANT-TO-CHANGED-SW'))
       restoreAtStart=parseBooleanNode(xmlRoot.find('RESTORE-AT-START'))
@@ -233,11 +233,11 @@ class BehaviorParser(object):
       writingFrequency=parseIntNode(xmlRoot.find('WRITING-FREQUENCY'))
       writingPriority=parseTextNode(xmlRoot.find('WRITING-PRIORITY'))
       defaultBlockRef=parseTextNode(xmlRoot.find('DEFAULT-BLOCK-REF'))
-      mirrorBlockref=parseTextNode(xmlRoot.find('MIRROR-BLOCK-REF'))      
+      mirrorBlockRef=parseTextNode(xmlRoot.find('MIRROR-BLOCK-REF'))      
       serviceCallPorts=self.parseServiceCallPorts(xmlRoot.find('SERVICE-CALL-PORTS'))
       assert(len(serviceCallPorts)>0)
-      swcNvBlockNeeds=SwcNvBlockNeeds(name,numberOfDataSets,readonly,reliability,resistantToChangedSW,restoreAtStart,
-                                      writeOnlyOnce,writingFrequency,writingPriority,defaultBlockRef,mirrorBlockref)
+      swcNvBlockNeeds=SwcNvBlockNeeds(name,numberOfDataSets,readOnly,reliability,resistantToChangedSW,restoreAtStart,
+                                      writeOnlyOnce,writingFrequency,writingPriority,defaultBlockRef,mirrorBlockRef)
       swcNvBlockNeeds.serviceCallPorts=serviceCallPorts
       return swcNvBlockNeeds
 
@@ -257,7 +257,7 @@ class BehaviorParser(object):
       name = parseTextNode(xmlRoot.find('SHORT-NAME'))
       adminData=parseAdminDataNode(xmlRoot.find('ADMIN-DATA'))
       typeRef = parseTextNode(xmlRoot.find('TYPE-TREF'))
-      calPrmElemPrototype = CalPrmElemPrototype(name, typeRef, adminData, parent)
+      calPrmElemPrototype = CalPrmElemPrototype(name, typeRef, parent, adminData)
       for xmlElem in xmlRoot.findall('./SW-DATA-DEF-PROPS/*'):
          if xmlElem.tag=='SW-ADDR-METHOD-REF':
             calPrmElemPrototype.swDataDefsProps.append(parseTextNode(xmlElem))

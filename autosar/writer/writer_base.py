@@ -99,7 +99,7 @@ class WriterBase():
       """
       writes data as as an array with varname
       """      
-      lines=['','%s = ['%varname] #easier to read generated code if there is an empty line first
+      lines=['','%s = ['%varname] #add newline at beginning to make reading easier
       indent=' '*(len(varname)+6)
       for i,elem in enumerate(data):         
          if i+1==len(data):
@@ -114,7 +114,7 @@ class WriterBase():
       """
       same as writeListCode but replaces surrounding [] with {}
       """
-      lines=['%s = {'%varname]
+      lines=['','%s = {'%varname] #add newline at beginning to make reading easier
       indent=' '*(len(varname)+6)
       for i,elem in enumerate(data):         
          if i+1==len(data):

@@ -358,7 +358,7 @@ class CalPrmElemPrototype(Element):
    """
    <CALPRM-ELEMENT-PROTOTYPE>
    """
-   def __init__(self,name, typeRef, adminData=None, parent=None):
+   def __init__(self,name, typeRef, parent=None, adminData=None):
       super().__init__(name, parent, adminData)
       self.typeRef=typeRef
       self.swDataDefsProps=[]
@@ -464,18 +464,16 @@ class InternalBehavior(Element):
       if ref[0]=='/': ref=ref[1:] #removes initial '/' if it exists
       ref=ref.partition('/')
       name=ref[0]
-      for runnable in self.runnables:
-         if runnable.name == name:
-            return runnable      
+      for elem in self.runnables:
+         if elem.name == name: return elem      
       for elem in self.sharedCalParams:
-         if elem.name == name:
-            return elem         
+         if elem.name == name: return elem         
       for elem in self.perInstanceMemories:
-         if elem.name == name:
-            return elem
+         if elem.name == name: return elem
       for elem in self.exclusiveAreas:
-         if elem.name == name:
-            return elem
+         if elem.name == name: return elem
+      for elem in defaultBlockRef:
+         if elem.name == name: return elem      
       return None
    
    def __getitem__(self,key):
@@ -485,11 +483,7 @@ class InternalBehavior(Element):
       runnable = RunnableEntity(name, concurrent, symbol, self)
       self.runnables.append(runnable)
       if portAccess is not None:
-         if self.swc is None:
-            ws = self.rootWS()
-            assert(ws is not None)
-            self.swc = ws.find(self.componentRef)
-         assert(self.swc is not None)
+         self._initSWC()
          ws = self.rootWS()
          assert (ws is not None)
          for elem in portAccess:
@@ -554,11 +548,8 @@ class InternalBehavior(Element):
 
    def createPortAPIOptionDefaults(self):
       self.portAPIOptions = []
-      if self.swc is None:
-         ws = self.rootWS()
-         assert(ws is not None)
-         self.swc = ws.find(self.componentRef)
-      assert(self.swc is not None)
+      self._initSWC()
+      ws = self.rootWS()
       tmp = self.swc.providePorts+self.swc.requirePorts
       for port in sorted(tmp,key=lambda x: x.name):
          self.portAPIOptions.append(PortAPIOption(port.ref))
@@ -593,11 +584,7 @@ class InternalBehavior(Element):
    
    
    def calcModeInstanceComponents(self, portName, modeValue):
-      if self.swc is None:
-         ws = self.rootWS()
-         assert(ws is not None)
-         self.swc = ws.find(self.componentRef)
-      assert(self.swc is not None)
+      self._initSWC()
       ws = self.rootWS()
       for port in self.swc.requirePorts:
          if (port.name == portName):            
@@ -622,11 +609,7 @@ class InternalBehavior(Element):
             raise ValueError('"%s" did not match any of the mode declarations in %s'%(modeValue,dataType.ref))
          
    def createModeSwitchEvent(self, runnableName, modeRef, activationType='ENTRY', name=None):
-      if self.swc is None:
-         ws = self.rootWS()
-         assert(ws is not None)
-         self.swc = ws.find(self.componentRef)
-      assert(self.swc is not None)
+      self._initSWC()
       ws = self.rootWS()
       runnable=self.find(runnableName)
       if runnable is None:
@@ -662,11 +645,7 @@ class InternalBehavior(Element):
       return event
 
    def createTimingEvent(self, runnableName, period, modeDependency=None, name=None ):
-      if self.swc is None:
-         ws = self.rootWS()
-         assert(ws is not None)
-         self.swc = ws.find(self.componentRef)
-      assert(self.swc is not None)
+      self._initSWC()
       ws = self.rootWS()
 
       runnable=self.find(runnableName)
@@ -693,11 +672,7 @@ class InternalBehavior(Element):
       operationRef: string using the format 'portName/operationName'
       name: optional event name, used to override only
       """
-      if self.swc is None:
-         ws = self.rootWS()
-         assert(ws is not None)
-         self.swc = ws.find(self.componentRef)
-      assert(self.swc is not None)
+      self._initSWC()
       ws = self.rootWS()
       
       runnable=self.find(runnableName)
@@ -741,11 +716,7 @@ class InternalBehavior(Element):
       dataElementRef: string using the format 'portName/dataElementName'. Using 'portName' only is also OK as long as the interface only has one element
       name: optional event name, used to override only
       """
-      if self.swc is None:
-         ws = self.rootWS()
-         assert(ws is not None)
-         self.swc = ws.find(self.componentRef)
-      assert(self.swc is not None)
+      self._initSWC()
       ws = self.rootWS()
       
       runnable=self.find(runnableName)
@@ -834,7 +805,111 @@ class InternalBehavior(Element):
       """
       creates a new ExclusiveArea
       """      
+      self._initSWC()
+      ws = self.rootWS()
       exclusiveArea = ExclusiveArea(str(name), self)
       self.exclusiveAreas.append(exclusiveArea)
       return exclusiveArea
+   
+   def createPerInstanceMemory(self, name, typeRef):
+      """
+      creates a new PerInstanceMemory object
+      name: name of the object (str)
+      typeRef: dataType reference (str)
+      """
+      self._initSWC()
+      ws = self.rootWS()
+      dataType = ws.find(typeRef, role='DataType')
+      if dataType is None:
+         raise ValueError('invalid reference: '+typeRef)
+      perInstanceMemory = PerInstanceMemory(name, dataType.ref, self)
+      self.perInstanceMemories.append(perInstanceMemory)
+      return perInstanceMemory
+   
+   def createSharedCalParam(self, name, typeRef, SWAddrMethodRef, adminData=None):
+      self._initSWC()
+      ws = self.rootWS()
+      dataType = ws.find(typeRef, role='DataType')
+      if dataType is None:
+         raise ValueError('invalid reference: '+typeRef)      
+      elem = CalPrmElemPrototype(name, dataType.ref, self, adminData)
+      elem.swDataDefsProps.append(SWAddrMethodRef)
+      self.sharedCalParams.append(elem)
+      return elem
+   
+   def createNvmBlock(self, name, blockParams):
+      """
+      creates a new SwcNvBlockNeeds object
+      name: name of the object (str)
+      blockParams: dict containing additional parameters
+      """
+      self._initSWC()
+      ws = self.rootWS()
+      numberOfDataSets= int(blockParams['numberOfDataSets'])
+      readOnly= bool(blockParams['readOnly'])
+      reliability= str(blockParams['reliability'])
+      resistantToChangedSW= bool(blockParams['resistantToChangedSW'])
+      restoreAtStart= bool(blockParams['restoreAtStart'])
+      writeOnlyOnce= bool(blockParams['writeOnlyOnce'])
+      writingFrequency= str(blockParams['writingFrequency'])
+      writingPriority= str(blockParams['writingPriority'])
+      defaultBlockRef=None
+      mirrorBlockRef=None
+      #defaultBlockRef
+      defaultBlock = blockParams['defaultBlock']
+      if '/' in defaultBlock:         
+         defaultBlockRef = defaultBlock #use as is
+      else:
+         for sharedCalParam in self.sharedCalParams:
+            if sharedCalParam.name == defaultBlock:
+               defaultBlockRef=sharedCalParam.ref
+               break
+      if defaultBlockRef is None:
+         raise ValueError('no SharedCalParam found with name: ' +defaultBlock)
+      #mirrorBlockref
+      mirrorBlock = blockParams['mirrorBlock']
+      if '/' in mirrorBlock:         
+         mirrorBlockRef = mirrorBlock #use as is
+      else:
+         for perInstanceMemory in self.perInstanceMemories:
+            if perInstanceMemory.name == mirrorBlock:
+               mirrorBlockRef=perInstanceMemory.ref
+               break
+      if mirrorBlockRef is None:
+         raise ValueError('no PerInstanceMemory found with name: ' +mirrorBlock)
+      elem = SwcNvBlockNeeds(name, numberOfDataSets, readOnly, reliability, resistantToChangedSW, restoreAtStart,
+                                        writeOnlyOnce, writingFrequency, writingPriority, defaultBlockRef, mirrorBlockRef)
+      #serviceCallPorts      
+      if isinstance(blockParams['serviceCallPorts'],str):
+         serviceCallPorts=[blockParams['serviceCallPorts']]
+      else:
+         serviceCallPorts = blockParams['serviceCallPorts']
+      if isinstance(serviceCallPorts, collections.Iterable):
+         for data in serviceCallPorts:
+            parts = autosar.base.splitRef(data)
+            if len(parts)!=2:
+               raise ValueError('serviceCallPorts must be either string or list of string of the format "portName/operationName"')
+            portName,operationName = parts[0],parts[1]
+            port = self.swc.find(portName)
+            if not isinstance(port, autosar.component.Port):
+               raise ValueError("'%s' is not a valid port name"%portName)
+            elem.serviceCallPorts.append(RoleBasedRPortAssignment(port.ref,operationName))
+      else:
+         raise ValueError('serviceCallPorts must be either string or list of string of format the "portName/operationName"')
+            
+      self.swcNvBlockNeeds.append(elem)
+      return elem
+
+   
+   def _initSWC(self, ):
+      """
+      sets up self.swc if not already setup
+      """
+      if self.swc is None:
+         ws = self.rootWS()
+         assert(ws is not None)
+         self.swc = ws.find(self.componentRef)
+      assert(self.swc is not None)
+      
+
    
