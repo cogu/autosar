@@ -1,6 +1,7 @@
 from autosar.writer.writer_base import WriterBase
 import autosar.behavior
 import autosar.base
+import autosar.portinterface
 
 class BehaviorWriter(WriterBase):
    def __init__(self,version):
@@ -22,6 +23,11 @@ class BehaviorWriter(WriterBase):
          for event in internalBehavior.events:
             lines.extend(self.indent(self._writeEventXML(ws,event),2))
          lines.append(self.indent('</EVENTS>',1))
+      if len(internalBehavior.exclusiveAreas)>0:
+         lines.append(self.indent('<EXCLUSIVE-AREAS>',1))
+         for exclusiveArea in internalBehavior.exclusiveAreas:
+            lines.extend(self.indent(self._writeExclusiveAreaXML(ws,exclusiveArea),2))
+         lines.append(self.indent('</EXCLUSIVE-AREAS>',1))                        
       if len(internalBehavior.portAPIOptions)==0:         
          internalBehavior.createPortAPIOptionDefaults() #try to automatically create PortAPIOption objects on behavior object
       if len(internalBehavior.perInstanceMemories)>0:
@@ -59,6 +65,14 @@ class BehaviorWriter(WriterBase):
       if runnable.adminData is not None:
          lines.extend(self.indent(self.writeAdminDataXML(runnable.adminData),1))
       lines.append(self.indent('<CAN-BE-INVOKED-CONCURRENTLY>%s</CAN-BE-INVOKED-CONCURRENTLY>'%('true' if runnable.invokeConcurrently else 'false'),1))
+      if len(runnable.exclusiveAreaRefs)>0:
+         lines.append(self.indent('<CAN-ENTER-EXCLUSIVE-AREA-REFS>',1))
+         for exclusiveAreaRef in runnable.exclusiveAreaRefs:
+            exclusiveArea = ws.find(exclusiveAreaRef)
+            if exclusiveArea is None:
+               raise ValueError('invalid reference:' + exclusiveAreaRef)
+            lines.append(self.indent('<CAN-ENTER-EXCLUSIVE-AREA-REF DEST="%s">%s</CAN-ENTER-EXCLUSIVE-AREA-REF>'%(exclusiveArea.tag(self.version),exclusiveArea.ref),2))
+         lines.append(self.indent('</CAN-ENTER-EXCLUSIVE-AREA-REFS>',1))
       if len(runnable.dataReceivePoints)>0:
          lines.append(self.indent('<DATA-RECEIVE-POINTS>',1))
          for dataReceivePoint in runnable.dataReceivePoints:
@@ -290,88 +304,167 @@ class BehaviorWriter(WriterBase):
       lines.append('</%s>'%elem.tag(self.version))
       return lines
 
+   def _writeExclusiveAreaXML(self, ws, elem):
+      lines=[]
+      lines.append('<%s>'%elem.tag(self.version))
+      lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
+      lines.append('</%s>'%elem.tag(self.version))
+      return lines
+
+   ### code generators
    def writeInternalBehaviorCode(self, internalBehavior, localvars):
       lines=[]
       swc = localvars['swc']      
       behavior=swc.behavior
       localvars['swc.behavior']=behavior
+      for exclusiveArea in behavior.exclusiveAreas:
+         lines.extend(self._writeExclusiveAreaCode(exclusiveArea, localvars))
       for runnable in behavior.runnables:
-         lines.extend(self._writeRunnableCode(runnable, localvars))      
+         lines.extend(self._writeRunnableCode(runnable, localvars))
       for event in behavior.events:
          lines.extend(self._writeEventCode(event, localvars))
       return lines  
          
 
    def _writeRunnableCode(self, runnable, localvars):
-      ws=runnable.rootWS()
-      assert(ws is not None)
+      ws=localvars['ws']
+      
       lines=[]
-      portAccessList=[]
+      #name
+      params=[repr(runnable.name)]
+      params2=[]
       if len(runnable.dataReceivePoints)>0:
          for receivePoint in runnable.dataReceivePoints:
-            portAccessList.append(self._createPortAccessString(runnable, receivePoint))
+            params2.append(repr(self._createPortAccessString(runnable, receivePoint)))
       if len(runnable.dataSendPoints)>0:
          for sendPoint in runnable.dataSendPoints:
-            portAccessList.append(self._createPortAccessString(runnable, sendPoint))
+            params2.append(repr(self._createPortAccessString(runnable, sendPoint)))
+      if len(runnable.serverCallPoints)>0:
+         for callPoint in runnable.serverCallPoints:
+            for instanceRef in callPoint.operationInstanceRefs:
+               params2.append(repr(self._createPortAccessString(runnable, instanceRef)))
       assert( 'swc.behavior' in localvars)
       
-      if len(portAccessList)>0:
-         if len(portAccessList)<4:
-            portAccessString = '["' +'", "'.join(portAccessList) + '"]'
-            lines.append('swc.behavior.createRunnable("%s",portAccess=%s)'%(runnable.name, portAccessString))
+      if len(params2)>0:
+         if len(params2)<4:
+            params.append('portAccess=[%s]'%(', '.join(params2)))            
+         else:            
+            lines.extend(self.writeListCode('portAccessList',params2))
+            params.append('portAccess=portAccessList')
+      if runnable.invokeConcurrently:
+         params.append('concurrent=True')      
+      #exclusive areas
+      params2=[]
+      for exclusiveAreaRef in runnable.exclusiveAreaRefs:
+         exclusiveArea=ws.find(exclusiveAreaRef)
+         if exclusiveArea is None:
+            raise ValueError('invalid reference: '+exclusiveAreaRef)         
+         params2.append(repr(exclusiveArea.name))      
+      if len(params2)>0:
+         if len(params2)==1:
+            params.append('exclusiveAreas='+params2[0])
          else:
-            localvars['portAccessList']=portAccessList
-            lines.extend(self.writeQuoteListCode('portAccessList',portAccessList))         
-            lines.append('swc.behavior.createRunnable("%s",portAccess=portAccessList)'%runnable.name)
-      else:
-         lines.append('swc.behavior.createRunnable("%s")'%runnable.name)                
+            params.append('exclusiveAreas=[%s]'%(', '.join(params2)))         
+      lines.append('swc.behavior.createRunnable(%s)'%(', '.join(params)))
       return lines
    
    def _writeEventCode(self, event, localvars):
-      ws=event.rootWS()
+      ws=localvars['ws']
       assert(ws is not None)
       assert('swc.behavior' in localvars)
       lines=[]
       
       runnableName = autosar.base.splitRef(event.startOnEventRef)[-1]
-      params = [runnableName]
+      params = [repr(runnableName)]
       if isinstance(event, autosar.behavior.ModeSwitchEvent):
          assert(event.modeInstRef is not None)         
          modeDeclParts = autosar.base.splitRef(event.modeInstRef.modeDeclarationRef)
          requirePortParts = autosar.base.splitRef(event.modeInstRef.requirePortPrototypeRef)
          modeRef = '/'.join([requirePortParts[-1],modeDeclParts[-1]])
-         params.append(modeRef)
+         params.append(repr(modeRef))
          if event.activationType != 'ENTRY':
-            params.append(str(event.activationType))
-         params_str=', '.join(['"%s"'%x for x in params])
-         lines.append('swc.behavior.createModeSwitchEvent(%s)'%(params_str));
+            params.append(repr(str(event.activationType)))
+         constructor='createModeSwitchEvent'
       elif isinstance(event, autosar.behavior.TimingEvent):
-         params_str=', '.join(['"%s"'%x for x in params])
-         lines.append('swc.behavior.createTimingEvent(%s)'%(params_str));
-      elif isinstance(event, autosar.behavior.DataReceivedEvent):
-         dataRef=''
-         params_str=', '.join(['"%s"'%x for x in params])
-         lines.append('swc.behavior.createDataReceivedEvent(%s)'%(params_str));
+         params.append('period='+str(event.period))
+         constructor='createTimingEvent'
+      elif isinstance(event, autosar.behavior.DataReceivedEvent):         
+         port = ws.find(event.dataInstanceRef.portRef)
+         if port is None:
+            raise ValueError('invalid port reference: ' + event.dataInstanceRef.portRef)
+         portInterface = ws.find(port.portInterfaceRef)
+         if portInterface is None:
+            raise ValueError('invalid portInterface reference: ' + port.portInterfaceRef)
+         dataElement = ws.find(event.dataInstanceRef.dataElemRef)
+         if dataElement is None:
+            raise ValueError('invalid dataElement reference: ' + event.dataInstanceRef.dataElemRef)
+         if len(portInterface.dataElements)>1:
+            params.append("'%s/%s'"%(port.name, dataElement.name)) #it is enough to just write the name of port/dataElement
+         elif len(portInterface.dataElements)==1:
+            params.append(repr(port.name)) #it is enough to just write the name of the port
+         else:
+            raise ValueError('portInterface without any data elements')
+         if len(event.swDataDefsProps)>0:
+            raise NotImplementedError('event has swDataDefsProps')
+         constructor='createDataReceivedEvent'
+      elif isinstance(event, autosar.behavior.OperationInvokedEvent):
+         parts1=autosar.base.splitRef(event.operationInstanceRef.portRef)
+         parts2=autosar.base.splitRef(event.operationInstanceRef.operationRef)
+         params.append("'%s/%s'"%(parts1[-1],parts2[-1])) #it is enough information to just write the names, not the full references
+         if len(event.swDataDefsProps)>0:
+            raise NotImplementedError('event has swDataDefsProps')
+         constructor = 'createOperationInvokedEvent'
       else:
          raise NotImplementedError(type(event))
+      if event.modeDependency is not None:
+         params2=[]
+         for iref in event.modeDependency.modeInstanceRefs:
+            assert(isinstance(iref, autosar.behavior.ModeDependencyRef))
+            requirePort = ws.find(iref.requirePortPrototypeRef)
+            modeDeclaration = ws.find(iref.modeDeclarationRef)
+            if requirePort is None:
+               raise ValueError('invalid port reference: '+iref.requirePortPrototypeRef)
+            if modeDeclaration is None:
+               raise ValueError('invalid mode declaration reference: '+iref.modeDeclarationRef)
+            #we can recreate the entire ModeDependencyRef object later using only the port name and the name of the mode declaration            
+            params2.append("'%s/%s'"%(requirePort.name, modeDeclaration.name))
+         if len(params2)>3:
+            lines.extend(self.writeListCode('modeDependencyList',params2))
+            params.append('modeDependency=modeDependencyList')
+         else:
+            params.append('modeDependency=[%s]'%(', '.join(params2)))
+      lines.append('swc.behavior.%s(%s)'%(constructor, ', '.join(params)))
       return lines
    
-   def _createPortAccessString(self, runnable, sendReceivePoint):
+   def _createPortAccessString(self, runnable, sendReceiveCallPoint):
+      """
+      creates a port access string of the form 'port' or 'port/dataElem' or 'port/operationName'
+      sendReceiveCallPoint can be of type DataInstanceRef, OperationInstanceRef
+      """
       ws=runnable.rootWS()
       assert(ws is not None)
-      port=ws.find(sendReceivePoint.portRef)
+      port=ws.find(sendReceiveCallPoint.portRef)
       if port is None:
          raise ValueError('Invalid portRef "%s" in runnable "%s"'(self.portRef,runnable.ref))
       portInterface = ws.find(port.portInterfaceRef)
       if portInterface is None:
          raise ValueError('Invalid portInterfaceRef "%s" in port "%s"'(port.portInterfaceRef,port.ref))
-      if len(portInterface.dataElements)==1:
-         #there is only one data element in this interface, only the port name is required since there is ambiguity
-         return port.name
-      else:
-         #there is possible ambiguity what element we mean, create a portaccess reference in the form "portName/dataElementName"
-         parts=autosar.base.splitref(receivePoint.dataElemRef)
+      if isinstance(portInterface, autosar.portinterface.SenderReceiverInterface) or isinstance(portInterface, autosar.portinterface.ParameterInterface):
+         if len(portInterface.dataElements)==1:
+            #there is only one data element in this interface, only the port name is required since there is ambiguity
+            return port.name
+         else:
+            #there is possible ambiguity what element we mean, create a portaccess reference in the form "portName/dataElementName"
+            parts=autosar.base.splitRef(sendReceiveCallPoint.dataElemRef)
+            return '/'.join([port.name,parts[-1]])
+      elif isinstance(portInterface, autosar.portinterface.ClientServerInterface):
+         parts=autosar.base.splitRef(sendReceiveCallPoint.operationRef)
          return '/'.join([port.name,parts[-1]])
+      else:
+         raise NotImplementedError(type(portInterface))
 
-   
-   
+   def _writeExclusiveAreaCode(self, exclusiveArea, localvars):
+      """
+      creates a call to create an ExclusiveArea
+      """      
+      return [('swc.behavior.createExclusiveArea(%s)'%(repr(exclusiveArea.name)))]

@@ -1,7 +1,7 @@
 from autosar.writer.writer_base import WriterBase
-from autosar.base import splitRef
+import autosar.base
 import autosar.workspace
-
+import autosar.constant
 
 class ComponentTypeWriter(WriterBase):
    def __init__(self,version):
@@ -129,27 +129,42 @@ class ComponentTypeWriter(WriterBase):
       ws=swc.rootWS()
       assert(isinstance(ws,autosar.Workspace))
       for port in swc.providePorts:
-         args=[]
-         args.append("'%s'"%port.name)
-         portInterface=ws.find(port.portInterfaceRef)
-         assert(portInterface is not None)
-         if isinstance(portInterface,autosar.portinterface.SenderReceiverInterface):
-            args.append("'%s'"%port.portInterfaceRef)
-            if len(port.comspec)>0:
-               if len(port.comspec)==1:
-                  comspec=port.comspec[0]
-                  if comspec.initValueRef is not None:
-                     tmp=splitRef(comspec.initValueRef)
-                     if len(tmp)==3:
-                        valueRef='/'+'/'.join(tmp[:-1])
-                     else:
-                        valueRef=comspec.initValueRef
-                     args.append("initValueRef='%s'"%valueRef)
-               else:
-                  raise NotImplementedError('multiple comspecs not yet supported')                        
-            lines.append('swc.createProvidePort(%s)'%(', '.join(args)))
+         params=[]
+         #name
+         params.append(repr(port.name))
+         portInterface=ws.find(port.portInterfaceRef, role='PortInterface')
+         if portInterface is None:
+            raise ValueError('invalid reference: '+port.portInterfaceRef)         
+         if isinstance(portInterface,autosar.portinterface.SenderReceiverInterface) or isinstance(portInterface,autosar.portinterface.ClientServerInterface):
+            #portInterfaceRef
+            if ws.roles['PortInterface'] is not None:
+               params.append(repr(portInterface.name)) #use name only
+            else:
+               params.append(repr(portInterface.ref)) #use full reference            
+            if isinstance(portInterface,autosar.portinterface.SenderReceiverInterface):
+               #comspec
+               if len(port.comspec)>0:
+                  if len(port.comspec)==1:
+                     comspec=port.comspec[0]
+                     if comspec.initValueRef is not None:
+                        initValue = ws.find(comspec.initValueRef)
+                        if initValue is None:
+                           raise ValueError('invalid reference: '+comspec.initValueRef)                                          
+                        if isinstance(initValue, autosar.constant.Constant):
+                           pass
+                        elif isinstance(initValue, autosar.constant.Value):
+                           initValue = initValue.parent #we can shorten the ref string by pointing to its direct parent instead
+                        else:
+                           raise ValueError('invalid reference type "%s" for "%s", expected Constant or Value'%(str(type(initValue)), initValue.ref))
+                        if ws.roles['Constant'] is not None:
+                           params.append('initValueRef='+repr(initValue.name)) #use name only
+                        else:
+                           params.append('initValueRef='+repr(initValue.ref)) #use full reference
+                  else:
+                     raise NotImplementedError('multiple comspecs not yet supported')                                    
          else:
             raise NotImplementedError(type(portInterface))
+         lines.append('swc.createProvidePort(%s)'%(', '.join(params)))
       return lines
 
    def writeSWCRequirePortsCode(self,swc):
@@ -158,32 +173,44 @@ class ComponentTypeWriter(WriterBase):
       assert(isinstance(ws,autosar.Workspace))
       for port in swc.requirePorts:
          params=[]
-         params.append('"%s"'%port.name)
-         portInterface=ws.find(port.portInterfaceRef)
-         assert(portInterface is not None)
-         if isinstance(portInterface,autosar.portinterface.SenderReceiverInterface):
-#            params.append("'%s'"%port.portInterfaceRef)
-            params.append('"%s"'%portInterface.name)
-            if len(port.comspec)>0:
-               if len(port.comspec)==1:
-                  comspec=port.comspec[0]
-                  if comspec.initValueRef is not None:
-                     tmp=splitRef(comspec.initValueRef)
-#                     if len(tmp)==3:
-#                        valueRef='/'+'/'.join(tmp[:-1])
-#                     else:
-#                        valueRef=comspec.initValueRef
-                     params.append('initValueRef="%s"'%tmp[-1])
-                  if (comspec.aliveTimeout is not None) and int(comspec.aliveTimeout)>0:
-                     params.append("aliveTimeout=%d"%int(comspec.aliveTimeout))
-               else:
-                  raise NotImplementedError('multiple comspecs not yet supported')                        
-            lines.append('swc.createRequirePort(%s)'%(', '.join(params)))
-         elif isinstance(portInterface,autosar.portinterface.ClientServerInterface):
-            params.append('"%s"'%port.portInterfaceRef)
-            lines.append('swc.createRequirePort(%s)'%(', '.join(params)))
+         #name
+         params.append(repr(port.name))
+         portInterface=ws.find(port.portInterfaceRef, role='PortInterface')
+         if portInterface is None:
+            raise ValueError('invalid reference: '+port.portInterfaceRef)         
+         if isinstance(portInterface,autosar.portinterface.PortInterface):
+            #portInterfaceRef
+            if ws.roles['PortInterface'] is not None:
+               params.append(repr(portInterface.name)) #use name only
+            else:
+               params.append(repr(portInterface.ref)) #use full reference            
+            if isinstance(portInterface,autosar.portinterface.SenderReceiverInterface):
+               if len(port.comspec)>0:
+                  if len(port.comspec)==1:
+                     comspec=port.comspec[0]
+                     if comspec.initValueRef is not None:
+                        initValue = ws.find(comspec.initValueRef)
+                        if initValue is None:
+                           raise ValueError('invalid reference: '+comspec.initValueRef)                                          
+                        if isinstance(initValue, autosar.constant.Constant):
+                           pass
+                        elif isinstance(initValue, autosar.constant.Value):
+                           initValue = initValue.parent #we can shorten the ref string by pointing to its direct parent instead
+                        else:
+                           raise ValueError('invalid reference type "%s" for "%s", expected Constant or Value'%(str(type(initValue)), initValue.ref))
+                        if ws.roles['Constant'] is not None:
+                           params.append('initValueRef='+repr(initValue.name)) #use name only
+                        else:
+                           params.append('initValueRef='+repr(initValue.ref)) #use full reference
+                     if (comspec.aliveTimeout is not None) and int(comspec.aliveTimeout)>0:
+                        params.append("aliveTimeout=%d"%int(comspec.aliveTimeout))
+                     if (comspec.queueLength is not None) and int(comspec.queueLength)!=1:
+                        params.append("queueLength=%d"%int(comspec.queueLength))
+                  else:
+                     raise NotImplementedError('multiple comspecs not yet supported')            
          else:
-            raise NotImplementedError(type(portInterface))
+            raise NotImplementedError(type(portInterface))         
+         lines.append('swc.createRequirePort(%s)'%(', '.join(params)))
       return lines
 
    def writeSwcImplementationXML(self,elem,package):
@@ -208,6 +235,5 @@ class ComponentTypeWriter(WriterBase):
       return lines
    
    def writeSwcImplementationCode(self, elem, localvars):
-      lines=[]
-      print(type(localvars['swc'].implementation))
-      return lines
+      return []
+   

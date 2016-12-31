@@ -5,6 +5,7 @@ from autosar.base import parseXMLFile,getXMLNamespace,removeNamespace
 import json
 import os
 import ntpath
+import collections
 
 _validWSRoles = ['DataType', 'Constant', 'PortInterface', 'ModeDclrGroup', 'CompuMethod', 'Unit']
 
@@ -38,10 +39,9 @@ class Workspace(object):
       if package is None:
          raise ValueError('invalid reference: '+ref)
       if not isinstance(package, autosar.package.Package):
-         raise ValueError('only packages can be assigned roles in the workspace')
+         raise ValueError('invalid type "%s"for reference "%s", expected Package type'%(str(type(package)),ref))
       package.role=role
       self.roles[role]=package.ref
-
 
    def openXML(self,filename):
       version = None
@@ -57,11 +57,16 @@ class Workspace(object):
       self.version=version
       self.xmlroot = xmlroot
 
-   def loadXML(self, filename):
+   def loadXML(self, filename, roles=None):
       global _validWSRoles
       self.openXML(filename)
       self.loadPackage('*')
-      
+      if roles is not None:
+         if not isinstance(roles, collections.Mapping):
+            raise ValueError('roles parameter must be a dictionary or Mapping')
+         for ref,role in roles.items():
+            self.setRole(ref,role)
+   
    def loadPackage(self, packagename, role=None):
       found=False
       result=[]
@@ -175,7 +180,7 @@ class Workspace(object):
       return None
    
    def createPackage(self,name,role=None):
-      package = autosar.Package(name,self)
+      package = autosar.package.Package(name,self)
       self.packages.append(package)
       if role is not None:
          self.setRole(package.ref, role)      

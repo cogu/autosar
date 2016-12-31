@@ -94,7 +94,7 @@ class BehaviorParser(object):
                         if syncServerCallPoint is not None: runnableEntity.serverCallPoints.append(syncServerCallPoint)
                   if xmlCanEnterExclusiveAreas is not None:
                      for xmlCanEnterExclusiveAreaRef in xmlCanEnterExclusiveAreas.findall('./CAN-ENTER-EXCLUSIVE-AREA-REF'):
-                        runnableEntity.canEnterExclusiveAreas.append(parseTextNode(xmlCanEnterExclusiveAreaRef))                        
+                        runnableEntity.exclusiveAreaRefs.append(parseTextNode(xmlCanEnterExclusiveAreaRef))                        
                   if runnableEntity is not None:
                      runnableEntity.adminData = adminData
                      internalBehavior.runnables.append(runnableEntity)
@@ -120,7 +120,7 @@ class BehaviorParser(object):
             elif xmlNode.tag == 'EXCLUSIVE-AREAS':
                for xmlElem in xmlNode.findall('./*'):
                   if xmlElem.tag=='EXCLUSIVE-AREA':
-                     exclusiveArea=ExclusiveArea(xmlElem.find('SHORT-NAME'))                     
+                     exclusiveArea=ExclusiveArea(parseTextNode(xmlElem.find('SHORT-NAME')), internalBehavior)
                      internalBehavior.exclusiveAreas.append(exclusiveArea)
                   else:
                      raise NotImplementedError(xmlElem.tag)

@@ -1,9 +1,9 @@
 import copy
 import autosar.component
 import autosar.portinterface
-from autosar.base import splitRef,parseBoolean
+import autosar.base
 from autosar.element import Element
-
+import collections
 
 class Event(Element):
    def __init__(self,name,startOnEventRef=None, parent=None):
@@ -59,6 +59,12 @@ class ModeDependency(object):
       for modeInstanceRef in self.modeInstanceRefs:
          data['modeInstanceRefs'].append(modeInstanceRef.asdict())
       if len(data['modeInstanceRefs'])==0: del data['modeInstanceRefs']
+   
+   def append(self, item):
+      if isinstance(item, ModeInstanceRef) or isinstance(item, ModeDependencyRef):
+         self.modeInstanceRefs.append(item)
+      else:
+         raise ValueError('invalid type: '+str(type(item)))
 
 class ModeInstanceRef(object):
    def __init__(self,modeDeclarationRef,modeDeclarationGroupPrototypeRef=None,requirePortPrototypeRef=None):      
@@ -132,7 +138,7 @@ class RunnableEntity(object):
       self.dataReceivePoints=[]
       self.dataSendPoints=[]
       self.serverCallPoints=[]
-      self.canEnterExclusiveAreas=[]
+      self.exclusiveAreaRefs=[]
    
    def tag(self,version=None):
       return 'RUNNABLE-ENTITY'
@@ -150,8 +156,8 @@ class RunnableEntity(object):
          data['dataSendPoints'].append(dataSendPoint.asdict())
       if len(self.syncServerCallPoints)>0:
          data['syncServerCallPoints']=[x.asdict for x in self.syncServerCallPoints]
-      if len(self.canEnterExclusiveAreas)>0:
-         data['canEnterExclusiveAreas']=[x for x in self.canEnterExclusiveAreas]
+      if len(self.exclusiveAreaRefs)>0:
+         data['exclusiveAreaRefs']=[x for x in self.exclusiveAreaRefs]
       if len(data['dataReceivePoints'])==0: del data['dataReceivePoints']
       if len(data['dataSendPoints'])==0: del data['dataSendPoints']
       return data
@@ -368,9 +374,9 @@ class CalPrmElemPrototype(Element):
       return 'CALPRM-ELEMENT-PROTOTYPE'
    
 
-class ExclusiveArea(object):
-   def __init__(self,name):
-      self.name=name
+class ExclusiveArea(Element):
+   def __init__(self, name, parent=None, adminData=None):
+      super().__init__(name,parent,adminData)
    
    def asdict(self):
       data={'type': self.__class__.__name__,'name':self.name}
@@ -466,14 +472,17 @@ class InternalBehavior(Element):
             return elem         
       for elem in self.perInstanceMemories:
          if elem.name == name:
-            return elem         
+            return elem
+      for elem in self.exclusiveAreas:
+         if elem.name == name:
+            return elem
       return None
    
    def __getitem__(self,key):
       return self.find(key)
    
-   def createRunnable(self,name,invokeConcurrently=False,symbol=None, portAccess=None):
-      runnable = RunnableEntity(name, invokeConcurrently, symbol, self)
+   def createRunnable(self, name, portAccess=None, symbol=None, concurrent=False, exclusiveAreas=None):
+      runnable = RunnableEntity(name, concurrent, symbol, self)
       self.runnables.append(runnable)
       if portAccess is not None:
          if self.swc is None:
@@ -492,7 +501,7 @@ class InternalBehavior(Element):
                port = self.swc.find(ref[0])               
                if port is None:
                   raise ValueError('invalid port reference: '+str(elem))
-               portInterface = ws.find(port.portInterfaceRef)
+               portInterface = ws.find(port.portInterfaceRef, role='PortInterface')
                if portInterface is None:
                   raise ValueError('invalid portinterface reference: '+str(port.portInterfaceRef))
                if isinstance(portInterface, autosar.portinterface.SenderReceiverInterface):
@@ -506,8 +515,7 @@ class InternalBehavior(Element):
                else:
                   raise NotImplementedError(type(portInterface))
             else:
-               #this section is for portAccess where both port name and dataelement is represented as "portName/dataElementName"
-               #this is all we need to find and build an actual 
+               #this section is for portAccess where both port name and dataelement is represented as "portName/dataElementName"               
                port = self.swc.find(ref[0])               
                if port is None:
                   raise ValueError('invalid port reference: '+str(elem))
@@ -519,9 +527,28 @@ class InternalBehavior(Element):
                   if dataElem is None:
                      raise ValueError('invalid data element reference: '+str(elem))
                   self._createSendReceivePoint(port,dataElem,runnable)
+               elif isinstance(portInterface, autosar.portinterface.ClientServerInterface):
+                  operation=portInterface.find(ref[2])
+                  if operation is None:
+                     raise ValueError('invalid operation reference: '+str(elem))
+                  self._createSyncServerCallPoint(port,operation,runnable)
                else:
                   raise NotImplementedError(type(portInterface))
-
+      if exclusiveAreas is not None:
+         if isinstance(exclusiveAreas, str):
+            exclusiveAreas =[exclusiveAreas]
+         if isinstance(exclusiveAreas, collections.Iterable):
+            for exclusiveAreaName in exclusiveAreas:
+               found = False
+               for exclusiveArea in self.exclusiveAreas:
+                  if exclusiveArea.name == exclusiveAreaName:
+                     found = True
+                     runnable.exclusiveAreaRefs.append(exclusiveArea.ref)
+                     break
+               if not found:
+                  raise ValueError('invalid exclusive area name: '+exclusiveAreaName)
+         else:
+            raise ValueError('exclusiveAreas must be either string or list')
       return runnable
 
 
@@ -539,14 +566,28 @@ class InternalBehavior(Element):
          
 
    def _createSendReceivePoint(self,port,dataElement,runnable):
-      #internal function that create a DataReceivePoint of the the port is a require port or
-      # a DataSendPoint if the port is a provide port
+      """
+      internal function that create a DataReceivePoint of the the port is a require port or
+      a DataSendPoint if the port is a provide port
+      """
       if isinstance(port,autosar.component.RequirePort):
          receivePoint=DataReceivePoint(port.ref,dataElement.ref,'REC_{0.name}_{1.name}'.format(port,dataElement),runnable)
          runnable.dataReceivePoints.append(receivePoint)
       elif isinstance(port,autosar.component.ProvidePort):
          sendPoint=DataSendPoint(port.ref,dataElement.ref,'SEND_{0.name}_{1.name}'.format(port,dataElement),runnable)
          runnable.dataSendPoints.append(sendPoint)
+      else:
+         raise ValueError('unexpected type: '+str(type(port)))
+
+   def _createSyncServerCallPoint(self,port,operation,runnable):
+      """
+      internal function that create a SyncServerCallPoint of the the port is a require port or
+      a DataSendPoint if the port is a provide port
+      """
+      if isinstance(port,autosar.component.RequirePort):
+         callPoint=SyncServerCallPoint('SC_{0.name}_{1.name}'.format(port,operation))
+         callPoint.operationInstanceRefs.append(OperationInstanceRef(port.ref, operation.ref))
+         runnable.serverCallPoints.append(callPoint)
       else:
          raise ValueError('unexpected type: '+str(type(port)))
    
@@ -560,7 +601,7 @@ class InternalBehavior(Element):
       ws = self.rootWS()
       for port in self.swc.requirePorts:
          if (port.name == portName):            
-            portInterface = ws.find(port.portInterfaceRef)
+            portInterface = ws.find(port.portInterfaceRef, role='PortInterface')
             if (portInterface is None):
                raise ValueError('invalid port interface reference: '+port.portInterfaceRef)
             if (portInterface.modeGroups is None) or (len(portInterface.modeGroups)==0):
@@ -580,14 +621,16 @@ class InternalBehavior(Element):
                   return (modeDeclarationRef,modeDeclarationGroupRef,port.ref)
             raise ValueError('"%s" did not match any of the mode declarations in %s'%(modeValue,dataType.ref))
          
-   def createModeSwitchEvent(self, runnableRef, modeRef, activationType='ENTRY', name=None):
+   def createModeSwitchEvent(self, runnableName, modeRef, activationType='ENTRY', name=None):
       if self.swc is None:
          ws = self.rootWS()
          assert(ws is not None)
          self.swc = ws.find(self.componentRef)
       assert(self.swc is not None)
       ws = self.rootWS()
-      runnable=ws.find(runnableRef)
+      runnable=self.find(runnableName)
+      if runnable is None:
+         raise ValueError('invalid runnable name: '+runnableName)
       assert(isinstance(runnable, autosar.behavior.RunnableEntity))
       nameBase = "MST_"+runnable.name
       index = 0
@@ -611,14 +654,14 @@ class InternalBehavior(Element):
          raise ValueError('invalid modeRef, expected "portName/modeValue", got "%s"'%modeRef)         
       portName=result[0]
       modeValue=result[2]
-      event = autosar.behavior.ModeSwitchEvent(eventName,runnableRef,activationType)
+      event = autosar.behavior.ModeSwitchEvent(eventName,runnable.ref,activationType)
       (modeDeclarationRef,modeDeclarationGroupRef,portRef) = self.calcModeInstanceComponents(portName,modeValue)
       event.modeInstRef = ModeInstanceRef(modeDeclarationRef, modeDeclarationGroupRef, portRef)
       assert(isinstance(event.modeInstRef, autosar.behavior.ModeInstanceRef))
       self.events.append(event)
       return event
 
-   def createTimingEvent(self, runnableRef, period, modeDependency=None, name=None ):
+   def createTimingEvent(self, runnableName, period, modeDependency=None, name=None ):
       if self.swc is None:
          ws = self.rootWS()
          assert(ws is not None)
@@ -626,50 +669,172 @@ class InternalBehavior(Element):
       assert(self.swc is not None)
       ws = self.rootWS()
 
-      runnable=ws.find(runnableRef)
+      runnable=self.find(runnableName)
+      if runnable is None:
+         raise ValueError('invalid runnable name: '+runnableName)
       assert(isinstance(runnable, autosar.behavior.RunnableEntity))
       eventName=name
       if eventName is None:
          #try to find a suitable name for the event
          baseName = "TMT_"+runnable.name
-         found = None
-         for event in self.events:
-            if event.name == baseName:
-               found = event
-               break
-         if found:
-            event.name=event.name+'_0'
-            index = 1     
-            eventName = None
-            while(True):
-               eventName= "%s_%d"%(baseName,index)
-               found = None
-               for event in self.events:
-                  if event.name == eventName:
-                     found = event
-                     break
-               if found:
-                  index+=1
-               else:
-                  break
-         else:
-            eventName = baseName
+         eventName = self._findEventName(baseName)
       
-      event = autosar.behavior.TimingEvent(eventName,runnableRef,period)
+      event = autosar.behavior.TimingEvent(eventName,runnable.ref,period)
       
       if modeDependency is not None:
-         for dependency in list(modeDependency):
-            result = dependency.partition('/')
-            if result[1]=='/':
-               portName=result[0]
-               modeValue=result[2]
-               (modeDeclarationRef,modeDeclarationGroupRef,portRef) = self.calcModeInstanceComponents(portName,modeValue)               
-            else:
-               raise ValueError('invalid modeRef, expected "portName/modeValue", got "%s"'%dependency)
-            if event.modeDependency is None:
-               event.modeDependency = []
-            event.modeDependency.append(ModeDependencyRef(modeDeclarationRef, modeDeclarationGroupRef, portRef))
+         self._processModeDependency(event, modeDependency)
       self.events.append(event)
       return event
-
+   
+   def createOperationInvokedEvent(self, runnableName, operationRef, modeDependency=None, name=None ):
+      """
+      creates a new OperationInvokedEvent
+      runnableName: name of the runnable to call (runnable must already exist)
+      operationRef: string using the format 'portName/operationName'
+      name: optional event name, used to override only
+      """
+      if self.swc is None:
+         ws = self.rootWS()
+         assert(ws is not None)
+         self.swc = ws.find(self.componentRef)
+      assert(self.swc is not None)
+      ws = self.rootWS()
       
+      runnable=self.find(runnableName)
+      if runnable is None:
+         raise ValueError('invalid runnable name: '+runnableName)
+      assert(isinstance(runnable, autosar.behavior.RunnableEntity))
+
+      if not isinstance(operationRef, str):
+         raise ValueError("expected operationRef to be string of the format 'portName/operationName' ")
+      parts = autosar.base.splitRef(operationRef)
+      if len(parts)!=2:
+         raise ValueError("expected operationRef to be string of the format 'portName/operationName' ")
+      portName,operationName=parts[0],parts[1]
+      eventName=name
+      port = self.swc.find(portName)
+      if (port is None) or not isinstance(port, autosar.component.Port):
+         raise ValueError('invalid port name: '+portName)
+      portInterface = ws.find(port.portInterfaceRef)
+      if portInterface is None:
+         raise ValueError('invalid reference: '+port.portInterface)
+      if not isinstance(portInterface, autosar.portinterface.ClientServerInterface):
+         raise ValueError('The referenced port "%s" does not have a ClientServerInterface'%(port.name))
+      operation = portInterface.find(operationName)
+      if (operation is None) or not isinstance(operation, autosar.portinterface.Operation):
+         raise ValueError('invalid operation name: '+operationName)      
+      if eventName is None:
+         eventName=self._findEventName('OIT_%s_%s_%s'%(runnable.name, port.name, operation.name))
+      event = OperationInvokedEvent(eventName, runnable.ref, self)
+      event.operationInstanceRef=OperationInstanceRef(port.ref, operation.ref)
+
+      if modeDependency is not None:
+         self._processModeDependency(event, modeDependency)
+
+      self.events.append(event)
+      return event
+   
+   def createDataReceivedEvent(self, runnableName, dataElementRef, modeDependency=None, name=None ):
+      """
+      creates a new DataReceivedEvent
+      runnableName: name of the runnable to call (runnable must already exist)
+      dataElementRef: string using the format 'portName/dataElementName'. Using 'portName' only is also OK as long as the interface only has one element
+      name: optional event name, used to override only
+      """
+      if self.swc is None:
+         ws = self.rootWS()
+         assert(ws is not None)
+         self.swc = ws.find(self.componentRef)
+      assert(self.swc is not None)
+      ws = self.rootWS()
+      
+      runnable=self.find(runnableName)
+      if runnable is None:
+         raise ValueError('invalid runnable name: '+runnableName)
+      assert(isinstance(runnable, autosar.behavior.RunnableEntity))
+
+      if not isinstance(dataElementRef, str):
+         raise ValueError("expected dataElementRef to be string of the format 'portName/dataElementName' ")
+      parts = autosar.base.splitRef(dataElementRef)
+      if len(parts)==2:
+         raise ValueError("expected dataElementRef to be string of the format 'portName/dataElementName' ")
+         portName,dataElementName=parts[0],parts[1]
+      elif len(parts)==1:
+         portName,dataElementName=parts[0],None
+      eventName=name
+      port = self.swc.find(portName)
+      if (port is None) or not isinstance(port, autosar.component.Port):
+         raise ValueError('invalid port name: '+portName)
+      portInterface = ws.find(port.portInterfaceRef)
+      if portInterface is None:
+         raise ValueError('invalid reference: '+port.portInterface)
+      if not isinstance(portInterface, autosar.portinterface.SenderReceiverInterface):
+         raise ValueError('The referenced port "%s" does not have a SenderReceiverInterface'%(port.name))
+      if dataElementName is None:
+         if len(portInterface.dataElements)==1:
+            dataElement=portInterface.dataElements[0]
+         elif len(portInterface.dataElements)>1:
+            raise ValueError("expected dataElementRef to be string of the format 'portName/dataElementName' ")
+         else:
+            raise ValueError('portInterface "%s" has no data elements'%portInterface.name)
+      else:
+         dataElement = portInterface.find(dataElementName)
+         if (dataElement is None) or not isinstance(dataElement, autosar.portinterface.Operation):
+            raise ValueError('invalid data element name: ' + dataElementName )
+      if eventName is None:
+         eventName=self._findEventName('DRT_%s_%s_%s'%(runnable.name, port.name, dataElement.name))
+      event = DataReceivedEvent(eventName, runnable.ref, self)
+      event.dataInstanceRef=DataInstanceRef(port.ref, dataElement.ref)
+      
+      if modeDependency is not None:
+         self._processModeDependency(event, modeDependency)
+         
+      self.events.append(event)
+      return event      
+   
+   def _findEventName(self, baseName):
+      found = False
+      for event in self.events:
+         if event.name == self.events:
+            found = True
+            break
+      if found:
+         event.name=event.name+'_0'
+         index = 1     
+         eventName = None
+         while(True):
+            eventName= "%s_%d"%(baseName,index)
+            found = False
+            for event in self.events:
+               if event.name == eventName:
+                  found = True
+                  break
+            if found:
+               index+=1
+            else:
+               break
+      else:
+         eventName = baseName
+      return eventName
+      
+   def _processModeDependency(self, event, modeDependencyList):
+      for dependency in list(modeDependencyList):
+         result = dependency.partition('/')
+         if result[1]=='/':
+            portName=result[0]
+            modeValue=result[2]
+            (modeDeclarationRef,modeDeclarationGroupRef,portRef) = self.calcModeInstanceComponents(portName,modeValue)               
+         else:
+            raise ValueError('invalid modeRef, expected "portName/modeValue", got "%s"'%dependency)
+         if event.modeDependency is None:
+            event.modeDependency = ModeDependency()
+         event.modeDependency.append(ModeDependencyRef(modeDeclarationRef, modeDeclarationGroupRef, portRef))
+   
+   def createExclusiveArea(self, name):
+      """
+      creates a new ExclusiveArea
+      """      
+      exclusiveArea = ExclusiveArea(str(name), self)
+      self.exclusiveAreas.append(exclusiveArea)
+      return exclusiveArea
+   

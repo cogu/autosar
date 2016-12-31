@@ -1,15 +1,12 @@
 from autosar.workspace import Workspace
-from autosar.component import ApplicationSoftwareComponent,ComponentType,RequirePort,ProvidePort,DataElementComSpec
-from autosar.behavior import InternalBehavior,RunnableEntity,DataReceivePoint
-#from autosar.portinterface import ParameterInterface,SenderReceiverInterface,ClientServerInterface,DataElement
+import autosar.component
+import autosar.behavior
 import autosar.portinterface
-#from autosar.datatype import RecordDataType,BooleanDataType,IntegerDataType,CompuMethodConst,CompuMethodRational,StringDataType,ArrayDataType
 import autosar.datatype
-
 import autosar.constant
+import autosar.signal
+import autosar.package
 from autosar.base import splitRef
-from autosar.signal import SystemSignal
-from autosar.package import Package
 import ntpath
 import os
 import xml.etree.ElementTree as ElementTree
@@ -44,19 +41,9 @@ class DcfParser:
       self.adjustDcfFileRef(dcf,basedir)
       return dcf
 
-__CurrentWS = None
 
 def workspace():
-   global __CurrentWS
-   __CurrentWS = Workspace()
-   return __CurrentWS
-
-def getCurrentWS():
-   return __CurrentWS
-
-def setCurrentWS(ws):
-   assert(isinstance(ws,autosar.workspace.Workspace))
-   __CurrentWS=ws
+   return autosar.Workspace()
 
 def dcfImport(filename):
    parser = DcfParser()

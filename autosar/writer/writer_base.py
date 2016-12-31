@@ -95,27 +95,11 @@ class WriterBase():
          return elem.desc,descAttr
       return None,None
    
-   
-   def writeQuoteListCode(self, varname, data):
-      """
-      writes data as as an array where each element is encapsulated in string quotes ("")
-      """
-      lines=['%s = ['%varname]
-      indent=' '*(len(varname)+6)
-      for i,elem in enumerate(data):         
-         if i+1==len(data):
-            lines.append('%s"%s"'%(indent,str(elem)))
-         else:
-            lines.append('%s"%s",'%(indent,str(elem)))
-      indent=' '*(len(varname)+3)
-      lines.append('%s]'%indent)
-      return lines
-   
    def writeListCode(self, varname, data):
       """
-      same as writeQuoteListCode but without adding quote characters
-      """
-      lines=['%s = ['%varname]
+      writes data as as an array with varname
+      """      
+      lines=['','%s = ['%varname] #easier to read generated code if there is an empty line first
       indent=' '*(len(varname)+6)
       for i,elem in enumerate(data):         
          if i+1==len(data):
