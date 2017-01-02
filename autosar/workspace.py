@@ -223,7 +223,7 @@ class Workspace(object):
       writer=autosar.writer.WorkspaceWriter()
       if isinstance(packages,str): packages=[packages]
       if isinstance(ignore,str): ignore=[ignore]
-      return writer.toXML(self, package, ignore)
+      return writer.toXML(self, packages, ignore)
 
    def append(self,elem):
       if isinstance(elem,autosar.package.Package):
