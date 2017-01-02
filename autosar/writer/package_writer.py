@@ -4,7 +4,9 @@ from autosar.writer.constant_writer import ConstantWriter
 from autosar.writer.component_writer import ComponentTypeWriter
 from autosar.writer.behavior_writer import BehaviorWriter
 from autosar.writer.portinterface_writer import PortInterfaceWriter
-
+import collections
+import autosar.behavior
+import autosar.component
 
 class PackageWriter(WriterBase):
    def __init__(self,version):
@@ -22,7 +24,7 @@ class PackageWriter(WriterBase):
                           'RecordDataType': self.dataTypeWriter.writeRecordDataTypeXML,
                           'StringDataType': self.dataTypeWriter.writeStringTypeXml,
                           'ApplicationSoftwareComponent': self.componentTypeWriter.writeApplicationSoftwareComponentXML,
-                          'COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE': None,
+                          'ComplexDeviceDriverComponent': self.componentTypeWriter.writeComplexDeviceDriverComponentXML,
                           'InternalBehavior': self.behaviorWriter.writeInternalBehaviorXML,
                           'SwcImplementation': self.componentTypeWriter.writeSwcImplementationXML,
                           'CompuMethodConst': self.dataTypeWriter.writeCompuMethodXML,
@@ -34,7 +36,7 @@ class PackageWriter(WriterBase):
                           'ParameterInterface': self.portInterfaceWriter.writeParameterInterfaceXML,
                           'ClientServerInterface': self.portInterfaceWriter.writeClientServerInterfaceXML,
                           'Constant': self.constantWriter.writeConstantXML,
-                          'COMPOSITION-TYPE': None,
+                          'CompositionComponent': self.componentTypeWriter.writeCompositionComponentXML,
                           'SYSTEM-SIGNAL': None,
                           'SYSTEM': None
                           }
@@ -45,7 +47,7 @@ class PackageWriter(WriterBase):
                           'RecordDataType': self.dataTypeWriter.writeRecordDataTypeCode,
                           'StringDataType': self.dataTypeWriter.writeStringTypeCode,
                           'ApplicationSoftwareComponent': self.componentTypeWriter.writeApplicationSoftwareComponentCode,
-                          'COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE': None,
+                          'ComplexDeviceDriverComponent': self.componentTypeWriter.writeComplexDeviceDriverComponentCode,
                           'InternalBehavior': self.behaviorWriter.writeInternalBehaviorCode,
                           'SwcImplementation': self.componentTypeWriter.writeSwcImplementationCode,
                           'CompuMethodConst': self.dataTypeWriter.writeCompuMethodCode,
@@ -57,24 +59,36 @@ class PackageWriter(WriterBase):
                           'ParameterInterface': self.portInterfaceWriter.writeParameterInterfaceCode,
                           'ClientServerInterface': self.portInterfaceWriter.writeClientServerInterfaceCode,
                           'Constant': self.constantWriter.writeConstantCode,
-                          'COMPOSITION-TYPE': None,
+                          'CompositionComponent': self.componentTypeWriter.writeCompositionComponentCode,
                           'SYSTEM-SIGNAL': None,
                           'SYSTEM': None
                           }
       else:
          raise NotImplementedError("AUTOSAR version not yet supported")
    
-   def toXML(self,package):      
+   def toXML(self,package,ignore):      
       lines=[]
       lines.extend(self.beginPackage(package.name))
       if len(package.elements)>0:
          lines.append(self.indent("<ELEMENTS>",1))
          for elem in package.elements:
-            writerFunc = self.switcherXML.get(elem.__class__.__name__)
-            if writerFunc is not None:            
-               lines.extend(self.indent(writerFunc(elem,package),2))
-            else:
-               print("skipped: %s"%str(type(elem)))
+            elemRef = elem.ref
+            ignoreElem=True if (isinstance(ignore, collections.Iterable) and elemRef in ignore) else False
+            #if SWC was ignored by user, also ignore its InternalBehavior and SwcImplementation elements in case they are in the same package
+            if not ignoreElem and isinstance(elem, autosar.behavior.InternalBehavior):
+               if (isinstance(ignore, collections.Iterable) and elem.componentRef in ignore):
+                  ignoreElem = True
+            if not ignoreElem and isinstance(elem, autosar.component.SwcImplementation):
+               behavior = package.rootWS().find(elem.behaviorRef)
+               if behavior is not None:
+                  if (isinstance(ignore, collections.Iterable) and behavior.componentRef in ignore):
+                     ignoreElem = True
+            if not ignoreElem:            
+               writerFunc = self.switcherXML.get(elem.__class__.__name__)
+               if writerFunc is not None:            
+                  lines.extend(self.indent(writerFunc(elem,package),2))
+               else:
+                  print("skipped: %s"%str(type(elem)))
          lines.append(self.indent("</ELEMENTS>",1))
       else:
          lines.append(self.indent("<ELEMENTS/>",1))
@@ -86,7 +100,7 @@ class PackageWriter(WriterBase):
       lines.extend(self.endPackage())
       return lines
    
-   def toCode(self, package, localvars):
+   def toCode(self, package, ignore, localvars):
       lines=[]
       if package.role is not None:
          lines.append('package=ws.createPackage("%s", role="%s")'%(package.name, package.role))
@@ -99,9 +113,20 @@ class PackageWriter(WriterBase):
          else:
             lines.append('package.createSubPackage("%s")'%(subPackage.name))            
       for elem in package.elements:
-         writerFunc = self.switcherCode.get(elem.__class__.__name__)
-         if writerFunc is not None:
-            lines.extend(writerFunc(elem, localvars))
-         else:
-            raise NotImplementedError(type(elem))            
+         elemRef = elem.ref
+         ignoreElem=True if (isinstance(ignore, str) and ignore==elemRef) or (isinstance(ignore, collections.Iterable) and elemRef in ignore) else False
+
+         #if SWC was ignored by user, also ignore its InternalBehavior and SwcImplementation elements in case they are in the same package
+         if not ignoreElem and isinstance(elem, autosar.behavior.InternalBehavior):
+            if (isinstance(ignore, str) and ignore==elem.componentRef) or (isinstance(ignore, collections.Iterable) and elem.componentRef in ignore): ignoreElem = True
+         if not ignoreElem and isinstance(elem, autosar.component.SwcImplementation):
+            behavior = package.rootWS().find(elem.behaviorRef)
+            if behavior is not None:
+               if (isinstance(ignore, str) and ignore==behavior.componentRef) or (isinstance(ignore, collections.Iterable) and behavior.componentRef in ignore): ignoreElem = True
+         if not ignoreElem:
+            writerFunc = self.switcherCode.get(elem.__class__.__name__)
+            if writerFunc is not None:
+               lines.extend(writerFunc(elem, localvars))
+            else:
+               raise NotImplementedError(type(elem))            
       return lines

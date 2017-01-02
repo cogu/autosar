@@ -97,21 +97,19 @@ class Package(object):
       if len(data['subPackages'])==0: del data['subPackages']
       return data
    
-   def createComponentType(self,name,componentType):
-      if componentType is autosar.component.ApplicationSoftwareComponent:         
-         swc=autosar.component.ApplicationSoftwareComponent(name,parent=self)
-      elif componentType is autosar.component.ComplexDeviceDriverSoftwareComponent:
-         swc.autosar.component.ComplexDeviceDriverSoftwareComponent(name,parent=self)
-      else:
-         raise ValueError(componentType+ "is an unsupported type")
-      internalBehavior=autosar.behavior.InternalBehavior('%s_InternalBehavior'%name,self.ref+'/%s'%name,parent=self)
-      implementation=autosar.component.SwcImplementation('%s_Implementation'%name,internalBehavior.ref,parent=self)
-      swc.behavior=internalBehavior
-      swc.implementation=implementation
-      self.elements.append(swc)
-      self.elements.append(internalBehavior)
-      self.elements.append(implementation)
-      return swc
+   def delete(self, ref):
+      if ref is None: return
+      if ref[0]=='/': ref=ref[1:] #removes initial '/' if it exists
+      ref = ref.partition('/')
+      for i,element in enumerate(self.elements):
+         if element.name == ref[0]:
+            if len(ref[2])>0:
+               return element.delete(ref[2])
+            else:
+               del self.elements[i]
+               break
+
+   
 
    def createSenderReceiverInterface(self,name, dataElements=None, modeGroups=None, isService=False, adminData=None):
       """
@@ -567,3 +565,24 @@ class Package(object):
       else:
          raise NotImplementedError(type(initValue))
       return value
+   
+   def createComplexDeviceDriverComponent(self,swcName,behaviorName=None,implementationName=None,multipleInstance=False):
+      if behaviorName is None:
+         behaviorName = str(swcName)+'_InternalBehavior'
+      if implementationName is None:
+         implementationName = str(swcName)+'_Implementation'
+      swc=autosar.component.ComplexDeviceDriverComponent(swcName, parent=self)
+      internalBehavior = autosar.behavior.InternalBehavior(behaviorName, swc.ref, multipleInstance, self)
+      implementation=autosar.component.SwcImplementation(implementationName, internalBehavior.ref, parent=self)
+      swc.behavior=internalBehavior
+      swc.implementation=implementation
+      self.append(swc)
+      self.append(internalBehavior)
+      self.append(implementation)
+      return swc
+
+   def createCompositionComponent(self, componentName, adminData=None):
+      component = autosar.component.CompositionComponent(str(componentName), self)
+      self.append(component)
+      return component
+      

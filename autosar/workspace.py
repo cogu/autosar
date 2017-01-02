@@ -7,7 +7,7 @@ import os
 import ntpath
 import collections
 
-_validWSRoles = ['DataType', 'Constant', 'PortInterface', 'ModeDclrGroup', 'CompuMethod', 'Unit']
+_validWSRoles = ['DataType', 'Constant', 'PortInterface', 'ComponentType', 'ModeDclrGroup', 'CompuMethod', 'Unit']
 
 class Workspace(object):
    def __init__(self,version=3.0):
@@ -16,7 +16,7 @@ class Workspace(object):
       self.packageParser=None
       self.xmlroot = None
       self.roles = {'DataType': None, 'Constant': None, 'PortInterface': None, 'ModeDclrGroup': None,
-                    'CompuMethod': None, 'Unit': None} #stores references to the actor (i.e. package) that acts the role
+                    'ComponentType': None, 'CompuMethod': None, 'Unit': None} #stores references to the actor (i.e. package) that acts the role
 
    def __getitem__(self,key):
       if isinstance(key,str):
@@ -180,8 +180,15 @@ class Workspace(object):
       return None
    
    def createPackage(self,name,role=None):
-      package = autosar.package.Package(name,self)
-      self.packages.append(package)
+      alreadyExists = False
+      for package in self.packages:
+         if package.name == name:
+            #package already exists
+            alreadyExists = True
+            break
+      if alreadyExists == False:
+         package = autosar.package.Package(name,self)
+         self.packages.append(package)
       if role is not None:
          self.setRole(package.ref, role)      
       return package
@@ -205,22 +212,18 @@ class Workspace(object):
    def root(self):
       return self
    
-   def saveXML(self,filename,packages=None):
+   def saveXML(self,filename,packages=None,ignore=None):
       writer=autosar.writer.WorkspaceWriter()
       with open(filename, 'w', encoding="utf-8") as fp:
          if isinstance(packages,str): packages=[packages]
-         if packages is not None:
-            writer.saveXML(self,fp,list(packages))
-         else:
-            writer.saveXML(self,fp,None)
+         if isinstance(ignore,str): ignore=[ignore]
+         writer.saveXML(self, fp, packages, ignore)
 
-   def toXML(self,packages=None):
+   def toXML(self, packages=None, ignore=None):
       writer=autosar.writer.WorkspaceWriter()
       if isinstance(packages,str): packages=[packages]
-      if packages is not None:
-         return writer.toXML(self,list(packages))
-      else:
-         return writer.toXML(self,None)
+      if isinstance(ignore,str): ignore=[ignore]
+      return writer.toXML(self, package, ignore)
 
    def append(self,elem):
       if isinstance(elem,autosar.package.Package):
@@ -243,14 +246,14 @@ class Workspace(object):
       if isinstance(packages,str): packages=[packages]
       return writer.toCode(self,list(packages),str(header))
          
-   def saveCode(self,filename,packages=None,head=None,tail=None):
+   def saveCode(self, filename, packages=None, ignore=None, head=None, tail=None):
+      """
+      saves the workspace as python code so it can be recreated later
+      """
       writer=autosar.writer.WorkspaceWriter()
       if isinstance(packages,str): packages=[packages]
       with open(filename,'w', encoding="utf-8") as fp:
-         if packages is not None:
-            writer.saveCode(self,fp,list(packages),head,tail)
-         else:
-            writer.saveCode(self,fp,None,head,tail)
+         writer.saveCode(self, fp, packages, ignore, head, tail)
 
    @property
    def ref(self):
@@ -288,5 +291,14 @@ class Workspace(object):
    def createAdminData(self, data):
       return autosar.base.createAdminData(data)
    
+   def fromDict(self, data):
+      for item in data:
+         if item['type'] == 'FileRef':
+            if os.path.isfile(item['path']):
+               roles = item.get('roles',None)
+               self.loadXML(item['path'],roles=roles)
+            else:
+               raise ValueError('invalid file path "%s"'%item['path'])
+            
 if __name__ == '__main__':
    print("done")

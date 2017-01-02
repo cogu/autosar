@@ -143,3 +143,32 @@ class WriterBase():
          return json.dumps(items[0])
       else:
          return json.dumps(items)
+      
+   def _createTypeRef(self, typeRef, localvars):
+      """
+      returns a represenation of a typeRef string
+      if role 'DataType' is setup in the workspace it will only return the name of the reference,
+      otherwise it returns the full reference
+      """
+      return self._createRef(componentRef, 'DataType', localvars)
+
+   def _createComponentRef(self, componentRef, localvars):
+      """
+      returns a represenation of a componentRef string
+      if role 'ComponentType' is setup in the workspace it will only return the name of the reference,
+      otherwise it returns the full reference
+      """
+      return self._createRef(componentRef, 'ComponentType', localvars)
+      
+   def _createRef(self, ref, role, localvars):
+      ws=localvars['ws']
+      assert(ws is not None)
+      element = ws.find(ref)
+      if element is None:
+         raise ValueError('invalid reference: '+ref)
+      if ws.roles[role] is not None:
+         return element.name #use name only
+      else:
+         return element.ref #use full reference
+   
+   

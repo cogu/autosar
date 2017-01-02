@@ -49,7 +49,7 @@ class ComponentTypeParser(object):
       if xmlRoot.tag=='APPLICATION-SOFTWARE-COMPONENT-TYPE':
          componentType = ApplicationSoftwareComponent(parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
       elif xmlRoot.tag=='COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE':
-         componentType=ComplexDeviceDriverSoftwareComponent(parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
+         componentType=ComplexDeviceDriverComponent(parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
       else:
          raise NotImplementedError(xmlRoot.tag)
       if xmlRoot.find('PORTS') is not None:
@@ -62,7 +62,7 @@ class ComponentTypeParser(object):
       for xmlPort in xmlPorts.findall('*'):
          if(xmlPort.tag == "R-PORT-PROTOTYPE"):
             portName = xmlPort.find('SHORT-NAME').text
-            portInterfaceRef = xmlPort.find('REQUIRED-INTERFACE-TREF').text
+            portInterfaceRef = parseTextNode(xmlPort.find('REQUIRED-INTERFACE-TREF'))
             port = RequirePort(portName,portInterfaceRef,parent=componentType)                        
             if xmlPort.findall('./REQUIRED-COM-SPECS') is not None:        
                for xmlItem in xmlPort.findall('./REQUIRED-COM-SPECS/*'):
@@ -74,9 +74,9 @@ class ComponentTypeParser(object):
                      dataElemName = _getDataElemNameFromComSpec(xmlItem,portInterfaceRef)
                      comspec = DataElementComSpec(dataElemName)
                      if xmlItem.find('./ALIVE-TIMEOUT') != None:
-                        comspec.aliveTimeout = xmlItem.find('./ALIVE-TIMEOUT').text
+                        comspec.aliveTimeout = parseTextNode(xmlItem.find('./ALIVE-TIMEOUT'))
                      if xmlItem.find('./INIT-VALUE-REF') != None:
-                        comspec.initValueRef = xmlItem.find('./INIT-VALUE-REF').text
+                        comspec.initValueRef = parseTextNode(xmlItem.find('./INIT-VALUE-REF'))
                      port.comspec.append(comspec)
                   elif xmlItem.tag == 'QUEUED-RECEIVER-COM-SPEC':
                      dataElemName = _getDataElemNameFromComSpec(xmlItem,portInterfaceRef)
@@ -89,7 +89,7 @@ class ComponentTypeParser(object):
             componentType.requirePorts.append(port)
          elif(xmlPort.tag == 'P-PORT-PROTOTYPE'):
             portName = xmlPort.find('SHORT-NAME').text
-            portInterfaceRef = xmlPort.find('PROVIDED-INTERFACE-TREF').text
+            portInterfaceRef = parseTextNode(xmlPort.find('PROVIDED-INTERFACE-TREF'))
             port = ProvidePort(portName,portInterfaceRef,parent=componentType)                                       
             if xmlPort.findall('./PROVIDED-COM-SPECS') is not None:
                for xmlItem in xmlPort.findall('./PROVIDED-COM-SPECS/*'):
@@ -102,9 +102,9 @@ class ComponentTypeParser(object):
                      dataElemName = _getDataElemNameFromComSpec(xmlItem,portInterfaceRef)
                      comspec = DataElementComSpec(dataElemName)
                      if xmlItem.find('./INIT-VALUE-REF') != None:
-                        comspec.initValueRef = xmlItem.find('./INIT-VALUE-REF').text
+                        comspec.initValueRef = parseTextNode(xmlItem.find('./INIT-VALUE-REF'))
                      if xmlItem.find('./CAN-INVALIDATE') != None:
-                        comspec.canInvalidate = True if xmlItem.find('./INIT-VALUE-REF').text=='true' else False
+                        comspec.canInvalidate = True if parseTextNode(xmlItem.find('./CAN-INVALIDATE'))=='true' else False
                      port.comspec.append(comspec)
                   elif xmlItem.tag == 'QUEUED-SENDER-COM-SPEC':
                      dataElemName = _getDataElemNameFromComSpec(xmlItem,portInterfaceRef)
@@ -132,7 +132,7 @@ class ComponentTypeParser(object):
       parses COMPOSITION-TYPE
       """
       assert(xmlRoot.tag=='COMPOSITION-TYPE')
-      swc=Composition(parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
+      swc=CompositionComponent(parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
       for elem in xmlRoot.findall('./*'):
          if elem.tag=='SHORT-NAME':
             continue
@@ -171,14 +171,13 @@ class ComponentTypeParser(object):
             providerPortRef=parseTextNode(elem.find('./PROVIDER-IREF/P-PORT-PROTOTYPE-REF'))
             requesterComponentRef=parseTextNode(elem.find('./REQUESTER-IREF/COMPONENT-PROTOTYPE-REF'))
             requesterPortRef=parseTextNode(elem.find('./REQUESTER-IREF/R-PORT-PROTOTYPE-REF'))
-            parent.assemblyConnectors.append(AssemblyConnector(name,
-                                                               ProviderInstanceRef(providerComponentRef,providerPortRef),
-                                                               RequesterInstanceRef(requesterComponentRef,requesterPortRef)))
+            parent.assemblyConnectors.append(AssemblyConnector(name, ProviderInstanceRef(providerComponentRef,providerPortRef), RequesterInstanceRef(requesterComponentRef,requesterPortRef)))
          elif elem.tag=='DELEGATION-CONNECTOR-PROTOTYPE':
             name=parseTextNode(elem.find('SHORT-NAME'))
             innerComponentRef=parseTextNode(elem.find('./INNER-PORT-IREF/COMPONENT-PROTOTYPE-REF'))
             innerPortRef=parseTextNode(elem.find('./INNER-PORT-IREF/PORT-PROTOTYPE-REF'))
-            parent.delegationConnectors.append(DelegationConnector(name,InnerPortInstanceRef(innerComponentRef,innerPortRef)))
+            outerPortRef=parseTextNode(elem.find('./OUTER-PORT-REF'))
+            parent.delegationConnectors.append(DelegationConnector(name, InnerPortInstanceRef(innerComponentRef,innerPortRef), OuterPortRef(outerPortRef)))
          else:
             raise NotImplementedError(elem.tag)
    

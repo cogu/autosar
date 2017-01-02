@@ -56,13 +56,17 @@ class PackageParser(object):
                           }
          
          if xmlRoot.find('ELEMENTS'):
+            elementNames = set([x.name for x in package.elements])
             for xmlElement in xmlRoot.findall('./ELEMENTS/*'):
                parseFunc = self.switcher.get(xmlElement.tag)
                if parseFunc is not None:
                   element = parseFunc(xmlElement,self.rootProject,parent=package)
                   element.parent=package
                   if isinstance(element,autosar.element.Element)==True:
-                     package.elements.append(element)
+                     if element.name not in elementNames:
+                        #ignore duplicated items
+                        package.elements.append(element)
+                        elementNames.add(element.name)
                   else:
                      #raise ValueError("parse error: %s"%type(element))
                      raise ValueError("parse error: %s"%xmlElement.tag)

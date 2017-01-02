@@ -312,11 +312,10 @@ class BehaviorWriter(WriterBase):
       return lines
 
    ### code generators
-   def writeInternalBehaviorCode(self, internalBehavior, localvars):
-      lines=[]
-      swc = localvars['swc']      
-      behavior=swc.behavior
+   def writeInternalBehaviorCode(self, behavior, localvars):
+      lines=[]      
       localvars['swc.behavior']=behavior
+      localvars['swc']=localvars['ws'].find(behavior.componentRef)
       for exclusiveArea in behavior.exclusiveAreas:
          lines.extend(self._writeExclusiveAreaCode(exclusiveArea, localvars))
       for perInstanceMemory in behavior.perInstanceMemories:

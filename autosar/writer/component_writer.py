@@ -8,20 +8,44 @@ class ComponentTypeWriter(WriterBase):
       super().__init__(version)
    
    def writeApplicationSoftwareComponentXML(self,swc,package):
-      lines=[]
       assert(isinstance(swc,autosar.component.ApplicationSoftwareComponent))
-      lines.append('<APPLICATION-SOFTWARE-COMPONENT-TYPE>')
+      return self._writeComponentXML(swc)
+
+   def writeComplexDeviceDriverComponentXML(self,swc,package):
+      assert(isinstance(swc,autosar.component.ComplexDeviceDriverComponent))
+      return self._writeComponentXML(swc)
+
+   def writeCompositionComponentXML(self,swc,package):
+      assert(isinstance(swc,autosar.component.CompositionComponent))
+      return self._writeComponentXML(swc)
+   
+   def _writeComponentXML(self, swc):
+      lines=[]
+      ws = swc.rootWS()
+      assert(ws is not None)
+      lines=[]
+      lines.append('<%s>'%swc.tag(self.version))
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%swc.name,1))
       lines.append(self.indent('<PORTS>',1))
       for port in swc.providePorts:
-         lines.extend(self.indent(self.writeProvidePortXML(port),2))
+         lines.extend(self.indent(self._writeProvidePortXML(port),2))
       for port in swc.requirePorts:
-         lines.extend(self.indent(self.writeRequirePortXML(port),2))
+         lines.extend(self.indent(self._writeRequirePortXML(port),2))
       lines.append(self.indent('</PORTS>',1))
-      lines.append('</APPLICATION-SOFTWARE-COMPONENT-TYPE>')
+      if isinstance(swc, autosar.component.CompositionComponent):
+         lines.extend(self.indent(self._writeComponentsXML(ws, swc.components),1))
+         if (len(swc.assemblyConnectors)>0) or (len(swc.delegationConnectors)>0):
+            lines.append(self.indent('<CONNECTORS>',1))
+            if len(swc.assemblyConnectors)>0:
+               lines.extend(self.indent(self._writeAssemblyConnectorsXML(ws, swc.assemblyConnectors),2))
+            if len(swc.delegationConnectors)>0:
+               lines.extend(self.indent(self._writeDelegationConnectorsXML(ws, swc.delegationConnectors),2))
+            lines.append(self.indent('</CONNECTORS>',1))
+      lines.append('</%s>'%swc.tag(self.version))
       return lines
+      
    
-   def writeRequirePortXML(self, port):
+   def _writeRequirePortXML(self, port):
       lines=[]
       assert(port.ref is not None)
       ws=port.rootWS()
@@ -29,7 +53,7 @@ class ComponentTypeWriter(WriterBase):
       portInterface=ws.find(port.portInterfaceRef)
       lines.append('<R-PORT-PROTOTYPE>')
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%port.name,1))
-      if len(port.comspec)==0:
+      if isinstance(portInterface, autosar.portinterface.ClientServerInterface) and isinstance(port.parent, autosar.component.CompositionComponent) or len(port.comspec)==0:
          lines.append(self.indent('<REQUIRED-COM-SPECS></REQUIRED-COM-SPECS>',1))
       else:
          lines.append(self.indent('<REQUIRED-COM-SPECS>',1))
@@ -66,7 +90,7 @@ class ComponentTypeWriter(WriterBase):
       lines.append('</R-PORT-PROTOTYPE>')
       return lines   
    
-   def writeProvidePortXML(self, port):
+   def _writeProvidePortXML(self, port):
       lines=[]
       assert(port.ref is not None)
       ws=port.rootWS()
@@ -74,7 +98,7 @@ class ComponentTypeWriter(WriterBase):
       portInterface=ws.find(port.portInterfaceRef)
       lines.append('<%s>'%port.tag(self.version))
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%port.name,1))
-      if len(port.comspec)==0:
+      if isinstance(portInterface, autosar.portinterface.ClientServerInterface) and isinstance(port.parent, autosar.component.CompositionComponent) or len(port.comspec)==0:
          lines.append(self.indent('<PROVIDED-COM-SPECS></PROVIDED-COM-SPECS>',1))
       else:
          lines.append(self.indent('<PROVIDED-COM-SPECS>',1))
@@ -111,20 +135,122 @@ class ComponentTypeWriter(WriterBase):
       lines.append(self.indent('<PROVIDED-INTERFACE-TREF DEST="%s">%s</PROVIDED-INTERFACE-TREF>'%(portInterface.tag(self.version),portInterface.ref),1))
       lines.append('</%s>'%port.tag(self.version))      
       return lines
-   
-   
-   def writeApplicationSoftwareComponentCode(self, swc, localvars):
+
+   def writeSwcImplementationXML(self,elem,package):
+      assert(isinstance(elem,autosar.component.SwcImplementation))
       lines=[]
-      package=localvars['package']      
-      lines.append("swc = %s.createApplicationSoftwareComponent('%s')"%('package', swc.name))
-      localvars['swc']=swc
-      if len(swc.providePorts)>0:
-         lines.extend(self.writeSWCProvidePortsCode(swc))
-      if len(swc.requirePorts)>0:
-         lines.extend(self.writeSWCRequirePortsCode(swc))      
+      ws = elem.rootWS()
+      assert(ws is not None)
+      behavior = ws.find(elem.behaviorRef)
+      if behavior is None:
+         raise ValueError('invalid reference: '+str(elem.behaviorRef))
+      lines=['<SWC-IMPLEMENTATION>',
+             self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1)        
+            ]
+      lines.append(self.indent('<CODE-DESCRIPTORS>',1))
+      lines.append(self.indent('<CODE>',2))
+      lines.append(self.indent('<SHORT-NAME>Code</SHORT-NAME>',3))
+      lines.append(self.indent('<TYPE>SRC</TYPE>',3))
+      lines.append(self.indent('</CODE>',2))
+      lines.append(self.indent('</CODE-DESCRIPTORS>',1))
+      lines.append(self.indent('<BEHAVIOR-REF DEST="%s">%s</BEHAVIOR-REF>'%(behavior.tag(self.version),elem.behaviorRef),1))
+      lines.append('</SWC-IMPLEMENTATION>')
       return lines
    
-   def writeSWCProvidePortsCode(self,swc):
+   def _writeComponentsXML(self, ws, components):
+      lines=[]
+      if len(components)>0:
+         lines.append('<COMPONENTS>')
+         for component in components:
+            swc = ws.find(component.typeRef)
+            if swc is None:
+               raise ValueError('Invalid reference: '+component.typeRef)
+            lines.append(self.indent('<COMPONENT-PROTOTYPE>',1))
+            lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%component.name,2))
+            lines.append(self.indent('<TYPE-TREF DEST="%s">%s</TYPE-TREF>'%(swc.tag(self.version),swc.ref),2))
+            lines.append(self.indent('</COMPONENT-PROTOTYPE>',1))
+         lines.append('</COMPONENTS>')
+      return lines   
+
+   def _writeAssemblyConnectorsXML(self, ws, connectors):
+      lines=[]
+      for connector in connectors:
+         lines.append('<%s>'%connector.tag(self.version))
+         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%connector.name, 1))
+         lines.append(self.indent('<%s>'%connector.providerInstanceRef.tag(self.version), 1))
+         providerComponent = ws.find(connector.providerInstanceRef.componentRef)
+         if providerComponent is None:
+            raise ValueError('invalid reference: ' +connector.providerInstanceRef.componentRef)
+         providePort = ws.find(connector.providerInstanceRef.portRef)
+         if providePort is None:
+            raise ValueError('invalid reference: ' +connector.providerInstanceRef.portRef)
+         lines.append(self.indent('<COMPONENT-PROTOTYPE-REF DEST="%s">%s</COMPONENT-PROTOTYPE-REF>'%(providerComponent.tag(self.version), providerComponent.ref), 2))
+         lines.append(self.indent('<P-PORT-PROTOTYPE-REF DEST="%s">%s</P-PORT-PROTOTYPE-REF>'%(providePort.tag(self.version), providePort.ref), 2))
+         lines.append(self.indent('</%s>'%connector.providerInstanceRef.tag(self.version), 1))
+         lines.append(self.indent('<%s>'%connector.requesterInstanceRef.tag(self.version), 1))
+         requesterComponent = ws.find(connector.requesterInstanceRef.componentRef)
+         if requesterComponent is None:
+            raise ValueError('invalid reference: ' +connector.requesterInstanceRef.componentRef)
+         requirePort = ws.find(connector.requesterInstanceRef.portRef)
+         if requirePort is None:
+            raise ValueError('invalid reference: ' +connector.requesterInstanceRef.portRef)
+         lines.append(self.indent('<COMPONENT-PROTOTYPE-REF DEST="%s">%s</COMPONENT-PROTOTYPE-REF>'%(requesterComponent.tag(self.version), requesterComponent.ref), 2))
+         lines.append(self.indent('<R-PORT-PROTOTYPE-REF DEST="%s">%s</R-PORT-PROTOTYPE-REF>'%(requirePort.tag(self.version), requirePort.ref), 2))
+         lines.append(self.indent('</%s>'%connector.requesterInstanceRef.tag(self.version), 1))
+         lines.append('</%s>'%connector.tag(self.version))
+      return lines
+
+   def _writeDelegationConnectorsXML(self, ws, connectors):
+      lines=[]
+      for connector in connectors:
+         lines.append('<%s>'%connector.tag(self.version))
+         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%connector.name, 1))
+         lines.append(self.indent('<%s>'%connector.innerPortInstanceRef.tag(self.version), 1))
+         innerComponent = ws.find(connector.innerPortInstanceRef.componentRef)
+         if innerComponent is None:
+            raise ValueError('invalid reference: ' +connector.innerPortInstanceRef.componentRef)
+         innerPort = ws.find(connector.innerPortInstanceRef.portRef)
+         if innerPort is None:
+            raise ValueError('invalid reference: ' +connector.innerPortInstanceRef.portRef)
+         lines.append(self.indent('<COMPONENT-PROTOTYPE-REF DEST="%s">%s</COMPONENT-PROTOTYPE-REF>'%(innerComponent.tag(self.version), innerComponent.ref), 2))
+         lines.append(self.indent('<PORT-PROTOTYPE-REF DEST="%s">%s</PORT-PROTOTYPE-REF>'%(innerPort.tag(self.version), innerPort.ref), 2))
+         lines.append(self.indent('</%s>'%connector.innerPortInstanceRef.tag(self.version), 1))
+         outerPort = ws.find(connector.outerPortRef.portRef)
+         if outerPort is None:
+            raise ValueError('invalid reference: ' +connector.outerPortRef.portRef)
+         lines.append(self.indent('<OUTER-PORT-REF DEST="%s">%s</OUTER-PORT-REF>'%(outerPort.tag(self.version), outerPort.ref), 1))         
+         lines.append('</%s>'%connector.tag(self.version))
+      return lines
+         
+   ### Code generators   
+   def writeApplicationSoftwareComponentCode(self, swc, localvars):
+      return self._writeComponentCode(swc, 'createApplicationSoftwareComponent', localvars)
+   
+   def writeComplexDeviceDriverComponentCode(self, swc, localvars):
+      return self._writeComponentCode(swc, 'createComplexDeviceDriverComponent', localvars)
+
+   def writeCompositionComponentCode(self, swc, localvars):
+      return self._writeComponentCode(swc, 'createCompositionComponent', localvars)
+
+   def _writeComponentCode(self, swc, methodName, localvars):
+      lines=[]
+      ws = localvars['ws']
+      lines.append("swc = package.%s(%s)"%(methodName,repr(swc.name)))
+      localvars['swc']=swc
+      if len(swc.providePorts)>0:
+         lines.extend(self._writeComponentProvidePortsCode(swc))
+      if len(swc.requirePorts)>0:
+         lines.extend(self._writeComponentRequirePortsCode(swc))                  
+      if isinstance(swc, autosar.component.CompositionComponent):
+         if len(swc.components)>0:
+            lines.extend(self._writeComponentsCode(swc.components, localvars))
+         if len(swc.assemblyConnectors)>0:
+            lines.extend(self._writeAssemblyConnectorsCode(swc.assemblyConnectors, localvars))
+         if len(swc.delegationConnectors)>0:
+            lines.extend(self._writeDelegationConnectorsCode(swc.delegationConnectors, localvars))
+      return lines
+   
+   def _writeComponentProvidePortsCode(self,swc):
       lines=[]
       ws=swc.rootWS()
       assert(isinstance(ws,autosar.Workspace))
@@ -167,7 +293,7 @@ class ComponentTypeWriter(WriterBase):
          lines.append('swc.createProvidePort(%s)'%(', '.join(params)))
       return lines
 
-   def writeSWCRequirePortsCode(self,swc):
+   def _writeComponentRequirePortsCode(self,swc):
       lines=[]
       ws=swc.rootWS()
       assert(isinstance(ws,autosar.Workspace))
@@ -213,27 +339,66 @@ class ComponentTypeWriter(WriterBase):
          lines.append('swc.createRequirePort(%s)'%(', '.join(params)))
       return lines
 
-   def writeSwcImplementationXML(self,elem,package):
-      assert(isinstance(elem,autosar.component.SwcImplementation))
-      lines=[]
-      ws = elem.rootWS()
-      assert(ws is not None)
-      behavior = ws.find(elem.behaviorRef)
-      if behavior is None:
-         raise ValueError('invalid reference: '+str(elem.behaviorRef))
-      lines=['<SWC-IMPLEMENTATION>',
-             self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1)        
-            ]
-      lines.append(self.indent('<CODE-DESCRIPTORS>',1))
-      lines.append(self.indent('<CODE>',2))
-      lines.append(self.indent('<SHORT-NAME>Code</SHORT-NAME>',3))
-      lines.append(self.indent('<TYPE>SRC</TYPE>',3))
-      lines.append(self.indent('</CODE>',2))
-      lines.append(self.indent('</CODE-DESCRIPTORS>',1))
-      lines.append(self.indent('<BEHAVIOR-REF DEST="%s">%s</BEHAVIOR-REF>'%(behavior.tag(self.version),elem.behaviorRef),1))
-      lines.append('</SWC-IMPLEMENTATION>')
-      return lines
    
    def writeSwcImplementationCode(self, elem, localvars):
+      """
+      No need to generate python code for explicitly creating SwcImplementation object
+      """
       return []
    
+   
+   def _writeComponentsCode(self, components, localvars):
+      lines=[]
+      assert('swc' in localvars)
+      for component in components:
+         params=[]
+         assert(isinstance(component, autosar.component.ComponentPrototype))         
+         params.append(repr(self._createComponentRef(component.typeRef, localvars)))
+         lines.append('swc.createComponentRef(%s)'%(', '.join(params)))
+      return lines
+  
+   def _writeAssemblyConnectorsCode(self, connectors, localvars):
+      lines=[]
+      ws = localvars['ws']
+      swc = localvars['swc']
+      
+      assert(ws is not None)
+      for connector in connectors:
+         params=[]
+         assert(isinstance(connector, autosar.component.AssemblyConnector))
+         providePort = ws.find(connector.providerInstanceRef.portRef)
+         if providePort is None:
+            raise ValueError('invalid reference: ' + connector.providerInstanceRef.portRef)
+         provideCompRef = self._createComponentRef(providePort.parent.ref, localvars)
+         requirePort = ws.find(connector.requesterInstanceRef.portRef)
+         if requirePort is None:
+            raise ValueError('invalid reference: ' + connector.requesterInstanceRef.portRef)
+         requireCompRef = self._createComponentRef(requirePort.parent.ref, localvars)
+                  
+         params.append(repr('%s/%s'%(provideCompRef,providePort.name)))
+         params.append(repr('%s/%s'%(requireCompRef,requirePort.name)))
+         lines.append('swc.createConnector(%s)'%(', '.join(params)))
+      return lines
+   
+   def _writeDelegationConnectorsCode(self, connectors, localvars):
+      lines=[]
+      ws = localvars['ws']
+      swc = localvars['swc']
+      
+      assert(ws is not None)
+      for connector in connectors:
+         params=[]
+         assert(isinstance(connector, autosar.component.DelegationConnector))
+         innerPort = ws.find(connector.innerPortInstanceRef.portRef)
+         if innerPort is None:
+            raise ValueError('invalid reference: ' + connector.innerPortInstanceRef.portRef)
+         innerComponentRef = self._createComponentRef(innerPort.parent.ref, localvars)
+         
+         parts = autosar.base.splitRef(connector.outerPortRef.portRef)
+         outerPort = swc.find(parts[-1])
+         if outerPort is None or not isinstance(outerPort, autosar.component.Port):
+            raise ValueError('no port with name "%s" found in Component %s'%(parts[-1], swc.ref))
+         params.append(repr(outerPort.name))
+         params.append(repr('%s/%s'%(innerComponentRef,innerPort.name)))         
+         lines.append('swc.createConnector(%s)'%(', '.join(params)))
+      return lines

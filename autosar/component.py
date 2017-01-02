@@ -4,17 +4,14 @@ import autosar.constant
 import copy
 import collections
 
-class ComponentType(Element):
-   
+class ComponentType(Element):   
    def __init__(self,name,parent=None):
       super().__init__(name,parent)      
       self.requirePorts=[]
       self.providePorts=[]
-      self.behavior=None
-      self.implementation=None
    
    def asdict(self):
-      data={'type': self.__class__.__name__,'name':self.name,'requirePorts':[],'providePorts':[]}
+      data={'type': self.__class__.__name__, 'name':self.name, 'requirePorts':[], 'providePorts':[]}
       for port in self.requirePorts:
          data['requirePorts'].append(port.asdict())
       for port in self.providePorts:
@@ -101,22 +98,165 @@ class ComponentType(Element):
       port = RequirePort(name,portInterface.ref,comspec,parent=self)
       self.requirePorts.append(port)
 
+class AtomicSoftwareComponent(ComponentType):
+   """
+   base class for ApplicationSoftwareComponent and ComplexDeviceDriverComponent
+   """
+   def __init__(self,name,parent=None):
+      super().__init__(name,parent)      
+      self.behavior=None
+      self.implementation=None
 
-
-class ApplicationSoftwareComponent(ComponentType):
+class ApplicationSoftwareComponent(AtomicSoftwareComponent):
    
    def tag(self,version=None): return "APPLICATION-SOFTWARE-COMPONENT-TYPE"
    
    def __init__(self,name,parent=None):
       super().__init__(name,parent)
 
-class ComplexDeviceDriverSoftwareComponent(ComponentType):
-   
+class ComplexDeviceDriverComponent(AtomicSoftwareComponent):   
    def tag(self,version=None): return "COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE"
    
    def __init__(self,name,parent=None):
       super().__init__(name,parent)
 
+class CompositionComponent(ComponentType):
+   """
+   Composition Component
+   """      
+   def __init__(self,name,parent=None):
+      super().__init__(name,parent) 
+      self.components=[]
+      self.assemblyConnectors=[]
+      self.delegationConnectors=[]
+   
+   def tag(self,version=None):
+      return "COMPOSITION-TYPE"
+   
+   def asdict(self):
+      data={'type': self.__class__.__name__,'name':self.name,'requirePorts':[],'providePorts':[],'components':[],
+         'assemblyConnectors':[], 'delegationConnectors':[]}
+      for port in self.requirePorts:
+         data['requirePorts'].append(port.asdict())
+      for port in self.providePorts:
+         data['providePorts'].append(port.asdict())
+      for component in self.components:
+         data['components'].append(component.asdict())
+      for connector in self.assemblyConnectors:
+         data['assemblyConnectors'].append(connector.asdict())
+      for connector in self.delegationConnectors:
+         data['delegationConnectors'].append(connector.asdict())
+      if len(data['requirePorts'])==0: del data['requirePorts']
+      if len(data['providePorts'])==0: del data['providePorts']
+      if len(data['components'])==0: del data['components']
+      if len(data['assemblyConnectors'])==0: del data['assemblyConnectors']
+      if len(data['delegationConnectors'])==0: del data['delegationConnectors']
+      return data
+
+   def find(self,ref):
+      parts=ref.partition('/')      
+      for elem in self.components:
+         if elem.name == parts[0]:
+            return elem
+      for elem in self.assemblyConnectors:
+         if elem.name == parts[0]:
+            return elem
+      for elem in self.delegationConnectors:
+         if elem.name == parts[0]:
+            return elem
+      return super().find(ref)
+
+
+   def createComponentRef(self, componentRef):
+      """
+      creates a new ComponentPrototype object and appends it to the CompositionComponent
+      """
+      ws = self.rootWS()
+      component = ws.find(componentRef, role='ComponentType')
+      if component is None:
+         raise ValueError('invalid reference: '+componentRef)
+      elem = ComponentPrototype(component.name, component.ref, self)
+      self.components.append(elem)
+      return elem
+
+
+   def createConnector(self, portRef1, portRef2):
+      """
+      creates a connector between an inner and outer port or between two inner ports
+      portRef1 and portRef2 can be of either formats:
+      'componentName/portName', 'portName' or 'componentRef/portName'
+      """
+      ws = self.rootWS()
+      assert (ws is not None)
+      port1, component1 = self._analyzePortRef(ws, portRef1)
+      port2, component2 = self._analyzePortRef(ws, portRef2)
+      
+      if isinstance(component1, ComponentPrototype) and isinstance(component2, ComponentPrototype):
+         #create an assembly port between the two ports                  
+         providePort=None
+         requirePort=None
+         if isinstance(port1, RequirePort) and isinstance(port2, ProvidePort):
+            requesterComponent, providerComponent = component1, component2
+            requirePort, providePort = port1, port2            
+         elif isinstance(port2, RequirePort) and isinstance(port1, ProvidePort):
+            requesterComponent, providerComponent = component2, component1
+            requirePort, providePort = port2, port1
+         elif isinstance(port2, RequirePort) and isinstance(port1, RequirePort):
+            raise ValueError('cannot create assembly connector between two require ports')
+         else:         
+            raise ValueError('cannot create assembly connector between two provide ports')
+         connectorName='_'.join([providerComponent.name, providePort.name, requesterComponent.name, requirePort.name])
+         connector = AssemblyConnector(connectorName, ProviderInstanceRef(providerComponent.ref,providePort.ref), RequesterInstanceRef(requesterComponent.ref,requirePort.ref))
+         if self.find(connectorName) is not None:
+            raise ValueError('connector "%s" already exists'%connectorName)
+         self.assemblyConnectors.append(connector)
+         return connector
+      elif isinstance(component1, ComponentPrototype) and not component2 is self:
+         #create a delegation port between port1 and port2
+         innerComponent, innerPort=component1,port1
+         outerPort = port2
+      elif component1 is self and isinstance(component2, ComponentPrototype):
+         #create a delegation port between port1 and port2
+         innerComponent, innerPort=component2, port2
+         outerPort = port1
+      else:
+         raise ValueError('invalid connector arguments ("%s", "%s")'%(portRef1, portRef2))
+      #create delegation connector
+      if isinstance(outerPort, ProvidePort):
+         connectorName = '_'.join([innerComponent.name, innerPort.name, outerPort.name])
+      else:
+         connectorName = '_'.join([outerPort.name, innerComponent.name, innerPort.name])
+      connector = DelegationConnector(connectorName, InnerPortInstanceRef(innerComponent.ref, innerPort.ref), OuterPortRef(outerPort.ref))
+      self.delegationConnectors.append(connector)
+      return connector
+      
+   def _analyzePortRef(self, ws, portRef):      
+      parts=autosar.base.splitRef(portRef)
+      if len(parts)>1:         
+         if len(parts)==2:
+            #assume format 'componentName/portName' with ComponentType role set
+            port=None
+            for innerComponent in self.components:
+               component = ws.find(innerComponent.typeRef)
+               if component is None:
+                  raise ValueError('invalid reference: '+innerComponent.typeRef)
+               if component.name == parts[0]:
+                  port = component.find(parts[1])
+                  component = innerComponent
+                  break
+         else:
+            #assume portRef1 is a full reference
+            port = ws.find(portRef)
+      else:
+         port = self.find(parts[0])
+         component=self
+      if port is None or not isinstance(port, Port):
+         raise ValueError('invalid port name: '+parts[-1])
+      return port,component
+      
+
+
+      
 class Port(object):
    def __init__(self,name, portInterfaceRef, comspec=None, parent=None):
       self.name = name      
@@ -288,51 +428,16 @@ class SwcImplementation(Element):
       super().__init__(name,parent)
       self.behaviorRef=behaviorRef
 
-class Composition(Element):
-   
-   def tag(self,version=None): return "COMPOSITION-TYPE"
-   
-   def __init__(self,name,parent=None):
-      super().__init__(name,parent) 
-      self.requirePorts=[]
-      self.providePorts=[]
-      self.components=[]
-      self.assemblyConnectors=[]
-      self.delegationConnectors=[]
-   
-   def asdict(self):
-      data={'type': self.__class__.__name__,'name':self.name,'requirePorts':[],'providePorts':[],'components':[],
-         'assemblyConnectors':[], 'delegationConnectors':[]}
-      for port in self.requirePorts:
-         data['requirePorts'].append(port.asdict())
-      for port in self.providePorts:
-         data['providePorts'].append(port.asdict())
-      for component in self.components:
-         data['components'].append(component.asdict())
-      for connector in self.assemblyConnectors:
-         data['assemblyConnectors'].append(connector.asdict())
-      for connector in self.delegationConnectors:
-         data['delegationConnectors'].append(connector.asdict())
-      if len(data['requirePorts'])==0: del data['requirePorts']
-      if len(data['providePorts'])==0: del data['providePorts']
-      if len(data['components'])==0: del data['components']
-      if len(data['assemblyConnectors'])==0: del data['assemblyConnectors']
-      if len(data['delegationConnectors'])==0: del data['delegationConnectors']
-      return data
 
-class ComponentPrototype:
+class ComponentPrototype(Element):
    def __init__(self,name,typeRef,parent=None):
-      self.name=name
+      super().__init__(name,parent)
       self.typeRef=typeRef
-      self.parent=parent
    def asdict(self):
       return {'type': self.__class__.__name__,'name':self.name,'typeRef':self.typeRef}
-   @property
-   def ref(self):
-      if self.parent is not None:
-         return self.parent.ref+'/%s'%self.name
-      else:
-         return '/%s'%self.name
+   
+   def tag(self, version=None):
+      return 'COMPONENT-PROTOTYPE'
 
 
 
@@ -341,22 +446,27 @@ class ProviderInstanceRef:
    """
    <PROVIDER-IREF>
    """
-   def __init__(self,componentRef,providePortRef):
+   def __init__(self,componentRef, portRef):
       self.componentRef=componentRef
-      self.providePortRef=providePortRef
+      self.portRef=portRef
    def asdict(self):
-      return {'type': self.__class__.__name__,'componentRef':self.componentRef,'providePortRef':self.providePortRef}
-
+      return {'type': self.__class__.__name__,'componentRef':self.componentRef,'portRef':self.portRef}
+   def tag(self, version=None):
+      return 'PROVIDER-IREF'
+   
 
 class RequesterInstanceRef:
    """
    <REQUESTER-IREF>
    """
-   def __init__(self,componentRef,requirePortRef):
+   def __init__(self,componentRef, portRef):
       self.componentRef=componentRef
-      self.requirePortRef=requirePortRef
+      self.portRef=portRef
    def asdict(self):
-      return {'type': self.__class__.__name__,'componentRef':self.componentRef,'requirePortRef':self.requirePortRef}
+      return {'type': self.__class__.__name__,'componentRef':self.componentRef,'portRef':self.portRef}
+   def tag(self, version=None):
+      return 'REQUESTER-IREF'
+   
 
 class InnerPortInstanceRef:
    """
@@ -367,31 +477,53 @@ class InnerPortInstanceRef:
       self.portRef=portRef
    def asdict(self):
       return {'type': self.__class__.__name__,'componentRef':self.componentRef,'portRef':self.portRef}
+   def tag(self, version=None):
+      return 'INNER-PORT-IREF'
    
-class AssemblyConnector(object):
+
+class OuterPortRef:
+   """
+   <OUTER-PORT-REF>
+   """
+   def __init__(self,portRef):
+      self.portRef=portRef
+   def asdict(self):
+      return {'type': self.__class__.__name__, 'portRef':self.portRef}
+   def tag(self, version=None):
+      return 'OUTER-PORT-REF'
+
+
+class AssemblyConnector(Element):
    """
    <ASSEMBLY-CONNECTOR-PROTOTYPE>
    """
-   def __init__(self,name,providerInstanceRef,requesterInstanceRef):
+   def __init__(self,name,providerInstanceRef,requesterInstanceRef,parent=None):
       assert(isinstance(providerInstanceRef,ProviderInstanceRef))
       assert(isinstance(requesterInstanceRef,RequesterInstanceRef))
-      self.name=name
+      super().__init__(name, parent)
       self.providerInstanceRef=providerInstanceRef
       self.requesterInstanceRef=requesterInstanceRef
    def asdict(self):
       return {'type': self.__class__.__name__,'providerInstanceRef':self.providerInstanceRef.asdict(),'requesterInstanceRef':self.requesterInstanceRef.asdict()}
+   
+   def tag(self, version=None):
+      return 'ASSEMBLY-CONNECTOR-PROTOTYPE'
+   
 
-class DelegationConnector:
+class DelegationConnector(Element):
    """
    <DELEGATION-CONNECTOR-PROTOTYPE>
    """
-   def __init__(self,name,innerPortInstanceRef):
+   def __init__(self, name, innerPortInstanceRef, outerPortRef, parent=None):
       assert(isinstance(innerPortInstanceRef,InnerPortInstanceRef))
-      self.name=name
-      self.innerPortInstanceRef=innerPortInstanceRef
+      assert(isinstance(outerPortRef,OuterPortRef))
+      super().__init__(name, parent)
+      self.innerPortInstanceRef = innerPortInstanceRef
+      self.outerPortRef = outerPortRef
+      
    def asdict(self):
       return {'type': self.__class__.__name__,'innerPortInstanceRef':self.innerPortInstanceRef.asdict()}
-
-
    
-
+   def tag(self, version=None):
+      return 'DELEGATION-CONNECTOR-PROTOTYPE'
+   

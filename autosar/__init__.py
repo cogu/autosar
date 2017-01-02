@@ -54,6 +54,23 @@ def dcfImport(filename):
       ws.loadXML(elem['path'])
    return ws
 
+def loadDcf(filename):
+   parser = DcfParser()
+   dcf = parser.readFile(filename)
+   ws = workspace()
+   result = []
+   lookupTable = {
+                     'CONSTANT': {'/Constant': 'Constant'},
+                     'DATATYPE': {'/DataType': 'DataType'},
+                     'PORTINTERFACE': {'/PortInterface': 'PortInterface'},
+                     'COMPONENTTYPE': {'/ComponentType': 'ComponentType'}
+                  }
+   for elem in dcf['fileRef']:
+      roles = lookupTable[elem['itemType']]
+      result.append({'type': 'FileRef', 'path': elem['path'], 'roles': roles})
+   return result
+   
+
 def splitRef(ref):
    return autosar.base.splitRef(ref)
 
