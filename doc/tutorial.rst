@@ -4,7 +4,7 @@ Tutorial
 Datatypes
 ---------
 
-In this tutorial we will start by creating some simple integer data types.
+In this tutorial we will be creating some simple integer data types.
 
 AUTOSAR supports two different kinds of integer data types:
  * Physical datatypes.
@@ -14,17 +14,17 @@ Physical data types have properties like unit, offset and scaling while enumerat
 
 Our physical data types for this tutorial:
    
-   +----------------+-----+-------+-----------+--------+---------+
-   | Name           | Min | Max   | Unit      | Offset | Scaling |
-   +================+=====+=======+===========+========+=========+
-   | EngineSpeed_T  | 0   | 65535 | RPM       |   0    |  1/64   |
-   +----------------+-----+-------+-----------+--------+---------+
-   | VehicleSpeed_T | 0   | 65535 | Km/h      |   0    |   1/8   |
-   +----------------+-----+-------+-----------+--------+---------+
-   | Percent_T      | 0   | 255   | Percent   |   0    |   0.4   |
-   +----------------+-----+-------+-----------+--------+---------+
-   | CoolantTemp_T  | 0   | 255   | Degrees C |   -40  |   1/2   |
-   +----------------+-----+-------+-----------+--------+---------+
+   +----------------+-----+-------+------------+--------+---------+
+   | Name           | Min | Max   | Unit       | Offset | Scaling |
+   +================+=====+=======+============+========+=========+
+   | EngineSpeed_T  | 0   | 65535 | RPM        |   0    |  1/64   |
+   +----------------+-----+-------+------------+--------+---------+
+   | VehicleSpeed_T | 0   | 65535 | Km/h (Kph) |   0    |   1/8   |
+   +----------------+-----+-------+------------+--------+---------+
+   | Percent_T      | 0   | 255   | Percent    |   0    |   0.4   |
+   +----------------+-----+-------+------------+--------+---------+
+   | CoolantTemp_T  | 0   | 255   | Degrees C  |   -40  |   1/2   |
+   +----------------+-----+-------+------------+--------+---------+
 
 |
 
@@ -60,25 +60,27 @@ The second subpackage we assign a role called 'Unit'. This package will contain 
 .. code-block:: python
    
    dataTypes=ws.createPackage('DataType')
-   dataTypes.createSubPackage('DataTypeSemantics',role='CompuMethod')
-   dataTypes.createSubPackage('DataTypeUnits',role='Unit')
+   dataTypes.createSubPackage('DataTypeSemantics', role='CompuMethod')
+   dataTypes.createSubPackage('DataTypeUnits', role='Unit')
 
-Next we use some helper functions to create our integer types. These functions will do the heavy lifting and create the necessary objects in our package and subpackages.
-It is always recommended to use these helper functions instead of creating the class objects yourself and add each piece to the correct subpackage.
+Next we use the Package.createIntegerDataType method to create our integer types.
+This method will do the heavy lifting of creating the necessary objects in our package (DataType) and subpackages (DataTypeSemantics, DataTypeUnits).
+It is strongly recommended that you always use the package.createXX set of methods to create all elements in your packages.
 
 .. code-block:: python
 
-   dataTypes.createIntegerDataType('EngineSpeed_T',min=0,max=65535,offset=0,scaling=1/8,unit='rpm')
-   dataTypes.createIntegerDataType('VehicleSpeed_T',min=0,max=65535,offset=0,scaling=1/64,unit='kph')
-   dataTypes.createIntegerDataType('Percent_T',min=0,max=255,offset=0,scaling=0.4,unit='Percent')
-   dataTypes.createIntegerDataType('CoolantTemp_T',min=0,max=255,offset=-40, scaling=0.5,unit='DegreeC')
+   dataTypes.createIntegerDataType('EngineSpeed_T', min=0, max=65535, offset=0, scaling=1/8, unit='rpm')
+   dataTypes.createIntegerDataType('VehicleSpeed_T', min=0, max=65535, offset=0, scaling=1/64, unit='kph')
+   dataTypes.createIntegerDataType('Percent_T',min=0, max=255, offset=0, scaling=0.4, unit='Percent')
+   dataTypes.createIntegerDataType('CoolantTemp_T', min=0, max=255,offset=-40, scaling=0.5, unit='DegreeC')
    print(ws.toXML())
 
 At the end I added a line which prints our work so far to the console. You should get an output like this:
 
 .. code-block:: xml
 
-   <AUTOSAR>
+   <?xml version="1.0" encoding="UTF-8"?>
+   <AUTOSAR xsi:schemaLocation="http://autosar.org/3.0.2 autosar_302_ext.xsd" xmlns="http://autosar.org/3.0.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
       <TOP-LEVEL-PACKAGES>
          <AR-PACKAGE>
             <SHORT-NAME>DataType</SHORT-NAME>
@@ -224,7 +226,7 @@ At the end I added a line which prints our work so far to the console. You shoul
       </TOP-LEVEL-PACKAGES>
    </AUTOSAR>
 
-Finally we add the lines that creates our enumeration types (InactiveActive_T, OnOff_T). We also replace our print to a file save to a new file called 'DataTypes.arxml'
+Finally, we add the lines that creates our enumeration types (InactiveActive_T, OnOff_T). We also replace our print to a file save to a new file called 'DataTypes.arxml'
 
 .. code-block:: python
 
@@ -243,7 +245,7 @@ Finally we add the lines that creates our enumeration types (InactiveActive_T, O
     
    ws.saveXML('DataTypes.arxml')
 
-Below you will find all the parts we written so far in one single script:
+Below you will find the entire script we have written so far.
 
 .. code-block:: python
 
@@ -252,25 +254,27 @@ Below you will find all the parts we written so far in one single script:
    ws=autosar.workspace()
    
    dataTypes=ws.createPackage('DataType')
-   dataTypes.createSubPackage('DataTypeSemantics',role='CompuMethod')
-   dataTypes.createSubPackage('DataTypeUnits',role='Unit')
+   dataTypes.createSubPackage('DataTypeSemantics', role='CompuMethod')
+   dataTypes.createSubPackage('DataTypeUnits', role='Unit')
    
-   dataTypes.createIntegerDataType('EngineSpeed_T',min=0,max=65535,offset=0,scaling=1/8,unit='rpm')
-   dataTypes.createIntegerDataType('VehicleSpeed_T',min=0,max=65535,offset=0,scaling=1/64,unit='kph')
-   dataTypes.createIntegerDataType('Percent_T',min=0,max=255,offset=0,scaling=0.4,unit='Percent')
-   dataTypes.createIntegerDataType('CoolantTemp_T',min=0,max=255,offset=-40, scaling=0.5,unit='DegreeC')
-   dataTypes.createIntegerDataType('InactiveActive_T',valueTable=[
+   dataTypes.createIntegerDataType('EngineSpeed_T', min=0, max=65535, offset=0, scaling=1/8, unit='rpm')
+   dataTypes.createIntegerDataType('VehicleSpeed_T', min=0, max=65535, offset=0, scaling=1/64,unit='kph')
+   dataTypes.createIntegerDataType('Percent_T', min=0, max=255, offset=0, scaling=0.4, unit='Percent')
+   dataTypes.createIntegerDataType('CoolantTemp_T', min=0, max=255, offset=-40, scaling=0.5, unit='DegreeC')
+   dataTypes.createIntegerDataType('InactiveActive_T', valueTable=[
         'InactiveActive_Inactive',
         'InactiveActive_Active',
         'InactiveActive_Error',
         'InactiveActive_NotAvailable'])
-   dataTypes.createIntegerDataType('OnOff_T',valueTable=[
+   dataTypes.createIntegerDataType('OnOff_T', valueTable=[
        "OnOff_Off",
        "OnOff_On",
        "OnOff_Error",
        "OnOff_NotAvailable"])
    
    ws.saveXML('DataTypes.arxml')
+
+If you run this script you will see a new file being created, called 'DataTypes.arxml'.
 
 Next, create a new python script (in the same directory) and enter the following code:
 
@@ -284,6 +288,8 @@ Next, create a new python script (in the same directory) and enter the following
    for elem in ws['DataType'].elements:
       print("%s: %s"%(elem.name,type(elem)))
 
+This script simply loops over all the elements in the DataType package and print its name and type (ws['DataType'].elements is the list containing all elements of the package 'DataType')
+
 Output:
 
 .. code-block:: bash
@@ -294,8 +300,3 @@ Output:
    CoolantTemp_T: <class 'autosar.datatype.IntegerDataType'>
    InactiveActive_T: <class 'autosar.datatype.IntegerDataType'>
    OnOff_T: <class 'autosar.datatype.IntegerDataType'>
-
-
-The above code is example where you loaded and parsed your newly created AUTOSAR package called 'DataType'.
-
-This concludes this part of the tutorial.

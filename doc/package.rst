@@ -1,5 +1,5 @@
-Package
-*******
+:mod:`autosar.package` --- Packages
+===================================
 
 The AUTOSAR Package class.
 
@@ -31,30 +31,25 @@ Attributes
 .. py:attribute:: Package.elements
    
    List of elements in the package. Elements can be basically anything (except for packages and workspaces).
-   
-   Currently implemented element types:
+      
 
-Convenience Methods
+Creating data types
 -------------------
 
-The Package class has many convencienc methods for creating various elements, they are documented in the following sections.
    
-DataTypes 
----------
-   
-.. py:method:: Package.createIntegerDataType(name :str,min=None,max=None,valueTable=None,offset=None, scaling=None, unit=None)
+.. py:method:: Package.createIntegerDataType(name :str, min=None, max=None, valueTable=None, offset=None, scaling=None, unit=None)
       
-   Creates an instance of IntegerDataType and appends it to the list of package elements.
+   Creates an instance of IntegerDataType and appends it to the *Package.elements* list.
    
    For enumeration type integers:
      
-     use min (int), max (int), and possibly ValueTable (described later)     
+     use min (int), max (int), and possibly ValueTable (see :doc:`tutorial`)
      
    For integer that has physical representation:
    
-      use offset (int), scaling (int) and unit (str).
+      use offset (float), scaling (float) and unit (str).
 
-ApplicationSoftwareComponent
+Creating software components
 ----------------------------
 
 .. py:method:: Package.createApplicationSoftwareComponent(swcName : str,behaviorName=None,implementationName=None,multipleInstance=False)

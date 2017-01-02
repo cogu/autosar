@@ -10,14 +10,15 @@ The `AUTOSAR <https://www.autosar.org/>`_ Python Package
    :maxdepth: 2
    :hidden:
       
-   start
-   tutorial/index
-   workspace
-   package
-   datatype/index
-   portinterface/index
-   constant/index
-   component/index
+   start    <start>
+   tutorial <tutorial>
+   autosar.workspace <workspace>
+   autosar.package <package>
+   autosar.datatype <datatype>
+   autosar.portinterface <portinterface>
+   autosar.constant <constant>
+   autosar.component <component>
+   autosar.behavior <behavior>
    
    
 
@@ -31,22 +32,19 @@ What can it do?
 
 It can be used for many things, such as:
 
-- Importing `AUTOSAR <https://www.autosar.org/>`_ XML files into Python.
-- Finding objects (packages or elements) from the in-memory data structure.
+- Load `AUTOSAR <https://www.autosar.org/>`_ XML files into a python data structure.
 - Manipulate, delete or add objects in the data structure.
-- Export your work back to XML.
+- Save the data structure back to XML
+- Save the data structure as python code that when executed builds up the data structure again.
 
 The primary focus of this project will be on the following `AUTOSAR <https://www.autosar.org/>`_ elements:
+ - Workspace
  - Packages
- - ComponentTypes
- - PortInterfaces
- - DataTypes
+ - Component types
+ - Port interfaces
+ - Data types
  - Constants
  - ECU Extracts (parsing only)
-
-Out of scope
-------------
-Everything else. The `AUTOSAR <https://www.autosar.org/>`_ XML format supports many other constructs such as BSW-configurations and ECU-configurations all which are out of scope for this project.
 
 Prerequisites
 -------------
@@ -63,7 +61,7 @@ install using::
 Getting Started
 ---------------
 
-First Read the :doc:`start` guide. After that you should read some of the :doc:`tutorial/index`.
+First Read the :doc:`start` guide. After that you should read some of the :doc:`tutorial`.
 
 Current Limitations
 -------------------

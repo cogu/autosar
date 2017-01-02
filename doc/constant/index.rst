@@ -1,8 +1,0 @@
-Constant
-=========
-
-.. toctree::   
-   
-   Constant
-   
-
