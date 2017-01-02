@@ -95,7 +95,7 @@ class PackageWriter(WriterBase):
       if len(package.subPackages)>0:
          lines.append(self.indent("<SUB-PACKAGES>",1))
          for subPackage in package.subPackages:
-            lines.extend(self.indent(self.toXML(subPackage),2))
+            lines.extend(self.indent(self.toXML(subPackage,ignore),2))
          lines.append(self.indent("</SUB-PACKAGES>",1))
       lines.extend(self.endPackage())
       return lines
