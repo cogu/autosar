@@ -3,7 +3,7 @@ AUTOSAR
 
 A set of python modules for working with `AUTOSAR <https://www.autosar.org/>`_ XML files
 
-**Usage:**::
+**Usage:**:
 
     >>> import autosar
     >>> ws = autosar.workspace()
