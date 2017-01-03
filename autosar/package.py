@@ -26,7 +26,7 @@ class Package(object):
          return None      
 
    def find(self,ref):
-      if ref.startswith('/'): return self.root().find(ref)
+      if ref.startswith('/'): return self.parent.find(ref)
       ref = ref.partition('/')      
       name = ref[0]
       for package in self.subPackages:

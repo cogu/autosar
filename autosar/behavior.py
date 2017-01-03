@@ -125,16 +125,14 @@ class DataSendPoint:
    
    def tag(self,version=None): return "DATA-SEND-POINT"
       
-class RunnableEntity(object):
-   def __init__(self,name,invokeConcurrently=False,symbol=None,parent=None):
-      self.name = name
+class RunnableEntity(Element):
+   def __init__(self, name, invokeConcurrently=False, symbol=None, parent=None, adminData=None):
+      super().__init__(name,parent,adminData)
       self.invokeConcurrently = invokeConcurrently
       if symbol is None:
          self.symbol=name
       else:
          self.symbol = symbol
-      self.adminData=None
-      self.parent=parent
       self.dataReceivePoints=[]
       self.dataSendPoints=[]
       self.serverCallPoints=[]
@@ -479,8 +477,8 @@ class InternalBehavior(Element):
    def __getitem__(self,key):
       return self.find(key)
    
-   def createRunnable(self, name, portAccess=None, symbol=None, concurrent=False, exclusiveAreas=None):
-      runnable = RunnableEntity(name, concurrent, symbol, self)
+   def createRunnable(self, name, portAccess=None, symbol=None, concurrent=False, exclusiveAreas=None, adminData=None):
+      runnable = RunnableEntity(name, concurrent, symbol, self, adminData)
       self.runnables.append(runnable)
       if portAccess is not None:
          self._initSWC()
@@ -551,7 +549,7 @@ class InternalBehavior(Element):
       self._initSWC()
       ws = self.rootWS()
       tmp = self.swc.providePorts+self.swc.requirePorts
-      for port in sorted(tmp,key=lambda x: x.name):
+      for port in sorted(tmp,key=lambda x: x.name.lower()):
          self.portAPIOptions.append(PortAPIOption(port.ref))
       
          

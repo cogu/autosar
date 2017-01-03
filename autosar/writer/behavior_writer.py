@@ -369,6 +369,10 @@ class BehaviorWriter(WriterBase):
             params.append('exclusiveAreas='+params2[0])
          else:
             params.append('exclusiveAreas=[%s]'%(', '.join(params2)))         
+      if runnable.adminData is not None:
+         param = self.writeAdminDataCode(runnable.adminData, localvars)
+         assert(len(param)>0)
+         params.append('adminData='+param)      
       lines.append('swc.behavior.createRunnable(%s)'%(', '.join(params)))
       return lines
    
