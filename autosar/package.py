@@ -18,6 +18,7 @@ class Package(object):
       self.subPackages = []
       self.parent=parent
       self.role=role
+      self.map={'elements':{}}
    @property
    def ref(self):
       if self.parent is not None:
@@ -35,13 +36,21 @@ class Package(object):
                return package.find(ref[2])
             else:
                return package
-      for elem in self.elements:
-         if elem.name == name:
-            if len(ref[2])>0:
-               return elem.find(ref[2])
-            else:
-               return elem
+      if name in self.map['elements']:
+         elem=self.map['elements'][name]
+         if len(ref[2])>0:
+            return elem.find(ref[2])
+         else:
+            return elem
       return None
+         
+      # for elem in self.elements:
+      #    if elem.name == name:
+      #       if len(ref[2])>0:
+      #          return elem.find(ref[2])
+      #       else:
+      #          return elem
+      # return None
    
    def findall(self,ref):
       """
@@ -116,12 +125,24 @@ class Package(object):
       creates a new sender-receiver port interface. dataElements can either be a single instance of DataElement or a list of DataElements.
       The same applies to modeGroups. isService must be boolean
       """
+      
+      ws = self.rootWS()
+      assert(ws is not None)
+
       portInterface = autosar.portinterface.SenderReceiverInterface(str(name), isService, adminData=adminData)
       if dataElements is not None:
          if isinstance(dataElements,collections.Iterable):
             for elem in dataElements:
+               dataType=ws.find(elem.typeRef, role='DataType')
+               if dataType is None:
+                  raise ValueError('invalid type reference: '+elem.typeRef)            
+               elem.typeRef=dataType.ref #normalize reference to data element
                portInterface.append(elem)
          elif isinstance(dataElements,autosar.portinterface.DataElement):         
+            dataType=ws.find(dataElements.typeRef, role='DataType')
+            if dataType is None:
+               raise ValueError('invalid type reference: '+dataElements.typeRef)
+            dataElements.typeRef=dataType.ref #normalize reference to data element
             portInterface.append(dataElements)
          else:
             raise ValueError("dataElements: expected autosar.portinterface.DataElement instance or list")
@@ -152,8 +173,16 @@ class Package(object):
       portInterface = autosar.portinterface.ParameterInterface(str(name), adminData=adminDataObj)
       if isinstance(dataElements,collections.Iterable):
          for elem in dataElements:
+            dataType=ws.find(elem.typeRef, role='DataType')
+            if dataType is None:
+               raise ValueError('invalid type reference: '+elem.typeRef)            
+            elem.typeRef=dataType.ref #normalize reference to data element
             portInterface.append(elem)
       elif isinstance(dataElements,autosar.portinterface.DataElement):         
+         dataType=ws.find(dataElements.typeRef, role='DataType')
+         if dataType is None:
+            raise ValueError('invalid type reference: '+dataElements.typeRef)
+         dataElements.typeRef=dataType.ref #normalize reference to data element
          portInterface.append(dataElements)
       else:
          raise ValueError("dataElements: expected autosar.DataElement instance or list")
@@ -182,6 +211,7 @@ class Package(object):
       if isinstance(elem,autosar.element.Element):         
          self.elements.append(elem)
          elem.parent=self
+         self.map['elements'][elem.name]=elem
       elif isinstance(elem,Package):
         self.subPackages.append(elem)
         elem.parent=self
@@ -217,12 +247,9 @@ class Package(object):
 
    def createApplicationSoftwareComponent(self,swcName,behaviorName=None,implementationName=None,multipleInstance=False):
       """
-      creates an instante of autosar.component.ApplicationSoftwareComponent and adds it to the package.
-      It also creates a behavior object of type autosar.behavior.InternalBehavior.
-      If behaviorName is None (default) the name of the InteralBehavior object is {swcName}_InternalBehavior           
+      Creates a new ApplicationSoftwareComponent object and adds it to the package.
+      It also creates an InternalBehavior object as well as an SwcImplementation object.
       
-      Usage:
-      (swc,behavior) = Package.createApplicationSoftwareComponent(swcName)
       """
       
       if behaviorName is None:

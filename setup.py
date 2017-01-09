@@ -5,7 +5,7 @@ def readme():
         return f.read()
 
 setup(name='autosar',
-      version='0.2.1',
+      version='0.3.0',
       description='autosar python module',
       long_description=readme(),
       classifiers=[
@@ -18,5 +18,5 @@ setup(name='autosar',
       author='Conny Gustafsson',
       author_email='congus8@gmail.com',
       license='MIT',
-      packages=['autosar','autosar.parser','autosar.writer'],
+      packages=['autosar','autosar.parser','autosar.writer','autosar.rte'],
       zip_safe=False)

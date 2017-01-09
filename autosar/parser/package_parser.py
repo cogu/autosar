@@ -64,8 +64,8 @@ class PackageParser(object):
                   element.parent=package
                   if isinstance(element,autosar.element.Element)==True:
                      if element.name not in elementNames:
-                        #ignore duplicated items
-                        package.elements.append(element)
+                        #ignore duplicated items                        
+                        package.append(element)
                         elementNames.add(element.name)
                   else:
                      #raise ValueError("parse error: %s"%type(element))

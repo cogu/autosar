@@ -246,14 +246,14 @@ class Workspace(object):
       if isinstance(packages,str): packages=[packages]
       return writer.toCode(self,list(packages),str(header))
          
-   def saveCode(self, filename, packages=None, ignore=None, head=None, tail=None):
+   def saveCode(self, filename, packages=None, ignore=None, head=None, tail=None, module=False):
       """
       saves the workspace as python code so it can be recreated later
       """
       writer=autosar.writer.WorkspaceWriter()
       if isinstance(packages,str): packages=[packages]
       with open(filename,'w', encoding="utf-8") as fp:
-         writer.saveCode(self, fp, packages, ignore, head, tail)
+         writer.saveCode(self, fp, packages, ignore, head, tail, module)
 
    @property
    def ref(self):

@@ -6,6 +6,7 @@ import autosar.datatype
 import autosar.constant
 import autosar.signal
 import autosar.package
+import autosar.rte
 from autosar.base import splitRef
 import ntpath
 import os
