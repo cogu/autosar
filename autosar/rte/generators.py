@@ -1,6 +1,7 @@
 import cfile as C
 import autosar
 import os
+import sys
 from autosar.rte.base import *
 
 class RteTypeGen:
@@ -65,12 +66,13 @@ class RteTypeGen:
             elif isinstance(dataType, autosar.datatype.RecordDataType):               
                body = C.block(indent=3)               
                for elem in dataType.elements:
-                  childType = ws.find(elem.typeRef)
+                  childType = ws.find(elem.typeRef, role='DataType')
                   body.append(C.statement(C.variable(elem.name, childType.name)))
                struct = C.struct(None,body, typedef=dataType.name)
                hfile.code.append(C.statement(struct))
             else:
-               raise NotImplementedError(type(dataType))
+               #raise NotImplementedError(type(dataType))
+               sys.stderr.write('not implemented: %s\n'%str(type(dataType)))
          else:
             raise ValueError(ref)
 

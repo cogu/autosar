@@ -470,8 +470,6 @@ class InternalBehavior(Element):
          if elem.name == name: return elem
       for elem in self.exclusiveAreas:
          if elem.name == name: return elem
-      for elem in defaultBlockRef:
-         if elem.name == name: return elem      
       return None
    
    def __getitem__(self,key):

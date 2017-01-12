@@ -51,7 +51,17 @@ class RteGenerator:
          typeFilePath = destDir+os.path.sep+typeFilename
          componentFilePath = destDir+os.path.sep+"Rte_%s.h"%name
          typegen.generate(ws, typeFilePath, basicTypes, complexTypes, modeTypes)
+         
+         
          componentHeadergen=RteHeaderGen()
          componentHeadergen.generate(swc, componentFilePath, typeFilename)
       else:
          sys.stderr.write('not an atomic software component: %s\n'%swc.name)
+   
+   def writeTypeHeader(self, ws, swc, destDir='.', name=None):
+      if name is None:
+         name=swc.name
+      hfile=C.hfile(destDir+os.path.sep+"Rte_Type.h", guard='_RTE_TYPE_H')
+      hfile.code.append(C.include('Rte_Type_%s.h'%name))
+      with open(hfile.path, 'w') as fp:
+         fp.write(str(hfile))

@@ -9,16 +9,16 @@ class RteTypeManager:
       if dataType.ref not in self.typeMap:         
          if isinstance(dataType, autosar.datatype.RecordDataType):
             for elem in dataType.elements:
-               childType = ws.find(elem.typeRef)
+               childType = ws.find(elem.typeRef, role='DataType')
                if childType is None:
                   raise ValueError('invalid reference: ' + elem.typeRef)
                self.processType(ws, childType)
             self.typeMap[dataType.ref]=dataType
          elif isinstance(dataType, autosar.datatype.ArrayDataType):
-               childType = ws.find(elem.typeRef)
+               childType = ws.find(dataType.typeRef, role='DataType')
                if childType is None:
                   raise ValueError('invalid reference: ' + elem.typeRef)
-               self.addType(ws, childType)
+               self.processType(ws, childType)
                self.typeMap[dataType.ref]=dataType
          else:
             self.typeMap[dataType.ref]=dataType
