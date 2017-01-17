@@ -12,16 +12,15 @@ The `AUTOSAR <https://www.autosar.org/>`_ Python Package
       
    start    <start>
    tutorial <tutorial>
-   autosar.workspace <workspace>
-   autosar.package <package>
-   autosar.datatype <datatype>
-   autosar.portinterface <portinterface>
-   autosar.constant <constant>
-   autosar.component <component>
-   autosar.behavior <behavior>
+   behavior <behavior>
+   component <component>
+   constant <constant>
+   datatype <datatype>   
+   package <package>   
+   portinterface <portinterface>
+   rte <rte>
+   workspace <workspace>   
    
-   
-
 What is it?
 -----------
 
