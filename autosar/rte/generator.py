@@ -63,16 +63,29 @@ class RteTypeGen:
                         hfile.code.append(line)
                   else:
                      raise ValueError(dataType.compuMethodRef)
-            elif isinstance(dataType, autosar.datatype.RecordDataType):               
+            elif isinstance(dataType, autosar.datatype.RecordDataType):
                body = C.block(indent=3)               
                for elem in dataType.elements:
                   childType = ws.find(elem.typeRef, role='DataType')
                   body.append(C.statement(C.variable(elem.name, childType.name)))
                struct = C.struct(None,body, typedef=dataType.name)
                hfile.code.append(C.statement(struct))
+            elif isinstance(dataType, autosar.datatype.StringDataType):
+               hfile.code.append('typedef uint8 %s[%d];'%(dataType.name, dataType.length+1))
+            elif isinstance(dataType, autosar.datatype.ArrayDataType):
+               childType = ws.find(dataType.typeRef, role='DataType')
+               if childType is None:
+                  raise ValueError('invalid type reference: '+dataType.typeRef)
+               hfile.code.append('typedef %s %s[%d];'%(childType.name, dataType.name, dataType.length))
+            elif isinstance(dataType, autosar.datatype.RealDataType):
+               if dataType.encoding == 'DOUBLE':
+                  platform_typename = 'float64'
+               else:
+                  platform_typename = 'float32'
+               hfile.code.append('typedef %s %s;'%(platform_typename, dataType.name))
             else:
-               #raise NotImplementedError(type(dataType))
-               sys.stderr.write('not implemented: %s\n'%str(type(dataType)))
+               raise NotImplementedError(type(dataType))
+               #sys.stderr.write('not implemented: %s\n'%str(type(dataType)))
          else:
             raise ValueError(ref)
 
@@ -131,7 +144,7 @@ class RteHeaderGen:
       operations=set()
       functions={'Receive':[], 'Read':[], 'Write':[], 'Send':[], 'Mode':[], 'Call':[], 'CalPrm':[]}
       basename = basename=os.path.splitext(os.path.basename(filename))[0]
-      self.headername = str('%s_H'%basename).upper()
+      self.headername = str('_%s_H'%basename).upper()
       with open(filename,'w') as fh:
          self._beginFile(fh,typefilename)                  
          for runnable in swc.behavior.runnables:
@@ -194,7 +207,7 @@ class RteHeaderGen:
             func=C.function(fname, 'Std_ReturnType', args=args)            
             functions['Call'].append({'shortname':shortname,'func':func})
 
-         
+         #process mode ports
          for port in swc.requirePorts:
             portInterface = ws.find(port.portInterfaceRef)
             if isinstance(portInterface, autosar.portinterface.SenderReceiverInterface):
@@ -226,7 +239,7 @@ class RteHeaderGen:
          prototypeList.extend(functionsSorted['Call'])
          prototypeList.extend(functionsSorted['CalPrm'])
             
-         self._genInitValues(fh)
+         self._genInitValues(fh, ws, swc.requirePorts+swc.providePorts)
          self._genAPIPrototypes(fh, [x['func'] for x in prototypeList])
          if len(functionsSorted['Read'])>0:
             self._genReadUnqueued(fh, functionsSorted['Read'])
@@ -238,6 +251,9 @@ class RteHeaderGen:
             self._genCall(fh, functionsSorted['Call'])
          if len(functionsSorted['CalPrm'])>0:
             self._genCalprm(fh, functionsSorted['CalPrm'])
+         if swc.behavior is not None:
+            if len(swc.behavior.runnables)>0:
+               self._genRunnables(fh, swc.behavior.runnables)
          self._endFile(fh)
    
    def _beginFile(self,fh,typefilename):
@@ -262,8 +278,55 @@ class RteHeaderGen:
 '''%comment)
       
       
-   def _genInitValues(self,fh):
-      self._genCommentHeader(fh,'Init Values for unqueued S/R communication (primitive types only)')
+   def _genInitValues(self, fh, ws, ports):
+      ports = sorted(ports, key=lambda port: port.name)
+      self._genCommentHeader(fh,'Init Values')
+      code = C.sequence()
+      for port in ports:                  
+         for comspec in port.comspec:               
+            if isinstance(comspec, autosar.component.DataElementComSpec):            
+               if comspec.initValueRef is not None:
+                  initValue = ws.find(comspec.initValueRef)
+                  if isinstance(initValue, autosar.constant.Constant):
+                     #in case the ref is pointing to a Constant (the parent), grab the child instance using .value
+                     initValue=initValue.value
+                  if initValue is not None:
+                     dataType = ws.find(initValue.typeRef)
+                     if dataType is not None:
+                        prefix = 'Rte_InitValue_%s_%s'%(port.name, comspec.name)
+                        code.extend(self._getInitValue(ws, prefix, initValue, dataType))
+      fh.write(str(code))
+   
+   def _getInitValue(self, ws, def_name, value, dataType):
+      """
+      returns a list or sequence
+      """
+      code = C.sequence()
+      if isinstance(value, autosar.constant.IntegerValue):
+         if dataType.minVal>=0:
+            suffix='u'
+         else:
+            suffix=''
+         code.append(C.define(def_name,'((%s)%s%s)'%(dataType.name, value.value,suffix)))
+      elif isinstance(value, autosar.constant.StringValue):
+         code.append(C.define(def_name,'"%s"'%(value.value)))
+      elif isinstance(value, autosar.constant.BooleanValue):
+         if value.value:
+            text='((boolean) TRUE)'
+         else:
+            text='((boolean) FALSE)'
+         code.append(C.define(def_name,text))
+      elif isinstance(value, autosar.constant.RecordValue):
+         for element in value.elements:
+            prefix = '%s_%s'%(def_name, element.name)
+            dataType = ws.find(element.typeRef)
+            if dataType is not None:
+               code.extend(self._getInitValue(ws, prefix, element, dataType))
+      elif isinstance(value, autosar.constant.ArrayValue):
+         pass
+      else:
+         raise NotImplementedError(type(value))
+      return code
    
    def _genAPIPrototypes(self,fh,prototypeList):
       self._genCommentHeader(fh,'API prototypes')
@@ -298,10 +361,10 @@ class RteHeaderGen:
    def _genCData(self,fh):
       self._genCommentHeader(fh,'Rte_CData (SW-C local calibration parameters)')
       
-   def _genPIMUserTypes(self, ):
+   def _genPIMUserTypes(self ):
       self._genCommentHeader(fh,'Per-Instance Memory User Types')
    
-   def _genPIM(self, ):
+   def _genPIM(self ):
       self._genCommentHeader(fh,'Rte_Pim (Per-Instance Memory)')
    
    def _type2arg(self,typeObj,pointer=False):
@@ -310,3 +373,9 @@ class RteHeaderGen:
       else:
          pointer=True
          return C.variable('data',typeObj.name,pointer=pointer)
+   
+   def _genRunnables(self, fh, runnables):
+      self._genCommentHeader(fh,'Runnables')
+      for runnable in sorted(runnables, key=lambda runnable: runnable.name):
+         line = C.statement(C.function(runnable.name, 'void'))
+         fh.write(str(line)+'\n');

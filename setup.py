@@ -19,8 +19,8 @@ setup(name='autosar',
       author_email='congus8@gmail.com',
       license='MIT',
 	  install_requires=[
-          'cfile>=0.1.1',
+          'cfile>=0.1.2',
       ],
       packages=['autosar','autosar.parser','autosar.writer','autosar.rte'],
-      zip_safe=False,
-	  dependency_links=['https://github.com/cogu/cfile/archive/v0.1.1.tar.gz#egg=cfile-0.1.1'])
+	  dependency_links=['https://github.com/cogu/cfile/archive/v0.1.2.tar.gz#egg=cfile-0.1.2'],
+	  zip_safe=False)

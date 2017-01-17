@@ -86,3 +86,6 @@ def ModeGroup(name, typeRef, parent=None, adminData=None):
 
 def CompuMethodConst(name, elements, parent=None, adminData=None):
    return autosar.datatype.CompuMethodConst(name, elements, parent, adminData)
+
+def RteGenerator():
+   return autosar.rte.RteGenerator()
