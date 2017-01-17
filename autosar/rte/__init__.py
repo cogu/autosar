@@ -3,7 +3,7 @@ import os
 import cfile
 import sys
 from autosar.rte.base import *
-from autosar.rte.generators import *
+from autosar.rte.generator import *
 
 class RteGenerator:
    def __init__(self):
@@ -45,6 +45,7 @@ class RteGenerator:
       if isinstance(swc, autosar.component.AtomicSoftwareComponent):
          if name is None:
             name=swc.name
+         self.name = name
          basicTypes, complexTypes, modeTypes = self.getComponentDataTypes(ws, swc)
          typegen = RteTypeGen()
          typeFilename = 'Rte_Type_%s.h'%name
@@ -54,13 +55,13 @@ class RteGenerator:
          
          
          componentHeadergen=RteHeaderGen()
-         componentHeadergen.generate(swc, componentFilePath, typeFilename)
+         componentHeadergen.generate(swc, componentFilePath, typeFilename, self.name)
       else:
          sys.stderr.write('not an atomic software component: %s\n'%swc.name)
    
    def writeTypeHeader(self, ws, swc, destDir='.', name=None):
       if name is None:
-         name=swc.name
+         name=swc.name      
       hfile=C.hfile(destDir+os.path.sep+"Rte_Type.h", guard='_RTE_TYPE_H')
       hfile.code.append(C.include('Rte_Type_%s.h'%name))
       with open(hfile.path, 'w') as fp:

@@ -18,5 +18,9 @@ setup(name='autosar',
       author='Conny Gustafsson',
       author_email='congus8@gmail.com',
       license='MIT',
-      packages=['autosar','autosar.parser','autosar.writer','autosar.rte'],
-      zip_safe=False)
+	  install_requires=[
+          'cfile>=0.1.1',
+      ],
+      packages=['autosar','autosar.parser','autosar.writer','autosar.rte', 'apx'],
+      zip_safe=False,
+	  dependency_links=['https://github.com/cogu/cfile/archive/v0.1.1.tar.gz#egg=cfile-0.1.1'])

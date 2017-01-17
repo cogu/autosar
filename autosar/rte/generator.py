@@ -124,7 +124,7 @@ class RteTypeGen:
 
 
 class RteHeaderGen:
-   def generate(self, swc , filename, typefilename):
+   def generate(self, swc , filename, typefilename, swc_name):
       assert(isinstance(swc, autosar.component.AtomicSoftwareComponent))
       ws=swc.rootWS()
       dataElements=set()
@@ -164,7 +164,7 @@ class RteHeaderGen:
                else:
                   ftype='Write'                  
             assert(ftype is not None)
-            fname='Rte_%s_%s_%s_%s'%(ftype, swc.name, port.name, dataElement.name)
+            fname='Rte_%s_%s_%s_%s'%(ftype, swc_name, port.name, dataElement.name)
             shortname='Rte_%s_%s_%s'%(ftype, port.name, dataElement.name)
             typeArg=self._type2arg(typeObj,pointer)
             func=C.function(fname, 'Std_ReturnType')
@@ -189,7 +189,7 @@ class RteHeaderGen:
                if argument.direction == 'INOUT' or argument.direction=='OUT':
                   pointer=True               
                args.append(C.variable(argument.name, dataType.name, pointer=pointer))
-            fname='_'.join(['Rte_Call', swc.name, port.name, operation.name])
+            fname='_'.join(['Rte_Call', swc_name, port.name, operation.name])
             shortname='_'.join(['Rte_Call', port.name, operation.name])            
             func=C.function(fname, 'Std_ReturnType', args=args)            
             functions['Call'].append({'shortname':shortname,'func':func})
@@ -201,14 +201,14 @@ class RteHeaderGen:
                if portInterface.modeGroups is not None and len(portInterface.modeGroups)>0:
                   for modeGroup in portInterface.modeGroups:                     
                      modeType = ws.find(modeGroup.typeRef)
-                     fname='_'.join(['Rte_Mode', swc.name, port.name, modeGroup.name])
+                     fname='_'.join(['Rte_Mode', swc_name, port.name, modeGroup.name])
                      shortname='_'.join(['Rte_Mode', port.name, modeGroup.name])                     
                      func=C.function(fname, 'Rte_ModeType_%s'%modeType.name)
                      functions['Mode'].append({'shortname':shortname,'func':func})
             elif isinstance(portInterface, autosar.portinterface.ParameterInterface):
                for dataElement in portInterface.dataElements:
                   dataType = ws.find(dataElement.typeRef)
-                  fname='_'.join(['Rte_Calprm', swc.name, port.name, dataElement.name])
+                  fname='_'.join(['Rte_Calprm', swc_name, port.name, dataElement.name])
                   shortname='_'.join(['Rte_Calprm', port.name, dataElement.name])                     
                   func=C.function(fname, dataType.name)
                   functions['CalPrm'].append({'shortname':shortname,'func':func})
@@ -247,6 +247,7 @@ class RteHeaderGen:
 '''%(self.headername,self.headername))
 
       fh.write('#include "%s"\n'%typefilename)
+      fh.write('#include "Rte.h"\n')
 
    def _endFile(self,fh):
       fh.write('''
