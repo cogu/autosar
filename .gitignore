@@ -1,3 +1,6 @@
+#Komodo project files
+*.komodoproject
+
 # Compiled python modules.
 *.pyc
 __pycache__/
@@ -12,4 +15,3 @@ __pycache__/
 #sphinx-doc files
 /doc/make.bat
 /doc/_build/
-
