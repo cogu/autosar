@@ -6,7 +6,7 @@ from autosar.rte.base import *
 
 class RteTypeGen:
    
-   def generate(self,ws,filename, basicTypes, complexTypes, modeTypes):
+   def generate(self,ws,filename, basicTypes, complexTypes, modeTypes, swc_name):
       hfile=C.hfile(filename)
       hfile.code.append(C.include("Std_Types.h"))
       hfile.code.append('''
@@ -108,6 +108,12 @@ class RteTypeGen:
             
          hfile.code.append(C.blank())
          hfile.code.extend(tmp)
+      hfile.code.append(C.blank())
+      hfile.code.extend(self._genCommentHeader('Component Data Structures'))
+      hfile.code.append('struct Rte_CDS_%s'%swc_name)
+      block = C.block(innerIndent=3)
+      block.code.append(C.statement('uint8 _dummy', indent=3))
+      hfile.code.append(C.statement(block))
          
       with open(filename,'w') as fh:
          fh.write(str(hfile))

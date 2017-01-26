@@ -54,7 +54,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'AUTOSAR'
-copyright = '2016, Conny Gustafsson'
+copyright = '2016-2017, Conny Gustafsson'
 author = 'Conny Gustafsson'
 
 # The version info for the project you're documenting, acts as replacement for

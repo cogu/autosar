@@ -60,7 +60,7 @@ class RteGenerator:
          typeFilename = 'Rte_Type_%s.h'%name
          typeFilePath = outdir+os.path.sep+typeFilename
          componentFilePath = outdir+os.path.sep+"Rte_%s.h"%name
-         typegen.generate(ws, typeFilePath, basicTypes, complexTypes, modeTypes)         
+         typegen.generate(ws, typeFilePath, basicTypes, complexTypes, modeTypes, self.name)         
          
          componentHeadergen=RteHeaderGen()
          componentHeadergen.generate(swc, componentFilePath, typeFilename, self.name)
