@@ -329,7 +329,7 @@ class Port(object):
          if initValueRef is not None:
             initValue = ws.find(initValueRef, role='Constant')
             if initValue is None:
-               raise ValueError("invalid reference: "%initValueRef)
+               raise ValueError("invalid reference: "+str(initValueRef))
             if isinstance(initValue,autosar.constant.Constant):
                #this is a convenience implementation for the user. Actually initValueRef needs to point to the value inside the Constant
                if dataElement.typeRef != initValue.value.typeRef:
@@ -359,7 +359,7 @@ class RequirePort(Port):
       elif isinstance(name,RequirePort):
          other=name #alias
          #copy constructor
-         super().__init__(other.name,other.portInterfaceRef,None)
+         super().__init__(other.name, other.portInterfaceRef, parent)
          self.comspec=copy.deepcopy(other.comspec)
       else:
          raise NotImplementedError(type(name))
