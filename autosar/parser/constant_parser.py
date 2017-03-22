@@ -7,10 +7,7 @@ class ConstantPackageParser(object):
    Constant package parser   
    """
    def __init__(self,pkg,version=3.0):
-      if version == 3.0:
-         self.version=version
-      else:
-         raise NotImplementedError('Version %d of ARXML not supported'%version)      
+      self.version=version
                   
    def parseConstantSpecification(self,xmlRoot,rootProject=None,parent=None):
       assert(xmlRoot.tag == 'CONSTANT-SPECIFICATION')

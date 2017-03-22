@@ -3,10 +3,7 @@ from autosar.signal import *
 
 class SignalParser(object):
    def __init__(self,pkg,version=3.0):
-      if version == 3.0:
-         self.version=version
-      else:
-         raise NotImplementedError('Version %d of ARXML not supported'%version)
+      self.version=version
       self.pkg=pkg
    
    def parseSystemSignal(self,xmlRoot,dummy,parent=None):

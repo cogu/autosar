@@ -6,6 +6,7 @@ import json
 import os
 import ntpath
 import collections
+import re
 
 _validWSRoles = ['DataType', 'Constant', 'PortInterface', 'ComponentType', 'ModeDclrGroup', 'CompuMethod', 'Unit']
 
@@ -49,7 +50,13 @@ class Workspace(object):
       namespace = getXMLNamespace(xmlroot)
 
       assert (namespace is not None)
-      if namespace == 'http://autosar.org/3.0.2': version = 3.0
+      tmp = namespace.split('/')[-1]
+      if tmp == '3.0.2':
+         version = 3.0
+      else:
+         result = re.match(r'r(\d+\.\d+)', tmp)
+         if result is not None:
+            version = float(result.group(1))
       if version is None:
          raise NotImplementedError('unsupported autosar vesion: %s'%namespace)
       removeNamespace(xmlroot,namespace)
@@ -75,35 +82,37 @@ class Workspace(object):
       if self.version >= 3.0 and self.version < 4.0:
          if self.xmlroot.find('TOP-LEVEL-PACKAGES'):
             for xmlPackage in self.xmlroot.findall('./TOP-LEVEL-PACKAGES/AR-PACKAGE'):
-               name = xmlPackage.find("./SHORT-NAME").text
-               if packagename=='*' or packagename==name:
-                  found=True
-                  package = self.find(name)
-                  if package is None:
-                     package = autosar.package.Package(name, parent=self)
-                     self.packages.append(package)
-                     result.append(package)
-                  self.packageParser.loadXML(package,xmlPackage)
-                  if (packagename==name) and (role is not None):
-                     self.setRole(package.ref, role)
+               if self._loadPackageInternal(result, xmlPackage, packagename, role):
+                  found = True
+               
+               
       elif self.version>=4.0:
          if self.xmlroot.find('AR-PACKAGES'):
             for xmlPackage in self.xmlroot.findall('.AR-PACKAGES/AR-PACKAGE'):
-               name = xmlPackage.find("./SHORT-NAME").text
-               if packagename=='*' or packagename==name :
-                  found=True
-                  package = Package(name)
-                  self.packageParser.loadXML(package,xmlPackage)
-                  self.packages.append(package)
-                  result.append(package)
-                  if (packagename==name) and (role is not None):
-                     self.setRole(package.ref, role)
+               if self._loadPackageInternal(result, xmlPackage, packagename, role):
+                  found = True
 
       else:
          raise NotImplementedError('Version %s of ARXML not supported'%version)
       if found==False:
          raise KeyError('package not found: '+packagename)
       return result
+   
+   def _loadPackageInternal(self, result, xmlPackage, packagename, role):
+      name = xmlPackage.find("./SHORT-NAME").text
+      found = False
+      if packagename=='*' or packagename==name:
+         found=True
+         package = self.find(name)
+         if package is None:
+            package = autosar.package.Package(name, parent=self)
+            self.packages.append(package)
+            result.append(package)
+         self.packageParser.loadXML(package,xmlPackage)
+         if (packagename==name) and (role is not None):
+            self.setRole(package.ref, role)
+      return found
+
 
    def loadJSON(self, filename):      
       with open(filename) as fp:

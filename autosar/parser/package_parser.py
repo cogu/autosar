@@ -29,8 +29,9 @@ class PackageParser(object):
       behaviorParser=BehaviorParser(self,self.version)
       signalParser=SignalParser(self,self.version)
       systemParser=SystemParser(self,self.version)
+      self.switcher=None
       
-      if self.version == 3:
+      if self.version >= 3.0 and self.version < 4.0:         
          self.switcher = {'ARRAY-TYPE': dataTypeParser.parseArrayType,
                           'BOOLEAN-TYPE': dataTypeParser.parseBooleanType,
                           'INTEGER-TYPE': dataTypeParser.parseIntegerType,
@@ -54,30 +55,38 @@ class PackageParser(object):
                           'SYSTEM-SIGNAL-GROUP': signalParser.parseSystemSignalGroup,
                           'SYSTEM': systemParser.parseSystem                          
                           }
+      elif self.version >= 4.0:         
+         self.switcher = {
+            'APPLICATION-SW-COMPONENT-TYPE' : componentTypeParser.parseSoftwareComponent,
+            'SWC-IMPLEMENTATION': componentTypeParser.parseSwcImplementation
+         }
          
-         if xmlRoot.find('ELEMENTS'):
-            elementNames = set([x.name for x in package.elements])
-            for xmlElement in xmlRoot.findall('./ELEMENTS/*'):
-               parseFunc = self.switcher.get(xmlElement.tag)
-               if parseFunc is not None:
-                  element = parseFunc(xmlElement,self.rootProject,parent=package)
-                  element.parent=package
-                  if isinstance(element,autosar.element.Element)==True:
-                     if element.name not in elementNames:
-                        #ignore duplicated items                        
-                        package.append(element)
-                        elementNames.add(element.name)
-                  else:
-                     #raise ValueError("parse error: %s"%type(element))
-                     raise ValueError("parse error: %s"%xmlElement.tag)
-               else:
-                  print("unhandled: %s"%xmlElement.tag)
-         if xmlRoot.find('SUB-PACKAGES'):
-            for xmlPackage in xmlRoot.findall('./SUB-PACKAGES/AR-PACKAGE'):
-               name = xmlPackage.find("./SHORT-NAME").text
-               subPackage = autosar.package.Package(name)           
-               self.loadXML(subPackage,xmlPackage)
-               package.subPackages.append(subPackage)
-               subPackage.parent=package
       else:
          raise NotImplementedError('Version of ARXML not supported')
+      
+      assert(self.switcher is not None)
+         
+      if xmlRoot.find('ELEMENTS'):
+         elementNames = set([x.name for x in package.elements])
+         for xmlElement in xmlRoot.findall('./ELEMENTS/*'):
+            parseFunc = self.switcher.get(xmlElement.tag)
+            if parseFunc is not None:
+               element = parseFunc(xmlElement,self.rootProject,parent=package)
+               element.parent=package
+               if isinstance(element,autosar.element.Element)==True:
+                  if element.name not in elementNames:
+                     #ignore duplicated items                        
+                     package.append(element)
+                     elementNames.add(element.name)
+               else:
+                  #raise ValueError("parse error: %s"%type(element))
+                  raise ValueError("parse error: %s"%xmlElement.tag)
+            else:
+               print("unhandled: %s"%xmlElement.tag)
+      if xmlRoot.find('SUB-PACKAGES'):
+         for xmlPackage in xmlRoot.findall('./SUB-PACKAGES/AR-PACKAGE'):
+            name = xmlPackage.find("./SHORT-NAME").text
+            subPackage = autosar.package.Package(name)           
+            self.loadXML(subPackage,xmlPackage)
+            package.subPackages.append(subPackage)
+            subPackage.parent=package

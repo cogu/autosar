@@ -26,11 +26,8 @@ class ComponentTypeParser(object):
    """
    ComponentType parser   
    """
-   def __init__(self,pkg,version=3):
-      if version == 3:
-         self.version=version
-      else:
-         raise NotImplementedError('Version %d of ARXML not supported'%version)
+   def __init__(self,pkg,version=3.0):
+      self.version=version
       self.pkg=pkg
    
    
@@ -50,6 +47,8 @@ class ComponentTypeParser(object):
          componentType = ApplicationSoftwareComponent(parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
       elif xmlRoot.tag=='COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE':
          componentType=ComplexDeviceDriverComponent(parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
+      elif xmlRoot.tag == 'APPLICATION-SW-COMPONENT-TYPE':
+         componentType = ApplicationSoftwareComponent(parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
       else:
          raise NotImplementedError(xmlRoot.tag)
       if xmlRoot.find('PORTS') is not None:
@@ -70,7 +69,7 @@ class ComponentTypeParser(object):
                      operationName=_getOperationNameFromComSpec(xmlItem,portInterfaceRef)
                      comspec=OperationComSpec(operationName)
                      port.comspec.append(comspec)
-                  elif xmlItem.tag == 'UNQUEUED-RECEIVER-COM-SPEC':
+                  elif xmlItem.tag == 'UNQUEUED-RECEIVER-COM-SPEC' or xmlItem.tag == 'NONQUEUED-RECEIVER-COM-SPEC':
                      dataElemName = _getDataElemNameFromComSpec(xmlItem,portInterfaceRef)
                      comspec = DataElementComSpec(dataElemName)
                      if xmlItem.find('./ALIVE-TIMEOUT') != None:
@@ -84,8 +83,10 @@ class ComponentTypeParser(object):
                      if xmlItem.find('./QUEUE-LENGTH') != None:
                         comspec.queueLength = parseTextNode(xmlItem.find('./QUEUE-LENGTH'))
                      port.comspec.append(comspec)
+                  elif xmlItem.tag == 'MODE-SWITCH-RECEIVER-COM-SPEC':
+                     pass #TODO: implement later
                   else:
-                     raise NotImplementedError(item.tag)
+                     raise NotImplementedError(xmlItem.tag)
             componentType.requirePorts.append(port)
          elif(xmlPort.tag == 'P-PORT-PROTOTYPE'):
             portName = xmlPort.find('SHORT-NAME').text
@@ -98,7 +99,7 @@ class ComponentTypeParser(object):
                      comspec=OperationComSpec(operationName)
                      comspec.queueLength=parseIntNode(xmlItem.find('QUEUE-LENGTH'))
                      port.comspec.append(comspec)
-                  elif xmlItem.tag == 'UNQUEUED-SENDER-COM-SPEC':
+                  elif xmlItem.tag == 'UNQUEUED-SENDER-COM-SPEC' or xmlItem.tag == 'NONQUEUED-SENDER-COM-SPEC':
                      dataElemName = _getDataElemNameFromComSpec(xmlItem,portInterfaceRef)
                      comspec = DataElementComSpec(dataElemName)
                      if xmlItem.find('./INIT-VALUE-REF') != None:

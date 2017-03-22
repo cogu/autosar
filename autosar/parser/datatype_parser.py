@@ -5,8 +5,7 @@ from autosar.parser.parser_base import BaseParser
 class DataTypeParser(BaseParser):
    def __init__(self,handler,version=3.0):
       super().__init__(version)
-      if version!=3.0:
-         raise NotImplementedError('Version of ARXML not supported')
+      self.version=version
       self.handler=handler
          
    def parseIntegerType(self,root,rootProject=None,parent=None):    
@@ -82,10 +81,7 @@ class DataTypeParser(BaseParser):
 
 class DataTypeSemanticsParser(object):
    def __init__(self,pkg,version=3.0):
-      if version == 3.0:
-         self.version=version
-      else:
-         raise NotImplementedError('Version %d of ARXML not supported'%version)
+      self.version=version
       self.pkg=pkg
       
    def parse(self,root):
@@ -145,10 +141,7 @@ class DataTypeSemanticsParser(object):
 
 class DataTypeUnitsParser(object):
    def __init__(self,handler,version=3.0):
-      if version == 3.0:
-         self.version=version
-      else:
-         raise NotImplementedError('Version %d of ARXML not supported'%version)
+      self.version=version
       self.handler=handler
       
    def parseUnit(self,xmlElem,rootProject=None,parent=None):

@@ -3,10 +3,7 @@ from autosar.behavior import *
 
 class BehaviorParser(object):
    def __init__(self,pkg,version=3):
-      if version == 3:
-         self.version=version
-      else:
-         raise NotImplementedError('Version %d of ARXML not supported'%version)
+      self.version=version
       self.pkg=pkg
 
    def parseInternalBehavior(self,xmlRoot,dummy,parent=None):

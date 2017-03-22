@@ -3,11 +3,8 @@ import autosar.portinterface
 from autosar.parser.parser_base import BaseParser
 
 class PortInterfacePackageParser(BaseParser):
-   def __init__(self,handler,version=3):
-      if version == 3:
-         self.version=version
-      else:
-         raise NotImplementedError('Version %d of ARXML not supported'%version)
+   def __init__(self,handler,version=3.0):
+      self.version=version
       self.handler=handler
    
    
@@ -93,11 +90,8 @@ class PortInterfacePackageParser(BaseParser):
             return portInterface
 
 class CEPParameterGroupPackageParser(object):
-   def __init__(self,package,version=3):
-      if version == 3:
-         self.version=version
-      else:
-         raise NotImplementedError('Version %d of ARXML not supported'%version)
+   def __init__(self,package,version=3.0):
+      self.version=version
       self.package=package
    def parseSWAddrMethod(self,xmlRoot,rootProject=None,parent=None):
       assert(xmlRoot.tag == 'SW-ADDR-METHOD')
@@ -106,10 +100,7 @@ class CEPParameterGroupPackageParser(object):
       
 class ModeDeclarationGroupPackageParser(object):
    def __init__(self,package,version=3):
-      if version == 3:
-         self.version=version
-      else:
-         raise NotImplementedError('Version %d of ARXML not supported'%version)
+      self.version=version
       self.package=package
 
    def parseModeDeclarationGroup(self,xmlRoot,rootProject=None,parent=None):
