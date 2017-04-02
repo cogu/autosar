@@ -243,6 +243,8 @@ class CompositionComponent(ComponentType):
                if component.name == parts[0]:
                   port = component.find(parts[1])
                   component = innerComponent
+                  if port is None:
+                     raise ValueError('component %s does not have port with name %s'%(component.name,parts[1]))                  
                   break
          else:
             #assume portRef1 is a full reference
@@ -526,4 +528,4 @@ class DelegationConnector(Element):
    
    def tag(self, version=None):
       return 'DELEGATION-CONNECTOR-PROTOTYPE'
-   
+

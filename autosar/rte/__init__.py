@@ -4,6 +4,7 @@ import cfile
 import sys
 from autosar.rte.base import *
 from autosar.rte.generator import *
+from autosar.rte.partition import *
 
 class RteGenerator:
    def __init__(self):
@@ -37,7 +38,8 @@ class RteGenerator:
                   else:
                      raise NotImplementedError(portInterface.__class__.__name__)               
                else:
-                  raise ValueError(port.portInterfaceRef)
+                  #raise ValueError(port.portInterfaceRef)
+                  print('invalid port interface reference: '+port.portInterfaceRef, file=sys.stderr)                  
       basicTypes,complexTypes, modeTypes = typeManager.getTypes(ws) #these are references only
       return (sorted(basicTypes, key=lambda x: x.upper()), sorted(complexTypes, key=lambda x: x.upper()), sorted(modeTypes, key=lambda x: x.upper()))
 
@@ -68,3 +70,11 @@ class RteGenerator:
       else:
          sys.stderr.write('not an atomic software component: %s\n'%swc.name)
    
+   def writeDummyRTE(self, ws, componentRefs = None, outdir='.'):
+      if not isinstance(componentRefs, list):
+         ValueError('ComponentRefs argument must be a list')
+      self.ws = ws
+
+
+      
+         

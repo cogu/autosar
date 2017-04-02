@@ -1,5 +1,7 @@
+import sys
 from autosar.base import parseXMLFile,splitRef,parseTextNode,parseIntNode
 from autosar.component import *
+from autosar.parser.behavior_parser import BehaviorParser
 
 def _getDataElemNameFromComSpec(xmlElem,portInterfaceRef):
    if xmlElem.find('./DATA-ELEMENT-REF') is not None:
@@ -29,6 +31,8 @@ class ComponentTypeParser(object):
    def __init__(self,pkg,version=3.0):
       self.version=version
       self.pkg=pkg
+      if self.version >=4.0:
+         self.behavior_parser = BehaviorParser(pkg,version)
    
    
    def loadFromXML(self,root):
@@ -43,6 +47,7 @@ class ComponentTypeParser(object):
                               
    def parseSoftwareComponent(self,xmlRoot,rootProject=None,parent=None):
       componentType=None
+      handledTags = ['SHORT-NAME','APPLICATION-SOFTWARE-COMPONENT-TYPE', 'COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE', 'APPLICATION-SW-COMPONENT-TYPE']
       if xmlRoot.tag=='APPLICATION-SOFTWARE-COMPONENT-TYPE':
          componentType = ApplicationSoftwareComponent(parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
       elif xmlRoot.tag=='COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE':
@@ -51,8 +56,18 @@ class ComponentTypeParser(object):
          componentType = ApplicationSoftwareComponent(parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
       else:
          raise NotImplementedError(xmlRoot.tag)
-      if xmlRoot.find('PORTS') is not None:
-         self.parseComponentPorts(componentType,xmlRoot)
+      for xmlElem in xmlRoot.findall('./*'):
+         if xmlElem.tag not in handledTags: 
+            if xmlElem.tag == 'PORTS':
+               self.parseComponentPorts(componentType,xmlRoot)
+            elif xmlElem.tag == 'INTERNAL-BEHAVIORS':
+               behaviors = xmlElem.findall('./SWC-INTERNAL-BEHAVIOR')
+               if len(behaviors)>1:
+                  raise ValueError('%s: an SWC cannot have multiple internal behaviors'%(componentType))
+               elif len(behaviors) == 1:
+                  componentType.behavior = self.behavior_parser.parseSWCInternalBehavior(behaviors[0], componentType)
+            else:
+               print('Unhandled tag: '+xmlElem.tag, file=sys.stderr)               
       return componentType
    
    def parseComponentPorts(self,componentType,xmlRoot):

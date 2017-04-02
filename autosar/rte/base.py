@@ -37,5 +37,9 @@ class RteTypeManager:
             basicTypes.add(dataType.ref)
       return list(basicTypes),list(complexTypes),list(modeTypes)
 
-         
+
+class RteModel:
+   
+   def __init__(self):
+      pass
          
