@@ -23,7 +23,7 @@ class RteTypeManager:
          else:
             self.typeMap[dataType.ref]=dataType
    
-   def getTypes(self, ws):
+   def getTypes(self):
       basicTypes=set()
       complexTypes=set()
       modeTypes=set()

@@ -3,8 +3,34 @@ import os
 import cfile
 import sys
 from autosar.rte.base import *
-from autosar.rte.generator import *
+from autosar.rte.generator2 import *
 from autosar.rte.partition import *
+
+class Variable:
+   def __init__(self, name, typename, isQueued=False, queueLen=None, initValue=None):
+      self.name = name
+      self.typename = typename
+      self.hasRead = False
+      self.hasWrite = False
+      self.isQueued = isQueued
+      self.queueLen  = queueLen
+      self.initValue = initValue
+
+class IntegerVariable(Variable):
+   def __init__(self, name, typename, isQueued=False, queueLen=None, initValue=0):
+      super().__init__(name, typename, isQueued, queueLen, initValue)
+      
+
+class RecordVariable(Variable):
+   def __init__(self, name, typename, isQueued=False, queueLen=None, initValue=None):
+      super().__init__(name, typename, isQueued, queueLen, initValue)
+      self.elements=[]
+
+class ArrayVariable(Variable):
+   def __init__(self, name, typename, arrayLen=1, initValue=None):
+      super().__init__(name, typename, initValue=initValue)
+      self.arrayLen=arrayLen
+
 
 class RteGenerator:
    def __init__(self):
@@ -50,25 +76,26 @@ class RteGenerator:
          fp.write(str(hfile))
          
    def writeComponentHeaders(self, swc, outdir='.', name=None):
-      if isinstance(swc, autosar.component.AtomicSoftwareComponent):
-         if name is None:
-            name=swc.name
-         self.name = name
-         ws = swc.rootWS()
-         if ws is None:
-            raise ValueError("swc '%s' does not belong to a workspace"%swc.name)
-         basicTypes, complexTypes, modeTypes = self._getComponentDataTypes(ws, swc)
-         typegen = RteTypeGen()
-         typeFilename = 'Rte_Type_%s.h'%name
-         typeFilePath = outdir+os.path.sep+typeFilename
-         componentFilePath = outdir+os.path.sep+"Rte_%s.h"%name
-         typegen.generate(ws, typeFilePath, basicTypes, complexTypes, modeTypes, self.name)         
-         
-         componentHeadergen=RteHeaderGen()
-         componentHeadergen.generate(swc, componentFilePath, typeFilename, self.name)
-         self._writeTypeHeader(ws, swc, outdir)
-      else:
-         sys.stderr.write('not an atomic software component: %s\n'%swc.name)
+      pass
+      # if isinstance(swc, autosar.component.AtomicSoftwareComponent):
+      #    if name is None:
+      #       name=swc.name
+      #    self.name = name
+      #    ws = swc.rootWS()
+      #    if ws is None:
+      #       raise ValueError("swc '%s' does not belong to a workspace"%swc.name)
+      #    basicTypes, complexTypes, modeTypes = self._getComponentDataTypes(ws, swc)
+      #    typegen = RteTypeGen()
+      #    typeFilename = 'Rte_Type_%s.h'%name
+      #    typeFilePath = outdir+os.path.sep+typeFilename
+      #    componentFilePath = outdir+os.path.sep+"Rte_%s.h"%name
+      #    typegen.generate(ws, typeFilePath, basicTypes, complexTypes, modeTypes, self.name)         
+      #    
+      #    componentHeadergen=RteHeaderGen()
+      #    componentHeadergen.generate(swc, componentFilePath, typeFilename, self.name)
+      #    self._writeTypeHeader(ws, swc, outdir)
+      # else:
+      #    sys.stderr.write('not an atomic software component: %s\n'%swc.name)
    
    def writeDummyRTE(self, ws, componentRefs = None, outdir='.'):
       if not isinstance(componentRefs, list):

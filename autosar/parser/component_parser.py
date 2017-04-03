@@ -89,8 +89,12 @@ class ComponentTypeParser(object):
                      comspec = DataElementComSpec(dataElemName)
                      if xmlItem.find('./ALIVE-TIMEOUT') != None:
                         comspec.aliveTimeout = parseTextNode(xmlItem.find('./ALIVE-TIMEOUT'))
-                     if xmlItem.find('./INIT-VALUE-REF') != None:
-                        comspec.initValueRef = parseTextNode(xmlItem.find('./INIT-VALUE-REF'))
+                     if self.version >= 4.0:
+                        if xmlItem.find('./INIT-VALUE') != None:
+                           comspec.initValueRef = parseTextNode(xmlItem.find('./INIT-VALUE/CONSTANT-REFERENCE/CONSTANT-REF'))
+                     else:                        
+                        if xmlItem.find('./INIT-VALUE-REF') != None:
+                           comspec.initValueRef = parseTextNode(xmlItem.find('./INIT-VALUE-REF'))                                                
                      port.comspec.append(comspec)
                   elif xmlItem.tag == 'QUEUED-RECEIVER-COM-SPEC':
                      dataElemName = _getDataElemNameFromComSpec(xmlItem,portInterfaceRef)
@@ -117,8 +121,12 @@ class ComponentTypeParser(object):
                   elif xmlItem.tag == 'UNQUEUED-SENDER-COM-SPEC' or xmlItem.tag == 'NONQUEUED-SENDER-COM-SPEC':
                      dataElemName = _getDataElemNameFromComSpec(xmlItem,portInterfaceRef)
                      comspec = DataElementComSpec(dataElemName)
-                     if xmlItem.find('./INIT-VALUE-REF') != None:
-                        comspec.initValueRef = parseTextNode(xmlItem.find('./INIT-VALUE-REF'))
+                     if self.version >= 4.0:
+                        if xmlItem.find('./INIT-VALUE') != None:
+                           comspec.initValueRef = parseTextNode(xmlItem.find('./INIT-VALUE/CONSTANT-REFERENCE/CONSTANT-REF'))
+                     else:                        
+                        if xmlItem.find('./INIT-VALUE-REF') != None:
+                           comspec.initValueRef = parseTextNode(xmlItem.find('./INIT-VALUE-REF'))                                                
                      if xmlItem.find('./CAN-INVALIDATE') != None:
                         comspec.canInvalidate = True if parseTextNode(xmlItem.find('./CAN-INVALIDATE'))=='true' else False
                      port.comspec.append(comspec)
