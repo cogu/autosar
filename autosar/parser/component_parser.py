@@ -101,8 +101,10 @@ class ComponentTypeParser(object):
                      comspec = DataElementComSpec(dataElemName)
                      if xmlItem.find('./QUEUE-LENGTH') != None:
                         comspec.queueLength = parseTextNode(xmlItem.find('./QUEUE-LENGTH'))
-                     port.comspec.append(comspec)
+                     port.comspec.append(comspec)                  
                   elif xmlItem.tag == 'MODE-SWITCH-RECEIVER-COM-SPEC':
+                     pass #TODO: implement later
+                  elif xmlItem.tag == 'PARAMETER-REQUIRE-COM-SPEC':
                      pass #TODO: implement later
                   else:
                      raise NotImplementedError(xmlItem.tag)
