@@ -48,12 +48,14 @@ class ComponentTypeParser(object):
    def parseSoftwareComponent(self,xmlRoot,rootProject=None,parent=None):
       componentType=None
       handledTags = ['SHORT-NAME','APPLICATION-SOFTWARE-COMPONENT-TYPE', 'COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE', 'APPLICATION-SW-COMPONENT-TYPE']
-      if xmlRoot.tag=='APPLICATION-SOFTWARE-COMPONENT-TYPE':
+      if xmlRoot.tag=='APPLICATION-SOFTWARE-COMPONENT-TYPE': #for AUTOSAR 3.x
          componentType = ApplicationSoftwareComponent(parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
       elif xmlRoot.tag=='COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE':
          componentType=ComplexDeviceDriverComponent(parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
-      elif xmlRoot.tag == 'APPLICATION-SW-COMPONENT-TYPE':
+      elif xmlRoot.tag == 'APPLICATION-SW-COMPONENT-TYPE': #for AUTOSAR 4.x
          componentType = ApplicationSoftwareComponent(parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
+      elif xmlRoot.tag == 'SERVICE-COMPONENT-TYPE': 
+         componentType = ServiceComponent(parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
       else:
          raise NotImplementedError(xmlRoot.tag)
       for xmlElem in xmlRoot.findall('./*'):

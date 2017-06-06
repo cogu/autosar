@@ -18,6 +18,10 @@ class ComponentTypeWriter(WriterBase):
    def writeCompositionComponentXML(self,swc,package):
       assert(isinstance(swc,autosar.component.CompositionComponent))
       return self._writeComponentXML(swc)
+
+   def writeServiceComponentXML(self,swc,package):
+      assert(isinstance(swc,autosar.component.ServiceComponent))
+      return self._writeComponentXML(swc)      
    
    def _writeComponentXML(self, swc):
       lines=[]
@@ -26,6 +30,8 @@ class ComponentTypeWriter(WriterBase):
       lines=[]
       lines.append('<%s>'%swc.tag(self.version))
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%swc.name,1))
+      if isinstance(swc, autosar.component.ServiceComponent):
+         lines.append(self.indent('<CATEGORY>ServiceComponent</CATEGORY>',1))         
       lines.append(self.indent('<PORTS>',1))
       for port in swc.providePorts:
          lines.extend(self.indent(self._writeProvidePortXML(port),2))
@@ -229,8 +235,12 @@ class ComponentTypeWriter(WriterBase):
    def writeComplexDeviceDriverComponentCode(self, swc, localvars):
       return self._writeComponentCode(swc, 'createComplexDeviceDriverComponent', localvars)
 
+   def writeServiceComponentCode(self, swc, localvars):
+      return self._writeComponentCode(swc, 'createServiceComponent', localvars)
+
    def writeCompositionComponentCode(self, swc, localvars):
       return self._writeComponentCode(swc, 'createCompositionComponent', localvars)
+
 
    def _writeComponentCode(self, swc, methodName, localvars):
       lines=[]

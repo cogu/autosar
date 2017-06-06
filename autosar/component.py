@@ -120,6 +120,13 @@ class ComplexDeviceDriverComponent(AtomicSoftwareComponent):
    def __init__(self,name,parent=None):
       super().__init__(name,parent)
 
+
+class ServiceComponent(AtomicSoftwareComponent):
+   def tag(self,version=None): return "SERVICE-COMPONENT-TYPE"
+   
+   def __init__(self,name,parent=None):
+      super().__init__(name,parent)
+
 class CompositionComponent(ComponentType):
    """
    Composition Component

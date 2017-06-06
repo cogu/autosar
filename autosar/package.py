@@ -195,10 +195,7 @@ class Package(object):
       if role is not None:
          ws = self.rootWS()
          assert(ws is not None)         
-         ws.setRole(pkg.ref, role)
-      
-   
-   
+         ws.setRole(pkg.ref, role)   
          
    def rootWS(self):
       if self.parent is None:
@@ -265,7 +262,27 @@ class Package(object):
       self.append(internalBehavior)
       self.append(implementation)
       return swc
+
+   def createServiceComponent(self,swcName,behaviorName=None,implementationName=None,multipleInstance=False):
+      """
+      Creates a new ApplicationSoftwareComponent object and adds it to the package.
+      It also creates an InternalBehavior object as well as an SwcImplementation object.
       
+      """
+      
+      if behaviorName is None:
+         behaviorName = str(swcName)+'_InternalBehavior'
+      if implementationName is None:
+         implementationName = str(swcName)+'_Implementation'
+      swc = autosar.component.ServiceComponent(swcName,self)      
+      internalBehavior = autosar.behavior.InternalBehavior(behaviorName,swc.ref,multipleInstance,self)
+      implementation=autosar.component.SwcImplementation(implementationName,internalBehavior.ref,parent=self)
+      swc.behavior=internalBehavior
+      swc.implementation=implementation
+      self.append(swc)
+      self.append(internalBehavior)
+      self.append(implementation)
+      return swc
 
    def createModeDeclarationGroup(self, name, modeDeclarations, initialMode, adminData=None):
       """

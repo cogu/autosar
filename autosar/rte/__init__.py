@@ -31,6 +31,9 @@ class ArrayVariable(Variable):
       super().__init__(name, typename, initValue=initValue)
       self.arrayLen=arrayLen
 
+class BooleanVariable(Variable):
+   def __init__(self, name, typename, initValue=None):
+      super().__init__(name, typename, initValue=initValue)
 
 class RteGenerator:
    def __init__(self):
