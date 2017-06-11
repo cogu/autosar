@@ -238,7 +238,7 @@ class CFileGenerator:
       """Generates all Rte_Read functions"""
       for proto in prototypes:
          body = C.block(innerIndent=3)
-         body.code.append(C.statement('*%s = %s'%(proto.func.arguments[0].name, proto.rte_var.name)))
+         body.code.append(C.statement('*%s = %s'%(proto.func.args[0].name, proto.rte_var.name)))
          print(proto.rte_var.typename)
          body.code.append(C.statement('return RTE_E_OK'))
          fp.write(str(proto.func)+'\n')
