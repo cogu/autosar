@@ -7,6 +7,7 @@ import autosar.constant
 import autosar.signal
 import autosar.package
 import autosar.rte
+import autosar.bsw.com
 from autosar.base import splitRef
 import ntpath
 import os
