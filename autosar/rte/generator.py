@@ -253,16 +253,16 @@ class RteGenerator:
          #    body.code.append(C.statement('%s = %s'%(rtevar.name, rtevar.initValue)))
       fp.write(str(func)+'\n')
       fp.write('\n'.join(body.lines())+'\n\n')     
-      if len(self.partition.componentAPI.read)>0:
-        self._genRead(fp, sorted(self.partition.componentAPI.final['read'], key=lambda x: x.shortname))
-      if len(self.partition.componentAPI.write)>0:
-        self._genWrite(fp, sorted(self.partition.componentAPI.final['write'], key=lambda x: x.shortname))
-      if len(self.partition.componentAPI.receive)>0:
-        self._genReceive(fp, sorted(self.partition.componentAPI.final['receive'], key=lambda x: x.shortname))
-      if len(self.partition.componentAPI.send)>0:
-        self._genSend(fp, sorted(self.partition.componentAPI.final['send'], key=lambda x: x.shortname))
-      #if len(self.partition.componentAPI.call)>0:
-      #  self._genCall(fp, sorted(self.partition.componentAPI.final['call'], key=lambda x: x.shortname))
+      if len(self.partition.serverAPI.read)>0:
+        self._genRead(fp, sorted(self.partition.serverAPI.final['read'], key=lambda x: x.shortname))
+      if len(self.partition.serverAPI.write)>0:
+        self._genWrite(fp, sorted(self.partition.serverAPI.final['write'], key=lambda x: x.shortname))
+      if len(self.partition.serverAPI.receive)>0:
+        self._genReceive(fp, sorted(self.partition.serverAPI.final['receive'], key=lambda x: x.shortname))
+      if len(self.partition.serverAPI.send)>0:
+        self._genSend(fp, sorted(self.partition.serverAPI.final['send'], key=lambda x: x.shortname))
+      #if len(self.partition.serverAPI.call)>0:
+      #  self._genCall(fp, sorted(self.partition.serverAPI.final['call'], key=lambda x: x.shortname))
 
 
    def _genRead(self, fp, prototypes):
@@ -335,43 +335,43 @@ class ComponentHeaderGenerator():
       #Write API
       hfile.code.append(C.blank())
       hfile.code.extend([C.line(x) for x in _genCommentHeader('API Prototypes')])
-      for proto in component.componentAPI.get_all():
+      for proto in component.clientAPI.get_all():
          hfile.code.append(C.statement(proto.func))
-      if len(component.componentAPI.final['read'])>0:
+      if len(component.clientAPI.final['read'])>0:
          hfile.code.append(C.blank())
          hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Read_<p>_<d>')])         
-         hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.componentAPI.final['read']])
-      if len(component.componentAPI.final['write'])>0:
+         hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.clientAPI.final['read']])
+      if len(component.clientAPI.final['write'])>0:
          hfile.code.append(C.blank())
          hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Write_<p>_<d>')])         
-         hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.componentAPI.final['write']])
-      if len(component.componentAPI.final['receive'])>0:
+         hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.clientAPI.final['write']])
+      if len(component.clientAPI.final['receive'])>0:
          hfile.code.append(C.blank())
          hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Receive_<p>_<d>')])         
-         hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.componentAPI.final['receive']])
-      if len(component.componentAPI.final['send'])>0:
+         hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.clientAPI.final['receive']])
+      if len(component.clientAPI.final['send'])>0:
          hfile.code.append(C.blank())
          hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Send_<p>_<d>')])         
-         hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.componentAPI.final['send']])
-      if len(component.componentAPI.final['mode'])>0:
+         hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.clientAPI.final['send']])
+      if len(component.clientAPI.final['mode'])>0:
          hfile.code.append(C.blank())
          hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Mode_<p>_<d>')])         
-         hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.componentAPI.final['mode']])
-      if len(component.componentAPI.final['mode'])>0:
+         hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.clientAPI.final['mode']])
+      if len(component.clientAPI.final['mode'])>0:
          hfile.code.append(C.blank())
          hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Mode_<mode>')])         
-         hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.componentAPI.final['mode']])
-      if len(component.componentAPI.final['calprm'])>0:
+         hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.clientAPI.final['mode']])
+      if len(component.clientAPI.final['calprm'])>0:
          hfile.code.append(C.blank())
          hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Calprm_<name>')])
-         hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.componentAPI.final['calprm']])
-      if len(component.componentAPI.final['call'])>0:
+         hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.clientAPI.final['calprm']])
+      if len(component.clientAPI.final['call'])>0:
          hfile.code.append(C.blank())
          hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Call_<p>_<o> ')])
-         hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.componentAPI.final['call']])         
-      if len(component.rteRunnables)>0:
-         for name in sorted(component.rteRunnables):
-            runnable = component.rteRunnables[name]
+         hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.clientAPI.final['call']])         
+      if len(component.rte_runnables)>0:
+         for name in sorted(component.rte_runnables):
+            runnable = component.rte_runnables[name]
             tmp = self._writeRunnableProto(runnable)
             hfile.code.extend(tmp)
       fp.write('\n'.join(hfile.lines()))

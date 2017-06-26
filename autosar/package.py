@@ -205,15 +205,25 @@ class Package(object):
       
    def append(self,elem):
       """appends elem to the self.elements list"""
-      if isinstance(elem,autosar.element.Element):         
-         self.elements.append(elem)
-         elem.parent=self
-         self.map['elements'][elem.name]=elem
-      elif isinstance(elem,Package):
-        self.subPackages.append(elem)
-        elem.parent=self
-      else:
-         raise ValueError('unexpected value type %s'%str(type(elem)))
+      isNewElement = True
+      if elem.name in self.map['elements']:
+         isNewElement = False
+         existingElem = self.map['elements'][elem.name]
+         if type(elem) != type(existingElem):
+            raise TypeError('Error: element %s %s already exists in package %s with different type from new element %s'%(str(type(existingElem)), existingElem.name, self.name, str(type(elem))))
+         else:            
+            if elem != existingElem:
+              raise ValueError('Error: element %s %s already exist in package %s using different definition'%(existingElem.name, str(type(existingElem)), self.name))
+      if isNewElement:
+         if isinstance(elem,autosar.element.Element):         
+            self.elements.append(elem)
+            elem.parent=self
+            self.map['elements'][elem.name]=elem
+         elif isinstance(elem,Package):
+           self.subPackages.append(elem)
+           elem.parent=self
+         else:
+            raise ValueError('unexpected value type %s'%str(type(elem)))
 
    def update(self,other):
       """copies/clones each element from other into self.elements"""
