@@ -97,6 +97,16 @@ class ComponentType(Element):
          raise NotImplementedError(type(portInterface))
       port = RequirePort(name,portInterface.ref,comspec,parent=self)
       self.requirePorts.append(port)
+   
+   def createProvidePortFromTemplate(self, cls):
+      ws = self.rootWS()      
+      assert(ws is not None)      
+      cls.createProvidePort(ws, self)
+
+   def createRequirePortFromTemplate(self, cls):
+      ws = self.rootWS()      
+      assert(ws is not None)      
+      cls.createRequirePort(ws, self)
 
 class AtomicSoftwareComponent(ComponentType):
    """

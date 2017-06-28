@@ -200,16 +200,16 @@ class RteGenerator:
    
    def _generate_com_access(self):
       if self.com_config is not None:                  
-         for element_name in self.partition.dataElements:
+         for element_name in self.partition.data_elements:
             if element_name in self.com_config.send:
-               data_element = self.partition.dataElements[element_name]
+               data_element = self.partition.data_elements[element_name]['element']
                isPointer = True if data_element.dataType.isComplexType else False
                self.com_access['send'][element_name] = C.function(
                   "%s_Send_%s"%(self.com_config.prefix, element_name),
                   'Std_ReturnType',                  
                   args = [C.variable('value', data_element.dataType.name, pointer=isPointer)])
             elif element_name in self.com_config.receive:
-               data_element = self.partition.dataElements[element_name]
+               data_element = self.partition.data_elements[element_name]['element']
                isPointer = True if data_element.dataType.isComplexType else False
                self.com_access['receive'][element_name] = C.function(
                   "%s_Receive_%s"%(self.com_config.prefix, element_name),
@@ -433,4 +433,9 @@ class ComponentHeaderGenerator():
       lines.append(C.blank())
       return lines
       
+
+            
+                                
+         
+            
             
