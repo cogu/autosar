@@ -98,15 +98,8 @@ class ComponentType(Element):
       port = RequirePort(name,portInterface.ref,comspec,parent=self)
       self.requirePorts.append(port)
    
-   def createProvidePortFromTemplate(self, cls):
-      ws = self.rootWS()      
-      assert(ws is not None)      
-      cls.createProvidePort(ws, self)
-
-   def createRequirePortFromTemplate(self, cls):
-      ws = self.rootWS()      
-      assert(ws is not None)      
-      cls.createRequirePort(ws, self)
+   def apply(self, template):
+      template.apply(self)
 
 class AtomicSoftwareComponent(ComponentType):
    """

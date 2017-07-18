@@ -8,7 +8,9 @@ import autosar.signal
 import autosar.package
 import autosar.rte
 import autosar.bsw.com
+import abc
 from autosar.base import splitRef
+
 import ntpath
 import os
 import xml.etree.ElementTree as ElementTree
@@ -88,5 +90,9 @@ def ModeGroup(name, typeRef, parent=None, adminData=None):
 def CompuMethodConst(name, elements, parent=None, adminData=None):
    return autosar.datatype.CompuMethodConst(name, elements, parent, adminData)
 
-def RteGenerator():
-   return autosar.rte.RteGenerator()
+
+#template support
+class Template:
+   @classmethod   
+   def apply(cls, ws):
+      raise NotImplementedError("%s: apply() method not implemented"%(cls.__qualname__))

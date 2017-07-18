@@ -308,6 +308,56 @@ class Workspace(object):
                self.loadXML(item['path'],roles=roles)
             else:
                raise ValueError('invalid file path "%s"'%item['path'])
-            
+
+   def apply(self, template):      
+      template.apply(self)
+
+   #template support 
+   @classmethod
+   def _createDefaultDataTypes(cls, package):
+      package.createBooleanDataType('Boolean')
+      package.createIntegerDataType('SInt8', -128, 127)
+      package.createIntegerDataType('SInt16', -32768, 32767)
+      package.createIntegerDataType('SInt32', -2147483648, 2147483647)
+      package.createIntegerDataType('UInt8', 0, 255)
+      package.createIntegerDataType('UInt16', 0, 65535)
+      package.createIntegerDataType('UInt32', 0, 4294967295)   
+      package.createRealDataType('Float', None, None, minValType='INFINITE', maxValType='INFINITE')
+      package.createRealDataType('Double', None, None, minValType='INFINITE', maxValType='INFINITE', hasNaN=True, encoding='DOUBLE')
+   
+   def getDataTypePackage(self):
+      package = self.find("DataType")
+      if package is None:
+         package=self.createPackage("DataType", role="DataType")
+         package.createSubPackage("DataTypeSemantics", role="CompuMethod")   
+         package.createSubPackage("DataTypeUnits", role="Unit")
+         Workspace._createDefaultDataTypes(package)
+      return package
+      
+   def getPortInterfacePackage(self):
+      package = self.find("PortInterface")
+      if package is None:
+         package=self.createPackage("PortInterface", role="PortInterface")
+      return package
+      
+   def getConstantPackage(self):
+      package = self.find("Constant")
+      if package is None:
+         package=self.createPackage("Constant", role="Constant")
+      return package
+      
+   def getModeDclrGroupPackage(self):
+      package = self.find("ModeDclrGroup")
+      if package is None:
+         package=self.createPackage("ModeDclrGroup", role="ModeDclrGroup")
+      return package
+      
+   def getComponentTypePackage(self):
+      package = self.find("ComponentType")
+      if package is None:
+         package=self.createPackage("ComponentType", role="ComponentType")
+      return package
+
 if __name__ == '__main__':
    print("done")
+   
