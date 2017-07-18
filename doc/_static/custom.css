@@ -1,0 +1,15 @@
+.table-monospace {
+   font-family: "Consolas", "monospace";
+}
+
+table.center-align td {
+   text-align: center;
+}
+
+body {
+	font-size: 110%;
+}
+
+div.sphinxsidebar{
+	font-size: 16px !important;
+}

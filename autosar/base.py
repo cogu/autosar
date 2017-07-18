@@ -9,6 +9,16 @@ class AdminData(object):
       for elem in self.specialDataGroups:
          retval['specialDataGroups'].append(elem.asdict())
       return retval
+   
+   def __eq__(self, other):
+      if isinstance(other, self.__class__) and len(self.specialDataGroups) == len(other.specialDataGroups):
+         for i,elem in enumerate(self.specialDataGroups):
+            if elem != other.specialDataGroups[i]:
+               return False
+         return True            
+      return False
+   
+   def __ne__(self, other): return not (self == other)
 
 class SpecialDataGroup(object):
    def __init__(self,SDG_GID,SD=None,SD_GID=None):
@@ -22,6 +32,14 @@ class SpecialDataGroup(object):
       if self.SD is not None: data['SD']=self.SD
       if self.SD_GID is not None: data['SD_GID']=self.SD_GID
       return data
+   
+   def __eq__(self, other):
+      if isinstance(other, self.__class__):
+         if self.SDG_GID == other.SDG_GID and self.SD == other.SD and self.SD_GID == other.SD_GID: return True
+      return False
+   
+   def __ne__(self, other): return not (self == other)
+   
 
 def removeNamespace(doc, namespace):
    """Removes XML namespace in place."""

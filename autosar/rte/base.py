@@ -23,7 +23,7 @@ class RteTypeManager:
          else:
             self.typeMap[dataType.ref]=dataType
    
-   def getTypes(self, ws):
+   def getTypes(self):
       basicTypes=set()
       complexTypes=set()
       modeTypes=set()
@@ -37,5 +37,9 @@ class RteTypeManager:
             basicTypes.add(dataType.ref)
       return list(basicTypes),list(complexTypes),list(modeTypes)
 
-         
+
+class RteModel:
+   
+   def __init__(self):
+      pass
          

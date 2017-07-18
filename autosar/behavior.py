@@ -5,6 +5,7 @@ import autosar.base
 from autosar.element import Element
 import collections
 
+###################################### Events ###########################################
 class Event(Element):
    def __init__(self,name,startOnEventRef=None, parent=None):
       super().__init__(name,parent)
@@ -12,11 +13,17 @@ class Event(Element):
       self.modeDependency=None
 
 class ModeSwitchEvent(Event):
-   def __init__(self,name,startOnEventRef=None, activationType='ENTRY', parent=None):
+   def __init__(self,name,startOnEventRef=None, activationType='ENTRY', parent=None, version=3.0):
       super().__init__(name, startOnEventRef, parent)
-      self.modeInstRef=None      
-      if (activationType!='ENTRY') and (activationType != 'EXIT'):
-         raise ValueError('activationType argument must be either "ENTRY" or "EXIT"')
+      self.modeInstRef=None
+      if version < 4.0:
+         if (activationType!='ENTRY') and (activationType != 'EXIT'):
+            raise ValueError('activationType argument must be either "ENTRY" or "EXIT"')
+      elif version >= 4.0:
+         if (activationType=='ENTRY'): activationType='ON-ENTRY'
+         if (activationType=='EXIT'): activationType='ON-EXIT'
+         if (activationType!='ON-ENTRY') and (activationType != 'ON-EXIT'):
+            raise ValueError('activationType argument must be either "ON-ENTRY" or "ON-EXIT"')
       self.activationType = activationType
       
    def tag(self,version=None):
@@ -48,8 +55,16 @@ class OperationInvokedEvent(Event):
       
    def tag(self, version=None):
       return "OPERATION-INVOKED-EVENT"
+
+class InitEvent(Event):
+   def __init__(self,name,startOnEventRef=None, parent=None):
+      super().__init__(name, startOnEventRef, parent)      
    
+   def tag(self, version=None):
+      return 'INIT-EVENT'
+
    
+####################################################################################################   
 
 class ModeDependency(object):
    def __init__(self):      
@@ -908,4 +923,11 @@ class InternalBehavior(Element):
       assert(self.swc is not None)
       
 
+class VariableAccess(Element):
+   def __init__(self, name, portPrototypeRef, targetDataPrototypeRef, parent=None):
+      super().__init__(name, parent)
+      self.portPrototypeRef=portPrototypeRef
+      self.targetDataPrototypeRef = targetDataPrototypeRef
    
+   def tag(self, version=None):
+      return 'VARIABLE-ACCESS'   

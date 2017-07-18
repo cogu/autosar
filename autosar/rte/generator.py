@@ -1,133 +1,163 @@
-import cfile as C
-import autosar
 import os
-import sys
-from autosar.rte.base import *
+import autosar.rte.partition
+import cfile as C
+import io
 
-class RteTypeGen:
+def _genCommentHeader(comment):
+   lines = []
+   lines.append('/*********************************************************************************************************************')
+   lines.append('* %s'%comment)
+   lines.append('*********************************************************************************************************************/')
+   return lines
+
+class TypeGenerator:
    
-   def generate(self,ws,filename, basicTypes, complexTypes, modeTypes, swc_name):
-      hfile=C.hfile(filename)
-      hfile.code.append(C.include("Std_Types.h"))
-      hfile.code.append('''
-                        
-/**********************************************************************************************************************
- * Data Type Definitions
- *********************************************************************************************************************/
-''')
-      first=True
-      for ref in sorted(basicTypes)+sorted(complexTypes):
-         dataType = ws.find(ref)
-         if dataType is not None:
-            if first:
-               first=False
-            else:
-               hfile.code.append(C.blank())
-            hfile.code.append('#  define Rte_TypeDef_%s'%dataType.name)
-            if isinstance(dataType,autosar.datatype.BooleanDataType):
-               hfile.code.append('typedef boolean %s;'%(dataType.name))
-            elif isinstance(dataType,autosar.datatype.IntegerDataType):
-               valrange = dataType.maxVal-dataType.minVal
-               bitcount = valrange.bit_length()
-               typename = dataType.name
-               basetype = self._typename(bitcount,dataType.minVal)
-               hfile.code.append(C.statement(C.typedef(basetype, typename)))
-               #hfile.code.append('typedef %s %s;'%(basetype, typename))            
-               isUnsigned = True if basetype in ('uint8','uint16','uint32') else False
-               if isUnsigned:
-                  minval=str(dataType.minVal)+'u'
-                  maxval=str(dataType.maxVal)+'u'
-               else:
-                  minval=str(dataType.minVal)
-                  maxval=str(dataType.maxVal)
-               hfile.code.append('#  define %s_LowerLimit ((%s)%s)'%(typename,typename,minval))
-               hfile.code.append('#  define %s_UpperLimit ((%s)%s)'%(typename,typename,maxval))
-               if dataType.compuMethodRef is not None:
-                  compuMethod = ws.find(dataType.compuMethodRef)
-                  if compuMethod is not None:
-                     lines1=[]
-                     lines2=[]
-                     if isinstance(compuMethod,autosar.datatype.CompuMethodConst):
-                        for elem in compuMethod.elements:
-                           if isUnsigned:
-                              value = str(elem.upperLimit)+'u'
-                           else:
-                              value = str(elem.upperLimit)
-                           lines1.append('#  define RTE_CONST_%s (%s)'%(elem.textValue,value))
-                           lines2.append('#  define %s ((%s)%s)'%(elem.textValue,typename,value))
-                     if len(lines2)>0:
-                        tmp=lines1+[C.blank()]+lines2
-                     else:
-                        tmp=lines1
-                     for line in tmp:
-                        hfile.code.append(line)
-                  else:
-                     raise ValueError(dataType.compuMethodRef)
-            elif isinstance(dataType, autosar.datatype.RecordDataType):
-               body = C.block(indent=3)               
-               for elem in dataType.elements:
-                  childType = ws.find(elem.typeRef, role='DataType')
-                  body.append(C.statement(C.variable(elem.name, childType.name)))
-               struct = C.struct(None,body, typedef=dataType.name)
-               hfile.code.append(C.statement(struct))
-            elif isinstance(dataType, autosar.datatype.StringDataType):
-               hfile.code.append('typedef uint8 %s[%d];'%(dataType.name, dataType.length+1))
-            elif isinstance(dataType, autosar.datatype.ArrayDataType):
-               childType = ws.find(dataType.typeRef, role='DataType')
-               if childType is None:
-                  raise ValueError('invalid type reference: '+dataType.typeRef)
-               hfile.code.append('typedef %s %s[%d];'%(childType.name, dataType.name, dataType.length))
-            elif isinstance(dataType, autosar.datatype.RealDataType):
-               if dataType.encoding == 'DOUBLE':
-                  platform_typename = 'float64'
-               else:
-                  platform_typename = 'float32'
-               hfile.code.append('typedef %s %s;'%(platform_typename, dataType.name))
-            else:
-               raise NotImplementedError(type(dataType))
-               #sys.stderr.write('not implemented: %s\n'%str(type(dataType)))
-         else:
-            raise ValueError(ref)
-
-      if len(modeTypes)>0:         
-         lines=self._genCommentHeader('Mode Types')
-         tmp=[]
-         hfile.code.extend(lines)
-         first=True
-         for ref in modeTypes:
-            if first:
-               first=False
-            else:
-               tmp.append(C.blank())
-            modeType = ws.find(ref)
-            hfile.code.append(C.statement(C.typedef('uint8', 'Rte_ModeType_'+modeType.name)))
-            
-            for i,elem in enumerate(modeType.modeDeclarations):
-               # define RTE_MODE_EcuM_Mode_POST_RUN ((Rte_ModeType_EcuM_Mode)0)
-               tmp.append(C.define('RTE_MODE_%s_%s'%(modeType.name,elem.name),'((Rte_ModeType_EcuM_Mode)%d)'%i))
-            
+   def __init__(self, partition, useDefaultTypes=True):
+      self.partition = partition
+      self.defaultTypes = {}
+      if useDefaultTypes:
+         self._initDefaultType()
+      
+   
+   def generate(self, filename, ws):
+      with io.open(filename, 'w', newline='\n') as fp:         
+         hfile=C.hfile(filename)
+         hfile.code.extend([C.line(x) for x in _genCommentHeader('Includes')])         
+         hfile.code.append(C.include("Std_Types.h"))
          hfile.code.append(C.blank())
-         hfile.code.extend(tmp)
-      hfile.code.append(C.blank())
-      hfile.code.extend(self._genCommentHeader('Component Data Structures'))
-      hfile.code.append('struct Rte_CDS_%s'%swc_name)
-      block = C.block(innerIndent=3)
-      block.code.append(C.statement('uint8 _dummy', indent=3))
-      hfile.code.append(C.statement(block))
+         (basicTypes,complexTypes,modeTypes) = self.partition.types.getTypes()         
+         hfile.code.extend([C.line(x) for x in _genCommentHeader('Data Type Definitions')])
+         hfile.code.append(C.blank())
+         unusedDefaultTypes = self._findUnusedDefaultTypes(ws, basicTypes)
          
-      with open(filename,'w') as fh:
-         fh.write(str(hfile))
+         first=True
+         for ref in sorted(basicTypes)+sorted(complexTypes):
+            dataType = ws.find(ref)
+            if dataType is not None:
+               typedef = None
+               if first:
+                  first=False
+               else:
+                  hfile.code.append(C.blank())
+               hfile.code.append('#define Rte_TypeDef_%s'%dataType.name)
+               if isinstance(dataType,autosar.datatype.BooleanDataType):
+                  typedef = C.typedef('boolean', dataType.name)
+                  hfile.code.append(C.statement(typedef))
+               elif isinstance(dataType,autosar.datatype.IntegerDataType):
+                  valrange = dataType.maxVal-dataType.minVal
+                  bitcount = valrange.bit_length()
+                  typename = dataType.name
+                  basetype = self._typename(bitcount,dataType.minVal)
+                  typedef = C.typedef(basetype, typename)
+                  hfile.code.append(C.statement(typedef))                  
+                  isUnsigned = True if basetype in ('uint8','uint16','uint32') else False
+                  if isUnsigned:
+                     minval=str(dataType.minVal)+'u'
+                     maxval=str(dataType.maxVal)+'u'
+                  else:
+                     minval=str(dataType.minVal)
+                     maxval=str(dataType.maxVal)
+                  hfile.code.append('#define %s_LowerLimit ((%s)%s)'%(typename,typename,minval))
+                  hfile.code.append('#define %s_UpperLimit ((%s)%s)'%(typename,typename,maxval))
+                  if dataType.compuMethodRef is not None:
+                     compuMethod = ws.find(dataType.compuMethodRef)
+                     if compuMethod is not None:
+                        lines1=[]
+                        lines2=[]
+                        if isinstance(compuMethod,autosar.datatype.CompuMethodConst):
+                           for elem in compuMethod.elements:
+                              if isUnsigned:
+                                 value = str(elem.upperLimit)+'u'
+                              else:
+                                 value = str(elem.upperLimit)
+                              lines1.append('#define RTE_CONST_%s (%s)'%(elem.textValue,value))
+                              lines2.append('#define %s ((%s)%s)'%(elem.textValue,typename,value))
+                        if len(lines2)>0:
+                           tmp=lines1+[C.blank()]+lines2
+                        else:
+                           tmp=lines1
+                        for line in tmp:
+                           hfile.code.append(line)
+                     else:
+                        raise ValueError(dataType.compuMethodRef)
+               elif isinstance(dataType, autosar.datatype.RecordDataType):
+                  body = C.block(innerIndent=3)               
+                  for elem in dataType.elements:
+                     childType = ws.find(elem.typeRef, role='DataType')
+                     body.append(C.statement(C.variable(elem.name, childType.name)))
+                  struct = C.struct(None,body, typedef=dataType.name)
+                  hfile.code.append(C.statement(struct))
+               elif isinstance(dataType, autosar.datatype.StringDataType):
+                  hfile.code.append('typedef uint8 %s[%d];'%(dataType.name, dataType.length+1))
+               elif isinstance(dataType, autosar.datatype.ArrayDataType):
+                  childType = ws.find(dataType.typeRef, role='DataType')
+                  if childType is None:
+                     raise ValueError('invalid type reference: '+dataType.typeRef)
+                  hfile.code.append('typedef %s %s[%d];'%(childType.name, dataType.name, dataType.length))
+               elif isinstance(dataType, autosar.datatype.RealDataType):
+                  if dataType.encoding == 'DOUBLE':
+                     platform_typename = 'float64'
+                  else:
+                     platform_typename = 'float32'
+                  hfile.code.append('typedef %s %s;'%(platform_typename, dataType.name))
+               else:
+                  raise NotImplementedError(type(dataType))
+                  #sys.stderr.write('not implemented: %s\n'%str(type(dataType)))
+            else:
+               raise ValueError(ref)
    
-   def _typedef(self,fh,left,right):
-      fh.write('typedef %s %s;\n'%(left,right))
-
-   def _genCommentHeader(self,comment):
-      lines = []
-      lines.append('/**********************************************************************************************************************')
-      lines.append('* %s'%comment)
-      lines.append('*********************************************************************************************************************/')
-      return lines
+         if len(modeTypes)>0:         
+            lines=self._genCommentHeader('Mode Types')
+            tmp=[]
+            hfile.code.extend(lines)
+            first=True
+            for ref in modeTypes:
+               if first:
+                  first=False
+               else:
+                  tmp.append(C.blank())
+               modeType = ws.find(ref)
+               hfile.code.append(C.statement(C.typedef('uint8', 'Rte_ModeType_'+modeType.name)))
+               
+               for i,elem in enumerate(modeType.modeDeclarations):
+                  # define RTE_MODE_EcuM_Mode_POST_RUN ((Rte_ModeType_EcuM_Mode)0)
+                  tmp.append(C.define('RTE_MODE_%s_%s'%(modeType.name,elem.name),'((Rte_ModeType_EcuM_Mode)%d)'%i))
+               
+            hfile.code.append(C.blank())
+            hfile.code.extend(tmp)
+         if len(unusedDefaultTypes)>0:
+            hfile.code.append(C.blank(2))
+            hfile.code.append(C.line('#ifndef RTE_SUPPRESS_UNUSED_DATATYPES'))
+            for name in sorted(unusedDefaultTypes):
+               hfile.code.append(C.blank())
+               hfile.code.extend(self.defaultTypes[name])
+            hfile.code.append(C.blank())
+            hfile.code.append(C.line('#endif'))            
+         fp.write('\n'.join(hfile.lines()))
+         fp.write('\n')
+         
    
+   def _initDefaultType(self):
+      self.defaultTypes['Boolean']=C.sequence().extend([C.statement(C.typedef('boolean', 'Boolean'))])
+      self.defaultTypes['UInt8']=C.sequence().extend([C.statement(C.typedef('uint8', 'UInt8')), C.define('UInt8_LowerLimit', '((UInt8)0u)'), C.define('UInt8_UpperLimit', '((UInt8)255u)')])
+      self.defaultTypes['UInt16']=C.sequence().extend([C.statement(C.typedef('uint16', 'UInt16')), C.define('UInt16_LowerLimit', '((UInt16)0u)'), C.define('UInt16_UpperLimit', '((UInt16)65535u)')])
+      self.defaultTypes['UInt32']=C.sequence().extend([C.statement(C.typedef('uint32', 'UInt32')), C.define('UInt32_LowerLimit', '((UInt32)0u)'), C.define('UInt32_UpperLimit', '((UInt32)4294967295u)')])
+      self.defaultTypes['SInt8']=C.sequence().extend([C.statement(C.typedef('sint8', 'SInt8')), C.define('SInt8_LowerLimit', '((SInt8)-128)'), C.define('SInt8_UpperLimit', '((SInt8)127)')])
+      self.defaultTypes['SInt16']=C.sequence().extend([C.statement(C.typedef('sint16', 'SInt16')), C.define('SInt16_LowerLimit', '((SInt16)-32768)'), C.define('SInt16_UpperLimit', '((SInt16)32767)')])
+      self.defaultTypes['SInt32']=C.sequence().extend([C.statement(C.typedef('sint32', 'SInt32')), C.define('SInt32_LowerLimit', '((SInt32)-2147483648)'), C.define('SInt32_UpperLimit', '((SInt32)2147483647)')])
+   
+   def _findUnusedDefaultTypes(self, ws, typerefs):
+      defaultTypeNames = set(self.defaultTypes.keys())
+      usedTypeNames = set()
+      
+      for ref in typerefs:         
+         dataType = ws.find(ref)
+         if dataType is None:
+            raise ValueError('invalid type reference: '+ref)
+         usedTypeNames.add(dataType.name)
+      return defaultTypeNames-usedTypeNames
+         
+         
    @staticmethod
    def _typename(bitcount,minval):
       if bitcount <=8:
@@ -141,152 +171,214 @@ class RteTypeGen:
       else:
          raise ValueError(bitcount)
 
-
-class RteHeaderGen:
-   def generate(self, swc , filename, typefilename, swc_name):
-      assert(isinstance(swc, autosar.component.AtomicSoftwareComponent))
-      ws=swc.rootWS()
-      dataElements=set()
-      operations=set()
-      functions={'Receive':[], 'Read':[], 'Write':[], 'Send':[], 'Mode':[], 'Call':[], 'CalPrm':[]}
-      basename = basename=os.path.splitext(os.path.basename(filename))[0]
-      self.headername = str('_%s_H'%basename).upper()
-      with open(filename,'w') as fh:
-         self._beginFile(fh,typefilename)                  
-         for runnable in swc.behavior.runnables:
-            for dataPoint in runnable.dataReceivePoints+runnable.dataSendPoints:
-               key=(swc.behavior.componentRef, dataPoint.portRef, dataPoint.dataElemRef)
-               dataElements.add(key)
-            for callPoint in runnable.serverCallPoints:
-               for elem in callPoint.operationInstanceRefs:
-                  key=(swc.behavior.componentRef, elem.portRef, elem.operationRef)
-                  operations.add(key)
-         for elem in dataElements:
-            (componentRef,portRef,dataElemRef)=elem
-            swc=ws.find(componentRef)
-            port=ws.find(portRef)
-            dataElement = ws.find(dataElemRef)
-            if dataElement is None:
-               raise ValueError(dataElemRef)
-            typeObj=ws.find(dataElement.typeRef)
-            pointer=False           
-            ftype=None            
-            if isinstance(port,autosar.component.RequirePort):
-               if dataElement.isQueued:
-                  ftype='Receive'                  
-               else:
-                  ftype='Read'                  
-               pointer=True
-            else:
-               if dataElement.isQueued:
-                  ftype='Send'                  
-               else:
-                  ftype='Write'                  
-            assert(ftype is not None)
-            fname='Rte_%s_%s_%s_%s'%(ftype, swc_name, port.name, dataElement.name)
-            shortname='Rte_%s_%s_%s'%(ftype, port.name, dataElement.name)
-            typeArg=self._type2arg(typeObj,pointer)
-            func=C.function(fname, 'Std_ReturnType')
-            func.add_arg(typeArg)
-            functions[ftype].append({'shortname':shortname,'func':func})
-
-         for elem in operations:
-            (componentRef,portRef,operationRef)=elem
-            swc=ws.find(componentRef)
-            port=ws.find(portRef)
-            operation = ws.find(operationRef)
-            if operation is None:
-               raise ValueError('invalid reference: '+operationRef)
-            args=[]
-            for argument in operation.arguments:
-               dataType = ws.find(argument.typeRef)
-               pointer = None
-               if isinstance(dataType, autosar.datatype.RecordDataType) or isinstance(dataType, autosar.datatype.ArrayDataType):
-                  pointer=True
-               else:
-                  pointer=False
-               if argument.direction == 'INOUT' or argument.direction=='OUT':
-                  pointer=True               
-               args.append(C.variable(argument.name, dataType.name, pointer=pointer))
-            fname='_'.join(['Rte_Call', swc_name, port.name, operation.name])
-            shortname='_'.join(['Rte_Call', port.name, operation.name])            
-            func=C.function(fname, 'Std_ReturnType', args=args)            
-            functions['Call'].append({'shortname':shortname,'func':func})
-
-         #process mode ports
-         for port in swc.requirePorts:
-            portInterface = ws.find(port.portInterfaceRef)
-            if isinstance(portInterface, autosar.portinterface.SenderReceiverInterface):
-               if portInterface.modeGroups is not None and len(portInterface.modeGroups)>0:
-                  for modeGroup in portInterface.modeGroups:                     
-                     modeType = ws.find(modeGroup.typeRef)
-                     fname='_'.join(['Rte_Mode', swc_name, port.name, modeGroup.name])
-                     shortname='_'.join(['Rte_Mode', port.name, modeGroup.name])                     
-                     func=C.function(fname, 'Rte_ModeType_%s'%modeType.name)
-                     functions['Mode'].append({'shortname':shortname,'func':func})
-            elif isinstance(portInterface, autosar.portinterface.ParameterInterface):
-               for dataElement in portInterface.dataElements:
-                  dataType = ws.find(dataElement.typeRef)
-                  fname='_'.join(['Rte_Calprm', swc_name, port.name, dataElement.name])
-                  shortname='_'.join(['Rte_Calprm', port.name, dataElement.name])                     
-                  func=C.function(fname, dataType.name)
-                  functions['CalPrm'].append({'shortname':shortname,'func':func})
-                  
-         functionsSorted={}
-         for k,v in functions.items():
-            if len(v)>0:
-               functionsSorted[k]=sorted(v, key=lambda x: x['func'].name.upper())
-            else:
-               functionsSorted[k]=[]
-         prototypeList=[]
-         prototypeList.extend(functionsSorted['Read'])
-         prototypeList.extend(functionsSorted['Write'])
-         prototypeList.extend(functionsSorted['Mode'])
-         prototypeList.extend(functionsSorted['Call'])
-         prototypeList.extend(functionsSorted['CalPrm'])
-            
-         self._genInitValues(fh, ws, swc.requirePorts+swc.providePorts)
-         self._genAPIPrototypes(fh, [x['func'] for x in prototypeList])
-         if len(functionsSorted['Read'])>0:
-            self._genReadUnqueued(fh, functionsSorted['Read'])
-         if len(functionsSorted['Write'])>0:
-            self._genWriteUnqueued(fh, functionsSorted['Write'])
-         if len(functionsSorted['Mode'])>0:
-            self._genMode(fh, functionsSorted['Mode'])
-         if len(functionsSorted['Call'])>0:
-            self._genCall(fh, functionsSorted['Call'])
-         if len(functionsSorted['CalPrm'])>0:
-            self._genCalprm(fh, functionsSorted['CalPrm'])
-         if swc.behavior is not None:
-            if len(swc.behavior.runnables)>0:
-               self._genRunnables(fh, swc.behavior.runnables)
-         self._endFile(fh)
+class RteGenerator:
+   """
+   Generates Rte.c based on partition. The prefix argument can be used to change both
+   the file name and prefix name used for public function names
+   """
+   def __init__(self, partition, prefix='Rte', include=None):
+      self.partition = partition
+      self.includes = [('Rte.h', False), ('Rte_Type.h', False)] #array of tuples, first element is the name of include header, second element is True if this is a sysinclude
+      self.prefix=prefix
+      self.com_config = None
+      self.local_vars = []
+      self.local_elements = []
+      self.com_access = {'receive': {}, 'send': {}}      
+      if include is not None:
+         for elem in include:
+            self.includes.append(elem)
    
-   def _beginFile(self,fh,typefilename):
-      fh.write('''#ifndef %s
-#define %s
+   
+   def generate(self, filename):
+      self._generate_com_access()
+      self._generate_local_vars()
+      with io.open(filename, 'w', newline='\n') as fp:
+         self._write_includes(fp)
+         self._write_constants_and_typedefs(fp)
+         self._write_local_vars(fp)
+         self._write_public_funcs(fp)
+   
+   def _generate_com_access(self):
+      if self.com_config is not None:                  
+         for element_name in self.partition.data_elements:
+            if element_name in self.com_config.send:
+               data_element = self.partition.data_elements[element_name]['element']
+               isPointer = True if data_element.dataType.isComplexType else False
+               self.com_access['send'][element_name] = C.function(
+                  "%s_Send_%s"%(self.com_config.prefix, element_name),
+                  'Std_ReturnType',                  
+                  args = [C.variable('value', data_element.dataType.name, pointer=isPointer)])
+            elif element_name in self.com_config.receive:
+               data_element = self.partition.data_elements[element_name]['element']
+               isPointer = True if data_element.dataType.isComplexType else False
+               self.com_access['receive'][element_name] = C.function(
+                  "%s_Receive_%s"%(self.com_config.prefix, element_name),
+                  'Std_ReturnType',                  
+                  args = [C.variable('value', data_element.dataType.name, pointer=isPointer)])
+            else:
+               self.local_elements.push(element_name)
 
-'''%(self.headername,self.headername))
+   def _generate_local_vars(self):
+      for element_name in self.local_elements:
+         print("local var: " + element_name)
+   
+   def _write_includes(self, fp):
+      lines = _genCommentHeader('Includes')
+      fp.write('\n'.join(lines)+'\n')
+      code = C.sequence()
+      for include in self.includes:         
+         code.append(C.include(*include))
+      fp.write('\n'.join(code.lines())+'\n\n')
+   
+   def _write_constants_and_typedefs(self, fp):
+      fp.write('\n'.join(_genCommentHeader('Constants and Types'))+'\n\n')
 
-      fh.write('#include "%s"\n'%typefilename)
-      fh.write('#include "Rte.h"\n')
+   def _write_local_vars(self, fp):
+      fp.write('\n'.join(_genCommentHeader('Local Variables'))+'\n')
+      code = C.sequence()
+      # for key in sorted(self.partition.vars.keys()):
+      #    item = self.partition.vars[key]
+      #    var = C.variable(key, item.typename, True)
+      #    code.append(C.statement(var))
+      # fp.write('\n'.join(code.lines())+'\n\n')
+   
+   def _write_public_funcs(self, fp):
+      fp.write('\n'.join(_genCommentHeader('Public Functions'))+'\n')
+      func = C.function(self.prefix+'_Start', 'void')
+      body = C.block(innerIndent=3)
+      #for name in sorted(self.partition.vars.keys()):
+         
+         # rtevar = self.partition.vars[name]
+         # if isinstance(rtevar, autosar.rte.IntegerVariable):
+         #    body.code.append(C.statement('%s = %s'%(rtevar.name, rtevar.initValue)))
+      fp.write(str(func)+'\n')
+      fp.write('\n'.join(body.lines())+'\n\n')     
+      if len(self.partition.serverAPI.read)>0:
+        self._genRead(fp, sorted(self.partition.serverAPI.final['read'], key=lambda x: x.shortname))
+      if len(self.partition.serverAPI.write)>0:
+        self._genWrite(fp, sorted(self.partition.serverAPI.final['write'], key=lambda x: x.shortname))
+      if len(self.partition.serverAPI.receive)>0:
+        self._genReceive(fp, sorted(self.partition.serverAPI.final['receive'], key=lambda x: x.shortname))
+      if len(self.partition.serverAPI.send)>0:
+        self._genSend(fp, sorted(self.partition.serverAPI.final['send'], key=lambda x: x.shortname))
+      #if len(self.partition.serverAPI.call)>0:
+      #  self._genCall(fp, sorted(self.partition.serverAPI.final['call'], key=lambda x: x.shortname))
 
-   def _endFile(self,fh):
-      fh.write('''
-#endif //%s
-'''%self.headername)
+
+   def _genRead(self, fp, prototypes):
+      """Generates all Rte_Read functions"""
+      for proto in prototypes:
+         body = C.block(innerIndent=3)
+         #body.code.append(C.statement('*%s = %s'%(proto.func.args[0].name, proto.rte_var.name)))
+         #print(proto.rte_var.typename)
+         if proto.data_element.name in self.com_access['receive']:
+            func = self.com_access['receive'][proto.data_element.name]
+            body.code.append(C.statement('return '+str(C.fcall(func.name, params=[proto.func.args[0].name]))))
+         else:
+            body.code.append(C.statement('return RTE_E_OK'))
+         fp.write(str(proto.func)+'\n')
+         fp.write('\n'.join(body.lines())+'\n\n')     
+         
+   def _genWrite(self, fp, prototypes):
+      for proto in prototypes:
+         hasComSignal = False
+         body = C.block(innerIndent=3)
+         if proto.data_element.name in self.com_access['send']:
+            func = self.com_access['send'][proto.data_element.name]
+            body.code.append(C.statement('return '+str(C.fcall(func.name, params=[proto.func.args[0].name]))))
+         else:
+            body.code.append(C.statement('return RTE_E_OK'))
+         fp.write(str(proto.func)+'\n')
+         fp.write('\n'.join(body.lines())+'\n\n')     
+         
+   def _genReceive(self, fp, prototypes):
+      for proto in prototypes:         
+         body = C.block(innerIndent=3)         
+         body.code.append(C.statement('return RTE_E_OK'))
+         fp.write(str(proto.func)+'\n')
+         fp.write('\n'.join(body.lines())+'\n\n')     
       
-   def _genCommentHeader(self,fh,comment):
-      fh.write('''
-/**********************************************************************************************************************
- * %s
- *********************************************************************************************************************/
-'''%comment)
+   def _genSend(self, fp, prototypes):
+      for proto in prototypes:         
+         body = C.block(innerIndent=3)
+         body.code.append(C.statement('return RTE_E_OK'))
+         fp.write(str(proto.func)+'\n')
+         fp.write('\n'.join(body.lines())+'\n\n')     
+
+   def _genCall(self, fp, prototypes):
+      for proto in prototypes:         
+         body = C.block(innerIndent=3)
+         body.code.append(C.statement('return RTE_E_OK'))
+         fp.write(str(proto.func)+'\n')
+         fp.write('\n'.join(body.lines())+'\n\n')     
       
+class ComponentHeaderGenerator():
+   def __init__(self, partition):
+      self.partition = partition
+   
+   def generate(self, destdir):
+      for component in self.partition.components:
+         with io.open(os.path.join(destdir, 'Rte_%s.h'%component.swc.name), 'w', newline='\n') as fp:
+            self._genComponentHeader(fp, component)
+   
+   def _genComponentHeader(self, fp, component):
+      ws = component.swc.rootWS()
+      assert(ws is not None)
+      hfile=C.hfile(None, guard='RTE_%s_H'%(component.swc.name.upper()))
+      hfile.code.append(C.include('Rte.h'))
+      hfile.code.append(C.include('Rte_Type.h'))      
+      lines = self._genInitValues(ws, component.swc.requirePorts+component.swc.providePorts)
+      if len(lines)>0:
+         hfile.code.extend([C.line(x) for x in _genCommentHeader('Init Values')])
+         hfile.code.extend(lines)
       
-   def _genInitValues(self, fh, ws, ports):
-      ports = sorted(ports, key=lambda port: port.name)
-      self._genCommentHeader(fh,'Init Values')
+      #Write API
+      hfile.code.append(C.blank())
+      hfile.code.extend([C.line(x) for x in _genCommentHeader('API Prototypes')])
+      for proto in component.clientAPI.get_all():
+         hfile.code.append(C.statement(proto.func))
+      if len(component.clientAPI.final['read'])>0:
+         hfile.code.append(C.blank())
+         hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Read_<p>_<d>')])         
+         hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.clientAPI.final['read']])
+      if len(component.clientAPI.final['write'])>0:
+         hfile.code.append(C.blank())
+         hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Write_<p>_<d>')])         
+         hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.clientAPI.final['write']])
+      if len(component.clientAPI.final['receive'])>0:
+         hfile.code.append(C.blank())
+         hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Receive_<p>_<d>')])         
+         hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.clientAPI.final['receive']])
+      if len(component.clientAPI.final['send'])>0:
+         hfile.code.append(C.blank())
+         hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Send_<p>_<d>')])         
+         hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.clientAPI.final['send']])
+      if len(component.clientAPI.final['mode'])>0:
+         hfile.code.append(C.blank())
+         hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Mode_<p>_<d>')])         
+         hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.clientAPI.final['mode']])
+      if len(component.clientAPI.final['mode'])>0:
+         hfile.code.append(C.blank())
+         hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Mode_<mode>')])         
+         hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.clientAPI.final['mode']])
+      if len(component.clientAPI.final['calprm'])>0:
+         hfile.code.append(C.blank())
+         hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Calprm_<name>')])
+         hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.clientAPI.final['calprm']])
+      if len(component.clientAPI.final['call'])>0:
+         hfile.code.append(C.blank())
+         hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Call_<p>_<o> ')])
+         hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.clientAPI.final['call']])         
+      if len(component.rte_runnables)>0:
+         for name in sorted(component.rte_runnables):
+            runnable = component.rte_runnables[name]
+            tmp = self._writeRunnableProto(runnable)
+            hfile.code.extend(tmp)
+      fp.write('\n'.join(hfile.lines()))
+      fp.write('\n')
+
+   def _genInitValues(self, ws, ports):
+      ports = sorted(ports, key=lambda port: port.name)      
       code = C.sequence()
       for port in ports:                  
          for comspec in port.comspec:               
@@ -301,7 +393,7 @@ class RteHeaderGen:
                      if dataType is not None:
                         prefix = 'Rte_InitValue_%s_%s'%(port.name, comspec.name)
                         code.extend(self._getInitValue(ws, prefix, initValue, dataType))
-      fh.write(str(code))
+      return code
    
    def _getInitValue(self, ws, def_name, value, dataType):
       """
@@ -334,54 +426,16 @@ class RteHeaderGen:
          raise NotImplementedError(type(value))
       return code
    
-   def _genAPIPrototypes(self,fh,prototypeList):
-      self._genCommentHeader(fh,'API prototypes')
-      for prototype in prototypeList:
-         fh.write('{};\n'.format(str(prototype)))
-   
-   def _genReadUnqueued(self,fh,funcList):
-      self._genCommentHeader(fh,'Rte_Read_<p>_<d> (explicit S/R communication with isQueued = false)')
-      for elem in funcList:
-         fh.write("# define {0[shortname]} {0[func].name}\n".format(elem))
-   
-   def _genWriteUnqueued(self,fh,funcList):
-      self._genCommentHeader(fh,'Rte_Write_<p>_<d> (explicit S/R communication with isQueued = false)')
-      for elem in funcList:
-         fh.write("# define {0[shortname]} {0[func].name}\n".format(elem))
-
-   def _genMode(self,fh, funcList):
-      self._genCommentHeader(fh,'Rte_Mode_<p>_<m>')
-      for elem in funcList:
-         fh.write("# define {0[shortname]} {0[func].name}\n".format(elem))
-
-   def _genCalprm(self,fh, funcList):
-      self._genCommentHeader(fh,'Rte_Calprm')
-      for elem in funcList:
-         fh.write("# define {0[shortname]} {0[func].name}\n".format(elem))
-
-   def _genCall(self,fh, funcList):
-      self._genCommentHeader(fh,'Rte_Call_<p>_<o> (C/S invocation)')
-      for elem in funcList:
-         fh.write("# define {0[shortname]} {0[func].name}\n".format(elem))
-   
-   def _genCData(self,fh):
-      self._genCommentHeader(fh,'Rte_CData (SW-C local calibration parameters)')
+   def _writeRunnableProto(self, runnable):      
+      lines = []
+      lines.extend([C.line(x) for x in _genCommentHeader('Runnable %s'%runnable.name)])
+      lines.append(C.statement(runnable.prototype))
+      lines.append(C.blank())
+      return lines
       
-   def _genPIMUserTypes(self ):
-      self._genCommentHeader(fh,'Per-Instance Memory User Types')
-   
-   def _genPIM(self ):
-      self._genCommentHeader(fh,'Rte_Pim (Per-Instance Memory)')
-   
-   def _type2arg(self,typeObj,pointer=False):
-      if ( isinstance(typeObj,autosar.datatype.IntegerDataType) or isinstance(typeObj,autosar.datatype.BooleanDataType) ):
-         return C.variable('data',typeObj.name,pointer=pointer)
-      else:
-         pointer=True
-         return C.variable('data',typeObj.name,pointer=pointer)
-   
-   def _genRunnables(self, fh, runnables):
-      self._genCommentHeader(fh,'Runnables')
-      for runnable in sorted(runnables, key=lambda runnable: runnable.name):
-         line = C.statement(C.function(runnable.name, 'void'))
-         fh.write(str(line)+'\n');
+
+            
+                                
+         
+            
+            

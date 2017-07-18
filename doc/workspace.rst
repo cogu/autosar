@@ -26,8 +26,57 @@ Attributes
    
    A list containing the currently loaded AUTOSAR packages.
 
+Examples
+--------
+
+.. code-block:: python
+
+   import autosar
+   ws = autosar.workspace()
+
+
+
 Loading and saving XML Files
 ----------------------------   
+
+.. py:method:: Workspace.loadXML(filename: str, roles=None)
+
+   automatically opens and loads (imports) all packages found in *filename*. Filename must be a valid .arxml file.
+   
+   roles is an optional dictionary object with roles as key-value pairs where key is the reference of the package and the value is the role name.
+   For valid role names, see the `Workspace.loadPackage <workspace-loadpackage_>`_ method.
+   
+   **Example:**
+   
+   .. code-block:: python
+   
+      import autosar
+   
+      ws = autosar.workspace()
+      ws.loadXML("DataTypes.arxml", roles={"/DataType": "DataType"})
+      ws.loadXML("PortInterfaces.arxml", roles={"/PortInterface": "PortInterface"})
+      ws.loadXML("Constants.arxml", roles={"/Constant": "Constant"})
+
+.. py:method:: Workspace.saveXML(filename: str, packages=None: list)
+
+   saves (exports) the workspace into .arxml format. By default it writes all packages currently in the Workspace.packages list.
+   The packages argument can be used to select a subset of packages to save. It must be a list of strings of package names.
+   
+   **Example:**
+   
+   .. code-block:: python
+
+      import autosar
+      
+      ws = autosar.workspace()
+      ws.openXML("ecu_extract.arxml")
+      ws.loadPackage("Constant", role="Constant")
+      ws.loadPackage("DataType", role="DataType")
+      ws.loadPackage("PortInterface", role="PortInterface")
+
+      ws.saveXML("Constants.arxml", packages=["Constant"])
+      ws.saveXML("DataTypes.arxml", packages=["DataType"])
+      ws.saveXML("PortInterfaces.arxml", packages=["PortInterface"])
            
 .. py:method:: Workspace.openXML(filename: str)
    
@@ -76,44 +125,6 @@ Loading and saving XML Files
       ws.loadPackage("PortInterface", role="PortInterface")
       ws.loadPackage("ComponentType", role="ComponentType")
       
-.. py:method:: Workspace.loadXML(filename: str, roles=None)
-
-   automatically opens and loads (imports) all packages found in *filename*. Filename must be a valid .arxml file.
-   
-   roles is an optional dictionary object with roles as key-value pairs where key is the reference of the package and the value is the role name.
-   For valid role names, see the `Workspace.loadPackage <workspace-loadpackage_>`_ method.
-   
-   **Example:**
-   
-   .. code-block:: python
-   
-      import autosar
-   
-      ws = autosar.workspace()
-      ws.loadXML("DataTypes.arxml", roles={"/DataType": "DataType"})
-      ws.loadXML("PortInterfaces.arxml", roles={"/PortInterface": "PortInterface"})
-      ws.loadXML("Constants.arxml", roles={"/Constant": "Constant"})
-
-.. py:method:: Workspace.saveXML(filename: str, packages=None: list)
-
-   saves (exports) the workspace into .arxml format. By default it writes all packages currently in the Workspace.packages list.
-   The packages argument can be used to select a subset of packages to save. It must be a list of strings of package names.
-   
-   **Example:**
-   
-   .. code-block:: python
-
-      import autosar
-      
-      ws = autosar.workspace()
-      ws.openXML("ecu_extract.arxml")
-      ws.loadPackage("Constant", role="Constant")
-      ws.loadPackage("DataType", role="DataType")
-      ws.loadPackage("PortInterface", role="PortInterface")
-
-      ws.saveXML("Constants.arxml", packages=["Constant"])
-      ws.saveXML("DataTypes.arxml", packages=["DataType"])
-      ws.saveXML("PortInterfaces.arxml", packages=["PortInterface"])
 
 Finding elements in the workspace
 ---------------------------------
@@ -203,14 +214,25 @@ Creating new packages in the workspace
    
    You can optionally set a `role <roles_>`_ for this new package.
    
-**Examplpe:**
+**Example:**
 
 .. code-block:: python
    
    import autosar
 
    ws = autosar.workspace()
+   #Create a new datatype package
    package=ws.createPackage("DataType", role="DataType")
+   
+   #Create a new port interface package
+   package=ws.createPackage("PortInterface", role="PortInterface")
+   
+   #Create a new constant package
+   package=ws.createPackage("Constant", role="Constant")
+
+   #Create a new component type package
+   package=ws.createPackage("ComponentType", role="ComponentType")
+   
 
 Deleting packages and elememts
 ------------------------------

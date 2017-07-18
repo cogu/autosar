@@ -75,7 +75,9 @@ class DataType(Element):
    def __init__(self, name, parent=None, adminData=None):
       super().__init__(name, parent, adminData)
    
-    
+   @property
+   def isComplexType(self):
+      return True if isinstance(self, (RecordDataType, ArrayDataType)) else False
 
 
 class IntegerDataType(DataType):

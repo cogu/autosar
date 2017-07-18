@@ -23,6 +23,19 @@ class SenderReceiverInterface(PortInterface):
    def __iter__(self):
       return iter(self.dataElements)
    
+   def __eq__(self, other):
+      if isinstance(other, self.__class__):
+         if self.name == other.name and self.isService == other.isService and \
+         self.adminData == other.adminData and len(self.dataElements) == len(other.dataElements):
+            if (self.modeGroups is not None) and (other.modeGroups is not None) and len(self.modeGroups) == len(other.modeGroups):
+               for i,elem in enumerate(self.modeGroups):
+                  if elem != other.modeGroups[i]: return False
+            return True
+      return False
+   
+   def __ne__(self, other):
+      return not (self == other)   
+   
    def dir(self):
       return [x.name for x in self.dataElements]         
    
@@ -45,8 +58,7 @@ class SenderReceiverInterface(PortInterface):
       if self.modeGroups is not None:
          for elem in self.modeGroups:
             if elem.name==name:
-               return elem
-         
+               return elem         
       return None
 
    def append(self,elem):
@@ -108,6 +120,22 @@ class ClientServerInterface(PortInterface):
 
    def tag(self,version=None):
       return 'CLIENT-SERVER-INTERFACE'
+
+
+   def __eq__(self, other):
+      if isinstance(other, self.__class__):
+         if self.name == other.name and self.adminData == other.adminData and len(self.operations) == len(other.operations) and \
+         len(self.applicationErrors) == len(other.applicationErrors):
+            for i,operation in enumerate(self.operations):
+               if operation != other.operations[i]: return False
+            for i,applicationError in enumerate(self.applicationErrors):
+               if applicationError != other.applicationErrors[i]: return False            
+            return True
+      return False
+   
+   def __ne__(self, other):
+      return not (self == other)   
+
 
    def asdict(self):
       retval = {'type': self.__class__.__name__, 'name': self.name, 'isService': self.isService, 'operations':[]}
@@ -180,6 +208,14 @@ class ModeGroup(Element):
    def asdict(self):
       return {'type': self.__class__.__name__, 'name':self.name, 'typeRef':self.typeRef}
 
+   def __eq__(self, other):
+      if isinstance(other, self.__class__):
+         if self.name == other.name and self.adminData == other.adminData and self.typeRef == other.typeRef: return True
+      return False
+   
+   def __ne__(self, other):
+      return not (self == other)  
+
 class Operation(Element):
    def __init__(self,name,parent=None):
       super().__init__(name,parent)      
@@ -188,6 +224,20 @@ class Operation(Element):
    
    def tag(self,version=None):
       return 'OPERATION-PROTOTYPE'
+
+   def __eq__(self, other):
+      if isinstance(other, self.__class__):
+         if self.name == other.name and self.adminData == other.adminData and len(self.arguments) == len(other.arguments) and \
+         (len(self.errorRefs) == len(other.errorRefs)):
+            for i,argument in enumerate(self.arguments):
+               if argument != other.arguments[i]: return False
+            for i,errorRef in enumerate(self.errorRefs):
+               if errorRef != other.errorRefs[i]: return False
+            return True
+      return False
+   
+   def __ne__(self, other):
+      return not (self == other)  
 
    def asdict(self):
       data = {'type': self.__class__.__name__, 'name':self.name, 'arguments':[]}
@@ -319,9 +369,29 @@ class ModeDeclarationGroup(Element):
          if elem.name==name:
             return elem      
       return None
+   
+   def __eq__(self, other):
+      if isinstance(other, self.__class__):
+         if self.name == other.name and self.initialModeRef == other.initialModeRef and \
+         len(self.modeDeclarations) == len(other.modeDeclarations) and self.adminData == other.adminData:
+            for i,left in enumerate(self.modeDeclarations):
+               right = other.modeDeclarations[i]
+               if left != right:
+                  return False
+            return True
+      return False
+   
+   def __ne__(self, other):
+      return not (self == other)
 
 class ModeDeclaration(Element):
    def __init__(self,name,parent=None):
       super().__init__(name,parent)
+   def __eq__(self, other):
+      if isinstance(other, self.__class__):
+         if self.name == other.name: return True
+      return False
+   
+   def __ne__(self, other): return not (self == other)
    
    def tag(self,version=None): return "MODE-DECLARATION"

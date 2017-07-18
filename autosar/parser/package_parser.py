@@ -51,6 +51,7 @@ class PackageParser(object):
                           'CLIENT-SERVER-INTERFACE': portInterfacePackageParser.parseClientServerInterface,
                           'CONSTANT-SPECIFICATION': constantPackageParser.parseConstantSpecification,
                           'COMPOSITION-TYPE': componentTypeParser.parseCompositionType,
+                          'SERVICE-COMPONENT-TYPE': componentTypeParser.parseSoftwareComponent,
                           'SYSTEM-SIGNAL': signalParser.parseSystemSignal,
                           'SYSTEM-SIGNAL-GROUP': signalParser.parseSystemSignalGroup,
                           'SYSTEM': systemParser.parseSystem                          

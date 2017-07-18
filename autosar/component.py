@@ -97,6 +97,16 @@ class ComponentType(Element):
          raise NotImplementedError(type(portInterface))
       port = RequirePort(name,portInterface.ref,comspec,parent=self)
       self.requirePorts.append(port)
+   
+   def createProvidePortFromTemplate(self, cls):
+      ws = self.rootWS()      
+      assert(ws is not None)      
+      cls.createProvidePort(ws, self)
+
+   def createRequirePortFromTemplate(self, cls):
+      ws = self.rootWS()      
+      assert(ws is not None)      
+      cls.createRequirePort(ws, self)
 
 class AtomicSoftwareComponent(ComponentType):
    """
@@ -116,6 +126,13 @@ class ApplicationSoftwareComponent(AtomicSoftwareComponent):
 
 class ComplexDeviceDriverComponent(AtomicSoftwareComponent):   
    def tag(self,version=None): return "COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE"
+   
+   def __init__(self,name,parent=None):
+      super().__init__(name,parent)
+
+
+class ServiceComponent(AtomicSoftwareComponent):
+   def tag(self,version=None): return "SERVICE-COMPONENT-TYPE"
    
    def __init__(self,name,parent=None):
       super().__init__(name,parent)
@@ -243,6 +260,8 @@ class CompositionComponent(ComponentType):
                if component.name == parts[0]:
                   port = component.find(parts[1])
                   component = innerComponent
+                  if port is None:
+                     raise ValueError('component %s does not have port with name %s'%(component.name,parts[1]))                  
                   break
          else:
             #assume portRef1 is a full reference
@@ -526,4 +545,4 @@ class DelegationConnector(Element):
    
    def tag(self, version=None):
       return 'DELEGATION-CONNECTOR-PROTOTYPE'
-   
+

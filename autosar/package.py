@@ -195,10 +195,7 @@ class Package(object):
       if role is not None:
          ws = self.rootWS()
          assert(ws is not None)         
-         ws.setRole(pkg.ref, role)
-      
-   
-   
+         ws.setRole(pkg.ref, role)   
          
    def rootWS(self):
       if self.parent is None:
@@ -208,15 +205,25 @@ class Package(object):
       
    def append(self,elem):
       """appends elem to the self.elements list"""
-      if isinstance(elem,autosar.element.Element):         
-         self.elements.append(elem)
-         elem.parent=self
-         self.map['elements'][elem.name]=elem
-      elif isinstance(elem,Package):
-        self.subPackages.append(elem)
-        elem.parent=self
-      else:
-         raise ValueError('unexpected value type %s'%str(type(elem)))
+      isNewElement = True
+      if elem.name in self.map['elements']:
+         isNewElement = False
+         existingElem = self.map['elements'][elem.name]
+         if type(elem) != type(existingElem):
+            raise TypeError('Error: element %s %s already exists in package %s with different type from new element %s'%(str(type(existingElem)), existingElem.name, self.name, str(type(elem))))
+         else:            
+            if elem != existingElem:
+              raise ValueError('Error: element %s %s already exist in package %s using different definition'%(existingElem.name, str(type(existingElem)), self.name))
+      if isNewElement:
+         if isinstance(elem,autosar.element.Element):         
+            self.elements.append(elem)
+            elem.parent=self
+            self.map['elements'][elem.name]=elem
+         elif isinstance(elem,Package):
+           self.subPackages.append(elem)
+           elem.parent=self
+         else:
+            raise ValueError('unexpected value type %s'%str(type(elem)))
 
    def update(self,other):
       """copies/clones each element from other into self.elements"""
@@ -265,7 +272,27 @@ class Package(object):
       self.append(internalBehavior)
       self.append(implementation)
       return swc
+
+   def createServiceComponent(self,swcName,behaviorName=None,implementationName=None,multipleInstance=False):
+      """
+      Creates a new ApplicationSoftwareComponent object and adds it to the package.
+      It also creates an InternalBehavior object as well as an SwcImplementation object.
       
+      """
+      
+      if behaviorName is None:
+         behaviorName = str(swcName)+'_InternalBehavior'
+      if implementationName is None:
+         implementationName = str(swcName)+'_Implementation'
+      swc = autosar.component.ServiceComponent(swcName,self)      
+      internalBehavior = autosar.behavior.InternalBehavior(behaviorName,swc.ref,multipleInstance,self)
+      implementation=autosar.component.SwcImplementation(implementationName,internalBehavior.ref,parent=self)
+      swc.behavior=internalBehavior
+      swc.implementation=implementation
+      self.append(swc)
+      self.append(internalBehavior)
+      self.append(implementation)
+      return swc
 
    def createModeDeclarationGroup(self, name, modeDeclarations, initialMode, adminData=None):
       """
