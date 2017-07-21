@@ -11,13 +11,31 @@ import re
 _validWSRoles = ['DataType', 'Constant', 'PortInterface', 'ComponentType', 'ModeDclrGroup', 'CompuMethod', 'Unit']
 
 class Workspace(object):
-   def __init__(self,version=3.0):
+   def __init__(self, version=3.0, packages=None):
       self.packages = []
       self.version=version
       self.packageParser=None
       self.xmlroot = None
-      self.roles = {'DataType': None, 'Constant': None, 'PortInterface': None, 'ModeDclrGroup': None,
-                    'ComponentType': None, 'CompuMethod': None, 'Unit': None} #stores references to the actor (i.e. package) that acts the role
+      self.roles = {'DataType': None,
+                    'Constant': None,
+                    'PortInterface': None,
+                    'ModeDclrGroup': None,
+                    'ComponentType': None,
+                    'CompuMethod': None,
+                    'Unit': None}
+      self.defaultPackages = {'DataType': 'DataType',
+                              'Constant': 'Constant',
+                              'PortInterface': 'PortInterface',
+                              'ModeDclrGroup': 'ModeDclrGroup',
+                              'ComponentType': 'ComponentType',
+                              'CompuMethod': 'DataTypeSemantics',
+                              'Unit': 'DataTypeUnits'}
+      if packages is not None:
+         for key,value in packages.items():
+            if key in self.defaultPackages:
+               self.defaultPackages[key]=value
+            else:
+               raise ValueError("Unknown role name '%s'"%key)
 
    def __getitem__(self,key):
       if isinstance(key,str):
@@ -326,36 +344,55 @@ class Workspace(object):
       package.createRealDataType('Double', None, None, minValType='INFINITE', maxValType='INFINITE', hasNaN=True, encoding='DOUBLE')
    
    def getDataTypePackage(self):
-      package = self.find("DataType")
+      """
+      Returns the current data type package from the workspace. If the workspace doesn't yet have such package a default package will be created and returned.
+      """
+      package = self.find(self.defaultPackages["DataType"])
       if package is None:
-         package=self.createPackage("DataType", role="DataType")
-         package.createSubPackage("DataTypeSemantics", role="CompuMethod")   
-         package.createSubPackage("DataTypeUnits", role="Unit")
+         package=self.createPackage(self.defaultPackages["DataType"], role="DataType")
+         package.createSubPackage(self.defaultPackages["CompuMethod"], role="CompuMethod")   
+         package.createSubPackage(self.defaultPackages["Unit"], role="Unit")
          Workspace._createDefaultDataTypes(package)
       return package
       
    def getPortInterfacePackage(self):
-      package = self.find("PortInterface")
+      """
+      Returns the current port interface package from the workspace. If the workspace doesn't yet have such package a default package will be created and returned.
+      """
+      package = self.find(self.defaultPackages["PortInterface"])
       if package is None:
-         package=self.createPackage("PortInterface", role="PortInterface")
+         package=self.createPackage(self.defaultPackages["PortInterface"], role="PortInterface")
       return package
       
    def getConstantPackage(self):
-      package = self.find("Constant")
+      """
+      Returns the current constant package from the workspace. If the workspace doesn't yet have such package, a default package will be created and returned.
+      """
+      package = self.find(self.defaultPackages["Constant"])
       if package is None:
-         package=self.createPackage("Constant", role="Constant")
+         package=self.createPackage(self.defaultPackages["Constant"], role="Constant")
       return package
       
    def getModeDclrGroupPackage(self):
-      package = self.find("ModeDclrGroup")
+      """
+      Returns the current mode declaration group package from the workspace. If the workspace doesn't yet have such package, a default package will be created and returned.
+      """
+      package = self.find(self.defaultPackages["ModeDclrGroup"])
       if package is None:
-         package=self.createPackage("ModeDclrGroup", role="ModeDclrGroup")
+         package=self.createPackage(self.defaultPackages["ModeDclrGroup"], role="ModeDclrGroup")
       return package
       
    def getComponentTypePackage(self):
-      package = self.find("ComponentType")
+      """
+      Returns the current component type package from the workspace. If the workspace doesn't yet have such package, a default package will be created and returned.
+      """      
+      if self.roles["ComponentType"] is not None:
+         packageName = self.roles["ComponentType"]
+      else:
+         packageName = self.defaultPackages["ComponentType"]
+      package = self.find(packageName)
       if package is None:
-         package=self.createPackage("ComponentType", role="ComponentType")
+         package=self.createPackage(packageName, role="ComponentType")
       return package
 
 if __name__ == '__main__':

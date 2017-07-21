@@ -5,7 +5,7 @@ import autosar
 import PortInterfaces
 import Signals
 
-class TelltaleHandler(autosar.Template):
+class GaugeHandler(autosar.Template):
    @classmethod
    def apply(cls, ws):
       componentName = cls.__name__
@@ -18,9 +18,8 @@ class TelltaleHandler(autosar.Template):
    @classmethod
    def addPorts(cls, swc):
       componentName = cls.__name__
-      swc.apply(Signals.ParkBrakeStatus.Receive)
-      swc.apply(Signals.DirIndStat.Receive)
-      swc.apply(Signals.BatteryChargeStatus.Receive)
+      swc.apply(Signals.VehicleSpeed.Receive)
+      swc.apply(Signals.EngineSpeed.Receive)
    
    @classmethod
    def addBehavior(cls, swc):
@@ -32,5 +31,5 @@ class TelltaleHandler(autosar.Template):
 
 if __name__ == '__main__':
    ws = autosar.workspace()
-   ws.apply(TelltaleHandler)
-   ws.saveXML('TellTaleHandler.arxml')
+   ws.apply(GaugeHandler)
+   ws.saveXML('GaugeHandler.arxml')

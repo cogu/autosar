@@ -3,18 +3,35 @@ sys.path.insert(0,'..')
 import autosar
 import DataTypes
 
-def _createSenderReceiverInterface(ws, name, dataTypeTemplate):
-   package = ws.getPortInterfacePackage()
-   if package.find(name) is None:
-      ws.apply(dataTypeTemplate)
-      package.createSenderReceiverInterface(name, autosar.DataElement(name, dataTypeTemplate.__name__))
-      
-class ParkBrakeStatus_I(autosar.Template):
+#### Helpers ####
+def createSenderReceiverInterfaceTemplate(name, dataTypeTemplate):
    @classmethod
-   def apply(cls, ws):      
-      _createSenderReceiverInterface(ws, cls.__name__, DataTypes.ParkBrakeStatus_T)
+   def apply(cls, ws):
+      package = ws.getPortInterfacePackage()
+      if package.find(name) is None:
+         ws.apply(cls.dataTypeTemplate)
+         package.createSenderReceiverInterface(name, autosar.DataElement(name, cls.dataTypeTemplate.__name__))
+   return type(name, (autosar.Template,), dict(dataTypeTemplate=dataTypeTemplate, apply=apply))
 
-class DirIndStat_I(autosar.Template):
+#### Sender Receiver Port Interfaces ####
+ParkBrakeStatus_I = createSenderReceiverInterfaceTemplate('ParkBrakeStatus_I', DataTypes.ParkBrakeStatus_T)
+DirIndStat_I = createSenderReceiverInterfaceTemplate('DirIndStat_I', DataTypes.DirIndStat_T)
+BatteryChargeStatus_I = createSenderReceiverInterfaceTemplate('BatteryChargeStatus_I', DataTypes.BatteryChargeStatus_T)
+VehicleSpeed_I = createSenderReceiverInterfaceTemplate('VehicleSpeed_I', DataTypes.VehicleSpeed_T)
+EngineSpeed_I = createSenderReceiverInterfaceTemplate('EngineSpeed_I', DataTypes.EngineSpeed_T)
+FuelLevelPercent_I = createSenderReceiverInterfaceTemplate('FuelLevelPercent_I', DataTypes.Percent_T)
+TripDist_I = createSenderReceiverInterfaceTemplate('TripDist_I', DataTypes.DistanceHiRes_T)
+LowFuelLevelWarning_I = createSenderReceiverInterfaceTemplate('LowFuelLevelWarning_I', DataTypes.InactiveActive_T)
+
+class SimpleNvm_I(autosar.Template):
    @classmethod
-   def apply(cls, ws):      
-      _createSenderReceiverInterface(ws, cls.__name__, DataTypes.DirIndStat_T)
+   def apply(cls, ws):
+      package = ws.getPortInterfacePackage()
+      if package.find(name) is None:
+         operationsList = ['SetRamBlockStatus']
+         portInterface=package.createClientServerInterface(cls.__name__,
+                                                           operationsList,
+                                                           autosar.ApplicationError("E_NOT_OK", 1),
+                                                           isService=True)
+         portInterface["SetRamBlockStatus"].possibleErrors = "E_NOT_OK"
+         portInterface['SetRamBlockStatus'].createInArgument("RamBlockStatus", "Boolean")

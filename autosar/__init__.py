@@ -46,8 +46,8 @@ class DcfParser:
       return dcf
 
 
-def workspace():
-   return autosar.Workspace()
+def workspace(version=3.0, packages=None):
+   return autosar.Workspace(version, packages)
 
 def dcfImport(filename):
    parser = DcfParser()

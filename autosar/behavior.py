@@ -655,7 +655,7 @@ class InternalBehavior(Element):
       self.events.append(event)
       return event
 
-   def createTimingEvent(self, runnableName, period, modeDependency=None, name=None ):
+   def createTimerEvent(self, runnableName, period, modeDependency=None, name=None ):
       self._initSWC()
       ws = self.rootWS()
 
@@ -675,6 +675,12 @@ class InternalBehavior(Element):
          self._processModeDependency(event, modeDependency)
       self.events.append(event)
       return event
+   
+   def createTimingEvent(self, runnableName, period, modeDependency=None, name=None):
+      """
+      alias for createTimerEvent
+      """
+      self.createTimerEvent(runnableName, period, modeDependency, name)
    
    def createOperationInvokedEvent(self, runnableName, operationRef, modeDependency=None, name=None ):
       """
