@@ -35,4 +35,6 @@ C_FuelLevelPercent_IV = createConstantTemplateFromPhysicalType('C_FuelLevelPerce
 C_TripDistA_IV = createConstantTemplateFromPhysicalType('C_TripDistA_IV', DataTypes.DistanceHiRes_T)
 C_TripDistB_IV = createConstantTemplateFromPhysicalType('C_TripDistB_IV', DataTypes.DistanceHiRes_T)
 C_TripDistTotal_IV = createConstantTemplateFromPhysicalType('C_TripDistTotal_IV', DataTypes.DistanceHiRes_T)
-
+C_RtcSeconds_IV = createConstantTemplateFromPhysicalType('C_RtcSeconds_IV', DataTypes.Seconds_T)
+C_RtcMinutes_IV = createConstantTemplateFromPhysicalType('C_RtcMinutes_IV', DataTypes.Minutes_T)
+C_RtcHours_IV = createConstantTemplateFromPhysicalType('C_RtcHours_IV', DataTypes.Hours_T)

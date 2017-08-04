@@ -100,7 +100,7 @@ class Seconds_T(autosar.Template):
    offset=0
    scaling=1
    unit='Seconds'
-   invalidRangeStart=None
+   invalidRangeStart=60
    errorRangeStart=254
    notAvailableRangeStart=255
    @classmethod
@@ -108,6 +108,37 @@ class Seconds_T(autosar.Template):
       package = ws.getDataTypePackage()
       if package.find(cls.__name__) is None:         
          package.createIntegerDataType(cls.__name__, min=cls.minValue, max=cls.maxValue, offset=cls.offset, scaling=cls.scaling, unit=cls.unit)
+
+class Minutes_T(autosar.Template):
+   minValue=0
+   maxValue=255
+   offset=0
+   scaling=1
+   unit='Minutes'
+   invalidRangeStart=60
+   errorRangeStart=254
+   notAvailableRangeStart=255
+   @classmethod
+   def apply(cls, ws):
+      package = ws.getDataTypePackage()
+      if package.find(cls.__name__) is None:         
+         package.createIntegerDataType(cls.__name__, min=cls.minValue, max=cls.maxValue, offset=cls.offset, scaling=cls.scaling, unit=cls.unit)
+
+class Hours_T(autosar.Template):
+   minValue=0
+   maxValue=255
+   offset=0
+   scaling=1
+   unit='Hours'
+   invalidRangeStart=60
+   errorRangeStart=254
+   notAvailableRangeStart=255
+   @classmethod
+   def apply(cls, ws):
+      package = ws.getDataTypePackage()
+      if package.find(cls.__name__) is None:         
+         package.createIntegerDataType(cls.__name__, min=cls.minValue, max=cls.maxValue, offset=cls.offset, scaling=cls.scaling, unit=cls.unit)
+
 
 class DistanceHiRes_T(autosar.Template):
    minValue=0

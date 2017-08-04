@@ -22,12 +22,15 @@ EngineSpeed_I = createSenderReceiverInterfaceTemplate('EngineSpeed_I', DataTypes
 FuelLevelPercent_I = createSenderReceiverInterfaceTemplate('FuelLevelPercent_I', DataTypes.Percent_T)
 TripDist_I = createSenderReceiverInterfaceTemplate('TripDist_I', DataTypes.DistanceHiRes_T)
 LowFuelLevelWarning_I = createSenderReceiverInterfaceTemplate('LowFuelLevelWarning_I', DataTypes.InactiveActive_T)
+RtcSeconds_I = createSenderReceiverInterfaceTemplate('RtcSeconds_I', DataTypes.Seconds_T)
+RtcMinutes_I = createSenderReceiverInterfaceTemplate('RtcMinutes_I', DataTypes.Minutes_T)
+RtcHours_I = createSenderReceiverInterfaceTemplate('RtcHours_I', DataTypes.Hours_T)
 
 class SimpleNvm_I(autosar.Template):
    @classmethod
    def apply(cls, ws):
       package = ws.getPortInterfacePackage()
-      if package.find(name) is None:
+      if package.find(cls.__name__) is None:
          operationsList = ['SetRamBlockStatus']
          portInterface=package.createClientServerInterface(cls.__name__,
                                                            operationsList,

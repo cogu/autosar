@@ -12,4 +12,7 @@ VehicleSpeed = createSenderReceiverPortTemplate('VehicleSpeed', PortInterfaces.V
 EngineSpeed = createSenderReceiverPortTemplate('EngineSpeed', PortInterfaces.EngineSpeed_I, Constants.C_EngineSpeed_IV, aliveTimeout=30)
 FuelLevelPercent = createSenderReceiverPortTemplate('FuelLevelPercent', PortInterfaces.FuelLevelPercent_I, Constants.C_FuelLevelPercent_IV, aliveTimeout=30)
 LowFuelLevelWarning = createSenderReceiverPortTemplate('LowFuelLevelWarning', PortInterfaces.LowFuelLevelWarning_I, Constants.C_LowFuelLevelWarning_IV)
+RtcSeconds = createSenderReceiverPortTemplate('RtcSeconds', PortInterfaces.RtcSeconds_I, Constants.C_RtcSeconds_IV)
+RtcMinutes = createSenderReceiverPortTemplate('RtcMinutes', PortInterfaces.RtcMinutes_I, Constants.C_RtcMinutes_IV)
+RtcHours = createSenderReceiverPortTemplate('RtcHours', PortInterfaces.RtcHours_I, Constants.C_RtcHours_IV)
 
