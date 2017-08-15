@@ -9,7 +9,7 @@ class PortInterfacePackageParser(BaseParser):
    
    
    def loadFromXML(self,root):
-      if self.version == 3:
+      if self.version >= 3.0:
          for elem in root.findall('./ELEMENTS/*'):
             if elem.tag=='SENDER-RECEIVER-INTERFACE':
                portInterface = self.parseSenderReceiverInterface(elem)

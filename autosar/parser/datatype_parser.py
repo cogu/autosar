@@ -9,7 +9,7 @@ class DataTypeParser(BaseParser):
       self.handler=handler
          
    def parseIntegerType(self,root,rootProject=None,parent=None):    
-      if self.version==3:         
+      if self.version>=3.0:
          name=root.find("./SHORT-NAME").text
          minval = int(root.find("./LOWER-LIMIT").text)
          maxval = int(root.find("./UPPER-LIMIT").text)
@@ -25,7 +25,7 @@ class DataTypeParser(BaseParser):
          return dataType
    
    def parseRecordType(self,root,rootProject=None,parent=None):
-      if self.version==3.0:
+      if self.version>=3.0:
          elements = []
          name=root.find("./SHORT-NAME").text         
          for elem in root.findall('./ELEMENTS/RECORD-ELEMENT'):
@@ -35,7 +35,7 @@ class DataTypeParser(BaseParser):
          return dataType
       
    def parseArrayType(self,root,rootProject=None,parent=None):
-      if self.version==3.0:
+      if self.version>=3.0:
          name=root.find("./SHORT-NAME").text         
          length=int(root.find('ELEMENT/MAX-NUMBER-OF-ELEMENTS').text)
          typeRef=root.find('ELEMENT/TYPE-TREF').text
@@ -44,14 +44,14 @@ class DataTypeParser(BaseParser):
          return dataType;
 
    def parseBooleanType(self,root,rootProject=None,parent=None):
-      if self.version==3:
+      if self.version>=3:
          name=root.find("./SHORT-NAME").text         
          dataType=BooleanDataType(name)
          self.parseDesc(root,dataType)
          return dataType
 
    def parseStringType(self,root,rootProject=None,parent=None):
-      if self.version==3.0:
+      if self.version>=3.0:
          name=root.find("./SHORT-NAME").text
          
          length=int(root.find('MAX-NUMBER-OF-CHARS').text)
@@ -61,7 +61,7 @@ class DataTypeParser(BaseParser):
          return dataType
 
    def parseRealType(self,root,rootProject=None,parent=None):
-      if self.version==3.0:
+      if self.version>=3.0:
          name=root.find("./SHORT-NAME").text
          
          elem = root.find("./LOWER-LIMIT")
@@ -85,7 +85,7 @@ class DataTypeSemanticsParser(object):
       self.pkg=pkg
       
    def parse(self,root):
-      if self.version==3.0:
+      if self.version>=3.0:
          for xmlElement in root.findall('./ELEMENTS/*'):
             element = self.parseElement(xmlElement)
    

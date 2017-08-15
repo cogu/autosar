@@ -37,7 +37,7 @@ class ComponentTypeParser(object):
    
    def loadFromXML(self,root):
       """loads constants from a constants package"""
-      if self.version == 3:
+      if self.version >= 3:
          for xmlElem in root.findall('./ELEMENTS/*'):
             componentType = None
             if xmlElem.tag == 'APPLICATION-SOFTWARE-COMPONENT-TYPE':

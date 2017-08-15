@@ -20,7 +20,7 @@ class WriterBase():
    def beginFile(self):
       lines=[]
       lines.append('<?xml version="1.0" encoding="UTF-8"?>')
-      if self.version == 3.0:
+      if self.version >= 3.0:
          lines.append('<AUTOSAR xsi:schemaLocation="http://autosar.org/3.0.2 autosar_302_ext.xsd" xmlns="http://autosar.org/3.0.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">')
          lines.append(self.indentChar+'<TOP-LEVEL-PACKAGES>')
       return lines

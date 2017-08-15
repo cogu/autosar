@@ -64,17 +64,14 @@ class Workspace(object):
 
    def openXML(self,filename):
       version = None
-      xmlroot = parseXMLFile(filename)  #'http://autosar.org/3.0.2'
+      xmlroot = parseXMLFile(filename)
       namespace = getXMLNamespace(xmlroot)
 
       assert (namespace is not None)
       tmp = namespace.split('/')[-1]
-      if tmp == '3.0.2':
-         version = 3.0
-      else:
-         result = re.match(r'r(\d+\.\d+)', tmp)
-         if result is not None:
-            version = float(result.group(1))
+      result = re.match(r'(\d+\.\d+)', tmp)
+      if result is not None:
+         version = float(result.group(1))
       if version is None:
          raise NotImplementedError('unsupported autosar vesion: %s'%namespace)
       removeNamespace(xmlroot,namespace)
