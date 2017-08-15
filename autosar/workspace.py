@@ -11,13 +11,31 @@ import re
 _validWSRoles = ['DataType', 'Constant', 'PortInterface', 'ComponentType', 'ModeDclrGroup', 'CompuMethod', 'Unit']
 
 class Workspace(object):
-   def __init__(self,version=3.0):
+   def __init__(self, version=3.0, packages=None):
       self.packages = []
       self.version=version
       self.packageParser=None
       self.xmlroot = None
-      self.roles = {'DataType': None, 'Constant': None, 'PortInterface': None, 'ModeDclrGroup': None,
-                    'ComponentType': None, 'CompuMethod': None, 'Unit': None} #stores references to the actor (i.e. package) that acts the role
+      self.roles = {'DataType': None,
+                    'Constant': None,
+                    'PortInterface': None,
+                    'ModeDclrGroup': None,
+                    'ComponentType': None,
+                    'CompuMethod': None,
+                    'Unit': None}
+      self.defaultPackages = {'DataType': 'DataType',
+                              'Constant': 'Constant',
+                              'PortInterface': 'PortInterface',
+                              'ModeDclrGroup': 'ModeDclrGroup',
+                              'ComponentType': 'ComponentType',
+                              'CompuMethod': 'DataTypeSemantics',
+                              'Unit': 'DataTypeUnits'}
+      if packages is not None:
+         for key,value in packages.items():
+            if key in self.defaultPackages:
+               self.defaultPackages[key]=value
+            else:
+               raise ValueError("Unknown role name '%s'"%key)
 
    def __getitem__(self,key):
       if isinstance(key,str):
@@ -308,6 +326,75 @@ class Workspace(object):
                self.loadXML(item['path'],roles=roles)
             else:
                raise ValueError('invalid file path "%s"'%item['path'])
-            
+
+   def apply(self, template):      
+      template.apply(self)
+
+   #template support 
+   @classmethod
+   def _createDefaultDataTypes(cls, package):
+      package.createBooleanDataType('Boolean')
+      package.createIntegerDataType('SInt8', -128, 127)
+      package.createIntegerDataType('SInt16', -32768, 32767)
+      package.createIntegerDataType('SInt32', -2147483648, 2147483647)
+      package.createIntegerDataType('UInt8', 0, 255)
+      package.createIntegerDataType('UInt16', 0, 65535)
+      package.createIntegerDataType('UInt32', 0, 4294967295)   
+      package.createRealDataType('Float', None, None, minValType='INFINITE', maxValType='INFINITE')
+      package.createRealDataType('Double', None, None, minValType='INFINITE', maxValType='INFINITE', hasNaN=True, encoding='DOUBLE')
+   
+   def getDataTypePackage(self):
+      """
+      Returns the current data type package from the workspace. If the workspace doesn't yet have such package a default package will be created and returned.
+      """
+      package = self.find(self.defaultPackages["DataType"])
+      if package is None:
+         package=self.createPackage(self.defaultPackages["DataType"], role="DataType")
+         package.createSubPackage(self.defaultPackages["CompuMethod"], role="CompuMethod")   
+         package.createSubPackage(self.defaultPackages["Unit"], role="Unit")
+         Workspace._createDefaultDataTypes(package)
+      return package
+      
+   def getPortInterfacePackage(self):
+      """
+      Returns the current port interface package from the workspace. If the workspace doesn't yet have such package a default package will be created and returned.
+      """
+      package = self.find(self.defaultPackages["PortInterface"])
+      if package is None:
+         package=self.createPackage(self.defaultPackages["PortInterface"], role="PortInterface")
+      return package
+      
+   def getConstantPackage(self):
+      """
+      Returns the current constant package from the workspace. If the workspace doesn't yet have such package, a default package will be created and returned.
+      """
+      package = self.find(self.defaultPackages["Constant"])
+      if package is None:
+         package=self.createPackage(self.defaultPackages["Constant"], role="Constant")
+      return package
+      
+   def getModeDclrGroupPackage(self):
+      """
+      Returns the current mode declaration group package from the workspace. If the workspace doesn't yet have such package, a default package will be created and returned.
+      """
+      package = self.find(self.defaultPackages["ModeDclrGroup"])
+      if package is None:
+         package=self.createPackage(self.defaultPackages["ModeDclrGroup"], role="ModeDclrGroup")
+      return package
+      
+   def getComponentTypePackage(self):
+      """
+      Returns the current component type package from the workspace. If the workspace doesn't yet have such package, a default package will be created and returned.
+      """      
+      if self.roles["ComponentType"] is not None:
+         packageName = self.roles["ComponentType"]
+      else:
+         packageName = self.defaultPackages["ComponentType"]
+      package = self.find(packageName)
+      if package is None:
+         package=self.createPackage(packageName, role="ComponentType")
+      return package
+
 if __name__ == '__main__':
    print("done")
+   
