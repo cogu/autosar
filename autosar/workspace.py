@@ -70,6 +70,8 @@ class Workspace(object):
       assert (namespace is not None)
       tmp = namespace.split('/')[-1]
       result = re.match(r'(\d+\.\d+)', tmp)
+      if result is None:
+         result = re.match(r'r(\d+\.\d+)', tmp)
       if result is not None:
          version = float(result.group(1))
       if version is None:
