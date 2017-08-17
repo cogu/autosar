@@ -78,6 +78,19 @@ class DataTypeParser(BaseParser):
          dataType=RealDataType(name,minval,maxval,minvalType,maxvalType,hasNaN,encoding)
          self.parseDesc(root,dataType)
          return dataType
+   
+   def parseDataConstraint(self, xmlRoot, dummy, parent=None):
+      assert (xmlRoot.tag == 'DATA-CONSTR')
+      name = xmlRoot.find("./SHORT-NAME").text
+      rules=[]
+      for xmlItem in xmlRoot.findall('./DATA-CONSTR-RULES/DATA-CONSTR-RULE/*'):
+         if xmlItem.tag == 'INTERNAL-CONSTRS':            
+            lowerLimit = parseTextNode(xmlItem.find('./LOWER-LIMIT'))
+            upperLimit = parseTextNode(xmlItem.find('./UPPER-LIMIT'))
+            rules.append({'type': 'internalConstraint', 'lowerLimit':int(lowerLimit), 'upperLimit':int(upperLimit)})
+         else:
+            raise NotImplementedError(xmlItem.tag)
+      return DataConstraint(name, rules, parent)
 
 
 class DataTypeSemanticsParser(object):
@@ -150,3 +163,4 @@ class DataTypeUnitsParser(object):
       name = xmlElem.find("./SHORT-NAME").text
       displayName = xmlElem.find("./DISPLAY-NAME").text
       return DataTypeUnitElement(name,displayName)
+

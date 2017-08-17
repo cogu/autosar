@@ -301,4 +301,19 @@ class CompuMethodConst(Element):
             if self.elements[i] != other.elements[i]: return False
          return True
       return False
+
+class InternalConstraint:
+   def __init__(self, lowerLimit=None, upperLimit=None):
+      if lowerLimit is not None:
+         self.lowerLimit = lowerLimit
+      if upperLimit is not None:
+         self.upperLimit = upperLimit
+
+class DataConstraint(Element):
+   def __init__(self, name, rules, parent=None, adminData=None):
+      super().__init__(name, parent, adminData)
+      self.rules = []
+      for rule in rules:
+         if rule['type'] == 'internalConstraint':
+            self.rules.append(InternalConstraint(lowerLimit=rule['lowerLimit'], upperLimit=['upperLimit']))
    

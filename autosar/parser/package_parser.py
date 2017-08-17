@@ -60,7 +60,8 @@ class PackageParser(object):
       elif self.version >= 4.0:         
          self.switcher = {
             'APPLICATION-SW-COMPONENT-TYPE' : componentTypeParser.parseSoftwareComponent,
-            'SWC-IMPLEMENTATION': componentTypeParser.parseSwcImplementation
+            'SWC-IMPLEMENTATION': componentTypeParser.parseSwcImplementation,
+            'DATA-CONSTR': dataTypeParser.parseDataConstraint
          }
          
       else:
