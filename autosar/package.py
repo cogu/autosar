@@ -19,6 +19,13 @@ class Package(object):
       self.parent=parent
       self.role=role
       self.map={'elements':{}}
+   
+   def __getitem__(self,key):
+      if isinstance(key,str):
+         return self.find(key)
+      else:
+         raise ValueError('expected string')
+   
    @property
    def ref(self):
       if self.parent is not None:

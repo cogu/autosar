@@ -19,7 +19,13 @@ class TypeGenerator:
          self._initDefaultType()
       
    
-   def generate(self, filename, ws):
+   def generate(self, filename='Rte_Type.h', dummy=None):
+      """
+      Generates Rte_Type.h
+      Note: The last argument has been deprecated and is no longer in use
+      """
+      if self.partition.isFinalized == False:
+         self.partition.finalize()
       with io.open(filename, 'w', newline='\n') as fp:         
          hfile=C.hfile(filename)
          hfile.code.extend([C.line(x) for x in _genCommentHeader('Includes')])         
@@ -28,6 +34,7 @@ class TypeGenerator:
          (basicTypes,complexTypes,modeTypes) = self.partition.types.getTypes()         
          hfile.code.extend([C.line(x) for x in _genCommentHeader('Data Type Definitions')])
          hfile.code.append(C.blank())
+         ws = self.partition.ws
          unusedDefaultTypes = self._findUnusedDefaultTypes(ws, basicTypes)
          
          first=True

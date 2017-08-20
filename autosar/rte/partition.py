@@ -314,6 +314,7 @@ class Partition:
       self.types = autosar.rte.RteTypeManager() #centralized type manager
       self.isFinalized = False
       self.comLayerPrefix = None
+      self.ws = None
    
    def addComponent(self, swc, runnables = None, name=None):
       """
@@ -325,6 +326,11 @@ class Partition:
       if isinstance(swc, autosar.component.AtomicSoftwareComponent):
          ws = swc.rootWS()         
          assert(ws is not None)
+         if self.ws is None:
+            self.ws = ws
+         else:
+            if self.ws is not ws:
+               raise ValueError('Cannot add components from different workspaces!')               
          component = Component(swc)
          self.components.append(component)         
          if swc.behavior is not None:
