@@ -72,8 +72,9 @@ class DataTypeParser(BaseParser):
          if elem is not None:
             maxval = elem.text
             maxvalType = elem.attrib['INTERVAL-TYPE']
-         hasNaN = True if root.find("./ALLOW-NAN").text == 'true' else False
-         encoding = root.find("./ENCODING").text
+         hasNaNText = parseTextNode(root.find("./ALLOW-NAN"))         
+         hasNaN = True if (hasNaNText is not None and hasNaNText == 'true') else False
+         encoding = parseTextNode(root.find("./ENCODING"))
          dataType=RealDataType(name,minval,maxval,minvalType,maxvalType,hasNaN,encoding)
          self.parseDesc(root,dataType)
          return dataType

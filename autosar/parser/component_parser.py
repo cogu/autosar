@@ -56,6 +56,8 @@ class ComponentTypeParser(object):
          componentType = ApplicationSoftwareComponent(parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
       elif xmlRoot.tag == 'SERVICE-COMPONENT-TYPE': 
          componentType = ServiceComponent(parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
+      elif xmlRoot.tag == 'CALPRM-COMPONENT-TYPE': 
+         componentType = ParameterComponent(parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
       else:
          raise NotImplementedError(xmlRoot.tag)
       for xmlElem in xmlRoot.findall('./*'):

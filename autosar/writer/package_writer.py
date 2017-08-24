@@ -50,6 +50,7 @@ class PackageWriter(WriterBase):
                           'ApplicationSoftwareComponent': self.componentTypeWriter.writeApplicationSoftwareComponentCode,
                           'ComplexDeviceDriverComponent': self.componentTypeWriter.writeComplexDeviceDriverComponentCode,
                           'ServiceComponent': self.componentTypeWriter.writeServiceComponentCode,
+                          'ParameterComponent': self.componentTypeWriter.writeParameterComponentCode,
                           'InternalBehavior': self.behaviorWriter.writeInternalBehaviorCode,
                           'SwcImplementation': self.componentTypeWriter.writeSwcImplementationCode,
                           'CompuMethodConst': self.dataTypeWriter.writeCompuMethodCode,

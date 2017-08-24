@@ -241,6 +241,9 @@ class ComponentTypeWriter(WriterBase):
    def writeCompositionComponentCode(self, swc, localvars):
       return self._writeComponentCode(swc, 'createCompositionComponent', localvars)
 
+   def writeParameterComponentCode(self, swc, localvars):
+      return self._writeComponentCode(swc, 'createParameterComponent', localvars)
+
 
    def _writeComponentCode(self, swc, methodName, localvars):
       lines=[]
@@ -271,7 +274,7 @@ class ComponentTypeWriter(WriterBase):
          portInterface=ws.find(port.portInterfaceRef, role='PortInterface')
          if portInterface is None:
             raise ValueError('invalid reference: '+port.portInterfaceRef)         
-         if isinstance(portInterface,autosar.portinterface.SenderReceiverInterface) or isinstance(portInterface,autosar.portinterface.ClientServerInterface):
+         if isinstance(portInterface,autosar.portinterface.PortInterface):
             #portInterfaceRef
             if ws.roles['PortInterface'] is not None:
                params.append(repr(portInterface.name)) #use name only

@@ -51,10 +51,11 @@ class PackageParser(object):
                           'CLIENT-SERVER-INTERFACE': portInterfacePackageParser.parseClientServerInterface,
                           'CONSTANT-SPECIFICATION': constantPackageParser.parseConstantSpecification,
                           'COMPOSITION-TYPE': componentTypeParser.parseCompositionType,
+                          'CALPRM-COMPONENT-TYPE': componentTypeParser.parseSoftwareComponent,
                           'SERVICE-COMPONENT-TYPE': componentTypeParser.parseSoftwareComponent,
                           'SYSTEM-SIGNAL': signalParser.parseSystemSignal,
                           'SYSTEM-SIGNAL-GROUP': signalParser.parseSystemSignalGroup,
-                          'SYSTEM': systemParser.parseSystem                          
+                          'SYSTEM': systemParser.parseSystem,                    
                           }
       elif self.version >= 4.0:         
          self.switcher = {
