@@ -4,6 +4,7 @@ from autosar.writer.constant_writer import ConstantWriter
 from autosar.writer.component_writer import ComponentTypeWriter
 from autosar.writer.behavior_writer import BehaviorWriter
 from autosar.writer.portinterface_writer import PortInterfaceWriter
+from autosar.writer.signal_writer import SignalWriter
 import collections
 import autosar.behavior
 import autosar.component
@@ -16,6 +17,7 @@ class PackageWriter(WriterBase):
       self.componentTypeWriter = ComponentTypeWriter(version)
       self.behaviorWriter = BehaviorWriter(version)
       self.portInterfaceWriter = PortInterfaceWriter(version)
+      self.signalWriter = SignalWriter(version)
       if self.version >= 3.0:
          self.switcherXML = {'ArrayDataType': self.dataTypeWriter.writeArrayDataTypeXml,
                           'BooleanDataType': self.dataTypeWriter.writeBooleanDataTypeXml,
@@ -38,7 +40,7 @@ class PackageWriter(WriterBase):
                           'ClientServerInterface': self.portInterfaceWriter.writeClientServerInterfaceXML,
                           'Constant': self.constantWriter.writeConstantXML,
                           'CompositionComponent': self.componentTypeWriter.writeCompositionComponentXML,
-                          'SYSTEM-SIGNAL': None,
+                          'SystemSignal': self.signalWriter.writeSignalXML,
                           'SYSTEM': None
                           }
          self.switcherCode = {'ArrayDataType': self.dataTypeWriter.writeArrayDataTypeCode,
