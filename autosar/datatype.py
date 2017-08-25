@@ -310,10 +310,11 @@ class InternalConstraint:
          self.upperLimit = upperLimit
 
 class DataConstraint(Element):
+   def tag(self,version=None): return 'DATA-CONSTR'
    def __init__(self, name, rules, parent=None, adminData=None):
       super().__init__(name, parent, adminData)
       self.rules = []
       for rule in rules:
          if rule['type'] == 'internalConstraint':
-            self.rules.append(InternalConstraint(lowerLimit=rule['lowerLimit'], upperLimit=['upperLimit']))
+            self.rules.append(InternalConstraint(lowerLimit=rule['lowerLimit'], upperLimit=rule['upperLimit']))
    

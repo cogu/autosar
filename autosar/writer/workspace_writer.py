@@ -3,12 +3,12 @@ from autosar.writer.package_writer import PackageWriter
 import collections
 
 class WorkspaceWriter(WriterBase):
-   def __init__(self,version=3):
+   def __init__(self,version=3.0):
       super().__init__(version)
       self.packageWriter=PackageWriter(self.version)
    
    def saveXML(self, ws, fp, packages, ignore):
-      fp.write(self.toXML(ws,packages, ignore))
+      fp.write(self.toXML(ws, packages, ignore))
 
    def toXML(self, ws, packages, ignore):
       lines=self.beginFile()

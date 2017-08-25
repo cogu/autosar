@@ -385,4 +385,36 @@ class DataTypeWriter(WriterBase):
       lines=[]
       ws=localvars['ws']
       return lines
-      
+   
+   def writeDataConstraintXml(self, elem, package):
+      assert(isinstance(elem,autosar.datatype.DataConstraint))
+      ws=elem.rootWS()
+      assert(isinstance(ws,autosar.Workspace))
+
+      lines=[]
+      lines.append("<%s>"%elem.tag(self.version))
+      lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
+      lines.append(self.indent('<DATA-CONSTR-RULES>', 1))
+      for rule in elem.rules:
+         lines.extend(self.indent(self.writeDataConstraintRuleXML(rule), 2))
+      lines.append(self.indent('</DATA-CONSTR-RULES>', 1))
+      lines.append("</%s>"%elem.tag(self.version))
+      return lines
+   
+   def writeDataConstraintRuleXML(self, rule):
+      lines = []
+      lines.append("<DATA-CONSTR-RULE>")
+      if isinstance(rule, autosar.datatype.InternalConstraint):
+         lines.append(self.indent('<INTERNAL-CONSTRS>', 1))
+         lines.append(self.indent('<LOWER-LIMIT INTERVAL-TYPE="CLOSED">{0}</LOWER-LIMIT>'.format(int(rule.lowerLimit)), 2))
+         lines.append(self.indent('<UPPER-LIMIT INTERVAL-TYPE="CLOSED">{0}</UPPER-LIMIT>'.format(int(rule.upperLimit)), 2))
+         lines.append(self.indent('</INTERNAL-CONSTRS>', 1))
+      else:
+         raise NotImplementedError(str(type(rule)))
+      lines.append("</DATA-CONSTR-RULE>")
+      return lines
+         
+   
+   def writeDataConstraintCode(self, dataType, localvars):
+      lines = []            
+      return lines

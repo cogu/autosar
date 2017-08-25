@@ -238,8 +238,11 @@ class Workspace(object):
    def root(self):
       return self
    
-   def saveXML(self,filename,packages=None,ignore=None):
-      writer=autosar.writer.WorkspaceWriter()
+   def saveXML(self,filename, packages=None, ignore=None, version=None):
+      if version is None:
+         writer=autosar.writer.WorkspaceWriter()
+      else:
+         writer=autosar.writer.WorkspaceWriter(version)
       with open(filename, 'w', encoding="utf-8") as fp:
          if isinstance(packages,str): packages=[packages]
          if isinstance(ignore,str): ignore=[ignore]
