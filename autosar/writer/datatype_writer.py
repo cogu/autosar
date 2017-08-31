@@ -418,3 +418,16 @@ class DataTypeWriter(WriterBase):
    def writeDataConstraintCode(self, dataType, localvars):
       lines = []            
       return lines
+
+
+   def writeImplementationDataTypeXML(self, elem, package):
+      lines = []
+      lines.append("<%s>"%elem.tag(self.version))
+      lines.append(self.indent("<SHORT-NAME>%s</SHORT-NAME>"%elem.name, 1))
+      lines.append("</%s>"%elem.tag(self.version))
+      return lines
+
+   def writeImplementationDataTypeCode(self, dataType, localvars):
+      lines = []            
+      return lines
+   

@@ -317,4 +317,25 @@ class DataConstraint(Element):
       for rule in rules:
          if rule['type'] == 'internalConstraint':
             self.rules.append(InternalConstraint(lowerLimit=rule['lowerLimit'], upperLimit=rule['upperLimit']))
-   
+
+class SwDataDefPropsConditional:
+   def tag(self,version=None): return 'SW-DATA-DEF-PROPS-CONDITIONAL'
+   def __init__(self, baseTypeRef = None, swCalibrationAccess = None, compuMethodRef = None, dataConstraintRef = None):
+      self.baseTypeRef = baseTypeRef
+      self.swCalibrationAccess = swCalibrationAccess
+      self.compuMethodRef = compuMethodRef
+      self.dataConstraintRef = dataConstraintRef
+
+class ImplementationDataType(Element):
+   def tag(self,version=None): return 'IMPLEMENTATION-DATA-TYPE'
+   def __init__(self, name, category='VALUE', variants=None, parent=None, adminData=None):
+      super().__init__(name, parent, adminData)
+      self.variants = []
+      if isinstance(variants, collections.Iterable):
+         for elem in variants:
+            if isinstance(elem, SwDataDefPropsConditional):
+               self.variants.append(elem)
+            else:
+               raise ValueError('Invalid type: ', type(elem))
+      
+      

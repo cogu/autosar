@@ -69,8 +69,14 @@ class PackageWriter(WriterBase):
                           'SYSTEM': None
                           }
       elif self.version >= 4.0:
-         self.switcherXML = {'DataConstraint': self.dataTypeWriter.writeDataConstraintXml}
-         self.switcherCode = {'DataConstraint': self.dataTypeWriter.writeDataConstraintCode}
+         self.switcherXML = {
+                              'DataConstraint': self.dataTypeWriter.writeDataConstraintXml,
+                              'ImplementationDataType': self.dataTypeWriter.writeImplementationDataTypeXML
+                            }
+         self.switcherCode = {
+                              'DataConstraint': self.dataTypeWriter.writeDataConstraintCode,
+                              'ImplementationDataType': self.dataTypeWriter.writeImplementationDataTypeCode
+                             }
       else:
          raise NotImplementedError("AUTOSAR version not yet supported")
    

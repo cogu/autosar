@@ -61,7 +61,8 @@ class PackageParser(object):
          self.switcher = {
             'APPLICATION-SW-COMPONENT-TYPE' : componentTypeParser.parseSoftwareComponent,
             'SWC-IMPLEMENTATION': componentTypeParser.parseSwcImplementation,
-            'DATA-CONSTR': dataTypeParser.parseDataConstraint
+            'DATA-CONSTR': dataTypeParser.parseDataConstraint,
+            'IMPLEMENTATION-DATA-TYPE': dataTypeParser.parseImplementationDataType,
          }
          
       else:
@@ -75,6 +76,9 @@ class PackageParser(object):
             parseFunc = self.switcher.get(xmlElement.tag)
             if parseFunc is not None:
                element = parseFunc(xmlElement,self.rootProject,parent=package)
+               if element is None:
+                  print("[package_parser] skipping: %s"%xmlElement.tag)
+                  continue
                element.parent=package
                if isinstance(element,autosar.element.Element)==True:
                   if element.name not in elementNames:
@@ -85,7 +89,7 @@ class PackageParser(object):
                   #raise ValueError("parse error: %s"%type(element))
                   raise ValueError("parse error: %s"%xmlElement.tag)
             else:
-               print("unhandled: %s"%xmlElement.tag)
+               print("[package_parser] unhandled: %s"%xmlElement.tag)
       if xmlRoot.find('SUB-PACKAGES'):
          for xmlPackage in xmlRoot.findall('./SUB-PACKAGES/AR-PACKAGE'):
             name = xmlPackage.find("./SHORT-NAME").text

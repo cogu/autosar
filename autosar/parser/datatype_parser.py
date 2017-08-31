@@ -91,6 +91,13 @@ class DataTypeParser(BaseParser):
          else:
             raise NotImplementedError(xmlItem.tag)
       return DataConstraint(name, rules, parent)
+   
+   def parseImplementationDataType(self, xmlRoot, dummy, parent=None):
+      assert (xmlRoot.tag == 'IMPLEMENTATION-DATA-TYPE')
+      name = parseTextNode(xmlRoot.find("./SHORT-NAME"))
+      dataType = ImplementationDataType(name)
+      return dataType
+      
 
 
 class DataTypeSemanticsParser(object):
