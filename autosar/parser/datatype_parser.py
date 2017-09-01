@@ -1,3 +1,4 @@
+import sys
 from autosar.base import parseXMLFile,splitRef,parseTextNode
 from autosar.datatype import *
 from autosar.parser.parser_base import BaseParser
@@ -87,7 +88,15 @@ class DataTypeParser(BaseParser):
          if xmlItem.tag == 'INTERNAL-CONSTRS':            
             lowerLimit = parseTextNode(xmlItem.find('./LOWER-LIMIT'))
             upperLimit = parseTextNode(xmlItem.find('./UPPER-LIMIT'))
-            rules.append({'type': 'internalConstraint', 'lowerLimit':int(lowerLimit), 'upperLimit':int(upperLimit)})
+            try:
+               lowerLimit = int(lowerLimit)
+            except ValueError:
+               lowerLimit = str(lowerLimit)
+            try:
+               upperLimit = int(upperLimit)
+            except ValueError:
+               upperLimit = str(upperLimit)
+            rules.append({'type': 'internalConstraint', 'lowerLimit':lowerLimit, 'upperLimit':upperLimit})
          else:
             raise NotImplementedError(xmlItem.tag)
       return DataConstraint(name, rules, parent)
@@ -95,10 +104,41 @@ class DataTypeParser(BaseParser):
    def parseImplementationDataType(self, xmlRoot, dummy, parent=None):
       assert (xmlRoot.tag == 'IMPLEMENTATION-DATA-TYPE')
       name = parseTextNode(xmlRoot.find("./SHORT-NAME"))
-      dataType = ImplementationDataType(name)
+      category = parseTextNode(xmlRoot.find("CATEGORY")) #category is a generic string identifier
+      dataType = ImplementationDataType(name, category)
+      self.parseDesc(xmlRoot,dataType)
+      for xmlItem in xmlRoot.findall('./SW-DATA-DEF-PROPS/SW-DATA-DEF-PROPS-VARIANTS/*'):
+         if xmlItem.tag == 'SW-DATA-DEF-PROPS-CONDITIONAL':
+            self.parseSwDataDefPropsConditional(xmlItem, dataType)
+         else:
+            raise NotImplementedError(xmlItem.tag)
       return dataType
       
+   def parseSwDataDefPropsConditional(self, xmlRoot, parent=None):
+      assert (xmlRoot.tag == 'SW-DATA-DEF-PROPS-CONDITIONAL')
+      (baseTypeRef, swCalibrationAccess, compuMethodRef, dataConstraintRef, swPointerTargetPropsXML) = (None, None, None, None, None)
+      for xmlItem in xmlRoot.findall('./*'):
+         if xmlItem.tag == 'BASE-TYPE-REF':
+            baseTypeRef = parseTextNode(xmlItem)
+         elif xmlItem.tag == 'SW-CALIBRATION-ACCESS':
+            swCalibrationAccess = parseTextNode(xmlItem)
+         elif xmlItem.tag == 'COMPU-METHOD-REF':
+            compuMethodRef = parseTextNode(xmlItem)
+         elif xmlItem.tag == 'DATA-CONSTR-REF':
+            dataConstraintRef = parseTextNode(xmlItem)         
+         elif xmlItem.tag == 'SW-POINTER-TARGET-PROPS':
+            swPointerTargetPropsXML = xmlItem            
+         elif xmlItem.tag == 'IMPLEMENTATION-DATA-TYPE-REF':
+            pass
+         else:
+            raise NotImplementedError(xmlItem.tag)
+         variant = SwDataDefPropsConditional(baseTypeRef, swCalibrationAccess, compuMethodRef, dataConstraintRef, parent)
+         if swPointerTargetPropsXML is not None:
+            variant.swPointerTargetProps = self.parseSwPointerTargetProps(swPointerTargetPropsXML, variant)
+         parent.variants.append(variant)
 
+   def parseSwPointerTargetProps(self, rootXML, parent = None):
+      return None
 
 class DataTypeSemanticsParser(object):
    def __init__(self,pkg,version=3.0):

@@ -2,7 +2,7 @@ import autosar.package
 import autosar.element
 
 
-from autosar.base import hasAdminData,parseAdminDataNode
+from autosar.base import hasAdminData, parseAdminDataNode, parseTextNode
 from autosar.parser.portinterface_parser import PortInterfacePackageParser,CEPParameterGroupPackageParser,ModeDeclarationGroupPackageParser
 from autosar.parser.constant_parser import ConstantPackageParser
 from autosar.parser.datatype_parser import DataTypeParser,DataTypeSemanticsParser,DataTypeUnitsParser
@@ -31,7 +31,7 @@ class PackageParser(object):
       systemParser=SystemParser(self,self.version)
       self.switcher=None
       
-      if self.version >= 3.0 and self.version < 4.0:         
+      if self.version >= 3.0 and self.version < 4.0:
          self.switcher = {'ARRAY-TYPE': dataTypeParser.parseArrayType,
                           'BOOLEAN-TYPE': dataTypeParser.parseBooleanType,
                           'INTEGER-TYPE': dataTypeParser.parseIntegerType,
@@ -90,10 +90,20 @@ class PackageParser(object):
                   raise ValueError("parse error: %s"%xmlElement.tag)
             else:
                print("[package_parser] unhandled: %s"%xmlElement.tag)
-      if xmlRoot.find('SUB-PACKAGES'):
-         for xmlPackage in xmlRoot.findall('./SUB-PACKAGES/AR-PACKAGE'):
-            name = xmlPackage.find("./SHORT-NAME").text
-            subPackage = autosar.package.Package(name)           
-            self.loadXML(subPackage,xmlPackage)
+      
+      if self.version >= 3.0 and self.version < 4.0:
+         if xmlRoot.find('SUB-PACKAGES'):
+            for xmlPackage in xmlRoot.findall('./SUB-PACKAGES/AR-PACKAGE'):
+               name = xmlPackage.find("./SHORT-NAME").text
+               subPackage = autosar.package.Package(name)           
+               self.loadXML(subPackage,xmlPackage)
+               package.subPackages.append(subPackage)
+               subPackage.parent=package
+      elif self.version >= 4.0:
+         for subPackageXML in xmlRoot.findall('./AR-PACKAGES/AR-PACKAGE'):
+            name = parseTextNode(subPackageXML.find("./SHORT-NAME"))
+            subPackage = autosar.package.Package(name)
+            self.loadXML(subPackage, subPackageXML)
             package.subPackages.append(subPackage)
             subPackage.parent=package
+         

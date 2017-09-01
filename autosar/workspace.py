@@ -235,7 +235,7 @@ class Workspace(object):
    def findWS(self):
       return self
    
-   def root(self):
+   def rootWS(self):
       return self
    
    def saveXML(self,filename, packages=None, ignore=None, version=None):

@@ -406,8 +406,8 @@ class DataTypeWriter(WriterBase):
       lines.append("<DATA-CONSTR-RULE>")
       if isinstance(rule, autosar.datatype.InternalConstraint):
          lines.append(self.indent('<INTERNAL-CONSTRS>', 1))
-         lines.append(self.indent('<LOWER-LIMIT INTERVAL-TYPE="CLOSED">{0}</LOWER-LIMIT>'.format(int(rule.lowerLimit)), 2))
-         lines.append(self.indent('<UPPER-LIMIT INTERVAL-TYPE="CLOSED">{0}</UPPER-LIMIT>'.format(int(rule.upperLimit)), 2))
+         lines.append(self.indent('<LOWER-LIMIT INTERVAL-TYPE="CLOSED">{0}</LOWER-LIMIT>'.format(rule.lowerLimit), 2))
+         lines.append(self.indent('<UPPER-LIMIT INTERVAL-TYPE="CLOSED">{0}</UPPER-LIMIT>'.format(rule.upperLimit), 2))
          lines.append(self.indent('</INTERNAL-CONSTRS>', 1))
       else:
          raise NotImplementedError(str(type(rule)))
@@ -421,13 +421,36 @@ class DataTypeWriter(WriterBase):
 
 
    def writeImplementationDataTypeXML(self, elem, package):
+      assert(isinstance(elem, autosar.datatype.ImplementationDataType))
+      ws=elem.rootWS()
+      assert(ws is not None)
       lines = []
       lines.append("<%s>"%elem.tag(self.version))
       lines.append(self.indent("<SHORT-NAME>%s</SHORT-NAME>"%elem.name, 1))
+      lines.append(self.indent("<SW-DATA-DEF-PROPS>", 1))
+      if len(elem.variants)>=0:
+         lines.append(self.indent("<SW-DATA-DEF-PROPS-VARIANTS>", 2))
+         for variant in elem.variants:
+            if isinstance(variant, autosar.datatype.SwDataDefPropsConditional):
+               lines.extend(self.indent(self.writeSwDataDefPropsConditionalXML(ws, variant), 3))
+         lines.append(self.indent("</SW-DATA-DEF-PROPS-VARIANTS>", 2))
       lines.append("</%s>"%elem.tag(self.version))
+      lines.append(self.indent("</SW-DATA-DEF-PROPS>", 1))
       return lines
 
    def writeImplementationDataTypeCode(self, dataType, localvars):
       lines = []            
       return lines
    
+   def writeSwDataDefPropsConditionalXML(self, ws, elem):         
+      assert(isinstance(elem, autosar.datatype.SwDataDefPropsConditional))
+      
+      lines = []
+      lines.append("<%s>"%elem.tag(self.version))
+      if elem.baseTypeRef is not None:
+         baseType=ws.find(elem.baseTypeRef)
+         if baseType is None:
+            raise ValueError('invalid reference: '+elem.baseTypeRef)
+         lines.append(self.indent('"<BASE-TYPE-REF DEST="%s">%s</BASE-TYPE-REF>"'%(baseType.tag(self.version), elem.baseTypeRef),1))
+      lines.append("</%s>"%elem.tag(self.version))
+      return lines

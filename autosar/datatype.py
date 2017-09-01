@@ -320,20 +320,50 @@ class DataConstraint(Element):
 
 class SwDataDefPropsConditional:
    def tag(self,version=None): return 'SW-DATA-DEF-PROPS-CONDITIONAL'
-   def __init__(self, baseTypeRef = None, swCalibrationAccess = None, compuMethodRef = None, dataConstraintRef = None):
+   def __init__(self, baseTypeRef = None, swCalibrationAccess = None, compuMethodRef = None, dataConstraintRef = None, parent = None):
       self.baseTypeRef = baseTypeRef
       self.swCalibrationAccess = swCalibrationAccess
       self.compuMethodRef = compuMethodRef
-      self.dataConstraintRef = dataConstraintRef
+      self.dataConstraintRef = dataConstraintRef      
+      self.parent = parent
+      self._swImplPolicy=None
+   
+   @property
+   def swImplPolicy(self):
+      return self._swImplPolicy
+   
+   @swImplPolicy.setter
+   def swImplPolicy(self, value):
+      ucvalue=str(value).upper()
+      enum_values = ["CONST", "FIXED", "MEASUREMENT-POINT", "QUEUED", "STANDARD"]
+      if ucvalue in enun_values:
+         self._swImplPolicy = ucvalue
+      else:
+         raise ValueError('invalid swImplPolicy value: ' +  value)
+
+
+class SwPointerTargetProps:
+   def tag(self,version=None): return 'SW-POINTER-TARGET-PROPS'
+   def __init__(self, name, category='VALUE', variants=None, parent=None):
+      self.category = category
+      self.variants = []
+      if isinstance(variants, collections.Iterable):
+         for elem in variants:
+            if isinstance(elem, SwDataDefPropsConditional) or isinstance(elem, SwPointerTargetProps):
+               self.variants.append(elem)
+            else:
+               raise ValueError('Invalid type: ', type(elem))
+      
 
 class ImplementationDataType(Element):
    def tag(self,version=None): return 'IMPLEMENTATION-DATA-TYPE'
    def __init__(self, name, category='VALUE', variants=None, parent=None, adminData=None):
       super().__init__(name, parent, adminData)
+      self.category = category
       self.variants = []
       if isinstance(variants, collections.Iterable):
          for elem in variants:
-            if isinstance(elem, SwDataDefPropsConditional):
+            if isinstance(elem, SwDataDefPropsConditional) or isinstance(elem, SwPointerTargetProps):
                self.variants.append(elem)
             else:
                raise ValueError('Invalid type: ', type(elem))
