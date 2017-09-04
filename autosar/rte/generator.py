@@ -343,6 +343,7 @@ class ComponentHeaderGenerator():
       hfile.code.append(C.blank())
       hfile.code.extend([C.line(x) for x in _genCommentHeader('API Prototypes')])
       for proto in component.clientAPI.get_all():
+         assert proto.func is not None
          hfile.code.append(C.statement(proto.func))
       if len(component.clientAPI.final['read'])>0:
          hfile.code.append(C.blank())
@@ -440,6 +441,7 @@ class ComponentHeaderGenerator():
       lines.append(C.blank())
       return lines
       
+         
 
             
                                 

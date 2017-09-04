@@ -44,8 +44,9 @@ class ReceivePortFunction(PortFunction):
 
 class CallPortFunction(PortFunction):
    """port function for Rte_Call actions"""
-   def __init__(self, shortname, func, portInterface, operation):
+   def __init__(self, shortname, func, port, portInterface, operation):
       super().__init__(shortname, func)
+      self.port = port
       self.portInterface = portInterface
       self.operation = operation
 
@@ -191,7 +192,7 @@ class Component:
             isPointer = True
          func.add_arg(C.variable(argument.name, dataType.name, pointer=isPointer))
          
-         rte_port_func = CallPortFunction(shortname, func, portInterface, operation)
+         rte_port_func = CallPortFunction(shortname, func, port, portInterface, operation)
          self.clientAPI.call[shortname] = rte_port_func
          
    def create_data_receive_point(self, ws, port, data_element, data_type):
@@ -446,7 +447,8 @@ class Partition:
             port_func = component.clientAPI.call[key]
             rte_runnable = self._findServerRunnable(component, port_func)
             if rte_runnable is None:
-               raise RuntimeError('Error: no RTE runnable found for %s in component %s'%(port_func.shortname, component.swc.name))
+               #raise RuntimeError('Error: no RTE runnable found for %s in component %s'%(port_func.shortname, component.swc.name))
+               port_func.func = self._createDefaultFunction(component, port_func.port, port_func.operation)
             else:
                port_func.func = rte_runnable.prototype
 
@@ -523,3 +525,21 @@ class Partition:
             raise ValueError('error: %s already defined'%shortname)
          component.clientAPI.__dict__[ftype.lower()][shortname] = CalPrmPortFunction(shortname, func)
       
+   def _createDefaultFunction(self, component, port, operation):
+      ws = component.swc.rootWS()
+      assert(ws is not None)
+      func_name='_'.join([self.prefix,'Call', component.swc.name, port.name, operation.name])
+      func = C.function(func_name, 'Std_ReturnType')
+      portInterface = ws.find(port.portInterfaceRef)
+      if portInterface is None:
+         raise ValueError("Error: invalid port interface reference: "+port.portInterfaceRef)
+      for argument in operation.arguments:
+         dataType = ws.find(argument.typeRef)
+         if dataType is None:
+            raise ValueError('Error: Invalid type reference: '+argument.typeRef)
+         self.types.processType(ws, dataType)
+         isPointer = False
+         if dataType.isComplexType or (argument.direction == 'OUT') or (argument.direction == 'INOUT'):
+            isPointer = True
+         func.add_arg(C.variable(argument.name, dataType.name, pointer=isPointer))
+      return func
