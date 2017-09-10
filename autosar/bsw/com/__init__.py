@@ -1,2 +1,2 @@
-from autosar.bsw.com.com_impl import *
+from autosar.bsw.com.config import *
 

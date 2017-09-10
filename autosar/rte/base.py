@@ -1,4 +1,8 @@
 import autosar.datatype
+from collections import namedtuple
+
+PortInstance = namedtuple('PortRef', 'component port')
+PortConnector = namedtuple('PortConnector', 'provide require')
 
 class RteTypeManager:
    

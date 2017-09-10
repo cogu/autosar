@@ -1,11 +1,13 @@
 import autosar.base
+from autosar.bsw.com.signal import Signal
 
-class Signal:
-   def __init__(self, name, dataType):
-      self.name = name
-      self.dataType = dataType
 
 class Config:
+   """
+   Com configuration
+   
+   With this class you can create Com_Receive and Com_Send upper layer interfaces
+   """
    def __init__(self, prefix = 'Com'):
       self.prefix = prefix
       self.receive={}

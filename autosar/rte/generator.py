@@ -196,9 +196,10 @@ class RteGenerator:
             self.includes.append(elem)
    
    
-   def generate(self, filename):
+   def generate(self, dest_dir='.'):
       self._generate_com_access()
       self._generate_local_vars()
+      filename = dest_dir+'/'+self.prefix+'.c'
       with io.open(filename, 'w', newline='\n') as fp:
          self._write_includes(fp)
          self._write_constants_and_typedefs(fp)
@@ -224,10 +225,14 @@ class RteGenerator:
                   args = [C.variable('value', data_element.dataType.name, pointer=isPointer)])
             else:
                self.local_elements.push(element_name)
+      else:
+         for element_name in self.partition.data_elements:
+            self.local_elements.append(element_name)
 
    def _generate_local_vars(self):
       for element_name in self.local_elements:
-         print("local var: " + element_name)
+         data_element = self.partition.data_elements[element_name]
+         print(data_element)
    
    def _write_includes(self, fp):
       lines = _genCommentHeader('Includes')
@@ -442,9 +447,10 @@ class ComponentHeaderGenerator():
       return lines
       
          
-
-            
-                                
-         
-            
-            
+class MockRteGenerator(RteGenerator):
+   def __init__(self, partition, prefix='MockRte'):
+      self.partition = partition
+      self.prefix = prefix
+   
+   def generate(self, dest_dir):
+      pass

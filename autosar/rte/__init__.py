@@ -5,6 +5,7 @@ import sys
 from autosar.rte.base import *
 from autosar.rte.generator import *
 from autosar.rte.partition import *
+from autosar.rte.config import *
 
 class Variable:
    def __init__(self, name, typename, isQueued=False, queueLen=None, initValue=None):
