@@ -362,7 +362,7 @@ class Partition:
       creates a connector between an inner and outer port or between two inner ports
       portRef1 and portRef2 can be of either formats:
       'componentName/portName', 'portName' or 'componentRef/portName'
-      """      
+      """
       assert (self.ws is not None)
       port1, component1 = self._analyzePortRef(portRef1)
       port2, component2 = self._analyzePortRef(portRef2)
@@ -385,7 +385,7 @@ class Partition:
       else:
          raise ValueError('invalid connector arguments ("%s", "%s")'%(portRef1, portRef2))
 
-   
+
    def autoConnect(self):
       """
       Attemts to create compatible connectors between components
@@ -398,19 +398,23 @@ class Partition:
             requirePortInstances.append(PortInstance(swc, port))
          for port in swc.providePorts:
             providePortInstances.append(PortInstance(swc, port))
-      
+
       for requirePortInstance in requirePortInstances:
          providePortInstance = self._findCompatibleProvidePort(requirePortInstance, providePortInstances)
-            
+         if providePortInstance is not None:
+            self._createConnectorInternal(providePortInstance, requirePortInstance)
+
    def _findCompatibleProvidePort(self, requirePortInstance, providePortInstances):
       requirePortInterface = self.ws.find(requirePortInstance.port.portInterfaceRef)
       if requirePortInterface is None: raise ValueError("Invalid port interface ref: %s"%requirePortInstance.port.portInterfaceRef)
       for providePortInstance in providePortInstances:
          providePortInterface = self.ws.find(providePortInstance.port.portInterfaceRef)
          if providePortInterface is None: raise ValueError("Invalid port interface ref: %s"%providePortInstance.port.portInterfaceRef)
-         if requirePortInterface==providePortInterface:
-            self._createConnectorInternal(providePortInstance, requirePortInstance)            
-         
+         if requirePortInterface==providePortInterface and (requirePortInstance.port.name == providePortInstance.port.name):            
+            return providePortInstance
+      return None
+            
+
    def _createConnectorInternal(self, providePortInstance, requirePortInstance):
       connectorName='_'.join([providePortInstance.component.name, providePortInstance.port.name, requirePortInstance.component.name, requirePortInstance.port.name])
       if connectorName in self.assemblyConnectorMap:
@@ -419,7 +423,7 @@ class Partition:
       self.assemblyConnectors.append(connector)
       self.assemblyConnectorMap[connectorName]=connector
       return connector
-   
+
    def _process_parameter_ports(self, component, ws, swc):
       for port in swc.requirePorts:
          portInterface = ws.find(port.portInterfaceRef)
