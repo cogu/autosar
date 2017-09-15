@@ -70,6 +70,8 @@ class PackageWriter(WriterBase):
                           }
       elif self.version >= 4.0:
          self.switcherXML = {
+                              'CompuMethodConst': self.dataTypeWriter.writeCompuMethodXML,
+                              'CompuMethodRational': self.dataTypeWriter.writeCompuMethodXML,
                               'DataConstraint': self.dataTypeWriter.writeDataConstraintXml,
                               'ImplementationDataType': self.dataTypeWriter.writeImplementationDataTypeXML
                             }
@@ -107,10 +109,16 @@ class PackageWriter(WriterBase):
       else:
          lines.append(self.indent("<ELEMENTS/>",1))
       if len(package.subPackages)>0:
-         lines.append(self.indent("<SUB-PACKAGES>",1))
-         for subPackage in package.subPackages:
-            lines.extend(self.indent(self.toXML(subPackage,ignore),2))
-         lines.append(self.indent("</SUB-PACKAGES>",1))
+         if self.version >= 3.0 and self.version < 4.0:
+            lines.append(self.indent("<SUB-PACKAGES>",1))
+            for subPackage in package.subPackages:
+               lines.extend(self.indent(self.toXML(subPackage,ignore),2))
+            lines.append(self.indent("</SUB-PACKAGES>",1))
+         elif self.version >= 4.0:
+            lines.append(self.indent("<AR-PACKAGES>",1))
+            for subPackage in package.subPackages:
+               lines.extend(self.indent(self.toXML(subPackage,ignore),2))
+            lines.append(self.indent("</AR-PACKAGES>",1))            
       lines.extend(self.endPackage())
       return lines
    

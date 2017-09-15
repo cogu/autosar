@@ -61,8 +61,9 @@ class PackageParser(object):
          self.switcher = {
             'APPLICATION-SW-COMPONENT-TYPE' : componentTypeParser.parseSoftwareComponent,
             'SWC-IMPLEMENTATION': componentTypeParser.parseSwcImplementation,
+            'COMPU-METHOD': dataTypeSemanticsParser.parseCompuMethod,
             'DATA-CONSTR': dataTypeParser.parseDataConstraint,
-            'IMPLEMENTATION-DATA-TYPE': dataTypeParser.parseImplementationDataType,
+            'IMPLEMENTATION-DATA-TYPE': dataTypeParser.parseImplementationDataType,            
          }
          
       else:

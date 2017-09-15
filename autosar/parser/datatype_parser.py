@@ -1,7 +1,8 @@
 import sys
-from autosar.base import parseXMLFile,splitRef,parseTextNode
+from autosar.base import parseXMLFile,splitRef,parseTextNode,hasAdminData,parseAdminDataNode
 from autosar.datatype import *
 from autosar.parser.parser_base import BaseParser
+
 
 class DataTypeParser(BaseParser):
    def __init__(self,handler,version=3.0):
@@ -85,9 +86,17 @@ class DataTypeParser(BaseParser):
       name = xmlRoot.find("./SHORT-NAME").text
       rules=[]
       for xmlItem in xmlRoot.findall('./DATA-CONSTR-RULES/DATA-CONSTR-RULE/*'):
-         if xmlItem.tag == 'INTERNAL-CONSTRS':            
-            lowerLimit = parseTextNode(xmlItem.find('./LOWER-LIMIT'))
-            upperLimit = parseTextNode(xmlItem.find('./UPPER-LIMIT'))
+         if xmlItem.tag == 'INTERNAL-CONSTRS':
+            lowerLimitXML = xmlItem.find('./LOWER-LIMIT')
+            upperLimitXML = xmlItem.find('./UPPER-LIMIT')
+            lowerLimit = parseTextNode(lowerLimitXML)
+            upperLimit = parseTextNode(upperLimitXML)            
+            lowerLimitType = 'CLOSED'
+            upperLimitType = 'CLOSED'
+            if lowerLimitXML.attrib['INTERVAL-TYPE']=='OPEN':
+               lowerLimitType='OPEN'
+            if upperLimitXML.attrib['INTERVAL-TYPE']=='OPEN':
+               upperLimitType='OPEN'
             try:
                lowerLimit = int(lowerLimit)
             except ValueError:
@@ -96,10 +105,13 @@ class DataTypeParser(BaseParser):
                upperLimit = int(upperLimit)
             except ValueError:
                upperLimit = str(upperLimit)
-            rules.append({'type': 'internalConstraint', 'lowerLimit':lowerLimit, 'upperLimit':upperLimit})
+            rules.append({'type': 'internalConstraint', 'lowerLimit':lowerLimit, 'upperLimit':upperLimit, 'lowerLimitType':lowerLimitType, 'upperLimitType':upperLimitType,})
          else:
             raise NotImplementedError(xmlItem.tag)
-      return DataConstraint(name, rules, parent)
+      elem = DataConstraint(name, rules, parent)
+      if hasAdminData(xmlRoot):
+         elem.adminData=parseAdminDataNode(xmlRoot.find('ADMIN-DATA'))
+      return elem
    
    def parseImplementationDataType(self, xmlRoot, dummy, parent=None):
       assert (xmlRoot.tag == 'IMPLEMENTATION-DATA-TYPE')

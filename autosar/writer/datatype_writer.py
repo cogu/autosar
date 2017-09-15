@@ -394,6 +394,8 @@ class DataTypeWriter(WriterBase):
       lines=[]
       lines.append("<%s>"%elem.tag(self.version))
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
+      if elem.adminData is not None:
+         lines.extend(self.indent(self.writeAdminDataXML(elem.adminData),1))
       lines.append(self.indent('<DATA-CONSTR-RULES>', 1))
       for rule in elem.rules:
          lines.extend(self.indent(self.writeDataConstraintRuleXML(rule), 2))
@@ -406,8 +408,8 @@ class DataTypeWriter(WriterBase):
       lines.append("<DATA-CONSTR-RULE>")
       if isinstance(rule, autosar.datatype.InternalConstraint):
          lines.append(self.indent('<INTERNAL-CONSTRS>', 1))
-         lines.append(self.indent('<LOWER-LIMIT INTERVAL-TYPE="CLOSED">{0}</LOWER-LIMIT>'.format(rule.lowerLimit), 2))
-         lines.append(self.indent('<UPPER-LIMIT INTERVAL-TYPE="CLOSED">{0}</UPPER-LIMIT>'.format(rule.upperLimit), 2))
+         lines.append(self.indent('<LOWER-LIMIT INTERVAL-TYPE="{0}">{1}</LOWER-LIMIT>'.format(rule.lowerLimitType, rule.lowerLimit), 2))
+         lines.append(self.indent('<UPPER-LIMIT INTERVAL-TYPE="{0}">{1}</UPPER-LIMIT>'.format(rule.lowerLimitType, rule.upperLimit), 2))
          lines.append(self.indent('</INTERNAL-CONSTRS>', 1))
       else:
          raise NotImplementedError(str(type(rule)))
@@ -427,6 +429,7 @@ class DataTypeWriter(WriterBase):
       lines = []
       lines.append("<%s>"%elem.tag(self.version))
       lines.append(self.indent("<SHORT-NAME>%s</SHORT-NAME>"%elem.name, 1))
+      lines.append(self.indent("<CATEGORY>%s</CATEGORY>" % elem.category, 1))
       lines.append(self.indent("<SW-DATA-DEF-PROPS>", 1))
       if len(elem.variants)>=0:
          lines.append(self.indent("<SW-DATA-DEF-PROPS-VARIANTS>", 2))
@@ -434,8 +437,8 @@ class DataTypeWriter(WriterBase):
             if isinstance(variant, autosar.datatype.SwDataDefPropsConditional):
                lines.extend(self.indent(self.writeSwDataDefPropsConditionalXML(ws, variant), 3))
          lines.append(self.indent("</SW-DATA-DEF-PROPS-VARIANTS>", 2))
-      lines.append("</%s>"%elem.tag(self.version))
       lines.append(self.indent("</SW-DATA-DEF-PROPS>", 1))
+      lines.append("</%s>"%elem.tag(self.version))      
       return lines
 
    def writeImplementationDataTypeCode(self, dataType, localvars):
@@ -450,7 +453,8 @@ class DataTypeWriter(WriterBase):
       if elem.baseTypeRef is not None:
          baseType=ws.find(elem.baseTypeRef)
          if baseType is None:
-            raise ValueError('invalid reference: '+elem.baseTypeRef)
+            #raise ValueError('invalid reference: '+elem.baseTypeRef)
+            return ''
          lines.append(self.indent('"<BASE-TYPE-REF DEST="%s">%s</BASE-TYPE-REF>"'%(baseType.tag(self.version), elem.baseTypeRef),1))
       lines.append("</%s>"%elem.tag(self.version))
       return lines

@@ -303,11 +303,20 @@ class CompuMethodConst(Element):
       return False
 
 class InternalConstraint:
-   def __init__(self, lowerLimit=None, upperLimit=None):
+   def __init__(self, lowerLimit=None, upperLimit=None, lowerLimitType='CLOSED', upperLimitType='CLOSED'):
       if lowerLimit is not None:
          self.lowerLimit = lowerLimit
       if upperLimit is not None:
          self.upperLimit = upperLimit
+      if lowerLimitType == 'CLOSED' or lowerLimitType == 'OPEN':
+         self.lowerLimitType = lowerLimitType
+      else:
+         raise ValueError(lowerLimitType)
+      if upperLimitType == 'CLOSED' or upperLimitType == 'OPEN':
+         self.upperLimitType = upperLimitType
+      else:
+         raise ValueError(upperLimitType)
+
 
 class DataConstraint(Element):
    def tag(self,version=None): return 'DATA-CONSTR'
@@ -316,7 +325,7 @@ class DataConstraint(Element):
       self.rules = []
       for rule in rules:
          if rule['type'] == 'internalConstraint':
-            self.rules.append(InternalConstraint(lowerLimit=rule['lowerLimit'], upperLimit=rule['upperLimit']))
+            self.rules.append(InternalConstraint(lowerLimit=rule['lowerLimit'], upperLimit=rule['upperLimit'], lowerLimitType=rule['lowerLimitType'], upperLimitType=rule['upperLimitType']))
 
 class SwDataDefPropsConditional:
    def tag(self,version=None): return 'SW-DATA-DEF-PROPS-CONDITIONAL'
