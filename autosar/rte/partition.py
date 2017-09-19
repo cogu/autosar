@@ -83,28 +83,23 @@ class Operation:
 
 class TimerEvent:
    """Runnable triggered by timer"""
-   def __init__(self, name, rte_runnable):
-      self.name = name
-      self.rte_runnable = rte_runnable
+   def __init__(self, runnable):      
+      self.runnable = runnable
 
 
-class OperationInvokeEvent:
+class OperationInvokedEvent:
    """triggered by server invocation"""
-   def __init__(self, name, rte_runnable ):
-      self.name = name
-      self.rte_runnable = rte_runnable
-
-
-   def createPrototype(self):
-      ws = self.operation.rootWS()
-
-      return func
+   def __init__(self, runnable, port, operation):
+      self.runnable = runnable
+      self.port = port
+      self.operation = operation
+      self.runnable.prototype=C.function(runnable.symbol, 'Std_ReturnType', args=operation.arguments)
 
 class ModeSwitchEvent:
    """
    Runnable triggered by mode switch event
    """
-   def __init__(self, ws, ar_event, rte_runnable):
+   def __init__(self, ws, ar_event, runnable):
       modeDeclaration = ws.find(ar_event.modeInstRef.modeDeclarationRef)
       if modeDeclaration is None:
          raise ValueError("Error: invalid reference: %s"+ar_event.modeInstRef.modeDeclarationRef)
@@ -113,7 +108,7 @@ class ModeSwitchEvent:
       self.name = "%s_%s_%s"%(self.activationType, mode.name, modeDeclaration.name)
       self.mode=mode.name
       self.modeDeclaration=modeDeclaration.name
-      self.rte_runnable = rte_runnable
+      self.runnable = runnable
 
 class Port:
    def __init__(self, ws, ar_port, parent):
@@ -165,7 +160,31 @@ class Port:
       for operation in self.operations:
          if operation.name == name: return operation
       raise KeyError("No operation with name "+name)
-
+   
+   def process_types(self, ws, type_manager):
+      for data_element in self.data_elements:
+         type_manager.processType(ws, data_element.dataType)
+      for operation in self.operations:
+         for argument in operation.ar_operation.arguments:
+            data_type = ws.find(argument.typeRef)
+            if data_type is None:
+               raise ValueError('Invalid Type Reference: '+argument.typeRef)
+            type_manager.processType(ws, data_type)
+      
+   def update_client_api(self, api):
+      for port_func in self.portAPI.values():
+         if isinstance(port_func, ReadPortFunction):
+            api.read[port_func.func.name]=port_func
+         elif isinstance(port_func, WritePortFunction):
+            api.write[port_func.func.name]=port_func
+         elif isinstance(port_func, SendPortFunction):
+            api.send[port_func.func.name]=port_func
+         elif isinstance(port_func, ReceivePortFunction):
+            api.receive[port_func.func.name]=port_func
+         elif isinstance(port_func, CallPortFunction):
+            api.call[port_func.func.name]=port_func
+         elif isinstance(port_func, CalPrmPortFunction):
+            api.calprm[port_func.func.name]=port_func
 
 class ProvidePort(Port):
    """
@@ -316,12 +335,9 @@ class Component:
       self.name = swc.name
       self.swc = swc
       self.clientAPI = ComponentAPI() #function calls towards the RTE (stuff that the RTE must provide)
-      #self.read = {}
-      #self.write = {}
-      self.rte_runnables = {}
-      self.rte_events = []
+#      self.rte_runnables = {}
+      self.events = []
       self.runnables = []
-      #self.parameters = set()
       self.data_elements = []
       self.rte_prefix = rte_prefix
       self.is_finalized = False
@@ -334,10 +350,15 @@ class Component:
          self.requirePorts.append(RequirePort(ws, ar_port, self))
 
 
-   def finalize(self):
-      if not self.is_finalized:
+   def finalize(self,ws, type_manager):
+      if not self.is_finalized:         
+         for port in self.requirePorts+self.providePorts:
+            port.process_types(ws, type_manager)
+            port.update_client_api(self.clientAPI)
          self.clientAPI.finalize()
+         self._runnables_finalize()
          self.is_finalized=True
+         
       #self._create_data_elements()
 
    def get_runnable(self, name):
@@ -359,7 +380,7 @@ class Component:
    def process_runnables(self, ws):
       if self.swc.behavior is not None:
          for ar_runnable in self.swc.behavior.runnables:
-            runnable = Runnable(ar_runnable.name, ar_runnable.symbol)
+            runnable = Runnable(ar_runnable)
             self.runnables.append(runnable)
             for dataPoint in ar_runnable.dataReceivePoints+ar_runnable.dataSendPoints:
                ar_port=ws.find(dataPoint.portRef)
@@ -374,8 +395,7 @@ class Component:
                   port = self.find_require_port(ar_port.name)
                data_element = port.find_data_element(ar_data_element.name)
                runnable.data_element_access.append(data_element)
-               port.create_data_access_api(ws, data_element)
-               #print("%s needs to access %s/%s"%(runnable.name, data_element.parent.name, data_element.name))
+               port.create_data_access_api(ws, data_element)               
 
             for callPoint in ar_runnable.serverCallPoints:
                for instanceRef in callPoint.operationInstanceRefs:
@@ -388,17 +408,47 @@ class Component:
                   port = self.find_require_port(ar_port.name)
                   operation = port.find_operation(ar_operation.name)
                   runnable.operation_access.append(operation)
-                  port.create_server_call_api(ws, operation)                  
-
-
+                  port.create_server_call_api(ws, operation)
+         for ar_event in self.swc.behavior.events:
+            ar_runnable = ws.find(ar_event.startOnEventRef)
+            if ar_runnable is None:
+               raise ValueError('Invalid StartOnEvent reference: '+ar_event.startOnEventRef)
+            for runnable in self.runnables:
+               if runnable.inner is ar_runnable:
+                  break
+            else:
+               raise ValueError('Runnable not found')
+            if isinstance(ar_event, autosar.behavior.TimingEvent):               
+               event = TimerEvent(runnable)
+            elif isinstance(ar_event, autosar.behavior.ModeSwitchEvent):
+               event = ModeSwitchEvent(ws, ar_event, runnable)
+            elif isinstance(ar_event, autosar.behavior.OperationInvokedEvent):
+               port_refs = autosar.base.splitRef(ar_event.operationInstanceRef.portRef)
+               operation_refs = autosar.base.splitRef(ar_event.operationInstanceRef.operationRef)
+               port = self.find_provide_port(port_refs[-1])
+               assert (port is not None) and (port.ar_port is ws.find(ar_event.operationInstanceRef.portRef))
+               operation = port.find_operation(operation_refs[-1])
+               assert (operation is not None)               
+               event = OperationInvokedEvent(runnable, port, operation)
+            else:
+               raise NotImplementedError(str(type(event)))
+            self.events.append(event)
+   
+   def _runnables_finalize(self):
+      operation_invoke_events = [event for event in self.events if isinstance(event, OperationInvokedEvent)]
+      for runnable in self.runnables:
+         if runnable.prototype is None:         
+            runnable.prototype = (C.function(runnable.symbol, 'void'))
 
 class Runnable:
    """RTE Runnable"""
-   def __init__(self, name, symbol, prototype = None):
-      self.name = name
-      self.symbol = symbol
+   def __init__(self, ar_runnable):
+      self.inner = ar_runnable
+      self.name = ar_runnable.name
+      self.symbol = ar_runnable.symbol
       self.data_element_access=[]
       self.operation_access=[]
+      self.prototype = None
 
 class Partition:
 
@@ -436,18 +486,7 @@ class Partition:
       if not self.isFinalized:
          for component in self.components:
             component.process_runnables(self.ws)
-            component.finalize()
-            #if component.swc.behavior is not None:
-            #self._process_server_runnables(component, ws, swc, runnables)
-            #   self._process_runnables(component, ws, swc, runnables)
-            #self._process_events(component, ws, swc, runnables)
-         #self._process_parameter_ports(component, ws, swc)
-
-            
-#            self._resolveCallPoints(component)
-#            self._resolve_data_elements(component)
-#            self._resolveParameters(component)
-#            self.serverAPI.update(component.clientAPI)
+            component.finalize(self.ws, self.types)
       self.isFinalized=True
 
    def createConnector(self, portRef1, portRef2):
@@ -506,17 +545,17 @@ class Partition:
       provide_port.connectors.append(require_port)
       require_port.connectors.append(provide_port)
 
-   def _process_parameter_ports(self, component, ws, swc):
-      for port in swc.requirePorts:
-         portInterface = ws.find(port.portInterfaceRef)
-         if portInterface is not None:
-            if isinstance(portInterface, autosar.portinterface.ParameterInterface):
-               for data_element in portInterface.dataElements:
-                  data_type = ws.find(data_element.typeRef)
-                  if data_type is None:
-                     raise ValueError("Error: Invalid type reference: "+ data_element.typeRef)
-                  self.types.processType(ws, data_type)
-                  component.create_parameter(ws, port, data_element, data_type)
+   # def _process_parameter_ports(self, component, ws, swc):
+   #    for port in swc.requirePorts:
+   #       portInterface = ws.find(port.portInterfaceRef)
+   #       if portInterface is not None:
+   #          if isinstance(portInterface, autosar.portinterface.ParameterInterface):
+   #             for data_element in portInterface.dataElements:
+   #                data_type = ws.find(data_element.typeRef)
+   #                if data_type is None:
+   #                   raise ValueError("Error: Invalid type reference: "+ data_element.typeRef)
+   #                self.types.processType(ws, data_type)
+   #                component.create_parameter(ws, port, data_element, data_type)
 
    def _process_events(self, component, ws, swc, runnables=None):
       for event in swc.behavior.events:
@@ -549,51 +588,50 @@ class Partition:
                      return port
       return None
 
-   def _resolveCallPoints(self, component):
-      if len(component.clientAPI.call):
-         for key in component.clientAPI.call:
-            port_func = component.clientAPI.call[key]
-            rte_runnable = self._findServerRunnable(component, port_func)
-            if rte_runnable is None:
-               #raise RuntimeError('Error: no RTE runnable found for %s in component %s'%(port_func.shortname, component.swc.name))
-               port_func.func = self._createDefaultFunction(component, port_func.port, port_func.operation)
-            else:
-               port_func.func = rte_runnable.prototype
-
-
-   def _findServerRunnable(self, component, port_func):
-      for component2 in self.components:
-         if component2 is component:
-            next
-         for rte_runnable in component2.rte_runnables.values():
-            if rte_runnable.isServerRunnable:
-               if (rte_runnable.serverPortInterface is port_func.portInterface) and (rte_runnable.serverOperation is port_func.operation):
-                   return rte_runnable
-      return None
-
-   def _resolveParameters(self, component):
-      ws = component.swc.rootWS()
-      assert(ws is not None)
-      for elem in component.parameters:
-         (componentRef,portRef,dataElemRef)=elem
-         swc=ws.find(componentRef)
-         port=ws.find(portRef)
-         dataElement = ws.find(dataElemRef)
-         if dataElement is None:
-            raise ValueError(dataElemRef)
-         typeObj=ws.find(dataElement.typeRef)
-         if typeObj is None:
-            raise ValueError('invalid reference: %s'%dataElement.typeRef)
-         self.types.processType(ws, typeObj)
-         ftype='Calprm'
-         if self.mode == 'single':
-            fname='%s_%s_%s_%s_%s'%(self.prefix, ftype, swc_name, port.name, dataElement.name)
-         elif self.mode == 'full':
-            fname='%s_%s_%s_%s'%(self.prefix, ftype, port.name, dataElement.name)
-         else:
-            raise ValueError('invalid mode value. Valid modes are "full" and "single"')
-         shortname='Rte_%s_%s_%s'%(ftype, port.name, dataElement.name)
-         func=C.function(fname, typeObj.name)
-         if shortname in component.clientAPI.__dict__[ftype.lower()]:
-            raise ValueError('error: %s already defined'%shortname)
-         component.clientAPI.__dict__[ftype.lower()][shortname] = CalPrmPortFunction(shortname, func)
+   # def _resolveCallPoints(self, component):
+   #    if len(component.clientAPI.call):
+   #       for key in component.clientAPI.call:
+   #          port_func = component.clientAPI.call[key]
+   #          rte_runnable = self._findServerRunnable(component, port_func)
+   #          if rte_runnable is None:               
+   #             port_func.func = self._createDefaultFunction(component, port_func.port, port_func.operation)
+   #          else:
+   #             port_func.func = rte_runnable.prototype
+   # 
+   # 
+   # def _findServerRunnable(self, component, port_func):
+   #    for component2 in self.components:
+   #       if component2 is component:
+   #          next
+   #       for rte_runnable in component2.rte_runnables.values():
+   #          if rte_runnable.isServerRunnable:
+   #             if (rte_runnable.serverPortInterface is port_func.portInterface) and (rte_runnable.serverOperation is port_func.operation):
+   #                 return rte_runnable
+   #    return None
+   # 
+   # def _resolveParameters(self, component):
+   #    ws = component.swc.rootWS()
+   #    assert(ws is not None)
+   #    for elem in component.parameters:
+   #       (componentRef,portRef,dataElemRef)=elem
+   #       swc=ws.find(componentRef)
+   #       port=ws.find(portRef)
+   #       dataElement = ws.find(dataElemRef)
+   #       if dataElement is None:
+   #          raise ValueError(dataElemRef)
+   #       typeObj=ws.find(dataElement.typeRef)
+   #       if typeObj is None:
+   #          raise ValueError('invalid reference: %s'%dataElement.typeRef)
+   #       self.types.processType(ws, typeObj)
+   #       ftype='Calprm'
+   #       if self.mode == 'single':
+   #          fname='%s_%s_%s_%s_%s'%(self.prefix, ftype, swc_name, port.name, dataElement.name)
+   #       elif self.mode == 'full':
+   #          fname='%s_%s_%s_%s'%(self.prefix, ftype, port.name, dataElement.name)
+   #       else:
+   #          raise ValueError('invalid mode value. Valid modes are "full" and "single"')
+   #       shortname='Rte_%s_%s_%s'%(ftype, port.name, dataElement.name)
+   #       func=C.function(fname, typeObj.name)
+   #       if shortname in component.clientAPI.__dict__[ftype.lower()]:
+   #          raise ValueError('error: %s already defined'%shortname)
+   #       component.clientAPI.__dict__[ftype.lower()][shortname] = CalPrmPortFunction(shortname, func)

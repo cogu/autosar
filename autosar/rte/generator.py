@@ -226,8 +226,9 @@ class RteGenerator:
             else:
                self.local_elements.push(element_name)
       else:
-         for element_name in self.partition.data_elements:
-            self.local_elements.append(element_name)
+         pass
+#         for element_name in self.partition.data_elements:
+#            self.local_elements.append(element_name)
 
    def _generate_local_vars(self):
       for element_name in self.local_elements:
@@ -382,9 +383,8 @@ class ComponentHeaderGenerator():
          hfile.code.append(C.blank())
          hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Call_<p>_<o> ')])
          hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.clientAPI.final['call']])         
-      if len(component.rte_runnables)>0:
-         for name in sorted(component.rte_runnables):
-            runnable = component.rte_runnables[name]
+      if len(component.runnables)>0:
+         for runnable in sorted(component.runnables, key=lambda x: x.symbol):
             tmp = self._writeRunnableProto(runnable)
             hfile.code.extend(tmp)
       fp.write('\n'.join(hfile.lines()))
