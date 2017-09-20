@@ -183,13 +183,13 @@ class RteGenerator:
    Generates Rte.c based on partition. The prefix argument can be used to change both
    the file name and prefix name used for public function names
    """
-   def __init__(self, partition, prefix='Rte', include=None):
-      self.partition = partition
+   def __init__(self, cfg, prefix='Rte', include=None):
+      self.cfg = cfg
+      self.partition=self.cfg.partition
       self.includes = [('Rte.h', False), ('Rte_Type.h', False)] #array of tuples, first element is the name of include header, second element is True if this is a sysinclude
       self.prefix=prefix
       self.com_config = None
-      self.local_vars = []
-      self.local_elements = []
+      self.data_elements = []
       self.com_access = {'receive': {}, 'send': {}}      
       if include is not None:
          for elem in include:
@@ -198,7 +198,7 @@ class RteGenerator:
    
    def generate(self, dest_dir='.'):
       self._generate_com_access()
-      self._generate_local_vars()
+      self._generate_data_elements()
       filename = dest_dir+'/'+self.prefix+'.c'
       with io.open(filename, 'w', newline='\n') as fp:
          self._write_includes(fp)
@@ -230,10 +230,10 @@ class RteGenerator:
 #         for element_name in self.partition.data_elements:
 #            self.local_elements.append(element_name)
 
-   def _generate_local_vars(self):
-      for element_name in self.local_elements:
-         data_element = self.partition.data_elements[element_name]
-         print(data_element)
+   def _generate_data_elements(self):
+      pass
+#      for data_element in self.data_elements:         
+#         print(data_element)
    
    def _write_includes(self, fp):
       lines = _genCommentHeader('Includes')
@@ -249,21 +249,16 @@ class RteGenerator:
    def _write_local_vars(self, fp):
       fp.write('\n'.join(_genCommentHeader('Local Variables'))+'\n')
       code = C.sequence()
-      # for key in sorted(self.partition.vars.keys()):
-      #    item = self.partition.vars[key]
-      #    var = C.variable(key, item.typename, True)
-      #    code.append(C.statement(var))
-      # fp.write('\n'.join(code.lines())+'\n\n')
+      for data_element in sorted(self.partition.data_element_map.values(), key=lambda x: x.symbol):
+         var = C.variable(data_element.symbol, data_element.dataType.name, True)
+         code.append(C.statement(var))
+      fp.write('\n'.join(code.lines())+'\n\n')
    
    def _write_public_funcs(self, fp):
       fp.write('\n'.join(_genCommentHeader('Public Functions'))+'\n')
       func = C.function(self.prefix+'_Start', 'void')
       body = C.block(innerIndent=3)
-      #for name in sorted(self.partition.vars.keys()):
-         
-         # rtevar = self.partition.vars[name]
-         # if isinstance(rtevar, autosar.rte.IntegerVariable):
-         #    body.code.append(C.statement('%s = %s'%(rtevar.name, rtevar.initValue)))
+      self._write_init_values(body)
       fp.write(str(func)+'\n')
       fp.write('\n'.join(body.lines())+'\n\n')     
       if len(self.partition.serverAPI.read)>0:
@@ -276,32 +271,38 @@ class RteGenerator:
         self._genSend(fp, sorted(self.partition.serverAPI.final['send'], key=lambda x: x.shortname))
       #if len(self.partition.serverAPI.call)>0:
       #  self._genCall(fp, sorted(self.partition.serverAPI.final['call'], key=lambda x: x.shortname))
-
+   
+   def _write_init_values(self, body):
+      for data_element in sorted(self.partition.data_element_map.values(), key=lambda x: x.symbol):
+         if data_element.initValue is not None:
+            body.code.append(C.statement('%s = %s'%(data_element.symbol, data_element.initValue)))
+      
+      
 
    def _genRead(self, fp, prototypes):
       """Generates all Rte_Read functions"""
-      for proto in prototypes:
-         body = C.block(innerIndent=3)
-         #body.code.append(C.statement('*%s = %s'%(proto.func.args[0].name, proto.rte_var.name)))
-         #print(proto.rte_var.typename)
-         if proto.data_element.name in self.com_access['receive']:
-            func = self.com_access['receive'][proto.data_element.name]
+      for port_func in prototypes:
+         body = C.block(innerIndent=3)         
+         if port_func.data_element.name in self.com_access['receive']:
+            func = self.com_access['receive'][port_func.data_element.name]
             body.code.append(C.statement('return '+str(C.fcall(func.name, params=[proto.func.args[0].name]))))
          else:
+            body.code.append(C.statement('*%s = %s'%(port_func.func.args[0].name, port_func.data_element.symbol)))
             body.code.append(C.statement('return RTE_E_OK'))
-         fp.write(str(proto.func)+'\n')
+         fp.write(str(port_func.func)+'\n')
          fp.write('\n'.join(body.lines())+'\n\n')     
          
    def _genWrite(self, fp, prototypes):
-      for proto in prototypes:
+      for port_func in prototypes:
          hasComSignal = False
          body = C.block(innerIndent=3)
-         if proto.data_element.name in self.com_access['send']:
-            func = self.com_access['send'][proto.data_element.name]
-            body.code.append(C.statement('return '+str(C.fcall(func.name, params=[proto.func.args[0].name]))))
+         if port_func.data_element.name in self.com_access['send']:
+            func = self.com_access['send'][port_func.data_element.name]
+            body.code.append(C.statement('return '+str(C.fcall(func.name, params=[port_func.func.args[0].name]))))
          else:
+            body.code.append(C.statement('%s = %s'%(port_func.data_element.symbol, port_func.func.args[0].name)))
             body.code.append(C.statement('return RTE_E_OK'))
-         fp.write(str(proto.func)+'\n')
+         fp.write(str(port_func.func)+'\n')
          fp.write('\n'.join(body.lines())+'\n\n')     
          
    def _genReceive(self, fp, prototypes):

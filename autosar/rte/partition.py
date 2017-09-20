@@ -58,18 +58,17 @@ class DataElement:
    RTE wrapper around an autosar.portinterface.DataElement
    """
    def __init__(self, name, parent, dataType, initValue = None, isQueued=False, queueLength=None):
+      self.symbol = None
       self.name = name
       self.dataType = dataType
       assert(parent is not None)
       self.parent = parent
       self.isQueued = isQueued
       self.queueLength = queueLength
-      if (initValue is not None) and (isinstance(initValue, autosar.constant.Constant)):
+      if initValue is not None:
          self.initValue = initValue.value
       else:
          self.initValue = None
-      #self.senders=[]
-      #self.receivers=[]
 
 class Operation:
    """
@@ -136,7 +135,6 @@ class Port:
                for comspec in ar_port.comspec:
                   if (comspec.name == data_element.name) and (comspec.initValueRef is not None):
                      initValue = ws.find(comspec.initValueRef)
-
             self.data_elements.append(DataElement(data_element.name, self, data_type, initValue, data_element.isQueued))
       elif isinstance(port_interface, autosar.portinterface.ClientServerInterface):
          for operation in port_interface.operations:
@@ -216,8 +214,7 @@ class ProvidePort(Port):
          if len(ar_port.comspec)>0:
             for comspec in ar_port.comspec:
                if (comspec.name == rte_data_element.name) and (comspec.initValueRef is not None):
-                  initValue = ws.find(comspec.initValueRef)
-         rte_data_element = DataElement(self.name, data_type, initValue, rte_data_element.isQueued)
+                  initValue = ws.find(comspec.initValueRef)         
          if call_type == 'Send':
             rte_port_func = SendPortFunction(shortname, func, rte_data_element)
          else:
@@ -256,8 +253,7 @@ class RequirePort(Port):
             for comspec in ar_port.comspec:
                if (comspec.name == rte_data_element.name) and (comspec.initValueRef is not None):
                   initValue = ws.find(comspec.initValueRef)
-                  queueLength = comspec.queueLength
-         rte_data_element = DataElement(self.name, data_type, initValue, rte_data_element.isQueued, queueLength)
+                  queueLength = comspec.queueLength         
          if call_type == 'Read':
             rte_port_func = ReadPortFunction(shortname, func, rte_data_element)
          else:
@@ -338,7 +334,7 @@ class Component:
 #      self.rte_runnables = {}
       self.events = []
       self.runnables = []
-      self.data_elements = []
+      self.data_vars = []
       self.rte_prefix = rte_prefix
       self.is_finalized = False
       self.requirePorts = []
@@ -355,9 +351,9 @@ class Component:
          for port in self.requirePorts+self.providePorts:
             port.process_types(ws, type_manager)
             port.update_client_api(self.clientAPI)
-         self.clientAPI.finalize()
-         self._runnables_finalize()
-         self.is_finalized=True
+         self.clientAPI.finalize()         
+         self._runnables_finalize()         
+      self.is_finalized=True
          
       #self._create_data_elements()
 
@@ -439,6 +435,23 @@ class Component:
       for runnable in self.runnables:
          if runnable.prototype is None:         
             runnable.prototype = (C.function(runnable.symbol, 'void'))
+   
+   def create_data_elements(self, data_element_map):
+      
+      for provide_port in self.providePorts:
+         for require_port in provide_port.connectors:
+            if len(require_port.data_elements)>0:
+               for port_func in require_port.portAPI.values():
+                  if isinstance(port_func, (ReadPortFunction, ReceivePortFunction)) and port_func.data_element.parent is require_port:
+                     data_element = provide_port.find_data_element(port_func.data_element.name)
+                     assert(data_element is not None)
+                     data_element_name = '_'.join([self.name,provide_port.name,data_element.name])
+                     if data_element_name not in data_element_map:
+                        data_element.symbol = data_element_name
+                        data_element_map[data_element_name] = data_element                        
+                        #reassign require_port data element to access the data element from the provide port
+                        port_func.data_element = data_element
+                     
 
 class Runnable:
    """RTE Runnable"""
@@ -452,16 +465,15 @@ class Runnable:
 
 class Partition:
 
-   def __init__(self, mode='full', prefix='Rte'):
-      self.mode = mode #can be single or full
+   def __init__(self, mode='full', prefix='Rte'):      
       self.prefix=prefix
       self.components = [] #clients (components)
       self.serverAPI = ComponentAPI() #functions that the RTE must support towards its clients
       self.types = autosar.rte.RteTypeManager() #centralized type manager
-      self.isFinalized = False
-      self.comLayerPrefix = None
+      self.isFinalized = False      
       self.ws = None
       self.assemblyConnectorMap = {}
+      self.data_element_map = {}
 
    def addComponent(self, swc, runnables = None, name=None):
       """
@@ -486,7 +498,11 @@ class Partition:
       if not self.isFinalized:
          for component in self.components:
             component.process_runnables(self.ws)
-            component.finalize(self.ws, self.types)
+            component.finalize(self.ws, self.types)            
+            self.serverAPI.update(component.clientAPI)
+         for component in self.components:
+            component.create_data_elements(self.data_element_map)
+         self.serverAPI.finalize()
       self.isFinalized=True
 
    def createConnector(self, portRef1, portRef2):
