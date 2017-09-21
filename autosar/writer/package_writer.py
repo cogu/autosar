@@ -73,7 +73,8 @@ class PackageWriter(WriterBase):
                               'CompuMethodConst': self.dataTypeWriter.writeCompuMethodXML,
                               'CompuMethodRational': self.dataTypeWriter.writeCompuMethodXML,
                               'DataConstraint': self.dataTypeWriter.writeDataConstraintXml,
-                              'ImplementationDataType': self.dataTypeWriter.writeImplementationDataTypeXML
+                              'ImplementationDataType': self.dataTypeWriter.writeImplementationDataTypeXML,
+                              'SwBaseType': self.dataTypeWriter.writeSwBaseTypeXML
                             }
          self.switcherCode = {
                               'DataConstraint': self.dataTypeWriter.writeDataConstraintCode,
@@ -107,7 +108,8 @@ class PackageWriter(WriterBase):
                   print("skipped: %s"%str(type(elem)))
          lines.append(self.indent("</ELEMENTS>",1))
       else:
-         lines.append(self.indent("<ELEMENTS/>",1))
+         if self.version<4.0:
+            lines.append(self.indent("<ELEMENTS/>",1))
       if len(package.subPackages)>0:
          if self.version >= 3.0 and self.version < 4.0:
             lines.append(self.indent("<SUB-PACKAGES>",1))

@@ -124,6 +124,8 @@ class DataTypeParser(BaseParser):
             self.parseSwDataDefPropsConditional(xmlItem, dataType)
          else:
             raise NotImplementedError(xmlItem.tag)
+      if hasAdminData(xmlRoot):
+         dataType.adminData=parseAdminDataNode(xmlRoot.find('ADMIN-DATA'))
       return dataType
       
    def parseSwDataDefPropsConditional(self, xmlRoot, parent=None):
@@ -144,13 +146,27 @@ class DataTypeParser(BaseParser):
             pass
          else:
             raise NotImplementedError(xmlItem.tag)
-         variant = SwDataDefPropsConditional(baseTypeRef, swCalibrationAccess, compuMethodRef, dataConstraintRef, parent)
-         if swPointerTargetPropsXML is not None:
-            variant.swPointerTargetProps = self.parseSwPointerTargetProps(swPointerTargetPropsXML, variant)
-         parent.variants.append(variant)
+      variant = SwDataDefPropsConditional(baseTypeRef, swCalibrationAccess, compuMethodRef, dataConstraintRef, parent)
+      if swPointerTargetPropsXML is not None:
+         variant.swPointerTargetProps = self.parseSwPointerTargetProps(swPointerTargetPropsXML, variant)
+      parent.variants.append(variant)
 
    def parseSwPointerTargetProps(self, rootXML, parent = None):
       return None
+   
+   def parseSwBaseType(self, xmlRoot, dummy, parent = None):
+      assert (xmlRoot.tag == 'SW-BASE-TYPE')      
+      name = parseTextNode(xmlRoot.find('SHORT-NAME'))
+      size = parseTextNode(xmlRoot.find('BASE-TYPE-SIZE'))
+      typeEncoding = parseTextNode(xmlRoot.find('BASE-TYPE-ENCODING'))
+      nativeDeclaration = parseTextNode(xmlRoot.find('NATIVE-DECLARATION'))
+      category = parseTextNode(xmlRoot.find('CATEGORY'))      
+      if hasAdminData(xmlRoot):
+         adminData=parseAdminDataNode(xmlRoot.find('ADMIN-DATA'))
+      else:
+         adminData=None
+      return SwBaseType(name, size, typeEncoding, nativeDeclaration, category, parent, adminData)
+
 
 class DataTypeSemanticsParser(object):
    def __init__(self,pkg,version=3.0):
@@ -170,19 +186,25 @@ class DataTypeSemanticsParser(object):
       else:
          raise NotImplementedError("<%s>"%elem.tag)
    
-   def parseCompuMethod(self,xmlElem,rootProject=None,parent=None):      
-      assert (xmlElem.tag == 'COMPU-METHOD')
-      name = xmlElem.find("./SHORT-NAME").text
-      unitRef = xmlElem.find("./UNIT-REF")
+   def parseCompuMethod(self,xmlRoot,rootProject=None,parent=None):      
+      assert (xmlRoot.tag == 'COMPU-METHOD')
+      name = parseTextNode(xmlRoot.find("./SHORT-NAME"))
+      category = parseTextNode(xmlRoot.find("./CATEGORY"))
+      unitRef = xmlRoot.find("./UNIT-REF")
       semanticsType = None
       semanticElements=[]
-      xmlCompuScales = xmlElem.findall('./COMPU-INTERNAL-TO-PHYS/COMPU-SCALES/COMPU-SCALE')
+      if hasAdminData(xmlRoot):
+         adminData=parseAdminDataNode(xmlRoot.find('ADMIN-DATA'))
+      else:
+         adminData=None
+      xmlCompuScales = xmlRoot.findall('./COMPU-INTERNAL-TO-PHYS/COMPU-SCALES/COMPU-SCALE')
       if xmlCompuScales is None:
          raise NotImplementedError("No COMPU-SCALE? item=%s"%name)
       else:                  
          for xmlItem in xmlCompuScales:
             rational = xmlItem.find('./COMPU-RATIONAL-COEFFS')
             const = xmlItem.find('./COMPU-CONST')
+            label = parseTextNode(xmlItem.find('./SHORT-LABEL'))
             if rational is not None:
                if (semanticsType is not None) and (semanticsType !='compuRational'):
                   raise NotImplementedError('mixed compuscales not supported, item=%s'%name)
@@ -192,22 +214,22 @@ class DataTypeSemanticsParser(object):
                   offset=v[0].text
                   numerator=v[1].text
                   denominator=rational.find('./COMPU-DENOMINATOR/V').text
-                  semanticElements.append({'offset':offset, 'numerator':numerator, 'denominator':denominator})                                 
+                  semanticElements.append({'offset':offset, 'numerator':numerator, 'denominator':denominator, 'label':label})
             if const is not None:
                if (semanticsType is not None) and (semanticsType !='compuConst'):
                   raise NotImplementedError('mixed compuscales not supported, item=%s'%name)
                else:
-                  semanticsType='compuConst'
+                  semanticsType='compuConst'                  
                   lowerLimit = parseTextNode(xmlItem.find('./LOWER-LIMIT'))
                   upperLimit = parseTextNode(xmlItem.find('./UPPER-LIMIT'))
                   textValue = parseTextNode(const.find('./VT'))
-                  semanticElements.append({'lowerLimit':int(lowerLimit),'upperLimit':int(upperLimit), 'textValue': textValue})
+                  semanticElements.append({'lowerLimit':int(lowerLimit),'upperLimit':int(upperLimit), 'textValue': textValue, 'label': label})
       if semanticsType == 'compuRational':
          if unitRef is not None: unitRef=unitRef.text
-         method=CompuMethodRational(name,unitRef,semanticElements)
+         method=CompuMethodRational(name,unitRef,semanticElements, category=category, adminData=adminData)
          return method
       elif semanticsType == 'compuConst':
-         method = CompuMethodConst(name,semanticElements)
+         method = CompuMethodConst(name,semanticElements, category=category, adminData=adminData)
          return method
       else:
          raise ValueError("unprocessed semanticsType,item=%s"%name)

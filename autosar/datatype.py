@@ -39,10 +39,12 @@ class RecordTypeElement(ConstElement):
       return False
 
 class CompuConstElement(ConstElement):
-   def __init__(self,lowerLimit,upperLimit,textValue):
+   def __init__(self, lowerLimit, upperLimit, textValue, label=None, adminData=None):
       self.lowerLimit=lowerLimit
       self.upperLimit=upperLimit
       self.textValue=textValue
+      self.label=label
+      self.adminData=adminData
    def __eq__(self,other):
       if self is other: return True
       if type(self) is type(other):
@@ -51,10 +53,12 @@ class CompuConstElement(ConstElement):
       
 
 class CompuRationalElement(ConstElement):
-   def __init__(self,offset,numerator,denominator):
+   def __init__(self, offset, numerator, denominator, label=None, adminData=None):
       self.offset=offset
       self.numerator=numerator
       self.denominator=denominator
+      self.label=label
+      self.adminData=adminData
    def __eq__(self,other):
       if self is other: return True
       if type(self) is type(other):
@@ -224,9 +228,11 @@ class RealDataType(DataType):
 
 class CompuMethodRational(Element):
    def tag(self,version=None): return 'COMPU-INTERNAL-TO-PHYS'
-   def __init__(self,name,unitRef,elements):      
+   def __init__(self,name,unitRef,elements, category=None, adminData=None):      
       super().__init__(name)
+      self.category=category
       self.unitRef = unitRef
+      self.adminData = adminData
       self.elements = []
       
       for elem in elements:
@@ -257,9 +263,11 @@ class CompuMethodRational(Element):
 
       
 class CompuMethodConst(Element):
-   def __init__(self, name, elements, parent=None, adminData=None):
+   def __init__(self, name, elements, parent=None, adminData=None, category=None):
       super().__init__(name, parent, adminData)
       self.elements = []
+      self.category=category
+      self.adminData = adminData
       for elem in elements:
          if isinstance(elem,str):
             index=len(self.elements)
@@ -377,4 +385,11 @@ class ImplementationDataType(Element):
             else:
                raise ValueError('Invalid type: ', type(elem))
       
-      
+class SwBaseType(Element):
+   def tag(self,version=None): return 'SW-BASE-TYPE'
+   def __init__(self, name, size, typeEncoding=None, nativeDeclaration=None, category=None, parent=None, adminData=None):
+      super().__init__(name, parent, adminData)
+      self.size = int(size)
+      self.typeEncoding=typeEncoding
+      self.nativeDeclaration=nativeDeclaration
+      self.category = category

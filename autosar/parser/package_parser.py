@@ -15,9 +15,6 @@ class PackageParser(object):
    def __init__(self,version,rootProject=None):
       self.version=version
       self.rootProject=rootProject
-      
-            
-   def loadXML(self,package,xmlRoot):
       dataTypeParser = DataTypeParser(self,self.version)
       componentTypeParser = ComponentTypeParser(self,self.version)
       dataTypeSemanticsParser = DataTypeSemanticsParser(self,self.version)
@@ -59,18 +56,21 @@ class PackageParser(object):
                           }
       elif self.version >= 4.0:         
          self.switcher = {
-            'APPLICATION-SW-COMPONENT-TYPE' : componentTypeParser.parseSoftwareComponent,
-            'SWC-IMPLEMENTATION': componentTypeParser.parseSwcImplementation,
+            'APPLICATION-SW-COMPONENT-TYPE' : componentTypeParser.parseSoftwareComponent,                        
             'COMPU-METHOD': dataTypeSemanticsParser.parseCompuMethod,
             'DATA-CONSTR': dataTypeParser.parseDataConstraint,
-            'IMPLEMENTATION-DATA-TYPE': dataTypeParser.parseImplementationDataType,            
+            'IMPLEMENTATION-DATA-TYPE': dataTypeParser.parseImplementationDataType,
+            'SW-BASE-TYPE': dataTypeParser.parseSwBaseType,
+            'SWC-IMPLEMENTATION': componentTypeParser.parseSwcImplementation,
          }
          
       else:
-         raise NotImplementedError('Version of ARXML not supported')
+         raise NotImplementedError('Version of ARXML not supported')      
+      
+            
+   def loadXML(self,package,xmlRoot):
       
       assert(self.switcher is not None)
-         
       if xmlRoot.find('ELEMENTS'):
          elementNames = set([x.name for x in package.elements])
          for xmlElement in xmlRoot.findall('./ELEMENTS/*'):
