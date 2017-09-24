@@ -1,6 +1,8 @@
 import xml.etree.ElementTree as ElementTree
 import re
 
+
+
 class AdminData(object):
    def __init__(self):
       self.specialDataGroups = []
@@ -148,7 +150,6 @@ def filter_packages(packages, filters):
             break
    return matched
 
-
 class SwDataDefPropsConditional:
    def tag(self,version=None): return 'SW-DATA-DEF-PROPS-CONDITIONAL'
    def __init__(self, baseTypeRef = None, implementationTypeRef = None, swAddressMethodRef = None, swCalibrationAccess = None, compuMethodRef = None, dataConstraintRef = None, parent = None):
@@ -180,3 +181,18 @@ class SwPointerTargetProps:
    def __init__(self, targetCategory=None):
       self.targetCategory = targetCategory
       self.variants = []
+      
+class InvalidPortInterfaceRef(ValueError):
+   pass
+
+class InvalidDataTypeRef(ValueError):
+   pass
+
+class InvalidDataElementRef(ValueError):
+   pass
+
+class InvalidPortRef(ValueError):
+   pass
+
+class InvalidInitValueRef(ValueError):
+   pass

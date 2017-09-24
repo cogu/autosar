@@ -12,7 +12,7 @@ class Config:
       self.services=[]
       self.partition = partition
       self.data_elements=[]      
-      self.com_cfg = autosar.bsw.com.Config()
+      
    
       
       

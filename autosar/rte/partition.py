@@ -1,8 +1,11 @@
 import autosar.base
 import autosar.component
 import autosar.rte.base
+from autosar.rte.base import (ReadPortFunction, WritePortFunction, SendPortFunction, ReceivePortFunction, CallPortFunction,
+                              CalPrmPortFunction, DataElement, Operation)
 import cfile as C
-from autosar.rte.base import PortConnector, PortInstance
+import sys
+import autosar.bsw.com
 
 def _type2arg(typeObj,pointer=False):
    if ( isinstance(typeObj,autosar.datatype.IntegerDataType) or isinstance(typeObj,autosar.datatype.BooleanDataType) ):
@@ -12,73 +15,6 @@ def _type2arg(typeObj,pointer=False):
       return C.variable('data',typeObj.name,pointer=pointer)
 
 
-class PortFunction:
-   """base class for port functions"""
-   def __init__(self, shortname, func):
-      self.shortname = shortname
-      self.func = func
-
-class ReadPortFunction(PortFunction):
-   """port function for Rte_Read actions"""
-   def __init__(self, shortname, func, data_element):
-      super().__init__(shortname, func)
-      self.data_element = data_element
-
-class WritePortFunction(PortFunction):
-   """port function for Rte_Write actions"""
-   def __init__(self, shortname, func, data_element):
-      super().__init__(shortname, func)
-      self.data_element = data_element
-
-class SendPortFunction(PortFunction):
-   """port function for Rte_Read actions"""
-   def __init__(self, shortname, func, data_element):
-      super().__init__(shortname, func)
-      self.data_element = data_element
-
-class ReceivePortFunction(PortFunction):
-   """port function for Rte_Write actions"""
-   def __init__(self, shortname, func, data_element):
-      super().__init__(shortname, func)
-      self.data_element = data_element
-
-class CallPortFunction(PortFunction):
-   """port function for Rte_Call actions"""
-   def __init__(self, shortname, func, operation):
-      super().__init__(shortname, func)
-      self.operation = operation
-
-class CalPrmPortFunction(PortFunction):
-   """port function for Rte_Call actions"""
-   def __init__(self, shortname, func):
-      super().__init__(shortname, func)
-
-class DataElement:
-   """
-   RTE wrapper around an autosar.portinterface.DataElement
-   """
-   def __init__(self, name, parent, dataType, initValue = None, isQueued=False, queueLength=None):
-      self.symbol = None
-      self.name = name
-      self.dataType = dataType
-      assert(parent is not None)
-      self.parent = parent
-      self.isQueued = isQueued
-      self.queueLength = queueLength
-      if initValue is not None:
-         self.initValue = initValue.value
-      else:
-         self.initValue = None
-
-class Operation:
-   """
-   RTE wrapper around an autosar.portinterface.Operation
-   """
-   def __init__(self, name, parent, arguments, ar_operation):
-      self.name = name
-      self.parent=parent
-      self.arguments = arguments
-      self.ar_operation = ar_operation
 
 class TimerEvent:
    """Runnable triggered by timer"""
@@ -443,14 +379,15 @@ class Component:
             if len(require_port.data_elements)>0:
                for port_func in require_port.portAPI.values():
                   if isinstance(port_func, (ReadPortFunction, ReceivePortFunction)) and port_func.data_element.parent is require_port:
-                     data_element = provide_port.find_data_element(port_func.data_element.name)
+                     data_element = provide_port.find_data_element(port_func.data_element.name)                     
                      assert(data_element is not None)
                      data_element_name = '_'.join([self.name,provide_port.name,data_element.name])
                      if data_element_name not in data_element_map:
                         data_element.symbol = data_element_name
-                        data_element_map[data_element_name] = data_element                        
+                        data_element_map[data_element_name] = data_element
                         #reassign require_port data element to access the data element from the provide port
                         port_func.data_element = data_element
+                        
                      
 
 class Runnable:
@@ -482,7 +419,7 @@ class Partition:
       name: Can be used to override name of swc. Default is to use name from swc.
       """
       swc_name = name if name is not None else swc.name
-      if isinstance(swc, autosar.component.AtomicSoftwareComponent):
+      if isinstance(swc, (autosar.component.AtomicSoftwareComponent, autosar.bsw.com.ComComponent)):
          ws = swc.rootWS()
          assert(ws is not None)
          if self.ws is None:
@@ -492,6 +429,8 @@ class Partition:
                raise ValueError('Cannot add components from different workspaces!')
          component = Component(swc, self)
          self.components.append(component)
+      else:
+         print("Unsupported component type: "+str(type(swc)), file=sys.stderr)
 
 
    def finalize(self):
@@ -502,6 +441,7 @@ class Partition:
             self.serverAPI.update(component.clientAPI)
          for component in self.components:
             component.create_data_elements(self.data_element_map)
+         self._generate_com_access()
          self.serverAPI.finalize()
       self.isFinalized=True
 
@@ -531,7 +471,7 @@ class Partition:
       """
       require_port_list = [] #list of RequirePort
       provide_port_list = [] #list of ProvidePort
-      for rte_comp in self.components:
+      for rte_comp in self.components:         
          for rte_port in rte_comp.requirePorts:
             require_port_list.append(rte_port)
          for rte_port in rte_comp.providePorts:
@@ -541,6 +481,16 @@ class Partition:
          provide_port = self._findCompatibleProvidePort(require_port, provide_port_list)
          if provide_port is not None:
             self._createConnectorInternal(provide_port, require_port)
+   
+   def unconnectedPorts(self):
+      """
+      Returns a generator that yields all unconnected ports of this partition
+      """
+      for component in self.components:
+         for port in component.requirePorts+component.providePorts:
+            if len(port.connectors)==0:
+               yield port
+
 
    def _findCompatibleProvidePort(self, require_port, provide_port_list):
       require_port_interface = self.ws.find(require_port.ar_port.portInterfaceRef)
@@ -603,6 +553,36 @@ class Partition:
                   if parts[1] == port.name:
                      return port
       return None
+   
+   def _generate_com_access(self):
+      for component in self.components:
+         if isinstance(component.swc, autosar.bsw.com.ComComponent):
+            for port in component.requirePorts:
+               for remote_port in port.connectors:
+                  for data_element in remote_port.data_elements:                     
+                     isPointer = True if data_element.dataType.isComplexType else False
+                     proto = C.function(
+                     "%s_Send_%s_%s"%(component.swc.name, remote_port.name, data_element.name),
+                     'Std_ReturnType',
+                     args = [C.variable('value', data_element.dataType.name, pointer=isPointer)])
+                     data_element.com_access['Send'] = proto
+                     component.swc.addSendInterface(proto, port, data_element)
+            for port in component.providePorts:
+               for data_element in port.data_elements:                     
+                  isPointer = True
+                  proto = C.function(
+                  "%s_Receive_%s_%s"%(component.swc.name, remote_port.name, data_element.name),
+                  'Std_ReturnType',
+                  args = [C.variable('value', data_element.dataType.name, pointer=isPointer)])
+                  data_element.com_access['Receive'] = proto
+                  component.swc.addReceiveInterface(proto, port, data_element)
+                  #remove from internal RTE variables
+                  symbol = data_element.symbol
+                  data_element.symbol = None
+                  if symbol in self.data_element_map:
+                     del self.data_element_map[symbol]
+   
+      
 
    # def _resolveCallPoints(self, component):
    #    if len(component.clientAPI.call):

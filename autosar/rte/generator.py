@@ -2,6 +2,7 @@ import os
 import autosar.rte.partition
 import cfile as C
 import io
+import autosar.bsw.com
 
 def _genCommentHeader(comment):
    lines = []
@@ -11,32 +12,33 @@ def _genCommentHeader(comment):
    return lines
 
 class TypeGenerator:
-   
+
    def __init__(self, partition, useDefaultTypes=True):
       self.partition = partition
       self.defaultTypes = {}
       if useDefaultTypes:
          self._initDefaultType()
-      
-   
-   def generate(self, filename='Rte_Type.h', dummy=None):
+
+
+   def generate(self, dest_dir = '.', file_name='Rte_Type.h'):
       """
       Generates Rte_Type.h
       Note: The last argument has been deprecated and is no longer in use
       """
       if self.partition.isFinalized == False:
          self.partition.finalize()
-      with io.open(filename, 'w', newline='\n') as fp:         
-         hfile=C.hfile(filename)
-         hfile.code.extend([C.line(x) for x in _genCommentHeader('Includes')])         
+      file_path = os.path.join(dest_dir, file_name)
+      with io.open(file_path, 'w', newline='\n') as fp:
+         hfile=C.hfile(file_name)
+         hfile.code.extend([C.line(x) for x in _genCommentHeader('Includes')])
          hfile.code.append(C.include("Std_Types.h"))
          hfile.code.append(C.blank())
-         (basicTypes,complexTypes,modeTypes) = self.partition.types.getTypes()         
+         (basicTypes,complexTypes,modeTypes) = self.partition.types.getTypes()
          hfile.code.extend([C.line(x) for x in _genCommentHeader('Data Type Definitions')])
          hfile.code.append(C.blank())
          ws = self.partition.ws
          unusedDefaultTypes = self._findUnusedDefaultTypes(ws, basicTypes)
-         
+
          first=True
          for ref in sorted(basicTypes)+sorted(complexTypes):
             dataType = ws.find(ref)
@@ -56,7 +58,7 @@ class TypeGenerator:
                   typename = dataType.name
                   basetype = self._typename(bitcount,dataType.minVal)
                   typedef = C.typedef(basetype, typename)
-                  hfile.code.append(C.statement(typedef))                  
+                  hfile.code.append(C.statement(typedef))
                   isUnsigned = True if basetype in ('uint8','uint16','uint32') else False
                   if isUnsigned:
                      minval=str(dataType.minVal)+'u'
@@ -88,7 +90,7 @@ class TypeGenerator:
                      else:
                         raise ValueError(dataType.compuMethodRef)
                elif isinstance(dataType, autosar.datatype.RecordDataType):
-                  body = C.block(innerIndent=3)               
+                  body = C.block(innerIndent=3)
                   for elem in dataType.elements:
                      childType = ws.find(elem.typeRef, role='DataType')
                      body.append(C.statement(C.variable(elem.name, childType.name)))
@@ -112,8 +114,8 @@ class TypeGenerator:
                   #sys.stderr.write('not implemented: %s\n'%str(type(dataType)))
             else:
                raise ValueError(ref)
-   
-         if len(modeTypes)>0:         
+
+         if len(modeTypes)>0:
             lines=self._genCommentHeader('Mode Types')
             tmp=[]
             hfile.code.extend(lines)
@@ -125,11 +127,11 @@ class TypeGenerator:
                   tmp.append(C.blank())
                modeType = ws.find(ref)
                hfile.code.append(C.statement(C.typedef('uint8', 'Rte_ModeType_'+modeType.name)))
-               
+
                for i,elem in enumerate(modeType.modeDeclarations):
                   # define RTE_MODE_EcuM_Mode_POST_RUN ((Rte_ModeType_EcuM_Mode)0)
                   tmp.append(C.define('RTE_MODE_%s_%s'%(modeType.name,elem.name),'((Rte_ModeType_EcuM_Mode)%d)'%i))
-               
+
             hfile.code.append(C.blank())
             hfile.code.extend(tmp)
          if len(unusedDefaultTypes)>0:
@@ -139,11 +141,11 @@ class TypeGenerator:
                hfile.code.append(C.blank())
                hfile.code.extend(self.defaultTypes[name])
             hfile.code.append(C.blank())
-            hfile.code.append(C.line('#endif'))            
+            hfile.code.append(C.line('#endif'))
          fp.write('\n'.join(hfile.lines()))
          fp.write('\n')
-         
-   
+
+
    def _initDefaultType(self):
       self.defaultTypes['Boolean']=C.sequence().extend([C.statement(C.typedef('boolean', 'Boolean'))])
       self.defaultTypes['UInt8']=C.sequence().extend([C.statement(C.typedef('uint8', 'UInt8')), C.define('UInt8_LowerLimit', '((UInt8)0u)'), C.define('UInt8_UpperLimit', '((UInt8)255u)')])
@@ -152,19 +154,19 @@ class TypeGenerator:
       self.defaultTypes['SInt8']=C.sequence().extend([C.statement(C.typedef('sint8', 'SInt8')), C.define('SInt8_LowerLimit', '((SInt8)-128)'), C.define('SInt8_UpperLimit', '((SInt8)127)')])
       self.defaultTypes['SInt16']=C.sequence().extend([C.statement(C.typedef('sint16', 'SInt16')), C.define('SInt16_LowerLimit', '((SInt16)-32768)'), C.define('SInt16_UpperLimit', '((SInt16)32767)')])
       self.defaultTypes['SInt32']=C.sequence().extend([C.statement(C.typedef('sint32', 'SInt32')), C.define('SInt32_LowerLimit', '((SInt32)-2147483648)'), C.define('SInt32_UpperLimit', '((SInt32)2147483647)')])
-   
+
    def _findUnusedDefaultTypes(self, ws, typerefs):
       defaultTypeNames = set(self.defaultTypes.keys())
       usedTypeNames = set()
-      
-      for ref in typerefs:         
+
+      for ref in typerefs:
          dataType = ws.find(ref)
          if dataType is None:
             raise ValueError('invalid type reference: '+ref)
          usedTypeNames.add(dataType.name)
       return defaultTypeNames-usedTypeNames
-         
-         
+
+
    @staticmethod
    def _typename(bitcount,minval):
       if bitcount <=8:
@@ -183,66 +185,37 @@ class RteGenerator:
    Generates Rte.c based on partition. The prefix argument can be used to change both
    the file name and prefix name used for public function names
    """
-   def __init__(self, cfg, prefix='Rte', include=None):
-      self.cfg = cfg
-      self.partition=self.cfg.partition
+   def __init__(self, partition, prefix='Rte', include=None):
+      self.partition=partition
       self.includes = [('Rte.h', False), ('Rte_Type.h', False)] #array of tuples, first element is the name of include header, second element is True if this is a sysinclude
       self.prefix=prefix
       self.com_config = None
       self.data_elements = []
-      self.com_access = {'receive': {}, 'send': {}}      
+      #self.com_access = {'receive': {}, 'send': {}}
       if include is not None:
          for elem in include:
-            self.includes.append(elem)
-   
-   
-   def generate(self, dest_dir='.'):
-      self._generate_com_access()
-      self._generate_data_elements()
-      filename = dest_dir+'/'+self.prefix+'.c'
+            if isinstance(elem, str) or isinstance(elem, tuple):
+               self.includes.append(elem)
+            else:
+               raise ValueError("include items must be of type str or tuple(str,boolean)")
+
+
+   def generate(self, dest_dir='.'):      
+      filename = os.path.join(dest_dir,self.prefix+'.c')
       with io.open(filename, 'w', newline='\n') as fp:
          self._write_includes(fp)
          self._write_constants_and_typedefs(fp)
          self._write_local_vars(fp)
          self._write_public_funcs(fp)
-   
-   def _generate_com_access(self):
-      if self.com_config is not None:                  
-         for element_name in self.partition.data_elements:
-            if element_name in self.com_config.send:
-               data_element = self.partition.data_elements[element_name]['element']
-               isPointer = True if data_element.dataType.isComplexType else False
-               self.com_access['send'][element_name] = C.function(
-                  "%s_Send_%s"%(self.com_config.prefix, element_name),
-                  'Std_ReturnType',                  
-                  args = [C.variable('value', data_element.dataType.name, pointer=isPointer)])
-            elif element_name in self.com_config.receive:
-               data_element = self.partition.data_elements[element_name]['element']
-               isPointer = True if data_element.dataType.isComplexType else False
-               self.com_access['receive'][element_name] = C.function(
-                  "%s_Receive_%s"%(self.com_config.prefix, element_name),
-                  'Std_ReturnType',                  
-                  args = [C.variable('value', data_element.dataType.name, pointer=isPointer)])
-            else:
-               self.local_elements.push(element_name)
-      else:
-         pass
-#         for element_name in self.partition.data_elements:
-#            self.local_elements.append(element_name)
 
-   def _generate_data_elements(self):
-      pass
-#      for data_element in self.data_elements:         
-#         print(data_element)
-   
    def _write_includes(self, fp):
       lines = _genCommentHeader('Includes')
       fp.write('\n'.join(lines)+'\n')
       code = C.sequence()
-      for include in self.includes:         
+      for include in self.includes:
          code.append(C.include(*include))
       fp.write('\n'.join(code.lines())+'\n\n')
-   
+
    def _write_constants_and_typedefs(self, fp):
       fp.write('\n'.join(_genCommentHeader('Constants and Types'))+'\n\n')
 
@@ -253,14 +226,14 @@ class RteGenerator:
          var = C.variable(data_element.symbol, data_element.dataType.name, True)
          code.append(C.statement(var))
       fp.write('\n'.join(code.lines())+'\n\n')
-   
+
    def _write_public_funcs(self, fp):
       fp.write('\n'.join(_genCommentHeader('Public Functions'))+'\n')
       func = C.function(self.prefix+'_Start', 'void')
       body = C.block(innerIndent=3)
       self._write_init_values(body)
       fp.write(str(func)+'\n')
-      fp.write('\n'.join(body.lines())+'\n\n')     
+      fp.write('\n'.join(body.lines())+'\n\n')
       if len(self.partition.serverAPI.read)>0:
         self._genRead(fp, sorted(self.partition.serverAPI.final['read'], key=lambda x: x.shortname))
       if len(self.partition.serverAPI.write)>0:
@@ -271,81 +244,82 @@ class RteGenerator:
         self._genSend(fp, sorted(self.partition.serverAPI.final['send'], key=lambda x: x.shortname))
       #if len(self.partition.serverAPI.call)>0:
       #  self._genCall(fp, sorted(self.partition.serverAPI.final['call'], key=lambda x: x.shortname))
-   
+
    def _write_init_values(self, body):
       for data_element in sorted(self.partition.data_element_map.values(), key=lambda x: x.symbol):
          if data_element.initValue is not None:
             body.code.append(C.statement('%s = %s'%(data_element.symbol, data_element.initValue)))
-      
-      
+
+
 
    def _genRead(self, fp, prototypes):
       """Generates all Rte_Read functions"""
       for port_func in prototypes:
-         body = C.block(innerIndent=3)         
-         if port_func.data_element.name in self.com_access['receive']:
-            func = self.com_access['receive'][port_func.data_element.name]
-            body.code.append(C.statement('return '+str(C.fcall(func.name, params=[proto.func.args[0].name]))))
+         body = C.block(innerIndent=3)
+         if port_func.data_element.com_access['Receive'] is not None:
+            com_func = port_func.data_element.com_access['Receive']
+            body.code.append(C.statement('return '+str(C.fcall(com_func.name, params=[port_func.func.args[0].name]))))
          else:
             body.code.append(C.statement('*%s = %s'%(port_func.func.args[0].name, port_func.data_element.symbol)))
             body.code.append(C.statement('return RTE_E_OK'))
          fp.write(str(port_func.func)+'\n')
-         fp.write('\n'.join(body.lines())+'\n\n')     
-         
+         fp.write('\n'.join(body.lines())+'\n\n')
+
    def _genWrite(self, fp, prototypes):
       for port_func in prototypes:
          hasComSignal = False
          body = C.block(innerIndent=3)
-         if port_func.data_element.name in self.com_access['send']:
-            func = self.com_access['send'][port_func.data_element.name]
-            body.code.append(C.statement('return '+str(C.fcall(func.name, params=[port_func.func.args[0].name]))))
-         else:
+         if port_func.data_element.symbol is not None:
             body.code.append(C.statement('%s = %s'%(port_func.data_element.symbol, port_func.func.args[0].name)))
+         if port_func.data_element.com_access['Send'] is not None:
+            com_func = port_func.data_element.com_access['Send']
+            body.code.append(C.statement('return '+str(C.fcall(com_func.name, params=[port_func.func.args[0].name]))))
+         else:
             body.code.append(C.statement('return RTE_E_OK'))
          fp.write(str(port_func.func)+'\n')
-         fp.write('\n'.join(body.lines())+'\n\n')     
-         
+         fp.write('\n'.join(body.lines())+'\n\n')
+
    def _genReceive(self, fp, prototypes):
-      for proto in prototypes:         
-         body = C.block(innerIndent=3)         
-         body.code.append(C.statement('return RTE_E_OK'))
-         fp.write(str(proto.func)+'\n')
-         fp.write('\n'.join(body.lines())+'\n\n')     
-      
-   def _genSend(self, fp, prototypes):
-      for proto in prototypes:         
+      for proto in prototypes:
          body = C.block(innerIndent=3)
          body.code.append(C.statement('return RTE_E_OK'))
          fp.write(str(proto.func)+'\n')
-         fp.write('\n'.join(body.lines())+'\n\n')     
+         fp.write('\n'.join(body.lines())+'\n\n')
+
+   def _genSend(self, fp, prototypes):
+      for proto in prototypes:
+         body = C.block(innerIndent=3)
+         body.code.append(C.statement('return RTE_E_OK'))
+         fp.write(str(proto.func)+'\n')
+         fp.write('\n'.join(body.lines())+'\n\n')
 
    def _genCall(self, fp, prototypes):
-      for proto in prototypes:         
+      for proto in prototypes:
          body = C.block(innerIndent=3)
          body.code.append(C.statement('return RTE_E_OK'))
          fp.write(str(proto.func)+'\n')
-         fp.write('\n'.join(body.lines())+'\n\n')     
-      
+         fp.write('\n'.join(body.lines())+'\n\n')
+
 class ComponentHeaderGenerator():
    def __init__(self, partition):
       self.partition = partition
-   
+
    def generate(self, destdir):
       for component in self.partition.components:
          with io.open(os.path.join(destdir, 'Rte_%s.h'%component.swc.name), 'w', newline='\n') as fp:
             self._genComponentHeader(fp, component)
-   
+
    def _genComponentHeader(self, fp, component):
       ws = component.swc.rootWS()
       assert(ws is not None)
       hfile=C.hfile(None, guard='RTE_%s_H'%(component.swc.name.upper()))
       hfile.code.append(C.include('Rte.h'))
-      hfile.code.append(C.include('Rte_Type.h'))      
+      hfile.code.append(C.include('Rte_Type.h'))
       lines = self._genInitValues(ws, component.swc.requirePorts+component.swc.providePorts)
       if len(lines)>0:
          hfile.code.extend([C.line(x) for x in _genCommentHeader('Init Values')])
          hfile.code.extend(lines)
-      
+
       #Write API
       hfile.code.append(C.blank())
       hfile.code.extend([C.line(x) for x in _genCommentHeader('API Prototypes')])
@@ -354,27 +328,27 @@ class ComponentHeaderGenerator():
          hfile.code.append(C.statement(proto.func))
       if len(component.clientAPI.final['read'])>0:
          hfile.code.append(C.blank())
-         hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Read_<p>_<d>')])         
+         hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Read_<p>_<d>')])
          hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.clientAPI.final['read']])
       if len(component.clientAPI.final['write'])>0:
          hfile.code.append(C.blank())
-         hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Write_<p>_<d>')])         
+         hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Write_<p>_<d>')])
          hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.clientAPI.final['write']])
       if len(component.clientAPI.final['receive'])>0:
          hfile.code.append(C.blank())
-         hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Receive_<p>_<d>')])         
+         hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Receive_<p>_<d>')])
          hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.clientAPI.final['receive']])
       if len(component.clientAPI.final['send'])>0:
          hfile.code.append(C.blank())
-         hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Send_<p>_<d>')])         
+         hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Send_<p>_<d>')])
          hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.clientAPI.final['send']])
       if len(component.clientAPI.final['mode'])>0:
          hfile.code.append(C.blank())
-         hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Mode_<p>_<d>')])         
+         hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Mode_<p>_<d>')])
          hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.clientAPI.final['mode']])
       if len(component.clientAPI.final['mode'])>0:
          hfile.code.append(C.blank())
-         hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Mode_<mode>')])         
+         hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Mode_<mode>')])
          hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.clientAPI.final['mode']])
       if len(component.clientAPI.final['calprm'])>0:
          hfile.code.append(C.blank())
@@ -383,7 +357,7 @@ class ComponentHeaderGenerator():
       if len(component.clientAPI.final['call'])>0:
          hfile.code.append(C.blank())
          hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Call_<p>_<o> ')])
-         hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.clientAPI.final['call']])         
+         hfile.code.extend([C.define(proto.shortname, proto.func.name) for proto in component.clientAPI.final['call']])
       if len(component.runnables)>0:
          for runnable in sorted(component.runnables, key=lambda x: x.symbol):
             tmp = self._writeRunnableProto(runnable)
@@ -392,11 +366,11 @@ class ComponentHeaderGenerator():
       fp.write('\n')
 
    def _genInitValues(self, ws, ports):
-      ports = sorted(ports, key=lambda port: port.name)      
+      ports = sorted(ports, key=lambda port: port.name)
       code = C.sequence()
-      for port in ports:                  
-         for comspec in port.comspec:               
-            if isinstance(comspec, autosar.component.DataElementComSpec):            
+      for port in ports:
+         for comspec in port.comspec:
+            if isinstance(comspec, autosar.component.DataElementComSpec):
                if comspec.initValueRef is not None:
                   initValue = ws.find(comspec.initValueRef)
                   if isinstance(initValue, autosar.constant.Constant):
@@ -408,7 +382,7 @@ class ComponentHeaderGenerator():
                         prefix = 'Rte_InitValue_%s_%s'%(port.name, comspec.name)
                         code.extend(self._getInitValue(ws, prefix, initValue, dataType))
       return code
-   
+
    def _getInitValue(self, ws, def_name, value, dataType):
       """
       returns a list or sequence
@@ -439,19 +413,19 @@ class ComponentHeaderGenerator():
       else:
          raise NotImplementedError(type(value))
       return code
-   
-   def _writeRunnableProto(self, runnable):      
+
+   def _writeRunnableProto(self, runnable):
       lines = []
       lines.extend([C.line(x) for x in _genCommentHeader('Runnable %s'%runnable.name)])
       lines.append(C.statement(runnable.prototype))
       lines.append(C.blank())
       return lines
-      
-         
+
+
 class MockRteGenerator(RteGenerator):
    def __init__(self, partition, prefix='MockRte'):
       self.partition = partition
       self.prefix = prefix
-   
+
    def generate(self, dest_dir):
       pass
