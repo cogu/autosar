@@ -2,6 +2,7 @@ import os
 import autosar.rte.partition
 import cfile as C
 import io
+import autosar.base
 import autosar.bsw.com
 
 def _genCommentHeader(comment):
@@ -189,7 +190,7 @@ class RteGenerator:
       self.partition=partition
       self.includes = [('Rte.h', False), ('Rte_Type.h', False)] #array of tuples, first element is the name of include header, second element is True if this is a sysinclude
       self.prefix=prefix
-      self.com_config = None
+      self.com_component = None
       self.data_elements = []
       #self.com_access = {'receive': {}, 'send': {}}
       if include is not None:
@@ -198,7 +199,12 @@ class RteGenerator:
                self.includes.append(elem)
             else:
                raise ValueError("include items must be of type str or tuple(str,boolean)")
-
+      for component in partition.components:
+         if isinstance(component.swc, autosar.bsw.com.ComComponent):            
+            if self.com_component is None:
+               self.com_component = component               
+            else:
+               raise RuntimeError("More than one Com component allowed in a partition")            
 
    def generate(self, dest_dir='.'):      
       filename = os.path.join(dest_dir,self.prefix+'.c')
@@ -214,6 +220,8 @@ class RteGenerator:
       code = C.sequence()
       for include in self.includes:
          code.append(C.include(*include))
+      if self.com_component is not None:
+         code.append(C.include(self.com_component.name+'.h'))
       fp.write('\n'.join(code.lines())+'\n\n')
 
    def _write_constants_and_typedefs(self, fp):
@@ -248,7 +256,8 @@ class RteGenerator:
    def _write_init_values(self, body):
       for data_element in sorted(self.partition.data_element_map.values(), key=lambda x: x.symbol):
          if data_element.initValue is not None:
-            body.code.append(C.statement('%s = %s'%(data_element.symbol, data_element.initValue)))
+            init_str = autosar.constant.initializer_string(data_element.initValue)
+            body.code.append(C.statement('%s = %s'%(data_element.symbol, init_str)))
 
 
 
@@ -306,8 +315,9 @@ class ComponentHeaderGenerator():
 
    def generate(self, destdir):
       for component in self.partition.components:
-         with io.open(os.path.join(destdir, 'Rte_%s.h'%component.swc.name), 'w', newline='\n') as fp:
-            self._genComponentHeader(fp, component)
+         if not isinstance(component.swc, autosar.bsw.com.ComComponent):
+            with io.open(os.path.join(destdir, 'Rte_%s.h'%component.swc.name), 'w', newline='\n') as fp:         
+               self._genComponentHeader(fp, component)
 
    def _genComponentHeader(self, fp, component):
       ws = component.swc.rootWS()

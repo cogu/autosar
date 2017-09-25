@@ -1,5 +1,14 @@
 from autosar.element import Element
 
+def initializer_string(constant):
+   if constant is None:
+      return ''
+   elif isinstance(constant, IntegerValue):
+      return '%d'%(int(constant.value))
+   else:
+      raise NotImplementedError(str(type(constant)))
+
+
 class Value(object):
    def __init__(self,name,parent=None):
       self.name = name

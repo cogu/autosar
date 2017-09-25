@@ -97,7 +97,7 @@ class DataElement:
       self.queueLength = queueLength
       self.com_access = {'Send': None, 'Receive': None}
       if initValue is not None:
-         self.initValue = initValue.value
+         self.initValue = initValue
       else:
          self.initValue = None
 
