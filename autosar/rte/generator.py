@@ -171,13 +171,13 @@ class TypeGenerator:
    @staticmethod
    def _typename(bitcount,minval):
       if bitcount <=8:
-         return 'uint8' if minval == 0 else 'sint8'
+         return 'uint8' if minval >= 0 else 'sint8'
       elif bitcount <=16:
-         return 'uint16' if minval == 0 else 'sint16'
+         return 'uint16' if minval >= 0 else 'sint16'
       elif bitcount <=32:
-         return 'uint32' if minval == 0 else 'sint32'
+         return 'uint32' if minval >= 0 else 'sint32'
       elif bitcount <=64:
-         return 'uint64' if minval == 0 else 'sint64'
+         return 'uint64' if minval >= 0 else 'sint64'
       else:
          raise ValueError(bitcount)
 

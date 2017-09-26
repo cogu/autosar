@@ -5,6 +5,13 @@ def initializer_string(constant):
       return ''
    elif isinstance(constant, IntegerValue):
       return '%d'%(int(constant.value))
+   elif isinstance(constant, RecordValue):
+      prolog = '{'
+      epilog = '}'
+      values = []
+      for elem in constant.elements:
+         values.append(initializer_string(elem))
+      return prolog+', '.join(values) + epilog
    else:
       raise NotImplementedError(str(type(constant)))
 
