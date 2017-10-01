@@ -2,7 +2,7 @@ import autosar.component
 import autosar.rte.base
 import autosar.bsw.com
 from collections import namedtuple
-from autosar.rte.base import PortConnector, PortInstance
+#from autosar.rte.base import PortConnector, PortInstance
 
 class Config:
    """
