@@ -2,7 +2,7 @@ import autosar.package
 import autosar.element
 
 
-from autosar.base import hasAdminData,parseAdminDataNode
+from autosar.base import hasAdminData, parseAdminDataNode, parseTextNode
 from autosar.parser.portinterface_parser import PortInterfacePackageParser,CEPParameterGroupPackageParser,ModeDeclarationGroupPackageParser
 from autosar.parser.constant_parser import ConstantPackageParser
 from autosar.parser.datatype_parser import DataTypeParser,DataTypeSemanticsParser,DataTypeUnitsParser
@@ -15,9 +15,6 @@ class PackageParser(object):
    def __init__(self,version,rootProject=None):
       self.version=version
       self.rootProject=rootProject
-      
-            
-   def loadXML(self,package,xmlRoot):
       dataTypeParser = DataTypeParser(self,self.version)
       componentTypeParser = ComponentTypeParser(self,self.version)
       dataTypeSemanticsParser = DataTypeSemanticsParser(self,self.version)
@@ -31,7 +28,7 @@ class PackageParser(object):
       systemParser=SystemParser(self,self.version)
       self.switcher=None
       
-      if self.version >= 3.0 and self.version < 4.0:         
+      if self.version >= 3.0 and self.version < 4.0:
          self.switcher = {'ARRAY-TYPE': dataTypeParser.parseArrayType,
                           'BOOLEAN-TYPE': dataTypeParser.parseBooleanType,
                           'INTEGER-TYPE': dataTypeParser.parseIntegerType,
@@ -59,21 +56,32 @@ class PackageParser(object):
                           }
       elif self.version >= 4.0:         
          self.switcher = {
-            'APPLICATION-SW-COMPONENT-TYPE' : componentTypeParser.parseSoftwareComponent,
-            'SWC-IMPLEMENTATION': componentTypeParser.parseSwcImplementation
+            'APPLICATION-SW-COMPONENT-TYPE' : componentTypeParser.parseSoftwareComponent,                        
+            'COMPU-METHOD': dataTypeSemanticsParser.parseCompuMethod,
+            'DATA-CONSTR': dataTypeParser.parseDataConstraint,
+            'IMPLEMENTATION-DATA-TYPE': dataTypeParser.parseImplementationDataType,
+            'SW-BASE-TYPE': dataTypeParser.parseSwBaseType,
+            'SWC-IMPLEMENTATION': componentTypeParser.parseSwcImplementation,
+            'UNIT': dataTypeUnitsParser.parseUnit,
+            'DATA-TYPE-MAPPING-SET': dataTypeParser.parseDataTypeMappingSet
          }
          
       else:
-         raise NotImplementedError('Version of ARXML not supported')
+         raise NotImplementedError('Version of ARXML not supported')      
+      
+            
+   def loadXML(self,package,xmlRoot):
       
       assert(self.switcher is not None)
-         
       if xmlRoot.find('ELEMENTS'):
          elementNames = set([x.name for x in package.elements])
          for xmlElement in xmlRoot.findall('./ELEMENTS/*'):
             parseFunc = self.switcher.get(xmlElement.tag)
             if parseFunc is not None:
                element = parseFunc(xmlElement,self.rootProject,parent=package)
+               if element is None:
+                  print("[package_parser] skipping: %s"%xmlElement.tag)
+                  continue
                element.parent=package
                if isinstance(element,autosar.element.Element)==True:
                   if element.name not in elementNames:
@@ -84,11 +92,21 @@ class PackageParser(object):
                   #raise ValueError("parse error: %s"%type(element))
                   raise ValueError("parse error: %s"%xmlElement.tag)
             else:
-               print("unhandled: %s"%xmlElement.tag)
-      if xmlRoot.find('SUB-PACKAGES'):
-         for xmlPackage in xmlRoot.findall('./SUB-PACKAGES/AR-PACKAGE'):
-            name = xmlPackage.find("./SHORT-NAME").text
-            subPackage = autosar.package.Package(name)           
-            self.loadXML(subPackage,xmlPackage)
+               print("[package_parser] unhandled: %s"%xmlElement.tag)
+      
+      if self.version >= 3.0 and self.version < 4.0:
+         if xmlRoot.find('SUB-PACKAGES'):
+            for xmlPackage in xmlRoot.findall('./SUB-PACKAGES/AR-PACKAGE'):
+               name = xmlPackage.find("./SHORT-NAME").text
+               subPackage = autosar.package.Package(name)           
+               self.loadXML(subPackage,xmlPackage)
+               package.subPackages.append(subPackage)
+               subPackage.parent=package
+      elif self.version >= 4.0:
+         for subPackageXML in xmlRoot.findall('./AR-PACKAGES/AR-PACKAGE'):
+            name = parseTextNode(subPackageXML.find("./SHORT-NAME"))
+            subPackage = autosar.package.Package(name)
+            self.loadXML(subPackage, subPackageXML)
             package.subPackages.append(subPackage)
             subPackage.parent=package
+         

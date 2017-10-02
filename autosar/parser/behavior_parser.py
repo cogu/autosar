@@ -126,6 +126,12 @@ class BehaviorParser(object):
                   runnableEntity = self.parseRunnableEntity(xmRunnable, parent)
                   if runnableEntity is not None:
                      internalBehavior.runnables.append(runnableEntity)                     
+            elif xmlNode.tag == 'AR-TYPED-PER-INSTANCE-MEMORYS':
+               pass
+            elif xmlNode.tag == 'SERVICE-DEPENDENCYS':
+               pass
+            elif xmlNode.tag == 'SHARED-PARAMETERS':
+               pass
             else:
                raise NotImplementedError(xmlNode.tag)
          return internalBehavior

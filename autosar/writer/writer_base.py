@@ -7,7 +7,10 @@ class WriterBase():
    def __init__(self,version=3.0):
       self.version=version
       self.lines=[]
-      self.indentChar='\t'
+      if (self.version >= 3.0) and (self.version < 4.0):
+         self.indentChar='\t'
+      else:
+         self.indentChar = '  '
       
    def indent(self,lines,indent):
       if isinstance(lines,list):
@@ -19,10 +22,14 @@ class WriterBase():
    
    def beginFile(self):
       lines=[]
-      lines.append('<?xml version="1.0" encoding="UTF-8"?>')
-      if self.version >= 3.0:
+      if (self.version >= 3.0) and (self.version < 4.0):
+         lines.append('<?xml version="1.0" encoding="UTF-8"?>')      
          lines.append('<AUTOSAR xsi:schemaLocation="http://autosar.org/3.0.2 autosar_302_ext.xsd" xmlns="http://autosar.org/3.0.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">')
          lines.append(self.indentChar+'<TOP-LEVEL-PACKAGES>')
+      elif self.version >= 4.0:         
+         lines.append('<?xml version="1.0" encoding="utf-8"?>')
+         lines.append('<AUTOSAR xsi:schemaLocation="http://autosar.org/schema/r{0:.1f} AUTOSAR_4-2-1.xsd" xmlns="http://autosar.org/schema/r{0:.1f}" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'.format(self.version))
+         lines.append(self.indentChar+'<AR-PACKAGES>')
       return lines
    
    def endFile(self):

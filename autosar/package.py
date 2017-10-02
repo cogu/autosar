@@ -208,7 +208,7 @@ class Package(object):
       if self.parent is None:
          return None
       else:
-         return self.parent.root()
+         return self.parent.rootWS()
       
    def append(self,elem):
       """appends elem to the self.elements list"""
