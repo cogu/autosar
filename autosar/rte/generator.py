@@ -192,7 +192,9 @@ class RteGenerator:
       self.prefix=prefix
       self.com_component = None
       self.data_elements = []
+      self.extra_static_vars={}
       self.extra_public_functions={}
+      self.extra_rte_start=C.sequence()
       #self.com_access = {'receive': {}, 'send': {}}
       if include is not None:
          for elem in include:
@@ -236,15 +238,13 @@ class RteGenerator:
       for data_element in sorted(self.partition.data_element_map.values(), key=lambda x: x.symbol):
          var = C.variable(data_element.symbol, data_element.dataType.name, True)
          code.append(C.statement(var))
+      for key in sorted(self.extra_static_vars.keys()):
+         code.append(C.statement(self.extra_static_vars[key]))
       fp.write('\n'.join(code.lines())+'\n\n')
 
-   def _write_public_funcs(self, fp):
+   def _write_public_funcs(self, fp):      
       fp.write('\n'.join(_genCommentHeader('Public Functions'))+'\n')
-      func = C.function(self.prefix+'_Start', 'void')
-      body = C.block(innerIndent=3)
-      self._write_init_values(body)
-      fp.write(str(func)+'\n')
-      fp.write('\n'.join(body.lines())+'\n\n')
+      self._write_rte_start(fp)
       if len(self.partition.serverAPI.read)>0:
         self._genRead(fp, sorted(self.partition.serverAPI.final['read'], key=lambda x: x.shortname))
       if len(self.partition.serverAPI.write)>0:
@@ -257,6 +257,17 @@ class RteGenerator:
         self._genGet(fp, sorted(self.partition.serverAPI.final['get'], key=lambda x: x.shortname))
       #if len(self.partition.serverAPI.call)>0:
       #  self._genCall(fp, sorted(self.partition.serverAPI.final['call'], key=lambda x: x.shortname))
+      if len(self.extra_public_functions)>0:
+         self._genExtra(fp, [self.extra_public_functions[key] for key in sorted(self.extra_public_functions.keys())])
+
+   def _write_rte_start(self, fp):
+      func = C.function(self.prefix+'_Start', 'void')
+      body = C.block(innerIndent=3)
+      self._write_init_values(body)
+      if len(self.extra_rte_start)>0:
+         body.extend(self.extra_rte_start)
+      fp.write(str(func)+'\n')
+      fp.write('\n'.join(body.lines())+'\n\n')
 
    def _write_init_values(self, body):
       for data_element in sorted(self.partition.data_element_map.values(), key=lambda x: x.symbol):
@@ -322,14 +333,22 @@ class RteGenerator:
          body.code.append(C.statement('return %s%s%s'%(prefix, port_func.data_element.symbol, suffix)))
          fp.write(str(port_func.proto)+'\n')
          fp.write('\n'.join(body.lines())+'\n\n')
-
+   
+   def _genExtra(self, fp, prototypes):
+      for port_func in prototypes:
+         fp.write(str(port_func.proto)+'\n')
+         fp.write('\n'.join(port_func.body.lines())+'\n\n')
+         
 
 
 class ComponentHeaderGenerator():
    def __init__(self, partition):
       self.partition = partition
+      self.useMockedAPI=False
 
-   def generate(self, destdir):
+   def generate(self, destdir, mocked=None):
+      if mocked is not None:
+         self.useMockedAPI=bool(mocked)
       for component in self.partition.components:
          if not isinstance(component.swc, autosar.bsw.com.ComComponent):
             with io.open(os.path.join(destdir, 'Rte_%s.h'%component.swc.name), 'w', newline='\n') as fp:
@@ -451,6 +470,7 @@ class ComponentHeaderGenerator():
 class MockRteGenerator(RteGenerator):
    def __init__(self, partition, api_prefix='Rte', file_prefix = 'MockRte', include=None):
       super().__init__(partition, api_prefix, include)
+      self.includes.append((file_prefix+'.h', False))
       self.api_prefix = api_prefix
       self.file_prefix = file_prefix
       self.typedefs={}
@@ -509,17 +529,37 @@ class MockRteGenerator(RteGenerator):
    def _create_operation_setter(self, component, port, operation, port_access):
       func_name='%s_SetCallHandler_%s_%s_%s'%(self.prefix, component.name, port.name, operation.name)
       short_name='%s_SetCallHandler_%s_%s'%(self.prefix, port.name, operation.name)
-      
-      
+
       type_name = '%s_%s_ServerCallHandler_t'%(port.name, operation.name)
-      var_name = 'm_ServerCallHandler_%s_%s_%s'%(component.name, port.name, operation.name)
-       #= C.function(func_name, 'void')
+      var_name = 'm_ServerCallHandler_%s_%s_%s'%(component.name, port.name, operation.name)       
       tmp_proto = C.fptr.from_func(port_access.func.proto, type_name)
-      
+
       self.typedefs[type_name] = 'typedef %s'%str(tmp_proto)
       proto = C.function(func_name, 'void', args=[C.variable('handler_func', type_name, pointer=True)])
       func = autosar.rte.base.SetCallHandlerFunction(short_name, proto, operation, var_name)
       self.extra_public_functions[short_name]=func
+      static_var = C.variable(var_name, type_name, static=True, pointer=True)
+      self.extra_static_vars[var_name]=static_var
+      self.extra_rte_start.append(C.statement('%s = (%s*) 0'%(var_name, type_name)))
+      body = self._createMockServerCallFunction(port_access.func.proto, var_name)
+      self.extra_public_functions[port_access.func.proto.name]=autosar.rte.base.ServerCallFunction(port_access.func.proto, body)
+
+   def _createMockServerCallFunction(self, proto, var_name):
+      body = C.block(innerIndent=3)
+      body.append(C.line('if (%s != 0)'%(var_name)))
+      inner = C.block(innerIndent=3)
+      fcall = C.fcall(var_name)
+      for arg in proto.args:
+         fcall.add_param(arg.name)
+      if proto.typename != 'void':
+         inner.append(C.statement('return %s'%str(fcall)))
+      else:
+         inner.append(C.statement(fcall))
+      body.append(inner)
+      if proto.typename != 'void':
+         body.append(C.statement('return RTE_E_INVALID'))
+      return body
+
 
    def _createPortVariable(self, component, port, data_element):
       data_element_map = self.partition.data_element_map
@@ -542,7 +582,7 @@ class MockRteGenerator(RteGenerator):
       code = hfile.code
       code.extend([C.line(x) for x in _genCommentHeader('Includes')])
       code.append(C.include("Std_Types.h"))
-      code.append(C.include("Rte_Type.h"))      
+      code.append(C.include("Rte_Type.h"))
       code.append(C.blank())
       code.extend(_genCommentHeader('Constants and Types'))
       for key in sorted(self.typedefs.keys()):

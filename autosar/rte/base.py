@@ -58,7 +58,7 @@ class Port:
       for operation in self.operations:
          if operation.name == name: return operation
       raise KeyError("No operation with name "+name)
-   
+
    def process_types(self, ws, type_manager):
       for data_element in self.data_elements:
          type_manager.processType(ws, data_element.dataType)
@@ -68,7 +68,7 @@ class Port:
             if data_type is None:
                raise ValueError('Invalid Type Reference: '+argument.typeRef)
             type_manager.processType(ws, data_type)
-      
+
    def update_client_api(self, api):
       for port_func in self.portAPI.values():
          if isinstance(port_func, ReadPortFunction):
@@ -108,13 +108,13 @@ class ProvidePort(Port):
       func=C.function(fname, 'Std_ReturnType')
       func.add_arg(type_arg)
       if shortname not in self.portAPI:
-         rte_port_func = None         
+         rte_port_func = None
          initValue = None
          ar_port = self.ar_port
          if len(ar_port.comspec)>0:
             for comspec in ar_port.comspec:
                if (comspec.name == rte_data_element.name) and (comspec.initValueRef is not None):
-                  initValue = ws.find(comspec.initValueRef)         
+                  initValue = ws.find(comspec.initValueRef)
          if call_type == 'Send':
             rte_port_func = SendPortFunction(shortname, func, rte_data_element)
          else:
@@ -145,7 +145,7 @@ class RequirePort(Port):
       func=C.function(fname, 'Std_ReturnType')
       func.add_arg(type_arg)
       if shortname not in self.portAPI:
-         rte_port_func = None         
+         rte_port_func = None
          initValue = None
          queueLength = None
          ar_port = self.ar_port
@@ -153,18 +153,18 @@ class RequirePort(Port):
             for comspec in ar_port.comspec:
                if (comspec.name == rte_data_element.name) and (comspec.initValueRef is not None):
                   initValue = ws.find(comspec.initValueRef)
-                  queueLength = comspec.queueLength         
+                  queueLength = comspec.queueLength
          if call_type == 'Read':
             rte_port_func = ReadPortFunction(shortname, func, rte_data_element)
          else:
             rte_port_func = ReceivePortFunction(shortname, func, rte_data_element)
          self.portAPI[shortname] = rte_port_func
-      
-   def create_server_call_api(self, ws, rte_operation):      
+
+   def create_server_call_api(self, ws, rte_operation):
       assert(ws is not None)
       shortname='_'.join([self.parent.rte_prefix, 'Call', self.name, rte_operation.name])
       func_name='_'.join([self.parent.rte_prefix, 'Call', self.parent.name, self.name, rte_operation.name])
-      return_type = 'Std_ReturnType' if len(rte_operation.inner.errorRefs)>0 else 'void'         
+      return_type = 'Std_ReturnType' if len(rte_operation.inner.errorRefs)>0 else 'void'
       proto = C.function(func_name, return_type)
       for argument in rte_operation.arguments:
          proto.add_arg(argument)
@@ -174,12 +174,12 @@ class RequirePort(Port):
 
 
 class RteTypeManager:
-   
+
    def __init__(self):
       self.typeMap = {}
-   
+
    def processType(self, ws, dataType):
-      if dataType.ref not in self.typeMap:         
+      if dataType.ref not in self.typeMap:
          if isinstance(dataType, autosar.datatype.RecordDataType):
             for elem in dataType.elements:
                childType = ws.find(elem.typeRef, role='DataType')
@@ -195,12 +195,12 @@ class RteTypeManager:
                self.typeMap[dataType.ref]=dataType
          else:
             self.typeMap[dataType.ref]=dataType
-   
+
    def getTypes(self):
       basicTypes=set()
       complexTypes=set()
       modeTypes=set()
-      
+
       for dataType in self.typeMap.values():
          if isinstance(dataType, autosar.datatype.RecordDataType) or isinstance(dataType, autosar.datatype.ArrayDataType):
             complexTypes.add(dataType.ref)
@@ -273,18 +273,19 @@ class RetValPortFunction(PortFunction):
 class SetCallHandlerFunction(PortFunction):
    def __init__(self, shortname, proto, operation, varname):
       super().__init__(shortname, proto)
-      self.operation = operation      
+      self.operation = operation
+      self.varname = varname
       self.body = self._create_body(proto)
-      
-      
-   
+
    def _create_body(self, proto):
-      body = C.block()
-      
-      #print(str(func))
-      
-      
-   
+      body = C.block(innerIndent=3)
+      body.append(C.statement('%s = %s'%(self.varname, proto.args[0].name)))
+      return body
+
+class ServerCallFunction(PortFunction):
+   def __init__(self, proto, body):
+      super().__init__(proto.name, proto)
+      self.body=body
 
 class DataElement:
    """
@@ -314,13 +315,13 @@ class Operation:
       self.arguments = arguments
       self.inner = inner
 
-class DataElementFunction:   
-   def __init__(self, proto, port, data_element):      
+class DataElementFunction:
+   def __init__(self, proto, port, data_element):
       self.proto = proto
       self.port = port
       self.data_element = data_element
       self.body = None
-      
+
 class DataElementPortAccess:
    def __init__(self, port, data_element, runnable):
       self.port = port
@@ -329,7 +330,7 @@ class DataElementPortAccess:
 
 class OperationPortAccess:
    def __init__(self, port, operation, runnable, func):
-      self.port = port      
+      self.port = port
       self.operation = operation
       self.runnable = runnable
       self.func = func
