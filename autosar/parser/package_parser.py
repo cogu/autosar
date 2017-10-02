@@ -62,6 +62,8 @@ class PackageParser(object):
             'IMPLEMENTATION-DATA-TYPE': dataTypeParser.parseImplementationDataType,
             'SW-BASE-TYPE': dataTypeParser.parseSwBaseType,
             'SWC-IMPLEMENTATION': componentTypeParser.parseSwcImplementation,
+            'UNIT': dataTypeUnitsParser.parseUnit,
+            'DATA-TYPE-MAPPING-SET': dataTypeParser.parseDataTypeMappingSet
          }
          
       else:

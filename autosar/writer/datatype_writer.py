@@ -1,4 +1,5 @@
 from autosar.writer.writer_base import WriterBase
+import autosar.base
 import autosar.datatype
 from fractions import Fraction
 
@@ -66,7 +67,7 @@ class DataTypeWriter(WriterBase):
       lines.append('<COMPU-INTERNAL-TO-PHYS>')
       lines.append(self.indent('<COMPU-SCALES>',1))
       for elem in item.elements:
-         lines.append(self.indent('<COMPU-SCALE>',2))         
+         lines.append(self.indent('<COMPU-SCALE>',2))
          if elem.label is not None:
             lines.append(self.indent('<SHORT-LABEL>%s</SHORT-LABEL>'%elem.label,3))
          if self.version>=4.0:
@@ -109,7 +110,13 @@ class DataTypeWriter(WriterBase):
       lines=[]
       lines.append('<UNIT>')
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
-      lines.append(self.indent('<DISPLAY-NAME>%s</DISPLAY-NAME>'%elem.displayName,1))
+      if elem.displayName is not None:
+         lines.append(self.indent('<DISPLAY-NAME>%s</DISPLAY-NAME>'%elem.displayName,1))
+      if self.version >= 4.0:
+         if elem.factor is not None:
+            lines.append(self.indent('<FACTOR-SI-TO-UNIT>%s</FACTOR-SI-TO-UNIT>'%elem.factor,1))
+         if elem.offset is not None:
+            lines.append(self.indent('<OFFSET-SI-TO-UNIT>%s</OFFSET-SI-TO-UNIT>'%elem.offset,1))
       lines.append('</UNIT>')
       return lines
 
@@ -442,19 +449,35 @@ class DataTypeWriter(WriterBase):
       lines.append("<%s>"%elem.tag(self.version))
       lines.append(self.indent("<SHORT-NAME>%s</SHORT-NAME>"%elem.name, 1))
       tmp = self.writeDescXML(elem)
-      if tmp is not None: lines.extend(self.indent(tmp,1))      
+      if tmp is not None: lines.extend(self.indent(tmp,1))
       lines.append(self.indent("<CATEGORY>%s</CATEGORY>" % elem.category, 1))
       if elem.adminData is not None:
          lines.extend(self.indent(self.writeAdminDataXML(elem.adminData),1))
       lines.append(self.indent("<SW-DATA-DEF-PROPS>", 1))
       if len(elem.variants)>=0:
-         lines.append(self.indent("<SW-DATA-DEF-PROPS-VARIANTS>", 2))
-         for variant in elem.variants:
-            if isinstance(variant, autosar.datatype.SwDataDefPropsConditional):
-               lines.extend(self.indent(self.writeSwDataDefPropsConditionalXML(ws, variant), 3))
-         lines.append(self.indent("</SW-DATA-DEF-PROPS-VARIANTS>", 2))
+         lines.extend(self.indent(self.writeSwDataDefPropsVariantsXML(ws, elem),2))
       lines.append(self.indent("</SW-DATA-DEF-PROPS>", 1))
+      if elem.dynamicArraySize is not None:
+         lines.append(self.indent("<DYNAMIC-ARRAY-SIZE-PROFILE>%s</DYNAMIC-ARRAY-SIZE-PROFILE>"%(str(elem.dynamicArraySize)), 1))
+      if len(elem.subElements)>0:
+         lines.append(self.indent("<SUB-ELEMENTS>", 1))
+         for subElem in elem.subElements:
+            lines.extend(self.indent(self.writeImplementationDataElementXML(ws, subElem),2))
+         lines.append(self.indent("</SUB-ELEMENTS>", 1))
+      if elem.typeEmitter is not None:
+         lines.append(self.indent("<TYPE-EMITTER>%s</TYPE-EMITTER>"%(elem.typeEmitter), 1))
       lines.append("</%s>"%elem.tag(self.version))
+      return lines
+
+   def writeSwDataDefPropsVariantsXML(self, ws, elem):
+      lines = []
+      lines.append(self.indent("<SW-DATA-DEF-PROPS-VARIANTS>", 0))
+      for variant in elem.variants:
+         if isinstance(variant, autosar.datatype.SwDataDefPropsConditional):
+            lines.extend(self.indent(self.writeSwDataDefPropsConditionalXML(ws, variant), 1))
+         else:
+            raise NotImplementedError(str(type(variant)))
+      lines.append(self.indent("</SW-DATA-DEF-PROPS-VARIANTS>", 0))
       return lines
 
    def writeImplementationDataTypeCode(self, dataType, localvars):
@@ -469,9 +492,39 @@ class DataTypeWriter(WriterBase):
       if elem.baseTypeRef is not None:
          baseType=ws.find(elem.baseTypeRef)
          if baseType is None:
-            #raise ValueError('invalid reference: '+elem.baseTypeRef)
-            return ''
-         lines.append(self.indent('<BASE-TYPE-REF DEST="%s">%s</BASE-TYPE-REF>'%(baseType.tag(self.version), elem.baseTypeRef),1))
+            raise ValueError('invalid reference: '+elem.baseTypeRef)
+         lines.append(self.indent('<BASE-TYPE-REF DEST="%s">%s</BASE-TYPE-REF>'%(baseType.tag(self.version), baseType.ref),1))
+      if elem.swCalibrationAccess is not None:
+         lines.append(self.indent('<SW-CALIBRATION-ACCESS>%s</SW-CALIBRATION-ACCESS>'%(elem.swCalibrationAccess),1))
+      if elem.compuMethodRef is not None:
+         lines.append(self.indent('<COMPU-METHOD-REF DEST="COMPU-METHOD">%s</COMPU-METHOD-REF>'%(elem.compuMethodRef),1))
+      if elem.dataConstraintRef is not None:
+         dataConstraint = ws.find(elem.dataConstraintRef)
+         if dataConstraint is None:
+            raise ValueError('invalid reference: '+ elem.dataConstraintRef)
+         lines.append(self.indent('<DATA-CONSTR-REF DEST="%s">%s</DATA-CONSTR-REF>'%(dataConstraint.tag(self.version), dataConstraint.ref),1))
+      if elem.swImplPolicy is not None:
+         lines.append(self.indent('<SW-IMPL-POLICY>%s</SW-IMPL-POLICY>'%(elem.swImplPolicy),1))
+      if elem.implementationTypeRef is not None:
+         implementationType=ws.find(elem.implementationTypeRef)
+         if implementationType is None:
+            raise ValueError('invalid reference: '+elem.implementationTypeRef)
+         lines.append(self.indent('<IMPLEMENTATION-DATA-TYPE-REF DEST="%s">%s</IMPLEMENTATION-DATA-TYPE-REF>'%(implementationType.tag(self.version), implementationType.ref),1))
+      if elem.swPointerTargetProps is not None:
+         lines.extend(self.indent(self.writeSwPointerTargetPropsXML(ws, elem.swPointerTargetProps),1))
+      lines.append("</%s>"%elem.tag(self.version))
+      return lines
+
+   def writeSwPointerTargetPropsXML(self, ws, elem):
+      assert(isinstance(elem, autosar.datatype.SwPointerTargetProps))
+      lines = []
+      lines.append("<%s>"%elem.tag(self.version))
+      if elem.targetCategory is not None:
+         lines.append(self.indent('<TARGET-CATEGORY>%s</TARGET-CATEGORY>'%(elem.targetCategory),1))
+      lines.append(self.indent("<SW-DATA-DEF-PROPS>", 1))
+      if len(elem.variants)>=0:
+         lines.extend(self.indent(self.writeSwDataDefPropsVariantsXML(ws, elem),2))
+      lines.append(self.indent("</SW-DATA-DEF-PROPS>", 1))
       lines.append("</%s>"%elem.tag(self.version))
       return lines
 
@@ -493,3 +546,32 @@ class DataTypeWriter(WriterBase):
          lines.append(self.indent('<NATIVE-DECLARATION>%s</NATIVE-DECLARATION>'%elem.nativeDeclaration,1))
       lines.append("</%s>"%elem.tag(self.version))
       return lines
+
+   def writeImplementationDataElementXML(self, ws, elem):
+      assert(isinstance(elem, autosar.datatype.ImplementationDataTypeElement))
+      lines = []
+      lines.append("<%s>"%elem.tag(self.version))
+      lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
+      if elem.category is not None:
+         lines.append(self.indent('<CATEGORY>%s</CATEGORY>'%elem.category,1))
+      if elem.adminData is not None:
+         lines.extend(self.indent(self.writeAdminDataXML(elem.adminData),1))
+      if elem.arraySize is not None:
+         lines.append(self.indent('<ARRAY-SIZE>%s</ARRAY-SIZE>'%elem.arraySize,1))
+      if elem.arraySizeSemantics is not None:
+         lines.append(self.indent('<ARRAY-SIZE-SEMANTICS>%s</ARRAY-SIZE-SEMANTICS>'%elem.arraySizeSemantics,1))
+      lines.append(self.indent("<SW-DATA-DEF-PROPS>", 1))
+      if len(elem.variants)>=0:
+         lines.extend(self.indent(self.writeSwDataDefPropsVariantsXML(ws, elem),2))
+      lines.append(self.indent("</SW-DATA-DEF-PROPS>", 1))
+      lines.append("</%s>"%elem.tag(self.version))
+      return lines
+
+   def writeDataTypeMappingSetXML(self, elem, package):
+      assert(isinstance(elem, autosar.datatype.DataTypeMappingSet))
+      lines = []
+      lines.append("<%s>"%elem.tag(self.version))
+      lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
+      lines.append("</%s>"%elem.tag(self.version))
+      return lines
+      

@@ -7,7 +7,7 @@ import collections
 class ConstElement(object):
    def __init__(self,parent=None):
       self.parent=parent
-   
+
    def asdict(self):
       data={'type': self.__class__.__name__}
       data.update(self.__dict__)
@@ -19,7 +19,7 @@ class ConstElement(object):
    def rootWS(self):
       if self.parent is None: return None
       return self.parent.rootWS()
-   
+
 
 
 class RecordTypeElement(ConstElement):
@@ -48,9 +48,9 @@ class CompuConstElement(ConstElement):
    def __eq__(self,other):
       if self is other: return True
       if type(self) is type(other):
-         return (self.lowerLimit == other.lowerLimit) and (self.upperLimit == other.upperLimit) and (self.textValue == self.textValue)      
+         return (self.lowerLimit == other.lowerLimit) and (self.upperLimit == other.upperLimit) and (self.textValue == self.textValue)
       return False
-      
+
 
 class CompuRationalElement(ConstElement):
    def __init__(self, offset, numerator, denominator, label=None, adminData=None):
@@ -62,30 +62,35 @@ class CompuRationalElement(ConstElement):
    def __eq__(self,other):
       if self is other: return True
       if type(self) is type(other):
-         return (self.offset == other.offset) and (self.numerator == other.numerator) and (self.denominator == self.denominator)      
-      return False      
+         return (self.offset == other.offset) and (self.numerator == other.numerator) and (self.denominator == self.denominator)
+      return False
 
 class DataTypeUnitElement(Element):
-   def __init__(self,name,displayName):
-      super().__init__(name)
+   def tag(self, version=None): return 'UNIT'
+   def __init__(self, name, displayName, factor=None, offset=None, parent=None):
+      super().__init__(name, parent)
       self.displayName=displayName
+      self.factor = factor       #only supported in AUTOSAR 4 and above
+      self.offset = offset       #only supported in AUTOSAR 4 and above
    def __eq__(self,other):
       if self is other: return True
       if type(self) is type(other):
-         return (self.name==other.name) and (self.displayName == other.displayName)
-      return False       
+         if (self.name==other.name) and (self.displayName == other.displayName) and (
+            self.factor == other.factor) and (self.offset == other.offset):
+            return True
+      return False
 
 class DataType(Element):
    def __init__(self, name, parent=None, adminData=None):
       super().__init__(name, parent, adminData)
-   
+
    @property
    def isComplexType(self):
       return True if isinstance(self, (RecordDataType, ArrayDataType)) else False
 
 
 class IntegerDataType(DataType):
-   
+
    def tag(self,version=None): return 'INTEGER-TYPE'
    def __init__(self, name, minVal=0, maxVal=0, compuMethodRef=None, parent=None, adminData=None):
       super().__init__(name, parent, adminData)
@@ -93,7 +98,7 @@ class IntegerDataType(DataType):
       self.maxVal = int(maxVal)
       self._minValType = 'CLOSED'
       self._maxValType = 'CLOSED'
-      
+
       if isinstance(compuMethodRef,str):
          self.compuMethodRef=compuMethodRef
       elif hasattr(compuMethodRef,'ref'):
@@ -118,7 +123,7 @@ class IntegerDataType(DataType):
          raise ValueError('value must be either "CLOSED" or "OPEN"')
       self._minValType=value
 
-   
+
    def __eq__(self,other):
       if self is other: return True
       if type(other) is type(self):
@@ -127,14 +132,14 @@ class IntegerDataType(DataType):
                return self.findWS().find(self.compuMethodRef) == other.findWS().find(other.compuMethodRef)
             elif (self.compuMethodRef is None) and (other.compuMethodRef is None):
                return True
-   
+
    def __deepcopy__(self,memo):
       obj=type(self)(self.name,self.minVal,self.maxVal,self.compuMethodRef)
       if self.adminData is not None: obj.adminData=copy.deepcopy(self.adminData,memo)
       return obj
-            
-class RecordDataType(DataType):   
-   def tag(self,version=None): return 'RECORD-TYPE'      
+
+class RecordDataType(DataType):
+   def tag(self,version=None): return 'RECORD-TYPE'
    def __init__(self, name, elements=None,  parent=None, adminData=None):
       super().__init__(name, parent, adminData)
       self.elements = []
@@ -149,10 +154,10 @@ class RecordDataType(DataType):
                self.elements.append(RecordTypeElement(elem['name'],elem['typeRef'],self))
             else:
                raise ValueError('element must be either Mapping, RecordTypeElement or tuple')
-   def asdict(self):         
+   def asdict(self):
       data={'type': self.__class__.__name__,'name':self.name,'elements':[]}
       if self.adminData is not None:
-         data['adminData']=self.adminData.asdict()      
+         data['adminData']=self.adminData.asdict()
       for elem in self.elements:
          data['elements'].append(elem.asdict())
       return data
@@ -165,35 +170,35 @@ class RecordDataType(DataType):
       return False
 
    def __deepcopy__(self,memo):
-      obj=type(self)(self.name)      
+      obj=type(self)(self.name)
       if self.adminData is not None: obj.adminData=copy.deepcopy(self.adminData,memo)
       for elem in self.elements:
          obj.elements.append(RecordTypeElement(elem.name,elem.typeRef,self))
       return obj
-      
-   
-   
+
+
+
 
 class ArrayDataType(DataType):
-   
+
    def tag(self,version=None): return 'ARRAY-TYPE'
-   
+
    def __init__(self, name, typeRef, length, parent=None, adminData=None):
       super().__init__(name, parent, adminData)
       self.typeRef = typeRef
       self.length = length
 
 class BooleanDataType(DataType):
-   
+
    def tag(self,version=None): return 'BOOLEAN-TYPE'
-   
+
    def __init__(self,name, parent=None, adminData=None):
       super().__init__(name, parent, adminData)
 
 
 class StringDataType(DataType):
    def tag(self,version=None): return 'STRING-TYPE'
-   
+
    def __init__(self,name,length,encoding, parent=None, adminData=None):
       super().__init__(name, parent, adminData)
       self.length=length
@@ -207,15 +212,15 @@ class StringDataType(DataType):
          if (self.name==other.name) and (self.length == other.length) and (self.encoding == other.encoding):
             return True
       return False
-   
+
    def __deepcopy__(self,memo):
       obj=type(self)(self.name,self.length,self.encoding)
       return obj
 
-      
+
 class RealDataType(DataType):
    def tag(self,version=None): return 'REAL-TYPE'
-   
+
    def __init__(self, name, minVal, maxVal, minValType='CLOSED', maxValType='CLOSED', hasNaN=False, encoding='SINGLE', parent=None, adminData=None):
       super().__init__(name, parent, adminData)
       self.minVal=minVal
@@ -224,17 +229,17 @@ class RealDataType(DataType):
       self.maxValType = maxValType
       self.hasNaN=hasNaN
       self.encoding=encoding
-      
+
 
 class CompuMethodRational(Element):
    def tag(self,version=None): return 'COMPU-INTERNAL-TO-PHYS'
-   def __init__(self,name,unitRef,elements, category=None, adminData=None):      
+   def __init__(self,name,unitRef,elements, category=None, adminData=None):
       super().__init__(name)
       self.category=category
       self.unitRef = unitRef
       self.adminData = adminData
       self.elements = []
-      
+
       for elem in elements:
          self.elements.append(CompuRationalElement(**elem))
    def asdict(self):
@@ -242,27 +247,28 @@ class CompuMethodRational(Element):
       for element in self.elements:
          data['elements'].append(element.asdict())
       return data
-   
+
    def find(self,ref):
       if ref.startswith('/'):
          root=self.rootWS()
          return root.find(ref)
       return None
-   
+
    def __eq__(self,other):
       if self is other: return True
       if self.name == other.name:
          lhs = None if self.unitRef is None else self.find(self.unitRef)
-         rhs = None if other.unitRef is None else other.find(other.unitRef)      
-         if lhs == rhs:         
+         rhs = None if other.unitRef is None else other.find(other.unitRef)
+         if lhs == rhs:
             if len(self.elements)!=len(other.elements): return False
             for i in range(len(self.elements)):
                if self.elements[i] != other.elements[i]: return False
             return True
       return False
 
-      
+
 class CompuMethodConst(Element):
+   def tag(self, version=3.0): return 'COMPU-METHOD'
    def __init__(self, name, elements, parent=None, adminData=None, category=None):
       super().__init__(name, parent, adminData)
       self.elements = []
@@ -289,7 +295,7 @@ class CompuMethodConst(Element):
          data['elements'].append(element.asdict())
       return data
 
-   
+
    def getValueTable(self):
       retval = []
       i = 0
@@ -298,7 +304,7 @@ class CompuMethodConst(Element):
             retval.append(elem.textvalue)
          else:
             return None
-         i+=1      
+         i+=1
       return retval if len(retval)>0 else None
 
    def __eq__(self,other):
@@ -337,30 +343,32 @@ class DataConstraint(Element):
 
 class SwDataDefPropsConditional:
    def tag(self,version=None): return 'SW-DATA-DEF-PROPS-CONDITIONAL'
-   def __init__(self, baseTypeRef = None, swCalibrationAccess = None, compuMethodRef = None, dataConstraintRef = None, parent = None):
+   def __init__(self, baseTypeRef = None, implementationTypeRef = None, swCalibrationAccess = None, compuMethodRef = None, dataConstraintRef = None, parent = None):
       self.baseTypeRef = baseTypeRef
       self.swCalibrationAccess = swCalibrationAccess
       self.compuMethodRef = compuMethodRef
-      self.dataConstraintRef = dataConstraintRef      
+      self.dataConstraintRef = dataConstraintRef
+      self.implementationTypeRef = implementationTypeRef
       self.parent = parent
+      self.swPointerTargetProps = None
       self._swImplPolicy=None
-   
+
    @property
    def swImplPolicy(self):
       return self._swImplPolicy
-   
+
    @swImplPolicy.setter
    def swImplPolicy(self, value):
       ucvalue=str(value).upper()
       enum_values = ["CONST", "FIXED", "MEASUREMENT-POINT", "QUEUED", "STANDARD"]
-      if ucvalue in enun_values:
+      if ucvalue in enum_values:
          self._swImplPolicy = ucvalue
       else:
          raise ValueError('invalid swImplPolicy value: ' +  value)
 
 
 class SwPointerTargetProps:
-   def tag(self,version=None): return 'SW-POINTER-TARGET-PROPS'
+   def tag(self, version=None): return 'SW-POINTER-TARGET-PROPS'
    def __init__(self, name, category='VALUE', variants=None, parent=None):
       self.category = category
       self.variants = []
@@ -370,26 +378,62 @@ class SwPointerTargetProps:
                self.variants.append(elem)
             else:
                raise ValueError('Invalid type: ', type(elem))
-      
+
 
 class ImplementationDataType(Element):
-   def tag(self,version=None): return 'IMPLEMENTATION-DATA-TYPE'
+   def tag(self, version=None): return 'IMPLEMENTATION-DATA-TYPE'
    def __init__(self, name, category='VALUE', variants=None, parent=None, adminData=None):
       super().__init__(name, parent, adminData)
       self.category = category
+      self.typeEmitter = None
+      self.dynamicArraySize = None
       self.variants = []
+      self.subElements = []
       if isinstance(variants, collections.Iterable):
          for elem in variants:
             if isinstance(elem, SwDataDefPropsConditional) or isinstance(elem, SwPointerTargetProps):
                self.variants.append(elem)
             else:
                raise ValueError('Invalid type: ', type(elem))
-      
+
+
 class SwBaseType(Element):
-   def tag(self,version=None): return 'SW-BASE-TYPE'
+   def tag(self, version=None): return 'SW-BASE-TYPE'
    def __init__(self, name, size, typeEncoding=None, nativeDeclaration=None, category=None, parent=None, adminData=None):
       super().__init__(name, parent, adminData)
       self.size = int(size)
       self.typeEncoding=typeEncoding
       self.nativeDeclaration=nativeDeclaration
       self.category = category
+
+
+class SwPointerTargetProps:
+   def tag(self, version=None): return 'SW-POINTER-TARGET-PROPS'
+   def __init__(self, targetCategory=None):
+      self.targetCategory = targetCategory
+      self.variants = []
+
+class ImplementationDataTypeElement(Element):
+   def tag(self, version=None): return 'IMPLEMENTATION-DATA-TYPE-ELEMENT'
+   def __init__(self, name, category=None, arraySize=None, arraySizeSemantics=None, variants=None, parent=None, adminData=None):
+      super().__init__(name, parent, adminData)
+      self.category=category
+      self.arraySize = arraySize      
+      if arraySize is not None:
+         if arraySizeSemantics is not None:
+            self.arraySizeSemantics = arraySizeSemantics
+         else:
+            self.arraySizeSemantics = 'FIXED-SIZE'
+      else:
+         self.arraySizeSemantics = None
+      if variants is not None:
+         self.variants=variants
+      else:
+         self.variants = []
+
+class DataTypeMappingSet(Element):
+   def tag(self, version=None): return 'DATA-TYPE-MAPPING-SET'
+   
+   def __init__(self, name, parent=None, adminData=None):
+      super().__init__(name, parent, adminData)
+   

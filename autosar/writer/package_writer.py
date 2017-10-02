@@ -74,7 +74,9 @@ class PackageWriter(WriterBase):
                               'CompuMethodRational': self.dataTypeWriter.writeCompuMethodXML,
                               'DataConstraint': self.dataTypeWriter.writeDataConstraintXml,
                               'ImplementationDataType': self.dataTypeWriter.writeImplementationDataTypeXML,
-                              'SwBaseType': self.dataTypeWriter.writeSwBaseTypeXML
+                              'SwBaseType': self.dataTypeWriter.writeSwBaseTypeXML,
+                              'DataTypeUnitElement': self.dataTypeWriter.writeDataTypeUnitElementXML,
+                              'DataTypeMappingSet': self.dataTypeWriter.writeDataTypeMappingSetXML
                             }
          self.switcherCode = {
                               'DataConstraint': self.dataTypeWriter.writeDataConstraintCode,
