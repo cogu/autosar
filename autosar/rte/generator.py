@@ -590,7 +590,8 @@ class MockRteGenerator(RteGenerator):
       code.append(C.blank())
       code.extend([C.line(x) for x in _genCommentHeader('Public Function Declarations')])
       code.append(C.blank())
-
+      
+      code.append(C.statement(C.function('%s_Start'%self.api_prefix, 'void')))
       for func in sorted(self.partition.serverAPI.final['get'], key=lambda x: x.shortname):
          assert func.proto is not None
          hfile.code.append(C.statement(func.proto))

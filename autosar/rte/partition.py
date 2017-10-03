@@ -233,7 +233,6 @@ class Component:
             runnable.prototype = (C.function(runnable.symbol, 'void'))
 
    def create_data_elements(self, data_element_map):
-
       for provide_port in self.providePorts:
          for require_port in provide_port.connectors:
             if len(require_port.data_elements)>0:

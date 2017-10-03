@@ -83,6 +83,8 @@ class Port:
             api.call[port_func.proto.name]=port_func
          elif isinstance(port_func, CalPrmPortFunction):
             api.calprm[port_func.proto.name]=port_func
+         else:
+            raise NotImplementedError(type(port_func))
 
 class ProvidePort(Port):
    """
@@ -102,8 +104,8 @@ class ProvidePort(Port):
          call_type='Write'
       data_type = rte_data_element.dataType
       pointer=True if data_type.isComplexType else False
-      fname='%s_%s_%s_%s_%s'%(self.parent.rte_prefix, call_type, self.parent.name, self.name, rte_data_element.name)
-      shortname='%s_%s_%s_%s'%(self.parent.rte_prefix, call_type, self.name, rte_data_element.name)
+      fname='_'.join([self.parent.rte_prefix, call_type, self.parent.name, self.name, rte_data_element.name])
+      shortname='_'.join([self.parent.rte_prefix, call_type, self.name, rte_data_element.name])
       type_arg=type2arg(data_type,pointer)
       func=C.function(fname, 'Std_ReturnType')
       func.add_arg(type_arg)
@@ -138,8 +140,8 @@ class RequirePort(Port):
       else:
          call_type='Read'
       pointer=True
-      fname='%s_%s_%s_%s_%s'%(self.parent.rte_prefix, call_type, self.parent.name, self.name, rte_data_element.name)
-      shortname='%s_%s_%s_%s'%(self.parent.rte_prefix, call_type, self.name, rte_data_element.name)
+      fname='_'.join([self.parent.rte_prefix, call_type, self.parent.name, self.name, rte_data_element.name])
+      shortname='_'.join([self.parent.rte_prefix, call_type, self.name, rte_data_element.name])
       data_type = rte_data_element.dataType
       type_arg=type2arg(data_type,pointer)
       func=C.function(fname, 'Std_ReturnType')
@@ -168,9 +170,9 @@ class RequirePort(Port):
       proto = C.function(func_name, return_type)
       for argument in rte_operation.arguments:
          proto.add_arg(argument)
-      func = CallPortFunction(shortname, proto, rte_operation)
-      self.portAPI[shortname] = proto
-      return func
+      port_func = CallPortFunction(shortname, proto, rte_operation)
+      self.portAPI[shortname] = port_func
+      return port_func
 
 
 class RteTypeManager:
