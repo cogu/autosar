@@ -19,7 +19,8 @@ class OperationInvokedEvent:
       self.runnable = runnable
       self.port = port
       self.operation = operation
-      self.runnable.prototype=C.function(runnable.symbol, 'Std_ReturnType', args=operation.arguments)
+      return_type = 'Std_ReturnType' if len(operation.inner.errorRefs)>0 else 'void'
+      self.runnable.prototype=C.function(runnable.symbol, return_type, args=operation.arguments)
 
 class ModeSwitchEvent:
    """

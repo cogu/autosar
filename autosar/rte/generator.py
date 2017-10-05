@@ -360,17 +360,21 @@ class ComponentHeaderGenerator():
       hfile=C.hfile(None, guard='RTE_%s_H'%(component.swc.name.upper()))
       hfile.code.append(C.include('Rte.h'))
       hfile.code.append(C.include('Rte_Type.h'))
+      hfile.code.append(C.blank())
       lines = self._genInitValues(ws, component.swc.requirePorts+component.swc.providePorts)
       if len(lines)>0:
          hfile.code.extend([C.line(x) for x in _genCommentHeader('Init Values')])
          hfile.code.extend(lines)
 
-      #Write API
-      hfile.code.append(C.blank())
-      hfile.code.extend([C.line(x) for x in _genCommentHeader('API Prototypes')])
-      for func in component.clientAPI.get_all():
-         assert func.proto is not None
-         hfile.code.append(C.statement(func.proto))
+      
+      #Write API      
+      num_funcs = sum(1 for x in component.clientAPI.get_all())
+      if num_funcs>0:
+         hfile.code.append(C.blank())
+         hfile.code.extend([C.line(x) for x in _genCommentHeader('API Prototypes')])
+         for func in component.clientAPI.get_all():
+            assert func.proto is not None
+            hfile.code.append(C.statement(func.proto))
       if len(component.clientAPI.final['read'])>0:
          hfile.code.append(C.blank())
          hfile.code.extend([C.line(x) for x in _genCommentHeader('Rte_Read_<p>_<d>')])
@@ -493,8 +497,8 @@ class MockRteGenerator(RteGenerator):
 
    def _create_data_element_getter(self, component, port, data_element):
       data_type = data_element.dataType
-      func_name='%s_GetData_%s_%s_%s'%(self.prefix, component.name, port.name, data_element.name)
-      short_name='%s_GetData_%s_%s'%(self.prefix, port.name, data_element.name)
+      func_name='%s_GetWriteData_%s_%s_%s'%(self.prefix, component.name, port.name, data_element.name)
+      short_name='%s_GetWriteData_%s_%s'%(self.prefix, port.name, data_element.name)
       suffix = '*' if data_type.isComplexType else ''
       proto=C.function(func_name, data_type.name+suffix)
       rte_func = autosar.rte.base.DataElementFunction(proto, port, data_element)
@@ -513,15 +517,15 @@ class MockRteGenerator(RteGenerator):
 
    def _create_data_element_setter(self, component, port, data_element):
       data_type = data_element.dataType
-      func_name='%s_SetData_%s_%s_%s'%(self.prefix, component.name, port.name, data_element.name)
-      short_name='%s_SetData_%s_%s'%(self.prefix, port.name, data_element.name)
+      func_name='%s_SetReadData_%s_%s_%s'%(self.prefix, component.name, port.name, data_element.name)
+      short_name='%s_SetReadData_%s_%s'%(self.prefix, port.name, data_element.name)
       proto=C.function(func_name, 'void')
       proto.add_arg(C.variable('data', data_type.name, pointer=data_type.isComplexType))
       rte_func = autosar.rte.base.DataElementFunction(proto, port, data_element)
       self._createPortVariable(component, port, data_element)
       self.partition.serverAPI.set[short_name] = autosar.rte.base.SetPortFunction(short_name, proto, data_element)
-      func_name='%s_SetResult_%s_%s_%s'%(self.prefix, component.name, port.name, data_element.name)
-      short_name='%s_SetResult_%s_%s'%(self.prefix, port.name, data_element.name)
+      func_name='%s_SetReadResult_%s_%s_%s'%(self.prefix, component.name, port.name, data_element.name)
+      short_name='%s_SetReadResult_%s_%s'%(self.prefix, port.name, data_element.name)
       proto=C.function(func_name, 'void')
       proto.add_arg(C.variable('retval', 'Std_ReturnType'))
       self.partition.serverAPI.retval[short_name] = autosar.rte.base.RetValPortFunction(short_name, proto, data_element)
