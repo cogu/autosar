@@ -50,8 +50,8 @@ class ComponentAPI:
       self.call = {}
       self.calprm = {}
       self.get = {}
-      self.set = {}
-      self.retval = {}
+      self.setReadData = {}
+      self.setReadResult = {}
 
       self.final = {
                      'read': [],
@@ -63,8 +63,8 @@ class ComponentAPI:
                      'calprm': [],
                      'modeswitch': [],
                      'get': [],           #FOR UNIT TEST PURPOSES
-                     'set': [],           #FOR UNIT TEST PURPOSES
-                     'retval': [],        #FOR UNIT TEST PURPOSES
+                     'setReadData': [],           #FOR UNIT TEST PURPOSES
+                     'setReadResult': [],        #FOR UNIT TEST PURPOSES
                    }
 
    def finalize(self):
@@ -82,10 +82,10 @@ class ComponentAPI:
          self.final['calprm']=[self.calprm[k] for k in sorted(self.calprm.keys())]
       if len(self.get)>0:
          self.final['get']=[self.get[k] for k in sorted(self.get.keys())]
-      if len(self.set)>0:
-         self.final['set']=[self.set[k] for k in sorted(self.set.keys())]
-      if len(self.retval)>0:
-         self.final['retval']=[self.retval[k] for k in sorted(self.retval.keys())]
+      if len(self.setReadData)>0:
+         self.final['setReadData']=[self.setReadData[k] for k in sorted(self.setReadData.keys())]
+      if len(self.setReadResult)>0:
+         self.final['setReadResult']=[self.setReadResult[k] for k in sorted(self.setReadResult.keys())]
 
    def get_all(self):
       for func in self.final['read']:
@@ -104,9 +104,9 @@ class ComponentAPI:
          yield func
       for func in self.final['get']:
          yield func
-      for func in self.final['set']:
+      for func in self.final['setReadData']:
          yield func
-      for func in self.final['retval']:
+      for func in self.final['setReadResult']:
          yield func
 
    def update(self, other):

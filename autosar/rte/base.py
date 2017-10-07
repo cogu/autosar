@@ -5,6 +5,8 @@ import cfile as C
 #PortInstance = namedtuple('PortRef', 'component port')
 #PortConnector = namedtuple('PortConnector', 'provide require')
 
+innerIndentDefault = 3
+
 def type2arg(typeObj, pointer=False, name='data'):
    return C.variable(name,typeObj.name,pointer=pointer)
 
@@ -260,18 +262,46 @@ class GetPortFunction(PortFunction):
       super().__init__(shortname, proto)
       self.data_element = data_element
 
-class SetPortFunction(PortFunction):
-   """MockRte setter function"""
-   def __init__(self, shortname, proto, data_element):
-      super().__init__(shortname, proto)
+class SetReadDataFunction:
+   """
+   MockRte setter function
+   """
+   def __init__(self, prefix, component, port, data_element, var_name):
+      data_type = data_element.dataType
+      func_name='%s_SetReadData_%s_%s_%s'%(prefix, component.name, port.name, data_element.name)
+      shortname='%s_SetReadData_%s_%s'%(prefix, port.name, data_element.name)
+      proto=C.function(func_name, 'void')
+      proto.add_arg(C.variable('data', data_type.name, pointer=data_type.isComplexType))
+      self.shortname = shortname
       self.data_element = data_element
+      self.proto=proto
+      body = C.block(innerIndent=innerIndentDefault)
+      if isinstance(data_type, autosar.datatype.ArrayDataType):               
+         body.append(C.statement('memcpy(&%s[0], %s, sizeof(%s)'%(var_name, proto.args[0].name, var_name)))
+      elif isinstance(data_type, autosar.datatype.RecordDataType):               
+         body.append(C.statement('memcpy(&%s, %s, sizeof(%s)'%(var_name, proto.args[0].name, var_name)))
+      else:
+         body.append(C.statement('%s = %s'%(var_name, proto.args[0].name)))
+      self.body=body
 
-class RetValPortFunction(PortFunction):
+class SetReadResultFunction:
    """MockRte rteval function"""
-   def __init__(self, shortname, proto, data_element):
-      super().__init__(shortname, proto)
+   def __init__(self, prefix, component, port, data_element):
+      func_name='%s_SetReadResult_%s_%s_%s'%(prefix, component.name, port.name, data_element.name)
+      shortname='%s_SetReadResult_%s_%s'%(prefix, port.name, data_element.name)
+      proto=C.function(func_name, 'void')
+      
+      proto.add_arg(C.variable('value', 'Std_ReturnType'))
+      self.shortname = shortname
+      self.proto=proto
       self.data_element = data_element
-
+      data_element.result_var = C.variable('m_ReadResult_%s_%s_%s'%(component.name, port.name, data_element.name), 'Std_ReturnType', static=True)
+      self.static_var = data_element.result_var
+      body = C.block(innerIndent=innerIndentDefault)
+      body.append(C.statement('%s = %s'%(self.static_var.name, proto.args[0].name)))
+      self.body=body
+      
+      
 class SetCallHandlerFunction(PortFunction):
    def __init__(self, shortname, proto, operation, varname):
       super().__init__(shortname, proto)
@@ -295,6 +325,7 @@ class DataElement:
    """
    def __init__(self, name, parent, dataType, initValue = None, isQueued=False, queueLength=None):
       self.symbol = None
+      self.result_var = None
       self.name = name
       self.dataType = dataType
       assert(parent is not None)

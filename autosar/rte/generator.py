@@ -253,12 +253,16 @@ class RteGenerator:
         self._genReceive(fp, sorted(self.partition.serverAPI.final['receive'], key=lambda x: x.shortname))
       if len(self.partition.serverAPI.send)>0:
         self._genSend(fp, sorted(self.partition.serverAPI.final['send'], key=lambda x: x.shortname))
-      if len(self.partition.serverAPI.get)>0:
-        self._genGet(fp, sorted(self.partition.serverAPI.final['get'], key=lambda x: x.shortname))
       #if len(self.partition.serverAPI.call)>0:
       #  self._genCall(fp, sorted(self.partition.serverAPI.final['call'], key=lambda x: x.shortname))
+      if len(self.partition.serverAPI.get)>0:
+        self._genGet(fp, sorted(self.partition.serverAPI.final['get'], key=lambda x: x.shortname))
+      if len(self.partition.serverAPI.setReadData)>0:
+        self._genFunctionBodies(fp, sorted(self.partition.serverAPI.final['setReadData'], key=lambda x: x.shortname))
+      if len(self.partition.serverAPI.setReadResult)>0:
+        self._genFunctionBodies(fp, sorted(self.partition.serverAPI.setReadResult.values(), key=lambda x: x.shortname))
       if len(self.extra_public_functions)>0:
-         self._genExtra(fp, [self.extra_public_functions[key] for key in sorted(self.extra_public_functions.keys())])
+         self._genFunctionBodies(fp, [self.extra_public_functions[key] for key in sorted(self.extra_public_functions.keys())])
 
    def _write_rte_start(self, fp):
       func = C.function(self.prefix+'_Start', 'void')
@@ -286,7 +290,11 @@ class RteGenerator:
             body.code.append(C.statement('return '+str(C.fcall(com_func.name, params=[port_func.proto.args[0].name]))))
          else:
             body.code.append(C.statement('*%s = %s'%(port_func.proto.args[0].name, port_func.data_element.symbol)))
-            body.code.append(C.statement('return RTE_E_OK'))
+            if port_func.data_element.result_var is not None:
+               body.code.append(C.statement('return %s'%port_func.data_element.result_var.name))
+            else:
+               body.code.append(C.statement('return RTE_E_OK'))
+
          fp.write(str(port_func.proto)+'\n')
          fp.write('\n'.join(body.lines())+'\n\n')
 
@@ -300,7 +308,10 @@ class RteGenerator:
             com_func = port_func.data_element.com_access['Send']
             body.code.append(C.statement('return '+str(C.fcall(com_func.name, params=[port_func.proto.args[0].name]))))
          else:
-            body.code.append(C.statement('return RTE_E_OK'))
+            if port_func.data_element.result_var is not None:
+               body.code.append(C.statement('return %s'%port_func.data_element.result_var.name))
+            else:
+               body.code.append(C.statement('return RTE_E_OK'))
          fp.write(str(port_func.proto)+'\n')
          fp.write('\n'.join(body.lines())+'\n\n')
 
@@ -334,7 +345,7 @@ class RteGenerator:
          fp.write(str(port_func.proto)+'\n')
          fp.write('\n'.join(body.lines())+'\n\n')
    
-   def _genExtra(self, fp, prototypes):
+   def _genFunctionBodies(self, fp, prototypes):
       for port_func in prototypes:
          fp.write(str(port_func.proto)+'\n')
          fp.write('\n'.join(port_func.body.lines())+'\n\n')
@@ -516,19 +527,14 @@ class MockRteGenerator(RteGenerator):
             self._create_operation_setter(component, port, operation, component.operation_port_access[key])
 
    def _create_data_element_setter(self, component, port, data_element):
-      data_type = data_element.dataType
-      func_name='%s_SetReadData_%s_%s_%s'%(self.prefix, component.name, port.name, data_element.name)
-      short_name='%s_SetReadData_%s_%s'%(self.prefix, port.name, data_element.name)
-      proto=C.function(func_name, 'void')
-      proto.add_arg(C.variable('data', data_type.name, pointer=data_type.isComplexType))
-      rte_func = autosar.rte.base.DataElementFunction(proto, port, data_element)
-      self._createPortVariable(component, port, data_element)
-      self.partition.serverAPI.set[short_name] = autosar.rte.base.SetPortFunction(short_name, proto, data_element)
-      func_name='%s_SetReadResult_%s_%s_%s'%(self.prefix, component.name, port.name, data_element.name)
-      short_name='%s_SetReadResult_%s_%s'%(self.prefix, port.name, data_element.name)
-      proto=C.function(func_name, 'void')
-      proto.add_arg(C.variable('retval', 'Std_ReturnType'))
-      self.partition.serverAPI.retval[short_name] = autosar.rte.base.RetValPortFunction(short_name, proto, data_element)
+      var_name = self._createDataElementVariable(component, port, data_element)
+      port_func = autosar.rte.base.SetReadDataFunction(self.prefix, component, port, data_element, var_name)
+      self.partition.serverAPI.setReadData[port_func.shortname] = port_func                  
+      port_func = autosar.rte.base.SetReadResultFunction(self.prefix, component, port, data_element)
+      self.partition.serverAPI.setReadResult[port_func.shortname]=port_func
+      self.extra_static_vars[port_func.static_var.name]=port_func.static_var
+      self.extra_rte_start.append(C.statement('%s = RTE_E_OK'%(data_element.result_var.name)))
+      
 
    def _create_operation_setter(self, component, port, operation, port_access):
       func_name='%s_SetCallHandler_%s_%s_%s'%(self.prefix, component.name, port.name, operation.name)
@@ -561,16 +567,17 @@ class MockRteGenerator(RteGenerator):
          inner.append(C.statement(fcall))
       body.append(inner)
       if proto.typename != 'void':
-         body.append(C.statement('return RTE_E_INVALID'))
+         body.append(C.statement('return RTE_E_OK'))
       return body
 
 
-   def _createPortVariable(self, component, port, data_element):
+   def _createDataElementVariable(self, component, port, data_element):
       data_element_map = self.partition.data_element_map
       variable_name = '_'.join([component.name, port.name, data_element.name])
       if variable_name not in data_element_map:
          data_element.symbol = variable_name
          data_element_map[variable_name] = data_element
+      return variable_name
 
    def _generateHeader(self, dest_dir):
       filepath = os.path.join(dest_dir,self.file_prefix+'.h')
@@ -599,10 +606,10 @@ class MockRteGenerator(RteGenerator):
       for func in sorted(self.partition.serverAPI.final['get'], key=lambda x: x.shortname):
          assert func.proto is not None
          hfile.code.append(C.statement(func.proto))
-      for func in sorted(self.partition.serverAPI.final['set'], key=lambda x: x.shortname):
+      for func in sorted(self.partition.serverAPI.final['setReadData'], key=lambda x: x.shortname):
          assert func.proto is not None
          hfile.code.append(C.statement(func.proto))
-      for func in sorted(self.partition.serverAPI.final['retval'], key=lambda x: x.shortname):
+      for func in sorted(self.partition.serverAPI.final['setReadResult'], key=lambda x: x.shortname):
          assert func.proto is not None
          hfile.code.append(C.statement(func.proto))
       for func in sorted(self.extra_public_functions.values(), key=lambda x: x.shortname):
