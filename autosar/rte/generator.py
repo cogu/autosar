@@ -203,7 +203,7 @@ class RteGenerator:
             else:
                raise ValueError("include items must be of type str or tuple(str,boolean)")
       for component in partition.components:
-         if isinstance(component.swc, autosar.bsw.com.ComComponent):
+         if isinstance(component.inner, autosar.bsw.com.ComComponent):
             if self.com_component is None:
                self.com_component = component
             else:
@@ -211,7 +211,7 @@ class RteGenerator:
 
    def generate(self, dest_dir='.', file_name=None):
       if file_name is None:
-         file_name = self.prefix+'.c'
+         file_name = 'RteApi.c'
       file_path = os.path.join(dest_dir,file_name)
       with io.open(file_path, 'w', newline='\n') as fp:
          self._write_includes(fp)
@@ -361,18 +361,18 @@ class ComponentHeaderGenerator():
       if mocked is not None:
          self.useMockedAPI=bool(mocked)
       for component in self.partition.components:
-         if not isinstance(component.swc, autosar.bsw.com.ComComponent):
-            with io.open(os.path.join(destdir, 'Rte_%s.h'%component.swc.name), 'w', newline='\n') as fp:
+         if not isinstance(component.inner, autosar.bsw.com.ComComponent):
+            with io.open(os.path.join(destdir, 'Rte_%s.h'%component.inner.name), 'w', newline='\n') as fp:
                self._genComponentHeader(fp, component)
 
    def _genComponentHeader(self, fp, component):
-      ws = component.swc.rootWS()
+      ws = component.inner.rootWS()
       assert(ws is not None)
-      hfile=C.hfile(None, guard='RTE_%s_H'%(component.swc.name.upper()))
+      hfile=C.hfile(None, guard='RTE_%s_H'%(component.inner.name.upper()))
       hfile.code.append(C.include('Rte.h'))
       hfile.code.append(C.include('Rte_Type.h'))
       hfile.code.append(C.blank())
-      lines = self._genInitValues(ws, component.swc.requirePorts+component.swc.providePorts)
+      lines = self._genInitValues(ws, component.inner.requirePorts+component.inner.providePorts)
       if len(lines)>0:
          hfile.code.extend([C.line(x) for x in _genCommentHeader('Init Values')])
          hfile.code.extend(lines)

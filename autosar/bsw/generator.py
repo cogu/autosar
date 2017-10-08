@@ -20,7 +20,7 @@ class OsConfigGenerator:
                rte_event = os_task.event_map[event_name]
                if isinstance(rte_event, autosar.rte.TimerEvent):
                   self.num_timer_events+=1                  
-               code.append(C.define(event_name, str(self.event_id)+' '+str(C.linecomment(rte_event.rte_runnable.symbol)), align=60))
+               code.append(C.define(event_name, str(self.event_id)+' '+str(C.linecomment(rte_event.runnable.symbol)), align=80))
                self.event_id+=1
             code.append(C.blank())         
          code.append(C.define('OS_NUM_TIMER_EVENTS', str(self.num_timer_events)))

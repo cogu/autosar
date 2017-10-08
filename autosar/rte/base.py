@@ -164,15 +164,25 @@ class RequirePort(Port):
             rte_port_func = ReceivePortFunction(shortname, func, rte_data_element)
          self.portAPI[shortname] = rte_port_func
 
-   def create_server_call_api(self, ws, rte_operation):
-      assert(ws is not None)
-      shortname='_'.join([self.parent.rte_prefix, 'Call', self.name, rte_operation.name])
-      func_name='_'.join([self.parent.rte_prefix, 'Call', self.parent.name, self.name, rte_operation.name])
-      return_type = 'Std_ReturnType' if len(rte_operation.inner.errorRefs)>0 else 'void'
+   def create_server_call_api(self, operation):      
+      shortname='_'.join([self.parent.rte_prefix, 'Call', self.name, operation.name])
+      if len(self.connectors)==0:
+         func_name='_'.join([self.parent.rte_prefix, 'Call', self.parent.name, self.name, operation.name])
+      elif len(self.connectors)==1:         
+         server_port = self.connectors[0]
+         for event in server_port.parent.events:
+            if isinstance(event, OperationInvokedEvent) and (event.operation.name == operation.name):
+               func_name=event.runnable.name
+               break
+         else:
+            raise ValueError('No event found to service operation %s/%s'%(self.parent.name, self.name))
+      else:
+         raise ValueError('Error: Operation %s/%s seems to have multiple servers'%(self.parent.name, self.name))
+      return_type = 'Std_ReturnType' if len(operation.inner.errorRefs)>0 else 'void'
       proto = C.function(func_name, return_type)
-      for argument in rte_operation.arguments:
+      for argument in operation.arguments:
          proto.add_arg(argument)
-      port_func = CallPortFunction(shortname, proto, rte_operation)
+      port_func = CallPortFunction(shortname, proto, operation)
       self.portAPI[shortname] = port_func
       return port_func
 
@@ -362,8 +372,43 @@ class DataElementPortAccess:
       self.runnable = runnable
 
 class OperationPortAccess:
-   def __init__(self, port, operation, runnable, func):
+   def __init__(self, port, operation, runnable):
       self.port = port
       self.operation = operation
       self.runnable = runnable
-      self.func = func
+      self.func = None
+
+class TimerEvent:
+   """Runnable triggered by timer"""
+   def __init__(self, ar_event, runnable):
+      self.inner = ar_event
+      self.name = ar_event.name
+      self.runnable = runnable
+
+
+class OperationInvokedEvent:
+   """triggered by server invocation"""
+   def __init__(self, ar_event, runnable, port, operation):
+      self.inner = ar_event
+      self.runnable = runnable
+      self.port = port
+      self.operation = operation
+      self.name = ar_event.name
+      return_type = 'Std_ReturnType' if len(operation.inner.errorRefs)>0 else 'void'
+      self.runnable.prototype=C.function(runnable.symbol, return_type, args=operation.arguments)
+
+class ModeSwitchEvent:
+   """
+   Runnable triggered by mode switch event
+   """
+   def __init__(self, ws, ar_event, runnable):
+      modeDeclaration = ws.find(ar_event.modeInstRef.modeDeclarationRef)
+      if modeDeclaration is None:
+         raise ValueError("Error: invalid reference: %s"+ar_event.modeInstRef.modeDeclarationRef)
+      mode = modeDeclaration.parent
+      self.inner = ar_event
+      self.activationType = 'OnEntry' if (ar_event.activationType == 'ON-ENTRY' or ar_event.activationType == 'ENTRY')  else 'OnExit'
+      self.name = "%s_%s_%s"%(self.activationType, mode.name, modeDeclaration.name)
+      self.mode=mode.name
+      self.modeDeclaration=modeDeclaration.name
+      self.runnable = runnable

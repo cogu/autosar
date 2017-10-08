@@ -7,35 +7,7 @@ import cfile as C
 import sys
 import autosar.bsw.com
 
-class TimerEvent:
-   """Runnable triggered by timer"""
-   def __init__(self, runnable):
-      self.runnable = runnable
 
-
-class OperationInvokedEvent:
-   """triggered by server invocation"""
-   def __init__(self, runnable, port, operation):
-      self.runnable = runnable
-      self.port = port
-      self.operation = operation
-      return_type = 'Std_ReturnType' if len(operation.inner.errorRefs)>0 else 'void'
-      self.runnable.prototype=C.function(runnable.symbol, return_type, args=operation.arguments)
-
-class ModeSwitchEvent:
-   """
-   Runnable triggered by mode switch event
-   """
-   def __init__(self, ws, ar_event, runnable):
-      modeDeclaration = ws.find(ar_event.modeInstRef.modeDeclarationRef)
-      if modeDeclaration is None:
-         raise ValueError("Error: invalid reference: %s"+ar_event.modeInstRef.modeDeclarationRef)
-      mode = modeDeclaration.parent
-      self.activationType = 'OnEntry' if (ar_event.activationType == 'ON-ENTRY' or ar_event.activationType == 'ENTRY')  else 'OnExit'
-      self.name = "%s_%s_%s"%(self.activationType, mode.name, modeDeclaration.name)
-      self.mode=mode.name
-      self.modeDeclaration=modeDeclaration.name
-      self.runnable = runnable
 
 class ComponentAPI:
    """
@@ -125,7 +97,7 @@ class Component:
    def __init__(self, swc, parent, rte_prefix='Rte'):
       self.parent = parent
       self.name = swc.name
-      self.swc = swc
+      self.inner = swc
       self.clientAPI = ComponentAPI() #function calls towards the RTE (stuff that the RTE must provide)
       self.events = []
       self.runnables = []
@@ -137,14 +109,27 @@ class Component:
       self.data_element_port_access = {}
       self.operation_port_access = {}
       ws = swc.rootWS()
-      for ar_port in swc.providePorts:
-         self.providePorts.append(ProvidePort(ws, ar_port, self))
-      for ar_port in swc.requirePorts:
-         self.requirePorts.append(RequirePort(ws, ar_port, self))
+      assert(ws is not None)
+      self._process_ports(ws)
+      self._process_runnables(ws)
+      self._process_events(ws)
+      
+      
 
+   def _process_ports(self, ws):
+      for ar_port in self.inner.providePorts:
+         self.providePorts.append(ProvidePort(ws, ar_port, self))
+      for ar_port in self.inner.requirePorts:
+         self.requirePorts.append(RequirePort(ws, ar_port, self))      
+      
+   # def pre_finalize(self, ws, type_manager):
+   #    if not self.is_finalized:
+   #       self._process_runnables(ws)
+   #       self._process_events(ws)
 
    def finalize(self,ws, type_manager):
-      if not self.is_finalized:
+      if not self.is_finalized:      
+         self._process_port_access()
          for port in self.requirePorts+self.providePorts:
             port.process_types(ws, type_manager)
             port.update_client_api(self.clientAPI)
@@ -168,10 +153,10 @@ class Component:
    def add_event(self, rte_event):
       self.rte_events.append(rte_event)
 
-   def process_runnables(self, ws):
-      if self.swc.behavior is not None:
-         for ar_runnable in self.swc.behavior.runnables:
-            runnable = Runnable(ar_runnable)
+   def _process_runnables(self, ws):
+      if self.inner.behavior is not None:
+         for ar_runnable in self.inner.behavior.runnables:
+            runnable = Runnable(self, ar_runnable)
             self.runnables.append(runnable)
             for dataPoint in ar_runnable.dataReceivePoints+ar_runnable.dataSendPoints:
                ar_port=ws.find(dataPoint.portRef)
@@ -199,36 +184,45 @@ class Component:
                      raise ValueError('Error: Invalid operation reference: '+instanceRef.operationRef)
                   port = self.find_require_port(ar_port.name)
                   operation = port.find_operation(ar_operation.name)
-                  runnable.operation_access.append(operation)
-                  proto = port.create_server_call_api(ws, operation)
-                  self.operation_port_access['%s/%s'%(port.name, operation.name)]=autosar.rte.base.OperationPortAccess(port, operation, runnable, proto)
-         for ar_event in self.swc.behavior.events:
-            ar_runnable = ws.find(ar_event.startOnEventRef)
-            if ar_runnable is None:
-               raise ValueError('Invalid StartOnEvent reference: '+ar_event.startOnEventRef)
-            for runnable in self.runnables:
-               if runnable.inner is ar_runnable:
-                  break
-            else:
-               raise ValueError('Runnable not found')
-            if isinstance(ar_event, autosar.behavior.TimingEvent):
-               event = TimerEvent(runnable)
-            elif isinstance(ar_event, autosar.behavior.ModeSwitchEvent):
-               event = ModeSwitchEvent(ws, ar_event, runnable)
-            elif isinstance(ar_event, autosar.behavior.OperationInvokedEvent):
-               port_refs = autosar.base.splitRef(ar_event.operationInstanceRef.portRef)
-               operation_refs = autosar.base.splitRef(ar_event.operationInstanceRef.operationRef)
-               port = self.find_provide_port(port_refs[-1])
-               assert (port is not None) and (port.ar_port is ws.find(ar_event.operationInstanceRef.portRef))
-               operation = port.find_operation(operation_refs[-1])
-               assert (operation is not None)
-               event = OperationInvokedEvent(runnable, port, operation)
-            else:
-               raise NotImplementedError(str(type(event)))
-            self.events.append(event)
+                  runnable.operation_access.append(operation)                  
+                  self.operation_port_access['%s/%s'%(port.name, operation.name)]=autosar.rte.base.OperationPortAccess(port, operation, runnable)
 
+   def _process_events(self, ws):
+      if self.inner.behavior is None:
+         return
+      for ar_event in self.inner.behavior.events:
+         ar_runnable = ws.find(ar_event.startOnEventRef)
+         if ar_runnable is None:
+            raise ValueError('Invalid StartOnEvent reference: '+ar_event.startOnEventRef)
+         for runnable in self.runnables:
+            if runnable.inner is ar_runnable:
+               break
+         else:
+            raise ValueError('Runnable not found')
+         if isinstance(ar_event, autosar.behavior.TimingEvent):
+            event = autosar.rte.base.TimerEvent(ar_event, runnable)
+         elif isinstance(ar_event, autosar.behavior.ModeSwitchEvent):
+            event = autosar.rte.base.ModeSwitchEvent(ws, ar_event, runnable)
+         elif isinstance(ar_event, autosar.behavior.OperationInvokedEvent):
+            port_refs = autosar.base.splitRef(ar_event.operationInstanceRef.portRef)
+            operation_refs = autosar.base.splitRef(ar_event.operationInstanceRef.operationRef)
+            port = self.find_provide_port(port_refs[-1])
+            assert (port is not None) and (port.ar_port is ws.find(ar_event.operationInstanceRef.portRef))
+            operation = port.find_operation(operation_refs[-1])
+            assert (operation is not None)
+            event = autosar.rte.base.OperationInvokedEvent(ar_event, runnable, port, operation)
+         else:
+            raise NotImplementedError(str(type(event)))
+         self.events.append(event)
+            
+   def _process_port_access(self):
+      for access in self.operation_port_access.values():
+         if isinstance(access, autosar.rte.base.OperationPortAccess):
+            proto = access.port.create_server_call_api(access.operation)
+         else:
+            raise NotImplementedError(str(type(access)))
    def _runnables_finalize(self):
-      operation_invoke_events = [event for event in self.events if isinstance(event, OperationInvokedEvent)]
+      #operation_invoke_events = [event for event in self.events if isinstance(event, OperationInvokedEvent)]         
       for runnable in self.runnables:
          if runnable.prototype is None:
             runnable.prototype = (C.function(runnable.symbol, 'void'))
@@ -252,7 +246,8 @@ class Component:
 
 class Runnable:
    """RTE Runnable"""
-   def __init__(self, ar_runnable):
+   def __init__(self, parent, ar_runnable):
+      self.parent = parent
       self.inner = ar_runnable
       self.name = ar_runnable.name
       self.symbol = ar_runnable.symbol
@@ -296,8 +291,9 @@ class Partition:
 
    def finalize(self):
       if not self.isFinalized:
+#         for component in self.components:            
+#            component.pre_finalize(self.ws, self.types)
          for component in self.components:
-            component.process_runnables(self.ws)
             component.finalize(self.ws, self.types)
             self.serverAPI.update(component.clientAPI)
          for component in self.components:
@@ -417,26 +413,26 @@ class Partition:
 
    def _generate_com_access(self):
       for component in self.components:
-         if isinstance(component.swc, autosar.bsw.com.ComComponent):
+         if isinstance(component.inner, autosar.bsw.com.ComComponent):
             for port in component.requirePorts:
                for remote_port in port.connectors:
                   for data_element in remote_port.data_elements:
                      isPointer = True if data_element.dataType.isComplexType else False
                      proto = C.function(
-                     "%s_Send_%s_%s"%(component.swc.name, remote_port.name, data_element.name),
+                     "%s_Send_%s_%s"%(component.inner.name, remote_port.name, data_element.name),
                      'Std_ReturnType',
                      args = [C.variable('value', data_element.dataType.name, pointer=isPointer)])
                      data_element.com_access['Send'] = proto
-                     component.swc.addSendInterface(proto, port, data_element)
+                     component.inner.addSendInterface(proto, port, data_element)
             for port in component.providePorts:
                for data_element in port.data_elements:
                   isPointer = True
                   proto = C.function(
-                  "%s_Receive_%s_%s"%(component.swc.name, remote_port.name, data_element.name),
+                  "%s_Receive_%s_%s"%(component.inner.name, remote_port.name, data_element.name),
                   'Std_ReturnType',
                   args = [C.variable('value', data_element.dataType.name, pointer=isPointer)])
                   data_element.com_access['Receive'] = proto
-                  component.swc.addReceiveInterface(proto, port, data_element)
+                  component.inner.addReceiveInterface(proto, port, data_element)
                   #remove from internal RTE variables
                   symbol = data_element.symbol
                   data_element.symbol = None
