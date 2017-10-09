@@ -1,15 +1,40 @@
 import sys
 from autosar.base import parseXMLFile,splitRef,parseTextNode,hasAdminData,parseAdminDataNode
 from autosar.datatype import *
-from autosar.parser.parser_base import BaseParser
+from autosar.parser.parser_base import ElementParser
 
+class DataTypeParser(ElementParser):
+   def __init__(self,version=3.0):
+      super().__init__(version)
 
-class DataTypeParser(BaseParser):
-   def __init__(self,handler,version=3.0):
-      super().__init__(version)      
-      self.handler=handler
+      if self.version >= 3.0 and self.version < 4.0:
+         self.switcher = {'ARRAY-TYPE': self.parseArrayType,
+                          'BOOLEAN-TYPE': self.parseBooleanType,
+                          'INTEGER-TYPE': self.parseIntegerType,
+                          'REAL-TYPE': self.parseRealType,
+                          'RECORD-TYPE': self.parseRecordType,
+                          'STRING-TYPE': self.parseStringType}
+      elif self.version >= 4.0:
+         self.switcher = {                        
+            'DATA-CONSTR': self.parseDataConstraint,
+            'IMPLEMENTATION-DATA-TYPE': self.parseImplementationDataType,
+            'SW-BASE-TYPE': self.parseSwBaseType,            
+            'UNIT': self.parseUnit,
+            'DATA-TYPE-MAPPING-SET': self.parseDataTypeMappingSet
+         }      
 
-   def parseIntegerType(self,root,rootProject=None,parent=None):
+   def getSupportedTags(self):
+      return self.switcher.keys()
+
+   def parseElement(self, xmlElement, parent = None):
+      parseFunc = self.switcher.get(xmlElement.tag)
+      if parseFunc is not None:
+         return parseFunc(xmlElement,parent)
+      else:
+         return None
+
+   
+   def parseIntegerType(self,root,parent=None):
       if self.version>=3.0:
          name=root.find("./SHORT-NAME").text
          minval = int(root.find("./LOWER-LIMIT").text)
@@ -25,7 +50,7 @@ class DataTypeParser(BaseParser):
                   raise NotImplementedError(elem.tag)
          return dataType
 
-   def parseRecordType(self,root,rootProject=None,parent=None):
+   def parseRecordType(self,root,parent=None):
       if self.version>=3.0:
          elements = []
          name=root.find("./SHORT-NAME").text
@@ -35,7 +60,7 @@ class DataTypeParser(BaseParser):
          self.parseDesc(root,dataType)
          return dataType
 
-   def parseArrayType(self,root,rootProject=None,parent=None):
+   def parseArrayType(self,root,parent=None):
       if self.version>=3.0:
          name=root.find("./SHORT-NAME").text
          length=int(root.find('ELEMENT/MAX-NUMBER-OF-ELEMENTS').text)
@@ -44,14 +69,14 @@ class DataTypeParser(BaseParser):
          self.parseDesc(root,dataType)
          return dataType;
 
-   def parseBooleanType(self,root,rootProject=None,parent=None):
+   def parseBooleanType(self,root,parent=None):
       if self.version>=3:
          name=root.find("./SHORT-NAME").text
          dataType=BooleanDataType(name)
          self.parseDesc(root,dataType)
          return dataType
 
-   def parseStringType(self,root,rootProject=None,parent=None):
+   def parseStringType(self,root,parent=None):
       if self.version>=3.0:
          name=root.find("./SHORT-NAME").text
 
@@ -61,7 +86,7 @@ class DataTypeParser(BaseParser):
          self.parseDesc(root,dataType)
          return dataType
 
-   def parseRealType(self,root,rootProject=None,parent=None):
+   def parseRealType(self,root,parent=None):
       if self.version>=3.0:
          name=root.find("./SHORT-NAME").text
 
@@ -80,7 +105,7 @@ class DataTypeParser(BaseParser):
          self.parseDesc(root,dataType)
          return dataType
 
-   def parseDataConstraint(self, xmlRoot, dummy, parent=None):
+   def parseDataConstraint(self, xmlRoot, parent=None):
       assert (xmlRoot.tag == 'DATA-CONSTR')
       name = xmlRoot.find("./SHORT-NAME").text
       rules=[]
@@ -112,7 +137,7 @@ class DataTypeParser(BaseParser):
          elem.adminData=parseAdminDataNode(xmlRoot.find('ADMIN-DATA'))
       return elem
 
-   def parseImplementationDataType(self, xmlRoot, dummy, parent=None):
+   def parseImplementationDataType(self, xmlRoot, parent=None):
       assert (xmlRoot.tag == 'IMPLEMENTATION-DATA-TYPE')
       name = parseTextNode(xmlRoot.find("./SHORT-NAME"))
       category = parseTextNode(xmlRoot.find("./CATEGORY")) #category is a generic string identifier
@@ -163,11 +188,11 @@ class DataTypeParser(BaseParser):
          else:
             raise NotImplementedError(xmlItem.tag)
       return elements
-   
+
    def parseImplementationDataTypeElement(self, xmlRoot, parent):
       assert (xmlRoot.tag == 'IMPLEMENTATION-DATA-TYPE-ELEMENT')
       (name, category, arraySize, arraySizeSemantics, variants) = (None, None, None, None, None)
-      for xmlItem in xmlRoot.findall('./*'):         
+      for xmlItem in xmlRoot.findall('./*'):
          if xmlItem.tag == 'SHORT-NAME':
             name = parseTextNode(xmlItem)
          elif xmlItem.tag == 'CATEGORY':
@@ -181,8 +206,8 @@ class DataTypeParser(BaseParser):
          else:
             raise NotImplementedError(xmlItem.tag)
       return ImplementationDataTypeElement(name, category, arraySize, arraySizeSemantics, variants, parent)
-      
-   
+
+
    def parseSwDataDefPropsConditional(self, xmlRoot, parent=None):
       assert (xmlRoot.tag == 'SW-DATA-DEF-PROPS-CONDITIONAL')
       (baseTypeRef, implementationTypeRef, swCalibrationAccess, compuMethodRef, dataConstraintRef, swPointerTargetPropsXML, swImplPolicy) = (None, None, None, None, None, None, None)
@@ -241,27 +266,22 @@ class DataTypeParser(BaseParser):
       else:
          adminData=None
       return DataTypeMappingSet(name, parent, adminData)
-   
 
-class DataTypeSemanticsParser(object):
-   def __init__(self,pkg,version=3.0):
+
+class DataTypeSemanticsParser(ElementParser):
+   def __init__(self,version=3.0):
       self.version=version
-      self.pkg=pkg
+      
+   def getSupportedTags(self):
+      return ['COMPU-METHOD']
 
-   def parse(self,root):
-      if self.version>=3.0:
-         for xmlElement in root.findall('./ELEMENTS/*'):
-            element = self.parseElement(xmlElement)
-
-   def parseElement(self,xmlElement):
-      name = xmlElement.find("./SHORT-NAME").text
-
+   def parseElement(self, xmlElement, parent = None):
       if xmlElement.tag == 'COMPU-METHOD':
-         pass
+         return self.parseCompuMethod(xmlElement, parent)
       else:
-         raise NotImplementedError("<%s>"%elem.tag)
+         return None
 
-   def parseCompuMethod(self,xmlRoot,rootProject=None,parent=None):
+   def parseCompuMethod(self,xmlRoot,parent=None):
       assert (xmlRoot.tag == 'COMPU-METHOD')
       name = parseTextNode(xmlRoot.find("./SHORT-NAME"))
       category = parseTextNode(xmlRoot.find("./CATEGORY"))
@@ -309,19 +329,29 @@ class DataTypeSemanticsParser(object):
       else:
          raise ValueError("unprocessed semanticsType,item=%s"%name)
 
-class DataTypeUnitsParser(BaseParser):
-   def __init__(self,handler,version=3.0):
+class DataTypeUnitsParser(ElementParser):
+   def __init__(self,version=3.0):
       super().__init__(version)
-      self.handler=handler
+      
+   
+   def getSupportedTags(self):
+      return ['UNIT']
+
+   def parseElement(self, xmlElement, parent = None):
+      if xmlElement.tag == 'UNIT':
+         return self.parseUnit(xmlElement, parent)
+      else:
+         return None
 
    def parseUnit(self,xmlRoot,rootProject=None,parent=None):
       assert (xmlRoot.tag == 'UNIT')
       name = parseTextNode(xmlRoot.find("./SHORT-NAME"))
       displayName = parseTextNode(xmlRoot.find("./DISPLAY-NAME"))
-      if self.version>=4.0:         
+      if self.version>=4.0:
          factor = parseTextNode(xmlRoot.find("./FACTOR-SI-TO-UNIT"))
          offset = parseTextNode(xmlRoot.find("./OFFSET-SI-TO-UNIT"))
       else:
          (factor,offset) = (None, None)
       return DataTypeUnitElement(name, displayName, factor, offset, parent)
+   
 

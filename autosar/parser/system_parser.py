@@ -1,12 +1,21 @@
 from autosar.base import parseXMLFile,splitRef,parseTextNode,parseIntNode,hasAdminData,parseAdminDataNode
 from autosar.system import *
+from autosar.parser.parser_base import ElementParser
 
-class SystemParser(object):
-   def __init__(self,pkg,version=3):
-      self.version=version
-      self.pkg=pkg
+class SystemParser(ElementParser):
+   def __init__(self,version=3.0):
+      super().__init__(version)
+      
+   def getSupportedTags(self):
+      return ['SYSTEM']
+
+   def parseElement(self, xmlElement, parent = None):
+      if xmlElement.tag == 'SYSTEM':
+         return self.parseSystem(xmlElement, parent)
+      else:
+         return None
    
-   def parseSystem(self,xmlRoot,dummy,parent=None):
+   def parseSystem(self,xmlRoot,parent=None):
       """
       parses <SYSTEM>
       """

@@ -1,13 +1,30 @@
 from autosar.base import parseXMLFile,splitRef,parseTextNode,parseIntNode
 from autosar.signal import *
-from autosar.parser.parser_base import BaseParser
+from autosar.parser.parser_base import ElementParser
 
-class SignalParser(object):
-   def __init__(self,pkg,version=3.0):
+class SignalParser(ElementParser):
+   def __init__(self,version=3):
       self.version=version
-      self.pkg=pkg
-   
-   def parseSystemSignal(self,xmlRoot,dummy,parent=None):
+
+      if self.version >= 3.0 and self.version < 4.0:
+         self.switcher = {'SYSTEM-SIGNAL': self.parseSystemSignal,
+                          'SYSTEM-SIGNAL-GROUP': self.parseSystemSignalGroup
+         }
+      elif self.version >= 4.0:
+         self.switcher = {
+         }
+
+   def getSupportedTags(self):
+      return self.switcher.keys()
+
+   def parseElement(self, xmlElement, parent = None):
+      parseFunc = self.switcher.get(xmlElement.tag)
+      if parseFunc is not None:
+         return parseFunc(xmlElement,parent)
+      else:
+         return None
+
+   def parseSystemSignal(self,xmlRoot,parent=None):
       """
       parses <SYSTEM-SIGNAL>
       """
@@ -36,9 +53,9 @@ class SignalParser(object):
       else:
          raise RunTimeError('failed to parse %s'%xmlRoot.tag)
 
-   def parseSystemSignalGroup(self, xmlRoot, dummy, parent=None):
+   def parseSystemSignalGroup(self, xmlRoot, parent=None):
       name,systemSignalRefs=None,None
-      for elem in xmlRoot.findall('./*'):         
+      for elem in xmlRoot.findall('./*'):
          if elem.tag=='SHORT-NAME':
             name=parseTextNode(elem)
          elif elem.tag=='SYSTEM-SIGNAL-REFS':
@@ -50,7 +67,7 @@ class SignalParser(object):
                   raise NotImplementedError(childElem.tag)
          else:
             raise NotImplementedError(elem.tag)
-         
+
       if (name is not None) and (isinstance(systemSignalRefs,list)):
          return SystemSignalGroup(name,systemSignalRefs)
       else:
