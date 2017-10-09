@@ -1,21 +1,30 @@
 from autosar.base import hasAdminData,parseAdminDataNode,parseTextNode
 import autosar.portinterface
-from autosar.parser.parser_base import BaseParser
+from autosar.parser.parser_base import ElementParser
 
-class PortInterfacePackageParser(BaseParser):
-   def __init__(self,handler,version=3.0):
+class PortInterfacePackageParser(ElementParser):
+   def __init__(self,version=3.0):
       self.version=version
-      self.handler=handler
+
+      if self.version >= 3.0 and self.version < 4.0:
+         self.switcher = {'SENDER-RECEIVER-INTERFACE': self.parseSenderReceiverInterface,
+                          'CALPRM-INTERFACE': self.parseParameterInterface,
+                          'CLIENT-SERVER-INTERFACE': self.parseClientServerInterface
+         }
+      elif self.version >= 4.0:
+         self.switcher = {                        
+         }      
+
+   def getSupportedTags(self):
+      return self.switcher.keys()
    
-   
-   def loadFromXML(self,root):
-      if self.version >= 3.0:
-         for elem in root.findall('./ELEMENTS/*'):
-            if elem.tag=='SENDER-RECEIVER-INTERFACE':
-               portInterface = self.parseSenderReceiverInterface(elem)
-               if portInterface is not None:
-                  self.handler.portInterfaces.append(portInterface)
-   
+   def parseElement(self, xmlElement, parent = None):
+      parseFunc = self.switcher.get(xmlElement.tag)
+      if parseFunc is not None:
+         return parseFunc(xmlElement,parent)
+      else:
+         return None
+
    def parseSenderReceiverInterface(self,xmlRoot,rootProject=None,parent=None): 
          name = xmlRoot.find("./SHORT-NAME")
          if name is not None:
@@ -89,19 +98,46 @@ class PortInterfacePackageParser(BaseParser):
                   portInterface.applicationErrors.append(autosar.portinterface.ApplicationError(name,errorCode,portInterface))            
             return portInterface
 
-class CEPParameterGroupPackageParser(object):
-   def __init__(self,package,version=3.0):
+class SoftwareAddressMethodParser(ElementParser):
+   def __init__(self,version=3.0):
       self.version=version
-      self.package=package
+   
+   def getSupportedTags(self):
+      return ['SW-ADDR-METHOD']
+
+   def parseElement(self, xmlElement, parent = None):
+      if xmlElement.tag == 'SW-ADDR-METHOD':
+         return self.parseSWAddrMethod(xmlElement, parent)
+      else:
+         return None
+   
    def parseSWAddrMethod(self,xmlRoot,rootProject=None,parent=None):
       assert(xmlRoot.tag == 'SW-ADDR-METHOD')
       name = xmlRoot.find("./SHORT-NAME").text
       return autosar.portinterface.SoftwareAddressMethod(name)
       
-class ModeDeclarationGroupPackageParser(object):
-   def __init__(self,package,version=3):
+class ModeDeclarationGroupPackageParser(ElementParser):
+   def __init__(self,version=3):
       self.version=version
-      self.package=package
+   
+      if self.version >= 3.0 and self.version < 4.0:
+         self.switcher = {'MODE-DECLARATION-GROUP': self.parseModeDeclarationGroup,
+                          'MODE-DECLARATIONS': self.parseModeDeclarations                          
+         }
+      elif self.version >= 4.0:
+         self.switcher = {                        
+         }      
+   
+   def getSupportedTags(self):
+      return self.switcher.keys()
+
+   def parseElement(self, xmlElement, parent = None):
+      parseFunc = self.switcher.get(xmlElement.tag)
+      if parseFunc is not None:
+         return parseFunc(xmlElement,parent)
+      else:
+         return None
+
 
    def parseModeDeclarationGroup(self,xmlRoot,rootProject=None,parent=None):
       assert(xmlRoot.tag == 'MODE-DECLARATION-GROUP')

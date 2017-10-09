@@ -7,6 +7,15 @@ import os
 import ntpath
 import collections
 import re
+from autosar.parser.datatype_parser import (DataTypeParser, DataTypeSemanticsParser, DataTypeUnitsParser)
+from autosar.parser.portinterface_parser import (PortInterfacePackageParser,SoftwareAddressMethodParser,ModeDeclarationGroupPackageParser)
+from autosar.parser.constant_parser import ConstantPackageParser
+from autosar.parser.behavior_parser import BehaviorParser
+from autosar.parser.component_parser import ComponentTypeParser
+from autosar.parser.system_parser import SystemParser
+from autosar.parser.signal_parser import SignalParser
+
+
 
 _validWSRoles = ['DataType', 'Constant', 'PortInterface', 'ComponentType', 'ModeDclrGroup', 'CompuMethod', 'Unit']
 
@@ -36,6 +45,7 @@ class Workspace(object):
                self.defaultPackages[key]=value
             else:
                raise ValueError("Unknown role name '%s'"%key)
+            
 
    def __getitem__(self,key):
       if isinstance(key,str):
@@ -77,7 +87,8 @@ class Workspace(object):
       if version is None:
          raise NotImplementedError('unsupported autosar vesion: %s'%namespace)
       removeNamespace(xmlroot,namespace)
-      self.packageParser = autosar.parser.package_parser.PackageParser(version,self)
+      self.packageParser = autosar.parser.package_parser.PackageParser(version)
+      self._registerDefaultElementParsers(self.packageParser)
       self.version=version
       self.xmlroot = xmlroot
 
@@ -396,7 +407,25 @@ class Workspace(object):
       if package is None:
          package=self.createPackage(packageName, role="ComponentType")
       return package
-
-if __name__ == '__main__':
-   print("done")
    
+   def registerElementParser(self, elementParser):
+      """
+      Registers a custom element parser object
+      """
+      if self.packageParser is None:
+         self.packageParser = autosar.parser.package_parser.PackageParser(self.version)
+         self._registerDefaultElementParsers(self.packageParser)
+      self.packageParser.registerElementParser(elementParser)
+   
+   def _registerDefaultElementParsers(self, parser):
+      parser.registerElementParser(DataTypeParser(self.version))
+      parser.registerElementParser(DataTypeSemanticsParser(self.version))
+      parser.registerElementParser(DataTypeUnitsParser(self.version))
+      parser.registerElementParser(PortInterfacePackageParser(self.version))
+      parser.registerElementParser(SoftwareAddressMethodParser(self.version))
+      parser.registerElementParser(ModeDeclarationGroupPackageParser(self.version))
+      parser.registerElementParser(ConstantPackageParser(self.version))
+      parser.registerElementParser(ComponentTypeParser(self.version))
+      parser.registerElementParser(BehaviorParser(self.version))
+      parser.registerElementParser(SystemParser(self.version))
+      parser.registerElementParser(SignalParser(self.version))

@@ -73,7 +73,7 @@ class PortInterfaceWriter(WriterBase):
          for ref in elem.swAddrMethodRefList:
             swAddrMethodElem=ws.find(ref)
             if (swAddrMethodElem is None):
-               raise ValueError("invalid reference: '%s'"%swAddrMethodRef.typeRef)
+               raise ValueError("invalid reference: '%s'"%ref)
             else:
                lines.append(self.indent('<SW-ADDR-METHOD-REF DEST="%s">%s</SW-ADDR-METHOD-REF>'%(swAddrMethodElem.tag(self.version),ref),2))
          lines.append(self.indent('</SW-DATA-DEF-PROPS>',1))

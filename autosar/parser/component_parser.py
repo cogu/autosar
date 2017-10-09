@@ -2,6 +2,7 @@ import sys
 from autosar.base import parseXMLFile,splitRef,parseTextNode,parseIntNode
 from autosar.component import *
 from autosar.parser.behavior_parser import BehaviorParser
+from autosar.parser.parser_base import ElementParser
 
 def _getDataElemNameFromComSpec(xmlElem,portInterfaceRef):
    if xmlElem.find('./DATA-ELEMENT-REF') is not None:
@@ -24,28 +25,41 @@ def _getOperationNameFromComSpec(xmlElem,portInterfaceRef):
          return operationName
    return None
 
-class ComponentTypeParser(object):
+class ComponentTypeParser(ElementParser):
    """
    ComponentType parser   
    """
-   def __init__(self,pkg,version=3.0):
-      self.version=version
-      self.pkg=pkg
+
+   def __init__(self,version=3.0):
+      super().__init__(version)
       if self.version >=4.0:
-         self.behavior_parser = BehaviorParser(pkg,version)
-   
-   
-   def loadFromXML(self,root):
-      """loads constants from a constants package"""
-      if self.version >= 3:
-         for xmlElem in root.findall('./ELEMENTS/*'):
-            componentType = None
-            if xmlElem.tag == 'APPLICATION-SOFTWARE-COMPONENT-TYPE':
-               componentType = self.parseApplicationSoftwareComponent(xmlElem)
-               if componentType is not None:
-                  self.pkg.elements.append(componentType)
-                              
-   def parseSoftwareComponent(self,xmlRoot,rootProject=None,parent=None):
+         self.behavior_parser = BehaviorParser(version)
+
+      if self.version >= 3.0 and self.version < 4.0:
+         self.switcher = { 'APPLICATION-SOFTWARE-COMPONENT-TYPE': self.parseSoftwareComponent,
+                           'COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE': self.parseSoftwareComponent,
+                           'SWC-IMPLEMENTATION': self.parseSwcImplementation,
+                           'COMPOSITION-TYPE': self.parseCompositionType,
+                           'CALPRM-COMPONENT-TYPE': self.parseSoftwareComponent,
+                           'SERVICE-COMPONENT-TYPE': self.parseSoftwareComponent
+                          }
+      elif self.version >= 4.0:
+         self.switcher = {
+            'APPLICATION-SW-COMPONENT-TYPE': self.parseSoftwareComponent,
+            'SWC-IMPLEMENTATION': self.parseSwcImplementation
+         }      
+
+   def getSupportedTags(self):
+      return self.switcher.keys()
+
+   def parseElement(self, xmlElement, parent = None):
+      parseFunc = self.switcher.get(xmlElement.tag)
+      if parseFunc is not None:
+         return parseFunc(xmlElement,parent)
+      else:
+         return None
+                           
+   def parseSoftwareComponent(self,xmlRoot,parent=None):
       componentType=None
       handledTags = ['SHORT-NAME','APPLICATION-SOFTWARE-COMPONENT-TYPE', 'COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE', 'APPLICATION-SW-COMPONENT-TYPE']
       if xmlRoot.tag=='APPLICATION-SOFTWARE-COMPONENT-TYPE': #for AUTOSAR 3.x
@@ -144,7 +158,7 @@ class ComponentTypeParser(object):
                      raise NotImplementedError(xmlItem.tag)
             componentType.providePorts.append(port)      
 
-   def parseSwcImplementation(self,xmlRoot,dummy,parent=None):
+   def parseSwcImplementation(self,xmlRoot,parent=None):
       ws = parent.rootWS()
       assert(ws is not None)
       name = parseTextNode(xmlRoot.find('SHORT-NAME'))
@@ -157,7 +171,7 @@ class ComponentTypeParser(object):
             swc.implementation=implementation
       return implementation
    
-   def parseCompositionType(self,xmlRoot,dummy,parent=None):
+   def parseCompositionType(self,xmlRoot,parent=None):
       """
       parses COMPOSITION-TYPE
       """

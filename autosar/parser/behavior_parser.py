@@ -1,13 +1,30 @@
 from autosar.base import parseBooleanNode,parseBoolean,parseTextNode,parseIntNode,parseFloatNode,parseAdminDataNode
 from autosar.behavior import *
+from autosar.parser.parser_base import ElementParser
 
-class BehaviorParser(object):
-   def __init__(self,pkg,version=3):
+class BehaviorParser(ElementParser):
+   def __init__(self,version=3.0):
       self.version=version
-      self.pkg=pkg
+      
+   def getSupportedTags(self):
+      if (self.version >=3.0) and (self.version < 4.0):
+         return ['INTERNAL-BEHAVIOR']
+      elif self.version >= 4.0:
+         return ['SWC-INTERNAL-BEHAVIOR']
+      else:
+         return []
 
-   def parseInternalBehavior(self,xmlRoot,dummy,parent):
+   def parseElement(self, xmlElement, parent = None):
+      if (self.version >=3.0) and (self.version < 4.0) and xmlElement.tag == 'INTERNAL-BEHAVIOR':
+         return self.parseInternalBehavior(xmlElement, parent)
+      elif (self.version >= 4.0) and (xmlElement.tag == 'SWC-INTERNAL-BEHAVIOR'):
+         return self.parseSWCInternalBehavior(xmlElement, parent)
+      else:
+         return None
+
+   def parseInternalBehavior(self,xmlRoot,parent):
       """AUTOSAR 3 Internal Behavior"""
+      assert(xmlRoot.tag == 'INTERNAL-BEHAVIOR')
       name = parseTextNode(xmlRoot.find('SHORT-NAME'))
       componentRef = parseTextNode(xmlRoot.find('COMPONENT-REF'))
       multipleInstance = False

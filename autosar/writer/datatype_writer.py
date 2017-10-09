@@ -160,11 +160,17 @@ class DataTypeWriter(WriterBase):
       if elem.minValType=="INFINITE":
          lines.append(self.indent('<LOWER-LIMIT INTERVAL-TYPE="INFINITE"></LOWER-LIMIT>',1))
       else:
-         lines.append(self.indent('<LOWER-LIMIT INTERVAL-TYPE="{0}">{1:f}</LOWER-LIMIT>'.format(elem.minValType,elem.minVal),1))
+         if isinstance(elem.minVal, str):
+            lines.append(self.indent('<LOWER-LIMIT INTERVAL-TYPE="{0.minValType}">{0.minVal}</LOWER-LIMIT>'.format(elem),1))
+         else:
+            lines.append(self.indent('<LOWER-LIMIT INTERVAL-TYPE="{0.minValType}">{0.minVal:f}</LOWER-LIMIT>'.format(elem),1))
       if elem.maxValType=="INFINITE":
          lines.append(self.indent('<UPPER-LIMIT INTERVAL-TYPE="INFINITE"></UPPER-LIMIT>',1))
       else:
-         lines.append(self.indent('<UPPER-LIMIT INTERVAL-TYPE="{0.maxValType}">{0.maxVal:f}</UPPER-LIMIT>'.format(elem),1))
+         if isinstance(elem.maxVal, str):
+            lines.append(self.indent('<UPPER-LIMIT INTERVAL-TYPE="{0.maxValType}">{0.maxVal}</UPPER-LIMIT>'.format(elem),1))
+         else:
+            lines.append(self.indent('<UPPER-LIMIT INTERVAL-TYPE="{0.maxValType}">{0.maxVal:f}</UPPER-LIMIT>'.format(elem),1))
       lines.append(self.indent('<ALLOW-NAN>%s</ALLOW-NAN>'%('true' if elem.hasNaN else 'false'),1))
       lines.append(self.indent('<ENCODING>%s</ENCODING>'%elem.encoding,1))
       lines.append("</%s>"%elem.tag(self.version))

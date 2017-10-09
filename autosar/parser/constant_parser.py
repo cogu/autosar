@@ -1,13 +1,23 @@
 from autosar.element import Element
 from autosar.constant import *
 from autosar.base import hasAdminData,parseAdminDataNode
+from autosar.parser.parser_base import ElementParser
 
-class ConstantPackageParser(object):
+class ConstantPackageParser(ElementParser):
    """
    Constant package parser   
    """
-   def __init__(self,pkg,version=3.0):
+   def __init__(self,version=3.0):
       self.version=version
+   
+   def getSupportedTags(self):
+      return ['CONSTANT-SPECIFICATION']
+
+   def parseElement(self, xmlElement, parent = None):
+      if xmlElement.tag == 'CONSTANT-SPECIFICATION':
+         return self.parseConstantSpecification(xmlElement, parent)
+      else:
+         return None
                   
    def parseConstantSpecification(self,xmlRoot,rootProject=None,parent=None):
       assert(xmlRoot.tag == 'CONSTANT-SPECIFICATION')
