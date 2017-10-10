@@ -18,8 +18,7 @@ class DataTypeParser(ElementParser):
          self.switcher = {                        
             'DATA-CONSTR': self.parseDataConstraint,
             'IMPLEMENTATION-DATA-TYPE': self.parseImplementationDataType,
-            'SW-BASE-TYPE': self.parseSwBaseType,            
-            'UNIT': self.parseUnit,
+            'SW-BASE-TYPE': self.parseSwBaseType,
             'DATA-TYPE-MAPPING-SET': self.parseDataTypeMappingSet
          }      
 
@@ -163,21 +162,6 @@ class DataTypeParser(ElementParser):
             raise NotImplementedError(xmlItem.tag)
       return dataType
 
-   def parseSwDataDefProps(self, xmlRoot):
-      assert (xmlRoot.tag == 'SW-DATA-DEF-PROPS')
-      variants = []
-      for itemXML in xmlRoot.findall('./*'):
-         if itemXML.tag == 'SW-DATA-DEF-PROPS-VARIANTS':
-            for subItemXML in itemXML.findall('./*'):
-               if subItemXML.tag == 'SW-DATA-DEF-PROPS-CONDITIONAL':
-                  variant = self.parseSwDataDefPropsConditional(subItemXML)
-                  assert(variant is not None)
-                  variants.append(variant)
-               else:
-                  raise NotImplementedError(subItemXML.tag)
-         else:
-            raise NotImplementedError(itemXML.tag)
-      return variants
 
    def parseImplementationDataTypeSubElements(self, xmlRoot, parent):
       assert (xmlRoot.tag == 'SUB-ELEMENTS')
@@ -208,42 +192,6 @@ class DataTypeParser(ElementParser):
       return ImplementationDataTypeElement(name, category, arraySize, arraySizeSemantics, variants, parent)
 
 
-   def parseSwDataDefPropsConditional(self, xmlRoot, parent=None):
-      assert (xmlRoot.tag == 'SW-DATA-DEF-PROPS-CONDITIONAL')
-      (baseTypeRef, implementationTypeRef, swCalibrationAccess, compuMethodRef, dataConstraintRef, swPointerTargetPropsXML, swImplPolicy) = (None, None, None, None, None, None, None)
-      for xmlItem in xmlRoot.findall('./*'):
-         if xmlItem.tag == 'BASE-TYPE-REF':
-            baseTypeRef = parseTextNode(xmlItem)
-         elif xmlItem.tag == 'SW-CALIBRATION-ACCESS':
-            swCalibrationAccess = parseTextNode(xmlItem)
-         elif xmlItem.tag == 'COMPU-METHOD-REF':
-            compuMethodRef = parseTextNode(xmlItem)
-         elif xmlItem.tag == 'DATA-CONSTR-REF':
-            dataConstraintRef = parseTextNode(xmlItem)
-         elif xmlItem.tag == 'SW-POINTER-TARGET-PROPS':
-            swPointerTargetPropsXML = xmlItem
-         elif xmlItem.tag == 'IMPLEMENTATION-DATA-TYPE-REF':
-            implementationTypeRef = parseTextNode(xmlItem)
-         elif xmlItem.tag == 'SW-IMPL-POLICY':
-            swImplPolicy = parseTextNode(xmlItem)
-         else:
-            raise NotImplementedError(xmlItem.tag)
-      variant = SwDataDefPropsConditional(baseTypeRef, implementationTypeRef, swCalibrationAccess, compuMethodRef, dataConstraintRef, parent)
-      if swPointerTargetPropsXML is not None:
-         variant.swPointerTargetProps = self.parseSwPointerTargetProps(swPointerTargetPropsXML, variant)
-      if swImplPolicy is not None:
-         variant.swImplPolicy = swImplPolicy
-      return variant
-
-   def parseSwPointerTargetProps(self, rootXML, parent = None):
-      assert (rootXML.tag == 'SW-POINTER-TARGET-PROPS')
-      props = SwPointerTargetProps()
-      for itemXML in rootXML.findall('./*'):
-         if itemXML.tag == 'TARGET-CATEGORY':
-            props.targetCategory = parseTextNode(itemXML)
-         if itemXML.tag == 'SW-DATA-DEF-PROPS':
-            props.variants = self.parseSwDataDefProps(itemXML)
-      return props
 
    def parseSwBaseType(self, xmlRoot, dummy, parent = None):
       assert (xmlRoot.tag == 'SW-BASE-TYPE')

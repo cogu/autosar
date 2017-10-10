@@ -76,7 +76,9 @@ class PackageWriter(WriterBase):
                               'ImplementationDataType': self.dataTypeWriter.writeImplementationDataTypeXML,
                               'SwBaseType': self.dataTypeWriter.writeSwBaseTypeXML,
                               'DataTypeUnitElement': self.dataTypeWriter.writeDataTypeUnitElementXML,
-                              'DataTypeMappingSet': self.dataTypeWriter.writeDataTypeMappingSetXML
+                              'DataTypeMappingSet': self.dataTypeWriter.writeDataTypeMappingSetXML,
+                              'ModeDeclarationGroup': self.portInterfaceWriter.writeModeDeclarationGroupXML,
+                              'ClientServerInterface': self.portInterfaceWriter.writeClientServerInterfaceXML
                             }
          self.switcherCode = {
                               'DataConstraint': self.dataTypeWriter.writeDataConstraintCode,
@@ -107,7 +109,7 @@ class PackageWriter(WriterBase):
                if writerFunc is not None:            
                   lines.extend(self.indent(writerFunc(elem,package),2))
                else:
-                  print("skipped: %s"%str(type(elem)))
+                  print("[PackageWriter] Unhandled: %s"%str(type(elem).__name__))
          lines.append(self.indent("</ELEMENTS>",1))
       else:
          if self.version<4.0:

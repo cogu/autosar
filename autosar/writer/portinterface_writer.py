@@ -43,13 +43,13 @@ class PortInterfaceWriter(WriterBase):
       lines.append('</DATA-ELEMENT-PROTOTYPE>')
       return lines
 
-   def writeParameterInterfaceXML(self, portInterface,package):
+   def writeCalPrmInterfaceXML(self, portInterface,package):
       assert(isinstance(portInterface,autosar.portinterface.ParameterInterface))
       lines=[]
       lines.append('<CALPRM-INTERFACE>')
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%portInterface.name,1))
       lines.append(self.indent('<IS-SERVICE>%s</IS-SERVICE>'%self.toBoolean(portInterface.isService),1))
-      if len(portInterface.dataElements)>0:
+      if len(portInterface.elements)>0:
          lines.append(self.indent('<CALPRM-ELEMENTS>',1))
          for elem in portInterface.dataElements:
             lines.extend(self.indent(self.writeCalParamElementXML(elem),2))
@@ -122,7 +122,7 @@ class PortInterfaceWriter(WriterBase):
       if len(operation.arguments)>0:
          lines.append(self.indent('<ARGUMENTS>',1))
          for argument in operation.arguments:
-            lines.append(self.indent('<%s>'%argument.tag(),2))
+            lines.append(self.indent('<%s>'%argument.tag(self.version),2))
             lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%argument.name,3))
             typeElem = ws.find(argument.typeRef, role="DataType")					
             if (typeElem is None):
@@ -130,7 +130,7 @@ class PortInterfaceWriter(WriterBase):
             else:
                lines.append(self.indent('<TYPE-TREF DEST="%s">%s</TYPE-TREF>'%(typeElem.tag(self.version),typeElem.ref),3))      
             lines.append(self.indent('<DIRECTION>%s</DIRECTION>'%argument.direction,3))
-            lines.append(self.indent('</%s>'%argument.tag(),2))
+            lines.append(self.indent('</%s>'%argument.tag(self.version),2))
          lines.append(self.indent('</ARGUMENTS>',1))
       if len(operation.errorRefs)>0:
          lines.append(self.indent('<POSSIBLE-ERROR-REFS>',1))
@@ -141,7 +141,7 @@ class PortInterfaceWriter(WriterBase):
             else:
                lines.append(self.indent('<POSSIBLE-ERROR-REF DEST="%s">%s</POSSIBLE-ERROR-REF>'%(errorElem.tag(self.version),errorElem.ref),2))
          lines.append(self.indent('</POSSIBLE-ERROR-REFS>',1))         
-      lines.append('</%s>'%operation.tag())
+      lines.append('</%s>'%operation.tag(self.version))
       return lines
    
    def writeApplicationErrorXML(self,applicationError):
@@ -176,7 +176,7 @@ class PortInterfaceWriter(WriterBase):
       lines.append('</%s>'%addressMethod.tag(self.version))
       return lines
    
-   def writeModeDeclarationGroupXML(self, modeDeclGroup,package):
+   def writeModeDeclarationGroupXML(self, modeDeclGroup, package):
       assert(isinstance(modeDeclGroup,autosar.portinterface.ModeDeclarationGroup))
       lines=[]
       ws = modeDeclGroup.rootWS()
@@ -184,6 +184,8 @@ class PortInterfaceWriter(WriterBase):
 
       lines.append('<%s>'%modeDeclGroup.tag(self.version))
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%modeDeclGroup.name,1))
+      if modeDeclGroup.category is not None:
+         lines.append(self.indent('<CATEGORY>%s</CATEGORY>'%modeDeclGroup.category,1))      
       if modeDeclGroup.adminData is not None:
          lines.extend(self.indent(self.writeAdminDataXML(modeDeclGroup.adminData),1))
       if modeDeclGroup.initialModeRef is not None:

@@ -87,10 +87,11 @@ class Workspace(object):
       if version is None:
          raise NotImplementedError('unsupported autosar vesion: %s'%namespace)
       removeNamespace(xmlroot,namespace)
-      self.packageParser = autosar.parser.package_parser.PackageParser(version)
-      self._registerDefaultElementParsers(self.packageParser)
+      if self.packageParser is None:
+         self.packageParser = autosar.parser.package_parser.PackageParser(version)      
       self.version=version
       self.xmlroot = xmlroot
+      self._registerDefaultElementParsers(self.packageParser)
 
    def loadXML(self, filename, roles=None):
       global _validWSRoles

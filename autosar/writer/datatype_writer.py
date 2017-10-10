@@ -479,7 +479,7 @@ class DataTypeWriter(WriterBase):
       lines = []
       lines.append(self.indent("<SW-DATA-DEF-PROPS-VARIANTS>", 0))
       for variant in elem.variants:
-         if isinstance(variant, autosar.datatype.SwDataDefPropsConditional):
+         if isinstance(variant, autosar.base.SwDataDefPropsConditional):
             lines.extend(self.indent(self.writeSwDataDefPropsConditionalXML(ws, variant), 1))
          else:
             raise NotImplementedError(str(type(variant)))
@@ -491,7 +491,7 @@ class DataTypeWriter(WriterBase):
       return lines
 
    def writeSwDataDefPropsConditionalXML(self, ws, elem):
-      assert(isinstance(elem, autosar.datatype.SwDataDefPropsConditional))
+      assert(isinstance(elem, autosar.base.SwDataDefPropsConditional))
 
       lines = []
       lines.append("<%s>"%elem.tag(self.version))
@@ -522,7 +522,7 @@ class DataTypeWriter(WriterBase):
       return lines
 
    def writeSwPointerTargetPropsXML(self, ws, elem):
-      assert(isinstance(elem, autosar.datatype.SwPointerTargetProps))
+      assert(isinstance(elem, autosar.base.SwPointerTargetProps))
       lines = []
       lines.append("<%s>"%elem.tag(self.version))
       if elem.targetCategory is not None:
