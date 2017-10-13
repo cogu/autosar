@@ -23,6 +23,7 @@ class SenderReceiverInterface(PortInterface):
       super().__init__(name, isService, parent, adminData)
       self.dataElements=[]
       self.modeGroups=None
+      self.invalidationPolicies=[]
    
    def __iter__(self):
       return iter(self.dataElements)
@@ -77,6 +78,10 @@ class SenderReceiverInterface(PortInterface):
       else:
          raise ValueError("expected elem variable to be of type DataElement")
       elem.parent=self
+   
+   def addInvalidationPolicy(self, invalidationPolicy):
+      self.invalidationPolicies.append(invalidationPolicy)
+         
    
 
 class ParameterInterface(PortInterface):
@@ -181,6 +186,8 @@ class ClientServerInterface(PortInterface):
       elem.parent=self      
 
 class ModeSwitchInterface(PortInterface):
+   def tag(self, version): return 'MODE-SWITCH-INTERFACE'
+   
    def __init__(self, name, isService=None, parent=None, adminData=None):
       super().__init__(name,isService, parent,adminData)
       self._modeGroup=None
@@ -196,7 +203,8 @@ class ModeSwitchInterface(PortInterface):
          self._modeGroup=value
 
 class DataElement(Element):
-   def __init__(self, name, typeRef, isQueued=False, softwareAddressMethodRef=None, parent=None, adminData=None):
+   def tag(self,version): return "VARIABLE-DATA-PROTOTYPE" if version >= 4.0 else "DATA-ELEMENT-PROTOTYPE"
+   def __init__(self, name, typeRef, isQueued=False, softwareAddressMethodRef=None, swCalibrationAccess=None, parent=None, adminData=None):
       super().__init__(name,parent,adminData)
       if isinstance(typeRef,str):
          self.typeRef=typeRef
@@ -207,10 +215,24 @@ class DataElement(Element):
          raise ValueError("unsupported type for argument: typeRef")
       assert(isinstance(isQueued,bool))
       self.isQueued=isQueued
-      self.swAddrMethodRefList=[]
-      if softwareAddressMethodRef is not None:
-         self.swAddrMethodRefList.append(str(softwareAddressMethodRef))
-   def tag(self,version=None): return "DATA-ELEMENT-PROTOTYPE"
+      self.softwareAddressMethodRef = softwareAddressMethodRef
+      self.swCalibrationAccess = swCalibrationAccess
+      self._swImplPolicy = "STANDARD"
+      
+   
+   @property
+   def swImplPolicy(self):
+      return self._swImplPolicy
+
+   @swImplPolicy.setter
+   def swImplPolicy(self, value):
+      ucvalue=str(value).upper()
+      enum_values = ["CONST", "FIXED", "MEASUREMENT-POINT", "QUEUED", "STANDARD"]
+      if ucvalue in enum_values:
+         self._swImplPolicy = ucvalue
+      else:
+         raise ValueError('invalid swImplPolicy value: ' +  value)
+
       
    def asdict(self):
       data = {'type': self.__class__.__name__, 'name': self.name, 'isQueued': self.isQueued, 'typeRef': self.typeRef}
@@ -350,9 +372,19 @@ class Argument(Element):
    def __init__(self, name, typeRef, direction, parent=None, adminData=None):
       super().__init__(name, parent, adminData)
       self.typeRef=typeRef
-      if (direction != 'IN') and (direction != 'OUT') and (direction != 'INOUT'):
-         raise ValueError('invalid value :%s'%direction)
-      self.direction=direction
+      self.direction = direction
+      self.swCalibrationAccess = None
+      self.serverArgumentImplPolicy = None
+   
+   @property
+   def direction(self):
+      return self._direction
+   
+   @direction.setter
+   def direction(self, value):
+      if (value != 'IN') and (value != 'OUT') and (value != 'INOUT'):
+         raise ValueError('invalid value :%s'%value)
+      self._direction=value      
       
    def asdict(self):
       return {'type': self.__class__.__name__, 'name':self.name, 'typeRef':self.typeRef, 'direction': self.direction}
@@ -422,3 +454,23 @@ class ModeDeclaration(Element):
    def __ne__(self, other): return not (self == other)
    
    def tag(self,version=None): return "MODE-DECLARATION"
+
+class InvalidationPolicy:
+   valid_values = ['DONT-INVALIDATE', 'EXTERNAL-REPLACEMENT', 'KEEP', 'REPLACE']
+   
+   def tag(self, version): return 'INVALIDATION-POLICY'
+   
+   def __init__(self, dataElementRef, handleInvalid):
+      self.dataElementRef = dataElementRef
+      self.handleInvalid = handleInvalid
+   
+   @property
+   def handleInvalid(self):
+      return self._handleInvalid
+   
+   @handleInvalid.setter
+   def handleInvalid(self, value):
+      if value not in InvalidationPolicy.valid_values:
+         raise ValueError('invalid value: %s'%value)
+      self._handleInvalid = value
+      

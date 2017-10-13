@@ -30,25 +30,113 @@ class PortInterfacePackageParser(ElementParser):
          return None
 
    def parseSenderReceiverInterface(self,xmlRoot,parent=None):
-         name = xmlRoot.find("./SHORT-NAME")
-         if name is not None:            
-            portInterface = autosar.portinterface.SenderReceiverInterface(name.text)
-            if hasAdminData(xmlRoot):
-               portInterface.adminData=parseAdminDataNode(xmlRoot.find('ADMIN-DATA'))
-            if xmlRoot.find("./IS-SERVICE").text == 'true': portInterface.isService = True
-            for xmlItem in xmlRoot.findall('./DATA-ELEMENTS/DATA-ELEMENT-PROTOTYPE'):
-               name = xmlItem.find("./SHORT-NAME")
-               if name is not None:
-                  isQueued = True if xmlItem.find("./IS-QUEUED").text=='true' else False
-                  typeRef=xmlItem.find("./TYPE-TREF").text
-                  dataElem = autosar.portinterface.DataElement(name.text,typeRef,isQueued,parent=portInterface)
-                  portInterface.dataElements.append(dataElem)
-            if xmlRoot.find('MODE-GROUPS') is not None:
-               portInterface.modeGroups=[]
-               for xmlItem in xmlRoot.findall('./MODE-GROUPS/MODE-DECLARATION-GROUP-PROTOTYPE'):
-                  modeGroup = autosar.portinterface.ModeGroup(xmlItem.find("./SHORT-NAME").text,xmlItem.find("./TYPE-TREF").text,portInterface)
-                  portInterface.modeGroups.append(modeGroup)
-            return portInterface
+      (name, adminData, isService, xmlDataElements, xmlModeGroups, xmlInvalidationPolicys) = (None, None, False, None, None, None)
+      for xmlElem in xmlRoot.findall('./*'):
+         if xmlElem.tag == 'SHORT-NAME':
+            name = self.parseTextNode(xmlElem)
+         elif xmlElem.tag == 'ADMIN-DATA':
+            adminData = self.parseAdminDataNode(xmlElem)
+         elif xmlElem.tag == 'IS-SERVICE':
+            if self.parseTextNode(xmlElem) == 'true':
+               isService = True
+         elif xmlElem.tag == 'DATA-ELEMENTS':
+            xmlDataElements = xmlElem
+         elif xmlElem.tag == 'INVALIDATION-POLICYS':
+            xmlInvalidationPolicys = xmlElem
+         else:
+            raise NotImplementedError(xmlElem.tag)
+         
+      if (name is not None) and (xmlDataElements is not None):
+         portInterface = autosar.portinterface.SenderReceiverInterface(name, isService, parent, adminData)
+         if self.version >= 4.0:
+            elemParser = self._parseDataElementV4
+            dataElemTag = 'VARIABLE-DATA-PROTOTYPE'  
+         else:
+            elemParser = self._parseDataElementV3
+            dataElemTag = 'DATA-ELEMENT-PROTOTYPE'
+         for xmlChild in xmlDataElements.findall('./*'):
+            if xmlChild.tag == dataElemTag:
+               dataElem = elemParser(xmlChild, portInterface)
+               portInterface.dataElements.append(dataElem)               
+            else:
+               raise NotImplementedError(xmlChild.tag)
+         if self.version >= 4.0 and xmlInvalidationPolicys is not None:
+            for xmlChild in xmlInvalidationPolicys.findall('./*'):
+               if xmlChild.tag == 'INVALIDATION-POLICY':                  
+                  invalidationPolicy = self._parseInvalidationPolicy(xmlChild)
+                  portInterface.addInvalidationPolicy(invalidationPolicy)
+               else:
+                  raise NotImplementedError(xmlChild.tag)
+         return portInterface
+   
+   def _parseDataElementV3(self, xmlElement, parent):
+      (name, typeRef, isQueued) = (None, None, False)
+      for xmlElem in xmlArgument.findall('./*'):
+         if xmlElem.tag == 'SHORT-NAME':
+            name = self.parseTextNode(xmlElem)
+         elif xmlElem.tag == 'TYPE-TREF':
+            typeRef = self.parseTextNode(xmlElem)
+         elif xmlElem.tag == 'IS-QUEUED':
+            isQueued = True if self.parseTextNode(xmlElem) == 'true' else False            
+         else:
+            raise NotImplementedError(xmlElem.tag)
+      if (name is not None) and (typeRef is not None):
+         return autosar.portinterface.DataElement(name, typeRef, isQueued, parent=parent)
+      else:
+         raise RuntimeError('SHORT-NAME and TYPE-TREF must not be None')
+
+   def _parseDataElementV4(self, xmlElement, parent):
+      (name, typeRef, props_variants, isQueued) = (None, None, None, False)
+      for xmlElem in xmlElement.findall('./*'):
+         if xmlElem.tag == 'SHORT-NAME':
+            name = self.parseTextNode(xmlElem)
+         elif xmlElem.tag == 'TYPE-TREF':
+            typeRef = self.parseTextNode(xmlElem)
+         elif xmlElem.tag == 'SW-DATA-DEF-PROPS':
+            props_variants = self.parseSwDataDefProps(xmlElem)
+         else:
+            raise NotImplementedError(xmlElem.tag)
+      if (name is not None) and (typeRef is not None):
+         dataElement = autosar.portinterface.DataElement(name, typeRef, isQueued, parent=parent)
+         if props_variants is not None:
+            dataElement.swCalibrationAccess=props_variants[0].swCalibrationAccess
+         return dataElement
+      else:
+         raise RuntimeError('SHORT-NAME and TYPE-TREF must not be None')
+      
+   def _parseInvalidationPolicy(self, xmlRoot):
+      (dataElementRef, handleInvalid) = (None, None)
+      for xmlElem in xmlRoot.findall('./*'):
+         if xmlElem.tag == 'DATA-ELEMENT-REF':
+            dataElementRef = self.parseTextNode(xmlElem)
+         elif xmlElem.tag == 'HANDLE-INVALID':
+            handleInvalid = self.parseTextNode(xmlElem)
+         else:
+            raise NotImplementedError(xmlElem.tag)
+      if (dataElementRef is not None) and (handleInvalid is not None):
+         return autosar.portinterface.InvalidationPolicy(dataElementRef, handleInvalid)
+      else:
+         raise RuntimeError('DATA-ELEMENT-REF and HANDLE-INVALID must not be None')
+         
+         # name = xmlRoot.find("./SHORT-NAME")
+         # if name is not None:            
+         #    portInterface = autosar.portinterface.SenderReceiverInterface(name.text)
+         #    if hasAdminData(xmlRoot):
+         #       portInterface.adminData=parseAdminDataNode(xmlRoot.find('ADMIN-DATA'))
+         #    if xmlRoot.find("./IS-SERVICE").text == 'true': portInterface.isService = True
+         #    for xmlItem in xmlRoot.findall('./DATA-ELEMENTS/DATA-ELEMENT-PROTOTYPE'):
+         #       name = xmlItem.find("./SHORT-NAME")
+         #       if name is not None:
+         #          isQueued = True if xmlItem.find("./IS-QUEUED").text=='true' else False
+         #          typeRef=xmlItem.find("./TYPE-TREF").text
+         #          dataElem = autosar.portinterface.DataElement(name.text,typeRef,isQueued,parent=portInterface)
+         #          portInterface.dataElements.append(dataElem)
+         #    if xmlRoot.find('MODE-GROUPS') is not None:
+         #       portInterface.modeGroups=[]
+         #       for xmlItem in xmlRoot.findall('./MODE-GROUPS/MODE-DECLARATION-GROUP-PROTOTYPE'):
+         #          modeGroup = autosar.portinterface.ModeGroup(xmlItem.find("./SHORT-NAME").text,xmlItem.find("./TYPE-TREF").text,portInterface)
+         #          portInterface.modeGroups.append(modeGroup)
+         #    return portInterface
 
    def parseCalPrmInterface(self,xmlRoot,parent=None):
       assert(xmlRoot.tag=='CALPRM-INTERFACE')
@@ -221,7 +309,10 @@ class PortInterfacePackageParser(ElementParser):
          else:
             raise NotImplementedError(xmlElem.tag)
       if (name is not None) and (typeRef is not None) and (direction is not None):
-         return autosar.portinterface.Argument(name, typeRef, direction)
+         argument = autosar.portinterface.Argument(name, typeRef, direction)
+         if props_variants is not None:            
+            argument.swCalibrationAccess = props_variants[0].swCalibrationAccess
+         return argument
       else:
          raise RuntimeError('SHORT-NAME, TYPE-TREF and DIRECTION must have valid values')
       

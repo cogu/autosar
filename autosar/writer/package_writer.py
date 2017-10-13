@@ -78,7 +78,9 @@ class PackageWriter(WriterBase):
                               'DataTypeUnitElement': self.dataTypeWriter.writeDataTypeUnitElementXML,
                               'DataTypeMappingSet': self.dataTypeWriter.writeDataTypeMappingSetXML,
                               'ModeDeclarationGroup': self.portInterfaceWriter.writeModeDeclarationGroupXML,
-                              'ClientServerInterface': self.portInterfaceWriter.writeClientServerInterfaceXML
+                              'ClientServerInterface': self.portInterfaceWriter.writeClientServerInterfaceXML,
+                              'ModeSwitchInterface': self.portInterfaceWriter.writeModeSwitchInterfaceXML,
+                              'SenderReceiverInterface': self.portInterfaceWriter.writeSenderReceiverInterfaceXML,
                             }
          self.switcherCode = {
                               'DataConstraint': self.dataTypeWriter.writeDataConstraintCode,
