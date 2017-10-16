@@ -5,6 +5,7 @@ from autosar.writer.component_writer import ComponentTypeWriter
 from autosar.writer.behavior_writer import BehaviorWriter
 from autosar.writer.portinterface_writer import PortInterfaceWriter
 from autosar.writer.signal_writer import SignalWriter
+from autosar.base import filter_packages
 import collections
 import autosar.behavior
 import autosar.component
@@ -36,7 +37,7 @@ class PackageWriter(WriterBase):
                           'SoftwareAddressMethod': self.portInterfaceWriter.writeSoftwareAddressMethodXML,
                           'ModeDeclarationGroup': self.portInterfaceWriter.writeModeDeclarationGroupXML,
                           'SenderReceiverInterface': self.portInterfaceWriter.writeSenderReceiverInterfaceXML,
-                          'ParameterInterface': self.portInterfaceWriter.writeParameterInterfaceXML,
+                          'ParameterInterface': self.portInterfaceWriter.writeCalPrmInterfaceXML,
                           'ClientServerInterface': self.portInterfaceWriter.writeClientServerInterfaceXML,
                           'Constant': self.constantWriter.writeConstantXML,
                           'CompositionComponent': self.componentTypeWriter.writeCompositionComponentXML,
@@ -76,7 +77,13 @@ class PackageWriter(WriterBase):
                               'ImplementationDataType': self.dataTypeWriter.writeImplementationDataTypeXML,
                               'SwBaseType': self.dataTypeWriter.writeSwBaseTypeXML,
                               'DataTypeUnitElement': self.dataTypeWriter.writeDataTypeUnitElementXML,
-                              'DataTypeMappingSet': self.dataTypeWriter.writeDataTypeMappingSetXML
+                              'DataTypeMappingSet': self.dataTypeWriter.writeDataTypeMappingSetXML,
+                              'ModeDeclarationGroup': self.portInterfaceWriter.writeModeDeclarationGroupXML,
+                              'ClientServerInterface': self.portInterfaceWriter.writeClientServerInterfaceXML,
+                              'ModeSwitchInterface': self.portInterfaceWriter.writeModeSwitchInterfaceXML,
+                              'SenderReceiverInterface': self.portInterfaceWriter.writeSenderReceiverInterfaceXML,
+                              'ParameterInterface': self.portInterfaceWriter.writeParameterInterfaceXML,
+                              'SoftwareAddressMethod': self.portInterfaceWriter.writeSoftwareAddressMethodXML,
                             }
          self.switcherCode = {
                               'DataConstraint': self.dataTypeWriter.writeDataConstraintCode,
@@ -85,7 +92,7 @@ class PackageWriter(WriterBase):
       else:
          raise NotImplementedError("AUTOSAR version not yet supported")
    
-   def toXML(self,package,ignore):      
+   def toXML(self, package, filters, ignore):      
       lines=[]
       lines.extend(self.beginPackage(package.name))
       if len(package.elements)>0:
@@ -107,21 +114,22 @@ class PackageWriter(WriterBase):
                if writerFunc is not None:            
                   lines.extend(self.indent(writerFunc(elem,package),2))
                else:
-                  print("skipped: %s"%str(type(elem)))
+                  print("[PackageWriter] Unhandled: %s"%str(type(elem).__name__))
          lines.append(self.indent("</ELEMENTS>",1))
       else:
          if self.version<4.0:
             lines.append(self.indent("<ELEMENTS/>",1))
       if len(package.subPackages)>0:
+         filtered_packages = filter_packages(package.subPackages, filters)
          if self.version >= 3.0 and self.version < 4.0:
-            lines.append(self.indent("<SUB-PACKAGES>",1))
-            for subPackage in package.subPackages:
-               lines.extend(self.indent(self.toXML(subPackage,ignore),2))
+            lines.append(self.indent("<SUB-PACKAGES>",1))            
+            for package in filtered_packages:            
+               lines.extend(self.indent(self.toXML(subPackage, filters, ignore),2))
             lines.append(self.indent("</SUB-PACKAGES>",1))
          elif self.version >= 4.0:
             lines.append(self.indent("<AR-PACKAGES>",1))
-            for subPackage in package.subPackages:
-               lines.extend(self.indent(self.toXML(subPackage,ignore),2))
+            for subPackage in filtered_packages:
+               lines.extend(self.indent(self.toXML(subPackage, filters, ignore),2))
             lines.append(self.indent("</AR-PACKAGES>",1))            
       lines.extend(self.endPackage())
       return lines

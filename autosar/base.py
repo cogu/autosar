@@ -124,10 +124,59 @@ def createAdminData(data):
       SD = item.get('SD',None)         
       adminData.specialDataGroups.append(SpecialDataGroup(SDG_GID,SD,SD_GID))
    return adminData
-      
-# class ChildElement:
-#    def rootWS(self):
-#       if self.parent is None:
-#          return None
-#       else:
-#          return self.parent.rootWS()
+
+def filter_package_refs(package_refs, filters):
+   matched = []
+   for ref in package_refs:
+      if ref[0] != '/': ref='/'+ref
+      for filter_string in filters:
+         if filter_string.startswith(ref):
+            matched.append(ref)
+            break
+   return matched
+
+def filter_packages(packages, filters):
+   matched = []
+   if filters is None:
+      return packages
+   for package in packages:
+      ref = package.ref               
+      for filter_string in filters:
+         if filter_string[0]!='/': filter_string='/'+filter_string
+         if filter_string.startswith(ref):
+            matched.append(package)
+            break
+   return matched
+
+
+class SwDataDefPropsConditional:
+   def tag(self,version=None): return 'SW-DATA-DEF-PROPS-CONDITIONAL'
+   def __init__(self, baseTypeRef = None, implementationTypeRef = None, swAddressMethodRef = None, swCalibrationAccess = None, compuMethodRef = None, dataConstraintRef = None, parent = None):
+      self.baseTypeRef = baseTypeRef
+      self.swCalibrationAccess = swCalibrationAccess
+      self.swAddressMethodRef = swAddressMethodRef
+      self.compuMethodRef = compuMethodRef
+      self.dataConstraintRef = dataConstraintRef
+      self.implementationTypeRef = implementationTypeRef
+      self.parent = parent
+      self.swPointerTargetProps = None
+      self._swImplPolicy=None
+
+   @property
+   def swImplPolicy(self):
+      return self._swImplPolicy
+
+   @swImplPolicy.setter
+   def swImplPolicy(self, value):
+      ucvalue=str(value).upper()
+      enum_values = ["CONST", "FIXED", "MEASUREMENT-POINT", "QUEUED", "STANDARD"]
+      if ucvalue in enum_values:
+         self._swImplPolicy = ucvalue
+      else:
+         raise ValueError('invalid swImplPolicy value: ' +  value)
+
+class SwPointerTargetProps:
+   def tag(self, version=None): return 'SW-POINTER-TARGET-PROPS'
+   def __init__(self, targetCategory=None):
+      self.targetCategory = targetCategory
+      self.variants = []

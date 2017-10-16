@@ -341,45 +341,6 @@ class DataConstraint(Element):
          if rule['type'] == 'internalConstraint':
             self.rules.append(InternalConstraint(lowerLimit=rule['lowerLimit'], upperLimit=rule['upperLimit'], lowerLimitType=rule['lowerLimitType'], upperLimitType=rule['upperLimitType']))
 
-class SwDataDefPropsConditional:
-   def tag(self,version=None): return 'SW-DATA-DEF-PROPS-CONDITIONAL'
-   def __init__(self, baseTypeRef = None, implementationTypeRef = None, swCalibrationAccess = None, compuMethodRef = None, dataConstraintRef = None, parent = None):
-      self.baseTypeRef = baseTypeRef
-      self.swCalibrationAccess = swCalibrationAccess
-      self.compuMethodRef = compuMethodRef
-      self.dataConstraintRef = dataConstraintRef
-      self.implementationTypeRef = implementationTypeRef
-      self.parent = parent
-      self.swPointerTargetProps = None
-      self._swImplPolicy=None
-
-   @property
-   def swImplPolicy(self):
-      return self._swImplPolicy
-
-   @swImplPolicy.setter
-   def swImplPolicy(self, value):
-      ucvalue=str(value).upper()
-      enum_values = ["CONST", "FIXED", "MEASUREMENT-POINT", "QUEUED", "STANDARD"]
-      if ucvalue in enum_values:
-         self._swImplPolicy = ucvalue
-      else:
-         raise ValueError('invalid swImplPolicy value: ' +  value)
-
-
-class SwPointerTargetProps:
-   def tag(self, version=None): return 'SW-POINTER-TARGET-PROPS'
-   def __init__(self, name, category='VALUE', variants=None, parent=None):
-      self.category = category
-      self.variants = []
-      if isinstance(variants, collections.Iterable):
-         for elem in variants:
-            if isinstance(elem, SwDataDefPropsConditional) or isinstance(elem, SwPointerTargetProps):
-               self.variants.append(elem)
-            else:
-               raise ValueError('Invalid type: ', type(elem))
-
-
 class ImplementationDataType(Element):
    def tag(self, version=None): return 'IMPLEMENTATION-DATA-TYPE'
    def __init__(self, name, category='VALUE', variants=None, parent=None, adminData=None):
@@ -405,13 +366,6 @@ class SwBaseType(Element):
       self.typeEncoding=typeEncoding
       self.nativeDeclaration=nativeDeclaration
       self.category = category
-
-
-class SwPointerTargetProps:
-   def tag(self, version=None): return 'SW-POINTER-TARGET-PROPS'
-   def __init__(self, targetCategory=None):
-      self.targetCategory = targetCategory
-      self.variants = []
 
 class ImplementationDataTypeElement(Element):
    def tag(self, version=None): return 'IMPLEMENTATION-DATA-TYPE-ELEMENT'

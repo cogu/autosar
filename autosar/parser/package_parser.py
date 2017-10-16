@@ -2,6 +2,7 @@ import autosar.package
 import autosar.element
 import autosar.parser.parser_base
 import sys
+from autosar.base import parseTextNode
 
 class PackageParser:
    def __init__(self,version):
@@ -33,7 +34,7 @@ class PackageParser:
             if parserObject is not None:
                element = parserObject.parseElement(xmlElement,package)
                if element is None:
-                  print("[PackageParser] skipping: %s"%xmlElement.tag)
+                  print("[PackageParser] No return value: %s"%xmlElement.tag)
                   continue
                element.parent=package
                if isinstance(element,autosar.element.Element):
