@@ -163,10 +163,12 @@ class Package(object):
             raise ValueError("dataElements: expected autosar.portinterface.DataElement instance or list")         
       self.append(portInterface)
 
-   def createParameterInterface(self,name,dataElements=None,modeDeclarationGroups=None, isService=False, adminData=None):
+   def createParameterInterface(self,name,parameters=None,modeDeclarationGroups=None, isService=False, adminData=None):
       """
-      creates a new parameter port interface. dataElements can either be a single instance of DataElement or a list of DataElements.
-      The same applies to modeDeclarationGroups. isService must be boolean
+      Creates a new parameter port interface. parameter can either be a single instance of Parameter or a list of Parameters.
+      The same applies to modeDeclarationGroups. isService must be boolean.
+      In a previous version of this function the class DataElement was used instead of Parameter.
+      In order to be backward compatible with old code, this method converts from old to new datatype internally
       """
       ws = self.rootWS()
       assert(ws is not None)
@@ -178,19 +180,35 @@ class Package(object):
       if (adminDataObj is not None) and not isinstance(adminDataObj, autosar.base.AdminData):
          raise ValueError("adminData must be of type dict or AdminData")
       portInterface = autosar.portinterface.ParameterInterface(str(name), adminData=adminDataObj)
-      if isinstance(dataElements,collections.Iterable):
-         for elem in dataElements:
+      if isinstance(parameters,collections.Iterable):
+         for elem in parameters:
             dataType=ws.find(elem.typeRef, role='DataType')
+            #normalize reference to data element
             if dataType is None:
                raise ValueError('invalid type reference: '+elem.typeRef)            
-            elem.typeRef=dataType.ref #normalize reference to data element
-            portInterface.append(elem)
-      elif isinstance(dataElements,autosar.portinterface.DataElement):         
-         dataType=ws.find(dataElements.typeRef, role='DataType')
+            elem.typeRef=dataType.ref
+            if isinstance(autosar.portinterface.DataElement):
+               #convert into Parameter
+               parameter = autosar.portinterface.Parameter(elem.name, elem.typeRef, elem.softwareAddressMethodRef, adminData=elem.adminData)
+            else:
+               parameter = elem
+            portInterface.append(parameter)
+      elif isinstance(parameters, autosar.portinterface.DataElement): 
+         dataType=ws.find(parameters.typeRef, role='DataType')
+         #normalize reference to data element
          if dataType is None:
             raise ValueError('invalid type reference: '+dataElements.typeRef)
-         dataElements.typeRef=dataType.ref #normalize reference to data element
-         portInterface.append(dataElements)
+         parameters.typeRef=dataType.ref
+         parameter = autosar.portinterface.Parameter(parameters.name, parameters.typeRef,
+                                                     parameters.softwareAddressMethodRef, adminData=parameters.adminData)
+         portInterface.append(parameter)
+      elif isinstance(parameters, autosar.portinterface.Parameter):
+         dataType=ws.find(parameters.typeRef, role='DataType')
+         #normalize reference to data element
+         if dataType is None:
+            raise ValueError('invalid type reference: '+parameters.typeRef)
+         parameters.typeRef=dataType.ref 
+         portInterface.append(parameters)         
       else:
          raise ValueError("dataElements: expected autosar.DataElement instance or list")
       self.append(portInterface)

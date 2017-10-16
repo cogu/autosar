@@ -69,7 +69,7 @@ class PortInterfaceWriter(WriterBase):
       lines.append(self.indent('<IS-SERVICE>%s</IS-SERVICE>'%self.toBoolean(portInterface.isService),1))
       if len(portInterface.elements)>0:
          lines.append(self.indent('<CALPRM-ELEMENTS>',1))
-         for elem in portInterface.dataElements:
+         for elem in portInterface.elements:
             lines.extend(self.indent(self.writeCalParamElementXML(elem),2))
          lines.append(self.indent('</CALPRM-ELEMENTS>',1))
       else:
@@ -78,7 +78,7 @@ class PortInterfaceWriter(WriterBase):
       return lines
    
    def writeCalParamElementXML(self,elem):
-      assert(isinstance(elem,autosar.portinterface.DataElement))
+      assert(isinstance(elem,autosar.portinterface.Parameter))
       lines=[]
       lines.append('<CALPRM-ELEMENT-PROTOTYPE>')
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
@@ -86,14 +86,13 @@ class PortInterfaceWriter(WriterBase):
       
       if elem.adminData is not None:
          lines.extend(self.indent(self.writeAdminDataXML(elem.adminData),1))
-      if len(elem.swAddrMethodRefList)>0:
+      if elem.swAddressMethodRef is not None:
          lines.append(self.indent('<SW-DATA-DEF-PROPS>',1))
-         for ref in elem.swAddrMethodRefList:
-            swAddrMethodElem=ws.find(ref)
-            if (swAddrMethodElem is None):
-               raise ValueError("invalid reference: '%s'"%ref)
-            else:
-               lines.append(self.indent('<SW-ADDR-METHOD-REF DEST="%s">%s</SW-ADDR-METHOD-REF>'%(swAddrMethodElem.tag(self.version),ref),2))
+         swAddrMethod = ws.find(elem.swAddressMethodRef)
+         if (swAddrMethod is None):
+            raise ValueError("invalid reference: '%s'"%ref)
+         else:
+             lines.append(self.indent('<SW-ADDR-METHOD-REF DEST="%s">%s</SW-ADDR-METHOD-REF>'%(swAddrMethod.tag(self.version),swAddrMethod.ref),2))
          lines.append(self.indent('</SW-DATA-DEF-PROPS>',1))
       typeElem = ws.find(elem.typeRef, role="DataType")					
       if (typeElem is None):
@@ -124,7 +123,7 @@ class PortInterfaceWriter(WriterBase):
       lines=[]
       lines.append('<%s>'%parameter.tag(self.version))
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%parameter.name,1))
-      typeElem = ws.find(parameter.typeRef, role="DataType")
+      
       lines.append(self.indent('<SW-DATA-DEF-PROPS>',1))
       if parameter.swCalibrationAccess is None:
          access = 'NOT-ACCESSIBLE'
@@ -133,9 +132,9 @@ class PortInterfaceWriter(WriterBase):
       variants = [autosar.base.SwDataDefPropsConditional(swAddressMethodRef=parameter.swAddressMethodRef, swCalibrationAccess=access)]
       lines.extend(self.indent(self.writeSwDataDefPropsVariantsXML(ws, variants),2))
       lines.append(self.indent('</SW-DATA-DEF-PROPS>',1))
-      
+      typeElem = ws.find(parameter.typeRef, role="DataType")
       if (typeElem is None):
-         raise ValueError("invalid type reference: '%s'"%elem.typeRef)
+         raise ValueError("invalid type reference: '%s'"%parameter.typeRef)
       else:
          lines.append(self.indent('<TYPE-TREF DEST="%s">%s</TYPE-TREF>'%(typeElem.tag(self.version),typeElem.ref),1))
       lines.append('</%s>'%parameter.tag(self.version))
