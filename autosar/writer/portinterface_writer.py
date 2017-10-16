@@ -99,8 +99,46 @@ class PortInterfaceWriter(WriterBase):
       if (typeElem is None):
          raise ValueError("invalid type reference: '%s'"%elem.typeRef)
       else:
-         lines.append(self.indent('<TYPE-TREF DEST="%s">%s</TYPE-TREF>'%(typeElem.tag(self.version),typeElem.ref),1))      
+         lines.append(self.indent('<TYPE-TREF DEST="%s">%s</TYPE-TREF>'%(typeElem.tag(self.version),typeElem.ref),1))
       lines.append('</CALPRM-ELEMENT-PROTOTYPE>')
+      return lines
+
+   def writeParameterInterfaceXML(self, portInterface, package):
+      assert(isinstance(portInterface,autosar.portinterface.ParameterInterface))
+      lines=[]
+      ws = portInterface.rootWS()
+      assert(ws is not None)
+      lines.append('<%s>'%portInterface.tag(self.version))
+      lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%portInterface.name,1))
+      if len(portInterface.elements)>0:
+         lines.append(self.indent('<PARAMETERS>',1))
+         for elem in portInterface.elements:
+            lines.extend(self.indent(self._writeParameterElement(elem, ws),2))
+         lines.append(self.indent('</PARAMETERS>',1))
+      else:
+         lines.append(self.indent('<PARAMETERS/>',1))
+      lines.append('</%s>'%portInterface.tag(self.version))
+      return lines
+   
+   def _writeParameterElement(self, parameter, ws):
+      lines=[]
+      lines.append('<%s>'%parameter.tag(self.version))
+      lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%parameter.name,1))
+      typeElem = ws.find(parameter.typeRef, role="DataType")
+      lines.append(self.indent('<SW-DATA-DEF-PROPS>',1))
+      if parameter.swCalibrationAccess is None:
+         access = 'NOT-ACCESSIBLE'
+      else:
+         access = parameter.swCalibrationAccess
+      variants = [autosar.base.SwDataDefPropsConditional(swAddressMethodRef=parameter.swAddressMethodRef, swCalibrationAccess=access)]
+      lines.extend(self.indent(self.writeSwDataDefPropsVariantsXML(ws, variants),2))
+      lines.append(self.indent('</SW-DATA-DEF-PROPS>',1))
+      
+      if (typeElem is None):
+         raise ValueError("invalid type reference: '%s'"%elem.typeRef)
+      else:
+         lines.append(self.indent('<TYPE-TREF DEST="%s">%s</TYPE-TREF>'%(typeElem.tag(self.version),typeElem.ref),1))
+      lines.append('</%s>'%parameter.tag(self.version))
       return lines
    
    def writeClientServerInterfaceXML(self, portInterface,package):
@@ -160,7 +198,7 @@ class PortInterfaceWriter(WriterBase):
       lines.append('<%s>'%argument.tag(self.version))
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%argument.name,1))
       if self.version >= 4.0:
-         lines.append(self.indent('<SW-DATA-DEF-PROPS>',1))         
+         lines.append(self.indent('<SW-DATA-DEF-PROPS>',1))
          if argument.swCalibrationAccess is None:
             tmp = 'NOT-ACCESSIBLE'
          else:

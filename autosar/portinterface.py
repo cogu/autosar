@@ -116,13 +116,13 @@ class Parameter(Element):
    Represents a <PARAMETER> element in AUTOSAR 4 or <CALPRM-ELEMENT-PROTOTYPE> in AUTOSAR 3
    """
    def tag(self, version):
-         return "PARAMETER" if version >=4.0 else "CALPRM-ELEMENT-PROTOTYPE"
+         return "PARAMETER-DATA-PROTOTYPE" if version >=4.0 else "CALPRM-ELEMENT-PROTOTYPE"
 
-   def __init__(self, name, typeRef = None, softwareAddressMethodRef=None, softwareCalibrationAccess=None, parent=None, adminData=None):
+   def __init__(self, name, typeRef = None, swAddressMethodRef=None, swCalibrationAccess=None, parent=None, adminData=None):
       super().__init__(name, parent, adminData)
       self.typeRef = typeRef
-      self.softwareAddressMethodRef = softwareCalibrationAccess
-      self.softwareCalibrationAccess = softwareCalibrationAccess
+      self.swAddressMethodRef = swAddressMethodRef
+      self.swCalibrationAccess = swCalibrationAccess
 
 class ClientServerInterface(PortInterface):
    def __init__(self, name, isService=False, parent=None, adminData=None):

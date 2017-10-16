@@ -67,7 +67,8 @@ class BaseParser():
 
    def parseSwDataDefPropsConditional(self, xmlRoot):
       assert (xmlRoot.tag == 'SW-DATA-DEF-PROPS-CONDITIONAL')
-      (baseTypeRef, implementationTypeRef, swCalibrationAccess, compuMethodRef, dataConstraintRef, swPointerTargetPropsXML, swImplPolicy) = (None, None, None, None, None, None, None)
+      (baseTypeRef, implementationTypeRef, swCalibrationAccess, compuMethodRef, dataConstraintRef,
+       swPointerTargetPropsXML, swImplPolicy, swAddressMethodRef) = (None, None, None, None, None, None, None, None)
       for xmlItem in xmlRoot.findall('./*'):
          if xmlItem.tag == 'BASE-TYPE-REF':
             baseTypeRef = self.parseTextNode(xmlItem)
@@ -83,9 +84,11 @@ class BaseParser():
             implementationTypeRef = self.parseTextNode(xmlItem)
          elif xmlItem.tag == 'SW-IMPL-POLICY':
             swImplPolicy = self.parseTextNode(xmlItem)
+         elif xmlItem.tag == 'SW-ADDR-METHOD-REF':
+            swAddressMethodRef = self.parseTextNode(xmlItem)
          else:
             raise NotImplementedError(xmlItem.tag)
-      variant = SwDataDefPropsConditional(baseTypeRef, implementationTypeRef, swCalibrationAccess, compuMethodRef, dataConstraintRef)
+      variant = SwDataDefPropsConditional(baseTypeRef, implementationTypeRef, swAddressMethodRef, swCalibrationAccess, compuMethodRef, dataConstraintRef)
       if swPointerTargetPropsXML is not None:
          variant.swPointerTargetProps = self.parseSwPointerTargetProps(swPointerTargetPropsXML, variant)
       if swImplPolicy is not None:

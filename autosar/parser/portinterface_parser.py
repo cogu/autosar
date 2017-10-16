@@ -322,21 +322,24 @@ class PortInterfacePackageParser(ElementParser):
       return autosar.portinterface.ApplicationError(name, errorCode, parent)
 
    def _parseParameterDataPrototype(self, xmlElem, parent):
-      (name, adminData, typeRef) = (None, None, None)
+      (name, adminData, typeRef, props_variants) = (None, None, None, None)
       for xmlElem in xmlElem.findall('./*'):
          if xmlElem.tag == 'SHORT-NAME':
             name = self.parseTextNode(xmlElem)
          elif xmlElem.tag == 'ADMIN-DATA':
             adminData = self.parseAdminDataNode(xmlElem)
          elif xmlElem.tag == 'SW-DATA-DEF-PROPS':
-            pass         
+            props_variants = self.parseSwDataDefProps(xmlElem)         
          elif xmlElem.tag == 'TYPE-TREF':
             typeRef = self.parseTextNode(xmlElem)
          else:
             raise NotImplementedError(xmlElem.tag)
       
       if (name is not None) and (typeRef is not None):
-         parameter = autosar.portinterface.Parameter(name, parent, adminData)         
+         parameter = autosar.portinterface.Parameter(name, typeRef, parent=parent, adminData=adminData)
+         if props_variants is not None:
+            parameter.swCalibrationAccess = props_variants[0].swCalibrationAccess
+            parameter.swAddressMethodRef = props_variants[0].swAddressMethodRef            
          return parameter
       
 

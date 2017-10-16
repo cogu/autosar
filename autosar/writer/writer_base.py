@@ -171,6 +171,11 @@ class WriterBase():
          if baseType is None:
             raise ValueError('invalid reference: '+elem.baseTypeRef)
          lines.append(self.indent('<BASE-TYPE-REF DEST="%s">%s</BASE-TYPE-REF>'%(baseType.tag(self.version), baseType.ref),1))
+      if elem.swAddressMethodRef is not None:
+         swAddressMethod = ws.find(elem.swAddressMethodRef)
+         if swAddressMethod is None:
+            raise ValueError('invalid SW-ADDRESS-METHOD reference: '+ elem.swAddressMethodRef)         
+         lines.append(self.indent('<SW-ADDR-METHOD-REF DEST="%s">%s</SW-ADDR-METHOD-REF>'%(swAddressMethod.tag(self.version), swAddressMethod.ref),1))
       if elem.swCalibrationAccess is not None:
          lines.append(self.indent('<SW-CALIBRATION-ACCESS>%s</SW-CALIBRATION-ACCESS>'%(elem.swCalibrationAccess),1))
       if elem.compuMethodRef is not None:
