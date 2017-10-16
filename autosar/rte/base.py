@@ -38,6 +38,13 @@ class Port:
                   if (comspec.name == data_element.name) and (comspec.initValueRef is not None):
                      initValue = ws.find(comspec.initValueRef)
             self.data_elements.append(DataElement(data_element.name, self, data_type, initValue, data_element.isQueued))
+         if port_interface.modeGroups is not None:
+            for group in port_interface.modeGroups:
+               data_type=ws.find(group.typeRef)
+               if data_type is None:
+                  raise ValueError('Error: Invalid data type reference: %s'%group.typeRef)
+               self.mode_groups.append(ModeGroup(group.name, self, data_type))
+               
       elif isinstance(port_interface, autosar.portinterface.ClientServerInterface):
          for operation in port_interface.operations:
             arguments = []
@@ -70,6 +77,9 @@ class Port:
             if data_type is None:
                raise ValueError('Invalid Type Reference: '+argument.typeRef)
             type_manager.processType(ws, data_type)
+      for group in self.mode_groups:
+         type_manager.processType(ws,  group.data_type)
+      
 
    def update_client_api(self, api):
       for port_func in self.portAPI.values():
@@ -405,10 +415,53 @@ class ModeSwitchEvent:
       modeDeclaration = ws.find(ar_event.modeInstRef.modeDeclarationRef)
       if modeDeclaration is None:
          raise ValueError("Error: invalid reference: %s"+ar_event.modeInstRef.modeDeclarationRef)
-      mode = modeDeclaration.parent
+      mode = modeDeclaration.parent      
       self.inner = ar_event
       self.activationType = 'OnEntry' if (ar_event.activationType == 'ON-ENTRY' or ar_event.activationType == 'ENTRY')  else 'OnExit'
       self.name = "%s_%s_%s"%(self.activationType, mode.name, modeDeclaration.name)
       self.mode=mode.name
       self.modeDeclaration=modeDeclaration.name
-      self.runnable = runnable
+      self.runnable = runnable       
+
+class ModeGroup:
+   """
+   RTE wrapper around an autosar.portinterface.ModeGroup
+   """
+   def __init__(self, name, parent, dataType):
+      self.name = name
+      self.parent = parent
+      self.data_type = dataType
+
+class ModeSwitchFunction:
+   def __init__(self, event):      
+      self.body = C.block(innerIndent = innerIndentDefault)
+      self.calls = set()
+      self.typename = 'Rte_ModeType_'+event.mode
+      self.proto = C.function('Rte_SetMode_'+event.mode, 'void', args = [C.variable('newMode', self.typename)])
+      self.static_var = C.variable('m_'+event.mode, self.typename, static=True)
+      self._init_body(event)
+   
+   def _init_body(self, event):
+      self.body.append(C.statement('%s %s = %s'%(self.typename, 'previousMode', self.static_var.name)))
+      self.body.append(C.statement('%s = %s'%(self.static_var.name, self.proto.args[0].name)))
+
+   
+   def generate_on_entry_code(self, event, function_name):
+      code = C.sequence()
+      else_str = 'else ' if len(self.calls) > 0 else ''
+      code.append(C.line(else_str+'if ( (previousMode != RTE_MODE_{0}) && (newMode == RTE_MODE_{0}) )'.format(event.mode+'_'+event.modeDeclaration)))
+      block = C.block(innerIndent = innerIndentDefault)
+      block.append(C.statement(C.fcall(function_name)))
+      code.append(block)
+      self.calls.add(function_name) 
+      self.body.extend(code)
+
+   def generate_on_exit_code(self, event, function_name):
+      code = C.sequence()
+      else_str = 'else ' if len(self.calls) > 0 else ''
+      code.append(C.line(else_str+'if ( (previousMode == RTE_MODE_{0}) && (newMode != RTE_MODE_{0}) )'.format(event.mode+'_'+event.modeDeclaration)))
+      block = C.block(innerIndent = innerIndentDefault)
+      block.append(C.statement(C.fcall(function_name)))
+      code.append(block)
+      self.calls.add(function_name) 
+      self.body.extend(code)

@@ -5,12 +5,25 @@ import io
 import autosar.base
 import autosar.bsw.com
 
+innerIndentDefault=3 #default indendation (number of spaces)
+
 def _genCommentHeader(comment):
    lines = []
    lines.append('/*********************************************************************************************************************')
    lines.append('* %s'%comment)
    lines.append('*********************************************************************************************************************/')
    return lines
+
+def _genCommentHeader2(comment):
+   """
+   Same as _genCommentHeader but returns a C sequence instead of raw strings
+   """
+   code = C.sequence()
+   code.append(C.line('/*********************************************************************************************************************'))
+   code.append(C.line('* %s'%comment))
+   code.append(C.line('*********************************************************************************************************************/'))
+   return code
+
 
 class TypeGenerator:
 
@@ -91,7 +104,7 @@ class TypeGenerator:
                      else:
                         raise ValueError(dataType.compuMethodRef)
                elif isinstance(dataType, autosar.datatype.RecordDataType):
-                  body = C.block(innerIndent=3)
+                  body = C.block(innerIndent=innerIndentDefault)
                   for elem in dataType.elements:
                      childType = ws.find(elem.typeRef, role='DataType')
                      body.append(C.statement(C.variable(elem.name, childType.name)))
@@ -117,7 +130,7 @@ class TypeGenerator:
                raise ValueError(ref)
 
          if len(modeTypes)>0:
-            lines=self._genCommentHeader('Mode Types')
+            lines=_genCommentHeader('Mode Types')
             tmp=[]
             hfile.code.extend(lines)
             first=True
@@ -186,15 +199,18 @@ class RteGenerator:
    Generates Rte.c based on partition. The prefix argument can be used to change both
    the file name and prefix name used for public function names
    """
-   def __init__(self, partition, prefix='Rte', include=None):
+   def __init__(self, partition, prefix='Rte', include=None, mode_switch=True, os_enable=True):
       self.partition=partition
-      self.includes = [('Rte.h', False), ('Rte_Type.h', False)] #array of tuples, first element is the name of include header, second element is True if this is a sysinclude
+      self.includes = [] #array of tuples, first element is the name of include header, second element is True if this is a sysinclude
       self.prefix=prefix
       self.com_component = None
+      self.header_file_name = None
       self.data_elements = []
       self.extra_static_vars={}
       self.extra_public_functions={}
       self.extra_rte_start=C.sequence()
+      self.mode_switch_enable=mode_switch
+      self.os_enable = os_enable
       #self.com_access = {'receive': {}, 'send': {}}
       if include is not None:
          for elem in include:
@@ -208,8 +224,28 @@ class RteGenerator:
                self.com_component = component
             else:
                raise RuntimeError("More than one Com component allowed in a partition")
+      self.extra_static_vars.update(partition.static_vars)
 
-   def generate(self, dest_dir='.', file_name=None):
+   def generate(self, dest_dir='.'):      
+      self._generate_header(dest_dir, 'RteApi.h')
+      self._generate_source(dest_dir, 'RteApi.c')
+   
+   def _generate_header(self, dest_dir='.', file_name=None):
+      if file_name is None:
+         file_name = 'RteApi.h'      
+      self.includes.append((file_name, False))
+      file_path = os.path.join(dest_dir,file_name)
+      with io.open(file_path, 'w', newline='\n') as fp:
+         header = C.hfile(file_path)
+         self._write_header_includes(header.code)
+         self._write_header_public_func(header.code)
+         for line in header.lines():
+            fp.write(line)
+            fp.write('\n')
+         fp.write('\n')
+         
+   
+   def _generate_source(self, dest_dir='.', file_name=None):
       if file_name is None:
          file_name = 'RteApi.c'
       file_path = os.path.join(dest_dir,file_name)
@@ -227,6 +263,8 @@ class RteGenerator:
          code.append(C.include(*include))
       if self.com_component is not None:
          code.append(C.include(self.com_component.name+'.h'))
+      if self.os_enable:
+         code.append(C.include('os.h'))
       fp.write('\n'.join(code.lines())+'\n\n')
 
    def _write_constants_and_typedefs(self, fp):
@@ -245,28 +283,30 @@ class RteGenerator:
    def _write_public_funcs(self, fp):      
       fp.write('\n'.join(_genCommentHeader('Public Functions'))+'\n')
       self._write_rte_start(fp)
-      if len(self.partition.serverAPI.read)>0:
-        self._genRead(fp, sorted(self.partition.serverAPI.final['read'], key=lambda x: x.shortname))
-      if len(self.partition.serverAPI.write)>0:
-        self._genWrite(fp, sorted(self.partition.serverAPI.final['write'], key=lambda x: x.shortname))
-      if len(self.partition.serverAPI.receive)>0:
-        self._genReceive(fp, sorted(self.partition.serverAPI.final['receive'], key=lambda x: x.shortname))
-      if len(self.partition.serverAPI.send)>0:
-        self._genSend(fp, sorted(self.partition.serverAPI.final['send'], key=lambda x: x.shortname))
-      #if len(self.partition.serverAPI.call)>0:
-      #  self._genCall(fp, sorted(self.partition.serverAPI.final['call'], key=lambda x: x.shortname))
-      if len(self.partition.serverAPI.get)>0:
-        self._genGet(fp, sorted(self.partition.serverAPI.final['get'], key=lambda x: x.shortname))
-      if len(self.partition.serverAPI.setReadData)>0:
-        self._genFunctionBodies(fp, sorted(self.partition.serverAPI.final['setReadData'], key=lambda x: x.shortname))
-      if len(self.partition.serverAPI.setReadResult)>0:
-        self._genFunctionBodies(fp, sorted(self.partition.serverAPI.setReadResult.values(), key=lambda x: x.shortname))
+      if len(self.partition.upperLayerAPI.read)>0:
+        self._genRead(fp, sorted(self.partition.upperLayerAPI.final['read'], key=lambda x: x.shortname))
+      if len(self.partition.upperLayerAPI.write)>0:
+        self._genWrite(fp, sorted(self.partition.upperLayerAPI.final['write'], key=lambda x: x.shortname))
+      if len(self.partition.upperLayerAPI.receive)>0:
+        self._genReceive(fp, sorted(self.partition.upperLayerAPI.final['receive'], key=lambda x: x.shortname))
+      if len(self.partition.upperLayerAPI.send)>0:
+        self._genSend(fp, sorted(self.partition.upperLayerAPI.final['send'], key=lambda x: x.shortname))
+      #if len(self.partition.upperLayerAPI.call)>0:
+      #  self._genCall(fp, sorted(self.partition.upperLayerAPI.final['call'], key=lambda x: x.shortname))
+      if len(self.partition.upperLayerAPI.get)>0:
+        self._genGet(fp, sorted(self.partition.upperLayerAPI.final['get'], key=lambda x: x.shortname))
+      if len(self.partition.upperLayerAPI.setReadData)>0:
+        self._genFunctionBodies(fp, sorted(self.partition.upperLayerAPI.final['setReadData'], key=lambda x: x.shortname))
+      if len(self.partition.upperLayerAPI.setReadResult)>0:
+        self._genFunctionBodies(fp, sorted(self.partition.upperLayerAPI.setReadResult.values(), key=lambda x: x.shortname))
+      if self.mode_switch_enable and len(self.partition.mode_switch_functions)>0:
+         self._genFunctionBodies(fp, [self.partition.mode_switch_functions[key] for key in sorted(self.partition.mode_switch_functions.keys())])
       if len(self.extra_public_functions)>0:
          self._genFunctionBodies(fp, [self.extra_public_functions[key] for key in sorted(self.extra_public_functions.keys())])
 
    def _write_rte_start(self, fp):
       func = C.function(self.prefix+'_Start', 'void')
-      body = C.block(innerIndent=3)
+      body = C.block(innerIndent=innerIndentDefault)
       self._write_init_values(body)
       if len(self.extra_rte_start)>0:
          body.extend(self.extra_rte_start)
@@ -284,7 +324,7 @@ class RteGenerator:
    def _genRead(self, fp, prototypes):
       """Generates all Rte_Read functions"""
       for port_func in prototypes:
-         body = C.block(innerIndent=3)
+         body = C.block(innerIndent=innerIndentDefault)
          if port_func.data_element.com_access['Receive'] is not None:
             com_func = port_func.data_element.com_access['Receive']
             body.code.append(C.statement('return '+str(C.fcall(com_func.name, params=[port_func.proto.args[0].name]))))
@@ -301,7 +341,7 @@ class RteGenerator:
    def _genWrite(self, fp, prototypes):
       for port_func in prototypes:
          hasComSignal = False
-         body = C.block(innerIndent=3)
+         body = C.block(innerIndent=innerIndentDefault)
          if port_func.data_element.symbol is not None:
             body.code.append(C.statement('%s = %s'%(port_func.data_element.symbol, port_func.proto.args[0].name)))
          if port_func.data_element.com_access['Send'] is not None:
@@ -317,28 +357,28 @@ class RteGenerator:
 
    def _genReceive(self, fp, prototypes):
       for proto in prototypes:
-         body = C.block(innerIndent=3)
+         body = C.block(innerIndent=innerIndentDefault)
          body.code.append(C.statement('return RTE_E_OK'))
          fp.write(str(proto.func)+'\n')
          fp.write('\n'.join(body.lines())+'\n\n')
 
    def _genSend(self, fp, prototypes):
       for proto in prototypes:
-         body = C.block(innerIndent=3)
+         body = C.block(innerIndent=innerIndentDefault)
          body.code.append(C.statement('return RTE_E_OK'))
          fp.write(str(proto.func)+'\n')
          fp.write('\n'.join(body.lines())+'\n\n')
 
    def _genCall(self, fp, prototypes):
       for proto in prototypes:
-         body = C.block(innerIndent=3)
+         body = C.block(innerIndent=innerIndentDefault)
          body.code.append(C.statement('return RTE_E_OK'))
          fp.write(str(proto.func)+'\n')
          fp.write('\n'.join(body.lines())+'\n\n')
 
    def _genGet(self, fp, prototypes):
       for port_func in prototypes:
-         body = C.block(innerIndent=3)
+         body = C.block(innerIndent=innerIndentDefault)
          prefix = '&' if port_func.data_element.dataType.isComplexType else ''
          suffix = '[0]' if isinstance(port_func.data_element.dataType, autosar.datatype.ArrayDataType) else ''
          body.code.append(C.statement('return %s%s%s'%(prefix, port_func.data_element.symbol, suffix)))
@@ -346,11 +386,24 @@ class RteGenerator:
          fp.write('\n'.join(body.lines())+'\n\n')
    
    def _genFunctionBodies(self, fp, prototypes):
-      for port_func in prototypes:
-         fp.write(str(port_func.proto)+'\n')
-         fp.write('\n'.join(port_func.body.lines())+'\n\n')
-         
+      for func in prototypes:
+         fp.write(str(func.proto)+'\n')
+         fp.write('\n'.join(func.body.lines())+'\n\n')
+   
+   def _write_header_includes(self, code):      
+      code.extend(_genCommentHeader2("INCLUDES"))      
+      code.append(C.include('Rte_Type.h'))
+      code.append(C.include('Rte.h'))
+   
+   def _write_header_public_func(self, code):
+      code.append('')
+      code.extend(_genCommentHeader2("PUBLIC FUNCTION PROTOTYPES"))      
+      code.append(C.statement(C.function('Rte_Start', 'void')))
+      if self.mode_switch_enable and len(self.partition.mode_switch_functions)>0:
+         for func in [self.partition.mode_switch_functions[key] for key in sorted(self.partition.mode_switch_functions.keys())]:
+            code.append(C.statement(func.proto))
 
+         
 
 class ComponentHeaderGenerator():
    def __init__(self, partition):
@@ -483,9 +536,9 @@ class ComponentHeaderGenerator():
 
 
 class MockRteGenerator(RteGenerator):
-   def __init__(self, partition, api_prefix='Rte', file_prefix = 'MockRte', include=None):
-      super().__init__(partition, api_prefix, include)
-      self.includes.append((file_prefix+'.h', False))
+   def __init__(self, partition, api_prefix='Rte', file_prefix = 'MockRte', include=None, mode_switch=False):
+      super().__init__(partition, api_prefix, include, mode_switch)      
+      self.includes.append((file_prefix+'.h', False))      
       self.api_prefix = api_prefix
       self.file_prefix = file_prefix
       self.typedefs={}
@@ -493,12 +546,13 @@ class MockRteGenerator(RteGenerator):
          if isinstance(port, autosar.rte.base.ProvidePort):
             self._create_port_getter_api(port)
          else:
-            self._create_port_setter_api(port)
-         self.partition.serverAPI.finalize()
+            if len(port.data_elements)>0:
+               self._create_port_setter_api(port)
+         self.partition.upperLayerAPI.finalize()
 
    def generate(self, dest_dir):
-      super().generate(dest_dir, self.file_prefix+'.c')
       self._generateHeader(dest_dir)
+      super()._generate_source(dest_dir, self.file_prefix+'.c')      
 
    def _create_port_getter_api(self, port):
       component = port.parent
@@ -514,7 +568,7 @@ class MockRteGenerator(RteGenerator):
       proto=C.function(func_name, data_type.name+suffix)
       rte_func = autosar.rte.base.DataElementFunction(proto, port, data_element)
       self._createPortVariable(component, port, data_element)
-      self.partition.serverAPI.get[short_name] = autosar.rte.base.GetPortFunction(short_name, proto, data_element)
+      self.partition.upperLayerAPI.get[short_name] = autosar.rte.base.GetPortFunction(short_name, proto, data_element)
 
    def _create_port_setter_api(self, port):
       component = port.parent
@@ -529,9 +583,9 @@ class MockRteGenerator(RteGenerator):
    def _create_data_element_setter(self, component, port, data_element):
       var_name = self._createDataElementVariable(component, port, data_element)
       port_func = autosar.rte.base.SetReadDataFunction(self.prefix, component, port, data_element, var_name)
-      self.partition.serverAPI.setReadData[port_func.shortname] = port_func                  
+      self.partition.upperLayerAPI.setReadData[port_func.shortname] = port_func                  
       port_func = autosar.rte.base.SetReadResultFunction(self.prefix, component, port, data_element)
-      self.partition.serverAPI.setReadResult[port_func.shortname]=port_func
+      self.partition.upperLayerAPI.setReadResult[port_func.shortname]=port_func
       self.extra_static_vars[port_func.static_var.name]=port_func.static_var
       self.extra_rte_start.append(C.statement('%s = RTE_E_OK'%(data_element.result_var.name)))
       
@@ -555,9 +609,9 @@ class MockRteGenerator(RteGenerator):
       self.extra_public_functions[port_access.func.proto.name]=autosar.rte.base.ServerCallFunction(port_access.func.proto, body)
 
    def _createMockServerCallFunction(self, proto, var_name):
-      body = C.block(innerIndent=3)
+      body = C.block(innerIndent=innerIndentDefault)
       body.append(C.line('if (%s != 0)'%(var_name)))
-      inner = C.block(innerIndent=3)
+      inner = C.block(innerIndent=innerIndentDefault)
       fcall = C.fcall(var_name)
       for arg in proto.args:
          fcall.add_param(arg.name)
@@ -594,6 +648,7 @@ class MockRteGenerator(RteGenerator):
       code.extend([C.line(x) for x in _genCommentHeader('Includes')])
       code.append(C.include("Std_Types.h"))
       code.append(C.include("Rte_Type.h"))
+      code.append(C.include("Rte.h"))
       code.append(C.blank())
       code.extend(_genCommentHeader('Constants and Types'))
       for key in sorted(self.typedefs.keys()):
@@ -603,13 +658,13 @@ class MockRteGenerator(RteGenerator):
       code.append(C.blank())
       
       code.append(C.statement(C.function('%s_Start'%self.api_prefix, 'void')))
-      for func in sorted(self.partition.serverAPI.final['get'], key=lambda x: x.shortname):
+      for func in sorted(self.partition.upperLayerAPI.final['get'], key=lambda x: x.shortname):
          assert func.proto is not None
          hfile.code.append(C.statement(func.proto))
-      for func in sorted(self.partition.serverAPI.final['setReadData'], key=lambda x: x.shortname):
+      for func in sorted(self.partition.upperLayerAPI.final['setReadData'], key=lambda x: x.shortname):
          assert func.proto is not None
          hfile.code.append(C.statement(func.proto))
-      for func in sorted(self.partition.serverAPI.final['setReadResult'], key=lambda x: x.shortname):
+      for func in sorted(self.partition.upperLayerAPI.final['setReadResult'], key=lambda x: x.shortname):
          assert func.proto is not None
          hfile.code.append(C.statement(func.proto))
       for func in sorted(self.extra_public_functions.values(), key=lambda x: x.shortname):
@@ -619,3 +674,170 @@ class MockRteGenerator(RteGenerator):
       return hfile.lines()
 
 
+class RteTaskGenerator:
+   """
+   RteTask C code generator
+   """
+   def __init__(self, partition, os_cfg, prefix='RteTask', include=None):
+      self.partition = partition
+      self.prefix = prefix
+      self.os_cfg = os_cfg
+      self.includes = [
+                     #array of tuples, first element is the name of include header, second element is True if this is a sysinclude
+                     ('stdio.h', True),
+                     ('Rte.h', False),
+                     ('Rte_Type.h', False),
+                     #('%s.h'%self.prefix, False),
+                     ('os.h', False),
+         ]
+      for component in self.partition.components:
+         self.includes.append(('Rte_%s.h'%component.name, False))
+      if include is not None:
+         for elem in List(include):
+            if isinstance(elem, str):
+               self.includes.append((elem, False))
+            elif isinstance(elem, tuple):
+               self.includes.append(elem)
+            else:
+               raise ValueError("elem: expected string or tuple, got "+str(type(elem)))      
+
+   def generate(self, dest_dir='.'):
+      #self._generate_header(dest_dir)
+      self._generate_source(dest_dir)
+   
+   def _generate_source(self, dest_dir):
+      file_name = self.prefix+'.c'
+      file_path = os.path.join(dest_dir,file_name)
+
+      with open(file_path, 'w', newline='\n') as fp:         
+         s1 = self._write_source_includes()
+         s2 = self._write_source_constants_and_typedefs()
+         s3 = self._write_source_local_funcs()
+         s4 = self._write_source_global_funcs()
+         for seq in [s1, s2, s3, s4]:
+            fp.write('\n'.join(seq.lines())+'\n')
+         
+         
+
+   def _write_source_includes(self):
+      code = C.sequence()
+      code.extend(_genCommentHeader2('INCLUDES'))
+      code.append(C.blank())
+      for include in self.includes:
+         code.append(C.include(*include))
+      code.append(C.blank())
+      return code
+
+   def _write_source_constants_and_typedefs(self):
+      code = C.sequence()
+      code.extend(_genCommentHeader2('CONSTANTS AND DATA TYPES'))
+      code.append(C.blank())
+      return code
+
+   def _write_source_local_funcs(self):
+      code = C.sequence()
+      code.extend(_genCommentHeader2('LOCAL FUNCTION PROTOTYPES'))
+      code.append(C.blank())
+      return code
+
+   def _write_source_global_funcs(self):
+      code = C.sequence()
+      code.extend(_genCommentHeader2('GLOBAL FUNCTIONS'))
+      code.append(C.blank())      
+      for task in sorted(self.os_cfg.tasks, key=lambda x: x.name):         
+         code.append(C.line('THREAD_PROTO({0.name}, arg)'.format(task)))
+         code.append(self._generate_task_body(task))
+         code.append(C.blank(2))
+      return code
+
+   def _generate_task_body(self, task):
+      code = C.block(innerIndent=innerIndentDefault)
+      isRunning=C.variable('isRunning', 'boolean')
+      code.append(C.statement('{0} = TRUE'.format(str(isRunning))))
+      code.append(C.statement('Os_task_t *self = (Os_task_t*) arg'))
+      code.append('')
+      code.append(C.line('if (self == 0)'))
+      body = C.block(innerIndent=innerIndentDefault)
+      body.append(C.statement('THREAD_RETURN(1)'))
+      code.append(body)
+      code.append('')
+      code.append(C.line('while (isRunning == TRUE)'))
+            
+      while_block = C.block(innerIndent=innerIndentDefault)
+      while_block.append(C.statement('uint16 eventId = Os_task_waitEvent(self)'))
+      while_block.append(C.line('if (eventId == OS_INVALID_EVENT_ID)'))
+      if_block = C.block(innerIndent=innerIndentDefault)
+      if_block.append(C.statement(C.fcall('fprintf', ['stderr', r'"Os_task_waitEvent failed\n"'])))
+      if_block.append(C.statement('break'))
+      while_block.append(if_block)
+      while_block.append(C.line('switch(eventId)'))
+      switch_block = C.block(innerIndent=innerIndentDefault)      
+      switch_block.extend(self._generate_task_switch_case(task, innerIndentDefault*2))
+      while_block.append(switch_block)
+      code.append(while_block)
+      code.append('')
+      code.append(C.statement('THREAD_RETURN(0)'))
+      return code
+
+   def _generate_task_switch_case(self, task, indent):
+      code = C.sequence()
+      default_handled = []
+      for runnable in task.runnables:
+         items = self._findEventTriggers(task, runnable)
+         if len(items)==1:
+            (name, event) = items[0]            
+            code.append(C.line('case %s:'%name, indent=indent))
+            code.append(C.statement(C.fcall(runnable.symbol)))
+            code.append(C.statement('break'))
+         elif len(items)>1:
+            default_handled.append(items)            
+      code.append(C.line('default:', indent=indent))
+      if len(default_handled)>0:
+         raise NotImplementedError('Not yet supported')
+      else:
+         code.append(C.statement('break'))
+      return code
+
+   def _findEventTriggers(self,  task, runnable):
+      result = []
+      for name in sorted(task.event_map.keys()):
+         for event in task.event_map[name]:
+            if (not isinstance(event, autosar.rte.base.OperationInvokedEvent)) and (event.runnable is runnable):
+               result.append((name, event))
+      return result
+      
+   def _generate_header(self, dest_dir):
+      file_name = self.prefix+'.h'
+      file_path = os.path.join(dest_dir,file_name)
+      with io.open(file_path, 'w', newline='\n') as fp:
+         print("#ifndef RTE_TASK_H", file=fp)
+         print("#define RTE_TASK_H", file=fp)
+         self._write_header_includes(fp)
+         self._write_header_constants_and_typedefs(fp)
+         self._write_header_global_var(fp)
+         self._write_header_global_proto(fp)
+         print("#endif //RTE_TASK_H", file=fp)
+   
+   def _write_header_includes(self, fp):
+      lines = _genCommentHeader('INCLUDES')
+      lines.append('#ifdef _MSC_VER')
+      lines.append('#include <Windows.h>')
+      lines.append('#else')
+      lines.append('#include <pthread.h>')
+      lines.append('#endif //_MSC_VER')
+      lines.append('#include "osmacro.h"')
+      fp.write('\n'.join(lines)+'\n\n')
+
+   def _write_header_constants_and_typedefs(self, fp):
+      lines = _genCommentHeader('CONSTANTS AND DATA TYPES')
+      fp.write('\n'.join(lines)+'\n\n')
+
+   def _write_header_global_var(self, fp):
+      lines = _genCommentHeader('GLOBAL VARIABLES')
+      fp.write('\n'.join(lines)+'\n\n')
+
+   def _write_header_global_proto(self, fp):
+      lines = _genCommentHeader('GLOBAL FUNCTION PROTOTYPES')
+      for task in self.os_cfg.tasks:
+         lines.append('THREAD_PROTO(%s, arg);'%task.name)
+      fp.write('\n'.join(lines)+'\n\n')

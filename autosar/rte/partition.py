@@ -8,6 +8,10 @@ import sys
 import autosar.bsw.com
 
 
+innerIndentDefault=3 #(number of spaces)
+
+
+   
 
 class ComponentAPI:
    """
@@ -202,7 +206,8 @@ class Component:
          if isinstance(ar_event, autosar.behavior.TimingEvent):
             event = autosar.rte.base.TimerEvent(ar_event, runnable)
          elif isinstance(ar_event, autosar.behavior.ModeSwitchEvent):
-            event = autosar.rte.base.ModeSwitchEvent(ws, ar_event, runnable)
+            if ar_event.modeInstRef is not None:
+               event = autosar.rte.base.ModeSwitchEvent(ws, ar_event, runnable)
          elif isinstance(ar_event, autosar.behavior.OperationInvokedEvent):
             port_refs = autosar.base.splitRef(ar_event.operationInstanceRef.portRef)
             operation_refs = autosar.base.splitRef(ar_event.operationInstanceRef.operationRef)
@@ -260,12 +265,15 @@ class Partition:
    def __init__(self, mode='full', prefix='Rte'):
       self.prefix=prefix
       self.components = [] #clients (components)
-      self.serverAPI = ComponentAPI() #functions that the RTE must support towards its clients
+      self.upperLayerAPI = ComponentAPI() #functions that the RTE must support towards its clients
+      self.lowerLayerAPI = {}
       self.types = autosar.rte.RteTypeManager() #centralized type manager
       self.isFinalized = False
       self.ws = None
       self.assemblyConnectorMap = {}
       self.data_element_map = {}
+      self.mode_switch_functions = {}
+      self.static_vars = {}
 
 
    def addComponent(self, swc, runnables = None, name=None):
@@ -295,11 +303,13 @@ class Partition:
 #            component.pre_finalize(self.ws, self.types)
          for component in self.components:
             component.finalize(self.ws, self.types)
-            self.serverAPI.update(component.clientAPI)
+            self.upperLayerAPI.update(component.clientAPI)
          for component in self.components:
             component.create_data_elements(self.data_element_map)
          self._generate_com_access()
-         self.serverAPI.finalize()
+         self.upperLayerAPI.finalize()
+         for component in self.components:
+            self._process_mode_switch_events(component)
       self.isFinalized=True
 
    def createConnector(self, portRef1, portRef2):
@@ -380,24 +390,24 @@ class Partition:
    #                self.types.processType(ws, data_type)
    #                component.create_parameter(ws, port, data_element, data_type)
 
-   def _process_events(self, component, ws, swc, runnables=None):
-      for event in swc.behavior.events:
-         ar_runnable = ws.find(event.startOnEventRef)
-         rte_runnable = component.get_runnable(ar_runnable.name)
-         if isinstance(event, autosar.behavior.TimingEvent):
-            rte_event = TimerEvent(event.name, rte_runnable)
-            component.add_event(rte_event)
-         elif isinstance(event, autosar.behavior.ModeSwitchEvent):
-            if ar_runnable is None:
-               raise ValueError('invalid reference: '+event.startOnEventRef)
-            if runnables is None or ar_runnable.name in runnables:
-               rte_event = ModeSwitchEvent(ws, event, rte_runnable)
-               rte_runnable.events.append(rte_event)
-               component.add_event(rte_event)
-         elif isinstance(event, autosar.behavior.OperationInvokedEvent):
-            pass #already processed
-         else:
-            raise NotImplementedError(type(event))
+   # def _process_events(self, component, ws, swc, runnables=None):
+   #    for event in swc.behavior.events:
+   #       ar_runnable = ws.find(event.startOnEventRef)
+   #       rte_runnable = component.get_runnable(ar_runnable.name)
+   #       if isinstance(event, autosar.behavior.TimingEvent):
+   #          rte_event = TimerEvent(event.name, rte_runnable)
+   #          component.add_event(rte_event)
+   #       elif isinstance(event, autosar.behavior.ModeSwitchEvent):
+   #          if ar_runnable is None:
+   #             raise ValueError('invalid reference: '+event.startOnEventRef)
+   #          if runnables is None or ar_runnable.name in runnables:
+   #             rte_event = ModeSwitchEvent(ws, event, rte_runnable)
+   #             rte_runnable.events.append(rte_event)
+   #             component.add_event(rte_event)
+   #       elif isinstance(event, autosar.behavior.OperationInvokedEvent):
+   #          pass #already processed
+   #       else:
+   #          raise NotImplementedError(type(event))
 
    def _analyzePortRef(self, portRef):
       parts=autosar.base.splitRef(portRef)
@@ -438,53 +448,18 @@ class Partition:
                   data_element.symbol = None
                   if symbol in self.data_element_map:
                      del self.data_element_map[symbol]
-
-
-
-   # def _resolveCallPoints(self, component):
-   #    if len(component.clientAPI.call):
-   #       for key in component.clientAPI.call:
-   #          port_func = component.clientAPI.call[key]
-   #          rte_runnable = self._findServerRunnable(component, port_func)
-   #          if rte_runnable is None:
-   #             port_func.func = self._createDefaultFunction(component, port_func.port, port_func.operation)
-   #          else:
-   #             port_func.func = rte_runnable.prototype
-   #
-   #
-   # def _findServerRunnable(self, component, port_func):
-   #    for component2 in self.components:
-   #       if component2 is component:
-   #          next
-   #       for rte_runnable in component2.rte_runnables.values():
-   #          if rte_runnable.isServerRunnable:
-   #             if (rte_runnable.serverPortInterface is port_func.portInterface) and (rte_runnable.serverOperation is port_func.operation):
-   #                 return rte_runnable
-   #    return None
-   #
-   # def _resolveParameters(self, component):
-   #    ws = component.swc.rootWS()
-   #    assert(ws is not None)
-   #    for elem in component.parameters:
-   #       (componentRef,portRef,dataElemRef)=elem
-   #       swc=ws.find(componentRef)
-   #       port=ws.find(portRef)
-   #       dataElement = ws.find(dataElemRef)
-   #       if dataElement is None:
-   #          raise ValueError(dataElemRef)
-   #       typeObj=ws.find(dataElement.typeRef)
-   #       if typeObj is None:
-   #          raise ValueError('invalid reference: %s'%dataElement.typeRef)
-   #       self.types.processType(ws, typeObj)
-   #       ftype='Calprm'
-   #       if self.mode == 'single':
-   #          fname='%s_%s_%s_%s_%s'%(self.prefix, ftype, swc_name, port.name, dataElement.name)
-   #       elif self.mode == 'full':
-   #          fname='%s_%s_%s_%s'%(self.prefix, ftype, port.name, dataElement.name)
-   #       else:
-   #          raise ValueError('invalid mode value. Valid modes are "full" and "single"')
-   #       shortname='Rte_%s_%s_%s'%(ftype, port.name, dataElement.name)
-   #       func=C.function(fname, typeObj.name)
-   #       if shortname in component.clientAPI.__dict__[ftype.lower()]:
-   #          raise ValueError('error: %s already defined'%shortname)
-   #       component.clientAPI.__dict__[ftype.lower()][shortname] = CalPrmPortFunction(shortname, func)
+   
+   def _process_mode_switch_events(self, component):      
+      for event in component.events:
+         if isinstance(event, autosar.rte.base.ModeSwitchEvent):
+            if event.mode not in self.mode_switch_functions:
+               func = autosar.rte.base.ModeSwitchFunction(event)
+               self.mode_switch_functions[event.mode] = func
+               if func.static_var not in self.static_vars:
+                  self.static_vars[func.static_var.name] = func.static_var
+            function_name = "_".join(['os', 'task', event.activationType, event.mode, event.modeDeclaration])
+            if function_name not in self.mode_switch_functions[event.mode].calls:                                            
+               if (event.activationType == 'OnEntry'):
+                  self.mode_switch_functions[event.mode].generate_on_entry_code(event, function_name)
+               else:
+                  self.mode_switch_functions[event.mode].generate_on_exit_code(event, function_name)
