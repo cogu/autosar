@@ -38,12 +38,28 @@ class Task:
          self.is_finalized = True
 
 class OsConfig:
-   def __init__(self):      
+   def __init__(self, partition):      
       self.tasks=[]
+      self.partition=partition
       self.mode_switch_calls=set()
+      self._create_mode_switch_events()
+   
    def create_task(self, name):
       task = Task(name)
       self.tasks.append(task)
       return task
    
+   def find_os_task_by_runnable(self, runnable):
+      assert(isinstance(runnable, autosar.rte.partition.Runnable))
+      for task in self.tasks:
+         for task_runnable in task.runnables:
+            if task_runnable is runnable:
+               return task
+      return None
+   
+   def _create_mode_switch_events(self):
+      for func in self.partition.mode_switch_functions.values():
+         for callback in sorted(func.calls.keys()):
+            self.mode_switch_calls.add(callback)
+
    

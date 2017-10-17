@@ -458,8 +458,10 @@ class Partition:
                if func.static_var not in self.static_vars:
                   self.static_vars[func.static_var.name] = func.static_var
             function_name = "_".join(['os', 'task', event.activationType, event.mode, event.modeDeclaration])
-            if function_name not in self.mode_switch_functions[event.mode].calls:                                            
+            if function_name not in self.mode_switch_functions[event.mode].calls:
                if (event.activationType == 'OnEntry'):
                   self.mode_switch_functions[event.mode].generate_on_entry_code(event, function_name)
                else:
                   self.mode_switch_functions[event.mode].generate_on_exit_code(event, function_name)
+            else:
+               self.mode_switch_functions[event.mode].add_event_to_call(event, function_name)

@@ -122,7 +122,27 @@ class OsConfigGenerator:
       body.append(C.line('0,'))
       body.append(C.line('0'))
       code.append(C.statement(body))
+      code.append('')
+      code.extend(_genCommentHeader('PUBLIC FUNCTIONS'))
+      for elem in self.cfg.partition.mode_switch_functions.values():
+         for callback_name in sorted(elem.calls.keys()):
+            code.extend(self._generate_mode_switch_func(callback_name, elem.calls[callback_name]))
+            code.append('')
+
       with io.open(source.path, 'w', newline='\n') as fp:
          for line in source.lines():
             fp.write(line+'\n')
-      
+   
+   def _generate_mode_switch_func(self, callback_name, events):
+      code = C.sequence()
+      generated=set()
+      code.append(C.function(callback_name, 'void'))
+      block = C.block(innerIndent = innerIndentDefault)
+      for event in events:
+         task = self.cfg.find_os_task_by_runnable(event.runnable)
+         if task is not None:
+            if (task.name, event.name) not in generated:               
+               block.append(C.statement(C.fcall('os_task_setEvent', params=['&m_os_task_%s'%task.name, 'EVENT_MASK_%s_%s'%(task.name, event.name)])))
+               generated.add((task.name, event.name))
+      code.append(block)
+      return code

@@ -435,7 +435,7 @@ class ModeGroup:
 class ModeSwitchFunction:
    def __init__(self, event):      
       self.body = C.block(innerIndent = innerIndentDefault)
-      self.calls = set()
+      self.calls = {}
       self.typename = 'Rte_ModeType_'+event.mode
       self.proto = C.function('Rte_SetMode_'+event.mode, 'void', args = [C.variable('newMode', self.typename)])
       self.static_var = C.variable('m_'+event.mode, self.typename, static=True)
@@ -446,22 +446,27 @@ class ModeSwitchFunction:
       self.body.append(C.statement('%s = %s'%(self.static_var.name, self.proto.args[0].name)))
 
    
-   def generate_on_entry_code(self, event, function_name):
+   def generate_on_entry_code(self, event, callback_name):
       code = C.sequence()
       else_str = 'else ' if len(self.calls) > 0 else ''
       code.append(C.line(else_str+'if ( (previousMode != RTE_MODE_{0}) && (newMode == RTE_MODE_{0}) )'.format(event.mode+'_'+event.modeDeclaration)))
       block = C.block(innerIndent = innerIndentDefault)
-      block.append(C.statement(C.fcall(function_name)))
+      block.append(C.statement(C.fcall(callback_name)))
       code.append(block)
-      self.calls.add(function_name) 
+      self.add_event_to_call(event, callback_name)
       self.body.extend(code)
 
-   def generate_on_exit_code(self, event, function_name):
+   def generate_on_exit_code(self, event, callback_name):
       code = C.sequence()
       else_str = 'else ' if len(self.calls) > 0 else ''
       code.append(C.line(else_str+'if ( (previousMode == RTE_MODE_{0}) && (newMode != RTE_MODE_{0}) )'.format(event.mode+'_'+event.modeDeclaration)))
       block = C.block(innerIndent = innerIndentDefault)
-      block.append(C.statement(C.fcall(function_name)))
+      block.append(C.statement(C.fcall(callback_name)))
       code.append(block)
-      self.calls.add(function_name) 
+      self.add_event_to_call(event, callback_name)
       self.body.extend(code)
+
+   def add_event_to_call(self, event, callback_name):
+      if callback_name not in self.calls:
+         self.calls[callback_name]=[]
+      self.calls[callback_name].append(event)
