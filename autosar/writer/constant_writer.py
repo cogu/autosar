@@ -4,7 +4,7 @@ import autosar.constant
 class ConstantWriter(WriterBase):
    def __init__(self,version):
       super().__init__(version)
-   
+
    def writeConstantXML(self,elem,package):
       lines = []
       assert(isinstance(elem,autosar.constant.Constant))
@@ -12,32 +12,35 @@ class ConstantWriter(WriterBase):
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
       if elem.adminData is not None:
          lines.extend(self.indent(self.writeAdminDataXML(elem.adminData),1))
-      lines.extend(self.indent(self.writeValueXML(elem.value),1))
+      if self.version>=4.0:
+         lines.extend(self.indent(self._writeValueXMLV4(elem.value),1))
+      else:
+         lines.extend(self.indent(self._writeValueXMLV3(elem.value),1))
       lines.append('</CONSTANT-SPECIFICATION>')
       return lines
-   
-   def writeValueXML(self,elem):
-      lines=[]      
+
+   def _writeValueXMLV3(self,elem):
+      lines=[]
       lines.append('<VALUE>')
-      lines.extend(self.indent(self.writeLiteralValueXML(elem),1))
-      lines.append('</VALUE>')      
+      lines.extend(self.indent(self._writeLiteralValueXML(elem),1))
+      lines.append('</VALUE>')
       return lines
-   
-   def writeLiteralValueXML(self,elem):
+
+   def _writeLiteralValueXML(self,elem):
       if isinstance(elem,autosar.constant.IntegerValue):
-         return self.writeIntegerLiteralXML(elem)
+         return self._writeIntegerLiteralXML(elem)
       elif isinstance(elem,autosar.constant.RecordValue):
-         return self.writeRecordSpecificationXML(elem)
+         return self._writeRecordSpecificationXML(elem)
       elif isinstance(elem,autosar.constant.StringValue):
-         return self.writeStringLiteralXML(elem)
+         return self._writeStringLiteralXML(elem)
       elif isinstance(elem,autosar.constant.BooleanValue):
-         return self.writeBooleanLiteralXML(elem)
+         return self._writeBooleanLiteralXML(elem)
       elif isinstance(elem,autosar.constant.ArrayValue):
-         return self.writeArraySpecificationXML(elem)
+         return self._writeArraySpecificationXML(elem)
       else:
          raise NotImplementedError(type(elem))
-   
-   def writeIntegerLiteralXML(self,elem):
+
+   def _writeIntegerLiteralXML(self,elem):
       assert(isinstance(elem,autosar.constant.IntegerValue))
       lines=[]
       lines.append('<INTEGER-LITERAL>')
@@ -47,9 +50,9 @@ class ConstantWriter(WriterBase):
       lines.append(self.indent('<VALUE>%d</VALUE>'%elem.value,1))
       lines.append('</INTEGER-LITERAL>')
       return lines
-   
-   def writeRecordSpecificationXML(self,elem):
-      assert(isinstance(elem,autosar.constant.RecordValue))      
+
+   def _writeRecordSpecificationXML(self,elem):
+      assert(isinstance(elem,autosar.constant.RecordValue))
       lines=[]
       lines.append('<RECORD-SPECIFICATION>')
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
@@ -59,12 +62,12 @@ class ConstantWriter(WriterBase):
       else:
          lines.append(self.indent('<ELEMENTS>',1))
          for childElem in elem.elements:
-            lines.extend(self.indent(self.writeLiteralValueXML(childElem),2))
-         lines.append(self.indent('</ELEMENTS>',1))      
+            lines.extend(self.indent(self._writeLiteralValueXML(childElem),2))
+         lines.append(self.indent('</ELEMENTS>',1))
       lines.append('</RECORD-SPECIFICATION>')
       return lines
 
-   def writeStringLiteralXML(self,elem):
+   def _writeStringLiteralXML(self,elem):
       assert(isinstance(elem,autosar.constant.StringValue))
       lines=[]
       lines.append('<STRING-LITERAL>')
@@ -75,7 +78,7 @@ class ConstantWriter(WriterBase):
       lines.append('</STRING-LITERAL>')
       return lines
 
-   def writeBooleanLiteralXML(self,elem):
+   def _writeBooleanLiteralXML(self,elem):
       assert(isinstance(elem,autosar.constant.BooleanValue))
       lines=[]
       lines.append('<BOOLEAN-LITERAL>')
@@ -86,7 +89,7 @@ class ConstantWriter(WriterBase):
       lines.append('</BOOLEAN-LITERAL>')
       return lines
 
-   def writeArraySpecificationXML(self,elem):
+   def _writeArraySpecificationXML(self,elem):
       assert(isinstance(elem,autosar.constant.ArrayValue))
       lines=[]
       lines.append('<ARRAY-SPECIFICATION>')
@@ -97,17 +100,66 @@ class ConstantWriter(WriterBase):
       else:
          lines.append(self.indent('<ELEMENTS>',1))
          for childElem in elem.elements:
-            lines.extend(self.indent(self.writeLiteralValueXML(childElem),2))
-         lines.append(self.indent('</ELEMENTS>',1))      
-     
+            lines.extend(self.indent(self._writeLiteralValueXML(childElem),2))
+         lines.append(self.indent('</ELEMENTS>',1))
+
       lines.append('</ARRAY-SPECIFICATION>')
       return lines
-   
+
+   def _writeValueXMLV4(self, value):
+      lines=[]
+      lines.append('<VALUE-SPEC>')
+      lines.extend(self.indent(self._writeValueSpecificationXML(value),1))
+      lines.append('</VALUE-SPEC>')
+      return lines
+
+   def _writeValueSpecificationXML(self, value):
+      lines=[]
+      lines.append('<%s>'%value.tag(self.version))
+      if isinstance(value, autosar.constant.TextValue):
+         lines.extend(self.indent(self._writeSimpleValueSpecificationXML(value),1))
+      elif isinstance(value, autosar.constant.NumericalValue):
+         lines.extend(self.indent(self._writeSimpleValueSpecificationXML(value),1))
+      elif isinstance(value, autosar.constant.RecordValue):
+         lines.extend(self.indent(self._writeRecordValueSpecificationXML(value),1))
+      elif isinstance(value, autosar.constant.ArrayValue):
+         lines.extend(self.indent(self._writeArrayValueSpecificationXML(value),1))
+      else:
+         raise NotImplementedError(str(type(value)))
+      lines.append('</%s>'%value.tag(self.version))
+      return lines
+
+   def _writeSimpleValueSpecificationXML(self, value):
+      lines=[]
+      if value.name is not None:
+         lines.append('<SHORT-LABEL>%s</SHORT-LABEL>'%(value.name))
+      lines.append('<VALUE>%s</VALUE>'%(value.value))
+      return lines
+
+   def _writeRecordValueSpecificationXML(self, value):
+      lines=[]
+      lines.append('<SHORT-LABEL>%s</SHORT-LABEL>'%(value.name))
+      lines.append('<FIELDS>')
+      for elem in value.elements:
+         lines.extend(self.indent(self._writeValueSpecificationXML(elem),1))
+      lines.append('</FIELDS>')
+      return lines
+
+   def _writeArrayValueSpecificationXML(self, value):
+      lines=[]
+      lines.append('<SHORT-LABEL>%s</SHORT-LABEL>'%(value.name))
+      lines.append('<ELEMENTS>')
+      for elem in value.elements:
+         lines.extend(self.indent(self._writeValueSpecificationXML(elem),1))
+      lines.append('</ELEMENTS>')
+      return lines
+
+
    ###code generators
-   
+
    def writeConstantCode(self, constant, localvars):
-      lines=[]      
-      ws=localvars['ws']      
+      lines=[]
+      ws=localvars['ws']
       if not isinstance(constant, autosar.constant.Constant):
          raise ValueError('expected type autosar.constant.Constant')
       if constant.value is not None:
@@ -116,15 +168,15 @@ class ConstantWriter(WriterBase):
          if dataType is None:
             raise ValueError('invalid reference: '+constant.value.typeRef)
          if isinstance(constant.value, autosar.constant.ArrayValue):
-            initValue = self._writeArrayValueConstantCode(constant.value, localvars)            
+            initValue = self._writeArrayValueConstantCode(constant.value, localvars)
          elif isinstance(constant.value, autosar.constant.IntegerValue):
-            initValue = self._writeIntegerValueConstantCode(constant.value, localvars)            
+            initValue = self._writeIntegerValueConstantCode(constant.value, localvars)
          elif isinstance(constant.value, autosar.constant.StringValue):
-            initValue = self._writeStringValueConstantCode(constant.value, localvars)            
+            initValue = self._writeStringValueConstantCode(constant.value, localvars)
          elif isinstance(constant.value, autosar.constant.BooleanValue):
-            initValue = self._writeBooleanValueConstantCode(constant.value, localvars)            
+            initValue = self._writeBooleanValueConstantCode(constant.value, localvars)
          elif isinstance(constant.value, autosar.constant.RecordValue):
-            initValue = self._writeRecordValueConstantCode(constant.value, localvars)            
+            initValue = self._writeRecordValueConstantCode(constant.value, localvars)
          else:
             raise ValueError('unknown value type: '+type(constant.value))
          params=[repr(constant.name)]
@@ -146,10 +198,10 @@ class ConstantWriter(WriterBase):
             params.append('adminData='+param)
          lines.append("package.createConstant(%s)"%(', '.join(params)))
       return lines
-   
+
    def _writeArrayValueConstantCode(self, value, localvars):
       ws=localvars['ws']
-      assert(isinstance(value, autosar.constant.ArrayValue))      
+      assert(isinstance(value, autosar.constant.ArrayValue))
       params=[]
       for elem in value.elements:
          if isinstance(elem, autosar.constant.ArrayValue):
@@ -174,14 +226,14 @@ class ConstantWriter(WriterBase):
       return str(value.value)
 
    def _writeStringValueConstantCode(self, value, localvars):
-      return repr(value.value)      
+      return repr(value.value)
 
    def _writeBooleanValueConstantCode(self, value, localvars):
       return str(value.value)
-   
+
    def _writeRecordValueConstantCode(self, value, localvars):
       ws=localvars['ws']
-      assert(isinstance(value, autosar.constant.RecordValue))      
+      assert(isinstance(value, autosar.constant.RecordValue))
       params=[]
       for elem in value.elements:
          if isinstance(elem, autosar.constant.ArrayValue):
