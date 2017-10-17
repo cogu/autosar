@@ -14,36 +14,37 @@ class Value(object):
          return self.parent.ref+'/%s'%self.name
       else:
          return '/%s'%self.name
-   
+
    def rootWS(self):
       if self.parent is None:
          return None
       else:
          return self.parent.rootWS()
 
+#AUTOSAR 3 constant values
 class IntegerValue(Value):
-   
-   def tag(self,version=None): return "INTEGER-LITERAL"   
+
+   def tag(self,version=None): return "INTEGER-LITERAL"
 
    def __init__(self, name, typeRef=None, value=None, parent=None):
       super().__init__(name, parent)
       self.typeRef=typeRef
       self.value=value
-   
-   
+
+
    @property
-   def value(self):      
+   def value(self):
       return self._value
-   
+
    @value.setter
-   def value(self,val):      
+   def value(self,val):
       if val is not None:
          self._value=int(val)
       else:
          self._value=None
 
 class StringValue(Value):
-   
+
    def tag(self,version=None): return "STRING-LITERAL"
 
 
@@ -54,35 +55,35 @@ class StringValue(Value):
       assert(isinstance(value,str))
       self.typeRef=typeRef
       self.value=value
-      
+
    @property
-   def value(self):      
+   def value(self):
       return self._value
-   
+
    @value.setter
-   def value(self,val):      
+   def value(self,val):
       if val is not None:
          self._value=str(val)
       else:
          self._value=None
 
 class BooleanValue(Value):
-   
+
    def tag(self,version=None): return "BOOLEAN-LITERAL"
 
    def __init__(self, name, typeRef=None, value=None, parent=None):
       super().__init__(name, parent)
       self.typeRef=typeRef
       self.value=value
-      
+
    @property
-   def value(self):      
+   def value(self):
       return self._value
-   
+
    @value.setter
-   def value(self,val):               
+   def value(self,val):
       if val is not None:
-         if isinstance(val,str):            
+         if isinstance(val,str):
             self._value = True if val=='true' else False
          else:
             self._value=bool(val)
@@ -90,9 +91,11 @@ class BooleanValue(Value):
          self._value=None
 
 class RecordValue(Value):
-   
-   def tag(self,version=None): return "RECORD-SPECIFICATION"
-   
+   """
+   typeRef is only necessary for AUTOSAR 3 constants
+   """
+   def tag(self,version=None): return "RECORD-VALUE-SPECIFICATION" if version >= 4.0 else "RECORD-VALUE"
+
    def __init__(self, name, typeRef=None, parent=None):
       super().__init__(name, parent)
       self.typeRef=typeRef
@@ -102,11 +105,13 @@ class RecordValue(Value):
       for element in self.elements:
          data['elements'].append(element.asdict())
       return data
-      
-   
+
+
 class ArrayValue(Value):
-   
-   def tag(self,version=None): return "ARRAY-SPECIFICATION"
+   """
+   typeRef is only necessary for AUTOSAR 3 constants
+   """
+   def tag(self,version=None): return "ARRAY-VALUE-SPECIFICATION" if version >= 4.0 else "ARRAY-SPECIFICATION"
 
    def __init__(self, name, typeRef=None, parent=None):
       super().__init__(name, parent)
@@ -118,14 +123,56 @@ class ArrayValue(Value):
          data['elements'].append(element.asdict())
       return data
 
+#AUTOSAR 4 constant values
 
+class TextValue(Value):
+   def tag(self,version=None): return "TEXT-VALUE-SPECIFICATION"
+
+   def __init__(self, name, value=None, parent=None):
+      super().__init__(name, parent)
+      if value is None:
+         value=''
+      self.value=value
+
+   @property
+   def value(self):
+      return self._value
+
+   @value.setter
+   def value(self,val):
+      if val is not None:
+         self._value=str(val)
+      else:
+         self._value=None
+
+class NumericalValue(Value):
+   def tag(self,version=None): return "NUMERICAL-VALUE-SPECIFICATION"
+
+   def __init__(self, name, value=None, parent=None):
+      super().__init__(name, parent)
+      if value is None:
+         value=0
+      self.value=value
+
+   @property
+   def value(self):
+      return self._value
+
+   @value.setter
+   def value(self,val):
+      if val is not None:
+         self._value=str(val)
+      else:
+         self._value=None
+
+#Common class
 class Constant(Element):
    def __init__(self, name, value=None, parent=None, adminData=None):
       super().__init__(name, parent, adminData)
       self.value=value
       if value is not None:
          value.parent=self
-   
+
    def asdict(self):
       data={'type': self.__class__.__name__,'name':self.name}
       data['value']=self.value.asdict()
@@ -135,5 +182,4 @@ class Constant(Element):
       if self.value.name==ref:
          return self.value
       return None
-   
 
