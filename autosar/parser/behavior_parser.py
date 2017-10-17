@@ -149,6 +149,8 @@ class BehaviorParser(ElementParser):
                pass
             elif xmlNode.tag == 'SHARED-PARAMETERS':
                pass
+            elif xmlNode.tag == 'EXCLUSIVE-AREAS':
+               pass
             else:
                raise NotImplementedError(xmlNode.tag)
          return internalBehavior
@@ -196,8 +198,9 @@ class BehaviorParser(ElementParser):
                xmlServerCallPoints=xmlElem
             elif xmlElem.tag=='SYMBOL':
                symbol=parseTextNode(xmlElem)
-#            elif xmlElem.tag=='CAN-ENTER-EXCLUSIVE-AREA-REFS':
-#               xmlCanEnterExclusiveAreas=xmlElem
+            elif xmlElem.tag=='CAN-ENTER-EXCLUSIVE-AREA-REFS':
+               pass
+               #xmlCanEnterExclusiveAreas=xmlElem
             elif xmlElem.tag == 'MINIMUM-START-INTERVAL':
                pass #not implemented
             elif xmlElem.tag=='ADMIN-DATA':
@@ -332,7 +335,8 @@ class BehaviorParser(ElementParser):
    def parseDataReceivedEvent(self,xmlRoot,parent=None):
       name = parseTextNode(xmlRoot.find('SHORT-NAME'))      
       startOnEventRef = parseTextNode(xmlRoot.find('START-ON-EVENT-REF'))
-      dataInstanceRef=self.parseDataInstanceRef(xmlRoot.find('DATA-IREF'),'R-PORT-PROTOTYPE-REF')
+      portTag = 'CONTEXT-R-PORT-REF' if self.version >= 4.0 else 'R-PORT-PROTOTYPE-REF'
+      dataInstanceRef=self.parseDataInstanceRef(xmlRoot.find('DATA-IREF'),portTag)
       dataReceivedEvent=DataReceivedEvent(name, startOnEventRef, parent)
       xmlModeDependency = xmlRoot.find('MODE-DEPENDENCY')
       if xmlModeDependency is not None:
