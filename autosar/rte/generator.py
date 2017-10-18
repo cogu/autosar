@@ -691,7 +691,8 @@ class RteTaskGenerator:
                      ('os.h', False),
          ]
       for component in self.partition.components:
-         self.includes.append(('Rte_%s.h'%component.name, False))
+         if not isinstance(component.inner, autosar.bsw.com.ComComponent):
+            self.includes.append(('Rte_%s.h'%component.name, False))
       if include is not None:
          for elem in List(include):
             if isinstance(elem, str):
@@ -745,7 +746,7 @@ class RteTaskGenerator:
       code.extend(_genCommentHeader2('GLOBAL FUNCTIONS'))
       code.append(C.blank())      
       for task in sorted(self.os_cfg.tasks, key=lambda x: x.name):         
-         code.append(C.line('THREAD_PROTO({0.name}, arg)'.format(task)))
+         code.append(C.line('OS_TASK_HANDLER({0.name}, arg)'.format(task)))
          code.append(self._generate_task_body(task))
          code.append(C.blank(2))
       return code
@@ -754,7 +755,7 @@ class RteTaskGenerator:
       code = C.block(innerIndent=innerIndentDefault)
       isRunning=C.variable('isRunning', 'boolean')
       code.append(C.statement('{0} = TRUE'.format(str(isRunning))))
-      code.append(C.statement('Os_task_t *self = (Os_task_t*) arg'))
+      code.append(C.statement('os_task_t *self = (os_task_t*)arg'))
       code.append('')
       code.append(C.line('if (self == 0)'))
       body = C.block(innerIndent=innerIndentDefault)
@@ -764,47 +765,71 @@ class RteTaskGenerator:
       code.append(C.line('while (isRunning == TRUE)'))
             
       while_block = C.block(innerIndent=innerIndentDefault)
-      while_block.append(C.statement('uint16 eventId = Os_task_waitEvent(self)'))
-      while_block.append(C.line('if (eventId == OS_INVALID_EVENT_ID)'))
+      
+      
+      while_block.append(C.statement('uint32 eventMask'))
+      while_block.append(C.statement('int8_t result = os_task_waitEvent(self, &eventMask)'))
+      while_block.append(C.line('if (result == 0)'))
       if_block = C.block(innerIndent=innerIndentDefault)
-      if_block.append(C.statement(C.fcall('fprintf', ['stderr', r'"Os_task_waitEvent failed\n"'])))
-      if_block.append(C.statement('break'))
+      if_block.extend(self._generate_event_mask_triggers(task))
       while_block.append(if_block)
-      while_block.append(C.line('switch(eventId)'))
-      switch_block = C.block(innerIndent=innerIndentDefault)      
-      switch_block.extend(self._generate_task_switch_case(task, innerIndentDefault*2))
-      while_block.append(switch_block)
+      while_block.append(C.line('else if(result > 0)'))      
+      if_block = C.block(innerIndent=innerIndentDefault)
+      if_block.append(C.statement('printf("%s_QuitEvent\\n")'%task.name))
+      if_block.append(C.statement('isRunning = false'))
+      while_block.append(if_block)
+      while_block.append(C.line('else'))
+      if_block = C.block(innerIndent=innerIndentDefault)
+      if_block.append(C.statement(r'fprintf(stderr, "os_task_waitEvent failed\n")'))
+      while_block.append(if_block)
+
       code.append(while_block)
       code.append('')
       code.append(C.statement('THREAD_RETURN(0)'))
       return code
 
-   def _generate_task_switch_case(self, task, indent):
+   def _generate_event_mask_triggers(self, task):
       code = C.sequence()
-      default_handled = []
       for runnable in task.runnables:
-         items = self._findEventTriggers(task, runnable)
-         if len(items)==1:
-            (name, event) = items[0]            
-            code.append(C.line('case %s:'%name, indent=indent))
-            code.append(C.statement(C.fcall(runnable.symbol)))
-            code.append(C.statement('break'))
-         elif len(items)>1:
-            default_handled.append(items)            
-      code.append(C.line('default:', indent=indent))
-      if len(default_handled)>0:
-         raise NotImplementedError('Not yet supported')
-      else:
-         code.append(C.statement('break'))
+         if runnable.processed:
+            continue
+         matching_runnables = self._find_compatible_runnables(task, runnable)
+         self._generate_runnable_calls(code, matching_runnables)
+         for matching in matching_runnables:
+            matching.processed=True
       return code
 
-   def _findEventTriggers(self,  task, runnable):
-      result = []
-      for name in sorted(task.event_map.keys()):
-         for event in task.event_map[name]:
-            if (not isinstance(event, autosar.rte.base.OperationInvokedEvent)) and (event.runnable is runnable):
-               result.append((name, event))
+   def _find_compatible_runnables(self, task, current):
+      result = [current]
+      for other in task.runnables:
+         if (other is not current) and (not other.processed):
+            if len(current.event_triggers) == len(other.event_triggers):
+               is_compatible = True
+               for current_event in current.event_triggers:
+                  found = False
+                  for other_event in other.event_triggers:
+                     if current_event.symbol == other_event.symbol:
+                        found = True
+                        break
+                  if not found:
+                     is_compatible = False
+                     break
+               if is_compatible:
+                  result.append(other)
       return result
+   
+   def _generate_runnable_calls(self, code, matching_runnables):
+      events = matching_runnables[0].event_triggers
+      if len(events) == 1:
+         event = events[0]
+         if not isinstance(event, autosar.rte.base.OperationInvokedEvent):
+            code.append(C.line('if (eventMask & %s)'%event.symbol))
+            block = C.block(innerIndent = innerIndentDefault)
+            for runnable in matching_runnables:
+               block.append(C.statement(C.fcall(runnable.symbol)))
+            code.append(block)
+      else:
+         raise NotImplementedError('multiple events')
       
    def _generate_header(self, dest_dir):
       file_name = self.prefix+'.h'

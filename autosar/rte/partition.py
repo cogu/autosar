@@ -259,6 +259,8 @@ class Runnable:
       self.data_element_access=[]
       self.operation_access=[]
       self.prototype = None
+      self.event_triggers=[]
+      self.processed=False
 
 class Partition:
 

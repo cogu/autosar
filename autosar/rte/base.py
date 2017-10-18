@@ -388,40 +388,42 @@ class OperationPortAccess:
       self.runnable = runnable
       self.func = None
 
-class TimerEvent:
-   """Runnable triggered by timer"""
+class Event:
+   """Event Base Class"""
    def __init__(self, ar_event, runnable):
       self.inner = ar_event
       self.name = ar_event.name
       self.runnable = runnable
+      self.symbol = None
 
+class TimerEvent(Event):
+   """Runnable triggered by timer"""
+   def __init__(self, ar_event, runnable):
+      super().__init__(ar_event, runnable)
 
-class OperationInvokedEvent:
+class OperationInvokedEvent(Event):
    """triggered by server invocation"""
    def __init__(self, ar_event, runnable, port, operation):
-      self.inner = ar_event
-      self.runnable = runnable
+      super().__init__(ar_event, runnable)
       self.port = port
-      self.operation = operation
-      self.name = ar_event.name
+      self.operation = operation      
       return_type = 'Std_ReturnType' if len(operation.inner.errorRefs)>0 else 'void'
       self.runnable.prototype=C.function(runnable.symbol, return_type, args=operation.arguments)
 
-class ModeSwitchEvent:
+class ModeSwitchEvent(Event):
    """
    Runnable triggered by mode switch event
    """
    def __init__(self, ws, ar_event, runnable):
+      super().__init__(ar_event, runnable)
       modeDeclaration = ws.find(ar_event.modeInstRef.modeDeclarationRef)
       if modeDeclaration is None:
          raise ValueError("Error: invalid reference: %s"+ar_event.modeInstRef.modeDeclarationRef)
-      mode = modeDeclaration.parent      
-      self.inner = ar_event
+      mode = modeDeclaration.parent
       self.activationType = 'OnEntry' if (ar_event.activationType == 'ON-ENTRY' or ar_event.activationType == 'ENTRY')  else 'OnExit'
       self.name = "%s_%s_%s"%(self.activationType, mode.name, modeDeclaration.name)
       self.mode=mode.name
       self.modeDeclaration=modeDeclaration.name
-      self.runnable = runnable       
 
 class ModeGroup:
    """

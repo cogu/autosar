@@ -16,26 +16,32 @@ class Task:
       component = runnable.parent      
       for event in component.events:
          if event.runnable is runnable:            
-            event_mask_name = 'EVENT_MASK_%s_%s'%(self.name,event.name)            
-            if event_mask_name not in self.event_map:
-                self.event_map[event_mask_name] = []
-            self.event_map[event_mask_name].append(event)
+            event.symbol = 'EVENT_MASK_%s_%s'%(self.name, event.name)
+            if event.symbol not in self.event_map:
+                self.event_map[event.symbol] = []
+            self.event_map[event.symbol].append(event)
+            if event not in runnable.event_triggers:
+               runnable.event_triggers.append(event)
 
    def finalize(self):
       if not self.is_finalized:
-         bit_mask = 1
-         num_timer_events = 0
-         for num,event_mask in enumerate(sorted(self.event_map.keys())):
-            if num>32:
-               raise RuntimeError('Task %s cannot support more than 32 events'%(os_task.name))
-            event_list = self.event_map[event_mask]
-            for event in event_list:
-               if isinstance(event, autosar.rte.TimerEvent):
-                  self.timer_events.append(event)
-            runnables_string = ", ".join([event.runnable.symbol for event in event_list])
-            self.event_masks.append(C.define(event_mask, str('((uint32) 0x%08X)'%bit_mask)+' '+str(C.linecomment(runnables_string)), align=80))
-            bit_mask=bit_mask<<1         
+         self._define_event_masks()
          self.is_finalized = True
+
+   def _define_event_masks(self):
+      bit_mask = 1
+      num_timer_events = 0
+      for num,event_mask in enumerate(sorted(self.event_map.keys())):
+         if num>32:
+            raise RuntimeError('Task %s cannot support more than 32 events'%(os_task.name))
+         event_list = self.event_map[event_mask]
+         for event in event_list:
+            if isinstance(event, autosar.rte.TimerEvent):
+               self.timer_events.append(event)
+         runnables_string = ", ".join([event.runnable.symbol for event in event_list])
+         self.event_masks.append(C.define(event_mask, str('((uint32) 0x%08X)'%bit_mask)+' '+str(C.linecomment(runnables_string)), align=80))
+         bit_mask=bit_mask<<1
+
 
 class OsConfig:
    def __init__(self, partition):      
