@@ -463,7 +463,7 @@ class InternalBehavior(Element):
       return data
    
    
-   def tag(self,version=None): return "INTERNAL-BEHAVIOR"
+   def tag(self,version): return 'SWC-INTERNAL-BEHAVIOR' if version >= 4.0 else 'INTERNAL-BEHAVIOR'
 
    def append(self,elem):
       if isinstance(elem,RunnableEntity):

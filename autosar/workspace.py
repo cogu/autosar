@@ -9,7 +9,7 @@ import collections
 import re
 from autosar.parser.datatype_parser import (DataTypeParser, DataTypeSemanticsParser, DataTypeUnitsParser)
 from autosar.parser.portinterface_parser import (PortInterfacePackageParser,SoftwareAddressMethodParser,ModeDeclarationGroupPackageParser)
-from autosar.parser.constant_parser import ConstantPackageParser
+from autosar.parser.constant_parser import ConstantParser
 from autosar.parser.behavior_parser import BehaviorParser
 from autosar.parser.component_parser import ComponentTypeParser
 from autosar.parser.system_parser import SystemParser
@@ -425,7 +425,7 @@ class Workspace(object):
       parser.registerElementParser(PortInterfacePackageParser(self.version))
       parser.registerElementParser(SoftwareAddressMethodParser(self.version))
       parser.registerElementParser(ModeDeclarationGroupPackageParser(self.version))
-      parser.registerElementParser(ConstantPackageParser(self.version))
+      parser.registerElementParser(ConstantParser(self.version))
       parser.registerElementParser(ComponentTypeParser(self.version))
       parser.registerElementParser(BehaviorParser(self.version))
       parser.registerElementParser(SystemParser(self.version))

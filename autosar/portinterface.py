@@ -192,15 +192,24 @@ class ModeSwitchInterface(PortInterface):
       super().__init__(name,isService, parent,adminData)
       self._modeGroup=None
       
-      @property
-      def modeGroup(self):
-         return self._modeGroup
+   @property
+   def modeGroup(self):
+      return self._modeGroup
       
-      @modeGroup.setter
-      def modeGroup(self, value):
-         if not isinstance(value, ModeGroup):
-            raise ValueError('value must of ModeGroup type')
-         self._modeGroup=value
+   @modeGroup.setter
+   def modeGroup(self, value):
+      if not isinstance(value, ModeGroup):
+         raise ValueError('value must of ModeGroup type')
+      self._modeGroup=value
+      
+   def find(self,ref):
+      ref = ref.partition('/')
+      name = ref[0]
+      modeGroup = self.modeGroup
+      if modeGroup is not None and modeGroup.name == name:
+         return modeGroup
+      return None
+
 
 class DataElement(Element):
    def tag(self,version): return "VARIABLE-DATA-PROTOTYPE" if version >= 4.0 else "DATA-ELEMENT-PROTOTYPE"

@@ -109,10 +109,25 @@ class AtomicSoftwareComponent(ComponentType):
       super().__init__(name,parent)      
       self.behavior=None
       self.implementation=None
+   
+   def find(self,ref):
+      ws = self.rootWS()
+      ref=ref.partition('/')      
+      for port in self.requirePorts:
+         if port.name == ref[0]:
+            return port
+      for port in self.providePorts:
+         if port.name == ref[0]:
+            return port
+      if (ws is not None) and (ws.version >= 4.0) and (self.behavior is not None):
+         if self.behavior.name == ref[0]:
+            return self.behavior
+      return None
+
 
 class ApplicationSoftwareComponent(AtomicSoftwareComponent):
    
-   def tag(self,version=None): return "APPLICATION-SOFTWARE-COMPONENT-TYPE"
+   def tag(self,version=None): return 'APPLICATION-SW-COMPONENT-TYPE' if version>=4.0 else 'APPLICATION-SOFTWARE-COMPONENT-TYPE'
    
    def __init__(self,name,parent=None):
       super().__init__(name,parent)
@@ -452,11 +467,20 @@ class DataElementComSpec(object):
       if self.canInvalidate is not None: data['canInvalidate']=self.canInvalidate
       return data
 
+class ModeSwitchComSpec:
+   def __init__(self, enhancedMode=False, supportAsync=False):
+      self.enhancedMode = enhancedMode
+      self.supportAsync = supportAsync
+
+class ParameterComSpec:
+   def __init__(self, name, initValue=None):
+      self.name = name
+      self.initValue = initValue
+
 class SwcImplementation(Element):
    def __init__(self,name,behaviorRef,parent=None):
       super().__init__(name,parent)
       self.behaviorRef=behaviorRef
-
 
 class ComponentPrototype(Element):
    def __init__(self,name,typeRef,parent=None):
@@ -467,9 +491,6 @@ class ComponentPrototype(Element):
    
    def tag(self, version=None):
       return 'COMPONENT-PROTOTYPE'
-
-
-
 
 class ProviderInstanceRef:
    """

@@ -167,6 +167,9 @@ class NumericalValue(Value):
 
 #Common class
 class Constant(Element):
+   
+   def tag(self, version): return 'CONSTANT-SPECIFICATION'
+   
    def __init__(self, name, value=None, parent=None, adminData=None):
       super().__init__(name, parent, adminData)
       self.value=value

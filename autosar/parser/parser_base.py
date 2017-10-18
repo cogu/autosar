@@ -1,6 +1,14 @@
 import abc
 from autosar.base import AdminData, SpecialDataGroup, SwDataDefPropsConditional, SwPointerTargetProps
 
+def _parseBoolean(value):
+   if value is None:
+      return None   
+   if isinstance(value,str):
+      if value == 'true': return True
+      elif value =='false': return False
+   raise ValueError(value) 
+
 class BaseParser():
    def __init__(self,version=None):
       self.version=version
@@ -25,7 +33,7 @@ class BaseParser():
       return None if xmlElem is None else float(xmlElem.text)
    
    def parseBooleanNode(self, xmlElem):
-      return None if xmlElem is None else parseBoolean(xmlElem.text)
+      return None if xmlElem is None else _parseBoolean(xmlElem.text)
 
    def hasAdminData(self, xmlRoot):
       return True if xmlRoot.find('ADMIN-DATA') is not None else False
