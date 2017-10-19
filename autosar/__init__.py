@@ -8,7 +8,7 @@ import autosar.signal
 import autosar.package
 import autosar.rte
 import autosar.bsw.com
-import abc
+from abc import (ABC,abstractmethod)
 from autosar.base import splitRef
 
 import ntpath
@@ -92,7 +92,10 @@ def CompuMethodConst(name, elements, parent=None, adminData=None):
 
 
 #template support
-class Template:
-   @classmethod   
+class Template(ABC):
+   @classmethod
+   @abstractmethod
    def apply(cls, ws):
-      raise NotImplementedError("%s: apply() method not implemented"%(cls.__qualname__))
+      """
+      Applies this class template to the workspace ws
+      """

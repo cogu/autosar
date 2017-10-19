@@ -109,49 +109,8 @@ class ConstantWriter(WriterBase):
    def _writeValueXMLV4(self, value):
       lines=[]
       lines.append('<VALUE-SPEC>')
-      lines.extend(self.indent(self._writeValueSpecificationXML(value),1))
+      lines.extend(self.indent(self.writeValueSpecificationXML(value),1))
       lines.append('</VALUE-SPEC>')
-      return lines
-
-   def _writeValueSpecificationXML(self, value):
-      lines=[]
-      lines.append('<%s>'%value.tag(self.version))
-      if isinstance(value, autosar.constant.TextValue):
-         lines.extend(self.indent(self._writeSimpleValueSpecificationXML(value),1))
-      elif isinstance(value, autosar.constant.NumericalValue):
-         lines.extend(self.indent(self._writeSimpleValueSpecificationXML(value),1))
-      elif isinstance(value, autosar.constant.RecordValue):
-         lines.extend(self.indent(self._writeRecordValueSpecificationXML(value),1))
-      elif isinstance(value, autosar.constant.ArrayValue):
-         lines.extend(self.indent(self._writeArrayValueSpecificationXML(value),1))
-      else:
-         raise NotImplementedError(str(type(value)))
-      lines.append('</%s>'%value.tag(self.version))
-      return lines
-
-   def _writeSimpleValueSpecificationXML(self, value):
-      lines=[]
-      if value.name is not None:
-         lines.append('<SHORT-LABEL>%s</SHORT-LABEL>'%(value.name))
-      lines.append('<VALUE>%s</VALUE>'%(value.value))
-      return lines
-
-   def _writeRecordValueSpecificationXML(self, value):
-      lines=[]
-      lines.append('<SHORT-LABEL>%s</SHORT-LABEL>'%(value.name))
-      lines.append('<FIELDS>')
-      for elem in value.elements:
-         lines.extend(self.indent(self._writeValueSpecificationXML(elem),1))
-      lines.append('</FIELDS>')
-      return lines
-
-   def _writeArrayValueSpecificationXML(self, value):
-      lines=[]
-      lines.append('<SHORT-LABEL>%s</SHORT-LABEL>'%(value.name))
-      lines.append('<ELEMENTS>')
-      for elem in value.elements:
-         lines.extend(self.indent(self._writeValueSpecificationXML(elem),1))
-      lines.append('</ELEMENTS>')
       return lines
 
 

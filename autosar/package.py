@@ -50,15 +50,7 @@ class Package(object):
          else:
             return elem
       return None
-         
-      # for elem in self.elements:
-      #    if elem.name == name:
-      #       if len(ref[2])>0:
-      #          return elem.find(ref[2])
-      #       else:
-      #          return elem
-      # return None
-   
+            
    def findall(self,ref):
       """
       experimental find-method that has some rudimentary support for globs.      
@@ -384,10 +376,11 @@ class Package(object):
       self.append(dataType)
       return dataType
 
-   def createIntegerDataType(self,name,min=None,max=None,valueTable=None,offset=None, scaling=None, unit=None, adminData=None, forceFloatScaling=False):
+   def createIntegerDataType(self,name,min=None,max=None,valueTable=None,offset=None, scaling=None, unit=None, baseTypeRef=None, adminData=None, forceFloatScaling=False):
       """
       Helper method for creating integer datatypes in a package.
-      In order to use this function you must have a subpackage present with role='CompuMethod'
+      In order to use this function you must have a subpackage present with role='CompuMethod'.
+      
       """
       semanticsPackage=None
       unitPackage=None
@@ -407,7 +400,10 @@ class Package(object):
          compuMethod=autosar.CompuMethodConst(str(name),list(valueTable))
          if (semanticsPackage is not None):
             semanticsPackage.append(compuMethod)
-            newType=autosar.datatype.IntegerDataType(name,min,max,compuMethodRef=compuMethod.ref, adminData=adminData)            
+            if ws.version >= 4.0:
+               pass
+            else:            
+               newType=autosar.datatype.IntegerDataType(name,min,max,compuMethodRef=compuMethod.ref, adminData=adminData)            
          else:
             raise RuntimeError("no package found with role='CompuMethod'")
       elif (valueTable is not None) and (min is None) and (max is None):
@@ -415,7 +411,18 @@ class Package(object):
          compuMethod=autosar.CompuMethodConst(str(name),list(valueTable))
          if (semanticsPackage is not None):
             semanticsPackage.append(compuMethod)
-            newType=autosar.datatype.IntegerDataType(name,0,len(valueTable)-1,compuMethodRef=compuMethod.ref, adminData=adminData)            
+            if ws.version >= 4.0:
+               if baseTypeRef is None:
+                  raise ValueError('baseTypeRef argument must be given to this method')
+               dataConstraint = self.createInternalDataConstraint(name+'_DataConstr', 0, len(valueTable)-1)
+               newType = autosar.datatype.ImplementationDataType(name, 'VALUE')
+               props = autosar.base.SwDataDefPropsConditional(baseTypeRef=baseTypeRef,
+                                                              swCalibrationAccess='NOT-ACCESSIBLE',
+                                                              compuMethodRef=compuMethod.ref,
+                                                              dataConstraintRef=dataConstraint.ref)
+               newType.variants = [props]
+            else:
+               newType=autosar.datatype.IntegerDataType(name,0,len(valueTable)-1,compuMethodRef=compuMethod.ref, adminData=adminData)            
          else:
             raise RuntimeError("no package found with role='CompuMethod'")
       elif (min is not None) and (max is not None) and (offset is not None) and (scaling is not None):
@@ -644,7 +651,20 @@ class Package(object):
       else:
          raise NotImplementedError(type(initValue))
       return value
-   
+
+   def createTextValueConstant(self, name, value):
+      constant = autosar.constant.Constant(name, None, self)      
+      constant.value = autosar.constant.TextValue(name, value, constant)
+      self.append(constant)
+      return constant
+      
+   def createNumericalValueConstant(self, name, value):
+      constant = autosar.constant.Constant(name, None, self)      
+      constant.value = autosar.constant.NumericalValue(name, value, constant)
+      self.append(constant)
+      return constant
+      
+
    def createComplexDeviceDriverComponent(self,swcName,behaviorName=None,implementationName=None,multipleInstance=False):
       if behaviorName is None:
          behaviorName = str(swcName)+'_InternalBehavior'
@@ -664,4 +684,32 @@ class Package(object):
       component = autosar.component.CompositionComponent(str(componentName), self)
       self.append(component)
       return component
-      
+   
+   def createInternalDataConstraint(self, name, lowerLimit, upperLimit, lowerLimitType="CLOSED", upperLimitType="CLOSED"):
+      rules=[]
+      try:
+         lowerLimit = int(lowerLimit)
+      except ValueError:
+         lowerLimit = str(lowerLimit)
+      try:
+         upperLimit = int(upperLimit)
+      except ValueError:
+         upperLimit = str(upperLimit)
+      rules.append({'type': 'internalConstraint', 'lowerLimit':lowerLimit, 'upperLimit':upperLimit, 'lowerLimitType':lowerLimitType, 'upperLimitType':upperLimitType})
+      constraint = autosar.datatype.DataConstraint(name, rules, self)
+      self.append(constraint)
+      return constraint
+   
+   def createSwBaseType(self, name, size, encoding=None, nativeDeclaration=None, adminData=None):
+      ws=self.rootWS()
+      assert(ws is not None)
+
+      if isinstance(adminData, dict):
+         adminDataObj=ws.createAdminData(adminData)
+      else:
+         adminDataObj = adminData
+      if (adminDataObj is not None) and not isinstance(adminDataObj, autosar.base.AdminData):
+         raise ValueError("adminData must be of type dict or AdminData")      
+      baseType = autosar.datatype.SwBaseType(name, size, encoding, nativeDeclaration, 'FIXED_LENGTH', self, adminData)
+      self.append(baseType)
+      return baseType

@@ -3,7 +3,7 @@ import autosar.constant
 from autosar.base import hasAdminData,parseAdminDataNode
 from autosar.parser.parser_base import ElementParser
 
-class ConstantPackageParser(ElementParser):
+class ConstantParser(ElementParser):
    """
    Constant package parser
    """
@@ -41,7 +41,7 @@ class ConstantPackageParser(ElementParser):
          if xmlValue is not None:
             constant.value = self._parseValueV3(xmlValue, constant)
          elif xmlValueSpec is not None:
-            values = self._parseValueV4(xmlValueSpec, constant)
+            values = self.parseValueV4(xmlValueSpec, constant)
             if len(values) != 1:
                raise ValueError('A value specification must contain exactly one element')
             constant.value = values[0]
@@ -76,7 +76,7 @@ class ConstantPackageParser(ElementParser):
                   constantValue.elements.append(innerConstant)
       return constantValue
 
-   def _parseValueV4(self, xmlValue, parent):
+   def parseValueV4(self, xmlValue, parent):
       result = []
       for xmlElem in xmlValue.findall('./*'):
          if xmlElem.tag == 'TEXT-VALUE-SPECIFICATION':
@@ -133,7 +133,7 @@ class ConstantPackageParser(ElementParser):
 
       if (label is not None) and (xmlFields is not None):
          record = autosar.constant.RecordValue(label, parent=parent)
-         record.elements = self._parseValueV4(xmlFields, record)
+         record.elements = self.parseValueV4(xmlFields, record)
          return record
       else:
          raise RuntimeError("both label and xmlFields must not be None")
@@ -150,7 +150,7 @@ class ConstantPackageParser(ElementParser):
 
       if (label is not None) and (xmlElements is not None):
          array = autosar.constant.ArrayValue(label, parent=parent)
-         array.elements = self._parseValueV4(xmlElements, array)
+         array.elements = self.parseValueV4(xmlElements, array)
          return array
 
       else:

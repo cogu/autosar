@@ -310,11 +310,11 @@ class BehaviorParser(ElementParser):
             if xmlElem.tag == 'MODE-IREF':
                modeInstanceRefs.append(self.parseModeInstanceRef(xmlElem))
             else:
-               raise NotImplementedError(xmlElem.tag)            
+               raise NotImplementedError(xmlElem.tag)         
          startOnEventRef = parseTextNode(xmlNode.find('START-ON-EVENT-REF'))
          activation = parseTextNode(xmlNode.find('ACTIVATION'))
          modeSwitchEvent=ModeSwitchEvent(name, startOnEventRef, activation, parent, self.version)
-         modeSwitchEvent.modeInstRef=modeInstanceRefs
+         modeSwitchEvent.modeInstRef=modeInstanceRefs[0]
       else:
          raise NotImplementedError('version: '+self.version)
       return modeSwitchEvent

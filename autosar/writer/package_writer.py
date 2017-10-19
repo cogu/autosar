@@ -85,6 +85,8 @@ class PackageWriter(WriterBase):
                               'ParameterInterface': self.portInterfaceWriter.writeParameterInterfaceXML,
                               'SoftwareAddressMethod': self.portInterfaceWriter.writeSoftwareAddressMethodXML,
                               'Constant': self.constantWriter.writeConstantXML,
+                              'ApplicationSoftwareComponent': self.componentTypeWriter.writeApplicationSoftwareComponentXML,
+                              'SwcImplementation': self.componentTypeWriter.writeSwcImplementationXML,
                             }
          self.switcherCode = {
                               'DataConstraint': self.dataTypeWriter.writeDataConstraintCode,
