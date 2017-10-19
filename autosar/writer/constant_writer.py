@@ -109,7 +109,7 @@ class ConstantWriter(WriterBase):
    def _writeValueXMLV4(self, value):
       lines=[]
       lines.append('<VALUE-SPEC>')
-      lines.extend(self.indent(self._writeValueSpecificationXML(value),1))
+      lines.extend(self.indent(self.writeValueSpecificationXML(value),1))
       lines.append('</VALUE-SPEC>')
       return lines
 

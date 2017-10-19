@@ -253,7 +253,7 @@ class WriterBase():
       lines.append('<SHORT-LABEL>%s</SHORT-LABEL>'%(value.name))
       lines.append('<FIELDS>')
       for elem in value.elements:
-         lines.extend(self.indent(self._writeValueSpecificationXML(elem),1))
+         lines.extend(self.indent(self.writeValueSpecificationXML(elem),1))
       lines.append('</FIELDS>')
       return lines
 
@@ -262,6 +262,6 @@ class WriterBase():
       lines.append('<SHORT-LABEL>%s</SHORT-LABEL>'%(value.name))
       lines.append('<ELEMENTS>')
       for elem in value.elements:
-         lines.extend(self.indent(self._writeValueSpecificationXML(elem),1))
+         lines.extend(self.indent(self.writeValueSpecificationXML(elem),1))
       lines.append('</ELEMENTS>')
       return lines
