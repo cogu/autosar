@@ -224,9 +224,10 @@ class RteGenerator:
                self.com_component = component
             else:
                raise RuntimeError("More than one Com component allowed in a partition")
-      self.extra_static_vars.update(partition.static_vars)
 
-   def generate(self, dest_dir='.'):      
+   def generate(self, dest_dir='.'):
+      if self.os_enable:
+         self.extra_static_vars.update(self.partition.static_vars)      
       self._generate_header(dest_dir, 'RteApi.h')
       self._generate_source(dest_dir, 'RteApi.c')
    
@@ -536,17 +537,18 @@ class ComponentHeaderGenerator():
 
 
 class MockRteGenerator(RteGenerator):
-   def __init__(self, partition, api_prefix='Rte', file_prefix = 'MockRte', include=None, mode_switch=False):
+   def __init__(self, partition, api_prefix='Rte', file_prefix = 'MockRte', include=None, mode_switch=False, os_enable=False):
       super().__init__(partition, api_prefix, include, mode_switch)      
       self.includes.append((file_prefix+'.h', False))      
       self.api_prefix = api_prefix
       self.file_prefix = file_prefix
+      self.os_enable = os_enable
       self.typedefs={}
       for port in partition.unconnectedPorts():
          if isinstance(port, autosar.rte.base.ProvidePort):
             self._create_port_getter_api(port)
          else:
-            if len(port.data_elements)>0:
+            if len(port.data_elements)>0 or len(port.operations)>0:
                self._create_port_setter_api(port)
          self.partition.upperLayerAPI.finalize()
 
@@ -595,8 +597,9 @@ class MockRteGenerator(RteGenerator):
       short_name='%s_SetCallHandler_%s_%s'%(self.prefix, port.name, operation.name)
 
       type_name = '%s_%s_ServerCallHandler_t'%(port.name, operation.name)
-      var_name = 'm_ServerCallHandler_%s_%s_%s'%(component.name, port.name, operation.name)       
-      tmp_proto = C.fptr.from_func(port_access.func.proto, type_name)
+      var_name = 'm_ServerCallHandler_%s_%s_%s'%(component.name, port.name, operation.name)      
+      port_func = port.portAPI['Rte_Call_%s_%s'%(port.name, operation.name)]
+      tmp_proto = C.fptr.from_func(port_func.proto, type_name)
 
       self.typedefs[type_name] = 'typedef %s'%str(tmp_proto)
       proto = C.function(func_name, 'void', args=[C.variable('handler_func', type_name, pointer=True)])
@@ -605,8 +608,8 @@ class MockRteGenerator(RteGenerator):
       static_var = C.variable(var_name, type_name, static=True, pointer=True)
       self.extra_static_vars[var_name]=static_var
       self.extra_rte_start.append(C.statement('%s = (%s*) 0'%(var_name, type_name)))
-      body = self._createMockServerCallFunction(port_access.func.proto, var_name)
-      self.extra_public_functions[port_access.func.proto.name]=autosar.rte.base.ServerCallFunction(port_access.func.proto, body)
+      body = self._createMockServerCallFunction(port_func.proto, var_name)
+      self.extra_public_functions[port_func.proto.name]=autosar.rte.base.ServerCallFunction(port_func.proto, body)
 
    def _createMockServerCallFunction(self, proto, var_name):
       body = C.block(innerIndent=innerIndentDefault)
