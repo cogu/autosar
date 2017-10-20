@@ -43,7 +43,7 @@ class ComponentTypeWriter(WriterBase):
       lines.append(self.indent('</PORTS>',1))
       if (self.version >= 4.0) and (isinstance(swc, autosar.component.AtomicSoftwareComponent)) and (swc.behavior is not None):
          lines.append(self.indent('<INTERNAL-BEHAVIORS>',1))         
-         #lines.extend(self.indent(self.behavior_writer.writeInternalBehaviorXML(swc.behavior, None),2))
+         lines.extend(self.indent(self.behavior_writer.writeInternalBehaviorXML(swc.behavior, None),2))
          lines.append(self.indent('</INTERNAL-BEHAVIORS>',1))
       if isinstance(swc, autosar.component.CompositionComponent):
          lines.extend(self.indent(self._writeComponentsXML(ws, swc.components),1))
@@ -234,7 +234,7 @@ class ComponentTypeWriter(WriterBase):
          lines.append(self.indent('<TYPE>SRC</TYPE>',3))
       lines.append(self.indent('</CODE>',2))
       lines.append(self.indent('</CODE-DESCRIPTORS>',1))
-      lines.append(self.indent('<BEHAVIOR-REF DEST="%s">%s</BEHAVIOR-REF>'%(behavior.tag(self.version),elem.behaviorRef),1))
+      #lines.append(self.indent('<BEHAVIOR-REF DEST="%s">%s</BEHAVIOR-REF>'%(behavior.tag(self.version),elem.behaviorRef),1))
       lines.append('</SWC-IMPLEMENTATION>')
       return lines
 

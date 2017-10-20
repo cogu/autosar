@@ -265,33 +265,59 @@ class BehaviorParser(ElementParser):
          raise NotImplemented('version: '+self.version)
       return ModeInstanceRef(modeDeclarationRef,modeDeclarationGroupPrototypeRef,requirePortPrototypeRef)
 
-   def parseModeDependency(self,xmlRoot,parent=None):
+   def _parseModeDependency(self,xmlRoot,parent=None):
       """parses <MODE-DEPENDENCY>"""
       assert(xmlRoot.tag == 'MODE-DEPENDENCY')
       modeDependency=ModeDependency()
       if xmlRoot.find('DEPENDENT-ON-MODE-IREFS') is not None:
          for xmlNode in xmlRoot.findall('./DEPENDENT-ON-MODE-IREFS/DEPENDENT-ON-MODE-IREF'):
-            modeInstanceRef = self.parseDependentOnModeInstanceRef(xmlNode)
+            modeInstanceRef = self._parseDependentOnModeInstanceRef(xmlNode)
             if modeInstanceRef is not None:
                modeDependency.modeInstanceRefs.append(modeInstanceRef)
       return modeDependency
-   
 
-   def parseDependentOnModeInstanceRef(self,xmlRoot,parent=None):
+   def _parseDependentOnModeInstanceRef(self,xmlRoot,parent=None):
       """parses <DEPENDENT-ON-MODE-IREF>"""
       assert(xmlRoot.tag == 'DEPENDENT-ON-MODE-IREF')      
       modeDeclarationRef=parseTextNode(xmlRoot.find('MODE-DECLARATION-REF'))
       modeDeclarationGroupPrototypeRef = parseTextNode(xmlRoot.find('MODE-DECLARATION-GROUP-PROTOTYPE-REF'))
       requirePortPrototypeRef = parseTextNode(xmlRoot.find('R-PORT-PROTOTYPE-REF'))
-      return ModeDependencyRef(modeDeclarationRef,modeDeclarationGroupPrototypeRef,requirePortPrototypeRef)    
+      return ModeDependencyRef(modeDeclarationRef,modeDeclarationGroupPrototypeRef,requirePortPrototypeRef)   
+  
+   def _parseDisabledModesInstanceRefs(self,xmlRoot,parent=None):
+      """parses <DISABLED-MODE-IREFS>"""
+      assert(xmlRoot.tag == 'DISABLED-MODE-IREFS')
+      disabledInModes = []
+      for xmlElem in xmlRoot.findall('./*'):
+         if xmlElem.tag == 'DISABLED-MODE-IREF':
+            disabledInModes.append(self._parseDisabledModeInstanceRef(xmlElem))
+         else:
+            raise NotImplementedError(xmlElem.tag)
+      return disabledInModes
+
+   def _parseDisabledModeInstanceRef(self, xmlRoot):
+      """parses <DISABLED-MODE-IREF>"""
+      (requirePortPrototypeRef, modeDeclarationGroupPrototypeRef, modeDeclarationRef) = (None, None, None)
+      for xmlElem in xmlRoot.findall('./*'):
+         if xmlElem.tag == 'CONTEXT-PORT-REF':
+            requirePortPrototypeRef = self.parseTextNode(xmlElem)
+         elif xmlElem.tag == 'CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF':
+            modeDeclarationGroupPrototypeRef = self.parseTextNode(xmlElem)
+         elif xmlElem.tag == 'TARGET-MODE-DECLARATION-REF':
+            modeDeclarationRef = self.parseTextNode(xmlElem)
+         else:
+            raise NotImplementedError(xmlElem.tag)
+      if (modeDeclarationRef is not None) and (modeDeclarationGroupPrototypeRef is not None) and (requirePortPrototypeRef is not None):
+         return DisabledModeInstanceRef(modeDeclarationRef,modeDeclarationGroupPrototypeRef,requirePortPrototypeRef)
+      else:
+         raise RuntimeError('Parse Error: <CONTEXT-PORT-REF DEST>, <CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF> and <TARGET-MODE-DECLARATION-REF> must be defined')
 
    def parseInitEvent(self,xmlNode,parent=None):
       name = parseTextNode(xmlNode.find('SHORT-NAME'))      
       startOnEventRef = parseTextNode(xmlNode.find('START-ON-EVENT-REF'))
       initEvent=InitEvent(name, startOnEventRef, parent)
       return initEvent
-      
-      
+            
    def parseModeSwitchEvent(self,xmlNode,parent=None):
       """parses AUTOSAR3 <MODE-SWITCH-EVENT>"""
       if self.version < 4.0:
@@ -320,16 +346,32 @@ class BehaviorParser(ElementParser):
       return modeSwitchEvent
 
    def parseTimingEvent(self,xmlNode,parent=None):
-      name = parseTextNode(xmlNode.find('SHORT-NAME'))      
-      startOnEventRef = parseTextNode(xmlNode.find('START-ON-EVENT-REF'))
-      period=parseTextNode(xmlNode.find('PERIOD'))
-      if period is None:
-         period=0.0
-      timingEvent=TimingEvent(name, startOnEventRef, float(period)*1000, parent)
-      xmlModeDependency = xmlNode.find('MODE-DEPENDENCY')
-      if xmlModeDependency is not None:
-         timingEvent.modeDependency = self.parseModeDependency(xmlModeDependency, parent)
-      return timingEvent
+      (name, startOnEventRef, period, xmlModeDepency, xmlDisabledModeRefs) = (None, None, None, None, None)
+      for xmlElem in xmlNode.findall('./*'):
+         if xmlElem.tag == 'SHORT-NAME':
+            name = self.parseTextNode(xmlElem)
+         elif self.version >= 4.0 and xmlElem.tag == 'DISABLED-MODE-IREFS':
+            xmlDisabledModeRefs =xmlElem
+         elif self.version < 4.0 and xmlElem.tag == 'MODE-DEPENDENCY':
+            xmlModeDepency =xmlElem
+         elif xmlElem.tag == 'START-ON-EVENT-REF':
+            startOnEventRef = self.parseTextNode(xmlElem)
+         elif xmlElem.tag == 'PERIOD':
+            period = self.parseTextNode(xmlElem)
+         else:
+            raise NotImplementedError(xmlElem.tag)
+      
+      if (name is not None) and (startOnEventRef is not None) and (period is not None):
+         timingEvent=TimingEvent(name, startOnEventRef, float(period)*1000, parent)
+         if xmlModeDepency is not None:
+            timingEvent.modeDependency = self._parseModeDependency(xmlModeDepency, parent)
+         elif xmlDisabledModeRefs is not None:
+            timingEvent.disabledInModes = self._parseDisabledModesInstanceRefs(xmlDisabledModeRefs, parent)
+         return timingEvent
+      else:
+         raise RuntimeError('Parse error: <SHORT-NAME> and <START-ON-EVENT-REF> and <PERIOD> must be defined')
+
+      
 
    
    def parseDataReceivedEvent(self,xmlRoot,parent=None):
@@ -340,7 +382,7 @@ class BehaviorParser(ElementParser):
       dataReceivedEvent=DataReceivedEvent(name, startOnEventRef, parent)
       xmlModeDependency = xmlRoot.find('MODE-DEPENDENCY')
       if xmlModeDependency is not None:
-         dataReceivedEvent.modeDependency = self.parseModeDependency(xmlModeDependency)
+         dataReceivedEvent.modeDependency = self._parseModeDependency(xmlModeDependency)
       dataReceivedEvent.dataInstanceRef=dataInstanceRef
       return dataReceivedEvent
 
@@ -351,7 +393,7 @@ class BehaviorParser(ElementParser):
       operationInvokedEvent=OperationInvokedEvent(name, startOnEventRef, parent)
       xmlModeDependency = xmlRoot.find('MODE-DEPENDENCY')
       if xmlModeDependency is not None:
-         operationInvokedEvent.modeDependency = self.parseModeDependency(xmlModeDependency)
+         operationInvokedEvent.modeDependency = self._parseModeDependency(xmlModeDependency)
       operationInvokedEvent.operationInstanceRef=operationInstanceRef
       return operationInvokedEvent
 

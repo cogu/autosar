@@ -261,7 +261,7 @@ class ModeGroup(Element):
       self.typeRef=typeRef
    
    def tag(self,version=None):
-      if version<4.0:
+      if version>=4.0:
          return "MODE-DECLARATION-GROUP-PROTOTYPE"
       else:
          return "MODE-GROUP"

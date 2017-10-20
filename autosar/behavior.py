@@ -10,7 +10,8 @@ class Event(Element):
    def __init__(self,name,startOnEventRef=None, parent=None):
       super().__init__(name,parent)
       self.startOnEventRef = startOnEventRef
-      self.modeDependency=None
+      self.modeDependency=None #for AUTOSAR3
+      self.disabledInModes=None #for AUTOSAR4
 
 class ModeSwitchEvent(Event):
    def __init__(self,name,startOnEventRef=None, activationType='ENTRY', parent=None, version=3.0):
@@ -26,8 +27,7 @@ class ModeSwitchEvent(Event):
             raise ValueError('activationType argument must be either "ON-ENTRY" or "ON-EXIT"')
       self.activationType = activationType
       
-   def tag(self,version=None):
-      return 'MODE-SWITCH-EVENT'
+   def tag(self,version): return 'SWC-MODE-SWITCH-EVENT' if version >= 4.0 else 'MODE-SWITCH-EVENT'
 
 class TimingEvent(Event):
    def __init__(self,name,startOnEventRef=None, period=0, parent=None):
@@ -109,6 +109,19 @@ class ModeDependencyRef(object):
    def tag(self,version=None):
       return 'DEPENDENT-ON-MODE-IREF'
 
+class DisabledModeInstanceRef(object):
+   def __init__(self,modeDeclarationRef,modeDeclarationGroupPrototypeRef=None,requirePortPrototypeRef=None):      
+      self.modeDeclarationRef=modeDeclarationRef #MODE-DECLARATION-REF
+      self.modeDeclarationGroupPrototypeRef=modeDeclarationGroupPrototypeRef #MODE-DECLARATION-GROUP-PROTOTYPE-REF
+      self.requirePortPrototypeRef=requirePortPrototypeRef #R-PORT-PROTOTYPE-REF
+   def asdict(self):
+      data={'type': self.__class__.__name__}
+      for key, value in self.__dict__.items():
+         data[key]=value
+      return data
+   
+   def tag(self,version=None):
+      return 'DISABLED-MODE-IREF'
 
 
 class PortAPIOption():

@@ -16,8 +16,9 @@ class BehaviorWriter(WriterBase):
       lines.append('<%s>'%internalBehavior.tag(self.version))
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%internalBehavior.name,1))
       swc=ws.find(internalBehavior.componentRef)
-      assert(swc is not None)      
-      lines.append(self.indent('<COMPONENT-REF DEST="%s">%s</COMPONENT-REF>'%(swc.tag(self.version),swc.ref),1))
+      assert(swc is not None)
+      if self.version < 4.0:
+         lines.append(self.indent('<COMPONENT-REF DEST="%s">%s</COMPONENT-REF>'%(swc.tag(self.version),swc.ref),1))
       if len(internalBehavior.events):
          lines.append(self.indent('<EVENTS>',1))
          for event in internalBehavior.events:
@@ -162,12 +163,23 @@ class BehaviorWriter(WriterBase):
             lines.extend(self.indent(self._writeModeInstanceRefXML(ws, item),3))         
          lines.append(self.indent('</DEPENDENT-ON-MODE-IREFS>',2))         
          lines.append(self.indent('</MODE-DEPENDENCY>',1))
+      elif event.disabledInModes is not None:
+         lines.append(self.indent('<DISABLED-MODE-IREFS>',1))         
+         for item in event.disabledInModes:
+            lines.extend(self.indent(self._writeModeInstanceRefXML(ws, item),2))                  
+         lines.append(self.indent('</DISABLED-MODE-IREFS>',1))
+         
       runnableEntity = ws.find(event.startOnEventRef)
       assert(runnableEntity is not None)
       lines.append(self.indent('<START-ON-EVENT-REF DEST="%s">%s</START-ON-EVENT-REF>'%(runnableEntity.tag(self.version),runnableEntity.ref),1))
-      if isinstance(event, autosar.behavior.ModeSwitchEvent):         
+      if isinstance(event, autosar.behavior.ModeSwitchEvent):
          lines.append(self.indent('<ACTIVATION>%s</ACTIVATION>'%(event.activationType),1))
-         lines.extend(self.indent(self._writeModeInstanceRefXML(ws,event.modeInstRef),1))
+         if self.version >= 4.0:
+            lines.append(self.indent('<MODE-IREFS>',1))
+            lines.extend(self.indent(self._writeModeInstanceRefXML(ws,event.modeInstRef),2))
+            lines.append(self.indent('</MODE-IREFS>',1))
+         else:
+            lines.extend(self.indent(self._writeModeInstanceRefXML(ws,event.modeInstRef),1))
       elif isinstance(event, autosar.behavior.TimingEvent):
          if event.period==0:
             lines.append(self.indent('<PERIOD>0</PERIOD>',1))
@@ -198,9 +210,14 @@ class BehaviorWriter(WriterBase):
       modeDeclaration = ws.find(modeInstRef.modeDeclarationRef)
       if modeDeclaration is None:
          raise ValueError('%s has invalid modeDeclarationRef: %s'%(modeInstRef,modeInstRef.modeDeclarationRef))
-      lines.append(self.indent('<R-PORT-PROTOTYPE-REF DEST="R-PORT-PROTOTYPE">%s</R-PORT-PROTOTYPE-REF>'%(port.ref),1))
-      lines.append(self.indent('<MODE-DECLARATION-GROUP-PROTOTYPE-REF DEST="%s">%s</MODE-DECLARATION-GROUP-PROTOTYPE-REF>'%(modeDeclarationGroup.tag(self.version), modeDeclarationGroup.ref),1))
-      lines.append(self.indent('<MODE-DECLARATION-REF DEST="%s">%s</MODE-DECLARATION-REF>'%(modeDeclaration.tag(self.version) ,modeDeclaration.ref),1))
+      if self.version >= 4.0:
+         lines.append(self.indent('<CONTEXT-PORT-REF DEST="R-PORT-PROTOTYPE">%s</CONTEXT-PORT-REF>'%(port.ref),1))
+         lines.append(self.indent('<CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF DEST="%s">%s</CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF>'%(modeDeclarationGroup.tag(self.version), modeDeclarationGroup.ref),1))
+         lines.append(self.indent('<TARGET-MODE-DECLARATION-REF DEST="%s">%s</TARGET-MODE-DECLARATION-REF>'%(modeDeclaration.tag(self.version) ,modeDeclaration.ref),1))
+      else:
+         lines.append(self.indent('<R-PORT-PROTOTYPE-REF DEST="R-PORT-PROTOTYPE">%s</R-PORT-PROTOTYPE-REF>'%(port.ref),1))
+         lines.append(self.indent('<MODE-DECLARATION-GROUP-PROTOTYPE-REF DEST="%s">%s</MODE-DECLARATION-GROUP-PROTOTYPE-REF>'%(modeDeclarationGroup.tag(self.version), modeDeclarationGroup.ref),1))
+         lines.append(self.indent('<MODE-DECLARATION-REF DEST="%s">%s</MODE-DECLARATION-REF>'%(modeDeclaration.tag(self.version) ,modeDeclaration.ref),1))
       lines.append('</%s>'%tag)            
       return lines
    
