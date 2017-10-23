@@ -123,6 +123,16 @@ class DisabledModeInstanceRef(object):
    def tag(self,version=None):
       return 'DISABLED-MODE-IREF'
 
+class ModeGroupInstanceRef:
+   def __init__(self, requirePortRef, modeGroupRef):
+      self.requirePortRef = requirePortRef
+      self.modeGroupRef = modeGroupRef
+   
+   def tag(self, version):
+      if version >= 4.0:
+         return 'R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF'
+      else:
+         raise RuntimeError('not supported in v%.1f'%version)
 
 class PortAPIOption():
    def __init__(self,portRef,takeAddress=False,indirectAPI=False):
@@ -142,7 +152,7 @@ class DataReceivePoint:
       self.name=name
       self.parent=parent
    
-   def tag(self,version=None): return "DATA-RECEIVE-POINT"
+   def tag(self,version): return "VARIABLE-ACCESS" if version >= 4.0 else "DATA-RECEIVE-POINT"
 
 class DataSendPoint:
    def __init__(self,portRef,dataElemRef=None,name=None,parent=None):
@@ -151,12 +161,13 @@ class DataSendPoint:
       self.name=name
       self.parent=parent
    
-   def tag(self,version=None): return "DATA-SEND-POINT"
+   def tag(self,version): return "VARIABLE-ACCESS" if version >= 4.0 else "DATA-SEND-POINT"
       
 class RunnableEntity(Element):
    def __init__(self, name, invokeConcurrently=False, symbol=None, parent=None, adminData=None):
       super().__init__(name,parent,adminData)
       self.invokeConcurrently = invokeConcurrently
+      self.minStartInterval = 0
       if symbol is None:
          self.symbol=name
       else:
@@ -165,6 +176,7 @@ class RunnableEntity(Element):
       self.dataSendPoints=[]
       self.serverCallPoints=[]
       self.exclusiveAreaRefs=[]
+      self.modeAccessPoints=[] #for AUTOSAR4
    
    def tag(self,version=None):
       return 'RUNNABLE-ENTITY'
@@ -333,6 +345,9 @@ class PerInstanceMemory(Element):
    
 
 class SwcNvBlockNeeds(object):
+   """
+   AUTOSAR 3 representation of SWC-NV-BLOCK-NEEDS
+   """
    def __init__(self,name,numberOfDataSets,readOnly,reliability,resistantToChangedSW,
                 restoreAtStart,writeOnlyOnce,writingFrequency,writingPriority,
                 defaultBlockRef,mirrorBlockRef):
@@ -364,7 +379,21 @@ class SwcNvBlockNeeds(object):
    
    def tag(self, version=None):
       return 'SWC-NV-BLOCK-NEEDS'
-   
+
+class NvBlockNeeds(Element):
+   """   
+   AUTOSAR 4 representation of NV-BLOCK-NEEDS
+   """
+   def __init__(self, name, numberOfDataSets, ramBlockStatusControl, reliability, restoreAtStart, storeAtShutdown, parent=None, adminData=None):
+      super().__init__(name, parent, adminData)
+      self.numberOfDataSets=numberOfDataSets
+      self.ramBlockStatusControl = ramBlockStatusControl
+      self.reliability = reliability
+      assert(isinstance(restoreAtStart,bool))
+      self.restoreAtStart = restoreAtStart
+      assert(isinstance(storeAtShutdown,bool))
+      self.storeAtShutdown = storeAtShutdown
+      
 
 class RoleBasedRPortAssignment(object):
    def __init__(self,portRef,role):
@@ -949,4 +978,5 @@ class VariableAccess(Element):
       self.targetDataPrototypeRef = targetDataPrototypeRef
    
    def tag(self, version=None):
-      return 'VARIABLE-ACCESS'   
+      return 'VARIABLE-ACCESS'
+

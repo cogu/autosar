@@ -61,10 +61,12 @@ class BehaviorWriter(WriterBase):
       ws=runnable.rootWS()
       assert(ws is not None)
       lines=['<RUNNABLE-ENTITY>',
-             self.indent('<SHORT-NAME>%s</SHORT-NAME>'%runnable.name,1),             
+             self.indent('<SHORT-NAME>%s</SHORT-NAME>'%runnable.name,1),
             ]
       if runnable.adminData is not None:
          lines.extend(self.indent(self.writeAdminDataXML(runnable.adminData),1))
+      if self.version >= 4.0:
+         lines.append(self.indent('<MINIMUM-START-INTERVAL>%d</MINIMUM-START-INTERVAL>'%(int(runnable.minStartInterval)),1))
       lines.append(self.indent('<CAN-BE-INVOKED-CONCURRENTLY>%s</CAN-BE-INVOKED-CONCURRENTLY>'%('true' if runnable.invokeConcurrently else 'false'),1))
       if len(runnable.exclusiveAreaRefs)>0:
          lines.append(self.indent('<CAN-ENTER-EXCLUSIVE-AREA-REFS>',1))
@@ -75,37 +77,29 @@ class BehaviorWriter(WriterBase):
             lines.append(self.indent('<CAN-ENTER-EXCLUSIVE-AREA-REF DEST="%s">%s</CAN-ENTER-EXCLUSIVE-AREA-REF>'%(exclusiveArea.tag(self.version),exclusiveArea.ref),2))
          lines.append(self.indent('</CAN-ENTER-EXCLUSIVE-AREA-REFS>',1))
       if len(runnable.dataReceivePoints)>0:
-         lines.append(self.indent('<DATA-RECEIVE-POINTS>',1))
-         for dataReceivePoint in runnable.dataReceivePoints:
-            lines.append(self.indent('<DATA-RECEIVE-POINT>',2))
-            lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%dataReceivePoint.name,3))
-            lines.append(self.indent('<DATA-ELEMENT-IREF>',3))
-            assert(dataReceivePoint.portRef is not None) and (dataReceivePoint.dataElemRef is not None)
-            port = ws.find(dataReceivePoint.portRef)
-            assert(port is not None)
-            dataElement = ws.find(dataReceivePoint.dataElemRef)
-            assert(port is not None)            
-            lines.append(self.indent('<R-PORT-PROTOTYPE-REF DEST="%s">%s</R-PORT-PROTOTYPE-REF>'%(port.tag(self.version),port.ref),4))
-            lines.append(self.indent('<DATA-ELEMENT-PROTOTYPE-REF DEST="%s">%s</DATA-ELEMENT-PROTOTYPE-REF>'%(dataElement.tag(self.version),dataElement.ref),4))
-            lines.append(self.indent('</DATA-ELEMENT-IREF>',3))
-            lines.append(self.indent('</DATA-RECEIVE-POINT>',2))
-         lines.append(self.indent('</DATA-RECEIVE-POINTS>',1))
+         if self.version >= 4.0:
+            lines.append(self.indent('<DATA-RECEIVE-POINT-BY-ARGUMENTS>',1))
+            for dataReceivePoint in runnable.dataReceivePoints:
+               lines.extend(self.indent(self._writeDataReceivePointXML(ws, dataReceivePoint),2))
+            lines.append(self.indent('</DATA-RECEIVE-POINT-BY-ARGUMENTS>',1))               
+         else:
+            lines.append(self.indent('<DATA-RECEIVE-POINTS>',1))
+            for dataReceivePoint in runnable.dataReceivePoints:
+               lines.extend(self.indent(self._writeDataReceivePointXML(ws, dataReceivePoint),2))
+            lines.append(self.indent('</DATA-RECEIVE-POINTS>',1))
       if len(runnable.dataSendPoints)>0:
          lines.append(self.indent('<DATA-SEND-POINTS>',1))
          for dataSendPoint in runnable.dataSendPoints:
             lines.append(self.indent('<%s>'%dataSendPoint.tag(self.version),2))
             lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%dataSendPoint.name,3))
-            lines.append(self.indent('<DATA-ELEMENT-IREF>',3))
-            assert(dataSendPoint.portRef is not None) and (dataSendPoint.dataElemRef is not None)
-            port = ws.find(dataSendPoint.portRef)
-            assert(port is not None)
-            dataElement = ws.find(dataSendPoint.dataElemRef)
-            assert(port is not None)            
-            lines.append(self.indent('<P-PORT-PROTOTYPE-REF DEST="%s">%s</P-PORT-PROTOTYPE-REF>'%(port.tag(self.version),port.ref),4))
-            lines.append(self.indent('<DATA-ELEMENT-PROTOTYPE-REF DEST="%s">%s</DATA-ELEMENT-PROTOTYPE-REF>'%(dataElement.tag(self.version),dataElement.ref),4))
-            lines.append(self.indent('</DATA-ELEMENT-IREF>',3))
+            lines.extend(self.indent(self._writeDataElementInstanceRefXML(ws, dataSendPoint.portRef, dataSendPoint.dataElemRef),3))
             lines.append(self.indent('</%s>'%dataSendPoint.tag(self.version),2))         
          lines.append(self.indent('</DATA-SEND-POINTS>',1))
+      if (self.version >= 4.0) and (len(runnable.modeAccessPoints)>0):
+         lines.append(self.indent('<MODE-ACCESS-POINTS>',1))
+         for modeAccessPoint in runnable.modeAccessPoints:
+            lines.extend(self.indent(self._writeModeAccessPointXML(ws, modeAccessPoint),2))
+         lines.append(self.indent('</MODE-ACCESS-POINTS>',1))
       if len(runnable.serverCallPoints)>0:
          lines.append(self.indent('<SERVER-CALL-POINTS>',1))
          for callPoint in runnable.serverCallPoints:            
@@ -114,16 +108,78 @@ class BehaviorWriter(WriterBase):
       lines.append(self.indent('<SYMBOL>%s</SYMBOL>'%runnable.symbol,1))
       lines.append('</RUNNABLE-ENTITY>')
       return lines
+  
+   def _writeDataReceivePointXML(self, ws, dataReceivePoint):
+      lines = []                  
+      lines.append('<%s>'%dataReceivePoint.tag(self.version))
+      lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%dataReceivePoint.name,1))
+      lines.extend(self.indent(self._writeDataElementInstanceRefXML(ws, dataReceivePoint.portRef, dataReceivePoint.dataElemRef),1))
+      lines.append('</%s>'%dataReceivePoint.tag(self.version))
+      return lines
+   
+  
+   def _writeDataElementInstanceRefXML(self, ws, portRef, dataElemRef):
+      lines = []      
+      assert( portRef is not None) and ( dataElemRef is not None)
+      port = ws.find(portRef)
+      if port is None:
+         raise ValueError('Invalid port reference: '+portRef)
+      dataElement = ws.find(dataElemRef)
+      if dataElement is None:
+         raise ValueError('Invalid port reference: '+dataElemRef)
+      if self.version >= 4.0:
+         lines.append('<ACCESSED-VARIABLE>')
+         lines.append(self.indent('<AUTOSAR-VARIABLE-IREF>',1))
+         lines.append(self.indent('<PORT-PROTOTYPE-REF DEST="%s">%s</PORT-PROTOTYPE-REF>'%(port.tag(self.version),port.ref),2))
+         lines.append(self.indent('<TARGET-DATA-PROTOTYPE-REF DEST="%s">%s</TARGET-DATA-PROTOTYPE-REF>'%(dataElement.tag(self.version),dataElement.ref),2))
+         lines.append(self.indent('</AUTOSAR-VARIABLE-IREF>',1))
+         lines.append('</ACCESSED-VARIABLE>')
+      else:
+         lines.append('<DATA-ELEMENT-IREF>')
+         if isinstance(port, autosar.component.ProvidePort):
+            lines.append(self.indent('<P-PORT-PROTOTYPE-REF DEST="%s">%s</P-PORT-PROTOTYPE-REF>'%(port.tag(self.version),port.ref),1))
+         else:                  
+            lines.append(self.indent('<R-PORT-PROTOTYPE-REF DEST="%s">%s</R-PORT-PROTOTYPE-REF>'%(port.tag(self.version),port.ref),1))            
+         lines.append(self.indent('<DATA-ELEMENT-PROTOTYPE-REF DEST="%s">%s</DATA-ELEMENT-PROTOTYPE-REF>'%(dataElement.tag(self.version),dataElement.ref),1))
+         lines.append('</DATA-ELEMENT-IREF>')
+      return lines
+   
+   def _writeModeAccessPointXML(self, ws, modeGroupInstanceRef):
+      lines = ['<MODE-ACCESS-POINT>']
+      lines.append(self.indent('<MODE-GROUP-IREF>', 1))
+      lines.extend(self.indent(self._writeModeGroupInstanceRefXML(ws, modeGroupInstanceRef),2))
+      lines.append(self.indent('</MODE-GROUP-IREF>', 1))
+      lines.append('</MODE-ACCESS-POINT>')
+      return lines
+   
+   def _writeModeGroupInstanceRefXML(self, ws, modeGroupInstanceRef):
+      lines=[]
+      port = ws.find(modeGroupInstanceRef.requirePortRef)
+      if port is None:
+         raise ValueError('invalid port reference'%(modeGroupInstanceRef.requirePortRef))
+      modeGroup = ws.find(modeGroupInstanceRef.modeGroupRef)
+      if modeGroup is None:
+         raise ValueError('invalid port reference'%(modeGroupInstanceRef.modeGroupRef))      
+
+      lines.append('<%s>'%modeGroupInstanceRef.tag(self.version))
+      lines.append(self.indent('<CONTEXT-R-PORT-REF DEST="%s">%s</CONTEXT-R-PORT-REF>'%(port.tag(self.version), port.ref),1))
+      lines.append(self.indent('<TARGET-MODE-GROUP-REF DEST="%s">%s</TARGET-MODE-GROUP-REF>'%(modeGroup.tag(self.version), modeGroup.ref),1))
+      lines.append('</%s>'%modeGroupInstanceRef.tag(self.version))
+      return lines
    
    def _writeServerCallPointXML(self, ws, runnable, callPoint):
       lines=[]
       if isinstance(callPoint, autosar.behavior.SyncServerCallPoint):
          lines.append('<SYNCHRONOUS-SERVER-CALL-POINT>')
          lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%callPoint.name,1))
-         lines.append(self.indent('<OPERATION-IREFS>',1))
-         for operationIRef in callPoint.operationInstanceRefs:
-            lines.extend(self.indent(self._writeOperationInstanceRefXML(ws, runnable, operationIRef),2))
-         lines.append(self.indent('</OPERATION-IREFS>',1))
+         if self.version >= 4.0:
+            for operationIRef in callPoint.operationInstanceRefs:
+               lines.extend(self.indent(self._writeOperationInstanceRefXML(ws, runnable, operationIRef),1))
+         else:
+            lines.append('<OPERATION-IREFS>')
+            for operationIRef in callPoint.operationInstanceRefs:
+               lines.extend(self.indent(self._writeOperationInstanceRefXML(ws, runnable, operationIRef),2))
+            lines.append('</OPERATION-IREFS>')            
          lines.append(self.indent('<TIMEOUT>%.9f</TIMEOUT>'%float(callPoint.timeout),1))
          lines.append('</SYNCHRONOUS-SERVER-CALL-POINT>')         								
       else:
@@ -231,10 +287,17 @@ class BehaviorWriter(WriterBase):
       if operation is None:
          raise ValueError('invalid reference "%s" found in callPoint.operation of item "%s"'%(operationIRef.operationRef, parent.ref))
       if isinstance(port, autosar.component.RequirePort):
-         lines.append(self.indent('<R-PORT-PROTOTYPE-REF DEST="%s">%s</R-PORT-PROTOTYPE-REF>'%(port.tag(self.version), port.ref),1))
+         if self.version >= 4.0:
+            (portRefTag,operationRefTag) = ('CONTEXT-R-PORT-REF','TARGET-REQUIRED-OPERATION-REF')
+         else:
+            (portRefTag,operationRefTag) = ('R-PORT-PROTOTYPE-REF','OPERATION-PROTOTYPE-REF')
       else:
-         lines.append(self.indent('<P-PORT-PROTOTYPE-REF DEST="%s">%s</P-PORT-PROTOTYPE-REF>'%(port.tag(self.version), port.ref),1))
-      lines.append(self.indent('<OPERATION-PROTOTYPE-REF DEST="%s">%s</OPERATION-PROTOTYPE-REF>'%(operation.tag(self.version), operation.ref),1))
+         if self.version >= 4.0:
+            (portRefTag,operationRefTag) = ('CONTEXT-P-PORT-REF','TARGET-PROVIDED-OPERATION-REF')
+         else:
+            (portRefTag,operationRefTag) = ('P-PORT-PROTOTYPE-REF','OPERATION-PROTOTYPE-REF')         
+      lines.append(self.indent('<%s DEST="%s">%s</%s>'%(portRefTag, port.tag(self.version), port.ref, portRefTag),1))
+      lines.append(self.indent('<%s DEST="%s">%s</%s>'%(operationRefTag, operation.tag(self.version), operation.ref, operationRefTag),1))
       lines.append('</%s>'%operationIRef.tag(self.version))
       return lines
 

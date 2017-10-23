@@ -146,9 +146,17 @@ class BehaviorParser(ElementParser):
             elif xmlNode.tag == 'AR-TYPED-PER-INSTANCE-MEMORYS':
                pass
             elif xmlNode.tag == 'SERVICE-DEPENDENCYS':
-               pass
+               for childElem in xmlNode.findall('./*'):
+                  if childElem.tag == 'SWC-SERVICE-DEPENDENCY':
+                     swcServiceDependency = self.parseSwcServiceDependency(childElem)
+                  else:
+                     raise NotImplementedError(childElem.tag)
             elif xmlNode.tag == 'SHARED-PARAMETERS':
-               pass
+               for childElem in xmlNode.findall('./*'):
+                  if childElem.tag == 'PARAMETER-DATA-PROTOTYPE':
+                     parameterDataPrototype = self.parseParameterDataPrototype(childElem)
+                  else:
+                     raise NotImplementedError(childElem.tag)
             elif xmlNode.tag == 'EXCLUSIVE-AREAS':
                pass
             else:
@@ -161,7 +169,7 @@ class BehaviorParser(ElementParser):
       xmlServerCallPoints=None
       xmlCanEnterExclusiveAreas=None
       adminData = None
-      modeAccessPoints = None
+      xmlModeAccessPoints = None
       if self.version < 4.0:
          for xmlElem in xmlRoot.findall('*'):
             if xmlElem.tag=='SHORT-NAME':
@@ -189,7 +197,7 @@ class BehaviorParser(ElementParser):
             elif xmlElem.tag=='CAN-BE-INVOKED-CONCURRENTLY':
                canBeInvokedConcurrently=parseBooleanNode(xmlElem)
             elif xmlElem.tag == 'MODE-ACCESS-POINTS':
-               modeAccessPoints = xmlElem
+               xmlModeAccessPoints = xmlElem
             elif xmlElem.tag=='DATA-RECEIVE-POINT-BY-ARGUMENTS':
                xmlDataReceivePoints=xmlElem
             elif xmlElem.tag=='DATA-SEND-POINTS':
@@ -238,6 +246,14 @@ class BehaviorParser(ElementParser):
                assert(accessedVariable is not None)
                dataSendPoint=DataSendPoint(accessedVariable.portPrototypeRef,accessedVariable.targetDataPrototypeRef,name)
                runnableEntity.append(dataSendPoint)            
+      if xmlModeAccessPoints is not None:
+         for xmlElem in xmlModeAccessPoints.findall('./*'):
+            if xmlElem.tag == 'MODE-ACCESS-POINT':
+               modeAccessPoint = self.parseModeAccessPoint(xmlElem)
+               assert(modeAccessPoint is not None)
+               runnableEntity.modeAccessPoints.append(modeAccessPoint)
+            else:
+               raise NotImplementedError(xmlElem.tag)
       if xmlServerCallPoints is not None:
          for xmlServerCallPoint in xmlServerCallPoints.findall('./SYNCHRONOUS-SERVER-CALL-POINT'):
             syncServerCallPoint = self.parseSyncServerCallPoint(xmlServerCallPoint)
@@ -249,7 +265,44 @@ class BehaviorParser(ElementParser):
          runnableEntity.adminData = adminData
       return runnableEntity
 
-
+   def parseModeAccessPoint(self, xmlRoot):
+      """parses <MODE-ACCESS-POINT>"""
+      assert(xmlRoot.tag == 'MODE-ACCESS-POINT')
+      modeGroupInstanceRef = None
+      for xmlElem in xmlRoot.findall('./*'):
+         if xmlElem.tag == 'MODE-GROUP-IREF':
+            for childElem in xmlElem.findall('./*'):
+               if childElem.tag == 'R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF':
+                  if modeGroupInstanceRef is None:
+                     modeGroupInstanceRef=self._parseModeGroupInstanceRef(childElem)
+                  else:
+                     NotImplementedError('Multiple instances of R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF not implemented')
+               else:
+                  raise NotImplementedError(childElem.tag)            
+         else:
+            raise NotImplementedError(xmlElem.tag)
+      if modeGroupInstanceRef is None:
+         raise RuntimeError('R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF not set')
+      return modeGroupInstanceRef
+   
+   def _parseModeGroupInstanceRef(self, xmlRoot):
+      """parses <R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF>"""
+      assert(xmlRoot.tag == 'R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF')
+      (requirePortRef, modeGroupRef ) = (None, None)
+      for xmlElem in xmlRoot.findall('./*'):
+         if xmlElem.tag == 'CONTEXT-R-PORT-REF':
+            requirePortRef = self.parseTextNode(xmlElem)
+         elif xmlElem.tag == 'TARGET-MODE-GROUP-REF':
+            modeGroupRef = self.parseTextNode(xmlElem)
+         else:
+            raise NotImplementedError(xmlElem.tag)
+      if requirePortRef is None:
+         raise RuntimeError('CONTEXT-R-PORT-REF not set')
+      if requirePortRef is None:
+         raise RuntimeError('TARGET-MODE-GROUP-REF not set')
+      return ModeGroupInstanceRef(requirePortRef, modeGroupRef)
+         
+   
    def parseModeInstanceRef(self,xmlRoot,parent=None):
       """parses <MODE-IREF>"""      
       assert(xmlRoot.tag == 'MODE-IREF')
@@ -265,6 +318,7 @@ class BehaviorParser(ElementParser):
          raise NotImplemented('version: '+self.version)
       return ModeInstanceRef(modeDeclarationRef,modeDeclarationGroupPrototypeRef,requirePortPrototypeRef)
 
+   
    def _parseModeDependency(self,xmlRoot,parent=None):
       """parses <MODE-DEPENDENCY>"""
       assert(xmlRoot.tag == 'MODE-DEPENDENCY')
@@ -510,3 +564,76 @@ class BehaviorParser(ElementParser):
       assert (xmlPortPrototypeRef is not None)
       assert (xmlTargetDataPrototypeRef is not None)
       return VariableAccess(parseTextNode(xmlRoot.find('SHORT-NAME')),parseTextNode(xmlPortPrototypeRef), parseTextNode(xmlTargetDataPrototypeRef))
+
+   def parseSwcServiceDependency(self, xmlRoot):
+      """parses <SWC-SERVICE-DEPENDENCY>"""
+      assert(xmlRoot.tag == 'SWC-SERVICE-DEPENDENCY')
+      (name, xmlDesc) = (None, None)
+      for xmlElem in xmlRoot.findall('./*'):
+         if xmlElem.tag == 'SHORT-NAME':
+            name = self.parseTextNode(xmlElem)
+         elif xmlElem.tag == 'DESC':
+            xmlDesc = xmlElem
+         elif xmlElem.tag == 'ASSIGNED-DATAS':
+            for xmlChildElem in xmlElem.findall('./*'):
+               if xmlChildElem.tag == 'ROLE-BASED-DATA-ASSIGNMENT':
+                  pass
+               else:
+                  raise NotImplementedError(xmlChildElem.tag)
+         elif xmlElem.tag == 'ASSIGNED-PORTS':
+            for xmlChildElem in xmlElem.findall('./*'):
+               if xmlChildElem.tag == 'ROLE-BASED-PORT-ASSIGNMENT':
+                  pass
+               else:
+                  raise NotImplementedError(xmlChildElem.tag)
+         elif xmlElem.tag == 'SERVICE-NEEDS':
+            serviceNeeds = self.parseServiceNeeds(xmlElem)
+         else:
+            raise NotImplementedError(xmlElem.tag)
+   
+   def parseParameterDataPrototype(self, xmlRoot):
+      """parses <PARAMETER-DATA-PROTOTYPE> (AUTOSAR 4)""" 
+      assert(xmlRoot.tag == 'PARAMETER-DATA-PROTOTYPE')
+      (name, xmlDesc) = (None, None)
+      for xmlElem in xmlRoot.findall('./*'):
+         if xmlElem.tag == 'SHORT-NAME':
+            name = self.parseTextNode(xmlElem)
+         elif xmlElem.tag == 'DESC':
+            xmlDesc = xmlElem
+         elif xmlElem.tag == 'SW-DATA-DEF-PROPS':
+            pass
+         elif xmlElem.tag == 'TYPE-TREF':
+            pass
+         else:
+            raise NotImplementedError(xmlElem.tag)
+
+   def parseServiceNeeds(self, xmlRoot):
+      """parses <SERVICE-NEEDS> (AUTOSAR 4)"""
+      assert(xmlRoot.tag == 'SERVICE-NEEDS')
+      for xmlElem in xmlRoot.findall('./*'):
+         if xmlElem.tag == 'NV-BLOCK-NEEDS':
+            nvBlockNeeds = self.parseNvBlockNeeds(xmlElem)
+         else:
+            raise NotImplementedError(xmlElem.tag)
+   
+   def parseNvBlockNeeds(self, xmlRoot):
+      """parses <NV-BLOCK-NEEDS> (AUTOSAR 4)"""
+      (name, adminData) = (None, None)
+      for xmlElem in xmlRoot.findall('./*'):
+         if xmlElem.tag == 'SHORT-NAME':
+            name = self.parseTextNode(xmlElem)
+         elif xmlElem.tag == 'ADMIN-DATA':
+            adminData = self.parseAdminDataNode(xmlElem)
+         elif xmlElem.tag == 'N-DATA-SETS':
+            numberOfDataSets = self.parseIntNode(xmlElem)
+         elif xmlElem.tag == 'RAM-BLOCK-STATUS-CONTROL':
+            pass
+         elif xmlElem.tag == 'RELIABILITY':
+            pass
+         elif xmlElem.tag == 'RESTORE-AT-START':
+            pass
+         elif xmlElem.tag == 'STORE-AT-SHUTDOWN':
+            pass
+         else:
+            raise NotImplementedError(xmlElem.tag)
+## CONTINUE HERE         if 
