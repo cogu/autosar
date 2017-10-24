@@ -220,9 +220,9 @@ class ModeGroup(Element):
    
    def tag(self,version=None):
       if version>=4.0:
-         return "MODE-DECLARATION-GROUP-PROTOTYPE"
-      else:
          return "MODE-GROUP"
+      else:
+         return "MODE-DECLARATION-GROUP-PROTOTYPE"
    
    def asdict(self):
       return {'type': self.__class__.__name__, 'name':self.name, 'typeRef':self.typeRef}

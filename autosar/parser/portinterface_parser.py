@@ -1,6 +1,7 @@
 from autosar.base import hasAdminData,parseAdminDataNode,parseTextNode
 import autosar.portinterface
 import autosar.base
+import autosar.element
 from autosar.parser.parser_base import ElementParser
 
 class PortInterfacePackageParser(ElementParser):
@@ -44,6 +45,8 @@ class PortInterfacePackageParser(ElementParser):
             xmlDataElements = xmlElem
          elif xmlElem.tag == 'INVALIDATION-POLICYS':
             xmlInvalidationPolicys = xmlElem
+         elif xmlElem.tag == 'MODE-GROUPS':
+            xmlModeGroups = xmlElem
          else:
             raise NotImplementedError(xmlElem.tag)
          
@@ -68,12 +71,17 @@ class PortInterfacePackageParser(ElementParser):
                   portInterface.addInvalidationPolicy(invalidationPolicy)
                else:
                   raise NotImplementedError(xmlChild.tag)
+         if self.version < 4.0 and xmlModeGroups is not None:
+            portInterface.modeGroups=[]
+            for xmlItem in xmlModeGroups.findall('./MODE-DECLARATION-GROUP-PROTOTYPE'):
+               modeGroup = autosar.portinterface.ModeGroup(xmlItem.find("./SHORT-NAME").text,xmlItem.find("./TYPE-TREF").text,portInterface)                     
+               portInterface.modeGroups.append(modeGroup)
          return portInterface
    
-   def parseDataElement(self, xmlElement, parent):
+   def parseDataElement(self, xmlRoot, parent):
       assert(xmlRoot.tag == 'DATA-ELEMENT-PROTOTYPE')
       (name, typeRef, isQueued) = (None, None, False)
-      for xmlElem in xmlArgument.findall('./*'):
+      for xmlElem in xmlRoot.findall('./*'):
          if xmlElem.tag == 'SHORT-NAME':
             name = self.parseTextNode(xmlElem)
          elif xmlElem.tag == 'TYPE-TREF':
@@ -83,7 +91,7 @@ class PortInterfacePackageParser(ElementParser):
          else:
             raise NotImplementedError(xmlElem.tag)
       if (name is not None) and (typeRef is not None):
-         return autosar.base.DataElement(name, typeRef, isQueued, parent=parent)
+         return autosar.element.DataElement(name, typeRef, isQueued, parent=parent)
       else:
          raise RuntimeError('SHORT-NAME and TYPE-TREF must not be None')
 
@@ -132,13 +140,13 @@ class PortInterfacePackageParser(ElementParser):
             xmlElemName = xmlElem.find("./SHORT-NAME")
             if xmlElemName is not None:
                typeRef=xmlElem.find("./TYPE-TREF").text
-               dataElem = autosar.portinterface.DataElement(xmlElemName.text,typeRef,parent=portInterface)
+               parameter = autosar.portinterface.Parameter(xmlElemName.text,typeRef,parent=portInterface)
                if hasAdminData(xmlElem):
-                  dataElem.adminData=parseAdminDataNode(xmlElem.find('ADMIN-DATA'))
+                  parameter.adminData=parseAdminDataNode(xmlElem.find('ADMIN-DATA'))
                if xmlElem.find('SW-DATA-DEF-PROPS'):
                   for xmlItem in xmlElem.findall('SW-DATA-DEF-PROPS/SW-ADDR-METHOD-REF'):
-                     dataElem.swAddrMethodRefList.append(xmlItem.text)
-               portInterface.dataElements.append(dataElem)
+                     parameter.swAddressMethodRef = self.parseTextNode(xmlItem)
+               portInterface.elements.append(parameter)
          return portInterface
 
    def parseClientServerInterface(self,xmlRoot,parent=None):
@@ -156,7 +164,7 @@ class PortInterfacePackageParser(ElementParser):
                      portInterface.isService = True
                elif xmlElem.tag == 'OPERATIONS':
                   for xmlChildItem in xmlElem.findall('./*'):
-                     if (self.version < 4.0 and xmlChildItem.tag == 'OPERATION') or (self.version >= 4.0 and xmlChildItem.tag == 'CLIENT-SERVER-OPERATION'):
+                     if (self.version < 4.0 and xmlChildItem.tag == 'OPERATION-PROTOTYPE') or (self.version >= 4.0 and xmlChildItem.tag == 'CLIENT-SERVER-OPERATION'):
                         operation = self._parseOperationPrototype(xmlChildItem, portInterface)
                         portInterface.operations.append(operation)
                      else:

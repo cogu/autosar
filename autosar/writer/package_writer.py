@@ -126,7 +126,7 @@ class PackageWriter(WriterBase):
          filtered_packages = filter_packages(package.subPackages, filters)
          if self.version >= 3.0 and self.version < 4.0:
             lines.append(self.indent("<SUB-PACKAGES>",1))            
-            for package in filtered_packages:            
+            for subPackage in filtered_packages:            
                lines.extend(self.indent(self.toXML(subPackage, filters, ignore),2))
             lines.append(self.indent("</SUB-PACKAGES>",1))
          elif self.version >= 4.0:

@@ -39,7 +39,7 @@ class ConstantParser(ElementParser):
       if (name is not None) and ((xmlValue is not None) or (xmlValueSpec is not None)):
          constant = autosar.constant.Constant(name, parent=parent, adminData=adminData)
          if xmlValue is not None:
-            constant.value = self._parseValueV3(xmlValue, constant)
+            constant.value = self._parseValueV3(xmlValue.find('./*') , constant)
          elif xmlValueSpec is not None:
             values = self.parseValueV4(xmlValueSpec, constant)
             if len(values) != 1:
@@ -71,7 +71,7 @@ class ConstantParser(ElementParser):
             else:
                constantValue=autosar.constant.ArrayValue(name, typeRef, parent=parent)
             for innerElem in xmlValue.findall('./ELEMENTS/*'):
-               innerConstant = self._parseConstantValue(innerElem, constantValue)
+               innerConstant = self._parseValueV3(innerElem, constantValue)
                if innerConstant is not None:
                   constantValue.elements.append(innerConstant)
       return constantValue
