@@ -50,3 +50,50 @@ class Element(object):
    
    def __deepcopy__(self,memo):
       raise NotImplementedError(type(self))
+
+class DataElement(Element):
+   def tag(self,version): return "VARIABLE-DATA-PROTOTYPE" if version >= 4.0 else "DATA-ELEMENT-PROTOTYPE"
+   def __init__(self, name, typeRef, isQueued=False, softwareAddressMethodRef=None, swCalibrationAccess=None, parent=None, adminData=None):
+      super().__init__(name,parent,adminData)
+      if isinstance(typeRef,str):
+         self.typeRef=typeRef
+      elif hasattr(typeRef,'ref'):
+         assert(isinstance(typeRef.ref,str))
+         self.typeRef=typeRef.ref
+      else:
+         raise ValueError("unsupported type for argument: typeRef")
+      assert(isinstance(isQueued,bool))
+      self.isQueued=isQueued
+      self.softwareAddressMethodRef = softwareAddressMethodRef
+      self.swCalibrationAccess = swCalibrationAccess
+      self._swImplPolicy = "STANDARD"
+      
+   
+   @property
+   def swImplPolicy(self):
+      return self._swImplPolicy
+
+   @swImplPolicy.setter
+   def swImplPolicy(self, value):
+      ucvalue=str(value).upper()
+      enum_values = ["CONST", "FIXED", "MEASUREMENT-POINT", "QUEUED", "STANDARD"]
+      if ucvalue in enum_values:
+         self._swImplPolicy = ucvalue
+      else:
+         raise ValueError('invalid swImplPolicy value: ' +  value)
+ 
+   def setProps(self, variant):
+      if isinstance(variant, autosar.base.SwDataDefPropsConditional):
+         if variant.swCalibrationAccess is not None:
+            self.swCalibrationAccess=variant.swCalibrationAccess
+         if variant.swAddressMethodRef is not None:
+            self.softwareAddressMethodRef = variant.swAddressMethodRef
+      else:
+         raise NotImplementedError(type(variant))
+
+   # def asdict(self):
+   #    data = {'type': self.__class__.__name__, 'name': self.name, 'isQueued': self.isQueued, 'typeRef': self.typeRef}
+   #    data['adminData']=self.adminData.asdict() if self.adminData is not None else None
+   #    if len(self.swAddrMethodRefList)>0:
+   #       data['swAddrMethodRef']=self.swAddrMethodRefList[:]
+   #    return data

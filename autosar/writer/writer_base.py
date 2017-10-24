@@ -2,6 +2,7 @@ import autosar.base
 import xml.sax.saxutils
 import json
 import collections
+from autosar.element import DataElement
 
 class WriterBase():
    def __init__(self,version=3.0):
@@ -67,12 +68,13 @@ class WriterBase():
                lines.append(self.indent('<SDG GID="%s">'%sdg.SDG_GID,2))
             else:
                lines.append(self.indent('<SDG>',2))
-            if (sdg.SD is not None) and (sdg.SD_GID is not None):
-               lines.append(self.indent('<SD GID="%s">%s</SD>'%(sdg.SD_GID,sdg.SD),3))
-            elif (sdg.SD is None) and (sdg.SD_GID is not None):
-               lines.append(self.indent('<SD GID="%s"></SD>'%(sdg.SD_GID),3))
-            elif (sdg.SD is not None) and (sdg.SD_GID is None):
-               lines.append(self.indent('<SD>%s</SD>'%(sdg.SD),3))
+            for sd in sdg.SD:
+               if (sd.TEXT is not None) and (sd.GID is not None):
+                  lines.append(self.indent('<SD GID="%s">%s</SD>'%(sd.GID, sd.TEXT),3))
+               elif (sd.TEXT is None) and (sd.GID is not None):
+                  lines.append(self.indent('<SD GID="%s"></SD>'%(sd.GID),3))
+               elif (sd.TEXT is not None) and (sd.GID is None):
+                  lines.append(self.indent('<SD>%s</SD>'%(sd.TEXT),3))
             lines.append(self.indent('</SDG>',2))
          lines.append(self.indent('</SDGS>',1))
       else:
@@ -88,7 +90,10 @@ class WriterBase():
             descAttr='FOR-ALL'
          lines = []
          lines.append('<DESC>')
-         lines.append(self.indent('<L-2 L="%s">%s</L-2>'%(descAttr,xml.sax.saxutils.escape(elem.desc)),1))
+         if elem.desc is None or len(elem.desc)==0:
+            lines.append(self.indent('<L-2 L="%s" />'%(descAttr),1))
+         else:
+            lines.append(self.indent('<L-2 L="%s">%s</L-2>'%(descAttr,xml.sax.saxutils.escape(elem.desc)),1))
          lines.append('</DESC>')
          return lines
       return None
@@ -265,3 +270,31 @@ class WriterBase():
          lines.extend(self.indent(self.writeValueSpecificationXML(elem),1))
       lines.append('</ELEMENTS>')
       return lines
+
+   def writeDataElementXML(self, elem):
+      assert(isinstance(elem,DataElement))
+      lines=[]
+      ws = elem.rootWS()
+      lines.append('<%s>'%elem.tag(self.version))
+      lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
+      if self.version >= 4.0:
+         lines.append(self.indent('<SW-DATA-DEF-PROPS>',1))         
+         if elem.swCalibrationAccess is None:
+            tmp = 'NOT-ACCESSIBLE'
+         else:
+            tmp = elem.swCalibrationAccess
+         variant = autosar.base.SwDataDefPropsConditional(swCalibrationAccess=tmp)
+         variant.swImplPolicy = elem.swImplPolicy
+         lines.extend(self.indent(self.writeSwDataDefPropsVariantsXML(ws, [variant]),2))
+         lines.append(self.indent('</SW-DATA-DEF-PROPS>',1))
+      
+      typeElem = ws.find(elem.typeRef, role="DataType")
+      if (typeElem is None):
+         raise ValueError("invalid type reference: '%s'"%elem.typeRef)
+      else:
+         lines.append(self.indent('<TYPE-TREF DEST="%s">%s</TYPE-TREF>'%(typeElem.tag(self.version),typeElem.ref),1))
+      if self.version < 4.0:
+         lines.append(self.indent('<IS-QUEUED>%s</IS-QUEUED>'%self.toBoolean(elem.isQueued),1))
+      lines.append('</%s>'%elem.tag(self.version))
+      return lines
+   

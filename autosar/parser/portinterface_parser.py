@@ -1,5 +1,6 @@
 from autosar.base import hasAdminData,parseAdminDataNode,parseTextNode
 import autosar.portinterface
+import autosar.base
 from autosar.parser.parser_base import ElementParser
 
 class PortInterfacePackageParser(ElementParser):
@@ -49,10 +50,10 @@ class PortInterfacePackageParser(ElementParser):
       if (name is not None) and (xmlDataElements is not None):
          portInterface = autosar.portinterface.SenderReceiverInterface(name, isService, parent, adminData)
          if self.version >= 4.0:
-            elemParser = self._parseDataElementV4
+            elemParser = self.parseVariableDataPrototype
             dataElemTag = 'VARIABLE-DATA-PROTOTYPE'  
          else:
-            elemParser = self._parseDataElementV3
+            elemParser = self.parseDataElement
             dataElemTag = 'DATA-ELEMENT-PROTOTYPE'
          for xmlChild in xmlDataElements.findall('./*'):
             if xmlChild.tag == dataElemTag:
@@ -69,7 +70,8 @@ class PortInterfacePackageParser(ElementParser):
                   raise NotImplementedError(xmlChild.tag)
          return portInterface
    
-   def _parseDataElementV3(self, xmlElement, parent):
+   def parseDataElement(self, xmlElement, parent):
+      assert(xmlRoot.tag == 'DATA-ELEMENT-PROTOTYPE')
       (name, typeRef, isQueued) = (None, None, False)
       for xmlElem in xmlArgument.findall('./*'):
          if xmlElem.tag == 'SHORT-NAME':
@@ -81,28 +83,10 @@ class PortInterfacePackageParser(ElementParser):
          else:
             raise NotImplementedError(xmlElem.tag)
       if (name is not None) and (typeRef is not None):
-         return autosar.portinterface.DataElement(name, typeRef, isQueued, parent=parent)
+         return autosar.base.DataElement(name, typeRef, isQueued, parent=parent)
       else:
          raise RuntimeError('SHORT-NAME and TYPE-TREF must not be None')
 
-   def _parseDataElementV4(self, xmlElement, parent):
-      (name, typeRef, props_variants, isQueued) = (None, None, None, False)
-      for xmlElem in xmlElement.findall('./*'):
-         if xmlElem.tag == 'SHORT-NAME':
-            name = self.parseTextNode(xmlElem)
-         elif xmlElem.tag == 'TYPE-TREF':
-            typeRef = self.parseTextNode(xmlElem)
-         elif xmlElem.tag == 'SW-DATA-DEF-PROPS':
-            props_variants = self.parseSwDataDefProps(xmlElem)
-         else:
-            raise NotImplementedError(xmlElem.tag)
-      if (name is not None) and (typeRef is not None):
-         dataElement = autosar.portinterface.DataElement(name, typeRef, isQueued, parent=parent)
-         if props_variants is not None:
-            dataElement.swCalibrationAccess=props_variants[0].swCalibrationAccess
-         return dataElement
-      else:
-         raise RuntimeError('SHORT-NAME and TYPE-TREF must not be None')
       
    def _parseInvalidationPolicy(self, xmlRoot):
       (dataElementRef, handleInvalid) = (None, None)

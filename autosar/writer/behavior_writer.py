@@ -9,7 +9,7 @@ class BehaviorWriter(WriterBase):
    
    def writeInternalBehaviorXML(self,internalBehavior,package):
       
-      assert(isinstance(internalBehavior,autosar.behavior.InternalBehavior))
+      assert(isinstance(internalBehavior, (autosar.behavior.InternalBehavior, autosar.behavior.SwcInternalBehavior)))
       lines=[]
       ws = internalBehavior.rootWS()
       assert(ws is not None)
@@ -19,6 +19,11 @@ class BehaviorWriter(WriterBase):
       assert(swc is not None)
       if self.version < 4.0:
          lines.append(self.indent('<COMPONENT-REF DEST="%s">%s</COMPONENT-REF>'%(swc.tag(self.version),swc.ref),1))
+      if isinstance(internalBehavior, autosar.behavior.SwcInternalBehavior) and len(internalBehavior.perInstanceMemories)>0:
+         lines.append(self.indent('<AR-TYPED-PER-INSTANCE-MEMORYS>',1))
+         for elem in internalBehavior.perInstanceMemories:
+            lines.extend(self.indent(self.writeDataElementXML(elem),2))
+         lines.append(self.indent('</AR-TYPED-PER-INSTANCE-MEMORYS>',1))
       if len(internalBehavior.events):
          lines.append(self.indent('<EVENTS>',1))
          for event in internalBehavior.events:
@@ -31,7 +36,7 @@ class BehaviorWriter(WriterBase):
          lines.append(self.indent('</EXCLUSIVE-AREAS>',1))                        
       if len(internalBehavior.portAPIOptions)==0:         
          internalBehavior.createPortAPIOptionDefaults() #try to automatically create PortAPIOption objects on behavior object
-      if len(internalBehavior.perInstanceMemories)>0:
+      if isinstance(internalBehavior, autosar.behavior.InternalBehavior) and len(internalBehavior.perInstanceMemories)>0:
          lines.append(self.indent('<PER-INSTANCE-MEMORYS>',1))
          for memory in internalBehavior.perInstanceMemories:
             lines.extend(self.indent(self._writePerInstanceMemoryXML(ws,memory),2))
@@ -43,12 +48,17 @@ class BehaviorWriter(WriterBase):
          for runnable in internalBehavior.runnables:
             lines.extend(self.indent(self._writeRunnableXML(runnable),2))
          lines.append(self.indent('</RUNNABLES>',1))
-      if len(internalBehavior.swcNvBlockNeeds)>0:
+      if isinstance(internalBehavior, autosar.behavior.InternalBehavior) and len(internalBehavior.swcNvBlockNeeds)>0:
          lines.append(self.indent('<SERVICE-NEEDSS>',1))
          for elem in internalBehavior.swcNvBlockNeeds:
             lines.extend(self.indent(self._writeSwcNvBlockNeedsXML(ws, elem),2))
          lines.append(self.indent('</SERVICE-NEEDSS>',1))
-      if len(internalBehavior.sharedCalParams)>0:
+      elif isinstance(internalBehavior, autosar.behavior.SwcInternalBehavior) and len(internalBehavior.serviceDependencies)>0:
+         lines.append(self.indent('<SERVICE-DEPENDENCYS>',1))
+         for serviceDependency in internalBehavior.serviceDependencies:
+            lines.extend(self.indent(self._writeServiceDependencyXML(ws, serviceDependency),2))
+         lines.append(self.indent('</SERVICE-DEPENDENCYS>',1))
+      if isinstance(internalBehavior, autosar.behavior.InternalBehavior) and len(internalBehavior.sharedCalParams)>0:
          lines.append(self.indent('<SHARED-CALPRMS>',1))
          for elem in internalBehavior.sharedCalParams:
             lines.extend(self.indent(self._writeSharedCalParamXML(ws, elem),2))
@@ -189,7 +199,7 @@ class BehaviorWriter(WriterBase):
    def _writePortAPIOptionsXML(self,internalBehavior):
       ws=internalBehavior.rootWS()
       assert(ws is not None)
-      assert(isinstance(internalBehavior,autosar.behavior.InternalBehavior))
+      assert(isinstance(internalBehavior, (autosar.behavior.InternalBehavior, autosar.behavior.SwcInternalBehavior)))
       lines=['<PORT-API-OPTIONS>']
       for option in internalBehavior.portAPIOptions:
          lines.extend(self.indent(self._writePortAPIOption(ws,option),1))         
@@ -391,6 +401,51 @@ class BehaviorWriter(WriterBase):
       lines.append('</%s>'%elem.tag(self.version))
       return lines
 
+   def _writeServiceDependencyXML(self, ws, elem):
+      assert(isinstance(elem, autosar.behavior.SwcServiceDependency))
+      lines = []      
+      lines.append("<%s>"%elem.tag(self.version))
+      if elem.name is not None:
+         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
+      tmp = self.writeDescXML(elem)
+      if tmp is not None: lines.extend(self.indent(tmp,1))      
+      if elem.serviceNeeds is not None:
+         lines.extend(self.indent(self._writeServiceNeedsXML(ws, elem.serviceNeeds),1))         
+      lines.append("</%s>"%elem.tag(self.version))
+      return lines
+
+   def _writeServiceNeedsXML(self, ws, elem):
+      assert(isinstance(elem, autosar.behavior.ServiceNeeds))
+      lines = []
+      lines.append("<%s>"%elem.tag(self.version))
+      if elem.name is not None:
+         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
+      tmp = self.writeDescXML(elem)
+      if tmp is not None: lines.extend(self.indent(tmp,1))      
+      if elem.nvBlockNeeds is not None:
+         lines.extend(self.indent(self._writeNvBlockNeedsXML(ws, elem.nvBlockNeeds),1))
+      lines.append("</%s>"%elem.tag(self.version))
+      return lines
+
+   def _writeNvBlockNeedsXML(self, ws, elem):
+      assert(isinstance(elem, autosar.behavior.NvBlockNeeds))
+      lines = []
+      lines.append("<%s>"%elem.tag(self.version))
+      if elem.name is not None:
+         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
+      if elem.adminData is not None:
+         lines.extend(self.indent(self.writeAdminDataXML(elem.adminData),1))
+      tmp = self.writeDescXML(elem)
+      if tmp is not None: lines.extend(self.indent(tmp,1))      
+      lines.append(self.indent('<N-DATA-SETS>%d</N-DATA-SETS>'%(int(elem.numberOfDataSets)),1))
+      lines.append(self.indent('<RAM-BLOCK-STATUS-CONTROL>%s</RAM-BLOCK-STATUS-CONTROL>'%(elem.ramBlockStatusControl),1))
+      lines.append(self.indent('<RELIABILITY>%s</RELIABILITY>'%(elem.reliability),1))      
+      lines.append(self.indent('<RESTORE-AT-START>%s</RESTORE-AT-START>'%('true' if elem.restoreAtStart else 'false'),1))
+      lines.append(self.indent('<STORE-AT-SHUTDOWN>%s</STORE-AT-SHUTDOWN>'%('true' if elem.storeAtShutdown else 'false'),1))
+
+      lines.append("</%s>"%elem.tag(self.version))
+      return lines
+   
    ### code generators
    def writeInternalBehaviorCode(self, behavior, localvars):
       lines=[]      
@@ -645,3 +700,4 @@ class BehaviorWriter(WriterBase):
          else:
             lines.append("'serviceCallPorts': [%s]"%(', '.join(params)))
       return lines
+   

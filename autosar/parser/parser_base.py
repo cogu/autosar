@@ -1,5 +1,6 @@
 import abc
-from autosar.base import AdminData, SpecialDataGroup, SwDataDefPropsConditional, SwPointerTargetProps
+from autosar.base import (AdminData, SpecialDataGroup, SpecialData, SwDataDefPropsConditional, SwPointerTargetProps)
+from autosar.element import DataElement
 
 def _parseBoolean(value):
    if value is None:
@@ -14,14 +15,23 @@ class BaseParser():
       self.version=version
 
    def parseDesc(self,xmlRoot,elem):
-      descXml = xmlRoot.find('DESC')
-      if descXml is not None:
-         L2Xml = descXml.find('L-2')
+      xmlDesc = xmlRoot.find('DESC')
+      if xmlDesc is not None:
+         L2Xml = xmlDesc.find('L-2')
          if L2Xml is not None:
             L2Text=self.parseTextNode(L2Xml)
             L2Attr=L2Xml.attrib['L']
             elem.desc=L2Text
             elem.descAttr=L2Attr
+   
+   def parseDescDirect(self,xmlDesc):
+      assert(xmlDesc.tag == 'DESC')
+      L2Xml = xmlDesc.find('L-2')
+      if L2Xml is not None:
+         L2Text=self.parseTextNode(L2Xml)
+         L2Attr=L2Xml.attrib['L']
+         return (L2Text, L2Attr)
+      return (None, None)
 
    def parseTextNode(self, xmlElem):
       return None if xmlElem is None else xmlElem.text
@@ -45,16 +55,19 @@ class BaseParser():
       xmlSDGS = xmlRoot.find('./SDGS')
       if xmlSDGS is not None:
          for xmlElem in xmlSDGS.findall('./SDG'):
-            GID=xmlElem.attrib['GID']
-            SD=None
-            SD_GID=None
-            xmlSD = xmlElem.find('SD')
-            if xmlSD is not None:
-               SD=xmlSD.text
-               try:
-                  SD_GID=xmlSD.attrib['GID']
-               except KeyError: pass
-            adminData.specialDataGroups.append(SpecialDataGroup(GID,SD,SD_GID))
+            SDG_GID=xmlElem.attrib['GID']
+            specialDataGroup = SpecialDataGroup(SDG_GID)
+            for xmlChild in xmlElem.findall('./*'):
+               if xmlChild.tag == 'SD':
+                  SD_GID = None
+                  TEXT=xmlChild.text
+                  try:
+                     SD_GID=xmlChild.attrib['GID']
+                  except KeyError: pass
+                  specialDataGroup.SD.append(SpecialData(TEXT, SD_GID))   
+               else:
+                  raise NotImplementedError(xmlChild.tag)
+            adminData.specialDataGroups.append(specialDataGroup)
       return adminData
    
    def parseSwDataDefProps(self, xmlRoot):
@@ -113,7 +126,24 @@ class BaseParser():
             props.variants = self.parseSwDataDefProps(itemXML)
       return props
 
-
+   def parseVariableDataPrototype(self, xmlRoot, parent):
+      assert(xmlRoot.tag == 'VARIABLE-DATA-PROTOTYPE')
+      (name, typeRef, props_variants, isQueued) = (None, None, None, False)
+      for xmlElem in xmlRoot.findall('./*'):
+         if xmlElem.tag == 'SHORT-NAME':
+            name = self.parseTextNode(xmlElem)
+         elif xmlElem.tag == 'TYPE-TREF':
+            typeRef = self.parseTextNode(xmlElem)
+         elif xmlElem.tag == 'SW-DATA-DEF-PROPS':
+            props_variants = self.parseSwDataDefProps(xmlElem)
+         else:
+            raise NotImplementedError(xmlElem.tag)
+      if (name is not None) and (typeRef is not None):
+         dataElement = DataElement(name, typeRef, isQueued, parent=parent)
+         dataElement.setProps(props_variants[0])
+         return dataElement
+      else:
+         raise RuntimeError('SHORT-NAME and TYPE-TREF must not be None')
 
 class ElementParser(BaseParser, metaclass=abc.ABCMeta):
    

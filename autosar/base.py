@@ -25,23 +25,33 @@ class AdminData(object):
 class SpecialDataGroup(object):
    def __init__(self,SDG_GID,SD=None,SD_GID=None):
       self.SDG_GID=SDG_GID
-      self.SD=SD
-      self.SD_GID=SD_GID
+      self.SD = []
+      if SD is not None or SD_GID is not None:
+         self.SD.append(SpecialData(SD, SD_GID))
       
-   def asdict(self):
-      data = {'type': self.__class__.__name__}
-      if self.SDG_GID is not None: data['SDG_GID']=self.SDG_GID
-      if self.SD is not None: data['SD']=self.SD
-      if self.SD_GID is not None: data['SD_GID']=self.SD_GID
-      return data
+   # def asdict(self):
+   #    data = {'type': self.__class__.__name__}
+   #    if self.SDG_GID is not None: data['SDG_GID']=self.SDG_GID
+   #    if self.SD is not None: data['SD']=self.SD
+   #    if self.SD_GID is not None: data['SD_GID']=self.SD_GID
+   #    return data
    
    def __eq__(self, other):
       if isinstance(other, self.__class__):
-         if self.SDG_GID == other.SDG_GID and self.SD == other.SD and self.SD_GID == other.SD_GID: return True
+         if self.SDG_GID == other.SDG_GID:
+            for i,SD in enumerate(self.SD):
+               other_SD = other.SD[i]
+               if SD.TEXT != other_SD.TEXT or SD.GID != other_SD.GID:
+                  return False
+            return True
       return False
    
    def __ne__(self, other): return not (self == other)
-   
+
+class SpecialData:
+   def __init__(self, TEXT, GID):
+      self.TEXT = TEXT
+      self.GID = GID
 
 def removeNamespace(doc, namespace):
    """Removes XML namespace in place."""

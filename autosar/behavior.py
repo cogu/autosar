@@ -2,7 +2,7 @@ import copy
 import autosar.component
 import autosar.portinterface
 import autosar.base
-from autosar.element import Element
+from autosar.element import Element,DataElement
 import collections
 
 ###################################### Events ###########################################
@@ -393,7 +393,8 @@ class NvBlockNeeds(Element):
       self.restoreAtStart = restoreAtStart
       assert(isinstance(storeAtShutdown,bool))
       self.storeAtShutdown = storeAtShutdown
-      
+   
+   def tag(self, version): return 'NV-BLOCK-NEEDS'
 
 class RoleBasedRPortAssignment(object):
    def __init__(self,portRef,role):
@@ -456,56 +457,85 @@ class SyncServerCallPoint(object):
       data['operationInstanceRefs'] = [x.asdict() for x in self.operationInstanceRefs]
       if len(data['operationInstanceRefs'])==0: del data['operationInstanceRefs']
       return data
-   
-class InternalBehavior(Element):
-   """ InternalBehavior class """
-   def __init__(self,name,componentRef,multipleInstance=False,parent=None):
-      super().__init__(name,parent)
+
+class InternalBehaviorCommon(Element):
+   """
+   Base class for InternalBehavior (AUTOSAR 3) and SwcInternalBehavior (AUTOSAR 4)
+   """
+   def __init__(self, name, componentRef, multipleInstance=False, parent=None, adminData=None):
+      super().__init__(name, parent, adminData)
       if not isinstance(componentRef,str): #this is a helper, in case the user called the function with obj instead of obj.ref
          if hasattr(componentRef,'ref'):
             componentRef=componentRef.ref
       if (componentRef is None) or (not isinstance(componentRef,str)):
          raise ValueError('componentRef: invalid reference')
       self.componentRef=str(componentRef)
-      self.parent=parent
       self.multipleInstance = bool(multipleInstance)
       self.events = []
       self.portAPIOptions = []
       self.runnables = []
+      self.exclusiveAreas=[]
       self.perInstanceMemories = []
+      self.swc = None
+
+   
+   def createPortAPIOptionDefaults(self):
+      self.portAPIOptions = []
+      self._initSWC()
+      ws = self.rootWS()
+      tmp = self.swc.providePorts+self.swc.requirePorts
+      for port in sorted(tmp,key=lambda x: x.name.lower()):
+         self.portAPIOptions.append(PortAPIOption(port.ref))               
+
+   def _initSWC(self):
+      """
+      sets up self.swc if not already setup
+      """
+      if self.swc is None:
+         ws = self.rootWS()
+         assert(ws is not None)
+         self.swc = ws.find(self.componentRef)
+      assert(self.swc is not None)
+
+
+class InternalBehavior(InternalBehaviorCommon):
+   """ InternalBehavior class (AUTOSAR 3)"""
+   def __init__(self,name, componentRef, multipleInstance=False,parent=None):
+      super().__init__(name, componentRef,multipleInstance, parent)
+      
       self.swcNvBlockNeeds = []
       self.sharedCalParams=[]
-      self.exclusiveAreas=[]
-      self.swc = None
-   def asdict(self):
-      data={'type': self.__class__.__name__,'name':self.name, 'multipleInstance':self.multipleInstance,
-            'componentRef':self.componentRef, 'events':[],'portAPIOptions':[],'runnables':[],'perInstanceMemories':[],
-            'swcNvBlockNeeds':[],'sharedCalPrms':[],'exclusiveAreas':[]}
-      for event in self.events:
-         data['events'].append(event.asdict())
-      for portAPIOption in self.portAPIOptions:
-         data['portAPIOptions'].append(portAPIOption.asdict())
-      for runnable in self.runnables:
-         data['runnables'].append(runnable.asdict())
-      for perInstanceMemory in self.perInstanceMemories:
-         data['perInstanceMemories'].append(perInstanceMemory.asdict())
-      for swcNvBlockNeed in self.swcNvBlockNeeds:
-         data['swcNvBlockNeeds'].append(swcNvBlockNeed.asdict())
-      for sharedCalPrm in self.sharedCalPrms:
-         data['sharedCalPrms'].append(sharedCalPrm.asdict())
-      for exclusiveArea in self.exclusiveAreas:
-         data['exclusiveAreas'].append(exclusiveArea.asdict())
-      if len(data['events'])==0: del data['events']
-      if len(data['portAPIOptions'])==0: del data['portAPIOptions']
-      if len(data['runnables'])==0: del data['runnables']
-      if len(data['perInstanceMemories'])==0: del data['perInstanceMemories']
-      if len(data['swcNvBlockNeeds'])==0: del data['swcNvBlockNeeds']
-      if len(data['sharedCalPrms'])==0: del data['sharedCalPrms']
-      if len(data['exclusiveAreas'])==0: del data['exclusiveAreas']
-      return data
+      
+      
+   # def asdict(self):
+   #    data={'type': self.__class__.__name__,'name':self.name, 'multipleInstance':self.multipleInstance,
+   #          'componentRef':self.componentRef, 'events':[],'portAPIOptions':[],'runnables':[],'perInstanceMemories':[],
+   #          'swcNvBlockNeeds':[],'sharedCalPrms':[],'exclusiveAreas':[]}
+   #    for event in self.events:
+   #       data['events'].append(event.asdict())
+   #    for portAPIOption in self.portAPIOptions:
+   #       data['portAPIOptions'].append(portAPIOption.asdict())
+   #    for runnable in self.runnables:
+   #       data['runnables'].append(runnable.asdict())
+   #    for perInstanceMemory in self.perInstanceMemories:
+   #       data['perInstanceMemories'].append(perInstanceMemory.asdict())
+   #    for swcNvBlockNeed in self.swcNvBlockNeeds:
+   #       data['swcNvBlockNeeds'].append(swcNvBlockNeed.asdict())
+   #    for sharedCalPrm in self.sharedCalPrms:
+   #       data['sharedCalPrms'].append(sharedCalPrm.asdict())
+   #    for exclusiveArea in self.exclusiveAreas:
+   #       data['exclusiveAreas'].append(exclusiveArea.asdict())
+   #    if len(data['events'])==0: del data['events']
+   #    if len(data['portAPIOptions'])==0: del data['portAPIOptions']
+   #    if len(data['runnables'])==0: del data['runnables']
+   #    if len(data['perInstanceMemories'])==0: del data['perInstanceMemories']
+   #    if len(data['swcNvBlockNeeds'])==0: del data['swcNvBlockNeeds']
+   #    if len(data['sharedCalPrms'])==0: del data['sharedCalPrms']
+   #    if len(data['exclusiveAreas'])==0: del data['exclusiveAreas']
+   #    return data
    
-   
-   def tag(self,version): return 'SWC-INTERNAL-BEHAVIOR' if version >= 4.0 else 'INTERNAL-BEHAVIOR'
+      
+   def tag(self, version): return 'INTERNAL-BEHAVIOR'
 
    def append(self,elem):
       if isinstance(elem,RunnableEntity):
@@ -598,16 +628,6 @@ class InternalBehavior(Element):
             raise ValueError('exclusiveAreas must be either string or list')
       return runnable
 
-
-   def createPortAPIOptionDefaults(self):
-      self.portAPIOptions = []
-      self._initSWC()
-      ws = self.rootWS()
-      tmp = self.swc.providePorts+self.swc.requirePorts
-      for port in sorted(tmp,key=lambda x: x.name.lower()):
-         self.portAPIOptions.append(PortAPIOption(port.ref))
-      
-         
 
    def _createSendReceivePoint(self,port,dataElement,runnable):
       """
@@ -960,16 +980,13 @@ class InternalBehavior(Element):
       return elem
 
    
-   def _initSWC(self, ):
-      """
-      sets up self.swc if not already setup
-      """
-      if self.swc is None:
-         ws = self.rootWS()
-         assert(ws is not None)
-         self.swc = ws.find(self.componentRef)
-      assert(self.swc is not None)
+
+class SwcInternalBehavior(InternalBehaviorCommon):
+   def __init__(self,name, componentRef, multipleInstance=False,parent=None):
+      super().__init__(name, componentRef, multipleInstance, parent)
+      self.serviceDependencies = [] #list of SwcServiceDependency objects
       
+   def tag(self, version): return "SWC-INTERNAL-BEHAVIOR"
 
 class VariableAccess(Element):
    def __init__(self, name, portPrototypeRef, targetDataPrototypeRef, parent=None):
@@ -980,3 +997,39 @@ class VariableAccess(Element):
    def tag(self, version=None):
       return 'VARIABLE-ACCESS'
 
+class ServiceNeeds(Element):
+   """
+   Represents <SERVICE-NEEDS> (AUTODSAR 4)
+   """
+   def tag(self, version): return 'SERVICE-NEEDS'
+   
+   def __init__(self, name = None, nvBlockNeeds = None, parent=None, adminData = None):
+      super().__init__(name, parent, adminData)
+      self.nvBlockNeeds = nvBlockNeeds
+
+class SwcServiceDependency(Element):
+   """
+   Represents <SWC-SERVICE-DEPENDENCY> (AUTODSAR 4)
+   """
+   def tag(self, version): return 'SWC-SERVICE-DEPENDENCY'
+   
+   def __init__(self, name=None, parent=None, adminData = None):
+      super().__init__(name, parent, adminData)
+      self._serviceNeeds = None
+      
+   @property
+   def serviceNeeds(self):
+      return self._serviceNeeds
+   
+   @serviceNeeds.setter
+   def serviceNeeds(self, elem):
+      elem.parent = self
+      self._serviceNeeds = elem
+
+class RoleBasedDataAssignment:
+   """
+   Represents <ROLE-BASED-DATA-ASSIGNMENT> (AUTOSAR 4)
+   """
+   def __init__(role, localVariableRef):
+      self.role = role
+      self.localVariableRef = localVariableRef
