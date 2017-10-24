@@ -36,6 +36,8 @@ class SenderReceiverInterface(PortInterface):
                for i,elem in enumerate(self.modeGroups):
                   if elem != other.modeGroups[i]: return False
             return True
+            for i,elem in enumerate(self.dataElements):
+               if elem != other.dataElements[i]: return False
       return False
    
    def __ne__(self, other):
@@ -226,8 +228,7 @@ class DataElement(Element):
       self.isQueued=isQueued
       self.softwareAddressMethodRef = softwareAddressMethodRef
       self.swCalibrationAccess = swCalibrationAccess
-      self._swImplPolicy = "STANDARD"
-      
+      self._swImplPolicy = "STANDARD"      
    
    @property
    def swImplPolicy(self):
@@ -241,7 +242,11 @@ class DataElement(Element):
          self._swImplPolicy = ucvalue
       else:
          raise ValueError('invalid swImplPolicy value: ' +  value)
-
+   
+   def __eq__(self, other):
+      if isinstance(other, self.__class__):
+         if self.name == other.name and self.adminData == other.adminData and self.typeRef == other.typeRef: return True
+      return False
       
    def asdict(self):
       data = {'type': self.__class__.__name__, 'name': self.name, 'isQueued': self.isQueued, 'typeRef': self.typeRef}

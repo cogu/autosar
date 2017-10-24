@@ -100,7 +100,19 @@ class ComponentType(Element):
    
    def apply(self, template):
       template.apply(self)
-
+   
+   def copyPort(self, otherPort):
+      """
+      Adds a copy of a port (from another component)
+      """
+      self.append(otherPort.copy())
+   
+   def mirrorPort(self, otherPort):
+      """
+      Adds a mirrored copy of a port (from another component)
+      """
+      self.append(otherPort.mirror())
+      
 class AtomicSoftwareComponent(ComponentType):
    """
    base class for ApplicationSoftwareComponent and ComplexDeviceDriverComponent
@@ -396,9 +408,12 @@ class Port(object):
          if operation is not None:
             return OperationComSpec(operation,queueLength)
       return None
+   
+      
             
       
 class RequirePort(Port):      
+   def tag(self,version=None): return "R-PORT-PROTOTYPE"
    def __init__(self,name,portInterfaceRef=None,comspec=None,parent=None):      
       if isinstance(name,str):
          #normal constructor
@@ -408,12 +423,29 @@ class RequirePort(Port):
          #copy constructor
          super().__init__(other.name, other.portInterfaceRef, parent)
          self.comspec=copy.deepcopy(other.comspec)
+      elif isinstance(name,ProvidePort):
+         other=name #alias
+         #copy constructor
+         super().__init__(other.name, other.portInterfaceRef, parent)
+         self.comspec=copy.deepcopy(other.comspec)
       else:
-         raise NotImplementedError(type(name))
+         raise NotImplementedError(type(name))   
+      
+   def copy(self):
+      """
+      returns a copy of itself
+      """
+      return RequirePort(self)
 
-   def tag(self,version=None): return "R-PORT-PROTOTYPE"
+   def mirror(self):
+      """
+      returns a mirrored copy of itself
+      """
+      return ProvidePort(self)
+
 
 class ProvidePort(Port):         
+   def tag(self,version=None): return "P-PORT-PROTOTYPE"
    def __init__(self,name,portInterfaceRef=None,comspec=None,parent=None):
       if isinstance(name,str):
       #normal constructor      
@@ -423,10 +455,26 @@ class ProvidePort(Port):
          #copy constructor
          super().__init__(other.name,other.portInterfaceRef,None)
          self.comspec=copy.deepcopy(other.comspec)
+      elif isinstance(name,RequirePort):
+         other=name #alias
+         #copy constructor
+         super().__init__(other.name, other.portInterfaceRef, parent)
+         self.comspec=copy.deepcopy(other.comspec)
       else:
          raise NotImplementedError(type(name))
       
-   def tag(self,version=None): return "P-PORT-PROTOTYPE"      
+   def copy(self):
+      """
+      returns a copy of itself
+      """
+      return ProvidePort(self)
+   
+   def mirror(self):
+      """
+      returns a mirrored copy of itself
+      """
+      return RequirePort(self)
+
 
 class OperationComSpec(object):
    def __init__(self,name=None,queueLength=1):
