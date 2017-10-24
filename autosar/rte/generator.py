@@ -569,7 +569,8 @@ class MockRteGenerator(RteGenerator):
       suffix = '*' if data_type.isComplexType else ''
       proto=C.function(func_name, data_type.name+suffix)
       rte_func = autosar.rte.base.DataElementFunction(proto, port, data_element)
-      self._createPortVariable(component, port, data_element)
+      #self._createPortVariable(component, port, data_element)
+      var_name = self._createDataElementVariable(component, port, data_element)
       self.partition.upperLayerAPI.get[short_name] = autosar.rte.base.GetPortFunction(short_name, proto, data_element)
 
    def _create_port_setter_api(self, port):
@@ -831,7 +832,7 @@ class RteTaskGenerator:
             for runnable in matching_runnables:
                block.append(C.statement(C.fcall(runnable.symbol)))
             code.append(block)
-      else:
+      elif len(events) > 1:      
          raise NotImplementedError('multiple events')
       
    def _generate_header(self, dest_dir):
