@@ -497,6 +497,19 @@ class InternalBehaviorCommon(Element):
          self.swc = ws.find(self.componentRef)
       assert(self.swc is not None)
 
+   def find(self,ref):
+      if ref is None: return None
+      if ref[0]=='/': ref=ref[1:] #removes initial '/' if it exists
+      ref=ref.partition('/')
+      name=ref[0]
+      for elem in self.runnables:
+         if elem.name == name: return elem      
+      for elem in self.perInstanceMemories:
+         if elem.name == name: return elem
+      for elem in self.exclusiveAreas:
+         if elem.name == name: return elem
+      return None
+
 
 class InternalBehavior(InternalBehaviorCommon):
    """ InternalBehavior class (AUTOSAR 3)"""
@@ -534,7 +547,7 @@ class InternalBehavior(InternalBehaviorCommon):
    #    if len(data['exclusiveAreas'])==0: del data['exclusiveAreas']
    #    return data
    
-      
+         
    def tag(self, version): return 'INTERNAL-BEHAVIOR'
 
    def append(self,elem):
@@ -544,20 +557,20 @@ class InternalBehavior(InternalBehaviorCommon):
       else:
          raise NotImplementedError(str(type(elem)))
 
-   def find(self,ref):      
+   def find(self, ref):
       if ref is None: return None
-      if ref[0]=='/': ref=ref[1:] #removes initial '/' if it exists
-      ref=ref.partition('/')
-      name=ref[0]
-      for elem in self.runnables:
-         if elem.name == name: return elem      
-      for elem in self.sharedCalParams:
-         if elem.name == name: return elem         
-      for elem in self.perInstanceMemories:
-         if elem.name == name: return elem
-      for elem in self.exclusiveAreas:
-         if elem.name == name: return elem
+      result = super().find(ref)
+      if result is None:
+         if ref[0]=='/': ref=ref[1:] #removes initial '/' if it exists
+         ref=ref.partition('/')
+         name=ref[0]
+         for elem in self.sharedCalParams:
+            if elem.name == name: return elem
+      else:
+         return result
       return None
+            
+
    
    def __getitem__(self,key):
       return self.find(key)

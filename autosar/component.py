@@ -133,7 +133,10 @@ class AtomicSoftwareComponent(ComponentType):
             return port
       if (ws is not None) and (ws.version >= 4.0) and (self.behavior is not None):
          if self.behavior.name == ref[0]:
-            return self.behavior
+            if len(ref[2])>0:
+               return self.behavior.find(ref[2])
+            else:         
+               return self.behavior
       return None
 
 
