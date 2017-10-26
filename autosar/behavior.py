@@ -1029,6 +1029,8 @@ class SwcServiceDependency(Element):
    def __init__(self, name=None, parent=None, adminData = None):
       super().__init__(name, parent, adminData)
       self._serviceNeeds = None
+      self.roleBasedDataAssignments = []
+      self.roleBasedPortAssignments = []
       
    @property
    def serviceNeeds(self):
@@ -1043,6 +1045,17 @@ class RoleBasedDataAssignment:
    """
    Represents <ROLE-BASED-DATA-ASSIGNMENT> (AUTOSAR 4)
    """
-   def __init__(role, localVariableRef):
+   def __init__(self, role, localVariableRef):
       self.role = role
       self.localVariableRef = localVariableRef
+   
+   def tag(self, version): return 'ROLE-BASED-DATA-ASSIGNMENT'
+
+class RoleBasedPortAssignment:
+   """
+   Represents <ROLE-BASED-PORT-ASSIGNMENT> (AUTOSAR 4)
+   """
+   def __init__(self, portRef):
+      self.portRef = portRef
+   
+   def tag(self, version): return 'ROLE-BASED-PORT-ASSIGNMENT'

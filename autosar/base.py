@@ -179,19 +179,23 @@ class SwDataDefPropsConditional:
 
    @swImplPolicy.setter
    def swImplPolicy(self, value):
-      ucvalue=str(value).upper()
-      enum_values = ["CONST", "FIXED", "MEASUREMENT-POINT", "QUEUED", "STANDARD"]
-      if ucvalue in enum_values:
-         self._swImplPolicy = ucvalue
+      if value is None:
+         self._swImplPolicy=None
       else:
-         raise ValueError('invalid swImplPolicy value: ' +  value)
+         ucvalue=str(value).upper()
+         enum_values = ["CONST", "FIXED", "MEASUREMENT-POINT", "QUEUED", "STANDARD"]
+         if ucvalue in enum_values:
+            self._swImplPolicy = ucvalue
+         else:
+            raise ValueError('invalid swImplPolicy value: ' +  value)
 
 class SwPointerTargetProps:
    def tag(self, version=None): return 'SW-POINTER-TARGET-PROPS'
    def __init__(self, targetCategory=None):
       self.targetCategory = targetCategory
       self.variants = []
-      
+
+#Exceptions      
 class InvalidPortInterfaceRef(ValueError):
    pass
 

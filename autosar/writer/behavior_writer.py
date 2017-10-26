@@ -408,7 +408,17 @@ class BehaviorWriter(WriterBase):
       if elem.name is not None:
          lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
       tmp = self.writeDescXML(elem)
-      if tmp is not None: lines.extend(self.indent(tmp,1))      
+      if tmp is not None: lines.extend(self.indent(tmp,1))
+      if len(elem.roleBasedDataAssignments):
+         lines.append(self.indent('<ASSIGNED-DATAS>',1))
+         for dataAssignment in elem.roleBasedDataAssignments:
+            lines.extend(self.indent(self._writeRoleBasedDataAssignmentXML(ws, dataAssignment),2))
+         lines.append(self.indent('</ASSIGNED-DATAS>',1))
+      if len(elem.roleBasedPortAssignments):
+         lines.append(self.indent('<ASSIGNED-PORTS>',1))
+         for portAssignment in elem.roleBasedPortAssignments:
+            lines.extend(self.indent(self._writeRoleBasedPortAssignmentXML(ws, portAssignment),2))
+         lines.append(self.indent('</ASSIGNED-PORTS>',1))
       if elem.serviceNeeds is not None:
          lines.extend(self.indent(self._writeServiceNeedsXML(ws, elem.serviceNeeds),1))         
       lines.append("</%s>"%elem.tag(self.version))
@@ -443,6 +453,31 @@ class BehaviorWriter(WriterBase):
       lines.append(self.indent('<RESTORE-AT-START>%s</RESTORE-AT-START>'%('true' if elem.restoreAtStart else 'false'),1))
       lines.append(self.indent('<STORE-AT-SHUTDOWN>%s</STORE-AT-SHUTDOWN>'%('true' if elem.storeAtShutdown else 'false'),1))
 
+      lines.append("</%s>"%elem.tag(self.version))
+      return lines
+   
+   def _writeRoleBasedDataAssignmentXML(self, ws, elem):
+      assert(isinstance(elem, autosar.behavior.RoleBasedDataAssignment))
+      lines = []
+      localVariable = ws.find(elem.localVariableRef)
+      if localVariable is None:
+         raise ValueError('Invalid reference: '+elem.localVariableRef)
+      lines.append('<%s>'%elem.tag(self.version))
+      lines.append(self.indent('<ROLE>%s</ROLE>'%elem.role,1))
+      lines.append(self.indent('<USED-DATA-ELEMENT>',1))
+      lines.append(self.indent('<LOCAL-VARIABLE-REF DEST="%s">%s</LOCAL-VARIABLE-REF>'%(localVariable.tag(self.version),localVariable.ref),2))
+      lines.append(self.indent('</USED-DATA-ELEMENT>',1))
+      lines.append('</%s>'%elem.tag(self.version))
+      return lines                      
+
+   def _writeRoleBasedPortAssignmentXML(self, ws, elem):
+      assert(isinstance(elem, autosar.behavior.RoleBasedPortAssignment))
+      lines = []      
+      port = ws.find(elem.portRef)
+      if port is None:
+         raise ValueError('Invalid reference: '+elem.portRef)
+      lines.append("<%s>"%elem.tag(self.version))
+      lines.append(self.indent('<PORT-PROTOTYPE-REF DEST="%s">%s</PORT-PROTOTYPE-REF>'%(port.tag(self.version),port.ref),1))      
       lines.append("</%s>"%elem.tag(self.version))
       return lines
    

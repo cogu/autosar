@@ -279,11 +279,7 @@ class WriterBase():
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
       if self.version >= 4.0:
          lines.append(self.indent('<SW-DATA-DEF-PROPS>',1))         
-         if elem.swCalibrationAccess is None:
-            tmp = 'NOT-ACCESSIBLE'
-         else:
-            tmp = elem.swCalibrationAccess
-         variant = autosar.base.SwDataDefPropsConditional(swCalibrationAccess=tmp)
+         variant = autosar.base.SwDataDefPropsConditional(None, None, elem.swAddressMethodRef, elem.swCalibrationAccess)
          variant.swImplPolicy = elem.swImplPolicy
          lines.extend(self.indent(self.writeSwDataDefPropsVariantsXML(ws, [variant]),2))
          lines.append(self.indent('</SW-DATA-DEF-PROPS>',1))

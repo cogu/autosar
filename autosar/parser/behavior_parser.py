@@ -586,13 +586,15 @@ class BehaviorParser(ElementParser):
          elif xmlElem.tag == 'ASSIGNED-DATAS':
             for xmlChildElem in xmlElem.findall('./*'):
                if xmlChildElem.tag == 'ROLE-BASED-DATA-ASSIGNMENT':
-                  roleBasedDataAssignments.append(self._parseRoleBasedDataAssignment(xmlChildElem))
+                  tmp = self._parseRoleBasedDataAssignment(xmlChildElem)
+                  if tmp is not None: roleBasedDataAssignments.append(tmp)
                else:
                   raise NotImplementedError(xmlChildElem.tag)
          elif xmlElem.tag == 'ASSIGNED-PORTS':
             for xmlChildElem in xmlElem.findall('./*'):
                if xmlChildElem.tag == 'ROLE-BASED-PORT-ASSIGNMENT':
-                  roleBasedPortAssignments.append(self._parseRoleBasedPortAssignment(xmlChildElem))
+                  tmp = self._parseRoleBasedPortAssignment(xmlChildElem)
+                  if tmp is not None: roleBasedPortAssignments.append(tmp)
                else:
                   raise NotImplementedError(xmlChildElem.tag)
          elif xmlElem.tag == 'SERVICE-NEEDS':
@@ -602,11 +604,15 @@ class BehaviorParser(ElementParser):
       swcServiceDependency = SwcServiceDependency(name, parent)
       if desc is not None:
          swcServiceDependency.desc=desc[0]
-         swcServiceDependency.descAttr=desc[1]         
-      if serviceNeeds is not None:            
+         swcServiceDependency.descAttr=desc[1]
+      if serviceNeeds is not None:
          swcServiceDependency.serviceNeeds = serviceNeeds
+      if len(roleBasedDataAssignments) > 0:
+         swcServiceDependency.roleBasedDataAssignments = roleBasedDataAssignments
+      if len(roleBasedPortAssignments) > 0:
+         swcServiceDependency.roleBasedPortAssignments = roleBasedPortAssignments
       return swcServiceDependency
-            
+
 
    def parseParameterDataPrototype(self, xmlRoot):
       """parses <PARAMETER-DATA-PROTOTYPE> (AUTOSAR 4)"""
@@ -632,12 +638,12 @@ class BehaviorParser(ElementParser):
          if xmlElem.tag == 'NV-BLOCK-NEEDS':
             xmlNvBlockNeeds = xmlElem
          else:
-            raise NotImplementedError(xmlElem.tag)      
+            raise NotImplementedError(xmlElem.tag)
       serviceNeeds = ServiceNeeds(None, parent)
       if xmlNvBlockNeeds is not None:
          serviceNeeds.nvBlockNeeds = self.parseNvBlockNeeds(xmlElem, serviceNeeds)
       return serviceNeeds
-      
+
 
    def parseNvBlockNeeds(self, xmlRoot, parent = None):
       """parses <NV-BLOCK-NEEDS> (AUTOSAR 4)"""
@@ -677,20 +683,31 @@ class BehaviorParser(ElementParser):
 
    def _parseRoleBasedDataAssignment(self, xmlRoot):
       assert(xmlRoot.tag == 'ROLE-BASED-DATA-ASSIGNMENT')
-      (role) = None
+      (role, localVariableRef) = (None, None)
       for xmlElem in xmlRoot.findall('./*'):
          if xmlElem.tag == 'ROLE':
             role = self.parseTextNode(xmlElem)
          elif xmlElem.tag == 'USED-DATA-ELEMENT':
             for xmlChild in xmlElem.findall('./*'):
                if xmlChild.tag == 'LOCAL-VARIABLE-REF':
-                  pass
+                  localVariableRef = self.parseTextNode(xmlChild)
                else:
                   raise NotImplementedError(xmlChild.tag)
          else:
             raise NotImplementedError(xmlElem.tag)
-      if role is None:
-         raise RuntimeError('<ROLE> is missing or incorrectly formatted')
-      
+      if (role is not None) and (localVariableRef is not None):
+         return RoleBasedDataAssignment(role, localVariableRef)
+      return None
+
+
    def _parseRoleBasedPortAssignment(self, xmlRoot):
       assert(xmlRoot.tag == 'ROLE-BASED-PORT-ASSIGNMENT')
+      portRef = None
+      for xmlElem in xmlRoot.findall('./*'):
+         if xmlElem.tag == 'PORT-PROTOTYPE-REF':
+            portRef = self.parseTextNode(xmlElem)
+         else:
+            raise NotImplementedError(xmlElem.tag)
+      if portRef is not None:
+         return RoleBasedPortAssignment(portRef)
+      return None

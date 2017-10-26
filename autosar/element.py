@@ -64,9 +64,9 @@ class DataElement(Element):
          raise ValueError("unsupported type for argument: typeRef")
       assert(isinstance(isQueued,bool))
       self.isQueued=isQueued
-      self.softwareAddressMethodRef = softwareAddressMethodRef
+      self.swAddressMethodRef = softwareAddressMethodRef
       self.swCalibrationAccess = swCalibrationAccess
-      self._swImplPolicy = "STANDARD"
+      self._swImplPolicy = None
       
    
    @property
@@ -87,7 +87,7 @@ class DataElement(Element):
          if variant.swCalibrationAccess is not None:
             self.swCalibrationAccess=variant.swCalibrationAccess
          if variant.swAddressMethodRef is not None:
-            self.softwareAddressMethodRef = variant.swAddressMethodRef
+            self.swAddressMethodRef = variant.swAddressMethodRef
       else:
          raise NotImplementedError(type(variant))
 
