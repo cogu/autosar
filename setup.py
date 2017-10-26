@@ -21,6 +21,6 @@ setup(name='autosar',
 	  install_requires=[
           'cfile>=0.1.3',
       ],
-      packages=['autosar','autosar.parser','autosar.writer','autosar.rte', 'autosar.bsw', 'autosar.bsw.com', 'autosar.bsw.os'],
+      packages=['autosar','autosar.parser','autosar.writer','autosar.rte', 'autosar.bsw'],
 	  dependency_links=['https://github.com/cogu/cfile/archive/v0.1.3.tar.gz#egg=cfile-0.1.3'],
 	  zip_safe=False)
