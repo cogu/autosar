@@ -80,7 +80,7 @@ def splitRef(ref):
    return autosar.base.splitRef(ref)
 
 def DataElement(name, typeRef, isQueued=False, softwareAddressMethodRef=None, parent=None, adminData=None):
-   return autosar.portinterface.DataElement(name, typeRef, isQueued, softwareAddressMethodRef, None, parent, adminData)
+   return autosar.portinterface.DataElement(name, typeRef, isQueued, softwareAddressMethodRef, None, None, parent, adminData)
 
 def ApplicationError(name, errorCode, parent=None, adminData=None):
    return autosar.portinterface.ApplicationError(name, errorCode, parent, adminData)

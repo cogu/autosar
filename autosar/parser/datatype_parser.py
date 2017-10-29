@@ -15,12 +15,13 @@ class DataTypeParser(ElementParser):
                           'RECORD-TYPE': self.parseRecordType,
                           'STRING-TYPE': self.parseStringType}
       elif self.version >= 4.0:
-         self.switcher = {                        
+         self.switcher = {
             'DATA-CONSTR': self.parseDataConstraint,
             'IMPLEMENTATION-DATA-TYPE': self.parseImplementationDataType,
             'SW-BASE-TYPE': self.parseSwBaseType,
-            'DATA-TYPE-MAPPING-SET': self.parseDataTypeMappingSet
-         }      
+            'DATA-TYPE-MAPPING-SET': self.parseDataTypeMappingSet,
+            'APPLICATION-PRIMITIVE-DATA-TYPE': self.parseApplicationPrimitiveDataType
+         }
 
    def getSupportedTags(self):
       return self.switcher.keys()
@@ -32,7 +33,7 @@ class DataTypeParser(ElementParser):
       else:
          return None
 
-   
+
    def parseIntegerType(self,root,parent=None):
       if self.version>=3.0:
          name=root.find("./SHORT-NAME").text
@@ -191,9 +192,7 @@ class DataTypeParser(ElementParser):
             raise NotImplementedError(xmlItem.tag)
       return ImplementationDataTypeElement(name, category, arraySize, arraySizeSemantics, variants, parent)
 
-
-
-   def parseSwBaseType(self, xmlRoot, dummy, parent = None):
+   def parseSwBaseType(self, xmlRoot, parent = None):
       assert (xmlRoot.tag == 'SW-BASE-TYPE')
       name = parseTextNode(xmlRoot.find('SHORT-NAME'))
       size = parseTextNode(xmlRoot.find('BASE-TYPE-SIZE'))
@@ -206,20 +205,74 @@ class DataTypeParser(ElementParser):
          adminData=None
       return SwBaseType(name, size, typeEncoding, nativeDeclaration, category, parent, adminData)
 
-   def parseDataTypeMappingSet(self, xmlRoot, dummy, parent = None):
+   def parseDataTypeMappingSet(self, xmlRoot, parent = None):
       assert (xmlRoot.tag == 'DATA-TYPE-MAPPING-SET')
-      name = parseTextNode(xmlRoot.find('SHORT-NAME'))
-      if hasAdminData(xmlRoot):
-         adminData=parseAdminDataNode(xmlRoot.find('ADMIN-DATA'))
-      else:
-         adminData=None
-      return DataTypeMappingSet(name, parent, adminData)
+      (name, dataTypeMaps, adminData) = (None, None, None)
+      dataTypeMaps = []
+      for xmlElem in xmlRoot.findall('./*'):
+         if xmlElem.tag == 'ADMIN-DATA':
+            adminData=parseAdminDataNode(xmlItem)
+         if xmlElem.tag == 'SHORT-NAME':
+            name = self.parseTextNode(xmlElem)
+         elif xmlElem.tag == 'DATA-TYPE-MAPS':
+            for xmlChild in xmlElem.findall('./*'):
+               if xmlChild.tag == 'DATA-TYPE-MAP':
+                  dataTypeMap = self.parseDataTypeMap(xmlChild)
+                  assert(dataTypeMap is not None)
+                  dataTypeMaps.append(dataTypeMap)
+               else:
+                  raise NotImplementedError(xmlElem.tag)               
+         else:
+            raise NotImplementedError(xmlElem.tag)
+      if (name is None):
+         raise RuntimeError('SHORT-NAME cannot be None')         
+      elem = DataTypeMappingSet(name, parent, adminData)
+      for dataTypeMap in dataTypeMaps:
+         elem.add(dataTypeMap)
+      return elem
 
+   def parseApplicationPrimitiveDataType(self, xmlRoot, parent = None):
+      assert (xmlRoot.tag == 'APPLICATION-PRIMITIVE-DATA-TYPE')
+      (name, category, variants, adminData, desc) = (None, None, None, None, None)
+      for xmlElem in xmlRoot.findall('./*'):
+         if xmlElem.tag == 'ADMIN-DATA':
+            adminData = self.parseAdminData(xmlElem)
+         elif xmlElem.tag == 'DESC':
+            desc = self.parseDescDirect(xmlElem)
+         elif xmlElem.tag == 'SHORT-NAME':
+            name = parseTextNode(xmlElem)
+         elif xmlElem.tag == 'CATEGORY':
+            category = parseTextNode(xmlElem)
+         elif xmlElem.tag == 'SW-DATA-DEF-PROPS':
+            variants = self.parseSwDataDefProps(xmlElem)
+         else:
+            raise NotImplementedError(xmlElem.tag)
+      if (name is None):
+         raise RuntimeError('SHORT-NAME cannot be None')
+      elem = ApplicationPrimitiveDataType(name, category, variants, parent, adminData)      
+      if desc is not None:
+         elem.desc=desc[0]
+         elem.descAttr=desc[1]
+      return elem
+
+   def parseDataTypeMap(self, xmlRoot):
+      assert (xmlRoot.tag == 'DATA-TYPE-MAP')
+      (applicationDataTypeRef, implementationDataTypeRef) = (None, None)
+      for xmlElem in xmlRoot.findall('./*'):
+         if xmlElem.tag == 'APPLICATION-DATA-TYPE-REF':
+            applicationDataTypeRef = self.parseTextNode(xmlElem)
+         elif xmlElem.tag == 'IMPLEMENTATION-DATA-TYPE-REF':
+            implementationDataTypeRef = self.parseTextNode(xmlElem)
+         else:
+            raise NotImplementedError(xmlElem.tag)
+      return DataTypeMap(applicationDataTypeRef, implementationDataTypeRef)
+         
+      
 
 class DataTypeSemanticsParser(ElementParser):
    def __init__(self,version=3.0):
       self.version=version
-      
+
    def getSupportedTags(self):
       return ['COMPU-METHOD']
 
@@ -247,7 +300,9 @@ class DataTypeSemanticsParser(ElementParser):
          for xmlItem in xmlCompuScales:
             rational = xmlItem.find('./COMPU-RATIONAL-COEFFS')
             const = xmlItem.find('./COMPU-CONST')
-            label = parseTextNode(xmlItem.find('./SHORT-LABEL'))
+            label = self.parseTextNode(xmlItem.find('./SHORT-LABEL'))
+            mask = self.parseIntNode(xmlItem.find('./MASK'))
+            symbol = self.parseTextNode(xmlItem.find('./SYMBOL'))
             if rational is not None:
                if (semanticsType is not None) and (semanticsType !='compuRational'):
                   raise NotImplementedError('mixed compuscales not supported, item=%s'%name)
@@ -257,7 +312,7 @@ class DataTypeSemanticsParser(ElementParser):
                   offset=v[0].text
                   numerator=v[1].text
                   denominator=rational.find('./COMPU-DENOMINATOR/V').text
-                  semanticElements.append({'offset':offset, 'numerator':numerator, 'denominator':denominator, 'label':label})
+                  semanticElements.append({'offset':offset, 'numerator':numerator, 'denominator':denominator, 'label':label, 'symbol': symbol})
             if const is not None:
                if (semanticsType is not None) and (semanticsType !='compuConst'):
                   raise NotImplementedError('mixed compuscales not supported, item=%s'%name)
@@ -266,22 +321,34 @@ class DataTypeSemanticsParser(ElementParser):
                   lowerLimit = parseTextNode(xmlItem.find('./LOWER-LIMIT'))
                   upperLimit = parseTextNode(xmlItem.find('./UPPER-LIMIT'))
                   textValue = parseTextNode(const.find('./VT'))
-                  semanticElements.append({'lowerLimit':int(lowerLimit),'upperLimit':int(upperLimit), 'textValue': textValue, 'label': label})
+                  semanticElements.append({'lowerLimit':int(lowerLimit),'upperLimit':int(upperLimit), 'textValue': textValue, 'label': label, 'symbol': symbol})
+            if mask is not None:
+               if (semanticsType is not None) and (semanticsType !='compuMask'):
+                  raise NotImplementedError('mixed compuscales not supported, item=%s'%name)
+               else:
+                  semanticsType='compuMask'
+                  lowerLimit = parseTextNode(xmlItem.find('./LOWER-LIMIT'))
+                  upperLimit = parseTextNode(xmlItem.find('./UPPER-LIMIT'))
+                  semanticElements.append({'lowerLimit':int(lowerLimit),'upperLimit':int(upperLimit), 'mask': mask, 'label': label, 'symbol': symbol})
+
       if semanticsType == 'compuRational':
          if unitRef is not None: unitRef=unitRef.text
-         method=CompuMethodRational(name,unitRef,semanticElements, category=category, adminData=adminData)
+         method=CompuMethodRational(name, unitRef, semanticElements, category=category, adminData=adminData)
          return method
       elif semanticsType == 'compuConst':
-         method = CompuMethodConst(name,semanticElements, category=category, adminData=adminData)
+         method = CompuMethodConst(name, semanticElements, category=category, adminData=adminData)
          return method
+      elif semanticsType == 'compuMask':
+         method = CompuMethodMask(name, semanticElements, category=category, adminData=adminData)
+         return method      
       else:
          raise ValueError("unprocessed semanticsType,item=%s"%name)
 
 class DataTypeUnitsParser(ElementParser):
    def __init__(self,version=3.0):
       super().__init__(version)
-      
-   
+
+
    def getSupportedTags(self):
       return ['UNIT']
 
@@ -301,5 +368,5 @@ class DataTypeUnitsParser(ElementParser):
       else:
          (factor,offset) = (None, None)
       return DataTypeUnitElement(name, displayName, factor, offset, parent)
-   
+
 

@@ -39,6 +39,7 @@ class Workspace(object):
                               'ComponentType': 'ComponentType',
                               'CompuMethod': 'DataTypeSemantics',
                               'Unit': 'DataTypeUnits'}
+      self.errorHandlingOpt = False
       if packages is not None:
          for key,value in packages.items():
             if key in self.defaultPackages:

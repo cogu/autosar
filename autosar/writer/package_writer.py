@@ -73,6 +73,7 @@ class PackageWriter(WriterBase):
          self.switcherXML = {
                               'CompuMethodConst': self.dataTypeWriter.writeCompuMethodXML,
                               'CompuMethodRational': self.dataTypeWriter.writeCompuMethodXML,
+                              'CompuMethodMask': self.dataTypeWriter.writeCompuMethodXML,
                               'DataConstraint': self.dataTypeWriter.writeDataConstraintXml,
                               'ImplementationDataType': self.dataTypeWriter.writeImplementationDataTypeXML,
                               'SwBaseType': self.dataTypeWriter.writeSwBaseTypeXML,
@@ -87,6 +88,7 @@ class PackageWriter(WriterBase):
                               'Constant': self.constantWriter.writeConstantXML,
                               'ApplicationSoftwareComponent': self.componentTypeWriter.writeApplicationSoftwareComponentXML,
                               'SwcImplementation': self.componentTypeWriter.writeSwcImplementationXML,
+                              'ApplicationPrimitiveDataType': self.dataTypeWriter.writeApplicationPrimitiveDataTypeXml,                              
                             }
          self.switcherCode = {
                               'DataConstraint': self.dataTypeWriter.writeDataConstraintCode,
@@ -124,16 +126,17 @@ class PackageWriter(WriterBase):
             lines.append(self.indent("<ELEMENTS/>",1))
       if len(package.subPackages)>0:
          filtered_packages = filter_packages(package.subPackages, filters)
-         if self.version >= 3.0 and self.version < 4.0:
-            lines.append(self.indent("<SUB-PACKAGES>",1))            
-            for package in filtered_packages:            
-               lines.extend(self.indent(self.toXML(subPackage, filters, ignore),2))
-            lines.append(self.indent("</SUB-PACKAGES>",1))
-         elif self.version >= 4.0:
-            lines.append(self.indent("<AR-PACKAGES>",1))
-            for subPackage in filtered_packages:
-               lines.extend(self.indent(self.toXML(subPackage, filters, ignore),2))
-            lines.append(self.indent("</AR-PACKAGES>",1))            
+         if len(filtered_packages) > 0:
+            if self.version >= 3.0 and self.version < 4.0:
+               lines.append(self.indent("<SUB-PACKAGES>",1))            
+               for subPackage in filtered_packages:            
+                  lines.extend(self.indent(self.toXML(subPackage, filters, ignore),2))
+               lines.append(self.indent("</SUB-PACKAGES>",1))
+            elif self.version >= 4.0:
+               lines.append(self.indent("<AR-PACKAGES>",1))
+               for subPackage in filtered_packages:
+                  lines.extend(self.indent(self.toXML(subPackage, filters, ignore),2))
+               lines.append(self.indent("</AR-PACKAGES>",1))            
       lines.extend(self.endPackage())
       return lines
    

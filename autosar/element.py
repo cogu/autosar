@@ -50,3 +50,53 @@ class Element(object):
    
    def __deepcopy__(self,memo):
       raise NotImplementedError(type(self))
+
+class DataElement(Element):
+   def tag(self,version): return "VARIABLE-DATA-PROTOTYPE" if version >= 4.0 else "DATA-ELEMENT-PROTOTYPE"
+   def __init__(self, name, typeRef, isQueued=False, softwareAddressMethodRef=None, swCalibrationAccess=None, swImplPolicy = None, parent=None, adminData=None):
+      super().__init__(name,parent,adminData)
+      if isinstance(typeRef,str):
+         self.typeRef=typeRef
+      elif hasattr(typeRef,'ref'):
+         assert(isinstance(typeRef.ref,str))
+         self.typeRef=typeRef.ref
+      else:
+         raise ValueError("unsupported type for argument: typeRef")
+      assert(isinstance(isQueued,bool))
+      self.isQueued=isQueued
+      self.swAddressMethodRef = softwareAddressMethodRef
+      self.swCalibrationAccess = swCalibrationAccess
+      self.swImplPolicy = swImplPolicy
+         
+   @property
+   def swImplPolicy(self):
+      return self._swImplPolicy
+
+   @swImplPolicy.setter
+   def swImplPolicy(self, value):
+      if value is None:
+         self._swImplPolicy=None
+      else:
+         ucvalue=str(value).upper()
+         enum_values = ["CONST", "FIXED", "MEASUREMENT-POINT", "QUEUED", "STANDARD"]
+         if ucvalue in enum_values:
+            self._swImplPolicy = ucvalue
+            if ucvalue == 'QUEUED':
+               self.isQueued = True
+         else:
+            raise ValueError('invalid swImplPolicy value: ' +  value)
+ 
+   def setProps(self, variant):
+      if isinstance(variant, autosar.base.SwDataDefPropsConditional):
+         self.swCalibrationAccess=variant.swCalibrationAccess
+         self.swAddressMethodRef = variant.swAddressMethodRef
+         self.swImplPolicy = variant.swImplPolicy            
+      else:
+         raise NotImplementedError(type(variant))
+
+   # def asdict(self):
+   #    data = {'type': self.__class__.__name__, 'name': self.name, 'isQueued': self.isQueued, 'typeRef': self.typeRef}
+   #    data['adminData']=self.adminData.asdict() if self.adminData is not None else None
+   #    if len(self.swAddrMethodRefList)>0:
+   #       data['swAddrMethodRef']=self.swAddrMethodRefList[:]
+   #    return data

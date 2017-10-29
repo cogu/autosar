@@ -133,7 +133,10 @@ class AtomicSoftwareComponent(ComponentType):
             return port
       if (ws is not None) and (ws.version >= 4.0) and (self.behavior is not None):
          if self.behavior.name == ref[0]:
-            return self.behavior
+            if len(ref[2])>0:
+               return self.behavior.find(ref[2])
+            else:         
+               return self.behavior
       return None
 
 
@@ -486,12 +489,13 @@ class OperationComSpec(object):
          data['queueLength']=self.queueLength
 
 class DataElementComSpec(object):
-   def __init__(self,name=None,initValueRef=None,aliveTimeout=None,queueLength=None,canInvalidate=None):
+   def __init__(self, name=None, initValueRef=None, aliveTimeout=None, queueLength=None, canInvalidate=None, initValue=None):
       self.name = name
       self.initValueRef = str(initValueRef) if initValueRef is not None else None
       self._aliveTimeout = int(aliveTimeout) if aliveTimeout is not None else None
       self._queueLength = int(queueLength) if queueLength is not None else None
       self.canInvalidate = bool(canInvalidate) if canInvalidate is not None else None
+      self.initValue = initValue
 
    @property
    def aliveTimeout(self):

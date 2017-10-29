@@ -6,18 +6,32 @@ import autosar.portinterface
 class BehaviorWriter(WriterBase):
    def __init__(self,version):
       super().__init__(version)
-   
+
    def writeInternalBehaviorXML(self,internalBehavior,package):
-      
-      assert(isinstance(internalBehavior,autosar.behavior.InternalBehavior))
+
+      assert(isinstance(internalBehavior, (autosar.behavior.InternalBehavior, autosar.behavior.SwcInternalBehavior)))
       lines=[]
       ws = internalBehavior.rootWS()
       assert(ws is not None)
       lines.append('<%s>'%internalBehavior.tag(self.version))
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%internalBehavior.name,1))
       swc=ws.find(internalBehavior.componentRef)
-      assert(swc is not None)      
-      lines.append(self.indent('<COMPONENT-REF DEST="%s">%s</COMPONENT-REF>'%(swc.tag(self.version),swc.ref),1))
+      assert(swc is not None)
+      if isinstance(internalBehavior, autosar.behavior.SwcInternalBehavior) and len(internalBehavior.perInstanceMemories)>0:
+         lines.append(self.indent('<AR-TYPED-PER-INSTANCE-MEMORYS>',1))
+         for elem in internalBehavior.perInstanceMemories:
+            lines.extend(self.indent(self.writeDataElementXML(elem),2))
+         lines.append(self.indent('</AR-TYPED-PER-INSTANCE-MEMORYS>',1))
+      if isinstance(internalBehavior, autosar.behavior.SwcInternalBehavior) and len(internalBehavior.dataTypeMappingRefs)>0:
+         lines.append(self.indent('<DATA-TYPE-MAPPING-REFS>',1))
+         for ref in internalBehavior.dataTypeMappingRefs:
+            dataTypeMapping = ws.find(ref)
+            if dataTypeMapping is None:
+               raise ValueError('Invalid DataTypeMapping reference: ' + ref)
+            lines.append(self.indent('<DATA-TYPE-MAPPING-REF DEST="%s">%s</DATA-TYPE-MAPPING-REF>'%(dataTypeMapping.tag(self.version), dataTypeMapping.ref),2))
+         lines.append(self.indent('</DATA-TYPE-MAPPING-REFS>',1))
+      if self.version < 4.0:
+         lines.append(self.indent('<COMPONENT-REF DEST="%s">%s</COMPONENT-REF>'%(swc.tag(self.version),swc.ref),1))
       if len(internalBehavior.events):
          lines.append(self.indent('<EVENTS>',1))
          for event in internalBehavior.events:
@@ -27,14 +41,14 @@ class BehaviorWriter(WriterBase):
          lines.append(self.indent('<EXCLUSIVE-AREAS>',1))
          for exclusiveArea in internalBehavior.exclusiveAreas:
             lines.extend(self.indent(self._writeExclusiveAreaXML(ws,exclusiveArea),2))
-         lines.append(self.indent('</EXCLUSIVE-AREAS>',1))                        
-      if len(internalBehavior.portAPIOptions)==0:         
+         lines.append(self.indent('</EXCLUSIVE-AREAS>',1))
+      if len(internalBehavior.portAPIOptions)==0:
          internalBehavior.createPortAPIOptionDefaults() #try to automatically create PortAPIOption objects on behavior object
-      if len(internalBehavior.perInstanceMemories)>0:
+      if isinstance(internalBehavior, autosar.behavior.InternalBehavior) and len(internalBehavior.perInstanceMemories)>0:
          lines.append(self.indent('<PER-INSTANCE-MEMORYS>',1))
          for memory in internalBehavior.perInstanceMemories:
             lines.extend(self.indent(self._writePerInstanceMemoryXML(ws,memory),2))
-         lines.append(self.indent('</PER-INSTANCE-MEMORYS>',1))               
+         lines.append(self.indent('</PER-INSTANCE-MEMORYS>',1))
       if len(internalBehavior.portAPIOptions)>0:
             lines.extend(self.indent(self._writePortAPIOptionsXML(internalBehavior),1))
       if len(internalBehavior.runnables)>0:
@@ -42,12 +56,22 @@ class BehaviorWriter(WriterBase):
          for runnable in internalBehavior.runnables:
             lines.extend(self.indent(self._writeRunnableXML(runnable),2))
          lines.append(self.indent('</RUNNABLES>',1))
-      if len(internalBehavior.swcNvBlockNeeds)>0:
+      if isinstance(internalBehavior, autosar.behavior.InternalBehavior) and len(internalBehavior.swcNvBlockNeeds)>0:
          lines.append(self.indent('<SERVICE-NEEDSS>',1))
          for elem in internalBehavior.swcNvBlockNeeds:
             lines.extend(self.indent(self._writeSwcNvBlockNeedsXML(ws, elem),2))
          lines.append(self.indent('</SERVICE-NEEDSS>',1))
-      if len(internalBehavior.sharedCalParams)>0:
+      elif isinstance(internalBehavior, autosar.behavior.SwcInternalBehavior) and len(internalBehavior.serviceDependencies)>0:
+         lines.append(self.indent('<SERVICE-DEPENDENCYS>',1))
+         for serviceDependency in internalBehavior.serviceDependencies:
+            lines.extend(self.indent(self._writeServiceDependencyXML(ws, serviceDependency),2))
+         lines.append(self.indent('</SERVICE-DEPENDENCYS>',1))
+      if isinstance(internalBehavior, autosar.behavior.SwcInternalBehavior) and len(internalBehavior.parameterDataPrototype)>0:
+         lines.append(self.indent('<SHARED-PARAMETERS>',1))
+         for elem in internalBehavior.parameterDataPrototype:
+            lines.extend(self.indent(self._writeParameterDataPrototype(ws, elem),2))
+         lines.append(self.indent('</SHARED-PARAMETERS>',1))
+      elif isinstance(internalBehavior, autosar.behavior.InternalBehavior) and len(internalBehavior.sharedCalParams)>0:
          lines.append(self.indent('<SHARED-CALPRMS>',1))
          for elem in internalBehavior.sharedCalParams:
             lines.extend(self.indent(self._writeSharedCalParamXML(ws, elem),2))
@@ -55,16 +79,15 @@ class BehaviorWriter(WriterBase):
       lines.append(self.indent('<SUPPORTS-MULTIPLE-INSTANTIATION>%s</SUPPORTS-MULTIPLE-INSTANTIATION>'%('true' if internalBehavior.multipleInstance else 'false'),1))
       lines.append('</%s>'%internalBehavior.tag(self.version))
       return lines
-   
+
    def _writeRunnableXML(self,runnable):
       ws=runnable.rootWS()
       assert(ws is not None)
       lines=['<RUNNABLE-ENTITY>',
-             self.indent('<SHORT-NAME>%s</SHORT-NAME>'%runnable.name,1),             
+             self.indent('<SHORT-NAME>%s</SHORT-NAME>'%runnable.name,1),
             ]
       if runnable.adminData is not None:
          lines.extend(self.indent(self.writeAdminDataXML(runnable.adminData),1))
-      lines.append(self.indent('<CAN-BE-INVOKED-CONCURRENTLY>%s</CAN-BE-INVOKED-CONCURRENTLY>'%('true' if runnable.invokeConcurrently else 'false'),1))
       if len(runnable.exclusiveAreaRefs)>0:
          lines.append(self.indent('<CAN-ENTER-EXCLUSIVE-AREA-REFS>',1))
          for exclusiveAreaRef in runnable.exclusiveAreaRefs:
@@ -73,75 +96,138 @@ class BehaviorWriter(WriterBase):
                raise ValueError('invalid reference:' + exclusiveAreaRef)
             lines.append(self.indent('<CAN-ENTER-EXCLUSIVE-AREA-REF DEST="%s">%s</CAN-ENTER-EXCLUSIVE-AREA-REF>'%(exclusiveArea.tag(self.version),exclusiveArea.ref),2))
          lines.append(self.indent('</CAN-ENTER-EXCLUSIVE-AREA-REFS>',1))
+      if self.version >= 4.0:
+         lines.append(self.indent('<MINIMUM-START-INTERVAL>%d</MINIMUM-START-INTERVAL>'%(int(runnable.minStartInterval)),1))
+      lines.append(self.indent('<CAN-BE-INVOKED-CONCURRENTLY>%s</CAN-BE-INVOKED-CONCURRENTLY>'%('true' if runnable.invokeConcurrently else 'false'),1))
       if len(runnable.dataReceivePoints)>0:
-         lines.append(self.indent('<DATA-RECEIVE-POINTS>',1))
-         for dataReceivePoint in runnable.dataReceivePoints:
-            lines.append(self.indent('<DATA-RECEIVE-POINT>',2))
-            lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%dataReceivePoint.name,3))
-            lines.append(self.indent('<DATA-ELEMENT-IREF>',3))
-            assert(dataReceivePoint.portRef is not None) and (dataReceivePoint.dataElemRef is not None)
-            port = ws.find(dataReceivePoint.portRef)
-            assert(port is not None)
-            dataElement = ws.find(dataReceivePoint.dataElemRef)
-            assert(port is not None)            
-            lines.append(self.indent('<R-PORT-PROTOTYPE-REF DEST="%s">%s</R-PORT-PROTOTYPE-REF>'%(port.tag(self.version),port.ref),4))
-            lines.append(self.indent('<DATA-ELEMENT-PROTOTYPE-REF DEST="%s">%s</DATA-ELEMENT-PROTOTYPE-REF>'%(dataElement.tag(self.version),dataElement.ref),4))
-            lines.append(self.indent('</DATA-ELEMENT-IREF>',3))
-            lines.append(self.indent('</DATA-RECEIVE-POINT>',2))
-         lines.append(self.indent('</DATA-RECEIVE-POINTS>',1))
+         if self.version >= 4.0:
+            lines.append(self.indent('<DATA-RECEIVE-POINT-BY-ARGUMENTS>',1))
+            for dataReceivePoint in runnable.dataReceivePoints:
+               lines.extend(self.indent(self._writeDataReceivePointXML(ws, dataReceivePoint),2))
+            lines.append(self.indent('</DATA-RECEIVE-POINT-BY-ARGUMENTS>',1))
+         else:
+            lines.append(self.indent('<DATA-RECEIVE-POINTS>',1))
+            for dataReceivePoint in runnable.dataReceivePoints:
+               lines.extend(self.indent(self._writeDataReceivePointXML(ws, dataReceivePoint),2))
+            lines.append(self.indent('</DATA-RECEIVE-POINTS>',1))
       if len(runnable.dataSendPoints)>0:
          lines.append(self.indent('<DATA-SEND-POINTS>',1))
          for dataSendPoint in runnable.dataSendPoints:
             lines.append(self.indent('<%s>'%dataSendPoint.tag(self.version),2))
             lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%dataSendPoint.name,3))
-            lines.append(self.indent('<DATA-ELEMENT-IREF>',3))
-            assert(dataSendPoint.portRef is not None) and (dataSendPoint.dataElemRef is not None)
-            port = ws.find(dataSendPoint.portRef)
-            assert(port is not None)
-            dataElement = ws.find(dataSendPoint.dataElemRef)
-            assert(port is not None)            
-            lines.append(self.indent('<P-PORT-PROTOTYPE-REF DEST="%s">%s</P-PORT-PROTOTYPE-REF>'%(port.tag(self.version),port.ref),4))
-            lines.append(self.indent('<DATA-ELEMENT-PROTOTYPE-REF DEST="%s">%s</DATA-ELEMENT-PROTOTYPE-REF>'%(dataElement.tag(self.version),dataElement.ref),4))
-            lines.append(self.indent('</DATA-ELEMENT-IREF>',3))
-            lines.append(self.indent('</%s>'%dataSendPoint.tag(self.version),2))         
+            lines.extend(self.indent(self._writeDataElementInstanceRefXML(ws, dataSendPoint.portRef, dataSendPoint.dataElemRef),3))
+            lines.append(self.indent('</%s>'%dataSendPoint.tag(self.version),2))
          lines.append(self.indent('</DATA-SEND-POINTS>',1))
+      if (self.version >= 4.0) and (len(runnable.modeAccessPoints)>0):
+         lines.append(self.indent('<MODE-ACCESS-POINTS>',1))
+         for modeAccessPoint in runnable.modeAccessPoints:
+            lines.extend(self.indent(self._writeModeAccessPointXML(ws, modeAccessPoint),2))
+         lines.append(self.indent('</MODE-ACCESS-POINTS>',1))
       if len(runnable.serverCallPoints)>0:
          lines.append(self.indent('<SERVER-CALL-POINTS>',1))
-         for callPoint in runnable.serverCallPoints:            
+         for callPoint in runnable.serverCallPoints:
             lines.extend(self.indent(self._writeServerCallPointXML(ws, runnable, callPoint),2))
          lines.append(self.indent('</SERVER-CALL-POINTS>',1))
       lines.append(self.indent('<SYMBOL>%s</SYMBOL>'%runnable.symbol,1))
       lines.append('</RUNNABLE-ENTITY>')
       return lines
-   
+
+   def _writeDataReceivePointXML(self, ws, dataReceivePoint):
+      lines = []
+      lines.append('<%s>'%dataReceivePoint.tag(self.version))
+      lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%dataReceivePoint.name,1))
+      lines.extend(self.indent(self._writeDataElementInstanceRefXML(ws, dataReceivePoint.portRef, dataReceivePoint.dataElemRef),1))
+      lines.append('</%s>'%dataReceivePoint.tag(self.version))
+      return lines
+
+
+   def _writeDataElementInstanceRefXML(self, ws, portRef, dataElemRef):
+      lines = []
+      assert( portRef is not None) and ( dataElemRef is not None)
+      port = ws.find(portRef)
+      if port is None:
+         raise ValueError('Invalid port reference: '+portRef)
+      dataElement = ws.find(dataElemRef)
+      if dataElement is None:
+         raise ValueError('Invalid port reference: '+dataElemRef)
+      if self.version >= 4.0:
+         lines.append('<ACCESSED-VARIABLE>')
+         lines.append(self.indent('<AUTOSAR-VARIABLE-IREF>',1))
+         lines.append(self.indent('<PORT-PROTOTYPE-REF DEST="%s">%s</PORT-PROTOTYPE-REF>'%(port.tag(self.version),port.ref),2))
+         lines.append(self.indent('<TARGET-DATA-PROTOTYPE-REF DEST="%s">%s</TARGET-DATA-PROTOTYPE-REF>'%(dataElement.tag(self.version),dataElement.ref),2))
+         lines.append(self.indent('</AUTOSAR-VARIABLE-IREF>',1))
+         lines.append('</ACCESSED-VARIABLE>')
+      else:
+         lines.append('<DATA-ELEMENT-IREF>')
+         if isinstance(port, autosar.component.ProvidePort):
+            lines.append(self.indent('<P-PORT-PROTOTYPE-REF DEST="%s">%s</P-PORT-PROTOTYPE-REF>'%(port.tag(self.version),port.ref),1))
+         else:
+            lines.append(self.indent('<R-PORT-PROTOTYPE-REF DEST="%s">%s</R-PORT-PROTOTYPE-REF>'%(port.tag(self.version),port.ref),1))
+         lines.append(self.indent('<DATA-ELEMENT-PROTOTYPE-REF DEST="%s">%s</DATA-ELEMENT-PROTOTYPE-REF>'%(dataElement.tag(self.version),dataElement.ref),1))
+         lines.append('</DATA-ELEMENT-IREF>')
+      return lines
+
+   def _writeModeAccessPointXML(self, ws, modeGroupInstanceRef):
+      lines = ['<MODE-ACCESS-POINT>']
+      lines.append(self.indent('<MODE-GROUP-IREF>', 1))
+      lines.extend(self.indent(self._writeModeGroupInstanceRefXML(ws, modeGroupInstanceRef),2))
+      lines.append(self.indent('</MODE-GROUP-IREF>', 1))
+      lines.append('</MODE-ACCESS-POINT>')
+      return lines
+
+   def _writeModeGroupInstanceRefXML(self, ws, modeGroupInstanceRef):
+      lines=[]
+      port = ws.find(modeGroupInstanceRef.requirePortRef)
+      if port is None:
+         raise ValueError('invalid port reference'%(modeGroupInstanceRef.requirePortRef))
+      modeGroup = ws.find(modeGroupInstanceRef.modeGroupRef)
+      if modeGroup is None:
+         raise ValueError('invalid port reference'%(modeGroupInstanceRef.modeGroupRef))
+
+      lines.append('<%s>'%modeGroupInstanceRef.tag(self.version))
+      lines.append(self.indent('<CONTEXT-R-PORT-REF DEST="%s">%s</CONTEXT-R-PORT-REF>'%(port.tag(self.version), port.ref),1))
+      #There is a mistake in the official 4.2.1 XSD file that forces DEST="MODE-DECLARATION-GROUP-PROTOTYPE" below
+      lines.append(self.indent('<TARGET-MODE-GROUP-REF DEST="MODE-DECLARATION-GROUP-PROTOTYPE">%s</TARGET-MODE-GROUP-REF>'%(modeGroup.ref),1))
+      lines.append('</%s>'%modeGroupInstanceRef.tag(self.version))
+      return lines
+
    def _writeServerCallPointXML(self, ws, runnable, callPoint):
       lines=[]
       if isinstance(callPoint, autosar.behavior.SyncServerCallPoint):
          lines.append('<SYNCHRONOUS-SERVER-CALL-POINT>')
          lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%callPoint.name,1))
-         lines.append(self.indent('<OPERATION-IREFS>',1))
-         for operationIRef in callPoint.operationInstanceRefs:
-            lines.extend(self.indent(self._writeOperationInstanceRefXML(ws, runnable, operationIRef),2))
-         lines.append(self.indent('</OPERATION-IREFS>',1))
-         lines.append(self.indent('<TIMEOUT>%.9f</TIMEOUT>'%float(callPoint.timeout),1))
-         lines.append('</SYNCHRONOUS-SERVER-CALL-POINT>')         								
+         if self.version >= 4.0:
+            for operationIRef in callPoint.operationInstanceRefs:
+               lines.extend(self.indent(self._writeOperationInstanceRefXML(ws, runnable, operationIRef),1))
+         else:
+            lines.append('<OPERATION-IREFS>')
+            for operationIRef in callPoint.operationInstanceRefs:
+               lines.extend(self.indent(self._writeOperationInstanceRefXML(ws, runnable, operationIRef),2))
+            lines.append('</OPERATION-IREFS>')
+         if callPoint.timeout == 0.0:
+            lines.append(self.indent('<TIMEOUT>0</TIMEOUT>',1))
+         else:
+            lines.append(self.indent('<TIMEOUT>%.9f</TIMEOUT>'%float(callPoint.timeout),1))
+         lines.append('</SYNCHRONOUS-SERVER-CALL-POINT>')
       else:
          raise NotImplementedError(type(callPoint))
       return lines
-   
+
    def _writePortAPIOptionsXML(self,internalBehavior):
       ws=internalBehavior.rootWS()
       assert(ws is not None)
-      assert(isinstance(internalBehavior,autosar.behavior.InternalBehavior))
+      assert(isinstance(internalBehavior, (autosar.behavior.InternalBehavior, autosar.behavior.SwcInternalBehavior)))
       lines=['<PORT-API-OPTIONS>']
       for option in internalBehavior.portAPIOptions:
-         lines.extend(self.indent(self._writePortAPIOption(ws,option),1))         
+         lines.extend(self.indent(self._writePortAPIOption(ws,option),1))
       lines.append('</PORT-API-OPTIONS>')
       return lines
-      
+
    def _writePortAPIOption(self, ws,option):
       lines=['<%s>'%option.tag(self.version)]
-      lines.append(self.indent('<ENABLE-TAKE-ADDRESS>%s</ENABLE-TAKE-ADDRESS>'%('true' if option.takeAddress else 'false'),1))
+      lines.append(self.indent('<ENABLE-TAKE-ADDRESS>%s</ENABLE-TAKE-ADDRESS>'%('true' if option.takeAddress else 'false'),1))      
+      if ws.errorHandlingOpt:
+         lines.append(self.indent('<ERROR-HANDLING>NO-TRANSFORMER-ERROR-HANDLING</ERROR-HANDLING>',1))
       lines.append(self.indent('<INDIRECT-API>%s</INDIRECT-API>'%('true' if option.indirectAPI else 'false'),1))
       port = ws.find(option.portRef)
       if port is None:
@@ -159,15 +245,26 @@ class BehaviorWriter(WriterBase):
          lines.append(self.indent('<MODE-DEPENDENCY>',1))
          lines.append(self.indent('<DEPENDENT-ON-MODE-IREFS>',2))
          for item in event.modeDependency.modeInstanceRefs:
-            lines.extend(self.indent(self._writeModeInstanceRefXML(ws, item),3))         
-         lines.append(self.indent('</DEPENDENT-ON-MODE-IREFS>',2))         
+            lines.extend(self.indent(self._writeModeInstanceRefXML(ws, item),3))
+         lines.append(self.indent('</DEPENDENT-ON-MODE-IREFS>',2))
          lines.append(self.indent('</MODE-DEPENDENCY>',1))
+      elif event.disabledInModes is not None:
+         lines.append(self.indent('<DISABLED-MODE-IREFS>',1))
+         for item in event.disabledInModes:
+            lines.extend(self.indent(self._writeModeInstanceRefXML(ws, item),2))
+         lines.append(self.indent('</DISABLED-MODE-IREFS>',1))
+
       runnableEntity = ws.find(event.startOnEventRef)
       assert(runnableEntity is not None)
       lines.append(self.indent('<START-ON-EVENT-REF DEST="%s">%s</START-ON-EVENT-REF>'%(runnableEntity.tag(self.version),runnableEntity.ref),1))
-      if isinstance(event, autosar.behavior.ModeSwitchEvent):         
+      if isinstance(event, autosar.behavior.ModeSwitchEvent):
          lines.append(self.indent('<ACTIVATION>%s</ACTIVATION>'%(event.activationType),1))
-         lines.extend(self.indent(self._writeModeInstanceRefXML(ws,event.modeInstRef),1))
+         if self.version >= 4.0:
+            lines.append(self.indent('<MODE-IREFS>',1))
+            lines.extend(self.indent(self._writeModeInstanceRefXML(ws,event.modeInstRef),2))
+            lines.append(self.indent('</MODE-IREFS>',1))
+         else:
+            lines.extend(self.indent(self._writeModeInstanceRefXML(ws,event.modeInstRef),1))
       elif isinstance(event, autosar.behavior.TimingEvent):
          if event.period==0:
             lines.append(self.indent('<PERIOD>0</PERIOD>',1))
@@ -179,12 +276,14 @@ class BehaviorWriter(WriterBase):
          lines.extend(self.indent(self._writeOperationInstanceRefXML(ws, event, event.operationInstanceRef),1))
       elif isinstance(event, autosar.behavior.DataReceivedEvent):
          assert(event.dataInstanceRef is not None)
-         lines.extend(self.indent(self._writeDataInstanceRefXML(ws, event, event.dataInstanceRef),1))         
+         lines.extend(self.indent(self._writeDataInstanceRefXML(ws, event, event.dataInstanceRef),1))
+      elif isinstance(event, autosar.behavior.InitEvent):
+         pass
       else:
          raise NotImplementedError(str(type(event)))
-      lines.append('</%s>'%tag)      
+      lines.append('</%s>'%tag)
       return lines
-   
+
    def _writeModeInstanceRefXML(self,ws,modeInstRef):
       lines = []
       tag = modeInstRef.tag(self.version)
@@ -198,12 +297,18 @@ class BehaviorWriter(WriterBase):
       modeDeclaration = ws.find(modeInstRef.modeDeclarationRef)
       if modeDeclaration is None:
          raise ValueError('%s has invalid modeDeclarationRef: %s'%(modeInstRef,modeInstRef.modeDeclarationRef))
-      lines.append(self.indent('<R-PORT-PROTOTYPE-REF DEST="R-PORT-PROTOTYPE">%s</R-PORT-PROTOTYPE-REF>'%(port.ref),1))
-      lines.append(self.indent('<MODE-DECLARATION-GROUP-PROTOTYPE-REF DEST="%s">%s</MODE-DECLARATION-GROUP-PROTOTYPE-REF>'%(modeDeclarationGroup.tag(self.version), modeDeclarationGroup.ref),1))
-      lines.append(self.indent('<MODE-DECLARATION-REF DEST="%s">%s</MODE-DECLARATION-REF>'%(modeDeclaration.tag(self.version) ,modeDeclaration.ref),1))
-      lines.append('</%s>'%tag)            
+      if self.version >= 4.0:
+         lines.append(self.indent('<CONTEXT-PORT-REF DEST="R-PORT-PROTOTYPE">%s</CONTEXT-PORT-REF>'%(port.ref),1))
+         #There is a mistake in the official 4.2.1 XSD file that forces DEST="MODE-DECLARATION-GROUP-PROTOTYPE" below
+         lines.append(self.indent('<CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF DEST="MODE-DECLARATION-GROUP-PROTOTYPE">%s</CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF>'%(modeDeclarationGroup.ref),1))
+         lines.append(self.indent('<TARGET-MODE-DECLARATION-REF DEST="%s">%s</TARGET-MODE-DECLARATION-REF>'%(modeDeclaration.tag(self.version) ,modeDeclaration.ref),1))
+      else:
+         lines.append(self.indent('<R-PORT-PROTOTYPE-REF DEST="R-PORT-PROTOTYPE">%s</R-PORT-PROTOTYPE-REF>'%(port.ref),1))
+         lines.append(self.indent('<MODE-DECLARATION-GROUP-PROTOTYPE-REF DEST="%s">%s</MODE-DECLARATION-GROUP-PROTOTYPE-REF>'%(modeDeclarationGroup.tag(self.version), modeDeclarationGroup.ref),1))
+         lines.append(self.indent('<MODE-DECLARATION-REF DEST="%s">%s</MODE-DECLARATION-REF>'%(modeDeclaration.tag(self.version) ,modeDeclaration.ref),1))
+      lines.append('</%s>'%tag)
       return lines
-   
+
    def _writeOperationInstanceRefXML(self, ws, parent, operationIRef):
       lines = []
       lines.append('<%s>'%operationIRef.tag(self.version))
@@ -214,10 +319,17 @@ class BehaviorWriter(WriterBase):
       if operation is None:
          raise ValueError('invalid reference "%s" found in callPoint.operation of item "%s"'%(operationIRef.operationRef, parent.ref))
       if isinstance(port, autosar.component.RequirePort):
-         lines.append(self.indent('<R-PORT-PROTOTYPE-REF DEST="%s">%s</R-PORT-PROTOTYPE-REF>'%(port.tag(self.version), port.ref),1))
+         if self.version >= 4.0:
+            (portRefTag,operationRefTag) = ('CONTEXT-R-PORT-REF','TARGET-REQUIRED-OPERATION-REF')
+         else:
+            (portRefTag,operationRefTag) = ('R-PORT-PROTOTYPE-REF','OPERATION-PROTOTYPE-REF')
       else:
-         lines.append(self.indent('<P-PORT-PROTOTYPE-REF DEST="%s">%s</P-PORT-PROTOTYPE-REF>'%(port.tag(self.version), port.ref),1))
-      lines.append(self.indent('<OPERATION-PROTOTYPE-REF DEST="%s">%s</OPERATION-PROTOTYPE-REF>'%(operation.tag(self.version), operation.ref),1))
+         if self.version >= 4.0:
+            (portRefTag,operationRefTag) = ('CONTEXT-P-PORT-REF','TARGET-PROVIDED-OPERATION-REF')
+         else:
+            (portRefTag,operationRefTag) = ('P-PORT-PROTOTYPE-REF','OPERATION-PROTOTYPE-REF')
+      lines.append(self.indent('<%s DEST="%s">%s</%s>'%(portRefTag, port.tag(self.version), port.ref, portRefTag),1))
+      lines.append(self.indent('<%s DEST="%s">%s</%s>'%(operationRefTag, operation.tag(self.version), operation.ref, operationRefTag),1))
       lines.append('</%s>'%operationIRef.tag(self.version))
       return lines
 
@@ -231,11 +343,13 @@ class BehaviorWriter(WriterBase):
       dataElement = ws.find(dataIRef.dataElemRef)
       if dataElement is None:
          raise ValueError('invalid reference "%s" found in dataIRef.dataElemRef of item "%s"'%(dataIRef.dataElemRef, parent.ref))
-      if isinstance(port, autosar.component.RequirePort):
-         lines.append(self.indent('<R-PORT-PROTOTYPE-REF DEST="%s">%s</R-PORT-PROTOTYPE-REF>'%(port.tag(self.version), port.ref),1))
+      if isinstance(port, autosar.component.RequirePort):         
+         portTagName = 'CONTEXT-R-PORT-REF' if self.version >= 4.0 else 'R-PORT-PROTOTYPE-REF'
       else:
-         lines.append(self.indent('<P-PORT-PROTOTYPE-REF DEST="%s">%s</P-PORT-PROTOTYPE-REF>'%(port.tag(self.version), port.ref),1))
-      lines.append(self.indent('<DATA-ELEMENT-PROTOTYPE-REF DEST="%s">%s</DATA-ELEMENT-PROTOTYPE-REF>'%(dataElement.tag(self.version), dataElement.ref),1))
+         portTagName = 'CONTEXT-P-PORT-REF' if self.version >= 4.0 else 'P-PORT-PROTOTYPE-REF'
+      dataTagName = 'TARGET-DATA-ELEMENT-REF' if self.version >= 4.0 else 'DATA-ELEMENT-PROTOTYPE-REF'
+      lines.append(self.indent('<%s DEST="%s">%s</%s>'%(portTagName, port.tag(self.version), port.ref, portTagName),1))
+      lines.append(self.indent('<%s DEST="%s">%s</%s>'%(dataTagName, dataElement.tag(self.version), dataElement.ref, dataTagName),1))
       lines.append('</%s>'%dataIRef.tag(self.version))
       return lines
 
@@ -250,7 +364,7 @@ class BehaviorWriter(WriterBase):
       lines.append(self.indent('<TYPE-DEFINITION>%s</TYPE-DEFINITION>'%dataType.ref,1))
       lines.append('</%s>'%memory.tag(self.version))
       return lines
-   
+
    def _writeSwcNvBlockNeedsXML(self, ws, elem):
       lines = []
       lines.append('<%s>'%elem.tag(self.version))
@@ -278,12 +392,12 @@ class BehaviorWriter(WriterBase):
          if port is None:
             raise ValueError('invalid reference "%s" in SwcNvBlockNeeds "%s"'%(callPoint.portRef, elem.name))
          lines.append(self.indent('<R-PORT-PROTOTYPE-REF DEST="%s">%s</R-PORT-PROTOTYPE-REF>'%(port.tag(self.version), port.ref),3))
-         lines.append(self.indent('<ROLE>%s</ROLE>'%callPoint.role,3))   
-         lines.append(self.indent('</ROLE-BASED-R-PORT-ASSIGNMENT>',2))      
+         lines.append(self.indent('<ROLE>%s</ROLE>'%callPoint.role,3))
+         lines.append(self.indent('</ROLE-BASED-R-PORT-ASSIGNMENT>',2))
       lines.append(self.indent('</SERVICE-CALL-PORTS>',1))
       lines.append('</%s>'%elem.tag(self.version))
       return lines
-   
+
    def _writeSharedCalParamXML(self, ws, elem):
       lines = []
       lines.append('<%s>'%elem.tag(self.version))
@@ -294,12 +408,12 @@ class BehaviorWriter(WriterBase):
       for ref in elem.swDataDefsProps:
          item = ws.find(ref)
          if item is None:
-            raise ValueError('invalid reference "%s" in %s'%(ref,elem.name))         
+            raise ValueError('invalid reference "%s" in %s'%(ref,elem.name))
          lines.append(self.indent('<SW-ADDR-METHOD-REF DEST="%s">%s</SW-ADDR-METHOD-REF>'%(item.tag(self.version), ref),2))
       lines.append(self.indent('</SW-DATA-DEF-PROPS>',1))
       dataType=ws.find(elem.typeRef)
       if dataType is None:
-         raise ValueError('invalid reference "%s" in %s'%(elem.typeRef,elem.name))      
+         raise ValueError('invalid reference "%s" in %s'%(elem.typeRef,elem.name))
       lines.append(self.indent('<TYPE-TREF DEST="%s">%s</TYPE-TREF>'%(dataType.tag(self.version), dataType.ref),1))
       lines.append('</%s>'%elem.tag(self.version))
       return lines
@@ -311,9 +425,89 @@ class BehaviorWriter(WriterBase):
       lines.append('</%s>'%elem.tag(self.version))
       return lines
 
+   def _writeServiceDependencyXML(self, ws, elem):
+      assert(isinstance(elem, autosar.behavior.SwcServiceDependency))
+      lines = []
+      lines.append("<%s>"%elem.tag(self.version))
+      if elem.name is not None:
+         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
+      tmp = self.writeDescXML(elem)
+      if tmp is not None: lines.extend(self.indent(tmp,1))
+      if len(elem.roleBasedDataAssignments):
+         lines.append(self.indent('<ASSIGNED-DATAS>',1))
+         for dataAssignment in elem.roleBasedDataAssignments:
+            lines.extend(self.indent(self._writeRoleBasedDataAssignmentXML(ws, dataAssignment),2))
+         lines.append(self.indent('</ASSIGNED-DATAS>',1))
+      if len(elem.roleBasedPortAssignments):
+         lines.append(self.indent('<ASSIGNED-PORTS>',1))
+         for portAssignment in elem.roleBasedPortAssignments:
+            lines.extend(self.indent(self._writeRoleBasedPortAssignmentXML(ws, portAssignment),2))
+         lines.append(self.indent('</ASSIGNED-PORTS>',1))
+      if elem.serviceNeeds is not None:
+         lines.extend(self.indent(self._writeServiceNeedsXML(ws, elem.serviceNeeds),1))
+      lines.append("</%s>"%elem.tag(self.version))
+      return lines
+
+   def _writeServiceNeedsXML(self, ws, elem):
+      assert(isinstance(elem, autosar.behavior.ServiceNeeds))
+      lines = []
+      lines.append("<%s>"%elem.tag(self.version))
+      if elem.name is not None:
+         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
+      tmp = self.writeDescXML(elem)
+      if tmp is not None: lines.extend(self.indent(tmp,1))
+      if elem.nvBlockNeeds is not None:
+         lines.extend(self.indent(self._writeNvBlockNeedsXML(ws, elem.nvBlockNeeds),1))
+      lines.append("</%s>"%elem.tag(self.version))
+      return lines
+
+   def _writeNvBlockNeedsXML(self, ws, elem):
+      assert(isinstance(elem, autosar.behavior.NvBlockNeeds))
+      lines = []
+      lines.append("<%s>"%elem.tag(self.version))
+      if elem.name is not None:
+         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
+      if elem.adminData is not None:
+         lines.extend(self.indent(self.writeAdminDataXML(elem.adminData),1))
+      tmp = self.writeDescXML(elem)
+      if tmp is not None: lines.extend(self.indent(tmp,1))
+      lines.append(self.indent('<N-DATA-SETS>%d</N-DATA-SETS>'%(int(elem.numberOfDataSets)),1))
+      lines.append(self.indent('<RAM-BLOCK-STATUS-CONTROL>%s</RAM-BLOCK-STATUS-CONTROL>'%(elem.ramBlockStatusControl),1))
+      lines.append(self.indent('<RELIABILITY>%s</RELIABILITY>'%(elem.reliability),1))
+      lines.append(self.indent('<RESTORE-AT-START>%s</RESTORE-AT-START>'%('true' if elem.restoreAtStart else 'false'),1))
+      lines.append(self.indent('<STORE-AT-SHUTDOWN>%s</STORE-AT-SHUTDOWN>'%('true' if elem.storeAtShutdown else 'false'),1))
+
+      lines.append("</%s>"%elem.tag(self.version))
+      return lines
+
+   def _writeRoleBasedDataAssignmentXML(self, ws, elem):
+      assert(isinstance(elem, autosar.behavior.RoleBasedDataAssignment))
+      lines = []
+      localVariable = ws.find(elem.localVariableRef)
+      if localVariable is None:
+         raise ValueError('Invalid reference: '+elem.localVariableRef)
+      lines.append('<%s>'%elem.tag(self.version))
+      lines.append(self.indent('<ROLE>%s</ROLE>'%elem.role,1))
+      lines.append(self.indent('<USED-DATA-ELEMENT>',1))
+      lines.append(self.indent('<LOCAL-VARIABLE-REF DEST="%s">%s</LOCAL-VARIABLE-REF>'%(localVariable.tag(self.version),localVariable.ref),2))
+      lines.append(self.indent('</USED-DATA-ELEMENT>',1))
+      lines.append('</%s>'%elem.tag(self.version))
+      return lines
+
+   def _writeRoleBasedPortAssignmentXML(self, ws, elem):
+      assert(isinstance(elem, autosar.behavior.RoleBasedPortAssignment))
+      lines = []
+      port = ws.find(elem.portRef)
+      if port is None:
+         raise ValueError('Invalid reference: '+elem.portRef)
+      lines.append("<%s>"%elem.tag(self.version))
+      lines.append(self.indent('<PORT-PROTOTYPE-REF DEST="%s">%s</PORT-PROTOTYPE-REF>'%(port.tag(self.version),port.ref),1))
+      lines.append("</%s>"%elem.tag(self.version))
+      return lines
+
    ### code generators
    def writeInternalBehaviorCode(self, behavior, localvars):
-      lines=[]      
+      lines=[]
       localvars['swc.behavior']=behavior
       localvars['swc']=localvars['ws'].find(behavior.componentRef)
       for exclusiveArea in behavior.exclusiveAreas:
@@ -323,16 +517,16 @@ class BehaviorWriter(WriterBase):
       for sharedCalParam in behavior.sharedCalParams:
          lines.extend(self._writeSharedCalParamCode(sharedCalParam, localvars))
       for swcNvBlockNeed in behavior.swcNvBlockNeeds:
-         lines.extend(self._writeSwcNvBlockNeedCode(swcNvBlockNeed, localvars))      
+         lines.extend(self._writeSwcNvBlockNeedCode(swcNvBlockNeed, localvars))
       for runnable in behavior.runnables:
          lines.extend(self._writeRunnableCode(runnable, localvars))
       for event in behavior.events:
          lines.extend(self._writeEventCode(event, localvars))
-      return lines           
+      return lines
 
    def _writeRunnableCode(self, runnable, localvars):
       ws=localvars['ws']
-      
+
       lines=[]
       #name
       params=[repr(runnable.name)]
@@ -348,44 +542,44 @@ class BehaviorWriter(WriterBase):
             for instanceRef in callPoint.operationInstanceRefs:
                params2.append(repr(self._createPortAccessString(runnable, instanceRef)))
       assert( 'swc.behavior' in localvars)
-      
+
       if len(params2)>0:
          if len(params2)<4:
-            params.append('portAccess=[%s]'%(', '.join(params2)))            
-         else:            
+            params.append('portAccess=[%s]'%(', '.join(params2)))
+         else:
             lines.extend(self.writeListCode('portAccessList',params2))
             params.append('portAccess=portAccessList')
       if runnable.invokeConcurrently:
-         params.append('concurrent=True')      
+         params.append('concurrent=True')
       #exclusive areas
       params2=[]
       for exclusiveAreaRef in runnable.exclusiveAreaRefs:
          exclusiveArea=ws.find(exclusiveAreaRef)
          if exclusiveArea is None:
-            raise ValueError('invalid reference: '+exclusiveAreaRef)         
-         params2.append(repr(exclusiveArea.name))      
+            raise ValueError('invalid reference: '+exclusiveAreaRef)
+         params2.append(repr(exclusiveArea.name))
       if len(params2)>0:
          if len(params2)==1:
             params.append('exclusiveAreas='+params2[0])
          else:
-            params.append('exclusiveAreas=[%s]'%(', '.join(params2)))         
+            params.append('exclusiveAreas=[%s]'%(', '.join(params2)))
       if runnable.adminData is not None:
          param = self.writeAdminDataCode(runnable.adminData, localvars)
          assert(len(param)>0)
-         params.append('adminData='+param)      
+         params.append('adminData='+param)
       lines.append('swc.behavior.createRunnable(%s)'%(', '.join(params)))
       return lines
-   
+
    def _writeEventCode(self, event, localvars):
       ws=localvars['ws']
       assert(ws is not None)
       assert('swc.behavior' in localvars)
       lines=[]
-      
+
       runnableName = autosar.base.splitRef(event.startOnEventRef)[-1]
       params = [repr(runnableName)]
       if isinstance(event, autosar.behavior.ModeSwitchEvent):
-         assert(event.modeInstRef is not None)         
+         assert(event.modeInstRef is not None)
          modeDeclParts = autosar.base.splitRef(event.modeInstRef.modeDeclarationRef)
          requirePortParts = autosar.base.splitRef(event.modeInstRef.requirePortPrototypeRef)
          modeRef = '/'.join([requirePortParts[-1],modeDeclParts[-1]])
@@ -396,7 +590,7 @@ class BehaviorWriter(WriterBase):
       elif isinstance(event, autosar.behavior.TimingEvent):
          params.append('period='+str(event.period))
          constructor='createTimingEvent'
-      elif isinstance(event, autosar.behavior.DataReceivedEvent):         
+      elif isinstance(event, autosar.behavior.DataReceivedEvent):
          port = ws.find(event.dataInstanceRef.portRef)
          if port is None:
             raise ValueError('invalid port reference: ' + event.dataInstanceRef.portRef)
@@ -434,7 +628,7 @@ class BehaviorWriter(WriterBase):
                raise ValueError('invalid port reference: '+iref.requirePortPrototypeRef)
             if modeDeclaration is None:
                raise ValueError('invalid mode declaration reference: '+iref.modeDeclarationRef)
-            #we can recreate the entire ModeDependencyRef object later using only the port name and the name of the mode declaration            
+            #we can recreate the entire ModeDependencyRef object later using only the port name and the name of the mode declaration
             params2.append("'%s/%s'"%(requirePort.name, modeDeclaration.name))
          if len(params2)>3:
             lines.extend(self.writeListCode('modeDependencyList',params2))
@@ -443,7 +637,7 @@ class BehaviorWriter(WriterBase):
             params.append('modeDependency=[%s]'%(', '.join(params2)))
       lines.append('swc.behavior.%s(%s)'%(constructor, ', '.join(params)))
       return lines
-   
+
    def _createPortAccessString(self, runnable, sendReceiveCallPoint):
       """
       creates a port access string of the form 'port' or 'port/dataElem' or 'port/operationName'
@@ -474,9 +668,9 @@ class BehaviorWriter(WriterBase):
    def _writeExclusiveAreaCode(self, exclusiveArea, localvars):
       """
       creates a call to create an ExclusiveArea object
-      """      
+      """
       return [('swc.behavior.createExclusiveArea(%s)'%(repr(exclusiveArea.name)))]
-   
+
    def _writePerInstanceMemoryCode(self, perInstanceMemory, localvars):
       """
       create a call to create a PerInstanceMemory object
@@ -495,8 +689,8 @@ class BehaviorWriter(WriterBase):
          params.append(repr(dataType.ref)) #use full reference
       lines.append('swc.behavior.createPerInstanceMemory(%s)'%(', '.join(params)))
       return lines
-   
-   def _writeSharedCalParamCode(self, sharedCalParam, localvars):      
+
+   def _writeSharedCalParamCode(self, sharedCalParam, localvars):
       lines=[]
       ws = localvars['ws']
       #name
@@ -515,7 +709,7 @@ class BehaviorWriter(WriterBase):
       if sharedCalParam.adminData is not None:
          param = self.writeAdminDataCode(sharedCalParam.adminData, localvars)
          assert(len(param)>0)
-         params.append('adminData='+param)      
+         params.append('adminData='+param)
       lines.append('swc.behavior.createSharedCalParam(%s)'%(', '.join(params)))
       return lines
 
@@ -529,7 +723,7 @@ class BehaviorWriter(WriterBase):
       params.append('blockParams')
       lines.append('swc.behavior.createNvmBlock(%s)'%(', '.join(params)))
       return lines
-   
+
    def _createNvmBlockOpts(self, swcNvBlockNeed, localvars):
       lines=[]
       ws = localvars['ws']
@@ -552,16 +746,32 @@ class BehaviorWriter(WriterBase):
       if (defaultBlock is not None) and (defaultBlock.parent is behavior):
          lines.append("'mirrorBlock': "+(repr(mirrorBlock.name)))
       else:
-         lines.append("'mirrorBlock': "+(repr(swcNvBlockNeed.mirrorBlockRef)))            
+         lines.append("'mirrorBlock': "+(repr(swcNvBlockNeed.mirrorBlockRef)))
       params=[]
       for roleBasedRPortAssignment in swcNvBlockNeed.serviceCallPorts:
          port = ws.find(roleBasedRPortAssignment.portRef)
          if port is None:
-            raise ValueError('invalid port reference: '+roleBasedRPortAssignment.portRef)         
+            raise ValueError('invalid port reference: '+roleBasedRPortAssignment.portRef)
          params.append("'%s/%s'"%(port.name, roleBasedRPortAssignment.role )) #it seems like the ClientServer operation is in this part of the XML is called "role" for some inexplicable reason
       if len(params)>0:
          if len(params)==1:
             lines.append("'serviceCallPorts': %s"%(params[0]))
          else:
             lines.append("'serviceCallPorts': [%s]"%(', '.join(params)))
+      return lines
+
+   def _writeParameterDataPrototype(self, ws, elem):
+      lines = []
+      datatype = ws.find(elem.typeRef)
+      if datatype is None:
+         raise ValueError('invalid type reference: '+elem.typeRef)
+      lines.append('<%s>'%elem.tag(self.version))
+      lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
+      if elem.swAddressMethodRef is not None or elem.swCalibrationAccess is not None:
+         variants = [autosar.base.SwDataDefPropsConditional(swAddressMethodRef = elem.swAddressMethodRef, swCalibrationAccess = elem.swCalibrationAccess)]
+         lines.append(self.indent('<SW-DATA-DEF-PROPS>',1))
+         lines.extend(self.indent(self.writeSwDataDefPropsVariantsXML(ws, variants),2))
+         lines.append(self.indent('</SW-DATA-DEF-PROPS>',1))
+         lines.append(self.indent('<TYPE-TREF DEST="%s">%s</TYPE-TREF>'%(datatype.tag(self.version), datatype.ref),1))
+      lines.append('</%s>'%elem.tag(self.version))
       return lines

@@ -25,23 +25,33 @@ class AdminData(object):
 class SpecialDataGroup(object):
    def __init__(self,SDG_GID,SD=None,SD_GID=None):
       self.SDG_GID=SDG_GID
-      self.SD=SD
-      self.SD_GID=SD_GID
+      self.SD = []
+      if SD is not None or SD_GID is not None:
+         self.SD.append(SpecialData(SD, SD_GID))
       
-   def asdict(self):
-      data = {'type': self.__class__.__name__}
-      if self.SDG_GID is not None: data['SDG_GID']=self.SDG_GID
-      if self.SD is not None: data['SD']=self.SD
-      if self.SD_GID is not None: data['SD_GID']=self.SD_GID
-      return data
+   # def asdict(self):
+   #    data = {'type': self.__class__.__name__}
+   #    if self.SDG_GID is not None: data['SDG_GID']=self.SDG_GID
+   #    if self.SD is not None: data['SD']=self.SD
+   #    if self.SD_GID is not None: data['SD_GID']=self.SD_GID
+   #    return data
    
    def __eq__(self, other):
       if isinstance(other, self.__class__):
-         if self.SDG_GID == other.SDG_GID and self.SD == other.SD and self.SD_GID == other.SD_GID: return True
+         if self.SDG_GID == other.SDG_GID:
+            for i,SD in enumerate(self.SD):
+               other_SD = other.SD[i]
+               if SD.TEXT != other_SD.TEXT or SD.GID != other_SD.GID:
+                  return False
+            return True
       return False
    
    def __ne__(self, other): return not (self == other)
-   
+
+class SpecialData:
+   def __init__(self, TEXT, GID):
+      self.TEXT = TEXT
+      self.GID = GID
 
 def removeNamespace(doc, namespace):
    """Removes XML namespace in place."""
@@ -152,16 +162,17 @@ def filter_packages(packages, filters):
 
 class SwDataDefPropsConditional:
    def tag(self,version=None): return 'SW-DATA-DEF-PROPS-CONDITIONAL'
-   def __init__(self, baseTypeRef = None, implementationTypeRef = None, swAddressMethodRef = None, swCalibrationAccess = None, compuMethodRef = None, dataConstraintRef = None, parent = None):
+   def __init__(self, baseTypeRef = None, implementationTypeRef = None, swAddressMethodRef = None, swCalibrationAccess = None, swImplPolicy = None, compuMethodRef = None, dataConstraintRef = None, unitRef = None, parent = None):
       self.baseTypeRef = baseTypeRef
       self.swCalibrationAccess = swCalibrationAccess
       self.swAddressMethodRef = swAddressMethodRef
       self.compuMethodRef = compuMethodRef
       self.dataConstraintRef = dataConstraintRef
-      self.implementationTypeRef = implementationTypeRef
-      self.parent = parent
+      self.implementationTypeRef = implementationTypeRef      
       self.swPointerTargetProps = None
-      self._swImplPolicy=None
+      self.unitRef = unitRef
+      self.swImplPolicy = swImplPolicy
+      self.parent = parent
 
    @property
    def swImplPolicy(self):
@@ -169,19 +180,23 @@ class SwDataDefPropsConditional:
 
    @swImplPolicy.setter
    def swImplPolicy(self, value):
-      ucvalue=str(value).upper()
-      enum_values = ["CONST", "FIXED", "MEASUREMENT-POINT", "QUEUED", "STANDARD"]
-      if ucvalue in enum_values:
-         self._swImplPolicy = ucvalue
+      if value is None:
+         self._swImplPolicy=None
       else:
-         raise ValueError('invalid swImplPolicy value: ' +  value)
+         ucvalue=str(value).upper()
+         enum_values = ["CONST", "FIXED", "MEASUREMENT-POINT", "QUEUED", "STANDARD"]
+         if ucvalue in enum_values:
+            self._swImplPolicy = ucvalue
+         else:
+            raise ValueError('invalid swImplPolicy value: ' +  value)
 
 class SwPointerTargetProps:
    def tag(self, version=None): return 'SW-POINTER-TARGET-PROPS'
    def __init__(self, targetCategory=None):
       self.targetCategory = targetCategory
       self.variants = []
-      
+
+#Exceptions      
 class InvalidPortInterfaceRef(ValueError):
    pass
 

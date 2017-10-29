@@ -39,7 +39,7 @@ class ConstantParser(ElementParser):
       if (name is not None) and ((xmlValue is not None) or (xmlValueSpec is not None)):
          constant = autosar.constant.Constant(name, parent=parent, adminData=adminData)
          if xmlValue is not None:
-            constant.value = self._parseValueV3(xmlValue, constant)
+            constant.value = self._parseValueV3(xmlValue.find('./*') , constant)
          elif xmlValueSpec is not None:
             values = self.parseValueV4(xmlValueSpec, constant)
             if len(values) != 1:
@@ -71,7 +71,7 @@ class ConstantParser(ElementParser):
             else:
                constantValue=autosar.constant.ArrayValue(name, typeRef, parent=parent)
             for innerElem in xmlValue.findall('./ELEMENTS/*'):
-               innerConstant = self._parseConstantValue(innerElem, constantValue)
+               innerConstant = self._parseValueV3(innerElem, constantValue)
                if innerConstant is not None:
                   constantValue.elements.append(innerConstant)
       return constantValue
@@ -131,12 +131,12 @@ class ConstantParser(ElementParser):
          else:
             raise NotImplementedError(xmlElem.tag)
 
-      if (label is not None) and (xmlFields is not None):
+      if (xmlFields is not None):
          record = autosar.constant.RecordValue(label, parent=parent)
          record.elements = self.parseValueV4(xmlFields, record)
          return record
       else:
-         raise RuntimeError("both label and xmlFields must not be None")
+         raise RuntimeError("<FIELDS> must not be None")
 
    def _parseArrayValueSpecification(self, xmlValue, parent):
       (label, xmlElements) = (None, None)
@@ -148,10 +148,10 @@ class ConstantParser(ElementParser):
          else:
             raise NotImplementedError(xmlElem.tag)
 
-      if (label is not None) and (xmlElements is not None):
+      if (xmlElements is not None):
          array = autosar.constant.ArrayValue(label, parent=parent)
          array.elements = self.parseValueV4(xmlElements, array)
          return array
 
       else:
-         raise RuntimeError("both label and xmlFields must not be None")
+         raise RuntimeError("<ELEMENTS> must not be None")

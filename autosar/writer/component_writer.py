@@ -43,7 +43,7 @@ class ComponentTypeWriter(WriterBase):
       lines.append(self.indent('</PORTS>',1))
       if (self.version >= 4.0) and (isinstance(swc, autosar.component.AtomicSoftwareComponent)) and (swc.behavior is not None):
          lines.append(self.indent('<INTERNAL-BEHAVIORS>',1))         
-         #lines.extend(self.indent(self.behavior_writer.writeInternalBehaviorXML(swc.behavior, None),2))
+         lines.extend(self.indent(self.behavior_writer.writeInternalBehaviorXML(swc.behavior, None),2))
          lines.append(self.indent('</INTERNAL-BEHAVIORS>',1))
       if isinstance(swc, autosar.component.CompositionComponent):
          lines.extend(self.indent(self._writeComponentsXML(ws, swc.components),1))
@@ -85,6 +85,11 @@ class ComponentTypeWriter(WriterBase):
                   if dataElem is None:
                      raise ValueError("%s: invalid comspec name '%s'"%(port.ref, comspec.name))
                   lines.extend(self.indent(self._writeDataReceiverComSpecXML(ws, dataElem, comspec),2))
+               elif isinstance(portInterface, autosar.portinterface.ClientServerInterface):
+                  operation=portInterface.find(comspec.name)
+                  if operation is None:
+                     raise ValueError("%s: invalid comspec name '%s'"%(port.ref,comspec.name))
+                  lines.extend(self.indent(self._writeOperationComSpec(operation),2))
                else:
                   raise NotImplementedError(str(type(portInterface)))
             else:
@@ -92,7 +97,7 @@ class ComponentTypeWriter(WriterBase):
                   operation=portInterface.find(comspec.name)
                   if operation is None:
                      raise ValueError("%s: invalid comspec name '%s'"%(port.ref,comspec.name))
-                  lines.extend(self.indent(self._writeOperationComSpec(portInterface, comspec),2))
+                  lines.extend(self.indent(self._writeOperationComSpec(operationc),2))
                else:
                   dataElem=portInterface.find(comspec.name)
                   if dataElem is None:
@@ -129,14 +134,15 @@ class ComponentTypeWriter(WriterBase):
             lines.append('</UNQUEUED-RECEIVER-COM-SPEC>')
       else:
          if dataElem.isQueued:                        
-            lines.append('<QUEUED-RECEIVER-COM-SPEC>',)
-            lines.append(self.indent('<DATA-ELEMENT-REF DEST="%s">%s</DATA-ELEMENT-REF>'%(dataElem.tag(self.version),dataElem.ref),3))
-            lines.append(self.indent('<QUEUE-LENGTH>%d</QUEUE-LENGTH>'%(int(comspec.queueLength)),3))
+            lines.append('<QUEUED-RECEIVER-COM-SPEC>')
+            lines.append(self.indent('<DATA-ELEMENT-REF DEST="%s">%s</DATA-ELEMENT-REF>'%(dataElem.tag(self.version),dataElem.ref),1))
+            lines.append(self.indent('<QUEUE-LENGTH>%d</QUEUE-LENGTH>'%(int(comspec.queueLength)),1))
             lines.append('</QUEUED-RECEIVER-COM-SPEC>')
          else:
             lines.append('<NONQUEUED-RECEIVER-COM-SPEC>')
             lines.append(self.indent('<DATA-ELEMENT-REF DEST="%s">%s</DATA-ELEMENT-REF>'%(dataElem.tag(self.version),dataElem.ref),1))
             lines.append(self.indent('<USES-END-TO-END-PROTECTION>false</USES-END-TO-END-PROTECTION>',1))
+
             lines.append(self.indent('<ALIVE-TIMEOUT>%d</ALIVE-TIMEOUT>'%(comspec.aliveTimeout),1))
             lines.append(self.indent('<ENABLE-UPDATE>false</ENABLE-UPDATE>',1))
             lines.append(self.indent('<FILTER>',1))
@@ -145,6 +151,10 @@ class ComponentTypeWriter(WriterBase):
             lines.append(self.indent('<HANDLE-NEVER-RECEIVED>false</HANDLE-NEVER-RECEIVED>',1))
             if comspec.initValueRef is not None:
                lines.extend(self.indent(self._writeInitValueRefXML(ws, comspec.initValueRef),1))
+            if comspec.initValue is not None:
+               lines.append(self.indent('<INIT-VALUE>',1))
+               lines.extend(self.indent(self.writeValueSpecificationXML(comspec.initValue),2))
+               lines.append(self.indent('</INIT-VALUE>',1))
             lines.append('</NONQUEUED-RECEIVER-COM-SPEC>')
       return lines
 
@@ -234,7 +244,10 @@ class ComponentTypeWriter(WriterBase):
          lines.append(self.indent('<TYPE>SRC</TYPE>',3))
       lines.append(self.indent('</CODE>',2))
       lines.append(self.indent('</CODE-DESCRIPTORS>',1))
-      lines.append(self.indent('<BEHAVIOR-REF DEST="%s">%s</BEHAVIOR-REF>'%(behavior.tag(self.version),elem.behaviorRef),1))
+      if self.version < 4.0:
+         lines.append(self.indent('<BEHAVIOR-REF DEST="%s">%s</BEHAVIOR-REF>'%(behavior.tag(self.version),elem.behaviorRef),1))
+      else:
+         lines.append(self.indent('<BEHAVIOR-REF DEST="%s">%s</BEHAVIOR-REF>'%(behavior.tag(self.version),behavior.ref),1))
       lines.append('</SWC-IMPLEMENTATION>')
       return lines
 

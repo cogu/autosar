@@ -1,4 +1,4 @@
-from autosar.element import Element
+from autosar.element import (Element, DataElement)
 import collections
 import autosar.base
 
@@ -131,6 +131,7 @@ class ClientServerInterface(PortInterface):
       super().__init__(name, isService, parent, adminData)
       self.operations=[]
       self.applicationErrors=[]
+      self.serviceKind = None
       
 
    def tag(self,version=None):
@@ -213,58 +214,16 @@ class ModeSwitchInterface(PortInterface):
       return None
 
 
-class DataElement(Element):
-   def tag(self,version): return "VARIABLE-DATA-PROTOTYPE" if version >= 4.0 else "DATA-ELEMENT-PROTOTYPE"
-   def __init__(self, name, typeRef, isQueued=False, softwareAddressMethodRef=None, swCalibrationAccess=None, parent=None, adminData=None):
-      super().__init__(name,parent,adminData)
-      if isinstance(typeRef,str):
-         self.typeRef=typeRef
-      elif hasattr(typeRef,'ref'):
-         assert(isinstance(typeRef.ref,str))
-         self.typeRef=typeRef.ref
-      else:
-         raise ValueError("unsupported type for argument: typeRef")
-      assert(isinstance(isQueued,bool))
-      self.isQueued=isQueued
-      self.softwareAddressMethodRef = softwareAddressMethodRef
-      self.swCalibrationAccess = swCalibrationAccess
-      self._swImplPolicy = "STANDARD"      
-   
-   @property
-   def swImplPolicy(self):
-      return self._swImplPolicy
-
-   @swImplPolicy.setter
-   def swImplPolicy(self, value):
-      ucvalue=str(value).upper()
-      enum_values = ["CONST", "FIXED", "MEASUREMENT-POINT", "QUEUED", "STANDARD"]
-      if ucvalue in enum_values:
-         self._swImplPolicy = ucvalue
-      else:
-         raise ValueError('invalid swImplPolicy value: ' +  value)
-   
-   def __eq__(self, other):
-      if isinstance(other, self.__class__):
-         if self.name == other.name and self.adminData == other.adminData and self.typeRef == other.typeRef: return True
-      return False
-      
-   def asdict(self):
-      data = {'type': self.__class__.__name__, 'name': self.name, 'isQueued': self.isQueued, 'typeRef': self.typeRef}
-      data['adminData']=self.adminData.asdict() if self.adminData is not None else None
-      if len(self.swAddrMethodRefList)>0:
-         data['swAddrMethodRef']=self.swAddrMethodRefList[:]
-      return data
-
 class ModeGroup(Element):
    def __init__(self, name, typeRef, parent=None, adminData=None):
       super().__init__(name, parent, adminData)
       self.typeRef=typeRef
    
    def tag(self,version=None):
-      if version<4.0:
-         return "MODE-DECLARATION-GROUP-PROTOTYPE"
-      else:
+      if version>=4.0:
          return "MODE-GROUP"
+      else:
+         return "MODE-DECLARATION-GROUP-PROTOTYPE"
    
    def asdict(self):
       return {'type': self.__class__.__name__, 'name':self.name, 'typeRef':self.typeRef}

@@ -181,7 +181,7 @@ class Package(object):
             elem.typeRef=dataType.ref
             if isinstance(autosar.portinterface.DataElement):
                #convert into Parameter
-               parameter = autosar.portinterface.Parameter(elem.name, elem.typeRef, elem.softwareAddressMethodRef, adminData=elem.adminData)
+               parameter = autosar.portinterface.Parameter(elem.name, elem.typeRef, elem.swAddressMethodRef, adminData=elem.adminData)
             else:
                parameter = elem
             portInterface.append(parameter)
@@ -189,10 +189,10 @@ class Package(object):
          dataType=ws.find(parameters.typeRef, role='DataType')
          #normalize reference to data element
          if dataType is None:
-            raise ValueError('invalid type reference: '+dataElements.typeRef)
+            raise ValueError('invalid type reference: '+parameters.typeRef)
          parameters.typeRef=dataType.ref
          parameter = autosar.portinterface.Parameter(parameters.name, parameters.typeRef,
-                                                     parameters.softwareAddressMethodRef, adminData=parameters.adminData)
+                                                     parameters.swAddressMethodRef, adminData=parameters.adminData)
          portInterface.append(parameter)
       elif isinstance(parameters, autosar.portinterface.Parameter):
          dataType=ws.find(parameters.typeRef, role='DataType')
