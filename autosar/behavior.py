@@ -918,14 +918,14 @@ class InternalBehavior(InternalBehaviorCommon):
       self.perInstanceMemories.append(perInstanceMemory)
       return perInstanceMemory
    
-   def createSharedCalParam(self, name, typeRef, SWAddrMethodRef, adminData=None):
+   def createSharedCalParam(self, name, typeRef, SwAddrMethodRef, adminData=None):
       self._initSWC()
       ws = self.rootWS()
       dataType = ws.find(typeRef, role='DataType')
       if dataType is None:
          raise ValueError('invalid reference: '+typeRef)      
       elem = CalPrmElemPrototype(name, dataType.ref, self, adminData)
-      elem.swDataDefsProps.append(SWAddrMethodRef)
+      elem.swDataDefsProps.append(SwAddrMethodRef)
       self.sharedCalParams.append(elem)
       return elem
    
@@ -998,6 +998,8 @@ class SwcInternalBehavior(InternalBehaviorCommon):
    def __init__(self,name, componentRef, multipleInstance=False,parent=None):
       super().__init__(name, componentRef, multipleInstance, parent)
       self.serviceDependencies = [] #list of SwcServiceDependency objects
+      self.parameterDataPrototype = [] #list of ParameterDataPrototye objects
+      self.dataTypeMappingRefs = [] #list of strings
       
    def tag(self, version): return "SWC-INTERNAL-BEHAVIOR"
 
@@ -1059,3 +1061,16 @@ class RoleBasedPortAssignment:
       self.portRef = portRef
    
    def tag(self, version): return 'ROLE-BASED-PORT-ASSIGNMENT'
+
+class ParameterDataPrototype(Element):
+   """
+   Represents <PARAMETER-DATA-PROTOTYPE>
+   """
+   
+   def __init__(self, name, typeRef, swAddressMethodRef=None, swCalibrationAccess=None, parent=None, adminData=None):
+      super().__init__(name, parent, adminData)
+      self.typeRef = typeRef      
+      self.swAddressMethodRef = swAddressMethodRef
+      self.swCalibrationAccess = swCalibrationAccess
+   
+   def tag(self, version): return 'PARAMETER-DATA-PROTOTYPE'

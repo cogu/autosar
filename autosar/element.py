@@ -53,7 +53,7 @@ class Element(object):
 
 class DataElement(Element):
    def tag(self,version): return "VARIABLE-DATA-PROTOTYPE" if version >= 4.0 else "DATA-ELEMENT-PROTOTYPE"
-   def __init__(self, name, typeRef, isQueued=False, softwareAddressMethodRef=None, swCalibrationAccess=None, parent=None, adminData=None):
+   def __init__(self, name, typeRef, isQueued=False, softwareAddressMethodRef=None, swCalibrationAccess=None, swImplPolicy = None, parent=None, adminData=None):
       super().__init__(name,parent,adminData)
       if isinstance(typeRef,str):
          self.typeRef=typeRef
@@ -66,28 +66,31 @@ class DataElement(Element):
       self.isQueued=isQueued
       self.swAddressMethodRef = softwareAddressMethodRef
       self.swCalibrationAccess = swCalibrationAccess
-      self._swImplPolicy = None
-      
-   
+      self.swImplPolicy = swImplPolicy
+         
    @property
    def swImplPolicy(self):
       return self._swImplPolicy
 
    @swImplPolicy.setter
    def swImplPolicy(self, value):
-      ucvalue=str(value).upper()
-      enum_values = ["CONST", "FIXED", "MEASUREMENT-POINT", "QUEUED", "STANDARD"]
-      if ucvalue in enum_values:
-         self._swImplPolicy = ucvalue
+      if value is None:
+         self._swImplPolicy=None
       else:
-         raise ValueError('invalid swImplPolicy value: ' +  value)
+         ucvalue=str(value).upper()
+         enum_values = ["CONST", "FIXED", "MEASUREMENT-POINT", "QUEUED", "STANDARD"]
+         if ucvalue in enum_values:
+            self._swImplPolicy = ucvalue
+            if ucvalue == 'QUEUED':
+               self.isQueued = True
+         else:
+            raise ValueError('invalid swImplPolicy value: ' +  value)
  
    def setProps(self, variant):
       if isinstance(variant, autosar.base.SwDataDefPropsConditional):
-         if variant.swCalibrationAccess is not None:
-            self.swCalibrationAccess=variant.swCalibrationAccess
-         if variant.swAddressMethodRef is not None:
-            self.swAddressMethodRef = variant.swAddressMethodRef
+         self.swCalibrationAccess=variant.swCalibrationAccess
+         self.swAddressMethodRef = variant.swAddressMethodRef
+         self.swImplPolicy = variant.swImplPolicy            
       else:
          raise NotImplementedError(type(variant))
 

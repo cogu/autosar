@@ -162,16 +162,17 @@ def filter_packages(packages, filters):
 
 class SwDataDefPropsConditional:
    def tag(self,version=None): return 'SW-DATA-DEF-PROPS-CONDITIONAL'
-   def __init__(self, baseTypeRef = None, implementationTypeRef = None, swAddressMethodRef = None, swCalibrationAccess = None, compuMethodRef = None, dataConstraintRef = None, parent = None):
+   def __init__(self, baseTypeRef = None, implementationTypeRef = None, swAddressMethodRef = None, swCalibrationAccess = None, swImplPolicy = None, compuMethodRef = None, dataConstraintRef = None, unitRef = None, parent = None):
       self.baseTypeRef = baseTypeRef
       self.swCalibrationAccess = swCalibrationAccess
       self.swAddressMethodRef = swAddressMethodRef
       self.compuMethodRef = compuMethodRef
       self.dataConstraintRef = dataConstraintRef
-      self.implementationTypeRef = implementationTypeRef
-      self.parent = parent
+      self.implementationTypeRef = implementationTypeRef      
       self.swPointerTargetProps = None
-      self._swImplPolicy=None
+      self.unitRef = unitRef
+      self.swImplPolicy = swImplPolicy
+      self.parent = parent
 
    @property
    def swImplPolicy(self):

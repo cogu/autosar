@@ -82,6 +82,8 @@ class PortInterfaceWriter(WriterBase):
       assert(ws is not None)
       lines.append('<%s>'%portInterface.tag(self.version))
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%portInterface.name,1))
+      if portInterface.adminData is not None:
+         lines.extend(self.indent(self.writeAdminDataXML(portInterface.adminData),1))
       if len(portInterface.elements)>0:
          lines.append(self.indent('<PARAMETERS>',1))
          for elem in portInterface.elements:
@@ -121,6 +123,8 @@ class PortInterfaceWriter(WriterBase):
       if portInterface.adminData is not None:
          lines.extend(self.indent(self.writeAdminDataXML(portInterface.adminData),1))
       lines.append(self.indent('<IS-SERVICE>%s</IS-SERVICE>'%self.toBoolean(portInterface.isService),1))
+      if (portInterface.serviceKind is not None) and (self.version >= 4.0):
+         lines.append(self.indent('<SERVICE-KIND>%s</SERVICE-KIND>'%portInterface.serviceKind,1))
       if len(portInterface.operations)>0:
          lines.append(self.indent('<OPERATIONS>',1))
          for operation in portInterface.operations:
@@ -317,10 +321,8 @@ class PortInterfaceWriter(WriterBase):
          params.append(repr(dataType.ref)) #use full reference
       if elem.isQueued:
          params.append('True')
-      if len(elem.swAddrMethodRefList)>1:
-         raise NotImplementedError("data elements with more than one SoftwareAddressMethod reference not supported")
-      if len(elem.swAddrMethodRefList)==1:
-         params.append('softwareAddressMethodRef="%s"'%elem.swAddrMethodRefList[0])
+      if elem.swAddressMethodRef is not None:
+         params.append('softwareAddressMethodRef="%s"'%elem.swAddressMethodRef)
       if elem.adminData is not None:
          param = self.writeAdminDataCode(elem.adminData, localvars)
          assert(len(param)>0)

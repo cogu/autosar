@@ -131,12 +131,12 @@ class ConstantParser(ElementParser):
          else:
             raise NotImplementedError(xmlElem.tag)
 
-      if (label is not None) and (xmlFields is not None):
+      if (xmlFields is not None):
          record = autosar.constant.RecordValue(label, parent=parent)
          record.elements = self.parseValueV4(xmlFields, record)
          return record
       else:
-         raise RuntimeError("both label and xmlFields must not be None")
+         raise RuntimeError("<FIELDS> must not be None")
 
    def _parseArrayValueSpecification(self, xmlValue, parent):
       (label, xmlElements) = (None, None)
@@ -148,10 +148,10 @@ class ConstantParser(ElementParser):
          else:
             raise NotImplementedError(xmlElem.tag)
 
-      if (label is not None) and (xmlElements is not None):
+      if (xmlElements is not None):
          array = autosar.constant.ArrayValue(label, parent=parent)
          array.elements = self.parseValueV4(xmlElements, array)
          return array
 
       else:
-         raise RuntimeError("both label and xmlFields must not be None")
+         raise RuntimeError("<ELEMENTS> must not be None")

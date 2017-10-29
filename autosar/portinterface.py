@@ -131,6 +131,7 @@ class ClientServerInterface(PortInterface):
       super().__init__(name, isService, parent, adminData)
       self.operations=[]
       self.applicationErrors=[]
+      self.serviceKind = None
       
 
    def tag(self,version=None):

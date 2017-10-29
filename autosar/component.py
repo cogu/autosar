@@ -489,12 +489,13 @@ class OperationComSpec(object):
          data['queueLength']=self.queueLength
 
 class DataElementComSpec(object):
-   def __init__(self,name=None,initValueRef=None,aliveTimeout=None,queueLength=None,canInvalidate=None):
+   def __init__(self, name=None, initValueRef=None, aliveTimeout=None, queueLength=None, canInvalidate=None, initValue=None):
       self.name = name
       self.initValueRef = str(initValueRef) if initValueRef is not None else None
       self._aliveTimeout = int(aliveTimeout) if aliveTimeout is not None else None
       self._queueLength = int(queueLength) if queueLength is not None else None
       self.canInvalidate = bool(canInvalidate) if canInvalidate is not None else None
+      self.initValue = initValue
 
    @property
    def aliveTimeout(self):

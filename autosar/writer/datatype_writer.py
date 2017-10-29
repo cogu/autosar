@@ -55,6 +55,8 @@ class DataTypeWriter(WriterBase):
          lines.extend(self.indent(self.writeAdminDataXML(elem.adminData),1))
       if isinstance(elem,autosar.datatype.CompuMethodConst):
          lines.extend(self.indent(self.writeCompuMethodConstXml(elem),1))
+      elif isinstance(elem,autosar.datatype.CompuMethodMask):
+         lines.extend(self.indent(self.writeCompuMethodMaskXml(elem),1))
       else:
          if elem.unitRef is not None:
             lines.append(self.indent('<UNIT-REF DEST="UNIT">%s</UNIT-REF>'%elem.unitRef,1))
@@ -79,6 +81,24 @@ class DataTypeWriter(WriterBase):
          lines.append(self.indent('<COMPU-CONST>',3))
          lines.append(self.indent('<VT>%s</VT>'%elem.textValue,4))
          lines.append(self.indent('</COMPU-CONST>',3))
+         lines.append(self.indent('</COMPU-SCALE>',2))
+      lines.append(self.indent('</COMPU-SCALES>',1))
+      lines.append('</COMPU-INTERNAL-TO-PHYS>')
+      return lines
+
+   def writeCompuMethodMaskXml(self,item):
+      lines=[]
+      lines.append('<COMPU-INTERNAL-TO-PHYS>')
+      lines.append(self.indent('<COMPU-SCALES>',1))
+      for elem in item.elements:
+         lines.append(self.indent('<COMPU-SCALE>',2))
+         if elem.label is not None:
+            lines.append(self.indent('<SHORT-LABEL>%s</SHORT-LABEL>'%elem.label,3))
+            if elem.symbol is not None:
+               lines.append(self.indent('<SYMBOL>%s</SYMBOL>'%elem.symbol,3))
+            lines.append(self.indent('<MASK>%d</MASK>'%elem.mask,3))
+            lines.append(self.indent('<LOWER-LIMIT INTERVAL-TYPE="CLOSED">%d</LOWER-LIMIT>'%elem.lowerLimit,3))
+            lines.append(self.indent('<UPPER-LIMIT INTERVAL-TYPE="CLOSED">%d</UPPER-LIMIT>'%elem.upperLimit,3))
          lines.append(self.indent('</COMPU-SCALE>',2))
       lines.append(self.indent('</COMPU-SCALES>',1))
       lines.append('</COMPU-INTERNAL-TO-PHYS>')
@@ -526,18 +546,61 @@ class DataTypeWriter(WriterBase):
          lines.append(self.indent('<ARRAY-SIZE>%s</ARRAY-SIZE>'%elem.arraySize,1))
       if elem.arraySizeSemantics is not None:
          lines.append(self.indent('<ARRAY-SIZE-SEMANTICS>%s</ARRAY-SIZE-SEMANTICS>'%elem.arraySizeSemantics,1))
-      lines.append(self.indent("<SW-DATA-DEF-PROPS>", 1))
       if len(elem.variants)>=0:
+         lines.append(self.indent("<SW-DATA-DEF-PROPS>", 1))
          lines.extend(self.indent(self.writeSwDataDefPropsVariantsXML(ws, elem.variants),2))
-      lines.append(self.indent("</SW-DATA-DEF-PROPS>", 1))
+         lines.append(self.indent("</SW-DATA-DEF-PROPS>", 1))
       lines.append("</%s>"%elem.tag(self.version))
       return lines
 
    def writeDataTypeMappingSetXML(self, elem, package):
       assert(isinstance(elem, autosar.datatype.DataTypeMappingSet))
+      ws=elem.rootWS()
+      assert(ws is not None)
+
       lines = []
       lines.append("<%s>"%elem.tag(self.version))
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
+      dataTypeMaps = []
+      for key in sorted(elem.map.keys()):
+         dataTypeMaps.append(elem.get(key))
+      if len(dataTypeMaps) > 0:
+         lines.append(self.indent('<DATA-TYPE-MAPS>',1))
+         for dataTypeMap in dataTypeMaps:
+            lines.extend(self.indent(self.writeDataTypeMap(ws, dataTypeMap),2))
+         lines.append(self.indent('</DATA-TYPE-MAPS>',1))
       lines.append("</%s>"%elem.tag(self.version))
       return lines
-      
+   
+   def writeDataTypeMap(self, ws, elem):
+      lines = []
+      lines.append("<%s>"%elem.tag(self.version))
+      applicationDataType = ws.find(elem.applicationDataTypeRef)
+      if applicationDataType is None:
+         raise ValueError('Invalid type refernce:' + elem.applicationDataTypeRef)
+      implementationDataType = ws.find(elem.implementationDataTypeRef)
+      if implementationDataType is None:
+         raise ValueError('Invalid type refernce:' + elem.implementationDataTypeRef)
+      lines.append(self.indent('<APPLICATION-DATA-TYPE-REF DEST="%s">%s</APPLICATION-DATA-TYPE-REF>'%(applicationDataType.tag(self.version), applicationDataType.ref),1))
+      lines.append(self.indent('<IMPLEMENTATION-DATA-TYPE-REF DEST="%s">%s</IMPLEMENTATION-DATA-TYPE-REF>'%(implementationDataType.tag(self.version), implementationDataType.ref),1))
+      lines.append("</%s>"%elem.tag(self.version))
+      return lines
+
+   def writeApplicationPrimitiveDataTypeXml(self, elem, package):
+      assert(isinstance(elem, autosar.datatype.ApplicationPrimitiveDataType))
+      ws=elem.rootWS()
+      assert(ws is not None)
+
+      lines = []
+      lines.append("<%s>"%elem.tag(self.version))
+      lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
+      if elem.desc is not None:
+         lines.extend(self.indent(self.writeDescXML(elem),1))
+      if elem.category is not None:
+         lines.append(self.indent('<CATEGORY>%s</CATEGORY>'%elem.category,1))
+      if len(elem.variants)>=0:
+         lines.append(self.indent("<SW-DATA-DEF-PROPS>", 1))
+         lines.extend(self.indent(self.writeSwDataDefPropsVariantsXML(ws, elem.variants),2))
+         lines.append(self.indent("</SW-DATA-DEF-PROPS>", 1))
+      lines.append("</%s>"%elem.tag(self.version))
+      return lines

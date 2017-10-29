@@ -199,6 +199,11 @@ class WriterBase():
          lines.append(self.indent('<IMPLEMENTATION-DATA-TYPE-REF DEST="%s">%s</IMPLEMENTATION-DATA-TYPE-REF>'%(implementationType.tag(self.version), implementationType.ref),1))
       if elem.swPointerTargetProps is not None:
          lines.extend(self.indent(self.writeSwPointerTargetPropsXML(ws, elem.swPointerTargetProps),1))
+      if elem.unitRef is not None:
+         unit=ws.find(elem.unitRef)
+         if unit is None:
+            raise ValueError('invalid reference: '+elem.unitRef)
+         lines.append(self.indent('<UNIT-REF DEST="UNIT">%s</UNIT-REF>'%(unit.ref),1))
       lines.append("</%s>"%elem.tag(self.version))
       return lines
 
@@ -255,7 +260,8 @@ class WriterBase():
 
    def _writeRecordValueSpecificationXML(self, value):
       lines=[]
-      lines.append('<SHORT-LABEL>%s</SHORT-LABEL>'%(value.name))
+      if value.name is not None:
+         lines.append('<SHORT-LABEL>%s</SHORT-LABEL>'%(value.name))
       lines.append('<FIELDS>')
       for elem in value.elements:
          lines.extend(self.indent(self.writeValueSpecificationXML(elem),1))
@@ -264,7 +270,8 @@ class WriterBase():
 
    def _writeArrayValueSpecificationXML(self, value):
       lines=[]
-      lines.append('<SHORT-LABEL>%s</SHORT-LABEL>'%(value.name))
+      if value.name is not None:
+         lines.append('<SHORT-LABEL>%s</SHORT-LABEL>'%(value.name))
       lines.append('<ELEMENTS>')
       for elem in value.elements:
          lines.extend(self.indent(self.writeValueSpecificationXML(elem),1))
@@ -279,7 +286,7 @@ class WriterBase():
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
       if self.version >= 4.0:
          lines.append(self.indent('<SW-DATA-DEF-PROPS>',1))         
-         variant = autosar.base.SwDataDefPropsConditional(None, None, elem.swAddressMethodRef, elem.swCalibrationAccess)
+         variant = autosar.base.SwDataDefPropsConditional(swAddressMethodRef = elem.swAddressMethodRef, swCalibrationAccess = elem.swCalibrationAccess)
          variant.swImplPolicy = elem.swImplPolicy
          lines.extend(self.indent(self.writeSwDataDefPropsVariantsXML(ws, [variant]),2))
          lines.append(self.indent('</SW-DATA-DEF-PROPS>',1))

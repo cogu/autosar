@@ -38,7 +38,7 @@ def _getParameterNameFromComSpec(xmlElem,portInterfaceRef):
 
 class ComponentTypeParser(ElementParser):
    """
-   ComponentType parser   
+   ComponentType parser
    """
 
    def __init__(self,version=3.0):
@@ -59,7 +59,7 @@ class ComponentTypeParser(ElementParser):
          self.switcher = {
             'APPLICATION-SW-COMPONENT-TYPE': self.parseSoftwareComponent,
             'SWC-IMPLEMENTATION': self.parseSwcImplementation
-         }      
+         }
 
    def getSupportedTags(self):
       return self.switcher.keys()
@@ -70,7 +70,7 @@ class ComponentTypeParser(ElementParser):
          return parseFunc(xmlElement,parent)
       else:
          return None
-                           
+
    def parseSoftwareComponent(self,xmlRoot,parent=None):
       componentType=None
       handledTags = ['SHORT-NAME','APPLICATION-SOFTWARE-COMPONENT-TYPE', 'COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE', 'APPLICATION-SW-COMPONENT-TYPE']
@@ -80,14 +80,14 @@ class ComponentTypeParser(ElementParser):
          componentType = autosar.component.ComplexDeviceDriverComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
       elif xmlRoot.tag == 'APPLICATION-SW-COMPONENT-TYPE': #for AUTOSAR 4.x
          componentType = autosar.component.ApplicationSoftwareComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
-      elif xmlRoot.tag == 'SERVICE-COMPONENT-TYPE': 
+      elif xmlRoot.tag == 'SERVICE-COMPONENT-TYPE':
          componentType = autosar.component.ServiceComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
-      elif xmlRoot.tag == 'CALPRM-COMPONENT-TYPE': 
+      elif xmlRoot.tag == 'CALPRM-COMPONENT-TYPE':
          componentType = autosar.component.ParameterComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
       else:
          raise NotImplementedError(xmlRoot.tag)
       for xmlElem in xmlRoot.findall('./*'):
-         if xmlElem.tag not in handledTags: 
+         if xmlElem.tag not in handledTags:
             if xmlElem.tag == 'PORTS':
                self.parseComponentPorts(componentType,xmlRoot)
             elif xmlElem.tag == 'INTERNAL-BEHAVIORS':
@@ -97,18 +97,18 @@ class ComponentTypeParser(ElementParser):
                elif len(behaviors) == 1:
                   componentType.behavior = self.behavior_parser.parseSWCInternalBehavior(behaviors[0], componentType)
             else:
-               print('Unhandled tag: '+xmlElem.tag, file=sys.stderr)               
+               print('Unhandled tag: '+xmlElem.tag, file=sys.stderr)
       return componentType
-   
+
    def parseComponentPorts(self,componentType,xmlRoot):
       xmlPorts=xmlRoot.find('PORTS')
-      assert(xmlPorts is not None)      
+      assert(xmlPorts is not None)
       for xmlPort in xmlPorts.findall('*'):
          if(xmlPort.tag == "R-PORT-PROTOTYPE"):
             portName = xmlPort.find('SHORT-NAME').text
             portInterfaceRef = self.parseTextNode(xmlPort.find('REQUIRED-INTERFACE-TREF'))
-            port = autosar.component.RequirePort(portName,portInterfaceRef,parent=componentType)                        
-            if xmlPort.findall('./REQUIRED-COM-SPECS') is not None:        
+            port = autosar.component.RequirePort(portName,portInterfaceRef,parent=componentType)
+            if xmlPort.findall('./REQUIRED-COM-SPECS') is not None:
                for xmlItem in xmlPort.findall('./REQUIRED-COM-SPECS/*'):
                   if xmlItem.tag == 'CLIENT-COM-SPEC':
                      operationName=_getOperationNameFromComSpec(xmlItem,portInterfaceRef)
@@ -120,11 +120,19 @@ class ComponentTypeParser(ElementParser):
                      if xmlItem.find('./ALIVE-TIMEOUT') != None:
                         comspec.aliveTimeout = self.parseTextNode(xmlItem.find('./ALIVE-TIMEOUT'))
                      if self.version >= 4.0:
-                        if xmlItem.find('./INIT-VALUE') != None:
-                           comspec.initValueRef = self.parseTextNode(xmlItem.find('./INIT-VALUE/CONSTANT-REFERENCE/CONSTANT-REF'))
-                     else:                        
+                        xmlElem = xmlItem.find('./INIT-VALUE')
+                        if xmlElem != None:
+                           for xmlChild in xmlElem.findall('./*'):
+                              if xmlChild.tag == 'CONSTANT-REFERENCE':
+                                 comspec.initValueRef = self.parseTextNode(xmlChild.find('./CONSTANT-REF'))
+                              else:
+                                 values = self.constant_parser.parseValueV4(xmlElem, None)
+                                 if len(values) != 1:
+                                    raise ValueError('INIT-VALUE cannot cannot contain multiple elements')
+                                 comspec.initValue = values[0]
+                     else:
                         if xmlItem.find('./INIT-VALUE-REF') != None:
-                           comspec.initValueRef = self.parseTextNode(xmlItem.find('./INIT-VALUE-REF'))                                                
+                           comspec.initValueRef = self.parseTextNode(xmlItem.find('./INIT-VALUE-REF'))
                      port.comspec.append(comspec)
                   elif xmlItem.tag == 'QUEUED-RECEIVER-COM-SPEC':
                      dataElemName = _getDataElemNameFromComSpec(xmlItem,portInterfaceRef)
@@ -144,13 +152,13 @@ class ComponentTypeParser(ElementParser):
          elif(xmlPort.tag == 'P-PORT-PROTOTYPE'):
             portName = xmlPort.find('SHORT-NAME').text
             portInterfaceRef = self.parseTextNode(xmlPort.find('PROVIDED-INTERFACE-TREF'))
-            port = autosar.component.ProvidePort(portName,portInterfaceRef,parent=componentType)                                       
+            port = autosar.component.ProvidePort(portName,portInterfaceRef,parent=componentType)
             if xmlPort.findall('./PROVIDED-COM-SPECS') is not None:
                for xmlItem in xmlPort.findall('./PROVIDED-COM-SPECS/*'):
                   if xmlItem.tag == 'SERVER-COM-SPEC':
                      operationName=_getOperationNameFromComSpec(xmlItem,portInterfaceRef)
                      comspec=autosar.component.OperationComSpec(operationName)
-                     comspec.queueLength=parseIntNode(xmlItem.find('QUEUE-LENGTH'))
+                     comspec.queueLength=self.parseIntNode(xmlItem.find('QUEUE-LENGTH'))
                      port.comspec.append(comspec)
                   elif xmlItem.tag == 'UNQUEUED-SENDER-COM-SPEC' or xmlItem.tag == 'NONQUEUED-SENDER-COM-SPEC':
                      dataElemName = _getDataElemNameFromComSpec(xmlItem,portInterfaceRef)
@@ -158,9 +166,9 @@ class ComponentTypeParser(ElementParser):
                      if self.version >= 4.0:
                         if xmlItem.find('./INIT-VALUE') != None:
                            comspec.initValueRef = self.parseTextNode(xmlItem.find('./INIT-VALUE/CONSTANT-REFERENCE/CONSTANT-REF'))
-                     else:                        
+                     else:
                         if xmlItem.find('./INIT-VALUE-REF') != None:
-                           comspec.initValueRef = self.parseTextNode(xmlItem.find('./INIT-VALUE-REF'))                                                
+                           comspec.initValueRef = self.parseTextNode(xmlItem.find('./INIT-VALUE-REF'))
                      if xmlItem.find('./CAN-INVALIDATE') != None:
                         comspec.canInvalidate = True if self.parseTextNode(xmlItem.find('./CAN-INVALIDATE'))=='true' else False
                      port.comspec.append(comspec)
@@ -170,13 +178,13 @@ class ComponentTypeParser(ElementParser):
                      port.comspec.append(comspec)
                   else:
                      raise NotImplementedError(xmlItem.tag)
-            componentType.providePorts.append(port)      
+            componentType.providePorts.append(port)
 
    def parseSwcImplementation(self,xmlRoot,parent=None):
       ws = parent.rootWS()
       assert(ws is not None)
       name = self.parseTextNode(xmlRoot.find('SHORT-NAME'))
-      behaviorRef = self.parseTextNode(xmlRoot.find('BEHAVIOR-REF'))      
+      behaviorRef = self.parseTextNode(xmlRoot.find('BEHAVIOR-REF'))
       implementation = autosar.component.SwcImplementation(name,behaviorRef,parent=parent)
       behavior = ws.find(behaviorRef)
       if behavior is not None:
@@ -184,13 +192,13 @@ class ComponentTypeParser(ElementParser):
          if swc is not None:
             swc.implementation=implementation
       return implementation
-   
+
    def parseCompositionType(self,xmlRoot,parent=None):
       """
       parses COMPOSITION-TYPE
       """
       assert(xmlRoot.tag=='COMPOSITION-TYPE')
-      swc=CompositionComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
+      swc=autosar.component.CompositionComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
       for elem in xmlRoot.findall('./*'):
          if elem.tag=='SHORT-NAME':
             continue
@@ -203,7 +211,7 @@ class ComponentTypeParser(ElementParser):
          else:
             raise NotImplementedError(elem.tag)
       return swc
-      
+
    def parseComponents(self,xmlRoot,parent):
       """
       parses <COMPONENTS>
@@ -238,9 +246,9 @@ class ComponentTypeParser(ElementParser):
             parent.delegationConnectors.append(autosar.component.DelegationConnector(name, autosar.component.InnerPortInstanceRef(innerComponentRef,innerPortRef), autosar.component.OuterPortRef(outerPortRef)))
          else:
             raise NotImplementedError(elem.tag)
-   
+
    def _parseModeSwitchComSpec(self, xmlRoot):
-      (enhancedMode, supportAsync) = (False, False)      
+      (enhancedMode, supportAsync) = (False, False)
       for xmlElem in xmlRoot.findall('./*'):
          if xmlElem.tag == 'ENHANCED-MODE-API':
             enhancedMode = self.parseBooleanNode(xmlElem)

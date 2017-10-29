@@ -151,9 +151,9 @@ class PortInterfacePackageParser(ElementParser):
 
    def parseClientServerInterface(self,xmlRoot,parent=None):
       assert(xmlRoot.tag=='CLIENT-SERVER-INTERFACE')
-      xmlName = xmlRoot.find("./SHORT-NAME")
-      if xmlName is not None:
-            portInterface = autosar.portinterface.ClientServerInterface(xmlName.text)
+      name = self.parseTextNode(xmlRoot.find('SHORT-NAME'))
+      if name is not None:            
+            portInterface = autosar.portinterface.ClientServerInterface(name)            
             if hasAdminData(xmlRoot):
                   portInterface.adminData=parseAdminDataNode(xmlRoot.find('ADMIN-DATA'))
             for xmlElem in xmlRoot.findall('./*'):
@@ -173,6 +173,8 @@ class PortInterfacePackageParser(ElementParser):
                   for xmlError in xmlElem.findall('APPLICATION-ERROR'):
                      applicationError = self._parseApplicationError(xmlError, portInterface)
                      portInterface.applicationErrors.append(applicationError)
+               elif xmlElem.tag == 'SERVICE-KIND':
+                  portInterface.serviceKind = self.parseTextNode(xmlElem)
                else:
                   raise NotImplementedError(xmlElem.tag)
             return portInterface

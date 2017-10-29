@@ -111,13 +111,17 @@ class BehaviorParser(ElementParser):
       if (name is not None):
          handledXML = ['SHORT-NAME', 'SUPPORTS-MULTIPLE-INSTANTIATION']
          internalBehavior = SwcInternalBehavior(name, parent.ref, multipleInstance, parent)
-         for xmlNode in xmlRoot.findall('./*'):
-            if xmlNode.tag in handledXML:
+         for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag in handledXML:
                pass
-            elif xmlNode.tag == 'DATA-TYPE-MAPPING-REFS':
-               pass #not yet implemented
-            elif xmlNode.tag == 'EVENTS':
-                  for xmlEvent in xmlNode.findall('./*'):
+            elif xmlElem.tag == 'DATA-TYPE-MAPPING-REFS':
+               for xmlChild in xmlElem.findall('./*'):
+                  if xmlChild.tag == 'DATA-TYPE-MAPPING-REF':
+                     tmp = self.parseTextNode(xmlChild)
+                     assert(tmp is not None)
+                     internalBehavior.dataTypeMappingRefs.append(tmp)
+            elif xmlElem.tag == 'EVENTS':
+                  for xmlEvent in xmlElem.findall('./*'):
                      event = None
                      if xmlEvent.tag == 'INIT-EVENT':
                         event = self.parseInitEvent(xmlEvent,internalBehavior)
@@ -135,39 +139,46 @@ class BehaviorParser(ElementParser):
                         internalBehavior.events.append(event)
                      else:
                         raise NotImplementedError(xmlEvent.tag)
-            elif xmlNode.tag == 'PORT-API-OPTIONS':
-               for xmlOption in xmlNode.findall('./PORT-API-OPTION'):
+            elif xmlElem.tag == 'PORT-API-OPTIONS':
+               for xmlOption in xmlElem.findall('./PORT-API-OPTION'):
                   portAPIOption = PortAPIOption(parseTextNode(xmlOption.find('PORT-REF')),parseBooleanNode(xmlOption.find('ENABLE-TAKE-ADDRESS')),parseBooleanNode(xmlOption.find('INDIRECT-API')))
                   if portAPIOption is not None: internalBehavior.portAPIOptions.append(portAPIOption)
-            elif xmlNode.tag == 'RUNNABLES':
-               for xmRunnable in xmlNode.findall('./RUNNABLE-ENTITY'):
+            elif xmlElem.tag == 'RUNNABLES':
+               for xmRunnable in xmlElem.findall('./RUNNABLE-ENTITY'):
                   runnableEntity = self.parseRunnableEntity(xmRunnable, internalBehavior)
                   if runnableEntity is not None:
                      internalBehavior.runnables.append(runnableEntity)
-            elif xmlNode.tag == 'AR-TYPED-PER-INSTANCE-MEMORYS':
-               for xmlChild in xmlNode.findall('./*'):
+            elif xmlElem.tag == 'AR-TYPED-PER-INSTANCE-MEMORYS':
+               for xmlChild in xmlElem.findall('./*'):
                   if xmlChild.tag == 'VARIABLE-DATA-PROTOTYPE':
                      dataElement = self.parseVariableDataPrototype(xmlChild, internalBehavior)
                      internalBehavior.perInstanceMemories.append(dataElement)
                   else:
                      raise NotImplementedError(xmlChild.tag)
-            elif xmlNode.tag == 'SERVICE-DEPENDENCYS':
-               for xmlChildElem in xmlNode.findall('./*'):
+            elif xmlElem.tag == 'SERVICE-DEPENDENCYS':
+               for xmlChildElem in xmlElem.findall('./*'):
                   if xmlChildElem.tag == 'SWC-SERVICE-DEPENDENCY':
                      swcServiceDependency = self.parseSwcServiceDependency(xmlChildElem, internalBehavior)
                      internalBehavior.serviceDependencies.append(swcServiceDependency)
                   else:
                      raise NotImplementedError(childElem.tag)
-            elif xmlNode.tag == 'SHARED-PARAMETERS':
-               for xmlChildElem in xmlNode.findall('./*'):
+            elif xmlElem.tag == 'SHARED-PARAMETERS':
+               for xmlChildElem in xmlElem.findall('./*'):
                   if xmlChildElem.tag == 'PARAMETER-DATA-PROTOTYPE':
-                     parameterDataPrototype = self.parseParameterDataPrototype(xmlChildElem)
+                     tmp = self.parseParameterDataPrototype(xmlChildElem)
+                     if tmp is not None:
+                        internalBehavior.parameterDataPrototype.append(tmp)                     
                   else:
                      raise NotImplementedError(childElem.tag)
-            elif xmlNode.tag == 'EXCLUSIVE-AREAS':
-               pass
+            elif xmlElem.tag == 'EXCLUSIVE-AREAS':
+               for xmlChild in xmlElem.findall('./*'):
+                  if xmlChild.tag=='EXCLUSIVE-AREA':
+                     exclusiveArea=ExclusiveArea(parseTextNode(xmlChild.find('SHORT-NAME')), internalBehavior)
+                     internalBehavior.exclusiveAreas.append(exclusiveArea)
+                  else:
+                     raise NotImplementedError(xmlChild.tag)
             else:
-               raise NotImplementedError(xmlNode.tag)
+               raise NotImplementedError(xmlElem.tag)
          return internalBehavior
 
    def parseRunnableEntity(self, xmlRoot, parent):
@@ -214,8 +225,7 @@ class BehaviorParser(ElementParser):
             elif xmlElem.tag=='SYMBOL':
                symbol=parseTextNode(xmlElem)
             elif xmlElem.tag=='CAN-ENTER-EXCLUSIVE-AREA-REFS':
-               pass
-               #xmlCanEnterExclusiveAreas=xmlElem
+               xmlCanEnterExclusiveAreas=xmlElem               
             elif xmlElem.tag == 'MINIMUM-START-INTERVAL':
                pass #not implemented
             elif xmlElem.tag=='ADMIN-DATA':
@@ -448,22 +458,37 @@ class BehaviorParser(ElementParser):
       return dataReceivedEvent
 
    def parseOperationInvokedEvent(self,xmlRoot,parent=None):
-      name = parseTextNode(xmlRoot.find('SHORT-NAME'))
-      startOnEventRef = parseTextNode(xmlRoot.find('START-ON-EVENT-REF'))
-      operationInstanceRef=self.parseOperationInstanceRef(xmlRoot.find('OPERATION-IREF'),'P-PORT-PROTOTYPE-REF')
+      (name, startOnEventRef, modeDependency, operationInstanceRef) = (None, None, None, None)      
+      for xmlElem in xmlRoot.findall('./*'):
+         if xmlElem.tag == 'SHORT-NAME':
+            name = self.parseTextNode(xmlElem)
+         elif xmlElem.tag == 'START-ON-EVENT-REF':
+            startOnEventRef = self.parseTextNode(xmlElem)
+         elif xmlElem.tag == 'OPERATION-IREF':
+            portTag = 'CONTEXT-P-PORT-REF' if self.version >= 4.0 else 'P-PORT-PROTOTYPE-REF'            
+            operationInstanceRef = self.parseOperationInstanceRef(xmlElem, portTag)
+         elif xmlElem.tag == 'MODE-DEPENDENCY':
+            modeDependency = self._parseModeDependency(xmlModeDependency)
+         else:
+            raise NotImplementedError(xmlElem.tag)
       operationInvokedEvent=OperationInvokedEvent(name, startOnEventRef, parent)
-      xmlModeDependency = xmlRoot.find('MODE-DEPENDENCY')
-      if xmlModeDependency is not None:
-         operationInvokedEvent.modeDependency = self._parseModeDependency(xmlModeDependency)
-      operationInvokedEvent.operationInstanceRef=operationInstanceRef
+      operationInvokedEvent.modeDependency = modeDependency      
+      operationInvokedEvent.operationInstanceRef = operationInstanceRef
       return operationInvokedEvent
 
-
-   def parseDataInstanceRef(self,xmlRoot,portTag):
+   def parseDataInstanceRef(self, xmlRoot, portTag):
       """parses <DATA-IREF>"""
       assert(xmlRoot.tag=='DATA-IREF')
-      assert(xmlRoot.find(portTag) is not None)
-      return DataInstanceRef(parseTextNode(xmlRoot.find(portTag)),parseTextNode(xmlRoot.find('DATA-ELEMENT-PROTOTYPE-REF')))
+      dataElemTag = 'TARGET-DATA-ELEMENT-REF' if self.version >= 4.0 else 'DATA-ELEMENT-PROTOTYPE-REF'
+      (portRef, dataElemRef) = (None, None)
+      for xmlElem in xmlRoot.findall('./*'):
+         if xmlElem.tag == portTag:
+            portRef = self.parseTextNode(xmlElem)
+         elif xmlElem.tag == dataElemTag:
+            dataElemRef = self.parseTextNode(xmlElem)
+         else:
+            raise NotImplementedError(xmlElem.tag)         
+      return DataInstanceRef(portRef,dataElemRef)
 
    def parseOperationInstanceRef(self,xmlRoot,portTag):
       """parses <OPERATION-IREF>"""
@@ -617,18 +642,25 @@ class BehaviorParser(ElementParser):
    def parseParameterDataPrototype(self, xmlRoot):
       """parses <PARAMETER-DATA-PROTOTYPE> (AUTOSAR 4)"""
       assert(xmlRoot.tag == 'PARAMETER-DATA-PROTOTYPE')
-      (name, xmlDesc) = (None, None)
+      (name, xmlDesc, variants, typeRef, swAddressMethodRef, swCalibrationAccess) = (None, None, None, None, None, None)
       for xmlElem in xmlRoot.findall('./*'):
          if xmlElem.tag == 'SHORT-NAME':
             name = self.parseTextNode(xmlElem)
          elif xmlElem.tag == 'DESC':
-            xmlDesc = xmlElem
+            desc = self.parseDescDirect(xmlElem)
          elif xmlElem.tag == 'SW-DATA-DEF-PROPS':
-            pass
+            variants = self.parseSwDataDefProps(xmlElem)
+            if len(variants) > 0:
+               swAddressMethodRef = variants[0].swAddressMethodRef
+               swCalibrationAccess = variants[0].swCalibrationAccess
          elif xmlElem.tag == 'TYPE-TREF':
-            pass
+            typeRef = self.parseTextNode(xmlElem)
          else:
             raise NotImplementedError(xmlElem.tag)
+      if (name is not None) and (typeRef is not None):
+         return ParameterDataPrototype(name, typeRef, swAddressMethodRef, swCalibrationAccess)
+      return None
+      
 
    def parseServiceNeeds(self, xmlRoot, parent = None):
       """parses <SERVICE-NEEDS> (AUTOSAR 4)"""

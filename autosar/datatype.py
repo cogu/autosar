@@ -1,10 +1,11 @@
 from autosar.element import Element
+import autosar.base
 import math
 import json
 import copy
 import collections
 
-class ConstElement(object):
+class ConstElement:
    def __init__(self,parent=None):
       self.parent=parent
 
@@ -19,8 +20,6 @@ class ConstElement(object):
    def rootWS(self):
       if self.parent is None: return None
       return self.parent.rootWS()
-
-
 
 class RecordTypeElement(ConstElement):
    def __init__(self,name,typeRef,parent=None):
@@ -39,10 +38,11 @@ class RecordTypeElement(ConstElement):
       return False
 
 class CompuConstElement(ConstElement):
-   def __init__(self, lowerLimit, upperLimit, textValue, label=None, adminData=None):
+   def __init__(self, lowerLimit, upperLimit, textValue, label=None, symbol=None, adminData=None):
       self.lowerLimit=lowerLimit
       self.upperLimit=upperLimit
       self.textValue=textValue
+      self.symbol=symbol
       self.label=label
       self.adminData=adminData
    def __eq__(self,other):
@@ -53,16 +53,31 @@ class CompuConstElement(ConstElement):
 
 
 class CompuRationalElement(ConstElement):
-   def __init__(self, offset, numerator, denominator, label=None, adminData=None):
+   def __init__(self, offset, numerator, denominator, label=None, symbol = None, adminData=None):
       self.offset=offset
       self.numerator=numerator
       self.denominator=denominator
       self.label=label
+      self.symbol=symbol
       self.adminData=adminData
    def __eq__(self,other):
       if self is other: return True
       if type(self) is type(other):
          return (self.offset == other.offset) and (self.numerator == other.numerator) and (self.denominator == self.denominator)
+      return False
+
+class CompuMaskElement(ConstElement):
+   def __init__(self, lowerLimit, upperLimit, mask, label=None, symbol=None, adminData=None):
+      self.lowerLimit=lowerLimit
+      self.upperLimit=upperLimit
+      self.label=label
+      self.mask=mask
+      self.symbol=symbol
+      self.adminData=adminData
+   def __eq__(self,other):
+      if self is other: return True
+      if type(self) is type(other):
+         return (self.lowerLimit == other.lowerLimit) and (self.upperLimit == other.upperLimit) and (self.mask == self.mask)
       return False
 
 class DataTypeUnitElement(Element):
@@ -269,11 +284,10 @@ class CompuMethodRational(Element):
 
 class CompuMethodConst(Element):
    def tag(self, version=3.0): return 'COMPU-METHOD'
-   def __init__(self, name, elements, parent=None, adminData=None, category=None):
+   def __init__(self, name, elements, parent=None, category=None, adminData=None):
       super().__init__(name, parent, adminData)
       self.elements = []
-      self.category=category
-      self.adminData = adminData
+      self.category=category      
       for elem in elements:
          if isinstance(elem,str):
             index=len(self.elements)
@@ -289,12 +303,11 @@ class CompuMethodConst(Element):
                raise ValueError('invalid length: %d'%len(elem))
          else:
             raise ValueError('type not supported:%s'%str(type(elem)))
-   def asdict(self):
-      data={'type': self.__class__.__name__,'name':self.name,'elements':[]}
-      for element in self.elements:
-         data['elements'].append(element.asdict())
-      return data
-
+   # def asdict(self):
+   #    data={'type': self.__class__.__name__,'name':self.name,'elements':[]}
+   #    for element in self.elements:
+   #       data['elements'].append(element.asdict())
+   #    return data
 
    def getValueTable(self):
       retval = []
@@ -307,6 +320,29 @@ class CompuMethodConst(Element):
          i+=1
       return retval if len(retval)>0 else None
 
+   def __eq__(self,other):
+      if self is other: return True
+      if self.name == other.name:
+         if len(self.elements)!=len(other.elements): return False
+         for i in range(len(self.elements)):
+            if self.elements[i] != other.elements[i]: return False
+         return True
+      return False
+
+class CompuMethodMask(Element):
+   def __init__(self, name, elements, parent=None, category=None, adminData=None):
+      super().__init__(name, parent, adminData)
+      self.elements = []
+      self.category=category      
+      for elem in elements:
+         if isinstance(elem,str):
+            mask= (1 << len(self.elements))
+            self.elements.append(CompuMaskElement(lowerLimit=mask,upperLimit=mask,mask=mask))
+         elif isinstance(elem,dict):
+            self.elements.append(CompuMaskElement(**elem))
+         else:
+            raise ValueError('type not supported:%s'%str(type(elem)))
+   
    def __eq__(self,other):
       if self is other: return True
       if self.name == other.name:
@@ -386,9 +422,41 @@ class ImplementationDataTypeElement(Element):
       else:
          self.variants = []
 
+class ApplicationPrimitiveDataType(Element):
+   def tag(self, version=None): return 'APPLICATION-PRIMITIVE-DATA-TYPE'
+   def __init__(self, name, category=None, variants=None, parent=None, adminData=None):
+      super().__init__(name, parent, adminData)
+      self.category=category
+      if variants is not None:
+         if isinstance(variants, autosar.base.SwDataDefPropsConditional):
+            self.variants = [variants]
+         else:
+            self.variants=variants
+      else:
+         self.variants = []
+
+
 class DataTypeMappingSet(Element):
-   def tag(self, version=None): return 'DATA-TYPE-MAPPING-SET'
+   def tag(self, version): return 'DATA-TYPE-MAPPING-SET'
    
    def __init__(self, name, parent=None, adminData=None):
       super().__init__(name, parent, adminData)
+      self.map = {} #applicationDataTypeRef to implementationDataTypeRef dictionary
    
+   def addDirect(self, applicationDataTypeRef, implementationDataTypeRef):
+      self.map[applicationDataTypeRef] = implementationDataTypeRef
+   
+   def add(self, dataTypeMap):
+      assert (isinstance(dataTypeMap, DataTypeMap))
+      self.addDirect(dataTypeMap.applicationDataTypeRef, dataTypeMap.implementationDataTypeRef)
+      
+   def get(self, applicationDataTypeRef):
+      if applicationDataTypeRef in self.map:
+         return DataTypeMap(applicationDataTypeRef,  self.map[applicationDataTypeRef])
+
+class DataTypeMap:
+   def __init__(self, applicationDataTypeRef, implementationDataTypeRef):
+      self.applicationDataTypeRef = applicationDataTypeRef
+      self.implementationDataTypeRef = implementationDataTypeRef
+   
+   def tag(self, version): return 'DATA-TYPE-MAP'
