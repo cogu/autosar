@@ -1,13 +1,23 @@
+import abc
 import autosar.base
 import xml.sax.saxutils
 import json
 import collections
 from autosar.element import DataElement
+from decimal import Decimal
 
-class WriterBase():
-   def __init__(self,version=3.0):
-      self.version=version
+class BaseWriter:
+   def __init__(self,version=3.0, patch=None):
+      self.version=version      
       self.lines=[]
+      d = Decimal(float(version))
+      self.major=int(d.quantize(1))
+      self.minor=int(((d%1)*10).quantize(1))
+      if patch is None:
+         self.patch = 0
+      else:
+         self.patch = int(patch)
+      
       if (self.version >= 3.0) and (self.version < 4.0):
          self.indentChar='\t'
       else:
@@ -22,14 +32,14 @@ class WriterBase():
          raise NotImplementedError(type(lines))
    
    def beginFile(self):
-      lines=[]
+      lines=[]      
       if (self.version >= 3.0) and (self.version < 4.0):
          lines.append('<?xml version="1.0" encoding="UTF-8"?>')      
          lines.append('<AUTOSAR xsi:schemaLocation="http://autosar.org/3.0.2 autosar_302_ext.xsd" xmlns="http://autosar.org/3.0.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">')
          lines.append(self.indentChar+'<TOP-LEVEL-PACKAGES>')
       elif self.version >= 4.0:         
          lines.append('<?xml version="1.0" encoding="utf-8"?>')
-         lines.append('<AUTOSAR xsi:schemaLocation="http://autosar.org/schema/r{0:.1f} AUTOSAR_4-2-1.xsd" xmlns="http://autosar.org/schema/r{0:.1f}" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'.format(self.version))
+         lines.append('<AUTOSAR xsi:schemaLocation="http://autosar.org/schema/r4.0 AUTOSAR_{0}-{1}-{2}.xsd" xmlns="http://autosar.org/schema/r4.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'.format(self.major, self.minor, self.patch))
          lines.append(self.indentChar+'<AR-PACKAGES>')
       return lines
    
@@ -300,4 +310,50 @@ class WriterBase():
          lines.append(self.indent('<IS-QUEUED>%s</IS-QUEUED>'%self.toBoolean(elem.isQueued),1))
       lines.append('</%s>'%elem.tag(self.version))
       return lines
+
+class ElementWriter(BaseWriter, metaclass=abc.ABCMeta):
    
+   def __init__(self, version, patch=None):
+      """
+      version: the XML (schema) version that this writer is expected to output. The value is the form of a float.
+      E.g. version=3.0 means AUTOSAR 3.0.
+      patch: Not yet supported but will eventually contain the expected patch version in the form of an integer.
+      
+      Combined Example: version=4.1, patch=1 means AUTOSAR 4.1.1      
+      """
+      super().__init__(version, patch)
+   
+   @abc.abstractmethod
+   def getSupportedXML(self):
+      """
+      Returns a list of class-names (strings) that this writer can turn into XML.
+      A generator returning strings is also OK.
+      """
+   
+   @abc.abstractmethod
+   def writeElementXML(self, elem):
+      """
+      Invokes the XML writer, requesting it to convert the elem object into XML
+      
+      The method shall return a list of strings that contains valid XML text.
+      
+      elem: the element object to write.
+      """
+
+   @abc.abstractmethod
+   def getSupportedCode(self):
+      """
+      Returns a list of class-names (strings) that this writer can turn into Python 3 code.
+      A generator returning strings is also OK.
+      """
+   
+   @abc.abstractmethod
+   def writeElementCode(self, elem, localvars):
+      """
+      Invokes the code writer, requesting it to convert the elem object into (normalized) Python code
+      
+      The method shall return a list of strings that contains valid python3 code that, when executed recreates the elem object.
+      
+      elem: the element object to write.
+      localvars: A dictionary containing local variables that the generated code can safely use.      
+      """

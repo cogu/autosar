@@ -1,12 +1,13 @@
-from autosar.writer.writer_base import WriterBase
+from autosar.writer.writer_base import BaseWriter
 from autosar.writer.package_writer import PackageWriter
 from autosar.base import filter_packages
 import collections
 
-class WorkspaceWriter(WriterBase):
-   def __init__(self,version=3.0):
-      super().__init__(version)
-      self.packageWriter=PackageWriter(self.version)
+class WorkspaceWriter(BaseWriter):
+   def __init__(self, version, patch, packageWriter):
+      super().__init__(version, patch)
+      assert(isinstance(packageWriter, PackageWriter))
+      self.packageWriter=packageWriter
    
    def saveXML(self, ws, fp, packages, ignore):
       fp.write(self.toXML(ws, packages, ignore))

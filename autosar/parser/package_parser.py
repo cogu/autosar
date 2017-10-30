@@ -8,7 +8,6 @@ class PackageParser:
    def __init__(self,version):
       self.version=version
       self.registeredParsers={}
-      self.xmlTagSwitcher={}
       self.switcher={}
    
    def registerElementParser(self, elementParser):
