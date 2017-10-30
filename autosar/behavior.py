@@ -176,7 +176,8 @@ class RunnableEntity(Element):
       self.dataSendPoints=[]
       self.serverCallPoints=[]
       self.exclusiveAreaRefs=[]
-      self.modeAccessPoints=[] #for AUTOSAR4
+      self.modeAccessPoints=[] #AUTOSAR4 only
+      self.parameterAccessPoints = [] #AUTOSAR4 only
    
    def tag(self,version=None):
       return 'RUNNABLE-ENTITY'
@@ -428,7 +429,7 @@ class CalPrmElemPrototype(Element):
    
    def tag(self, version=None):
       return 'CALPRM-ELEMENT-PROTOTYPE'
-   
+  
 
 class ExclusiveArea(Element):
    def __init__(self, name, parent=None, adminData=None):
@@ -1001,7 +1002,21 @@ class SwcInternalBehavior(InternalBehaviorCommon):
       self.parameterDataPrototype = [] #list of ParameterDataPrototye objects
       self.dataTypeMappingRefs = [] #list of strings
       
+      
    def tag(self, version): return "SWC-INTERNAL-BEHAVIOR"
+   
+   def find(self, ref):
+      if ref is None: return None
+      result = super().find(ref)
+      if result is None:
+         if ref[0]=='/': ref=ref[1:] #removes initial '/' if it exists
+         ref=ref.partition('/')
+         name=ref[0]
+         for elem in self.parameterDataPrototype:
+            if elem.name == name: return elem
+      else:
+         return result
+      return None 
 
 class VariableAccess(Element):
    def __init__(self, name, portPrototypeRef, targetDataPrototypeRef, parent=None):
@@ -1047,9 +1062,10 @@ class RoleBasedDataAssignment:
    """
    Represents <ROLE-BASED-DATA-ASSIGNMENT> (AUTOSAR 4)
    """
-   def __init__(self, role, localVariableRef):
+   def __init__(self, role, localVariableRef=None, localParameterRef=None):
       self.role = role
       self.localVariableRef = localVariableRef
+      self.localParameterRef = localParameterRef
    
    def tag(self, version): return 'ROLE-BASED-DATA-ASSIGNMENT'
 
@@ -1064,7 +1080,7 @@ class RoleBasedPortAssignment:
 
 class ParameterDataPrototype(Element):
    """
-   Represents <PARAMETER-DATA-PROTOTYPE>
+   Represents <PARAMETER-DATA-PROTOTYPE> (AUTOSAR 4)
    """
    
    def __init__(self, name, typeRef, swAddressMethodRef=None, swCalibrationAccess=None, parent=None, adminData=None):
@@ -1074,3 +1090,33 @@ class ParameterDataPrototype(Element):
       self.swCalibrationAccess = swCalibrationAccess
    
    def tag(self, version): return 'PARAMETER-DATA-PROTOTYPE'
+
+class ParameterInstanceRef:
+   """
+   Represents <AUTOSAR-PARAMETER-IREF> (AUTOSAR 4)
+   """
+   def __init__(self, portRef, parameterDataRef):
+      self.portRef = portRef
+      self.parameterDataRef = parameterDataRef
+   
+   def tag(self, version): return 'AUTOSAR-PARAMETER-IREF'
+
+class LocalParameterRef:
+   """
+   Represents <LOCAL-PARAMETER-REF> (AUTOSAR 4)
+   """
+   def __init__(self, parameterDataRef):
+      self.parameterDataRef = parameterDataRef
+   
+   def tag(self, version): return 'LOCAL-PARAMETER-REF'
+
+class ParameterAccessPoint(Element):
+   """
+   Represents <PARAMETER-ACCESS> (AUTOSAR 4)
+   """
+   
+   def __init__(self, name, accessedParameter = None, parent = None, adminData = None):
+      super().__init__(name, parent, adminData)
+      self.accessedParameter = accessedParameter #this can be NoneType or LocalParameterRef or ParameterInstanceRef
+   
+   def tag(self, version): return 'PARAMETER-ACCESS'

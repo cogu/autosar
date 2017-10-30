@@ -204,6 +204,11 @@ class ComponentTypeWriter(WriterBase):
                      lines.append(self.indent('<QUEUED-SENDER-COM-SPEC>',2))
                      lines.append(self.indent('<DATA-ELEMENT-REF DEST="%s">%s</DATA-ELEMENT-REF>'%(elem.tag(self.version),elem.ref),3))
                      lines.append(self.indent('</QUEUED-SENDER-COM-SPEC>',2))
+                  else:
+                     lines.append(self.indent('<QUEUED-SENDER-COM-SPEC>',2))
+                     lines.append(self.indent('<DATA-ELEMENT-REF DEST="%s">%s</DATA-ELEMENT-REF>'%(elem.tag(self.version),elem.ref),3))
+                     lines.append(self.indent('<USES-END-TO-END-PROTECTION>false</USES-END-TO-END-PROTECTION>',3))                     
+                     lines.append(self.indent('</QUEUED-SENDER-COM-SPEC>',2))
                else:
                   lines.extend(self.indent(self._writeUnqueuedSenderComSpecXML(ws, comspec, elem),2))
             elif isinstance(elem,autosar.portinterface.Operation):
@@ -255,14 +260,15 @@ class ComponentTypeWriter(WriterBase):
       lines=[]
       if len(components)>0:
          lines.append('<COMPONENTS>')
+         componentTag = 'SW-COMPONENT-PROTOTYPE' if self.version >= 4.0 else 'COMPONENT-PROTOTYPE'
          for component in components:
             swc = ws.find(component.typeRef)
             if swc is None:
                raise ValueError('Invalid reference: '+component.typeRef)
-            lines.append(self.indent('<COMPONENT-PROTOTYPE>',1))
+            lines.append(self.indent('<%s>'%componentTag,1))
             lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%component.name,2))
             lines.append(self.indent('<TYPE-TREF DEST="%s">%s</TYPE-TREF>'%(swc.tag(self.version),swc.ref),2))
-            lines.append(self.indent('</COMPONENT-PROTOTYPE>',1))
+            lines.append(self.indent('</%s>'%componentTag,1))
          lines.append('</COMPONENTS>')
       return lines
 
@@ -278,8 +284,10 @@ class ComponentTypeWriter(WriterBase):
          providePort = ws.find(connector.providerInstanceRef.portRef)
          if providePort is None:
             raise ValueError('invalid reference: ' +connector.providerInstanceRef.portRef)
-         lines.append(self.indent('<COMPONENT-PROTOTYPE-REF DEST="%s">%s</COMPONENT-PROTOTYPE-REF>'%(providerComponent.tag(self.version), providerComponent.ref), 2))
-         lines.append(self.indent('<P-PORT-PROTOTYPE-REF DEST="%s">%s</P-PORT-PROTOTYPE-REF>'%(providePort.tag(self.version), providePort.ref), 2))
+         componentTag = 'CONTEXT-COMPONENT-REF' if self.version >= 4.0 else 'COMPONENT-PROTOTYPE-REF'
+         portTag = 'TARGET-P-PORT-REF' if self.version >= 4.0 else 'P-PORT-PROTOTYPE-REF'
+         lines.append(self.indent('<%s DEST="%s">%s</%s>'%(componentTag, providerComponent.tag(self.version), providerComponent.ref, componentTag), 2))
+         lines.append(self.indent('<%s DEST="%s">%s</%s>'%(portTag, providePort.tag(self.version), providePort.ref, portTag), 2))
          lines.append(self.indent('</%s>'%connector.providerInstanceRef.tag(self.version), 1))
          lines.append(self.indent('<%s>'%connector.requesterInstanceRef.tag(self.version), 1))
          requesterComponent = ws.find(connector.requesterInstanceRef.componentRef)
@@ -287,9 +295,10 @@ class ComponentTypeWriter(WriterBase):
             raise ValueError('invalid reference: ' +connector.requesterInstanceRef.componentRef)
          requirePort = ws.find(connector.requesterInstanceRef.portRef)
          if requirePort is None:
-            raise ValueError('invalid reference: ' +connector.requesterInstanceRef.portRef)
-         lines.append(self.indent('<COMPONENT-PROTOTYPE-REF DEST="%s">%s</COMPONENT-PROTOTYPE-REF>'%(requesterComponent.tag(self.version), requesterComponent.ref), 2))
-         lines.append(self.indent('<R-PORT-PROTOTYPE-REF DEST="%s">%s</R-PORT-PROTOTYPE-REF>'%(requirePort.tag(self.version), requirePort.ref), 2))
+            raise ValueError('invalid reference: ' +connector.requesterInstanceRef.portRef)         
+         portTag = 'TARGET-R-PORT-REF' if self.version >= 4.0 else 'R-PORT-PROTOTYPE-REF'
+         lines.append(self.indent('<%s DEST="%s">%s</%s>'%(componentTag, requesterComponent.tag(self.version), requesterComponent.ref, componentTag), 2))
+         lines.append(self.indent('<%s DEST="%s">%s</%s>'%(portTag, requirePort.tag(self.version), requirePort.ref, portTag), 2))
          lines.append(self.indent('</%s>'%connector.requesterInstanceRef.tag(self.version), 1))
          lines.append('</%s>'%connector.tag(self.version))
       return lines
@@ -306,14 +315,36 @@ class ComponentTypeWriter(WriterBase):
          innerPort = ws.find(connector.innerPortInstanceRef.portRef)
          if innerPort is None:
             raise ValueError('invalid reference: ' +connector.innerPortInstanceRef.portRef)
-         lines.append(self.indent('<COMPONENT-PROTOTYPE-REF DEST="%s">%s</COMPONENT-PROTOTYPE-REF>'%(innerComponent.tag(self.version), innerComponent.ref), 2))
-         lines.append(self.indent('<PORT-PROTOTYPE-REF DEST="%s">%s</PORT-PROTOTYPE-REF>'%(innerPort.tag(self.version), innerPort.ref), 2))
+         if self.version >= 4.0:
+            lines.extend(self.indent(self._writeInnerPortRefV4(innerComponent,innerPort),2))
+         else:
+            lines.extend(self.indent(self._writeInnerPortRefV3(innerComponent,innerPort),2))
          lines.append(self.indent('</%s>'%connector.innerPortInstanceRef.tag(self.version), 1))
          outerPort = ws.find(connector.outerPortRef.portRef)
          if outerPort is None:
             raise ValueError('invalid reference: ' +connector.outerPortRef.portRef)
          lines.append(self.indent('<OUTER-PORT-REF DEST="%s">%s</OUTER-PORT-REF>'%(outerPort.tag(self.version), outerPort.ref), 1))
          lines.append('</%s>'%connector.tag(self.version))
+      return lines
+
+   def _writeInnerPortRefV3(self, innerComponent, innerPort):
+      lines = []
+      lines.append('<COMPONENT-PROTOTYPE-REF DEST="%s">%s</COMPONENT-PROTOTYPE-REF>'%(innerComponent.tag(self.version), innerComponent.ref))
+      lines.append('<PORT-PROTOTYPE-REF DEST="%s">%s</PORT-PROTOTYPE-REF>'%(innerPort.tag(self.version), innerPort.ref))
+      return lines
+
+   def _writeInnerPortRefV4(self, innerComponent, innerPort):
+      lines = []
+      if isinstance(innerPort, autosar.component.RequirePort):
+         outerTag = 'R-PORT-IN-COMPOSITION-INSTANCE-REF'
+         innerTag = 'TARGET-R-PORT-REF'
+      else:
+         outerTag = 'P-PORT-IN-COMPOSITION-INSTANCE-REF'
+         innerTag = 'TARGET-P-PORT-REF'
+      lines.append('<%s>'%outerTag)
+      lines.append(self.indent('<CONTEXT-COMPONENT-REF DEST="%s">%s</CONTEXT-COMPONENT-REF>'%(innerComponent.tag(self.version), innerComponent.ref), 1))
+      lines.append(self.indent('<%s DEST="%s">%s</%s>'%(innerTag, innerPort.tag(self.version), innerPort.ref, innerTag), 1))
+      lines.append('</%s>'%outerTag)
       return lines
 
    def _writeUnqueuedSenderComSpecXML(self, ws, comspec, elem):
@@ -333,6 +364,10 @@ class ComponentTypeWriter(WriterBase):
          lines.append(self.indent('<USES-END-TO-END-PROTECTION>false</USES-END-TO-END-PROTECTION>',1))
          if comspec.initValueRef is not None:
             lines.extend(self.indent(self._writeInitValueRefXML(ws, comspec.initValueRef),1))
+         if comspec.initValue is not None:
+            lines.append(self.indent('<INIT-VALUE>',1))
+            lines.extend(self.indent(self.writeValueSpecificationXML(comspec.initValue),2))
+            lines.append(self.indent('</INIT-VALUE>',1))
          lines.append('</NONQUEUED-SENDER-COM-SPEC>')
       return lines
    

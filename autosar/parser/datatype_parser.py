@@ -203,7 +203,9 @@ class DataTypeParser(ElementParser):
          adminData=parseAdminDataNode(xmlRoot.find('ADMIN-DATA'))
       else:
          adminData=None
-      return SwBaseType(name, size, typeEncoding, nativeDeclaration, category, parent, adminData)
+      elem = SwBaseType(name, size, typeEncoding, nativeDeclaration, category, parent, adminData)
+      self.parseDesc(xmlRoot,elem)
+      return elem
 
    def parseDataTypeMappingSet(self, xmlRoot, parent = None):
       assert (xmlRoot.tag == 'DATA-TYPE-MAPPING-SET')

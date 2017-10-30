@@ -32,7 +32,7 @@ class PortInterfacePackageParser(ElementParser):
          return None
 
    def parseSenderReceiverInterface(self,xmlRoot,parent=None):
-      (name, adminData, isService, xmlDataElements, xmlModeGroups, xmlInvalidationPolicys) = (None, None, False, None, None, None)
+      (name, adminData, isService, serviceKind, xmlDataElements, xmlModeGroups, xmlInvalidationPolicys) = (None, None, False, None, None, None, None)
       for xmlElem in xmlRoot.findall('./*'):
          if xmlElem.tag == 'SHORT-NAME':
             name = self.parseTextNode(xmlElem)
@@ -41,6 +41,8 @@ class PortInterfacePackageParser(ElementParser):
          elif xmlElem.tag == 'IS-SERVICE':
             if self.parseTextNode(xmlElem) == 'true':
                isService = True
+         elif xmlElem.tag == 'SERVICE-KIND':
+            serviceKind = self.parseTextNode(xmlElem)
          elif xmlElem.tag == 'DATA-ELEMENTS':
             xmlDataElements = xmlElem
          elif xmlElem.tag == 'INVALIDATION-POLICYS':
@@ -51,7 +53,7 @@ class PortInterfacePackageParser(ElementParser):
             raise NotImplementedError(xmlElem.tag)
          
       if (name is not None) and (xmlDataElements is not None):
-         portInterface = autosar.portinterface.SenderReceiverInterface(name, isService, parent, adminData)
+         portInterface = autosar.portinterface.SenderReceiverInterface(name, isService, serviceKind, parent, adminData)
          if self.version >= 4.0:
             elemParser = self.parseVariableDataPrototype
             dataElemTag = 'VARIABLE-DATA-PROTOTYPE'  

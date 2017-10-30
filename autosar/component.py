@@ -187,8 +187,7 @@ class CompositionComponent(ComponentType):
       self.assemblyConnectors=[]
       self.delegationConnectors=[]
    
-   def tag(self,version=None):
-      return "COMPOSITION-TYPE"
+   def tag(self,version): return 'COMPOSITION-SW-COMPONENT-TYPE' if version >= 4.0 else 'COMPOSITION-TYPE'
    
    def asdict(self):
       data={'type': self.__class__.__name__,'name':self.name,'requirePorts':[],'providePorts':[],'components':[],
@@ -544,8 +543,7 @@ class ComponentPrototype(Element):
    def asdict(self):
       return {'type': self.__class__.__name__,'name':self.name,'typeRef':self.typeRef}
    
-   def tag(self, version=None):
-      return 'COMPONENT-PROTOTYPE'
+   def tag(self, version=None): return 'SW-COMPONENT-PROTOTYPE' if version >= 4.0 else'COMPONENT-PROTOTYPE'
 
 class ProviderInstanceRef:
    """
@@ -611,8 +609,8 @@ class AssemblyConnector(Element):
    def asdict(self):
       return {'type': self.__class__.__name__,'providerInstanceRef':self.providerInstanceRef.asdict(),'requesterInstanceRef':self.requesterInstanceRef.asdict()}
    
-   def tag(self, version=None):
-      return 'ASSEMBLY-CONNECTOR-PROTOTYPE'
+   def tag(self, version):
+      return 'ASSEMBLY-SW-CONNECTOR' if version >= 4.0 else 'ASSEMBLY-CONNECTOR-PROTOTYPE'
    
 
 class DelegationConnector(Element):
@@ -629,6 +627,5 @@ class DelegationConnector(Element):
    def asdict(self):
       return {'type': self.__class__.__name__,'innerPortInstanceRef':self.innerPortInstanceRef.asdict()}
    
-   def tag(self, version=None):
-      return 'DELEGATION-CONNECTOR-PROTOTYPE'
+   def tag(self, version): return 'DELEGATION-SW-CONNECTOR' if version >= 4.0 else 'DELEGATION-CONNECTOR-PROTOTYPE'
 
