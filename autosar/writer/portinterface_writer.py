@@ -1,11 +1,48 @@
-from autosar.writer.writer_base import WriterBase
+from autosar.writer.writer_base import ElementWriter
 import autosar.portinterface
 
-class PortInterfaceWriter(WriterBase):
-   def __init__(self,version):
-      super().__init__(version)
+class XMLPortInterfaceWriter(ElementWriter):
+   def __init__(self,version, patch):
+      super().__init__(version, patch)
+      
+      if self.version >= 3.0 and self.version < 4.0:
+         self.switcher = {
+                          'SoftwareAddressMethod': self.writeSoftwareAddressMethodXML,
+                          'ModeDeclarationGroup': self.writeModeDeclarationGroupXML,
+                          'SenderReceiverInterface': self.writeSenderReceiverInterfaceXML,
+                          'ParameterInterface': self.writeCalPrmInterfaceXML,
+                          'ClientServerInterface': self.writeClientServerInterfaceXML,
+
+         }
+      elif self.version >= 4.0:
+         self.switcher = {
+                           'ModeDeclarationGroup': self.writeModeDeclarationGroupXML,
+                           'ClientServerInterface': self.writeClientServerInterfaceXML,
+                           'ModeSwitchInterface': self.writeModeSwitchInterfaceXML,
+                           'SenderReceiverInterface': self.writeSenderReceiverInterfaceXML,
+                           'ParameterInterface': self.writeParameterInterfaceXML,
+                           'SoftwareAddressMethod': self.writeSoftwareAddressMethodXML,
+         }
+      else:
+         switch.keys = {}
+
+   def getSupportedXML(self):
+      return self.switcher.keys()
+
+   def getSupportedCode(self):
+      return []
+
+   def writeElementXML(self, elem):
+      xmlWriteFunc = self.switcher.get(type(elem).__name__)
+      if xmlWriteFunc is not None:
+         return xmlWriteFunc(elem)
+      else:
+         return None
    
-   def writeSenderReceiverInterfaceXML(self, portInterface,package):      
+   def writeElementCode(self, elem, localvars):
+      raise NotImplementedError('writeElementCode')
+   
+   def writeSenderReceiverInterfaceXML(self, portInterface):      
       assert(isinstance(portInterface,autosar.portinterface.SenderReceiverInterface))
       ws = portInterface.rootWS()
       lines=[]      
@@ -36,7 +73,7 @@ class PortInterfaceWriter(WriterBase):
       lines.append('</SENDER-RECEIVER-INTERFACE>')      
       return lines
 
-   def writeCalPrmInterfaceXML(self, portInterface,package):
+   def writeCalPrmInterfaceXML(self, portInterface):
       assert(isinstance(portInterface,autosar.portinterface.ParameterInterface))
       lines=[]
       lines.append('<CALPRM-INTERFACE>')
@@ -77,7 +114,7 @@ class PortInterfaceWriter(WriterBase):
       lines.append('</CALPRM-ELEMENT-PROTOTYPE>')
       return lines
 
-   def writeParameterInterfaceXML(self, portInterface, package):
+   def writeParameterInterfaceXML(self, portInterface):
       assert(isinstance(portInterface,autosar.portinterface.ParameterInterface))
       lines=[]
       ws = portInterface.rootWS()
@@ -117,7 +154,7 @@ class PortInterfaceWriter(WriterBase):
       lines.append('</%s>'%parameter.tag(self.version))
       return lines
    
-   def writeClientServerInterfaceXML(self, portInterface,package):
+   def writeClientServerInterfaceXML(self, portInterface):
       assert(isinstance(portInterface,autosar.portinterface.ClientServerInterface))
       lines=[]
       lines.append('<CLIENT-SERVER-INTERFACE>')
@@ -220,7 +257,7 @@ class PortInterfaceWriter(WriterBase):
       lines.append('</%s>'%modeGroup.tag(self.version))
       return lines
    
-   def writeSoftwareAddressMethodXML(self, addressMethod,package):
+   def writeSoftwareAddressMethodXML(self, addressMethod):
       assert(isinstance(addressMethod,autosar.portinterface.SoftwareAddressMethod))
       lines=[]
       lines.append('<%s>'%addressMethod.tag(self.version))
@@ -228,7 +265,7 @@ class PortInterfaceWriter(WriterBase):
       lines.append('</%s>'%addressMethod.tag(self.version))
       return lines
    
-   def writeModeDeclarationGroupXML(self, modeDeclGroup, package):
+   def writeModeDeclarationGroupXML(self, modeDeclGroup):
       assert(isinstance(modeDeclGroup,autosar.portinterface.ModeDeclarationGroup))
       lines=[]
       ws = modeDeclGroup.rootWS()
@@ -256,7 +293,7 @@ class PortInterfaceWriter(WriterBase):
       lines.append('</%s>'%modeDeclGroup.tag(self.version))
       return lines
    
-   def writeModeSwitchInterfaceXML(self, portInterface, package):
+   def writeModeSwitchInterfaceXML(self, portInterface):
       assert(isinstance(portInterface, autosar.portinterface.ModeSwitchInterface))
       lines=[]
       lines.append('<%s>'%portInterface.tag(self.version))
@@ -282,7 +319,39 @@ class PortInterfaceWriter(WriterBase):
       return lines
       
 
-#### CODE GENERATOTS ####
+class CodePortInterfaceWriter(ElementWriter):
+   def __init__(self,version, patch):
+      super().__init__(version, patch)
+      
+      if self.version >= 3.0 and self.version < 4.0:
+         self.switcher = {
+                          'SoftwareAddressMethod': self.writeSoftwareAddressMethodCode,
+                          'ModeDeclarationGroup': self.writeModeDeclarationGroupCode,
+                          'SenderReceiverInterface': self.writeSenderReceiverInterfaceCode,
+                          'ParameterInterface': self.writeParameterInterfaceCode,
+                          'ClientServerInterface': self.writeClientServerInterfaceCode,
+         }
+      elif self.version >= 4.0:
+         self.switcher = {
+         }
+      else:
+         switch.keys = {}
+
+   def getSupportedXML(self):
+      return []
+
+   def getSupportedCode(self):
+      return self.switcher.keys()
+
+   def writeElementXML(self, elem):
+      raise NotImplementedError('writeElementCode')
+   
+   def writeElementCode(self, elem, localvars):
+      codeWriteFunc = self.switcher.get(type(elem).__name__)
+      if codeWriteFunc is not None:
+         return codeWriteFunc(elem, localvars)
+      else:
+         return None
 
    def writeSenderReceiverInterfaceCode(self, portInterface, localvars):
       assert(isinstance(portInterface,autosar.portinterface.SenderReceiverInterface))
@@ -444,4 +513,3 @@ class PortInterfaceWriter(WriterBase):
          
       lines.append('package.createModeDeclarationGroup(%s)'%(', '.join(params)))
       return lines
-   

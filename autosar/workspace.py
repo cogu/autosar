@@ -9,12 +9,16 @@ import collections
 import re
 from autosar.parser.datatype_parser import (DataTypeParser, DataTypeSemanticsParser, DataTypeUnitsParser)
 from autosar.parser.portinterface_parser import (PortInterfacePackageParser,SoftwareAddressMethodParser,ModeDeclarationGroupPackageParser)
+#default parsers
 from autosar.parser.constant_parser import ConstantParser
 from autosar.parser.behavior_parser import BehaviorParser
 from autosar.parser.component_parser import ComponentTypeParser
 from autosar.parser.system_parser import SystemParser
 from autosar.parser.signal_parser import SignalParser
-from autosar.writer.datatype_writer import XMLDataTypeWriter
+#default writers
+from autosar.writer.datatype_writer import XMLDataTypeWriter, CodeDataTypeWriter
+from autosar.writer.constant_writer import XMLConstantWriter, CodeConstantWriter
+from autosar.writer.portinterface_writer import XMLPortInterfaceWriter, CodePortInterfaceWriter
 
 _validWSRoles = ['DataType', 'Constant', 'PortInterface', 'ComponentType', 'ModeDclrGroup', 'CompuMethod', 'Unit']
 
@@ -447,4 +451,10 @@ class Workspace(object):
       parser.registerElementParser(SignalParser(self.version))
 
    def _registerDefaultElementWriters(self, writer):
-      writer.registerElementWriter(XMLDataTypeWriter(self.version, self.patch))
+      writer.registerElementWriter(XMLDataTypeWriter(self.version, self.patch))      
+      writer.registerElementWriter(CodeDataTypeWriter(self.version, self.patch))
+      writer.registerElementWriter(XMLConstantWriter(self.version, self.patch))
+      writer.registerElementWriter(CodeConstantWriter(self.version, self.patch))
+      writer.registerElementWriter(XMLPortInterfaceWriter(self.version, self.patch))
+      writer.registerElementWriter(CodePortInterfaceWriter(self.version, self.patch))
+      
