@@ -19,11 +19,12 @@ class SenderReceiverInterface(PortInterface):
    def tag(self,version=None):
       return 'SENDER-RECEIVER-INTERFACE'
    
-   def __init__(self, name, isService=False, parent=None, adminData=None):
+   def __init__(self, name, isService=False, serviceKind = None, parent=None, adminData=None):
       super().__init__(name, isService, parent, adminData)
       self.dataElements=[]
       self.modeGroups=None
       self.invalidationPolicies=[]
+      self.serviceKind = serviceKind
    
    def __iter__(self):
       return iter(self.dataElements)

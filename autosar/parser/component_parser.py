@@ -57,7 +57,10 @@ class ComponentTypeParser(ElementParser):
                           }
       elif self.version >= 4.0:
          self.switcher = {
-            'APPLICATION-SW-COMPONENT-TYPE': self.parseSoftwareComponent,
+            'APPLICATION-SW-COMPONENT-TYPE': self.parseSoftwareComponent,            
+            'COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE': self.parseSoftwareComponent,
+            'SERVICE-COMPONENT-TYPE': self.parseSoftwareComponent,
+            'COMPOSITION-SW-COMPONENT-TYPE': self.parseCompositionType,
             'SWC-IMPLEMENTATION': self.parseSwcImplementation
          }
 
@@ -117,7 +120,7 @@ class ComponentTypeParser(ElementParser):
                   elif xmlItem.tag == 'UNQUEUED-RECEIVER-COM-SPEC' or xmlItem.tag == 'NONQUEUED-RECEIVER-COM-SPEC':
                      dataElemName = _getDataElemNameFromComSpec(xmlItem,portInterfaceRef)
                      comspec = autosar.component.DataElementComSpec(dataElemName)
-                     if xmlItem.find('./ALIVE-TIMEOUT') != None:
+                     if xmlItem.find('./ALIVE-TIMEOUT') is not None:
                         comspec.aliveTimeout = self.parseTextNode(xmlItem.find('./ALIVE-TIMEOUT'))
                      if self.version >= 4.0:
                         xmlElem = xmlItem.find('./INIT-VALUE')
@@ -164,10 +167,18 @@ class ComponentTypeParser(ElementParser):
                      dataElemName = _getDataElemNameFromComSpec(xmlItem,portInterfaceRef)
                      comspec = autosar.component.DataElementComSpec(dataElemName)
                      if self.version >= 4.0:
-                        if xmlItem.find('./INIT-VALUE') != None:
-                           comspec.initValueRef = self.parseTextNode(xmlItem.find('./INIT-VALUE/CONSTANT-REFERENCE/CONSTANT-REF'))
+                        xmlElem = xmlItem.find('./INIT-VALUE')
+                        if xmlElem != None:
+                           for xmlChild in xmlElem.findall('./*'):
+                              if xmlChild.tag == 'CONSTANT-REFERENCE':
+                                 comspec.initValueRef = self.parseTextNode(xmlChild.find('./CONSTANT-REF'))
+                              else:
+                                 values = self.constant_parser.parseValueV4(xmlElem, None)
+                                 if len(values) != 1:
+                                    raise ValueError('INIT-VALUE cannot cannot contain multiple elements')
+                                 comspec.initValue = values[0]
                      else:
-                        if xmlItem.find('./INIT-VALUE-REF') != None:
+                        if xmlItem.find('./INIT-VALUE-REF') is not None:
                            comspec.initValueRef = self.parseTextNode(xmlItem.find('./INIT-VALUE-REF'))
                      if xmlItem.find('./CAN-INVALIDATE') != None:
                         comspec.canInvalidate = True if self.parseTextNode(xmlItem.find('./CAN-INVALIDATE'))=='true' else False
@@ -197,7 +208,7 @@ class ComponentTypeParser(ElementParser):
       """
       parses COMPOSITION-TYPE
       """
-      assert(xmlRoot.tag=='COMPOSITION-TYPE')
+      assert (xmlRoot.tag=='COMPOSITION-TYPE') or (xmlRoot.tag=='COMPOSITION-SW-COMPONENT-TYPE')
       swc=autosar.component.CompositionComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
       for elem in xmlRoot.findall('./*'):
          if elem.tag=='SHORT-NAME':
@@ -207,7 +218,10 @@ class ComponentTypeParser(ElementParser):
          elif elem.tag=='COMPONENTS':
             self.parseComponents(elem,swc)
          elif elem.tag=='CONNECTORS':
-            self.parseConnectors(elem,swc)
+            if self.version >= 4.0:
+               self.parseConnectorsV4(elem,swc)
+            else:
+               self.parseConnectorsV3(elem,swc)
          else:
             raise NotImplementedError(elem.tag)
       return swc
@@ -218,16 +232,17 @@ class ComponentTypeParser(ElementParser):
       """
       assert(xmlRoot.tag=='COMPONENTS')
       for elem in xmlRoot.findall('./*'):
-         if elem.tag=='COMPONENT-PROTOTYPE':
+         componentTag = 'SW-COMPONENT-PROTOTYPE' if self.version >= 4.0 else 'COMPONENT-PROTOTYPE'
+         if elem.tag==componentTag:
             name=self.parseTextNode(elem.find('SHORT-NAME'))
             typeRef=self.parseTextNode(elem.find('TYPE-TREF'))
             parent.components.append(autosar.component.ComponentPrototype(name,typeRef,parent))
          else:
             raise NotImplementedError(elem.tag)
 
-   def parseConnectors(self,xmlRoot,parent=None):
+   def parseConnectorsV3(self,xmlRoot,parent=None):
       """
-      parses <CONNECTORS>
+      parses <CONNECTORS> (AUTOSAR 3)
       """
       assert(xmlRoot.tag=='CONNECTORS')
       for elem in xmlRoot.findall('./*'):
@@ -246,6 +261,51 @@ class ComponentTypeParser(ElementParser):
             parent.delegationConnectors.append(autosar.component.DelegationConnector(name, autosar.component.InnerPortInstanceRef(innerComponentRef,innerPortRef), autosar.component.OuterPortRef(outerPortRef)))
          else:
             raise NotImplementedError(elem.tag)
+
+   def parseConnectorsV4(self,xmlRoot,parent=None):
+      """
+      parses <CONNECTORS> (AUTOSAR 4)
+      """
+      assert(xmlRoot.tag=='CONNECTORS')
+      for xmlElem in xmlRoot.findall('./*'):
+         if xmlElem.tag=='ASSEMBLY-SW-CONNECTOR':
+            name=self.parseTextNode(xmlElem.find('SHORT-NAME'))
+            for xmlChild in xmlElem.findall('./*'):
+               if xmlChild.tag == 'SHORT-NAME':
+                  continue
+               elif xmlChild.tag == 'PROVIDER-IREF':
+                  providerComponentRef=self.parseTextNode(xmlChild.find('./CONTEXT-COMPONENT-REF'))
+                  providerPortRef=self.parseTextNode(xmlChild.find('./TARGET-P-PORT-REF'))
+               elif xmlChild.tag == 'REQUESTER-IREF':
+                  requesterComponentRef=self.parseTextNode(xmlChild.find('./CONTEXT-COMPONENT-REF'))
+                  requesterPortRef=self.parseTextNode(xmlChild.find('./TARGET-R-PORT-REF'))
+               else:
+                  raise NotImplementedError(xmlChild.tag)
+            if providerComponentRef is None:
+               raise RuntimeError('PROVIDER-IREF/CONTEXT-COMPONENT-REF is missing: item=%s'%name)
+            if providerComponentRef is None:
+               raise RuntimeError('PROVIDER-IREF/TARGET-P-PORT-REF is missing: item=%s'%name)
+            if requesterComponentRef is None:
+               raise RuntimeError('REQUESTER-IREF/CONTEXT-COMPONENT-REF is missing: item=%s'%name)
+            if requesterPortRef is None:
+               raise RuntimeError('REQUESTER-IREF/TARGET-R-PORT-REF is missing: item=%s'%name)
+            
+            parent.assemblyConnectors.append(autosar.component.AssemblyConnector(name, autosar.component.ProviderInstanceRef(providerComponentRef,providerPortRef), autosar.component.RequesterInstanceRef(requesterComponentRef,requesterPortRef)))
+         elif xmlElem.tag=='DELEGATION-SW-CONNECTOR':
+            name=self.parseTextNode(xmlElem.find('SHORT-NAME'))
+            for xmlChild in xmlElem.findall('./INNER-PORT-IREF/*'):
+               if xmlChild.tag == 'R-PORT-IN-COMPOSITION-INSTANCE-REF':
+                  innerComponentRef=self.parseTextNode(xmlChild.find('./CONTEXT-COMPONENT-REF'))
+                  innerPortRef=self.parseTextNode(xmlChild.find('./TARGET-R-PORT-REF'))
+               elif xmlChild.tag == 'P-PORT-IN-COMPOSITION-INSTANCE-REF':
+                  innerComponentRef=self.parseTextNode(xmlChild.find('./CONTEXT-COMPONENT-REF'))
+                  innerPortRef=self.parseTextNode(xmlChild.find('./TARGET-P-PORT-REF'))
+               else:
+                  raise NotImplementedError(xmlChild.tag)
+            outerPortRef=self.parseTextNode(xmlElem.find('./OUTER-PORT-REF'))
+            parent.delegationConnectors.append(autosar.component.DelegationConnector(name, autosar.component.InnerPortInstanceRef(innerComponentRef,innerPortRef), autosar.component.OuterPortRef(outerPortRef)))
+         else:
+            raise NotImplementedError(xmlElem.tag)
 
    def _parseModeSwitchComSpec(self, xmlRoot):
       (enhancedMode, supportAsync) = (False, False)

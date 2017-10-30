@@ -2,6 +2,11 @@ from autosar.writer.writer_base import WriterBase
 import autosar.behavior
 import autosar.base
 import autosar.portinterface
+from decimal import Decimal
+
+def format_float(f):
+    d = Decimal(str(f));
+    return d.quantize(Decimal(1)) if d == d.to_integral() else d.normalize()
 
 class BehaviorWriter(WriterBase):
    def __init__(self,version):
@@ -123,6 +128,11 @@ class BehaviorWriter(WriterBase):
          for modeAccessPoint in runnable.modeAccessPoints:
             lines.extend(self.indent(self._writeModeAccessPointXML(ws, modeAccessPoint),2))
          lines.append(self.indent('</MODE-ACCESS-POINTS>',1))
+      if (self.version >= 4.0) and (len(runnable.parameterAccessPoints)>0):
+        lines.append(self.indent('<PARAMETER-ACCESSS>',1))
+        for parameterAccessPoint in runnable.parameterAccessPoints:
+            lines.extend(self.indent(self._writeParameterAccessPointXML(ws, parameterAccessPoint),2))
+        lines.append(self.indent('</PARAMETER-ACCESSS>',1))
       if len(runnable.serverCallPoints)>0:
          lines.append(self.indent('<SERVER-CALL-POINTS>',1))
          for callPoint in runnable.serverCallPoints:
@@ -207,10 +217,40 @@ class BehaviorWriter(WriterBase):
          if callPoint.timeout == 0.0:
             lines.append(self.indent('<TIMEOUT>0</TIMEOUT>',1))
          else:
-            lines.append(self.indent('<TIMEOUT>%.9f</TIMEOUT>'%float(callPoint.timeout),1))
+            if self.version < 4.0:
+               lines.append(self.indent('<TIMEOUT>%.9f</TIMEOUT>'%float(callPoint.timeout),1))
+            else:
+               timeout = format_float(float(callPoint.timeout))
+               lines.append(self.indent('<TIMEOUT>%s</TIMEOUT>'%timeout,1))
          lines.append('</SYNCHRONOUS-SERVER-CALL-POINT>')
       else:
          raise NotImplementedError(type(callPoint))
+      return lines
+
+   def _writeParameterAccessPointXML(self, ws, parameterAccessPoint):
+      assert(isinstance(parameterAccessPoint, autosar.behavior.ParameterAccessPoint))
+      lines = []
+      lines.append('<%s>'%parameterAccessPoint.tag(self.version))
+      lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%parameterAccessPoint.name,1))
+      lines.append(self.indent('<ACCESSED-PARAMETER>',1))
+      parameterData = ws.find(parameterAccessPoint.accessedParameter.parameterDataRef)
+      if parameterData is None:
+         raise ValueError('Invalid parameter data reference: '+parameterAccessPoint.accessedParameter.parameterDataRef)
+      if isinstance(parameterAccessPoint.accessedParameter, autosar.behavior.ParameterInstanceRef):
+         parameterInstanceRef = parameterAccessPoint.accessedParameter
+         port = ws.find(parameterInstanceRef.portRef)
+         if port is None:
+            raise ValueError('Invalid port reference: '+parameterInstanceRef.portRef)
+         lines.append(self.indent('<%s>'%parameterInstanceRef.tag(self.version),2))
+         lines.append(self.indent('<PORT-PROTOTYPE-REF DEST="%s">%s</PORT-PROTOTYPE-REF>'%(port.tag(self.version),port.ref),3))
+         lines.append(self.indent('<TARGET-DATA-PROTOTYPE-REF DEST="%s">%s</TARGET-DATA-PROTOTYPE-REF>'%(parameterData.tag(self.version), parameterData.ref),3))
+         lines.append(self.indent('</%s>'%parameterInstanceRef.tag(self.version),2))
+      elif isinstance(parameterAccessPoint.accessedParameter, autosar.behavior.LocalParameterRef):
+         lines.append(self.indent('<LOCAL-PARAMETER-REF DEST="%s">%s</LOCAL-PARAMETER-REF>'%(parameterData.tag(self.version), parameterData.ref),2))
+      else:
+         raise NotImplementedError(type(parameterAccessPoint.accessedParameter))
+      lines.append(self.indent('</ACCESSED-PARAMETER>',1))
+      lines.append('</%s>'%parameterAccessPoint.tag(self.version))
       return lines
 
    def _writePortAPIOptionsXML(self,internalBehavior):
@@ -225,7 +265,7 @@ class BehaviorWriter(WriterBase):
 
    def _writePortAPIOption(self, ws,option):
       lines=['<%s>'%option.tag(self.version)]
-      lines.append(self.indent('<ENABLE-TAKE-ADDRESS>%s</ENABLE-TAKE-ADDRESS>'%('true' if option.takeAddress else 'false'),1))      
+      lines.append(self.indent('<ENABLE-TAKE-ADDRESS>%s</ENABLE-TAKE-ADDRESS>'%('true' if option.takeAddress else 'false'),1))
       if ws.errorHandlingOpt:
          lines.append(self.indent('<ERROR-HANDLING>NO-TRANSFORMER-ERROR-HANDLING</ERROR-HANDLING>',1))
       lines.append(self.indent('<INDIRECT-API>%s</INDIRECT-API>'%('true' if option.indirectAPI else 'false'),1))
@@ -269,8 +309,12 @@ class BehaviorWriter(WriterBase):
          if event.period==0:
             lines.append(self.indent('<PERIOD>0</PERIOD>',1))
          else:
-            period = float(event.period)/1000.0
-            lines.append(self.indent('<PERIOD>%.9f</PERIOD>'%(period),1))
+            if self.version < 4.0:
+               period = float(event.period)/1000.0
+               lines.append(self.indent('<PERIOD>%.9f</PERIOD>'%(period),1))
+            else:
+               period = format_float(float(event.period)/1000.0)
+               lines.append(self.indent('<PERIOD>%s</PERIOD>'%(period),1))
       elif isinstance(event, autosar.behavior.OperationInvokedEvent):
          assert(event.operationInstanceRef is not None)
          lines.extend(self.indent(self._writeOperationInstanceRefXML(ws, event, event.operationInstanceRef),1))
@@ -343,7 +387,7 @@ class BehaviorWriter(WriterBase):
       dataElement = ws.find(dataIRef.dataElemRef)
       if dataElement is None:
          raise ValueError('invalid reference "%s" found in dataIRef.dataElemRef of item "%s"'%(dataIRef.dataElemRef, parent.ref))
-      if isinstance(port, autosar.component.RequirePort):         
+      if isinstance(port, autosar.component.RequirePort):
          portTagName = 'CONTEXT-R-PORT-REF' if self.version >= 4.0 else 'R-PORT-PROTOTYPE-REF'
       else:
          portTagName = 'CONTEXT-P-PORT-REF' if self.version >= 4.0 else 'P-PORT-PROTOTYPE-REF'
@@ -483,14 +527,28 @@ class BehaviorWriter(WriterBase):
    def _writeRoleBasedDataAssignmentXML(self, ws, elem):
       assert(isinstance(elem, autosar.behavior.RoleBasedDataAssignment))
       lines = []
-      localVariable = ws.find(elem.localVariableRef)
-      if localVariable is None:
-         raise ValueError('Invalid reference: '+elem.localVariableRef)
+      if elem.localVariableRef is not None:
+         localVariable = ws.find(elem.localVariableRef)
+         if localVariable is None:
+            raise ValueError('Invalid reference: '+elem.localVariableRef)
+      else:
+         localVariable = None
+      if elem.localParameterRef is not None:
+         localParameter = ws.find(elem.localParameterRef.parameterDataRef)
+         if localParameter is None:
+            raise ValueError('Invalid reference: '+elem.localParameterRef.parameterDataRef)
+      else:
+         localParameter = None
       lines.append('<%s>'%elem.tag(self.version))
       lines.append(self.indent('<ROLE>%s</ROLE>'%elem.role,1))
-      lines.append(self.indent('<USED-DATA-ELEMENT>',1))
-      lines.append(self.indent('<LOCAL-VARIABLE-REF DEST="%s">%s</LOCAL-VARIABLE-REF>'%(localVariable.tag(self.version),localVariable.ref),2))
-      lines.append(self.indent('</USED-DATA-ELEMENT>',1))
+      if localVariable is not None:
+         lines.append(self.indent('<USED-DATA-ELEMENT>',1))
+         lines.append(self.indent('<LOCAL-VARIABLE-REF DEST="%s">%s</LOCAL-VARIABLE-REF>'%(localVariable.tag(self.version),localVariable.ref),2))
+         lines.append(self.indent('</USED-DATA-ELEMENT>',1))
+      if localParameter is not None:
+         lines.append(self.indent('<USED-PARAMETER-ELEMENT>',1))
+         lines.append(self.indent('<LOCAL-PARAMETER-REF DEST="%s">%s</LOCAL-PARAMETER-REF>'%(localParameter.tag(self.version),localParameter.ref),2))
+         lines.append(self.indent('</USED-PARAMETER-ELEMENT>',1))
       lines.append('</%s>'%elem.tag(self.version))
       return lines
 

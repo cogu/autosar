@@ -165,7 +165,7 @@ class BehaviorParser(ElementParser):
             elif xmlElem.tag == 'SHARED-PARAMETERS':
                for xmlChildElem in xmlElem.findall('./*'):
                   if xmlChildElem.tag == 'PARAMETER-DATA-PROTOTYPE':
-                     tmp = self.parseParameterDataPrototype(xmlChildElem)
+                     tmp = self.parseParameterDataPrototype(xmlChildElem, internalBehavior)
                      if tmp is not None:
                         internalBehavior.parameterDataPrototype.append(tmp)                     
                   else:
@@ -188,6 +188,7 @@ class BehaviorParser(ElementParser):
       xmlCanEnterExclusiveAreas=None
       adminData = None
       xmlModeAccessPoints = None
+      xmlParameterAccessPoints = None
       if self.version < 4.0:
          for xmlElem in xmlRoot.findall('*'):
             if xmlElem.tag=='SHORT-NAME':
@@ -228,8 +229,10 @@ class BehaviorParser(ElementParser):
                xmlCanEnterExclusiveAreas=xmlElem               
             elif xmlElem.tag == 'MINIMUM-START-INTERVAL':
                pass #not implemented
-            elif xmlElem.tag=='ADMIN-DATA':
+            elif xmlElem.tag =='ADMIN-DATA':
                adminData=parseAdminDataNode(xmlElem)
+            elif xmlElem.tag == 'PARAMETER-ACCESSS':
+               xmlParameterAccessPoints = xmlElem
             else:
                raise NotImplementedError(xmlElem.tag)
       runnableEntity = RunnableEntity(name, canBeInvokedConcurrently, symbol, parent)
@@ -278,6 +281,15 @@ class BehaviorParser(ElementParser):
       if xmlCanEnterExclusiveAreas is not None:
          for xmlCanEnterExclusiveAreaRef in xmlCanEnterExclusiveAreas.findall('./CAN-ENTER-EXCLUSIVE-AREA-REF'):
             runnableEntity.exclusiveAreaRefs.append(parseTextNode(xmlCanEnterExclusiveAreaRef))
+      if self.version >= 4.0 and xmlParameterAccessPoints is not None:
+         for xmlChild in xmlParameterAccessPoints.findall('./*'):
+            if xmlChild.tag == 'PARAMETER-ACCESS':
+               tmp = self.parseParameterAccessPoint(xmlChild, runnableEntity)
+               if tmp is not None:
+                  runnableEntity.parameterAccessPoints.append(tmp)
+            else:
+               raise NotImplementedError('xmlChild.tag')
+      
       if runnableEntity is not None:
          runnableEntity.adminData = adminData
       return runnableEntity
@@ -302,6 +314,25 @@ class BehaviorParser(ElementParser):
          raise RuntimeError('R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF not set')
       return modeGroupInstanceRef
 
+   def parseParameterAccessPoint(self, xmlRoot, parent = None):
+      assert(xmlRoot.tag == 'PARAMETER-ACCESS')
+      (name, accessedParameter) = (None, None)
+      for xmlElem in xmlRoot.findall('./*'):
+         if xmlElem.tag == 'SHORT-NAME':
+            name = self.parseTextNode(xmlElem)
+         elif xmlElem.tag == 'ACCESSED-PARAMETER':
+            for xmlChild in xmlElem.findall('./*'):
+               if xmlChild.tag == 'AUTOSAR-PARAMETER-IREF':
+                  accessedParameter = self.parseParameterInstanceRef(xmlChild)
+               elif xmlChild.tag == 'LOCAL-PARAMETER-REF':
+                  accessedParameter = LocalParameterRef(self.parseTextNode(xmlChild))
+               else:
+                  raise NotImplementedError(xmlChild.tag)
+         else:
+            raise NotImplementedError(xmlElem.tag)
+      if (name is not None) and (accessedParameter is not None):
+         return ParameterAccessPoint(name, accessedParameter)
+      
    def _parseModeGroupInstanceRef(self, xmlRoot):
       """parses <R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF>"""
       assert(xmlRoot.tag == 'R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF')
@@ -320,22 +351,28 @@ class BehaviorParser(ElementParser):
       return ModeGroupInstanceRef(requirePortRef, modeGroupRef)
 
 
-   def parseModeInstanceRef(self,xmlRoot,parent=None):
+   def parseModeInstanceRef(self, xmlRoot):
       """parses <MODE-IREF>"""
       assert(xmlRoot.tag == 'MODE-IREF')
       if self.version < 4.0:
-         modeDeclarationRef=parseTextNode(xmlRoot.find('MODE-DECLARATION-REF'))
-         modeDeclarationGroupPrototypeRef = parseTextNode(xmlRoot.find('MODE-DECLARATION-GROUP-PROTOTYPE-REF'))
-         requirePortPrototypeRef = parseTextNode(xmlRoot.find('R-PORT-PROTOTYPE-REF'))
+         modeDeclarationRef=self.parseTextNode(xmlRoot.find('MODE-DECLARATION-REF'))
+         modeDeclarationGroupPrototypeRef = self.parseTextNode(xmlRoot.find('MODE-DECLARATION-GROUP-PROTOTYPE-REF'))
+         requirePortPrototypeRef = self.parseTextNode(xmlRoot.find('R-PORT-PROTOTYPE-REF'))
       elif self.version >= 4.0:
-         modeDeclarationRef=parseTextNode(xmlRoot.find('TARGET-MODE-DECLARATION-REF'))
-         modeDeclarationGroupPrototypeRef = parseTextNode(xmlRoot.find('CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF'))
-         requirePortPrototypeRef = parseTextNode(xmlRoot.find('CONTEXT-PORT-REF'))
+         modeDeclarationRef=self.parseTextNode(xmlRoot.find('TARGET-MODE-DECLARATION-REF'))
+         modeDeclarationGroupPrototypeRef = self.parseTextNode(xmlRoot.find('CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF'))
+         requirePortPrototypeRef = self.parseTextNode(xmlRoot.find('CONTEXT-PORT-REF'))
       else:
          raise NotImplemented('version: '+self.version)
       return ModeInstanceRef(modeDeclarationRef,modeDeclarationGroupPrototypeRef,requirePortPrototypeRef)
 
-
+   def parseParameterInstanceRef(self, xmlRoot):
+      """parses <AUTOSAR-PARAMETER-IREF>"""
+      assert(xmlRoot.tag == 'AUTOSAR-PARAMETER-IREF')
+      portRef = self.parseTextNode(xmlRoot.find('PORT-PROTOTYPE-REF'))
+      parameterDataRef = self.parseTextNode(xmlRoot.find('TARGET-DATA-PROTOTYPE-REF'))
+      return ParameterInstanceRef(portRef, parameterDataRef)
+   
    def _parseModeDependency(self,xmlRoot,parent=None):
       """parses <MODE-DEPENDENCY>"""
       assert(xmlRoot.tag == 'MODE-DEPENDENCY')
@@ -639,10 +676,10 @@ class BehaviorParser(ElementParser):
       return swcServiceDependency
 
 
-   def parseParameterDataPrototype(self, xmlRoot):
+   def parseParameterDataPrototype(self, xmlRoot, parent = None):
       """parses <PARAMETER-DATA-PROTOTYPE> (AUTOSAR 4)"""
       assert(xmlRoot.tag == 'PARAMETER-DATA-PROTOTYPE')
-      (name, xmlDesc, variants, typeRef, swAddressMethodRef, swCalibrationAccess) = (None, None, None, None, None, None)
+      (name, desc, variants, typeRef, swAddressMethodRef, swCalibrationAccess) = (None, None, None, None, None, None)
       for xmlElem in xmlRoot.findall('./*'):
          if xmlElem.tag == 'SHORT-NAME':
             name = self.parseTextNode(xmlElem)
@@ -658,7 +695,11 @@ class BehaviorParser(ElementParser):
          else:
             raise NotImplementedError(xmlElem.tag)
       if (name is not None) and (typeRef is not None):
-         return ParameterDataPrototype(name, typeRef, swAddressMethodRef, swCalibrationAccess)
+         elem = ParameterDataPrototype(name, typeRef, swAddressMethodRef, swCalibrationAccess, parent)
+         if desc is not None:
+            elem.desc=desc[0]
+            elem.descAttr=desc[1]
+         return elem
       return None
       
 
@@ -715,7 +756,8 @@ class BehaviorParser(ElementParser):
 
    def _parseRoleBasedDataAssignment(self, xmlRoot):
       assert(xmlRoot.tag == 'ROLE-BASED-DATA-ASSIGNMENT')
-      (role, localVariableRef) = (None, None)
+      (role, localVariableRef, localParameterRef) = (None, None, None)
+      
       for xmlElem in xmlRoot.findall('./*'):
          if xmlElem.tag == 'ROLE':
             role = self.parseTextNode(xmlElem)
@@ -725,10 +767,17 @@ class BehaviorParser(ElementParser):
                   localVariableRef = self.parseTextNode(xmlChild)
                else:
                   raise NotImplementedError(xmlChild.tag)
+         elif xmlElem.tag == 'USED-PARAMETER-ELEMENT':
+            pass
+            for xmlChild in xmlElem.findall('./*'):
+               if xmlChild.tag == 'LOCAL-PARAMETER-REF':
+                  localParameterRef = LocalParameterRef(self.parseTextNode(xmlChild))
+               else:
+                  raise NotImplementedError(xmlChild.tag)
          else:
             raise NotImplementedError(xmlElem.tag)
-      if (role is not None) and (localVariableRef is not None):
-         return RoleBasedDataAssignment(role, localVariableRef)
+      if (role is not None) and ( (localVariableRef is not None) or (localParameterRef is not None) ):
+         return RoleBasedDataAssignment(role, localVariableRef, localParameterRef)
       return None
 
 

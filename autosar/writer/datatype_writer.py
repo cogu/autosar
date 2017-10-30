@@ -519,6 +519,8 @@ class DataTypeWriter(WriterBase):
       lines = []
       lines.append("<%s>"%elem.tag(self.version))
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
+      tmp = self.writeDescXML(elem)
+      if tmp is not None: lines.extend(self.indent(tmp,1))
       if elem.category is not None:
          lines.append(self.indent('<CATEGORY>%s</CATEGORY>'%elem.category,1))
       if elem.adminData is not None:

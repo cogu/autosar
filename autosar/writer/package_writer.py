@@ -88,7 +88,8 @@ class PackageWriter(WriterBase):
                               'Constant': self.constantWriter.writeConstantXML,
                               'ApplicationSoftwareComponent': self.componentTypeWriter.writeApplicationSoftwareComponentXML,
                               'SwcImplementation': self.componentTypeWriter.writeSwcImplementationXML,
-                              'ApplicationPrimitiveDataType': self.dataTypeWriter.writeApplicationPrimitiveDataTypeXml,                              
+                              'ApplicationPrimitiveDataType': self.dataTypeWriter.writeApplicationPrimitiveDataTypeXml,
+                              'CompositionComponent': self.componentTypeWriter.writeCompositionComponentXML,
                             }
          self.switcherCode = {
                               'DataConstraint': self.dataTypeWriter.writeDataConstraintCode,

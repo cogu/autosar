@@ -14,6 +14,8 @@ class PortInterfaceWriter(WriterBase):
       if portInterface.adminData is not None:
          lines.extend(self.indent(self.writeAdminDataXML(portInterface.adminData),1))
       lines.append(self.indent('<IS-SERVICE>%s</IS-SERVICE>'%self.toBoolean(portInterface.isService),1))
+      if (self.version >= 4.0) and (portInterface.serviceKind is not None):
+         lines.append(self.indent('<SERVICE-KIND>%s</SERVICE-KIND>'%portInterface.serviceKind,1))
       if len(portInterface.dataElements)>0:
          lines.append(self.indent('<DATA-ELEMENTS>',1))
          for elem in portInterface.dataElements:
