@@ -9,21 +9,29 @@ import collections
 import re
 from autosar.parser.datatype_parser import (DataTypeParser, DataTypeSemanticsParser, DataTypeUnitsParser)
 from autosar.parser.portinterface_parser import (PortInterfacePackageParser,SoftwareAddressMethodParser,ModeDeclarationGroupPackageParser)
+#default parsers
 from autosar.parser.constant_parser import ConstantParser
 from autosar.parser.behavior_parser import BehaviorParser
 from autosar.parser.component_parser import ComponentTypeParser
 from autosar.parser.system_parser import SystemParser
 from autosar.parser.signal_parser import SignalParser
-
-
+#default writers
+from autosar.writer.datatype_writer import XMLDataTypeWriter, CodeDataTypeWriter
+from autosar.writer.constant_writer import XMLConstantWriter, CodeConstantWriter
+from autosar.writer.portinterface_writer import XMLPortInterfaceWriter, CodePortInterfaceWriter
+from autosar.writer.component_writer import XMLComponentTypeWriter, CodeComponentTypeWriter
+from autosar.writer.behavior_writer import XMLBehaviorWriter, CodeBehaviorWriter
+from autosar.writer.signal_writer import SignalWriter
 
 _validWSRoles = ['DataType', 'Constant', 'PortInterface', 'ComponentType', 'ModeDclrGroup', 'CompuMethod', 'Unit']
 
 class Workspace(object):
-   def __init__(self, version=3.0, packages=None):
+   def __init__(self, version=3.0, patch = 0, packages=None):
       self.packages = []
       self.version=version
+      self.patch=patch
       self.packageParser=None
+      self.packageWriter=None
       self.xmlroot = None
       self.roles = {'DataType': None,
                     'Constant': None,
@@ -251,10 +259,15 @@ class Workspace(object):
    def rootWS(self):
       return self
    
-   def saveXML(self,filename, packages=None, ignore=None, version=None):
+   def saveXML(self,filename, packages=None, ignore=None, version=None, patch=None):
       if version is None:
          version = self.version
-      writer=autosar.writer.WorkspaceWriter(version)
+      if patch is None:
+         patch = self.patch
+      if self.packageWriter is None:
+         self.packageWriter = autosar.writer.package_writer.PackageWriter(version, patch)
+         self._registerDefaultElementWriters(self.packageWriter)
+      writer=autosar.writer.WorkspaceWriter(version, patch, self.packageWriter)
       with open(filename, 'w', encoding="utf-8") as fp:
          if isinstance(packages,str): packages=[packages]
          if isinstance(ignore,str): ignore=[ignore]
@@ -417,6 +430,15 @@ class Workspace(object):
          self.packageParser = autosar.parser.package_parser.PackageParser(self.version)
          self._registerDefaultElementParsers(self.packageParser)
       self.packageParser.registerElementParser(elementParser)
+
+   def registerElementWriter(self, elementWriter):
+      """
+      Registers a custom element parser object
+      """
+      if self.packageWriter is None:
+         self.packageWriter = autosar.writer.package_writer.PackageWriter(self.version, self.patch)
+         self._registerDefaultElementWriters(self.packageWriter)
+      self.packageWriter.registerElementWriter(elementWriter)
    
    def _registerDefaultElementParsers(self, parser):
       parser.registerElementParser(DataTypeParser(self.version))
@@ -430,3 +452,17 @@ class Workspace(object):
       parser.registerElementParser(BehaviorParser(self.version))
       parser.registerElementParser(SystemParser(self.version))
       parser.registerElementParser(SignalParser(self.version))
+
+   def _registerDefaultElementWriters(self, writer):
+      writer.registerElementWriter(XMLDataTypeWriter(self.version, self.patch))      
+      writer.registerElementWriter(CodeDataTypeWriter(self.version, self.patch))
+      writer.registerElementWriter(XMLConstantWriter(self.version, self.patch))
+      writer.registerElementWriter(CodeConstantWriter(self.version, self.patch))
+      writer.registerElementWriter(XMLPortInterfaceWriter(self.version, self.patch))
+      writer.registerElementWriter(CodePortInterfaceWriter(self.version, self.patch))
+      writer.registerElementWriter(XMLComponentTypeWriter(self.version, self.patch))
+      writer.registerElementWriter(CodeComponentTypeWriter(self.version, self.patch))
+      writer.registerElementWriter(XMLBehaviorWriter(self.version, self.patch))
+      writer.registerElementWriter(CodeBehaviorWriter(self.version, self.patch))
+      writer.registerElementWriter(SignalWriter(self.version, self.patch))
+      

@@ -1,28 +1,61 @@
-from autosar.writer.writer_base import WriterBase
+from autosar.writer.writer_base import ElementWriter
 import autosar.base
 import autosar.workspace
 import autosar.constant
-from autosar.writer.behavior_writer import BehaviorWriter
+from autosar.writer.behavior_writer import XMLBehaviorWriter
 
-class ComponentTypeWriter(WriterBase):
-   def __init__(self,version):
-      super().__init__(version)
+class XMLComponentTypeWriter(ElementWriter):
+   def __init__(self,version, patch):
+      super().__init__(version, patch)
       if version >= 4.0:
-         self.behavior_writer=BehaviorWriter(version)
+         self.behavior_writer=XMLBehaviorWriter(version, patch)
 
-   def writeApplicationSoftwareComponentXML(self,swc,package):
+      if self.version >= 3.0 and self.version < 4.0:
+         self.switcher = {
+                           'ApplicationSoftwareComponent': self.writeApplicationSoftwareComponentXML,
+                           'ComplexDeviceDriverComponent': self.writeComplexDeviceDriverComponentXML,
+                           'ServiceComponent': self.writeServiceComponentXML,
+                           'SwcImplementation': self.writeSwcImplementationXML,
+                           'CompositionComponent': self.writeCompositionComponentXML
+         }
+      elif self.version >= 4.0:
+         self.switcher = {
+                           'ApplicationSoftwareComponent': self.writeApplicationSoftwareComponentXML,
+                           'SwcImplementation': self.writeSwcImplementationXML,                           
+                           'CompositionComponent': self.writeCompositionComponentXML
+         }
+      else:
+         switch.keys = {}
+
+   def getSupportedXML(self):
+      return self.switcher.keys()
+
+   def getSupportedCode(self):
+      return []
+
+   def writeElementXML(self, elem):
+      xmlWriteFunc = self.switcher.get(type(elem).__name__)
+      if xmlWriteFunc is not None:
+         return xmlWriteFunc(elem)
+      else:
+         return None
+   
+   def writeElementCode(self, elem, localvars):
+      raise NotImplementedError('writeElementCode')
+
+   def writeApplicationSoftwareComponentXML(self,swc):
       assert(isinstance(swc,autosar.component.ApplicationSoftwareComponent))
       return self._writeComponentXML(swc)
 
-   def writeComplexDeviceDriverComponentXML(self,swc,package):
+   def writeComplexDeviceDriverComponentXML(self,swc):
       assert(isinstance(swc,autosar.component.ComplexDeviceDriverComponent))
       return self._writeComponentXML(swc)
 
-   def writeCompositionComponentXML(self,swc,package):
+   def writeCompositionComponentXML(self,swc):
       assert(isinstance(swc,autosar.component.CompositionComponent))
       return self._writeComponentXML(swc)
 
-   def writeServiceComponentXML(self,swc,package):
+   def writeServiceComponentXML(self,swc):
       assert(isinstance(swc,autosar.component.ServiceComponent))
       return self._writeComponentXML(swc)
 
@@ -43,7 +76,7 @@ class ComponentTypeWriter(WriterBase):
       lines.append(self.indent('</PORTS>',1))
       if (self.version >= 4.0) and (isinstance(swc, autosar.component.AtomicSoftwareComponent)) and (swc.behavior is not None):
          lines.append(self.indent('<INTERNAL-BEHAVIORS>',1))         
-         lines.extend(self.indent(self.behavior_writer.writeInternalBehaviorXML(swc.behavior, None),2))
+         lines.extend(self.indent(self.behavior_writer.writeInternalBehaviorXML(swc.behavior),2))
          lines.append(self.indent('</INTERNAL-BEHAVIORS>',1))
       if isinstance(swc, autosar.component.CompositionComponent):
          lines.extend(self.indent(self._writeComponentsXML(ws, swc.components),1))
@@ -223,7 +256,7 @@ class ComponentTypeWriter(WriterBase):
       lines.append('</%s>'%port.tag(self.version))
       return lines
 
-   def writeSwcImplementationXML(self,elem,package):
+   def writeSwcImplementationXML(self,elem):
       assert(isinstance(elem,autosar.component.SwcImplementation))
       lines=[]
       ws = elem.rootWS()
@@ -383,8 +416,42 @@ class ComponentTypeWriter(WriterBase):
       lines.append('</INIT-VALUE>')
       return lines
 
+class CodeComponentTypeWriter(ElementWriter):
+   def __init__(self,version, patch):
+      super().__init__(version, patch)
 
-   ### Code generators
+      if self.version >= 3.0 and self.version < 4.0:
+         self.switcher = {
+                          'ApplicationSoftwareComponent': self.writeApplicationSoftwareComponentCode,
+                          'ComplexDeviceDriverComponent': self.writeComplexDeviceDriverComponentCode,
+                          'ServiceComponent': self.writeServiceComponentCode,
+                          'ParameterComponent': self.writeParameterComponentCode,
+                          'InternalBehavior': self.writeInternalBehaviorCode,
+                          'SwcImplementation': self.writeSwcImplementationCode,
+                          'CompositionComponent': self.writeCompositionComponentCode,
+         }
+      elif self.version >= 4.0:
+         self.switcher = {
+         }
+      else:
+         switch.keys = {}
+
+   def getSupportedXML(self):
+      return self.switcher.keys()
+
+   def getSupportedCode(self):
+      return []
+
+   def writeElementXML(self, elem):
+      raise NotImplementedError('writeElementXML')
+   
+   def writeElementCode(self, elem, localvars):
+      codeWriteFunc = self.switcher.get(type(elem).__name__)
+      if codeWriteFunc is not None:
+         return codeWriteFunc(elem)
+      else:
+         return None
+
    def writeApplicationSoftwareComponentCode(self, swc, localvars):
       return self._writeComponentCode(swc, 'createApplicationSoftwareComponent', localvars)
 

@@ -1,11 +1,26 @@
-from autosar.writer.writer_base import WriterBase
+from autosar.writer.writer_base import ElementWriter
 import autosar.constant
 
-class ConstantWriter(WriterBase):
-   def __init__(self,version):
-      super().__init__(version)
+class XMLConstantWriter(ElementWriter):
+   def __init__(self,version, patch):
+      super().__init__(version, patch)
 
-   def writeConstantXML(self,elem,package):
+   def getSupportedXML(self):
+      return ['Constant']
+
+   def getSupportedCode(self):
+      return []
+
+   def writeElementXML(self, elem):
+      if type(elem).__name__ == 'Constant':
+         return self.writeConstantXML(elem)
+      else:
+         return None
+   
+   def writeElementCode(self, elem, localvars):
+      raise NotImplementedError('writeElementCode')      
+
+   def writeConstantXML(self,elem):
       lines = []
       assert(isinstance(elem,autosar.constant.Constant))
       lines.append('<CONSTANT-SPECIFICATION>')
@@ -113,8 +128,24 @@ class ConstantWriter(WriterBase):
       lines.append('</VALUE-SPEC>')
       return lines
 
+class CodeConstantWriter(ElementWriter):
+   def __init__(self,version, patch):
+      super().__init__(version, patch)
 
-   ###code generators
+   def getSupportedXML(self):
+      return []
+
+   def getSupportedCode(self):
+      return ['Constant']
+
+   def writeElementXML(self, elem):
+      raise NotImplementedError('writeElementXML')
+
+   def writeElementCode(self, elem, localvars):   
+      if type(elem).__name__ == 'Constant':
+         return self.writeConstantCode(elem, localvars)
+      else:
+         return None
 
    def writeConstantCode(self, constant, localvars):
       lines=[]
@@ -216,4 +247,3 @@ class ConstantWriter(WriterBase):
          else:
             return text
       return None
-
