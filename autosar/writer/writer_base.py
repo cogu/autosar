@@ -296,8 +296,8 @@ class BaseWriter:
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
       if self.version >= 4.0:
          lines.append(self.indent('<SW-DATA-DEF-PROPS>',1))         
-         variant = autosar.base.SwDataDefPropsConditional(swAddressMethodRef = elem.swAddressMethodRef, swCalibrationAccess = elem.swCalibrationAccess)
-         variant.swImplPolicy = elem.swImplPolicy
+         variant = autosar.base.SwDataDefPropsConditional(swAddressMethodRef = elem.swAddressMethodRef, swCalibrationAccess = elem.swCalibrationAccess, swImplPolicy = elem.swImplPolicy)
+         variant.dataConstraintRef = elem.dataConstraintRef
          lines.extend(self.indent(self.writeSwDataDefPropsVariantsXML(ws, [variant]),2))
          lines.append(self.indent('</SW-DATA-DEF-PROPS>',1))
       

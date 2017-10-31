@@ -67,6 +67,7 @@ class DataElement(Element):
       self.swAddressMethodRef = softwareAddressMethodRef
       self.swCalibrationAccess = swCalibrationAccess
       self.swImplPolicy = swImplPolicy
+      self.dataConstraintRef = None
          
    @property
    def swImplPolicy(self):
@@ -90,7 +91,8 @@ class DataElement(Element):
       if isinstance(variant, autosar.base.SwDataDefPropsConditional):
          self.swCalibrationAccess=variant.swCalibrationAccess
          self.swAddressMethodRef = variant.swAddressMethodRef
-         self.swImplPolicy = variant.swImplPolicy            
+         self.swImplPolicy = variant.swImplPolicy
+         self.dataConstraintRef = variant.dataConstraintRef
       else:
          raise NotImplementedError(type(variant))
 
