@@ -1,4 +1,4 @@
-from autosar.writer.writer_base import WriterBase
+from autosar.writer.writer_base import ElementWriter
 import autosar.behavior
 import autosar.base
 import autosar.portinterface
@@ -8,12 +8,29 @@ def format_float(f):
     d = Decimal(str(f));
     return d.quantize(Decimal(1)) if d == d.to_integral() else d.normalize()
 
-class BehaviorWriter(WriterBase):
-   def __init__(self,version):
-      super().__init__(version)
+class XMLBehaviorWriter(ElementWriter):
+   def __init__(self,version, patch):
+      super().__init__(version, patch)
 
-   def writeInternalBehaviorXML(self,internalBehavior,package):
+   def getSupportedXML(self):
+      if (self.version >= 3.0) and (self.version < 4.0):
+        return 'InternalBehavior'
+      else:
+         return []
 
+   def getSupportedCode(self):
+      return []
+
+   def writeElementXML(self, elem):
+      if type(elem).__name__ == 'InternalBehavior':
+         return self.writeInternalBehaviorXML(elem)
+      else:
+         return None
+
+   def writeElementCode(self, elem, localvars):
+      raise NotImplementedError('writeElementCode')
+
+   def writeInternalBehaviorXML(self,internalBehavior):
       assert(isinstance(internalBehavior, (autosar.behavior.InternalBehavior, autosar.behavior.SwcInternalBehavior)))
       lines=[]
       ws = internalBehavior.rootWS()
@@ -564,6 +581,46 @@ class BehaviorWriter(WriterBase):
       return lines
 
    ### code generators
+
+
+   def _writeParameterDataPrototype(self, ws, elem):
+      lines = []
+      datatype = ws.find(elem.typeRef)
+      if datatype is None:
+         raise ValueError('invalid type reference: '+elem.typeRef)
+      lines.append('<%s>'%elem.tag(self.version))
+      lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
+      if elem.swAddressMethodRef is not None or elem.swCalibrationAccess is not None:
+         variants = [autosar.base.SwDataDefPropsConditional(swAddressMethodRef = elem.swAddressMethodRef, swCalibrationAccess = elem.swCalibrationAccess)]
+         lines.append(self.indent('<SW-DATA-DEF-PROPS>',1))
+         lines.extend(self.indent(self.writeSwDataDefPropsVariantsXML(ws, variants),2))
+         lines.append(self.indent('</SW-DATA-DEF-PROPS>',1))
+         lines.append(self.indent('<TYPE-TREF DEST="%s">%s</TYPE-TREF>'%(datatype.tag(self.version), datatype.ref),1))
+      lines.append('</%s>'%elem.tag(self.version))
+      return lines
+
+class CodeBehaviorWriter(ElementWriter):
+   def __init__(self,version, patch):
+      super().__init__(version, patch)
+
+   def getSupportedXML(self):
+      return []
+
+   def getSupportedCode(self):
+      if (self.version >= 3.0) and (self.version < 4.0):
+        return 'InternalBehavior'
+      else:
+         return []
+
+   def writeElementXML(self, elem):
+      raise NotImplementedError('writeElementXML')
+
+   def writeElementCode(self, elem, localvars):
+      if type(elem).__name__ == 'InternalBehavior':
+         return self.writeInternalBehaviorCode(elem)
+      else:
+         return None
+
    def writeInternalBehaviorCode(self, behavior, localvars):
       lines=[]
       localvars['swc.behavior']=behavior
@@ -816,20 +873,4 @@ class BehaviorWriter(WriterBase):
             lines.append("'serviceCallPorts': %s"%(params[0]))
          else:
             lines.append("'serviceCallPorts': [%s]"%(', '.join(params)))
-      return lines
-
-   def _writeParameterDataPrototype(self, ws, elem):
-      lines = []
-      datatype = ws.find(elem.typeRef)
-      if datatype is None:
-         raise ValueError('invalid type reference: '+elem.typeRef)
-      lines.append('<%s>'%elem.tag(self.version))
-      lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
-      if elem.swAddressMethodRef is not None or elem.swCalibrationAccess is not None:
-         variants = [autosar.base.SwDataDefPropsConditional(swAddressMethodRef = elem.swAddressMethodRef, swCalibrationAccess = elem.swCalibrationAccess)]
-         lines.append(self.indent('<SW-DATA-DEF-PROPS>',1))
-         lines.extend(self.indent(self.writeSwDataDefPropsVariantsXML(ws, variants),2))
-         lines.append(self.indent('</SW-DATA-DEF-PROPS>',1))
-         lines.append(self.indent('<TYPE-TREF DEST="%s">%s</TYPE-TREF>'%(datatype.tag(self.version), datatype.ref),1))
-      lines.append('</%s>'%elem.tag(self.version))
       return lines

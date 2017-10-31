@@ -344,7 +344,7 @@ class CodePortInterfaceWriter(ElementWriter):
       return self.switcher.keys()
 
    def writeElementXML(self, elem):
-      raise NotImplementedError('writeElementCode')
+      raise NotImplementedError('writeElementXML')
    
    def writeElementCode(self, elem, localvars):
       codeWriteFunc = self.switcher.get(type(elem).__name__)

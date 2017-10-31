@@ -139,7 +139,7 @@ class CodeConstantWriter(ElementWriter):
       return ['Constant']
 
    def writeElementXML(self, elem):
-      raise NotImplementedError('writeElementCode')
+      raise NotImplementedError('writeElementXML')
 
    def writeElementCode(self, elem, localvars):   
       if type(elem).__name__ == 'Constant':
