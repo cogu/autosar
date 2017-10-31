@@ -377,7 +377,7 @@ class XMLDataTypeWriter(ElementWriter):
       if len(dataTypeMaps) > 0:
          lines.append(self.indent('<DATA-TYPE-MAPS>',1))
          for dataTypeMap in dataTypeMaps:
-            lines.extend(self.indent(self.writeDataTypeMap(ws, dataTypeMap),2))
+            lines.extend(self.indent(self.writeDataTypeMapXML(ws, dataTypeMap),2))
          lines.append(self.indent('</DATA-TYPE-MAPS>',1))
       lines.append("</%s>"%elem.tag(self.version))
       return lines
@@ -681,7 +681,3 @@ class CodeDataTypeWriter(ElementWriter):
    def writeDataConstraintCode(self, dataType, localvars):
       lines = []
       return lines
-
-      
-
-      

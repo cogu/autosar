@@ -1,11 +1,26 @@
-from autosar.writer.writer_base import WriterBase
+from autosar.writer.writer_base import ElementWriter
 import autosar.datatype
 
-class SignalWriter(WriterBase):
-   def __init__(self,version):
-      super().__init__(version)
+class SignalWriter(ElementWriter):
+   def __init__(self,version, patch):
+      super().__init__(version, patch)
+      
+   def getSupportedXML(self):
+      return ['SYSTEM-SIGNAL']
+
+   def getSupportedCode(self):
+      return []
+
+   def writeElementXML(self, elem):
+      if type(elem).__name__ == 'SYSTEM-SIGNAL':
+         return self.writeSignalXML(elem)
+      else:
+         return None
    
-   def writeSignalXML(self,elem,package):
+   def writeElementCode(self, elem, localvars):
+      raise NotImplementedError('writeElementCode')
+
+   def writeSignalXML(self,elem):
       assert isinstance(elem,autosar.signal.SystemSignal)
       lines = []
       lines.append('<SYSTEM-SIGNAL>')

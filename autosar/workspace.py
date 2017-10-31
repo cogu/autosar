@@ -21,6 +21,7 @@ from autosar.writer.constant_writer import XMLConstantWriter, CodeConstantWriter
 from autosar.writer.portinterface_writer import XMLPortInterfaceWriter, CodePortInterfaceWriter
 from autosar.writer.component_writer import XMLComponentTypeWriter, CodeComponentTypeWriter
 from autosar.writer.behavior_writer import XMLBehaviorWriter, CodeBehaviorWriter
+from autosar.writer.signal_writer import SignalWriter
 
 _validWSRoles = ['DataType', 'Constant', 'PortInterface', 'ComponentType', 'ModeDclrGroup', 'CompuMethod', 'Unit']
 
@@ -463,3 +464,5 @@ class Workspace(object):
       writer.registerElementWriter(CodeComponentTypeWriter(self.version, self.patch))
       writer.registerElementWriter(XMLBehaviorWriter(self.version, self.patch))
       writer.registerElementWriter(CodeBehaviorWriter(self.version, self.patch))
+      writer.registerElementWriter(SignalWriter(self.version, self.patch))
+      
