@@ -1,5 +1,6 @@
 from setuptools import setup
 
+
 def readme():
     with open('README.rst') as f:
         return f.read()
@@ -23,4 +24,5 @@ setup(name='autosar',
       ],
       packages=['autosar','autosar.parser','autosar.writer','autosar.rte', 'autosar.bsw'],
 	  dependency_links=['https://github.com/cogu/cfile/archive/v0.1.3.tar.gz#egg=cfile-0.1.3'],
-	  zip_safe=False)
+	  zip_safe=False,
+	  test_suite='tests.my_test_suite')
