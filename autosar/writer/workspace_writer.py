@@ -4,10 +4,38 @@ from autosar.base import filter_packages
 import collections
 
 class WorkspaceWriter(BaseWriter):
-   def __init__(self, version, patch, packageWriter):
+   def __init__(self, version, patch, schema, packageWriter):
       super().__init__(version, patch)
       assert(isinstance(packageWriter, PackageWriter))
+      self.schema = schema
       self.packageWriter=packageWriter
+      
+   def beginFile(self):
+      lines=[]      
+      if (self.version >= 3.0) and (self.version < 4.0):
+         lines.append('<?xml version="1.0" encoding="UTF-8"?>')
+         versionString = "%d.%d.%d"%(self.major, self.minor, self.patch)
+         if self.schema is None:
+            schema = 'autosar_'+versionString+'.xsd'
+         else:
+            schema = self.schema
+         lines.append('<AUTOSAR xsi:schemaLocation="http://autosar.org/%s %s" xmlns="http://autosar.org/%s" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'%(versionString, schema, versionString))
+         lines.append(self.indentChar+'<TOP-LEVEL-PACKAGES>')
+      elif self.version >= 4.0:         
+         lines.append('<?xml version="1.0" encoding="utf-8"?>')
+         lines.append('<AUTOSAR xsi:schemaLocation="http://autosar.org/schema/r4.0 AUTOSAR_{0}-{1}-{2}.xsd" xmlns="http://autosar.org/schema/r4.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'.format(self.major, self.minor, self.patch))
+         lines.append(self.indentChar+'<AR-PACKAGES>')
+      return lines
+   
+   def endFile(self):
+      lines=[]
+      if (self.version >= 3.0) and (self.version<4.0):
+         lines.append(self.indentChar+'</TOP-LEVEL-PACKAGES>')
+      else:
+         lines.append(self.indentChar+'</AR-PACKAGES>')
+      lines.append('</AUTOSAR>')
+      return lines
+
    
    def saveXML(self, ws, fp, packages, ignore):
       fp.write(self.toXML(ws, packages, ignore))

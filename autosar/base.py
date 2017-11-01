@@ -1,8 +1,6 @@
 import xml.etree.ElementTree as ElementTree
 import re
 
-
-
 class AdminData(object):
    def __init__(self):
       self.specialDataGroups = []
@@ -160,6 +158,36 @@ def filter_packages(packages, filters):
             break
    return matched
 
+def parseAutosarVersionAndSchema(xmlRoot):
+   """
+   Parses AUTOSAR version from the attributes in the root AUTOSAR tag
+   Returns a tuple with major,minor,patch,schemaFile (all integers except schemaFile which is string)
+   """
+   schemaLocation = None
+   for key in xmlRoot.attrib.keys():
+      if key.endswith('schemaLocation'):
+         value = xmlRoot.attrib[key]
+         #Retreive the schema file
+         result = re.search(r'(^[ ]+\.xsd)', value)
+         tmp = value.partition(' ')
+         if len(tmp[2])>0 is not None:
+            schemaFile = tmp[2]
+         else:
+            schemaFile = None
+         #Is this AUTOSAR 3?
+         result = re.search(r'(\d)\.(\d)\.(\d)', value)
+         if result is not None:
+            return (int(result.group(1)),int(result.group(2)),int(result.group(3)), schemaFile)
+         else:
+            #Is this AUTOSAR 4?
+            result = re.search(r'(\d)-(\d)-(\d).*\.xsd', value)
+            if result is not None:
+               return (int(result.group(1)),int(result.group(2)),int(result.group(3)), schemaFile)
+            
+   return (None, None, None)
+
+
+
 class SwDataDefPropsConditional:
    def tag(self,version=None): return 'SW-DATA-DEF-PROPS-CONDITIONAL'
    def __init__(self, baseTypeRef = None, implementationTypeRef = None, swAddressMethodRef = None, swCalibrationAccess = None, swImplPolicy = None, compuMethodRef = None, dataConstraintRef = None, unitRef = None, parent = None):
@@ -195,6 +223,8 @@ class SwPointerTargetProps:
    def __init__(self, targetCategory=None):
       self.targetCategory = targetCategory
       self.variants = []
+
+
 
 #Exceptions      
 class InvalidPortInterfaceRef(ValueError):

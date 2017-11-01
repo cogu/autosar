@@ -6,6 +6,7 @@ from autosar.base import parseTextNode
 
 class PackageParser:
    def __init__(self,version):
+      assert(isinstance(version, float))
       self.version=version
       self.registeredParsers={}
       self.switcher={}

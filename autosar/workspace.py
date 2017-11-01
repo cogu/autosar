@@ -1,7 +1,7 @@
 import autosar.package
 import autosar.parser.package_parser
 import autosar.writer
-from autosar.base import parseXMLFile,getXMLNamespace,removeNamespace
+from autosar.base import parseXMLFile,getXMLNamespace,removeNamespace,parseAutosarVersionAndSchema
 import json
 import os
 import ntpath
@@ -26,10 +26,11 @@ from autosar.writer.signal_writer import SignalWriter
 _validWSRoles = ['DataType', 'Constant', 'PortInterface', 'ComponentType', 'ModeDclrGroup', 'CompuMethod', 'Unit']
 
 class Workspace(object):
-   def __init__(self, version=3.0, patch = 0, packages=None):
+   def __init__(self, version, patch, schema, packages=None):
       self.packages = []
       self.version=version
       self.patch=patch
+      self.schema=schema
       self.packageParser=None
       self.packageWriter=None
       self.xmlroot = None
@@ -81,25 +82,21 @@ class Workspace(object):
       package.role=role
       self.roles[role]=package.ref
 
-   def openXML(self,filename):
-      version = None
+   def openXML(self,filename):      
       xmlroot = parseXMLFile(filename)
       namespace = getXMLNamespace(xmlroot)
 
       assert (namespace is not None)
-      tmp = namespace.split('/')[-1]
-      result = re.match(r'(\d+\.\d+)', tmp)
-      if result is None:
-         result = re.match(r'r(\d+\.\d+)', tmp)
-      if result is not None:
-         version = float(result.group(1))
-      if version is None:
-         raise NotImplementedError('unsupported autosar vesion: %s'%namespace)
+      (major, minor, patch, schema) = parseAutosarVersionAndSchema(xmlroot)
       removeNamespace(xmlroot,namespace)
-      if self.packageParser is None:
-         self.packageParser = autosar.parser.package_parser.PackageParser(version)      
-      self.version=version
+      self.version=float('%s.%s'%(major,minor))
+      self.major=major
+      self.minor=minor
+      self.patch=patch
+      self.schema=schema
       self.xmlroot = xmlroot
+      if self.packageParser is None:
+         self.packageParser = autosar.parser.package_parser.PackageParser(self.version)      
       self._registerDefaultElementParsers(self.packageParser)
 
    def loadXML(self, filename, roles=None):
@@ -150,7 +147,6 @@ class Workspace(object):
          if (packagename==name) and (role is not None):
             self.setRole(package.ref, role)
       return found
-
 
    def loadJSON(self, filename):      
       with open(filename) as fp:
@@ -259,22 +255,33 @@ class Workspace(object):
    def rootWS(self):
       return self
    
-   def saveXML(self,filename, packages=None, ignore=None, version=None, patch=None):
+   def saveXML(self,filename, packages=None, ignore=None, version=None, patch=None, schema=None):
       if version is None:
          version = self.version
       if patch is None:
          patch = self.patch
+      if schema is None:
+         schema = self.schema
       if self.packageWriter is None:
          self.packageWriter = autosar.writer.package_writer.PackageWriter(version, patch)
          self._registerDefaultElementWriters(self.packageWriter)
-      writer=autosar.writer.WorkspaceWriter(version, patch, self.packageWriter)
+      writer=autosar.writer.WorkspaceWriter(version, patch, schema, self.packageWriter)
       with open(filename, 'w', encoding="utf-8") as fp:
          if isinstance(packages,str): packages=[packages]
          if isinstance(ignore,str): ignore=[ignore]
          writer.saveXML(self, fp, packages, ignore)
 
-   def toXML(self, packages=None, ignore=None):
-      writer=autosar.writer.WorkspaceWriter()
+   def toXML(self, packages=None, ignore=None, version=None, patch=None, schema=None):
+      if version is None:
+         version = self.version
+      if patch is None:
+         patch = self.patch
+      if schema is None:
+         schema = self.schema
+      if self.packageWriter is None:
+         self.packageWriter = autosar.writer.package_writer.PackageWriter(version, patch)
+         self._registerDefaultElementWriters(self.packageWriter)
+      writer=autosar.writer.WorkspaceWriter(version, patch, schema, self.packageWriter)
       if isinstance(packages,str): packages=[packages]
       if isinstance(ignore,str): ignore=[ignore]
       return writer.toXML(self, packages, ignore)
@@ -295,8 +302,12 @@ class Workspace(object):
       with open(filename,'w') as fp:
          json.dump(data,fp,indent=indent)
          
-   def toCode(self, packages=None, header=None):
-      writer=autosar.writer.WorkspaceWriter()
+   def toCode(self, packages=None, header=None, version=None, patch=None):
+      if version is None:
+         version = self.version
+      if patch is None:
+         patch = self.patch
+      writer=autosar.writer.WorkspaceWriter(version, patch, None, self.packageWriter)
       if isinstance(packages,str): packages=[packages]
       return writer.toCode(self,list(packages),str(header))
          
@@ -311,7 +322,7 @@ class Workspace(object):
       if self.packageWriter is None:
          self.packageWriter = autosar.writer.package_writer.PackageWriter(version, patch)
          self._registerDefaultElementWriters(self.packageWriter)
-      writer=autosar.writer.WorkspaceWriter(version, patch, self.packageWriter)
+      writer=autosar.writer.WorkspaceWriter(version, patch, None, self.packageWriter)
       if isinstance(packages,str): packages=[packages]
       with open(filename,'w', encoding="utf-8") as fp:
          writer.saveCode(self, fp, packages, ignore, head, tail, module)
@@ -320,7 +331,7 @@ class Workspace(object):
    def ref(self):
       return ''
 
-   def listXMLPackages(self):
+   def listPackages(self):
       """returns a list of strings containg the package names of the opened XML file"""
       packageList=[]
       if self.xmlroot is None:
@@ -352,16 +363,19 @@ class Workspace(object):
    def createAdminData(self, data):
       return autosar.base.createAdminData(data)
    
-   def fromDict(self, data):
-      for item in data:
-         if item['type'] == 'FileRef':
-            if os.path.isfile(item['path']):
-               roles = item.get('roles',None)
-               self.loadXML(item['path'],roles=roles)
-            else:
-               raise ValueError('invalid file path "%s"'%item['path'])
+   # def fromDict(self, data):
+   #    for item in data:
+   #       if item['type'] == 'FileRef':
+   #          if os.path.isfile(item['path']):
+   #             roles = item.get('roles',None)
+   #             self.loadXML(item['path'],roles=roles)
+   #          else:
+   #             raise ValueError('invalid file path "%s"'%item['path'])
 
-   def apply(self, template):      
+   def apply(self, template):
+      """
+      Applies template to this workspace
+      """
       template.apply(self)
 
    #template support 

@@ -47,8 +47,10 @@ class DcfParser:
       return dcf
 
 
-def workspace(version=3.0, packages=None):
-   return autosar.Workspace(version, packages)
+def workspace(version=3.0, patch = 2, schema=None, packages=None):
+   if schema is None and version == 3.0 and patch == 2:
+      schema = 'autosar_302_ext.xsd'
+   return autosar.Workspace(version, patch, schema, packages)
 
 def dcfImport(filename):
    parser = DcfParser()

@@ -7,9 +7,8 @@ from autosar.element import DataElement
 from decimal import Decimal
 
 class BaseWriter:
-   def __init__(self,version=3.0, patch=None):
-      self.version=version      
-      self.lines=[]
+   def __init__(self, version=3.0, patch=None):
+      self.version=version
       d = Decimal(float(version))
       self.major=int(d.quantize(1))
       self.minor=int(((d%1)*10).quantize(1))
@@ -17,12 +16,12 @@ class BaseWriter:
          self.patch = 0
       else:
          self.patch = int(patch)
-      
+
       if (self.version >= 3.0) and (self.version < 4.0):
          self.indentChar='\t'
       else:
          self.indentChar = '  '
-      
+
    def indent(self,lines,indent):
       if isinstance(lines,list):
          return ['%s%s'%(self.indentChar*indent,x) for x in lines]
@@ -30,43 +29,23 @@ class BaseWriter:
          return '%s%s'%(self.indentChar*indent,lines)
       else:
          raise NotImplementedError(type(lines))
-   
-   def beginFile(self):
-      lines=[]      
-      if (self.version >= 3.0) and (self.version < 4.0):
-         lines.append('<?xml version="1.0" encoding="UTF-8"?>')      
-         lines.append('<AUTOSAR xsi:schemaLocation="http://autosar.org/3.0.2 autosar_302_ext.xsd" xmlns="http://autosar.org/3.0.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">')
-         lines.append(self.indentChar+'<TOP-LEVEL-PACKAGES>')
-      elif self.version >= 4.0:         
-         lines.append('<?xml version="1.0" encoding="utf-8"?>')
-         lines.append('<AUTOSAR xsi:schemaLocation="http://autosar.org/schema/r4.0 AUTOSAR_{0}-{1}-{2}.xsd" xmlns="http://autosar.org/schema/r4.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'.format(self.major, self.minor, self.patch))
-         lines.append(self.indentChar+'<AR-PACKAGES>')
-      return lines
-   
-   def endFile(self):
-      lines=[]
-      if (self.version >= 3.0) and (self.version<4.0):
-         lines.append(self.indentChar+'</TOP-LEVEL-PACKAGES>')
-      else:
-         lines.append(self.indentChar+'</AR-PACKAGES>')
-      lines.append('</AUTOSAR>')
-      return lines
-   
+
+
    def beginPackage(self, name,indent=None):
       lines = []
       lines.append('<AR-PACKAGE>')
       lines.append(self.indentChar+'<SHORT-NAME>%s</SHORT-NAME>'%name)
       return lines
-   
+
    def endPackage(self,indent=None):
       lines = []
       lines.append('</AR-PACKAGE>')
       return lines
-   
+
    def toBoolean(self,value):
       if value: return 'true'
       return 'false'
-   
+
    def writeAdminDataXML(self,elem):
       assert(isinstance(elem,autosar.base.AdminData))
       lines = []
@@ -91,7 +70,7 @@ class BaseWriter:
          lines.append('<SDGS/>')
       lines.append('</ADMIN-DATA>')
       return lines
-      
+
    def writeDescXML(self,elem):
       if hasattr(elem,'desc'):
          if hasattr(elem,'descAttr'):
@@ -107,7 +86,7 @@ class BaseWriter:
          lines.append('</DESC>')
          return lines
       return None
-   
+
    def writeDescCode(self, elem):
       if hasattr(elem,'desc'):
          if hasattr(elem,'descAttr') and (elem.descAttr != "FOR-ALL"):
@@ -116,14 +95,14 @@ class BaseWriter:
             descAttr=None
          return elem.desc,descAttr
       return None,None
-   
+
    def writeListCode(self, varname, data):
       """
       writes data as as an array with varname
-      """      
+      """
       lines=['','%s = ['%varname] #add newline at beginning to make reading easier
       indent=' '*(len(varname)+6)
-      for i,elem in enumerate(data):         
+      for i,elem in enumerate(data):
          if i+1==len(data):
             lines.append('%s%s'%(indent,str(elem)))
          else:
@@ -138,7 +117,7 @@ class BaseWriter:
       """
       lines=['','%s = {'%varname] #add newline at beginning to make reading easier
       indent=' '*(len(varname)+6)
-      for i,elem in enumerate(data):         
+      for i,elem in enumerate(data):
          if i+1==len(data):
             lines.append('%s%s'%(indent,str(elem)))
          else:
@@ -164,8 +143,8 @@ class BaseWriter:
          return json.dumps(items[0])
       else:
          return json.dumps(items)
-   
-   def writeSwDataDefPropsVariantsXML(self, ws, variants):      
+
+   def writeSwDataDefPropsVariantsXML(self, ws, variants):
       lines = []
       lines.append(self.indent("<SW-DATA-DEF-PROPS-VARIANTS>", 0))
       for variant in variants:
@@ -189,7 +168,7 @@ class BaseWriter:
       if elem.swAddressMethodRef is not None:
          swAddressMethod = ws.find(elem.swAddressMethodRef)
          if swAddressMethod is None:
-            raise ValueError('invalid SW-ADDRESS-METHOD reference: '+ elem.swAddressMethodRef)         
+            raise ValueError('invalid SW-ADDRESS-METHOD reference: '+ elem.swAddressMethodRef)
          lines.append(self.indent('<SW-ADDR-METHOD-REF DEST="%s">%s</SW-ADDR-METHOD-REF>'%(swAddressMethod.tag(self.version), swAddressMethod.ref),1))
       if elem.swCalibrationAccess is not None:
          lines.append(self.indent('<SW-CALIBRATION-ACCESS>%s</SW-CALIBRATION-ACCESS>'%(elem.swCalibrationAccess),1))
@@ -217,7 +196,7 @@ class BaseWriter:
       lines.append("</%s>"%elem.tag(self.version))
       return lines
 
-      
+
    def _createTypeRef(self, typeRef, localvars):
       """
       returns a represenation of a typeRef string
@@ -233,7 +212,7 @@ class BaseWriter:
       otherwise it returns the full reference
       """
       return self._createRef(componentRef, 'ComponentType', localvars)
-      
+
    def _createRef(self, ref, role, localvars):
       ws=localvars['ws']
       assert(ws is not None)
@@ -244,7 +223,7 @@ class BaseWriter:
          return element.name #use name only
       else:
          return element.ref #use full reference
-   
+
    def writeValueSpecificationXML(self, value):
       lines=[]
       lines.append('<%s>'%value.tag(self.version))
@@ -295,12 +274,12 @@ class BaseWriter:
       lines.append('<%s>'%elem.tag(self.version))
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
       if self.version >= 4.0:
-         lines.append(self.indent('<SW-DATA-DEF-PROPS>',1))         
+         lines.append(self.indent('<SW-DATA-DEF-PROPS>',1))
          variant = autosar.base.SwDataDefPropsConditional(swAddressMethodRef = elem.swAddressMethodRef, swCalibrationAccess = elem.swCalibrationAccess, swImplPolicy = elem.swImplPolicy)
          variant.dataConstraintRef = elem.dataConstraintRef
          lines.extend(self.indent(self.writeSwDataDefPropsVariantsXML(ws, [variant]),2))
          lines.append(self.indent('</SW-DATA-DEF-PROPS>',1))
-      
+
       typeElem = ws.find(elem.typeRef, role="DataType")
       if (typeElem is None):
          raise ValueError("invalid type reference: '%s'"%elem.typeRef)
@@ -312,31 +291,31 @@ class BaseWriter:
       return lines
 
 class ElementWriter(BaseWriter, metaclass=abc.ABCMeta):
-   
+
    def __init__(self, version, patch=None):
       """
       version: the XML (schema) version that this writer is expected to output. The value is the form of a float.
       E.g. version=3.0 means AUTOSAR 3.0.
       patch: Not yet supported but will eventually contain the expected patch version in the form of an integer.
-      
-      Combined Example: version=4.1, patch=1 means AUTOSAR 4.1.1      
+
+      Combined Example: version=4.1, patch=1 means AUTOSAR 4.1.1
       """
       super().__init__(version, patch)
-   
+
    @abc.abstractmethod
    def getSupportedXML(self):
       """
       Returns a list of class-names (strings) that this writer can turn into XML.
       A generator returning strings is also OK.
       """
-   
+
    @abc.abstractmethod
    def writeElementXML(self, elem):
       """
       Invokes the XML writer, requesting it to convert the elem object into XML
-      
+
       The method shall return a list of strings that contains valid XML text.
-      
+
       elem: the element object to write.
       """
 
@@ -346,14 +325,14 @@ class ElementWriter(BaseWriter, metaclass=abc.ABCMeta):
       Returns a list of class-names (strings) that this writer can turn into Python 3 code.
       A generator returning strings is also OK.
       """
-   
+
    @abc.abstractmethod
    def writeElementCode(self, elem, localvars):
       """
       Invokes the code writer, requesting it to convert the elem object into (normalized) Python code
-      
+
       The method shall return a list of strings that contains valid python3 code that, when executed recreates the elem object.
-      
+
       elem: the element object to write.
-      localvars: A dictionary containing local variables that the generated code can safely use.      
+      localvars: A dictionary containing local variables that the generated code can safely use.
       """
