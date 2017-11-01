@@ -300,11 +300,18 @@ class Workspace(object):
       if isinstance(packages,str): packages=[packages]
       return writer.toCode(self,list(packages),str(header))
          
-   def saveCode(self, filename, packages=None, ignore=None, head=None, tail=None, module=False):
+   def saveCode(self, filename, packages=None, ignore=None, head=None, tail=None, module=False, version=None, patch=None):
       """
       saves the workspace as python code so it can be recreated later
       """
-      writer=autosar.writer.WorkspaceWriter()
+      if version is None:
+         version = self.version
+      if patch is None:
+         patch = self.patch
+      if self.packageWriter is None:
+         self.packageWriter = autosar.writer.package_writer.PackageWriter(version, patch)
+         self._registerDefaultElementWriters(self.packageWriter)
+      writer=autosar.writer.WorkspaceWriter(version, patch, self.packageWriter)
       if isinstance(packages,str): packages=[packages]
       with open(filename,'w', encoding="utf-8") as fp:
          writer.saveCode(self, fp, packages, ignore, head, tail, module)

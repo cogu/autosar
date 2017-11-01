@@ -425,8 +425,7 @@ class CodeComponentTypeWriter(ElementWriter):
                           'ApplicationSoftwareComponent': self.writeApplicationSoftwareComponentCode,
                           'ComplexDeviceDriverComponent': self.writeComplexDeviceDriverComponentCode,
                           'ServiceComponent': self.writeServiceComponentCode,
-                          'ParameterComponent': self.writeParameterComponentCode,
-                          'InternalBehavior': self.writeInternalBehaviorCode,
+                          'ParameterComponent': self.writeParameterComponentCode,                          
                           'SwcImplementation': self.writeSwcImplementationCode,
                           'CompositionComponent': self.writeCompositionComponentCode,
          }
@@ -437,10 +436,10 @@ class CodeComponentTypeWriter(ElementWriter):
          switch.keys = {}
 
    def getSupportedXML(self):
-      return self.switcher.keys()
+      return []
 
    def getSupportedCode(self):
-      return []
+      return self.switcher.keys()
 
    def writeElementXML(self, elem):
       raise NotImplementedError('writeElementXML')
@@ -448,7 +447,7 @@ class CodeComponentTypeWriter(ElementWriter):
    def writeElementCode(self, elem, localvars):
       codeWriteFunc = self.switcher.get(type(elem).__name__)
       if codeWriteFunc is not None:
-         return codeWriteFunc(elem)
+         return codeWriteFunc(elem, localvars)
       else:
          return None
 

@@ -608,7 +608,7 @@ class CodeBehaviorWriter(ElementWriter):
 
    def getSupportedCode(self):
       if (self.version >= 3.0) and (self.version < 4.0):
-        return 'InternalBehavior'
+        return ['InternalBehavior']
       else:
          return []
 
@@ -617,7 +617,7 @@ class CodeBehaviorWriter(ElementWriter):
 
    def writeElementCode(self, elem, localvars):
       if type(elem).__name__ == 'InternalBehavior':
-         return self.writeInternalBehaviorCode(elem)
+         return self.writeInternalBehaviorCode(elem, localvars)
       else:
          return None
 

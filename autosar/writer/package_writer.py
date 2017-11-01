@@ -20,10 +20,14 @@ class PackageWriter(BaseWriter):
       if writerName not in self.registeredWriters:
          list_or_generator = elementWriter.getSupportedXML()
          if list_or_generator is not None:
+            if isinstance(list_or_generator, str):
+               list_or_generator = [list_or_generator]
             for elementName in list_or_generator:
                self.xmlSwitcher[elementName] = elementWriter
          list_or_generator = elementWriter.getSupportedCode()
          if list_or_generator is not None:
+            if isinstance(list_or_generator, str):
+               list_or_generator = [list_or_generator]
             for elementName in list_or_generator:
                self.codeSwitcher[elementName] = elementWriter
          self.registeredWriters[writerName] = elementWriter
@@ -102,9 +106,9 @@ class PackageWriter(BaseWriter):
                if (isinstance(ignore, str) and ignore==behavior.componentRef) or (isinstance(ignore, collections.Iterable) and behavior.componentRef in ignore): ignoreElem = True
          if not ignoreElem:
             elementName = elem.__class__.__name__
-            elementWriter = self.xmlSwitcher.get(elementName)
+            elementWriter = self.codeSwitcher.get(elementName)
             if elementWriter is not None:
-               result = elementWriter.writeElementXML(elem)
+               result = elementWriter.writeElementCode(elem, localvars)
                if result is None:
                   print("[PackageWriter] No return value: %s"%elementName)
                   continue

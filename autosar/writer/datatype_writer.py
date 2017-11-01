@@ -450,7 +450,7 @@ class CodeDataTypeWriter(ElementWriter):
    def writeElementCode(self, elem, localvars):      
       codeWriteFunc = self.switcher.get(type(elem).__name__)
       if codeWriteFunc is not None:
-         return codeWriteFunc(elem)
+         return codeWriteFunc(elem, localvars)
       else:
          return None
 
