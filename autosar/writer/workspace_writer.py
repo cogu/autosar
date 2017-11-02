@@ -1,6 +1,6 @@
 from autosar.writer.writer_base import BaseWriter
 from autosar.writer.package_writer import PackageWriter
-from autosar.base import filter_packages
+from autosar.base import applyFilter
 import collections
 
 class WorkspaceWriter(BaseWriter):
@@ -37,18 +37,18 @@ class WorkspaceWriter(BaseWriter):
       return lines
 
    
-   def saveXML(self, ws, fp, packages, ignore):
-      fp.write(self.toXML(ws, packages, ignore))
+   def saveXML(self, ws, fp, filters):
+      fp.write(self.toXML(ws, filters))
 
-   def toXML(self, ws, filters, ignore):
+   def toXML(self, ws, filters):
       lines=self.beginFile()
       result='\n'.join(lines)+'\n'
-      filtered_packages = filter_packages(ws.packages, filters)
-      for package in filtered_packages:
-         lines=self.packageWriter.toXML(package, filters, ignore)
-         if len(lines)>0:
-            lines=self.indent(lines,2)
-            result+='\n'.join(lines)+'\n'
+      for package in ws.packages:
+         if applyFilter(package.ref, filters):
+            lines=self.packageWriter.toXML(package, filters)
+            if len(lines)>0:
+               lines=self.indent(lines,2)
+               result+='\n'.join(lines)+'\n'
       lines=self.endFile()
       return result+'\n'.join(lines)+'\n'
    

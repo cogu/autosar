@@ -186,8 +186,27 @@ def parseAutosarVersionAndSchema(xmlRoot):
             
    return (None, None, None)
 
+def applyFilter(ref, filters):
+   if ref[0] == '/': ref=ref[1:]
+   tmp = ref.split('/')
+   
+   for f in filters:
+      match = True
+      for i,filter_elem in enumerate(f):
+         if i >=len(tmp): return True
+         ref_elem = tmp[i]
+         if (filter_elem != '*') and (ref_elem != filter_elem):
+            match = False
+            break
+      if match: return True
+   return False
 
 
+def prepareFilter(fstr):
+   if fstr[0] == '/': fstr=fstr[1:]
+   if fstr[-1] == '/': fstr+='*'
+   return fstr.split('/')
+   
 class SwDataDefPropsConditional:
    def tag(self,version=None): return 'SW-DATA-DEF-PROPS-CONDITIONAL'
    def __init__(self, baseTypeRef = None, implementationTypeRef = None, swAddressMethodRef = None, swCalibrationAccess = None, swImplPolicy = None, compuMethodRef = None, dataConstraintRef = None, unitRef = None, parent = None):

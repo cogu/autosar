@@ -1,7 +1,7 @@
 import autosar.package
 import autosar.parser.package_parser
 import autosar.writer
-from autosar.base import parseXMLFile,getXMLNamespace,removeNamespace,parseAutosarVersionAndSchema
+from autosar.base import parseXMLFile,getXMLNamespace,removeNamespace,parseAutosarVersionAndSchema,prepareFilter
 import json
 import os
 import ntpath
@@ -260,7 +260,7 @@ class Workspace(object):
    def rootWS(self):
       return self
    
-   def saveXML(self,filename, packages=None, ignore=None, version=None, patch=None, schema=None):
+   def saveXML(self, filename, filters=None, packages=None, version=None, patch=None, schema=None):
       if version is None:
          version = self.version
       if patch is None:
@@ -273,8 +273,18 @@ class Workspace(object):
       writer=autosar.writer.WorkspaceWriter(version, patch, schema, self.packageWriter)
       with open(filename, 'w', encoding="utf-8") as fp:
          if isinstance(packages,str): packages=[packages]
-         if isinstance(ignore,str): ignore=[ignore]
-         writer.saveXML(self, fp, packages, ignore)
+         if isinstance(filters,str): filters=[filters]
+         if packages is not None:
+            if filters is None:
+               filters = []
+            for package in packages:
+               if package[-1]=='/':
+                  filters.append(package+'*')
+               else:
+                  filters.append(package+'/*')
+         if filters is not None:
+            filters = [prepareFilter(x) for x in filters]
+         writer.saveXML(self, fp, filters)
 
    def toXML(self, packages=None, ignore=None, version=None, patch=None, schema=None):
       if version is None:

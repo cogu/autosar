@@ -1,5 +1,5 @@
 from autosar.writer.writer_base import BaseWriter, ElementWriter
-from autosar.base import filter_packages
+from autosar.base import applyFilter
 import collections
 import autosar.behavior
 import autosar.component
@@ -32,24 +32,25 @@ class PackageWriter(BaseWriter):
                self.codeSwitcher[elementName] = elementWriter
          self.registeredWriters[writerName] = elementWriter
 
-   def toXML(self, package, filters, ignore):      
+   def toXML(self, package, filters):
       lines=[]
       lines.extend(self.beginPackage(package.name))
       if len(package.elements)>0:
          lines.append(self.indent("<ELEMENTS>",1))
          for elem in package.elements:
             elemRef = elem.ref
-            ignoreElem=True if (isinstance(ignore, collections.Iterable) and elemRef in ignore) else False
-            #if SWC was ignored by user, also ignore its InternalBehavior and SwcImplementation elements in case they are in the same package
-            if not ignoreElem and isinstance(elem, autosar.behavior.InternalBehavior):
-               if (isinstance(ignore, collections.Iterable) and elem.componentRef in ignore):
-                  ignoreElem = True
-            if not ignoreElem and isinstance(elem, autosar.component.SwcImplementation):
-               behavior = package.rootWS().find(elem.behaviorRef)
-               if behavior is not None:
-                  if (isinstance(ignore, collections.Iterable) and behavior.componentRef in ignore):
-                     ignoreElem = True
-            if not ignoreElem:
+            # ignoreElem=True if (isinstance(ignore, collections.Iterable) and elemRef in ignore) else False
+            # #if SWC was ignored by user, also ignore its InternalBehavior and SwcImplementation elements in case they are in the same package
+            # if not ignoreElem and isinstance(elem, autosar.behavior.InternalBehavior):
+            #    if (isinstance(ignore, collections.Iterable) and elem.componentRef in ignore):
+            #       ignoreElem = True
+            # if not ignoreElem and isinstance(elem, autosar.component.SwcImplementation):
+            #    behavior = package.rootWS().find(elem.behaviorRef)
+            #    if behavior is not None:
+            #       if (isinstance(ignore, collections.Iterable) and behavior.componentRef in ignore):
+            #          ignoreElem = True
+            # if not ignoreElem:
+            if applyFilter(elemRef, filters):
                elementName = elem.__class__.__name__
                elementWriter = self.xmlSwitcher.get(elementName)
                if elementWriter is not None:
@@ -66,18 +67,25 @@ class PackageWriter(BaseWriter):
          if self.version<4.0:
             lines.append(self.indent("<ELEMENTS/>",1))
       if len(package.subPackages)>0:
-         filtered_packages = filter_packages(package.subPackages, filters)
-         if len(filtered_packages) > 0:
-            if self.version >= 3.0 and self.version < 4.0:
-               lines.append(self.indent("<SUB-PACKAGES>",1))            
-               for subPackage in filtered_packages:            
-                  lines.extend(self.indent(self.toXML(subPackage, filters, ignore),2))
+         numPackets = 0
+         if self.version >= 3.0 and self.version < 4.0:
+            for subPackage in package.subPackages:
+               if applyFilter(subPackage.ref, filters):
+                  if numPackets == 0:
+                     lines.append(self.indent("<SUB-PACKAGES>",1))
+                  lines.extend(self.indent(self.toXML(subPackage, filters),2))
+                  numPackets += 1
+            if numPackets > 0:
                lines.append(self.indent("</SUB-PACKAGES>",1))
-            elif self.version >= 4.0:
-               lines.append(self.indent("<AR-PACKAGES>",1))
-               for subPackage in filtered_packages:
-                  lines.extend(self.indent(self.toXML(subPackage, filters, ignore),2))
-               lines.append(self.indent("</AR-PACKAGES>",1))            
+         elif self.version >= 4.0:
+            for subPackage in package.subPackages:
+               if applyFilter(subPackage.ref, filters):
+                  if numPackets == 0:
+                     lines.append(self.indent("<AR-PACKAGES>",1))
+                  lines.extend(self.indent(self.toXML(subPackage, filters),2))
+                  numPackets += 1
+            if numPackets > 0:
+               lines.append(self.indent("</AR-PACKAGES>",1))
       lines.extend(self.endPackage())
       return lines
    
