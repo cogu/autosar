@@ -23,10 +23,11 @@ from autosar.writer.component_writer import XMLComponentTypeWriter, CodeComponen
 from autosar.writer.behavior_writer import XMLBehaviorWriter, CodeBehaviorWriter
 from autosar.writer.signal_writer import SignalWriter
 
-_validWSRoles = ['DataType', 'Constant', 'PortInterface', 'ComponentType', 'ModeDclrGroup', 'CompuMethod', 'Unit']
+_validWSRoles = ['DataType', 'Constant', 'PortInterface', 'ComponentType', 'ModeDclrGroup', 'CompuMethod', 'Unit',
+                 'BaseType', 'DataConstraint']
 
 class Workspace(object):
-   def __init__(self, version, patch, schema, packages=None):
+   def __init__(self, version, patch, schema, EcuName = None, packages=None):
       self.packages = []
       self.version=version
       self.patch=patch
@@ -34,13 +35,17 @@ class Workspace(object):
       self.packageParser=None
       self.packageWriter=None
       self.xmlroot = None
+      self.EcuName = EcuName
       self.roles = {'DataType': None,
                     'Constant': None,
                     'PortInterface': None,
                     'ModeDclrGroup': None,
                     'ComponentType': None,
                     'CompuMethod': None,
-                    'Unit': None}
+                    'Unit': None,
+                    'BaseType': None,        #AUTOSAR 4 only
+                    'DataConstraint': None }  #AUTOSAR 4 only
+      
       self.defaultPackages = {'DataType': 'DataType',
                               'Constant': 'Constant',
                               'PortInterface': 'PortInterface',
@@ -148,20 +153,20 @@ class Workspace(object):
             self.setRole(package.ref, role)
       return found
 
-   def loadJSON(self, filename):      
-      with open(filename) as fp:
-         basedir = ntpath.dirname(filename)
-         data = json.load(fp)         
-         if data is not None:
-            for item in data:
-               if item['type']=='fileRef':
-                  adjustedPath = self._adjustFileRef(item, basedir)
-                  if adjustedPath.endswith('.arxml'):
-                     self.loadXML(adjustedPath)
-                  else:
-                     raise NotImplementedError(adjustedPath)
-               else:
-                  raise ValueError('Unknown type: %s'%item['type'])
+   # def loadJSON(self, filename):      
+   #    with open(filename) as fp:
+   #       basedir = ntpath.dirname(filename)
+   #       data = json.load(fp)
+   #       if data is not None:
+   #          for item in data:
+   #             if item['type']=='fileRef':
+   #                adjustedPath = self._adjustFileRef(item, basedir)
+   #                if adjustedPath.endswith('.arxml'):
+   #                   self.loadXML(adjustedPath)
+   #                else:
+   #                   raise NotImplementedError(adjustedPath)
+   #             else:
+   #                raise ValueError('Unknown type: %s'%item['type'])
    
 
    def find(self, ref, role=None):

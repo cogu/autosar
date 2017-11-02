@@ -695,6 +695,13 @@ class Package(object):
       return component
    
    def createInternalDataConstraint(self, name, lowerLimit, upperLimit, lowerLimitType="CLOSED", upperLimitType="CLOSED"):
+      ws = self.rootWS()
+      assert(ws is not None)
+      dataConstraintPackage = None
+      if ws.roles['DataConstraint'] is not None:
+         dataConstraintPackage=ws.find(ws.roles['DataConstraint'])
+         if dataConstraintPackage is None:
+            raise RuntimeError("no package found with role='DataConstraint'")      
       rules=[]
       try:
          lowerLimit = int(lowerLimit)
@@ -706,7 +713,7 @@ class Package(object):
          upperLimit = str(upperLimit)
       rules.append({'type': 'internalConstraint', 'lowerLimit':lowerLimit, 'upperLimit':upperLimit, 'lowerLimitType':lowerLimitType, 'upperLimitType':upperLimitType})
       constraint = autosar.datatype.DataConstraint(name, rules, self)
-      self.append(constraint)
+      dataConstraintPackage.append(constraint)
       return constraint
    
    def createSwBaseType(self, name, size, encoding=None, nativeDeclaration=None, adminData=None):
