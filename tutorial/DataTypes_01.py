@@ -64,4 +64,4 @@ def apply(ws):
 if __name__ == '__main__':
    ws = autosar.workspace()
    apply(ws)
-   ws.saveXML('DataTypes_01.arxml', packages=['DataType'])
+   ws.saveXML('DataTypes_01.arxml', filters=['DataType'])

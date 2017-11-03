@@ -1,7 +1,7 @@
 import autosar.package
 import autosar.parser.package_parser
 import autosar.writer
-from autosar.base import parseXMLFile,getXMLNamespace,removeNamespace,parseAutosarVersionAndSchema
+from autosar.base import parseXMLFile,getXMLNamespace,removeNamespace,parseAutosarVersionAndSchema,prepareFilter
 import json
 import os
 import ntpath
@@ -260,7 +260,7 @@ class Workspace(object):
    def rootWS(self):
       return self
    
-   def saveXML(self,filename, packages=None, ignore=None, version=None, patch=None, schema=None):
+   def saveXML(self, filename, filters=None, packages=None, ignore=None, version=None, patch=None, schema=None):
       if version is None:
          version = self.version
       if patch is None:
@@ -272,11 +272,22 @@ class Workspace(object):
          self._registerDefaultElementWriters(self.packageWriter)
       writer=autosar.writer.WorkspaceWriter(version, patch, schema, self.packageWriter)
       with open(filename, 'w', encoding="utf-8") as fp:
+         if isinstance(filters,str): filters=[filters]
          if isinstance(packages,str): packages=[packages]
-         if isinstance(ignore,str): ignore=[ignore]
-         writer.saveXML(self, fp, packages, ignore)
+         if isinstance(ignore,str): filters=[ignore]
+         if packages is not None:
+            if filters is None:
+               filters = []
+            for package in packages:
+               if package[-1]=='/':
+                  filters.append(package+'*')
+               else:
+                  filters.append(package+'/*')
+         if filters is not None:
+            filters = [prepareFilter(x) for x in filters]         
+         writer.saveXML(self, fp, filters, ignore)
 
-   def toXML(self, packages=None, ignore=None, version=None, patch=None, schema=None):
+   def toXML(self, filters=None, packages=None, ignore=None, version=None, patch=None, schema=None):      
       if version is None:
          version = self.version
       if patch is None:
@@ -287,9 +298,20 @@ class Workspace(object):
          self.packageWriter = autosar.writer.package_writer.PackageWriter(version, patch)
          self._registerDefaultElementWriters(self.packageWriter)
       writer=autosar.writer.WorkspaceWriter(version, patch, schema, self.packageWriter)
+      if isinstance(filters,str): filters=[filters]
       if isinstance(packages,str): packages=[packages]
-      if isinstance(ignore,str): ignore=[ignore]
-      return writer.toXML(self, packages, ignore)
+      if isinstance(ignore,str): filters=[ignore]
+      if packages is not None:
+         if filters is None:
+            filters = []
+         for package in packages:
+            if package[-1]=='/':
+               filters.append(package+'*')
+            else:
+               filters.append(package+'/*')
+      if filters is not None:
+         filters = [prepareFilter(x) for x in filters]
+      return writer.toXML(self, filters, ignore)
 
    def append(self,elem):
       if isinstance(elem,autosar.package.Package):
@@ -298,25 +320,36 @@ class Workspace(object):
       else:
          raise ValueError(type(elem))
    
-   def toJSON(self,packages=None,indent=3):
-      data=ws.asdict(packages)
-      return json.dumps(data,indent=indent)
-      
-   def saveJSON(self,filename,packages=None,indent=3):
-      data=self.asdict(packages)
-      with open(filename,'w') as fp:
-         json.dump(data,fp,indent=indent)
+   # def toJSON(self,packages=None,indent=3):
+   #    data=ws.asdict(packages)
+   #    return json.dumps(data,indent=indent)
+   #    
+   # def saveJSON(self,filename,packages=None,indent=3):
+   #    data=self.asdict(packages)
+   #    with open(filename,'w') as fp:
+   #       json.dump(data,fp,indent=indent)
          
-   def toCode(self, packages=None, header=None, version=None, patch=None):
+   def toCode(self, filters=None, packages=None, header=None, version=None, patch=None):
       if version is None:
          version = self.version
       if patch is None:
          patch = self.patch
       writer=autosar.writer.WorkspaceWriter(version, patch, None, self.packageWriter)
+      if isinstance(filters,str): filters=[filters]
       if isinstance(packages,str): packages=[packages]
-      return writer.toCode(self,list(packages),str(header))
+      if packages is not None:
+         if filters is None:
+            filters = []
+         for package in packages:
+            if package[-1]=='/':
+               filters.append(package+'*')
+            else:
+               filters.append(package+'/*')
+      if filters is not None:
+         filters = [prepareFilter(x) for x in filters]
+      return writer.toCode(self, filters ,str(header))
          
-   def saveCode(self, filename, packages=None, ignore=None, head=None, tail=None, module=False, version=None, patch=None):
+   def saveCode(self, filename, filters=None, packages=None, ignore=None, head=None, tail=None, module=False, version=None, patch=None):
       """
       saves the workspace as python code so it can be recreated later
       """
@@ -329,8 +362,21 @@ class Workspace(object):
          self._registerDefaultElementWriters(self.packageWriter)
       writer=autosar.writer.WorkspaceWriter(version, patch, None, self.packageWriter)
       if isinstance(packages,str): packages=[packages]
+      if isinstance(filters,str): filters=[filters]
+      if isinstance(ignore,str): ignore=[ignore]
+      if packages is not None:
+         if filters is None:
+            filters = []
+         for package in packages:
+            if package[-1]=='/':
+               filters.append(package+'*')
+            else:
+               filters.append(package+'/*')
+      if filters is not None:
+         filters = [prepareFilter(x) for x in filters]
+
       with open(filename,'w', encoding="utf-8") as fp:
-         writer.saveCode(self, fp, packages, ignore, head, tail, module)
+         writer.saveCode(self, fp, filters, ignore, head, tail, module)
 
    @property
    def ref(self):
@@ -383,7 +429,7 @@ class Workspace(object):
       """
       template.apply(self)
 
-   #template support 
+   #---DEPRECATED CODE, TO BE REMOVED ---#
    @classmethod
    def _createDefaultDataTypes(cls, package):
       package.createBooleanDataType('Boolean')
@@ -447,6 +493,8 @@ class Workspace(object):
       if package is None:
          package=self.createPackage(packageName, role="ComponentType")
       return package
+   
+   #--- END DEPCRECATED CODE ---#
    
    def registerElementParser(self, elementParser):
       """

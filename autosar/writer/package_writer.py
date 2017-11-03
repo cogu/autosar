@@ -1,5 +1,5 @@
 from autosar.writer.writer_base import BaseWriter, ElementWriter
-from autosar.base import filter_packages
+from autosar.base import applyFilter
 import collections
 import autosar.behavior
 import autosar.component
@@ -32,7 +32,7 @@ class PackageWriter(BaseWriter):
                self.codeSwitcher[elementName] = elementWriter
          self.registeredWriters[writerName] = elementWriter
 
-   def toXML(self, package, filters, ignore):      
+   def toXML(self, package, filters, ignore):
       lines=[]
       lines.extend(self.beginPackage(package.name))
       if len(package.elements)>0:
@@ -49,7 +49,7 @@ class PackageWriter(BaseWriter):
                if behavior is not None:
                   if (isinstance(ignore, collections.Iterable) and behavior.componentRef in ignore):
                      ignoreElem = True
-            if not ignoreElem:
+            if not ignoreElem and applyFilter(elemRef, filters):
                elementName = elem.__class__.__name__
                elementWriter = self.xmlSwitcher.get(elementName)
                if elementWriter is not None:
@@ -66,22 +66,29 @@ class PackageWriter(BaseWriter):
          if self.version<4.0:
             lines.append(self.indent("<ELEMENTS/>",1))
       if len(package.subPackages)>0:
-         filtered_packages = filter_packages(package.subPackages, filters)
-         if len(filtered_packages) > 0:
-            if self.version >= 3.0 and self.version < 4.0:
-               lines.append(self.indent("<SUB-PACKAGES>",1))            
-               for subPackage in filtered_packages:            
+         numPackets = 0
+         if self.version >= 3.0 and self.version < 4.0:
+            for subPackage in package.subPackages:
+               if applyFilter(subPackage.ref, filters):
+                  if numPackets == 0:
+                     lines.append(self.indent("<SUB-PACKAGES>",1))
                   lines.extend(self.indent(self.toXML(subPackage, filters, ignore),2))
+                  numPackets += 1
+            if numPackets > 0:
                lines.append(self.indent("</SUB-PACKAGES>",1))
-            elif self.version >= 4.0:
-               lines.append(self.indent("<AR-PACKAGES>",1))
-               for subPackage in filtered_packages:
+         elif self.version >= 4.0:
+            for subPackage in package.subPackages:
+               if applyFilter(subPackage.ref, filters):
+                  if numPackets == 0:
+                     lines.append(self.indent("<AR-PACKAGES>",1))
                   lines.extend(self.indent(self.toXML(subPackage, filters, ignore),2))
-               lines.append(self.indent("</AR-PACKAGES>",1))            
+                  numPackets += 1
+            if numPackets > 0:
+               lines.append(self.indent("</AR-PACKAGES>",1))
       lines.extend(self.endPackage())
       return lines
-   
-   def toCode(self, package, ignore, localvars):
+
+   def toCode(self, package, filters, ignore, localvars):
       lines=[]
       if package.role is not None:
          lines.append('package=ws.createPackage("%s", role="%s")'%(package.name, package.role))
@@ -92,7 +99,7 @@ class PackageWriter(BaseWriter):
          if subPackage.role is not None:
             lines.append('package.createSubPackage("%s", role="%s")'%(subPackage.name, subPackage.role))
          else:
-            lines.append('package.createSubPackage("%s")'%(subPackage.name))            
+            lines.append('package.createSubPackage("%s")'%(subPackage.name))
       for elem in package.elements:
          elemRef = elem.ref
          ignoreElem=True if (isinstance(ignore, str) and ignore==elemRef) or (isinstance(ignore, collections.Iterable) and elemRef in ignore) else False
@@ -104,7 +111,7 @@ class PackageWriter(BaseWriter):
             behavior = package.rootWS().find(elem.behaviorRef)
             if behavior is not None:
                if (isinstance(ignore, str) and ignore==behavior.componentRef) or (isinstance(ignore, collections.Iterable) and behavior.componentRef in ignore): ignoreElem = True
-         if not ignoreElem:
+         if not ignoreElem and applyFilter(elemRef, filters):
             elementName = elem.__class__.__name__
             elementWriter = self.codeSwitcher.get(elementName)
             if elementWriter is not None:
@@ -115,7 +122,7 @@ class PackageWriter(BaseWriter):
                else:
                   lines.extend(result)
             else:
-               print("[PackageWriter] Unhandled: %s"%elementName)            
+               print("[PackageWriter] Unhandled: %s"%elementName)
          else:
             pass
       return lines

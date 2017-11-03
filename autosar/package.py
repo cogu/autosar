@@ -212,7 +212,8 @@ class Package(object):
       if role is not None:
          ws = self.rootWS()
          assert(ws is not None)         
-         ws.setRole(pkg.ref, role)   
+         ws.setRole(pkg.ref, role)
+      return pkg
          
    def rootWS(self):
       if self.parent is None:

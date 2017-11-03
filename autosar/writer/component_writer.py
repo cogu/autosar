@@ -154,16 +154,16 @@ class XMLComponentTypeWriter(ElementWriter):
       if self.version<4.0:
          if dataElem.isQueued:                        
             lines.append('<QUEUED-RECEIVER-COM-SPEC>',)
-            lines.append(self.indent('<DATA-ELEMENT-REF DEST="%s">%s</DATA-ELEMENT-REF>'%(dataElem.tag(self.version),dataElem.ref),3))
-            lines.append(self.indent('<QUEUE-LENGTH>%d</QUEUE-LENGTH>'%(int(comspec.queueLength)),3))
-            lines.append(self.indent('</QUEUED-RECEIVER-COM-SPEC>',2))
+            lines.append(self.indent('<DATA-ELEMENT-REF DEST="%s">%s</DATA-ELEMENT-REF>'%(dataElem.tag(self.version),dataElem.ref),1))
+            lines.append(self.indent('<QUEUE-LENGTH>%d</QUEUE-LENGTH>'%(int(comspec.queueLength)),1))
+            lines.append('</QUEUED-RECEIVER-COM-SPEC>')
          else:                        
-            lines.append(self.indent('<UNQUEUED-RECEIVER-COM-SPEC>',2))
-            lines.append(self.indent('<DATA-ELEMENT-REF DEST="%s">%s</DATA-ELEMENT-REF>'%(dataElem.tag(self.version),dataElem.ref),3))
-            lines.append(self.indent('<ALIVE-TIMEOUT>%d</ALIVE-TIMEOUT>'%(comspec.aliveTimeout),3))
+            lines.append('<UNQUEUED-RECEIVER-COM-SPEC>')
+            lines.append(self.indent('<DATA-ELEMENT-REF DEST="%s">%s</DATA-ELEMENT-REF>'%(dataElem.tag(self.version),dataElem.ref),1))
+            lines.append(self.indent('<ALIVE-TIMEOUT>%d</ALIVE-TIMEOUT>'%(comspec.aliveTimeout),1))
             if comspec.initValueRef is not None:
                tag = ws.find(comspec.initValueRef).tag(self.version)
-               lines.append(self.indent('<INIT-VALUE-REF DEST="%s">%s</INIT-VALUE-REF>'%(tag,comspec.initValueRef),3))
+               lines.append(self.indent('<INIT-VALUE-REF DEST="%s">%s</INIT-VALUE-REF>'%(tag,comspec.initValueRef),1))
             lines.append('</UNQUEUED-RECEIVER-COM-SPEC>')
       else:
          if dataElem.isQueued:                        
