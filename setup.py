@@ -6,7 +6,7 @@ def readme():
         return f.read()
 
 setup(name='autosar',
-      version='0.3.3',
+      version='0.3.4',
       description='autosar python module',
       long_description=readme(),
       classifiers=[
@@ -20,9 +20,9 @@ setup(name='autosar',
       author_email='congus8@gmail.com',
       license='MIT',
 	  install_requires=[
-          'cfile>=0.1.3',
+          'cfile>=0.1.4',
       ],
       packages=['autosar','autosar.parser','autosar.writer','autosar.rte', 'autosar.bsw'],
-	  dependency_links=['https://github.com/cogu/cfile/archive/v0.1.3.tar.gz#egg=cfile-0.1.3'],
+	  dependency_links=['https://github.com/cogu/cfile/archive/v0.1.4.tar.gz#egg=cfile-0.1.4'],
 	  zip_safe=False,
 	  test_suite='tests.my_test_suite')

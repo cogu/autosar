@@ -3,14 +3,23 @@ AUTOSAR
 
 A set of python modules for working with `AUTOSAR <https://www.autosar.org/>`_ XML files
 
-Important Announcements
------------------------
+Current Status (last updated 2017-11-03)
+----------------------------------------
 
-2017-10-24  
-~~~~~~~~~~
-The project is currently undergoing major refactoring efforts towards version 0.3.4 (soon to be v0.4.0). This means that master branch might be broken from time to time in the nextcoming 2-3 weeks.
+Current Version: 0.3.4
+~~~~~~~~~~~~~~~~~~~~~~
 
-For now I suggest you use the latest stable release `v0.3.3 <https://github.com/cogu/autosar/releases/tag/v0.3.3>`_.
+* Basic AUTOAR 4 support (supports reading/writing existing XML files).
+* Supports custom XML readers and writers.
+* Filters support.
+* Template support.
+
+Upcoming Version: 0.3.5 
+~~~~~~~~~~~~~~~~~~~~~~~
+
+* Update the documentation.
+* AUTOSAR 4 programmers API (create XML files programmatically).
+
 
 Prerequisites
 -------------
@@ -20,6 +29,6 @@ Prerequisites
 
 Documentation
 -------------
-Documentation is currently outdated and requires major update. You can see documentation for v0.3.3 `here <http://autosar.readthedocs.io/en/latest/>`_.
+Documentation is currently outdated and requires major update. You can see the documentation for v0.3.3 `here <http://autosar.readthedocs.io/en/latest/>`_.
 
 
