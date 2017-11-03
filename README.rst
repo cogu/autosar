@@ -14,6 +14,19 @@ Current Version: 0.3.4
 * Filters support.
 * Template support.
 
+Installation (Requires Python3)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Windows**::
+
+   >pip install https://github.com/cogu/cfile/archive/v0.1.4.tar.gz
+   >pip install https://github.com/cogu/autosar/archive/v0.3.4.tar.gz
+
+**Linux/Cygwin**::
+   
+   $pip3 install https://github.com/cogu/cfile/archive/v0.1.4.tar.gz
+   $pip3 install https://github.com/cogu/autosar/archive/v0.3.4.tar.gz
+   
 Upcoming Version: 0.3.5 
 ~~~~~~~~~~~~~~~~~~~~~~~
 
