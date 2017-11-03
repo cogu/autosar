@@ -135,29 +135,6 @@ def createAdminData(data):
       adminData.specialDataGroups.append(SpecialDataGroup(SDG_GID,SD,SD_GID))
    return adminData
 
-def filter_package_refs(package_refs, filters):
-   matched = []
-   for ref in package_refs:
-      if ref[0] != '/': ref='/'+ref
-      for filter_string in filters:
-         if filter_string.startswith(ref):
-            matched.append(ref)
-            break
-   return matched
-
-def filter_packages(packages, filters):
-   matched = []
-   if filters is None:
-      return packages
-   for package in packages:
-      ref = package.ref               
-      for filter_string in filters:
-         if filter_string[0]!='/': filter_string='/'+filter_string
-         if filter_string.startswith(ref):
-            matched.append(package)
-            break
-   return matched
-
 def parseAutosarVersionAndSchema(xmlRoot):
    """
    Parses AUTOSAR version from the attributes in the root AUTOSAR tag
@@ -187,6 +164,9 @@ def parseAutosarVersionAndSchema(xmlRoot):
    return (None, None, None)
 
 def applyFilter(ref, filters):
+   if filters is None:
+      return True
+   
    if ref[0] == '/': ref=ref[1:]
    tmp = ref.split('/')
    

@@ -51,6 +51,11 @@ class TestBase(unittest.TestCase):
       self.assertTrue(autosar.base.applyFilter('Package1/Child1', [['Package1', 'Child1', 'D']]))
       self.assertTrue(autosar.base.applyFilter('Package1/Child1/D', [['Package1', 'Child1', 'D']]))
       self.assertFalse(autosar.base.applyFilter('Package1/Child/C', [['Package1', 'Child1', 'D']]))
+      self.assertTrue(autosar.base.applyFilter(A.ref, None))
+      self.assertTrue(autosar.base.applyFilter(B.ref, None))
+      self.assertTrue(autosar.base.applyFilter(C.ref, None))
+      self.assertTrue(autosar.base.applyFilter(D.ref, None))
+      self.assertTrue(autosar.base.applyFilter(E.ref, None))
       
       
    def test_prepare_filters(self):

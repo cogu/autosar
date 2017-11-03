@@ -37,22 +37,22 @@ class WorkspaceWriter(BaseWriter):
       return lines
 
    
-   def saveXML(self, ws, fp, filters):
-      fp.write(self.toXML(ws, filters))
+   def saveXML(self, ws, fp, filters, ignore):
+      fp.write(self.toXML(ws, filters, ignore))
 
-   def toXML(self, ws, filters):
+   def toXML(self, ws, filters, ignore):
       lines=self.beginFile()
       result='\n'.join(lines)+'\n'
       for package in ws.packages:
          if applyFilter(package.ref, filters):
-            lines=self.packageWriter.toXML(package, filters)
+            lines=self.packageWriter.toXML(package, filters, ignore)
             if len(lines)>0:
                lines=self.indent(lines,2)
                result+='\n'.join(lines)+'\n'
       lines=self.endFile()
       return result+'\n'.join(lines)+'\n'
    
-   def toCode(self, ws, packages=None, ignore=None, head=None, tail=None, module=False, indent=3):
+   def toCode(self, ws, filters=None, ignore=None, head=None, tail=None, module=False, indent=3):
       localvars = collections.OrderedDict()
       localvars['ws']=ws
       indentStr=indent*' '
@@ -70,8 +70,8 @@ class WorkspaceWriter(BaseWriter):
          
          #body
          for package in ws.packages:
-            if (isinstance(packages, collections.Iterable) and package.name in packages) or (isinstance(packages, str) and package.name==packages) or (packages is None):
-               lines=self.packageWriter.toCode(package, ignore, localvars)
+            if applyFilter(package.ref, filters):
+               lines=self.packageWriter.toCode(package, filters, ignore, localvars)
                if len(lines)>0:
                   result+='\n'.join(lines)+'\n'
          #tail
@@ -98,8 +98,8 @@ class WorkspaceWriter(BaseWriter):
          #body
          result+='def apply(ws):\n'
          for package in ws.packages:
-            if (isinstance(packages, collections.Iterable) and package.name in packages) or (isinstance(packages, str) and package.name==packages) or (packages is None):
-               lines=self.packageWriter.toCode(package, ignore, localvars)
+            if applyFilter(package.ref, filters):
+               lines=self.packageWriter.toCode(package, filters, ignore, localvars)
                if len(lines)>0:
                   lines=[indentStr+x for x in lines]
                   result+='\n'.join(lines)+'\n'
@@ -126,5 +126,5 @@ class WorkspaceWriter(BaseWriter):
       
 
       
-   def saveCode(self, ws, fp, packages=None, ignore=None, head=None, tail=None, module=False):
-      fp.write(self.toCode(ws, packages, ignore, head, tail, module))
+   def saveCode(self, ws, fp, filters=None, ignore=None, head=None, tail=None, module=False):
+      fp.write(self.toCode(ws, filters, ignore, head, tail, module))

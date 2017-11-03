@@ -32,25 +32,24 @@ class PackageWriter(BaseWriter):
                self.codeSwitcher[elementName] = elementWriter
          self.registeredWriters[writerName] = elementWriter
 
-   def toXML(self, package, filters):
+   def toXML(self, package, filters, ignore):
       lines=[]
       lines.extend(self.beginPackage(package.name))
       if len(package.elements)>0:
          lines.append(self.indent("<ELEMENTS>",1))
          for elem in package.elements:
             elemRef = elem.ref
-            # ignoreElem=True if (isinstance(ignore, collections.Iterable) and elemRef in ignore) else False
-            # #if SWC was ignored by user, also ignore its InternalBehavior and SwcImplementation elements in case they are in the same package
-            # if not ignoreElem and isinstance(elem, autosar.behavior.InternalBehavior):
-            #    if (isinstance(ignore, collections.Iterable) and elem.componentRef in ignore):
-            #       ignoreElem = True
-            # if not ignoreElem and isinstance(elem, autosar.component.SwcImplementation):
-            #    behavior = package.rootWS().find(elem.behaviorRef)
-            #    if behavior is not None:
-            #       if (isinstance(ignore, collections.Iterable) and behavior.componentRef in ignore):
-            #          ignoreElem = True
-            # if not ignoreElem:
-            if applyFilter(elemRef, filters):
+            ignoreElem=True if (isinstance(ignore, collections.Iterable) and elemRef in ignore) else False
+            #if SWC was ignored by user, also ignore its InternalBehavior and SwcImplementation elements in case they are in the same package
+            if not ignoreElem and isinstance(elem, autosar.behavior.InternalBehavior):
+               if (isinstance(ignore, collections.Iterable) and elem.componentRef in ignore):
+                  ignoreElem = True
+            if not ignoreElem and isinstance(elem, autosar.component.SwcImplementation):
+               behavior = package.rootWS().find(elem.behaviorRef)
+               if behavior is not None:
+                  if (isinstance(ignore, collections.Iterable) and behavior.componentRef in ignore):
+                     ignoreElem = True
+            if not ignoreElem and applyFilter(elemRef, filters):
                elementName = elem.__class__.__name__
                elementWriter = self.xmlSwitcher.get(elementName)
                if elementWriter is not None:
@@ -73,7 +72,7 @@ class PackageWriter(BaseWriter):
                if applyFilter(subPackage.ref, filters):
                   if numPackets == 0:
                      lines.append(self.indent("<SUB-PACKAGES>",1))
-                  lines.extend(self.indent(self.toXML(subPackage, filters),2))
+                  lines.extend(self.indent(self.toXML(subPackage, filters, ignore),2))
                   numPackets += 1
             if numPackets > 0:
                lines.append(self.indent("</SUB-PACKAGES>",1))
@@ -82,14 +81,14 @@ class PackageWriter(BaseWriter):
                if applyFilter(subPackage.ref, filters):
                   if numPackets == 0:
                      lines.append(self.indent("<AR-PACKAGES>",1))
-                  lines.extend(self.indent(self.toXML(subPackage, filters),2))
+                  lines.extend(self.indent(self.toXML(subPackage, filters, ignore),2))
                   numPackets += 1
             if numPackets > 0:
                lines.append(self.indent("</AR-PACKAGES>",1))
       lines.extend(self.endPackage())
       return lines
-   
-   def toCode(self, package, ignore, localvars):
+
+   def toCode(self, package, filters, ignore, localvars):
       lines=[]
       if package.role is not None:
          lines.append('package=ws.createPackage("%s", role="%s")'%(package.name, package.role))
@@ -100,7 +99,7 @@ class PackageWriter(BaseWriter):
          if subPackage.role is not None:
             lines.append('package.createSubPackage("%s", role="%s")'%(subPackage.name, subPackage.role))
          else:
-            lines.append('package.createSubPackage("%s")'%(subPackage.name))            
+            lines.append('package.createSubPackage("%s")'%(subPackage.name))
       for elem in package.elements:
          elemRef = elem.ref
          ignoreElem=True if (isinstance(ignore, str) and ignore==elemRef) or (isinstance(ignore, collections.Iterable) and elemRef in ignore) else False
@@ -112,7 +111,7 @@ class PackageWriter(BaseWriter):
             behavior = package.rootWS().find(elem.behaviorRef)
             if behavior is not None:
                if (isinstance(ignore, str) and ignore==behavior.componentRef) or (isinstance(ignore, collections.Iterable) and behavior.componentRef in ignore): ignoreElem = True
-         if not ignoreElem:
+         if not ignoreElem and applyFilter(elemRef, filters):
             elementName = elem.__class__.__name__
             elementWriter = self.codeSwitcher.get(elementName)
             if elementWriter is not None:
@@ -123,7 +122,7 @@ class PackageWriter(BaseWriter):
                else:
                   lines.extend(result)
             else:
-               print("[PackageWriter] Unhandled: %s"%elementName)            
+               print("[PackageWriter] Unhandled: %s"%elementName)
          else:
             pass
       return lines
