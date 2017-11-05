@@ -294,11 +294,11 @@ class XMLDataTypeWriter(ElementWriter):
       if elem.adminData is not None:
          lines.extend(self.indent(self.writeAdminDataXML(elem.adminData),1))
       lines.append(self.indent("<SW-DATA-DEF-PROPS>", 1))
-      if len(elem.variants)>=0:
-         lines.extend(self.indent(self.writeSwDataDefPropsVariantsXML(ws, elem.variants),2))
+      if len(elem.variantProps)>=0:
+         lines.extend(self.indent(self.writeSwDataDefPropsVariantsXML(ws, elem.variantProps),2))
       lines.append(self.indent("</SW-DATA-DEF-PROPS>", 1))
-      if elem.dynamicArraySize is not None:
-         lines.append(self.indent("<DYNAMIC-ARRAY-SIZE-PROFILE>%s</DYNAMIC-ARRAY-SIZE-PROFILE>"%(str(elem.dynamicArraySize)), 1))
+      if elem.dynamicArraySizeProfile is not None:
+         lines.append(self.indent("<DYNAMIC-ARRAY-SIZE-PROFILE>%s</DYNAMIC-ARRAY-SIZE-PROFILE>"%(str(elem.dynamicArraySizeProfile)), 1))
       if len(elem.subElements)>0:
          lines.append(self.indent("<SUB-ELEMENTS>", 1))
          for subElem in elem.subElements:
@@ -356,9 +356,9 @@ class XMLDataTypeWriter(ElementWriter):
          lines.append(self.indent('<ARRAY-SIZE>%s</ARRAY-SIZE>'%elem.arraySize,1))
       if elem.arraySizeSemantics is not None:
          lines.append(self.indent('<ARRAY-SIZE-SEMANTICS>%s</ARRAY-SIZE-SEMANTICS>'%elem.arraySizeSemantics,1))
-      if len(elem.variants)>=0:
+      if len(elem.variantProps)>=0:
          lines.append(self.indent("<SW-DATA-DEF-PROPS>", 1))
-         lines.extend(self.indent(self.writeSwDataDefPropsVariantsXML(ws, elem.variants),2))
+         lines.extend(self.indent(self.writeSwDataDefPropsVariantsXML(ws, elem.variantProps),2))
          lines.append(self.indent("</SW-DATA-DEF-PROPS>", 1))
       lines.append("</%s>"%elem.tag(self.version))
       return lines

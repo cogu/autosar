@@ -156,7 +156,7 @@ class DataTypeParser(ElementParser):
          elif xmlItem.tag == 'TYPE-EMITTER':
             dataType.typeEmitter = parseTextNode(xmlItem)
          elif xmlItem.tag == 'DYNAMIC-ARRAY-SIZE-PROFILE':
-            dataType.dynamicArraySize = parseTextNode(xmlItem)
+            dataType.dynamicArraySizeProfile = parseTextNode(xmlItem)
          elif xmlItem.tag == 'SUB-ELEMENTS':
             dataType.subElements = self.parseImplementationDataTypeSubElements(xmlItem, dataType)
          else:

@@ -287,7 +287,7 @@ class CompuMethodConst(Element):
    def __init__(self, name, elements, parent=None, category=None, adminData=None):
       super().__init__(name, parent, adminData)
       self.elements = []
-      self.category=category      
+      self.category=category
       for elem in elements:
          if isinstance(elem,str):
             index=len(self.elements)
@@ -313,12 +313,18 @@ class CompuMethodConst(Element):
       retval = []
       i = 0
       for elem in self.elements:
-         if (elem.minvalue == elem.maxvalue) and elem.minvalue==i:
-            retval.append(elem.textvalue)
+         if (elem.lowerLimit == elem.upperLimit) and elem.lowerLimit==i:
+            retval.append(elem.textValue)
          else:
             return None
          i+=1
       return retval if len(retval)>0 else None
+   
+   def textValue(self, numericValue):
+      for elem in self.elements:
+         if (elem.lowerLimit <= numericValue) and (numericValue <= elem.upperLimit):
+            return (elem.textValue)
+      return None
 
    def __eq__(self,other):
       if self is other: return True
@@ -333,7 +339,7 @@ class CompuMethodMask(Element):
    def __init__(self, name, elements, parent=None, category=None, adminData=None):
       super().__init__(name, parent, adminData)
       self.elements = []
-      self.category=category      
+      self.category=category
       for elem in elements:
          if isinstance(elem,str):
             mask= (1 << len(self.elements))
@@ -342,7 +348,7 @@ class CompuMethodMask(Element):
             self.elements.append(CompuMaskElement(**elem))
          else:
             raise ValueError('type not supported:%s'%str(type(elem)))
-   
+
    def __eq__(self,other):
       if self is other: return True
       if self.name == other.name:
@@ -379,17 +385,19 @@ class DataConstraint(Element):
 
 class ImplementationDataType(Element):
    def tag(self, version=None): return 'IMPLEMENTATION-DATA-TYPE'
-   def __init__(self, name, category='VALUE', variants=None, parent=None, adminData=None):
+   def __init__(self, name, category='VALUE', variantProps=None, dynamicArraySizeProfile=None, parent=None, adminData=None):
       super().__init__(name, parent, adminData)
       self.category = category
       self.typeEmitter = None
-      self.dynamicArraySize = None
-      self.variants = []
+      self.dynamicArraySizeProfile = dynamicArraySizeProfile
+      self.variantProps = []
       self.subElements = []
-      if isinstance(variants, collections.Iterable):
-         for elem in variants:
-            if isinstance(elem, SwDataDefPropsConditional) or isinstance(elem, SwPointerTargetProps):
-               self.variants.append(elem)
+      if isinstance(variantProps, (autosar.base.SwDataDefPropsConditional, autosar.base.SwPointerTargetProps)):
+         self.variantProps.append(variantProps)
+      elif isinstance(variantProps, collections.Iterable):
+         for elem in variantProps:
+            if isinstance(elem, (autosar.base.SwDataDefPropsConditional, autosar.base.SwPointerTargetProps)):
+               self.variantProps.append(elem)
             else:
                raise ValueError('Invalid type: ', type(elem))
 
@@ -398,18 +406,19 @@ class SwBaseType(Element):
    def tag(self, version=None): return 'SW-BASE-TYPE'
    def __init__(self, name, size, typeEncoding=None, nativeDeclaration=None, category=None, parent=None, adminData=None):
       super().__init__(name, parent, adminData)
-      self.size = int(size)      
-      self.typeEncoding=typeEncoding      
+      self.size = int(size)
+      self.typeEncoding=typeEncoding
       self.nativeDeclaration=nativeDeclaration
       if category is None: category='FIXED_LENGTH'
       self.category = category
 
 class ImplementationDataTypeElement(Element):
    def tag(self, version=None): return 'IMPLEMENTATION-DATA-TYPE-ELEMENT'
-   def __init__(self, name, category=None, arraySize=None, arraySizeSemantics=None, variants=None, parent=None, adminData=None):
+   def __init__(self, name, category=None, arraySize=None, arraySizeSemantics=None, variantProps=None, parent=None, adminData=None):
       super().__init__(name, parent, adminData)
       self.category=category
-      self.arraySize = arraySize      
+      self.arraySize = arraySize
+      self.variantProps = []
       if arraySize is not None:
          if arraySizeSemantics is not None:
             self.arraySizeSemantics = arraySizeSemantics
@@ -417,10 +426,15 @@ class ImplementationDataTypeElement(Element):
             self.arraySizeSemantics = 'FIXED-SIZE'
       else:
          self.arraySizeSemantics = None
-      if variants is not None:
-         self.variants=variants
-      else:
-         self.variants = []
+      if variantProps is not None:         
+         if isinstance(variantProps, (autosar.base.SwDataDefPropsConditional, autosar.base.SwPointerTargetProps)):
+            self.variantProps.append(variantProps)
+         elif isinstance(variantProps, collections.Iterable):
+            for elem in variantProps:
+               if isinstance(elem, (autosar.base.SwDataDefPropsConditional, autosar.base.SwPointerTargetProps)):
+                  self.variantProps.append(elem)
+               else:
+                  raise ValueError('Invalid type: ', type(elem))
 
 class ApplicationPrimitiveDataType(Element):
    def tag(self, version=None): return 'APPLICATION-PRIMITIVE-DATA-TYPE'
@@ -438,18 +452,18 @@ class ApplicationPrimitiveDataType(Element):
 
 class DataTypeMappingSet(Element):
    def tag(self, version): return 'DATA-TYPE-MAPPING-SET'
-   
+
    def __init__(self, name, parent=None, adminData=None):
       super().__init__(name, parent, adminData)
       self.map = {} #applicationDataTypeRef to implementationDataTypeRef dictionary
-   
+
    def addDirect(self, applicationDataTypeRef, implementationDataTypeRef):
       self.map[applicationDataTypeRef] = implementationDataTypeRef
-   
+
    def add(self, dataTypeMap):
       assert (isinstance(dataTypeMap, DataTypeMap))
       self.addDirect(dataTypeMap.applicationDataTypeRef, dataTypeMap.implementationDataTypeRef)
-      
+
    def get(self, applicationDataTypeRef):
       if applicationDataTypeRef in self.map:
          return DataTypeMap(applicationDataTypeRef,  self.map[applicationDataTypeRef])
@@ -458,5 +472,5 @@ class DataTypeMap:
    def __init__(self, applicationDataTypeRef, implementationDataTypeRef):
       self.applicationDataTypeRef = applicationDataTypeRef
       self.implementationDataTypeRef = implementationDataTypeRef
-   
+
    def tag(self, version): return 'DATA-TYPE-MAP'
