@@ -45,6 +45,7 @@ class Workspace(object):
                     'Unit': None,
                     'BaseType': None,        #AUTOSAR 4 only
                     'DataConstraint': None }  #AUTOSAR 4 only
+      self.map = {'packages': {}}
       
       self.defaultPackages = {'DataType': 'DataType',
                               'Constant': 'Constant',
@@ -180,11 +181,11 @@ class Workspace(object):
       
       if ref[0]=='/': ref=ref[1:] #removes initial '/' if it exists
       ref = ref.partition('/')
-      for pkg in self.packages:
-         if pkg.name == ref[0]:
-            if len(ref[2])>0:
-               return pkg.find(ref[2])
-            return pkg
+      if ref[0] in self.map['packages']:
+         pkg = self.map['packages'][ref[0]]
+         if len(ref[2])>0:
+            return pkg.find(ref[2])
+         return pkg
       return None
 
    def findall(self,ref):
@@ -227,19 +228,16 @@ class Workspace(object):
                   return childPkg
       return None
    
-   def createPackage(self,name,role=None):
-      alreadyExists = False
-      for package in self.packages:
-         if package.name == name:
-            #package already exists
-            alreadyExists = True
-            break
-      if alreadyExists == False:
+   def createPackage(self,name,role=None):      
+      if name not in self.map['packages']:
          package = autosar.package.Package(name,self)
          self.packages.append(package)
-      if role is not None:
-         self.setRole(package.ref, role)      
-      return package
+         self.map['packages'][name] = package
+         if role is not None:
+            self.setRole(package.ref, role)      
+         return package
+      else:
+         return self.map['packages'][name]
 
    def dir(self,ref=None,_prefix='/'):
       if ref is None:

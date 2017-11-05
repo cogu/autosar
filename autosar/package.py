@@ -9,6 +9,7 @@ import re
 from fractions import Fraction
 import collections
 import decimal
+import sys
 
 class Package(object):
    packageName = None
@@ -18,7 +19,7 @@ class Package(object):
       self.subPackages = []
       self.parent=parent
       self.role=role
-      self.map={'elements':{}}
+      self.map={'elements':{}, 'packages':{}}
    
    def __getitem__(self,key):
       if isinstance(key,str):
@@ -37,12 +38,12 @@ class Package(object):
       if ref.startswith('/'): return self.parent.find(ref)
       ref = ref.partition('/')      
       name = ref[0]
-      for package in self.subPackages:
-         if package.name == name:
-            if len(ref[2])>0:
-               return package.find(ref[2])
-            else:
-               return package
+      if name in self.map['packages']:
+         package=self.map['packages'][name]
+         if len(ref[2])>0:
+            return package.find(ref[2])
+         else:
+            return package
       if name in self.map['elements']:
          elem=self.map['elements'][name]
          if len(ref[2])>0:
@@ -240,6 +241,7 @@ class Package(object):
          elif isinstance(elem,Package):
            self.subPackages.append(elem)
            elem.parent=self
+           self.map['packages'][elem.name]=elem
          else:
             raise ValueError('unexpected value type %s'%str(type(elem)))
 
@@ -430,7 +432,7 @@ class Package(object):
                                                               swCalibrationAccess='NOT-ACCESSIBLE',
                                                               compuMethodRef=compuMethod.ref,
                                                               dataConstraintRef=dataConstraint.ref)
-               newType.variants = [props]
+               newType.variantProps = [props]
             else:
                newType=autosar.datatype.IntegerDataType(name,0,len(valueTable)-1,compuMethodRef=compuMethod.ref, adminData=adminData)            
          else:
@@ -479,9 +481,31 @@ class Package(object):
       
    def createRecordDataType(self, name, elements, adminData=None):
       """
-      create a new instance of autosar.datatype.RecordDataType and appends it to current package
+      AUTOSAR3: Create a new instance of RecordDataType and appends it to current package
+      AUTOSAR4: Creates a new ImplementationDataType and appends it to current package
       """
-      dataType=autosar.datatype.RecordDataType(name, elements, self, adminData)
+      ws = self.rootWS()
+      assert(ws is not None)
+      if ws.version < 4.0:
+         dataType=autosar.datatype.RecordDataType(name, elements, self, adminData)
+      else:         
+         props = autosar.base.SwDataDefPropsConditional(swCalibrationAccess = 'NOT-ACCESSIBLE')
+         dataType = autosar.datatype.ImplementationDataType(name, 'STRUCTURE', props, 'None', self, adminData)         
+         for element in elements:
+            if not isinstance(element, tuple):               
+               raise ValueError('element must be a tuple')            
+            (elementName, elemTypeRef) = element
+            elemType = ws.find(elemTypeRef, role='DataType')
+            if elemType is None:
+               raise ValueError('Unknown data type name: '+elemTypeRef)            
+            if isinstance(elemType, autosar.datatype.ImplementationDataType):
+               props = autosar.base.SwDataDefPropsConditional(implementationTypeRef = elemType.ref)
+            elif isinstance(elemType, autosar.datatype.SwBaseType):
+               props = autosar.base.SwDataDefPropsConditional(baseTypeRef = elemType.ref)
+            else:
+               raise NotImplementedError(type(elemType))
+            implementationDataTypeElement = autosar.datatype.ImplementationDataTypeElement(elementName, 'TYPE_REFERENCE', variantProps=props)
+            dataType.subElements.append(implementationDataTypeElement)
       self.append(dataType)
       return dataType
       
@@ -511,6 +535,13 @@ class Package(object):
       value=None
       if dataType is None:
          raise ValueError('invalid reference:' + str(typeRef))
+      if ws.version < 4.0:
+         self._createConstantV3(ws, name, dataType, initValue, adminData)
+      else:
+         self._createConstantV4(ws, name, dataType, initValue, adminData)
+         
+   def _createConstantV3(self, ws, name, dataType, initValue, adminData=None):
+      """Creates an AUTOSAR 3 Constant"""
       if isinstance(dataType, autosar.datatype.IntegerDataType):
          if not isinstance(initValue, int):
             raise ValueError('initValue: expected type int, got '+str(type(initValue)))
@@ -520,7 +551,7 @@ class Package(object):
             pass
          else:
             raise ValueError('initValue: expected type Mapping or Iterable, got '+str(type(initValue)))
-         value=self._createRecordValue(ws, name, dataType, initValue)         
+         value=self._createRecordValueV3(ws, name, dataType, initValue)         
       elif isinstance(dataType, autosar.datatype.ArrayDataType):
          if isinstance(initValue, collections.Iterable):
             pass
@@ -554,7 +585,7 @@ class Package(object):
       self.append(constant)
       return constant
       
-   def _createRecordValue(self, ws, name, dataType, initValue, parent=None):
+   def _createRecordValueV3(self, ws, name, dataType, initValue, parent=None):
       value = autosar.constant.RecordValue(name, dataType.ref, parent)
       if isinstance(initValue, collections.Mapping):
          for elem in dataType.elements:
@@ -662,17 +693,71 @@ class Package(object):
          raise NotImplementedError(type(initValue))
       return value
 
+   def _createConstantV4(self, ws, name, dataType, initValue, adminData=None):
+      if isinstance(dataType, autosar.datatype.ImplementationDataType):
+         if dataType.category == 'STRUCTURE':
+           value = self._createRecordValueV4(ws, name, dataType, initValue)
+         else:
+            value = None
+      assert(value is not None)
+      constant = autosar.constant.Constant(name, value, parent=self, adminData=adminData)
+      self.append(constant)
+      return constant
+   
+   def _createRecordValueV4(self, ws, name, dataType, initValue, parent=None):
+      value = autosar.constant.RecordValue(name, dataType.ref, parent)
+      if isinstance(initValue, collections.Mapping):
+         a = set() #datatype elements
+         b = set() #initvalue elements
+         for subElem in dataType.subElements:
+            a.add(subElem.name)
+         for key in initValue.keys():
+            b.add(key)
+         extra_keys = b-a
+         for elem in extra_keys:
+            print('Unknown name in initializer: %s.%s'%(name,elem), file=sys.stderr)
+         for elem in dataType.subElements:
+            if elem.name in initValue:
+               v = initValue[elem.name]
+               variantProps = elem.variantProps[0]
+               if variantProps.implementationTypeRef is not None:
+                  typeRef = variantProps.implementationTypeRef
+               else:
+                  raise NotImplementedError('could not deduce the type of element "%s"'%(elem.name))
+               childType = ws.find(typeRef, role='DataType')
+               if childType is None:
+                  raise ValueError('Invalid reference: '+str(typeRef))
+               if isinstance(childType, autosar.datatype.ImplementationDataType):
+                  childProps = childType.variantProps[0]
+                  if childProps.compuMethodRef is not None:
+                     compuMethod = ws.find(childProps.compuMethodRef, role='CompuMethod')
+                     if compuMethod is None:
+                        raise ValueError('Invalid CompuMethod reference: '+childProps.compuMethodRef)
+                     textValue = compuMethod.textValue(v)
+                     if textValue is None:
+                        raise ValueError('Could not find a text value that matches numerical value %s'%v )
+                     value.elements.append(autosar.constant.TextValue(elem.name,textValue))
+               else:
+                  raise NotImplementedError(type(childType))
+            else:
+               raise ValueError('%s: missing initValue field: %s'%(name, elem.name))
+      return value
+      
+      
    def createTextValueConstant(self, name, value):
+      """AUTOSAR 4 text value constant"""
       constant = autosar.constant.Constant(name, None, self)      
       constant.value = autosar.constant.TextValue(name, value, constant)
       self.append(constant)
       return constant
       
    def createNumericalValueConstant(self, name, value):
+      """AUTOSAR 4 numerical value constant"""
       constant = autosar.constant.Constant(name, None, self)      
       constant.value = autosar.constant.NumericalValue(name, value, constant)
       self.append(constant)
       return constant
+   
       
 
    def createComplexDeviceDriverComponent(self,swcName,behaviorName=None,implementationName=None,multipleInstance=False):
