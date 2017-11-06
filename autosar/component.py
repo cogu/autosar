@@ -390,9 +390,9 @@ class Port(object):
             initValue = ws.find(initValueRef, role='Constant')
             if initValue is None:
                raise ValueError("invalid reference: "+str(initValueRef))
-            if isinstance(initValue,autosar.constant.Constant):
-               #this is a convenience implementation for the user. Actually initValueRef needs to point to the value inside the Constant
-               if not isinstance(initValue.value, (autosar.constant.TextValue, autosar.constant.NumericalValue)):
+            if isinstance(initValue,autosar.constant.Constant):               
+               if ws.version < 4.0:
+                  #this is a convenience implementation for the user. For AUTOSAR3, initValueRef needs to point to the value inside the Constant
                   if dataElement.typeRef != initValue.value.typeRef:
                      raise ValueError("constant value has different type from data element, expected '%s', found '%s'"%(dataElement.typeRef,initValue.value.typeRef))
                   initValueRef=initValue.value.ref #correct the reference to the actual value
