@@ -130,7 +130,7 @@ class XMLComponentTypeWriter(ElementWriter):
                   operation=portInterface.find(comspec.name)
                   if operation is None:
                      raise ValueError("%s: invalid comspec name '%s'"%(port.ref,comspec.name))
-                  lines.extend(self.indent(self._writeOperationComSpec(operationc),2))
+                  lines.extend(self.indent(self._writeOperationComSpec(operation),2))
                else:
                   dataElem=portInterface.find(comspec.name)
                   if dataElem is None:
