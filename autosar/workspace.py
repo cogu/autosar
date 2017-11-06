@@ -436,7 +436,7 @@ class Workspace(object):
       package.createIntegerDataType('SInt32', -2147483648, 2147483647)
       package.createIntegerDataType('UInt8', 0, 255)
       package.createIntegerDataType('UInt16', 0, 65535)
-      package.createIntegerDataType('UInt32', 0, 4294967295)   
+      package.createIntegerDataType('UInt32', 0, 4294967295)
       package.createRealDataType('Float', None, None, minValType='INFINITE', maxValType='INFINITE')
       package.createRealDataType('Double', None, None, minValType='INFINITE', maxValType='INFINITE', hasNaN=True, encoding='DOUBLE')
    

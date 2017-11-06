@@ -93,6 +93,8 @@ class ComponentType(Element):
             comspec.append({'operation': operation.name})
       elif isinstance(portInterface,autosar.portinterface.ParameterInterface):
          pass
+      elif isinstance(portInterface,autosar.portinterface.ModeSwitchInterface):
+         comspec={'enhancedMode':False, 'supportAsync':False}
       else:
          raise NotImplementedError(type(portInterface))
       port = RequirePort(name,portInterface.ref,comspec,parent=self)
@@ -409,6 +411,12 @@ class Port(object):
          queueLength = comspec.get('queueLength',1)
          if operation is not None:
             return OperationComSpec(operation,queueLength)
+      elif isinstance(portInterface, autosar.portinterface.ModeSwitchInterface):
+         enhancedMode = comspec.get('enhancedMode', False)
+         supportAsync = comspec.get('supportAsync', False)         
+         return ModeSwitchComSpec(enhancedMode, supportAsync)
+      else:
+         raise NotImplementedError(type(portInterface))
       return None
    
       

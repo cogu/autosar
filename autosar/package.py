@@ -205,7 +205,15 @@ class Package(object):
       else:
          raise ValueError("dataElements: expected autosar.DataElement instance or list")
       self.append(portInterface)
+      return portInterface
 
+   def createModeSwitchInterface(self, name, modeGroup = None, isService=False, adminData=None):
+      portInterface = autosar.portinterface.ModeSwitchInterface(name, isService, self, adminData)
+      if modeGroup is not None:
+         portInterface.modeGroup = modeGroup
+         modeGroup.parent = portInterface
+      self.append(portInterface)
+      return portInterface
          
    def createSubPackage(self, name, role=None):
       pkg = Package(name)
@@ -323,7 +331,7 @@ class Package(object):
       self.append(implementation)
       return swc
 
-   def createModeDeclarationGroup(self, name, modeDeclarations, initialMode, adminData=None):
+   def createModeDeclarationGroup(self, name, modeDeclarations, initialMode, category=None, adminData=None):
       """
       creates an instance of autosar.portinterface.ModeDeclarationGroup
       name: name of the ModeDeclarationGroup
@@ -339,7 +347,7 @@ class Package(object):
          adminDataObj = adminData
       if (adminDataObj is not None) and not isinstance(adminDataObj, autosar.base.AdminData):
          raise ValueError("adminData must be of type dict or AdminData")
-      group = autosar.portinterface.ModeDeclarationGroup(name,None,None,self,adminDataObj)
+      group = autosar.portinterface.ModeDeclarationGroup(name,None,None,category,self,adminDataObj)
       for declarationName in modeDeclarations:
          item=autosar.portinterface.ModeDeclaration(declarationName,group)
          group.modeDeclarations.append(item)
