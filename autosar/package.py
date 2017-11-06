@@ -20,23 +20,23 @@ class Package(object):
       self.parent=parent
       self.role=role
       self.map={'elements':{}, 'packages':{}}
-   
+
    def __getitem__(self,key):
       if isinstance(key,str):
          return self.find(key)
       else:
          raise ValueError('expected string')
-   
+
    @property
    def ref(self):
       if self.parent is not None:
          return self.parent.ref+'/%s'%self.name
       else:
-         return None      
+         return None
 
    def find(self,ref):
       if ref.startswith('/'): return self.parent.find(ref)
-      ref = ref.partition('/')      
+      ref = ref.partition('/')
       name = ref[0]
       if name in self.map['packages']:
          package=self.map['packages'][name]
@@ -51,10 +51,10 @@ class Package(object):
          else:
             return elem
       return None
-            
+
    def findall(self,ref):
       """
-      experimental find-method that has some rudimentary support for globs.      
+      experimental find-method that has some rudimentary support for globs.
       """
       if ref is None: return None
       if ref[0]=='/': ref=ref[1:] #removes initial '/' if it exists
@@ -79,11 +79,11 @@ class Package(object):
                      result.extend(item.findall(ref[2]))
                   else:
                      result.append(item)
-      return result      
-   
+      return result
+
    def dir(self,ref=None,_prefix=''):
       if ref==None:
-         return [_prefix+x.name for x in self.subPackages]+[_prefix+x.name for x in self.elements]      
+         return [_prefix+x.name for x in self.subPackages]+[_prefix+x.name for x in self.elements]
       else:
          ref = ref.partition('/')
          result=self.find(ref[0])
@@ -91,21 +91,21 @@ class Package(object):
             return result.dir(ref[2] if len(ref[2])>0 else None,_prefix+ref[0]+'/')
          else:
             return None
-      
-   
+
+
    def asdict(self):
       data={'type':self.__class__.__name__,'name':self.name,'elements':[],'subPackages':[]}
       for element in self.elements:
-         if hasattr(element,'asdict'):            
+         if hasattr(element,'asdict'):
             data['elements'].append(element.asdict())
          else:
             print(type(element))
-      for subPackage in self.subPackages:         
+      for subPackage in self.subPackages:
          data['subPackages'].append(subPackage.asdict())
       if len(data['elements'])==0: del data['elements']
       if len(data['subPackages'])==0: del data['subPackages']
       return data
-   
+
    def delete(self, ref):
       if ref is None: return
       if ref[0]=='/': ref=ref[1:] #removes initial '/' if it exists
@@ -118,14 +118,14 @@ class Package(object):
                del self.elements[i]
                break
 
-   
+
 
    def createSenderReceiverInterface(self,name, dataElements=None, modeGroups=None, isService=False, adminData=None):
       """
       creates a new sender-receiver port interface. dataElements can either be a single instance of DataElement or a list of DataElements.
       The same applies to modeGroups. isService must be boolean
       """
-      
+
       ws = self.rootWS()
       assert(ws is not None)
 
@@ -135,10 +135,10 @@ class Package(object):
             for elem in dataElements:
                dataType=ws.find(elem.typeRef, role='DataType')
                if dataType is None:
-                  raise ValueError('invalid type reference: '+elem.typeRef)            
+                  raise ValueError('invalid type reference: '+elem.typeRef)
                elem.typeRef=dataType.ref #normalize reference to data element
                portInterface.append(elem)
-         elif isinstance(dataElements,autosar.portinterface.DataElement):         
+         elif isinstance(dataElements,autosar.portinterface.DataElement):
             dataType=ws.find(dataElements.typeRef, role='DataType')
             if dataType is None:
                raise ValueError('invalid type reference: '+dataElements.typeRef)
@@ -150,10 +150,10 @@ class Package(object):
          if isinstance(modeGroups,collections.Iterable):
             for elem in modeGroups:
                portInterface.append(elem)
-         elif isinstance(modeGroups,autosar.portinterface.ModeGroup):         
+         elif isinstance(modeGroups,autosar.portinterface.ModeGroup):
             portInterface.append(modeGroups)
          else:
-            raise ValueError("dataElements: expected autosar.portinterface.DataElement instance or list")         
+            raise ValueError("dataElements: expected autosar.portinterface.DataElement instance or list")
       self.append(portInterface)
 
    def createParameterInterface(self,name,parameters=None,modeDeclarationGroups=None, isService=False, adminData=None):
@@ -178,7 +178,7 @@ class Package(object):
             dataType=ws.find(elem.typeRef, role='DataType')
             #normalize reference to data element
             if dataType is None:
-               raise ValueError('invalid type reference: '+elem.typeRef)            
+               raise ValueError('invalid type reference: '+elem.typeRef)
             elem.typeRef=dataType.ref
             if isinstance(autosar.portinterface.DataElement):
                #convert into Parameter
@@ -186,7 +186,7 @@ class Package(object):
             else:
                parameter = elem
             portInterface.append(parameter)
-      elif isinstance(parameters, autosar.portinterface.DataElement): 
+      elif isinstance(parameters, autosar.portinterface.DataElement):
          dataType=ws.find(parameters.typeRef, role='DataType')
          #normalize reference to data element
          if dataType is None:
@@ -200,8 +200,8 @@ class Package(object):
          #normalize reference to data element
          if dataType is None:
             raise ValueError('invalid type reference: '+parameters.typeRef)
-         parameters.typeRef=dataType.ref 
-         portInterface.append(parameters)         
+         parameters.typeRef=dataType.ref
+         portInterface.append(parameters)
       else:
          raise ValueError("dataElements: expected autosar.DataElement instance or list")
       self.append(portInterface)
@@ -214,22 +214,22 @@ class Package(object):
          modeGroup.parent = portInterface
       self.append(portInterface)
       return portInterface
-         
+
    def createSubPackage(self, name, role=None):
       pkg = Package(name)
       self.append(pkg)
       if role is not None:
          ws = self.rootWS()
-         assert(ws is not None)         
+         assert(ws is not None)
          ws.setRole(pkg.ref, role)
       return pkg
-         
+
    def rootWS(self):
       if self.parent is None:
          return None
       else:
          return self.parent.rootWS()
-      
+
    def append(self,elem):
       """appends elem to the self.elements list"""
       isNewElement = True
@@ -238,11 +238,11 @@ class Package(object):
          existingElem = self.map['elements'][elem.name]
          if type(elem) != type(existingElem):
             raise TypeError('Error: element %s %s already exists in package %s with different type from new element %s'%(str(type(existingElem)), existingElem.name, self.name, str(type(elem))))
-         else:            
+         else:
             if elem != existingElem:
               raise ValueError('Error: element %s %s already exist in package %s using different definition'%(existingElem.name, str(type(existingElem)), self.name))
       if isNewElement:
-         if isinstance(elem,autosar.element.Element):         
+         if isinstance(elem,autosar.element.Element):
             self.elements.append(elem)
             elem.parent=self
             self.map['elements'][elem.name]=elem
@@ -256,14 +256,14 @@ class Package(object):
    def update(self,other):
       """copies/clones each element from other into self.elements"""
       if type(self) == type(other):
-         for otherElem in other.elements:            
+         for otherElem in other.elements:
             newElem=copy.deepcopy(otherElem)
             assert(newElem is not None)
             try:
                i=self.index('elements',otherElem.name)
                oldElem=self.elements[i]
                self.elements[i]=newElem
-               oldElem.parent=None               
+               oldElem.parent=None
             except ValueError:
                self.elements.append(newElem)
             newElem.parent=self
@@ -284,9 +284,9 @@ class Package(object):
       """
       Creates a new ApplicationSoftwareComponent object and adds it to the package.
       It also creates an InternalBehavior object as well as an SwcImplementation object.
-      
+
       """
-      
+
       if behaviorName is None:
          behaviorName = str(swcName)+'_InternalBehavior'
       if implementationName is None:
@@ -314,14 +314,14 @@ class Package(object):
       """
       Creates a new ApplicationSoftwareComponent object and adds it to the package.
       It also creates an InternalBehavior object as well as an SwcImplementation object.
-      
+
       """
-      
+
       if behaviorName is None:
          behaviorName = str(swcName)+'_InternalBehavior'
       if implementationName is None:
          implementationName = str(swcName)+'_Implementation'
-      swc = autosar.component.ServiceComponent(swcName,self)      
+      swc = autosar.component.ServiceComponent(swcName,self)
       internalBehavior = autosar.behavior.InternalBehavior(behaviorName,swc.ref,multipleInstance,self)
       implementation=autosar.component.SwcImplementation(implementationName,internalBehavior.ref,parent=self)
       swc.behavior=internalBehavior
@@ -357,7 +357,7 @@ class Package(object):
          raise ValueError('initalMode "%s" not a valid modeDeclaration name'%initialMode)
       self.append(group)
       return group
-         
+
    def createClientServerInterface(self, name, operations, errors=None, isService=False, adminData=None):
       """
       creates a new client server interface in current package
@@ -369,12 +369,12 @@ class Package(object):
       """
       portInterface = autosar.portinterface.ClientServerInterface(name, isService, self, adminData)
       for name in operations:
-         portInterface.append(autosar.portinterface.Operation(name))      
+         portInterface.append(autosar.portinterface.Operation(name))
       if errors is not None:
          if isinstance(errors, collections.Iterable):
             for error in errors:
                portInterface.append(error)
-         else:            
+         else:
             assert( isinstance(errors, autosar.portinterface.ApplicationError))
             portInterface.append(errors)
       self.append(portInterface)
@@ -384,14 +384,14 @@ class Package(object):
       item = autosar.portinterface.SoftwareAddressMethod(name)
       self.append(item)
       return item
-      
+
    def createArrayDataType(self, name, typeRef, length, adminData=None):
       """creates an ArrayDataType and adds it to current package"""
       ws = self.rootWS()
       typeRefOrig=typeRef
       assert(ws is not None)
       if (not typeRef.startswith('/')) and (ws.roles['DataType'] is not None):
-         typeRef=ws.roles['DataType']+'/'+typeRef      
+         typeRef=ws.roles['DataType']+'/'+typeRef
       dataType = autosar.datatype.ArrayDataType(name, typeRef, length, adminData)
       self.append(dataType)
       return dataType
@@ -400,7 +400,7 @@ class Package(object):
       """
       Helper method for creating integer datatypes in a package.
       In order to use this function you must have a subpackage present with role='CompuMethod'.
-      
+
       """
       semanticsPackage=None
       unitPackage=None
@@ -414,7 +414,7 @@ class Package(object):
          unitPackage=ws.find(ws.roles['Unit'])
          if unitPackage is None:
             raise RuntimeError("no package found with role='Unit'")
-      
+
       if (valueTable is not None) and (min is not None) and (max is not None):
          #used for enumeration types using valueTables with explicit min and max
          compuMethod=autosar.CompuMethodConst(str(name),list(valueTable))
@@ -422,8 +422,8 @@ class Package(object):
             semanticsPackage.append(compuMethod)
             if ws.version >= 4.0:
                pass
-            else:            
-               newType=autosar.datatype.IntegerDataType(name,min,max,compuMethodRef=compuMethod.ref, adminData=adminData)            
+            else:
+               newType=autosar.datatype.IntegerDataType(name,min,max,compuMethodRef=compuMethod.ref, adminData=adminData)
          else:
             raise RuntimeError("no package found with role='CompuMethod'")
       elif (valueTable is not None) and (min is None) and (max is None):
@@ -442,7 +442,7 @@ class Package(object):
                                                               dataConstraintRef=dataConstraint.ref)
                newType.variantProps = [props]
             else:
-               newType=autosar.datatype.IntegerDataType(name,0,len(valueTable)-1,compuMethodRef=compuMethod.ref, adminData=adminData)            
+               newType=autosar.datatype.IntegerDataType(name,0,len(valueTable)-1,compuMethodRef=compuMethod.ref, adminData=adminData)
          else:
             raise RuntimeError("no package found with role='CompuMethod'")
       elif (min is not None) and (max is not None) and (offset is not None) and (scaling is not None):
@@ -455,10 +455,10 @@ class Package(object):
                semanticElements=[{'offset':offset, 'numerator':scaling, 'denominator':1}]
             else:
                semanticElements=[{'offset':offset, 'numerator':f.numerator, 'denominator':f.denominator}]
-         compuMethod=autosar.datatype.CompuMethodRational(name,None,semanticElements)            
+         compuMethod=autosar.datatype.CompuMethodRational(name,None,semanticElements)
          if (semanticsPackage is not None):
             semanticsPackage.append(compuMethod)
-            newType=autosar.datatype.IntegerDataType(name,min,max,compuMethodRef=compuMethod.ref, adminData=adminData)            
+            newType=autosar.datatype.IntegerDataType(name,min,max,compuMethodRef=compuMethod.ref, adminData=adminData)
          else:
             raise RuntimeError("no package found with role='CompuMethod'")
          if unit is not None:
@@ -473,9 +473,19 @@ class Package(object):
                raise RuntimeError("no package found with role='Unit'")
       elif (min is not None) and (max is not None):
          #creates a simple IntegerDataType
-         newType=autosar.datatype.IntegerDataType(name,min,max, adminData=adminData)
-      else:         
-         raise NotImplementedError("not implemented")         
+         if ws.version >= 4.0:
+            if baseTypeRef is None:
+                  raise ValueError('baseTypeRef argument must be given to this method')
+            dataConstraint = self.createInternalDataConstraint(name+'_DataConstr', min, max)
+            newType = autosar.datatype.ImplementationDataType(name, 'VALUE')
+            props = autosar.base.SwDataDefPropsConditional(baseTypeRef=baseTypeRef,
+                                                            swCalibrationAccess='NOT-ACCESSIBLE',
+                                                            dataConstraintRef=dataConstraint.ref)
+            newType.variantProps = [props]
+         else:
+            newType=autosar.datatype.IntegerDataType(name,min,max, adminData=adminData)
+      else:
+         raise NotImplementedError("not implemented")
       self.append(newType)
       return newType
 
@@ -486,7 +496,7 @@ class Package(object):
       dataType=autosar.datatype.RealDataType(name, minVal, maxVal, minValType, maxValType, hasNaN, encoding, self, adminData)
       self.append(dataType)
       return dataType
-      
+
    def createRecordDataType(self, name, elements, adminData=None):
       """
       AUTOSAR3: Create a new instance of RecordDataType and appends it to current package
@@ -496,16 +506,16 @@ class Package(object):
       assert(ws is not None)
       if ws.version < 4.0:
          dataType=autosar.datatype.RecordDataType(name, elements, self, adminData)
-      else:         
+      else:
          props = autosar.base.SwDataDefPropsConditional(swCalibrationAccess = 'NOT-ACCESSIBLE')
-         dataType = autosar.datatype.ImplementationDataType(name, 'STRUCTURE', props, 'None', self, adminData)         
+         dataType = autosar.datatype.ImplementationDataType(name, 'STRUCTURE', props, 'None', self, adminData)
          for element in elements:
-            if not isinstance(element, tuple):               
-               raise ValueError('element must be a tuple')            
+            if not isinstance(element, tuple):
+               raise ValueError('element must be a tuple')
             (elementName, elemTypeRef) = element
             elemType = ws.find(elemTypeRef, role='DataType')
             if elemType is None:
-               raise ValueError('Unknown data type name: '+elemTypeRef)            
+               raise ValueError('Unknown data type name: '+elemTypeRef)
             if isinstance(elemType, autosar.datatype.ImplementationDataType):
                props = autosar.base.SwDataDefPropsConditional(implementationTypeRef = elemType.ref)
             elif isinstance(elemType, autosar.datatype.SwBaseType):
@@ -516,7 +526,7 @@ class Package(object):
             dataType.subElements.append(implementationDataTypeElement)
       self.append(dataType)
       return dataType
-      
+
    def createStringDataType(self, name, length, encoding='ISO-8859-1', adminData=None):
       """
       create a new instance of autosar.datatype.StringDataType and appends it to current package
@@ -547,25 +557,25 @@ class Package(object):
          self._createConstantV3(ws, name, dataType, initValue, adminData)
       else:
          self._createConstantV4(ws, name, dataType, initValue, adminData)
-         
+
    def _createConstantV3(self, ws, name, dataType, initValue, adminData=None):
       """Creates an AUTOSAR 3 Constant"""
       if isinstance(dataType, autosar.datatype.IntegerDataType):
          if not isinstance(initValue, int):
             raise ValueError('initValue: expected type int, got '+str(type(initValue)))
-         value=autosar.constant.IntegerValue(name, dataType.ref, initValue)         
+         value=autosar.constant.IntegerValue(name, dataType.ref, initValue)
       elif isinstance(dataType, autosar.datatype.RecordDataType):
          if isinstance(initValue, collections.Mapping) or isinstance(initValue, collections.Iterable):
             pass
          else:
             raise ValueError('initValue: expected type Mapping or Iterable, got '+str(type(initValue)))
-         value=self._createRecordValueV3(ws, name, dataType, initValue)         
+         value=self._createRecordValueV3(ws, name, dataType, initValue)
       elif isinstance(dataType, autosar.datatype.ArrayDataType):
          if isinstance(initValue, collections.Iterable):
             pass
          else:
             raise ValueError('initValue: expected type Iterable, got '+str(type(initValue)))
-         value=self._createArrayValue(ws, name, dataType, initValue)         
+         value=self._createArrayValue(ws, name, dataType, initValue)
       elif isinstance(dataType, autosar.datatype.BooleanDataType):
          if isinstance(initValue, bool):
             pass
@@ -573,50 +583,50 @@ class Package(object):
             initValue=bool(initValue)
          else:
             raise ValueError('initValue: expected type bool or str, got '+str(type(initValue)))
-         value=autosar.constant.BooleanValue(name, dataType.ref, initValue)         
+         value=autosar.constant.BooleanValue(name, dataType.ref, initValue)
       elif isinstance(dataType, autosar.datatype.StringDataType):
          if isinstance(initValue, str):
             pass
          else:
             raise ValueError('initValue: expected type str, got '+str(type(initValue)))
-         value=autosar.constant.StringValue(name, dataType.ref, initValue)         
+         value=autosar.constant.StringValue(name, dataType.ref, initValue)
       elif isinstance(dataType, autosar.datatype.RealDataType):
          if isinstance(initValue, float) or isinstance(initValue, decimal.Decimal) or isinstance(initValue, int):
             pass
          else:
             raise ValueError('initValue: expected type int, float or Decimal, got '+str(type(initValue)))
-         value=autosar.constant.RealValue(name, dataType.ref, initValue)               
+         value=autosar.constant.RealValue(name, dataType.ref, initValue)
       else:
-         raise ValueError('unrecognized type: '+str(type(dataType)))      
+         raise ValueError('unrecognized type: '+str(type(dataType)))
       assert(value is not None)
       constant = autosar.constant.Constant(name, value, adminData=adminData)
       self.append(constant)
       return constant
-      
+
    def _createRecordValueV3(self, ws, name, dataType, initValue, parent=None):
       value = autosar.constant.RecordValue(name, dataType.ref, parent)
       if isinstance(initValue, collections.Mapping):
          for elem in dataType.elements:
             if elem.name in initValue:
-               v = initValue[elem.name]               
+               v = initValue[elem.name]
                childType = ws.find(elem.typeRef, role='DataType')
                if childType is None:
                   raise ValueError('invalid reference: '+str(elem.typeRef))
                if isinstance(childType, autosar.datatype.IntegerDataType):
                   if not isinstance(v, int):
-                     raise ValueError('v: expected type int, got '+str(type(v)))                     
+                     raise ValueError('v: expected type int, got '+str(type(v)))
                   value.elements.append(autosar.constant.IntegerValue(elem.name, childType.ref, v, value))
                elif isinstance(childType, autosar.datatype.RecordDataType):
                   if isinstance(v, collections.Mapping) or isinstance(v, collections.Iterable):
                      pass
                   else:
-                     raise ValueError('v: expected type Mapping or Iterable, got '+str(type(v)))                     
+                     raise ValueError('v: expected type Mapping or Iterable, got '+str(type(v)))
                   value.elements.append(self._createRecordValue(ws, elem.name, childType, v, value))
                elif isinstance(childType, autosar.datatype.ArrayDataType):
                   if isinstance(v, collections.Iterable):
                      pass
                   else:
-                     raise ValueError('v: expected type Iterable, got '+str(type(v)))                     
+                     raise ValueError('v: expected type Iterable, got '+str(type(v)))
                   value.elements.append(self._createArrayValue(ws, elem.name, childType, v, value))
                elif isinstance(childType, autosar.datatype.BooleanDataType):
                   if isinstance(v, bool):
@@ -624,19 +634,19 @@ class Package(object):
                   elif isinstance(v, str) or isinstance(v, int):
                      v=bool(v)
                   else:
-                     raise ValueError('v: expected type bool or str, got '+str(type(v)))                     
+                     raise ValueError('v: expected type bool or str, got '+str(type(v)))
                   value.elements.append(autosar.constant.BooleanValue(elem.name, childType.ref, v, value))
                elif isinstance(childType, autosar.datatype.StringDataType):
                   if isinstance(v, str):
                      pass
                   else:
-                     raise ValueError('v: expected type str, got '+str(type(v)))                     
+                     raise ValueError('v: expected type str, got '+str(type(v)))
                   value.elements.append(autosar.constant.StringValue(elem.name, childType.ref, v, value))
                elif isinstance(childType, autosar.datatype.RealDataType):
                   if isinstance(v, float) or isinstance(v, decimal.Decimal) or isinstance(v, int):
                      pass
                   else:
-                     raise ValueError('v: expected type int, float or Decimal, got '+str(type(v)))                     
+                     raise ValueError('v: expected type int, float or Decimal, got '+str(type(v)))
                   value.elements.append(autosar.constant.RealValue(elem.name, childType.ref, v, value))
                else:
                   raise ValueError('unrecognized type: '+str(type(childType)))
@@ -645,14 +655,14 @@ class Package(object):
       else:
          raise NotImplementedError(type(initValue))
       return value
-            
-   
+
+
    def _createArrayValue(self, ws, name, dataType, initValue, parent=None):
       value = autosar.constant.ArrayValue(name, dataType.ref, parent)
       childType = ws.find(dataType.typeRef, role='DataType')
       if childType is None:
-         raise ValueError('invalid reference: '+str(elem.typeRef))      
-      if isinstance(initValue, collections.Iterable):         
+         raise ValueError('invalid reference: '+str(elem.typeRef))
+      if isinstance(initValue, collections.Iterable):
          for i in range(dataType.length):
             try:
                v=initValue[i]
@@ -661,19 +671,19 @@ class Package(object):
             elemName='%s_%d'%(childType.name,i)
             if isinstance(childType, autosar.datatype.IntegerDataType):
                if not isinstance(v, int):
-                  raise ValueError('v: expected type int, got '+str(type(v)))                     
+                  raise ValueError('v: expected type int, got '+str(type(v)))
                value.elements.append(autosar.constant.IntegerValue(elemName, childType.ref, v, value))
             elif isinstance(childType, autosar.datatype.RecordDataType):
                if isinstance(v, collections.Mapping) or isinstance(v, collections.Iterable):
                   pass
                else:
-                  raise ValueError('v: expected type Mapping or Iterable, got '+str(type(v)))                     
+                  raise ValueError('v: expected type Mapping or Iterable, got '+str(type(v)))
                value.elements.append(self._createRecordValue(ws, elemName, childType, v, value))
             elif isinstance(childType, autosar.datatype.ArrayDataType):
                if isinstance(v, collections.Iterable):
                   pass
                else:
-                  raise ValueError('v: expected type Iterable, got '+str(type(v)))                     
+                  raise ValueError('v: expected type Iterable, got '+str(type(v)))
                value.elements.append(self._createArrayValue(ws, elemName, childType, v, value))
             elif isinstance(childType, autosar.datatype.BooleanDataType):
                if isinstance(v, bool):
@@ -681,22 +691,22 @@ class Package(object):
                elif isinstance(v, str) or isinstance(v, int):
                   v=bool(v)
                else:
-                  raise ValueError('v: expected type bool or str, got '+str(type(v)))                     
+                  raise ValueError('v: expected type bool or str, got '+str(type(v)))
                value.elements.append(autosar.constant.BooleanValue(elemName, childType.ref, v, value))
             elif isinstance(childType, autosar.datatype.StringDataType):
                if isinstance(v, str):
                   pass
                else:
-                  raise ValueError('v: expected type str, got '+str(type(v)))                     
+                  raise ValueError('v: expected type str, got '+str(type(v)))
                value.elements.append(autosar.constant.StringValue(elemName, childType.ref, v, value))
             elif isinstance(childType, autosar.datatype.RealDataType):
                if isinstance(v, float) or isinstance(v, decimal.Decimal) or isinstance(v, int):
                   pass
                else:
-                  raise ValueError('v: expected type int, float or Decimal, got '+str(type(v)))                     
+                  raise ValueError('v: expected type int, float or Decimal, got '+str(type(v)))
                value.elements.append(autosar.constant.RealValue(elemName, childType.ref, v, value))
             else:
-               raise ValueError('unrecognized type: '+str(type(childType)))            
+               raise ValueError('unrecognized type: '+str(type(childType)))
       else:
          raise NotImplementedError(type(initValue))
       return value
@@ -711,7 +721,7 @@ class Package(object):
       constant = autosar.constant.Constant(name, value, parent=self, adminData=adminData)
       self.append(constant)
       return constant
-   
+
    def _createRecordValueV4(self, ws, name, dataType, initValue, parent=None):
       value = autosar.constant.RecordValue(name, dataType.ref, parent)
       if isinstance(initValue, collections.Mapping):
@@ -750,23 +760,23 @@ class Package(object):
             else:
                raise ValueError('%s: missing initValue field: %s'%(name, elem.name))
       return value
-      
-      
+
+
    def createTextValueConstant(self, name, value):
       """AUTOSAR 4 text value constant"""
-      constant = autosar.constant.Constant(name, None, self)      
+      constant = autosar.constant.Constant(name, None, self)
       constant.value = autosar.constant.TextValue(name, value, constant)
       self.append(constant)
       return constant
-      
+
    def createNumericalValueConstant(self, name, value):
       """AUTOSAR 4 numerical value constant"""
-      constant = autosar.constant.Constant(name, None, self)      
+      constant = autosar.constant.Constant(name, None, self)
       constant.value = autosar.constant.NumericalValue(name, value, constant)
       self.append(constant)
       return constant
-   
-      
+
+
 
    def createComplexDeviceDriverComponent(self,swcName,behaviorName=None,implementationName=None,multipleInstance=False):
       if behaviorName is None:
@@ -787,7 +797,7 @@ class Package(object):
       component = autosar.component.CompositionComponent(str(componentName), self)
       self.append(component)
       return component
-   
+
    def createInternalDataConstraint(self, name, lowerLimit, upperLimit, lowerLimitType="CLOSED", upperLimitType="CLOSED"):
       ws = self.rootWS()
       assert(ws is not None)
@@ -795,7 +805,7 @@ class Package(object):
       if ws.roles['DataConstraint'] is not None:
          dataConstraintPackage=ws.find(ws.roles['DataConstraint'])
          if dataConstraintPackage is None:
-            raise RuntimeError("no package found with role='DataConstraint'")      
+            raise RuntimeError("no package found with role='DataConstraint'")
       rules=[]
       try:
          lowerLimit = int(lowerLimit)
@@ -809,7 +819,7 @@ class Package(object):
       constraint = autosar.datatype.DataConstraint(name, rules, self)
       dataConstraintPackage.append(constraint)
       return constraint
-   
+
    def createSwBaseType(self, name, size, encoding=None, nativeDeclaration=None, adminData=None):
       ws=self.rootWS()
       assert(ws is not None)
@@ -819,7 +829,7 @@ class Package(object):
       else:
          adminDataObj = adminData
       if (adminDataObj is not None) and not isinstance(adminDataObj, autosar.base.AdminData):
-         raise ValueError("adminData must be of type dict or AdminData")      
+         raise ValueError("adminData must be of type dict or AdminData")
       baseType = autosar.datatype.SwBaseType(name, size, encoding, nativeDeclaration, 'FIXED_LENGTH', self, adminData)
       self.append(baseType)
       return baseType
