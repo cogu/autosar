@@ -409,9 +409,9 @@ class XMLDataTypeWriter(ElementWriter):
          lines.extend(self.indent(tmp,1))
       if elem.category is not None:
          lines.append(self.indent('<CATEGORY>%s</CATEGORY>'%elem.category,1))
-      if len(elem.variants)>=0:
+      if len(elem.variantProps)>=0:
          lines.append(self.indent("<SW-DATA-DEF-PROPS>", 1))
-         lines.extend(self.indent(self.writeSwDataDefPropsVariantsXML(ws, elem.variants),2))
+         lines.extend(self.indent(self.writeSwDataDefPropsVariantsXML(ws, elem.variantProps),2))
          lines.append(self.indent("</SW-DATA-DEF-PROPS>", 1))
       lines.append("</%s>"%elem.tag(self.version))
       return lines
