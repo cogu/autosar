@@ -456,11 +456,6 @@ class Package(object):
             else:
                semanticElements=[{'offset':offset, 'numerator':f.numerator, 'denominator':f.denominator}]
          compuMethod=autosar.datatype.CompuMethodRational(name,None,semanticElements)
-         if (semanticsPackage is not None):
-            semanticsPackage.append(compuMethod)
-            newType=autosar.datatype.IntegerDataType(name,min,max,compuMethodRef=compuMethod.ref, adminData=adminData)
-         else:
-            raise RuntimeError("no package found with role='CompuMethod'")
          if unit is not None:
             if unitPackage is not None:
                unitElem = unitPackage.find(str(unit))
@@ -468,9 +463,28 @@ class Package(object):
                   #create new unit if not found
                   unitElem = autosar.datatype.DataTypeUnitElement(unit,unit)
                   unitPackage.append(unitElem)
-               compuMethod.unitRef=unitElem.ref
+                  compuMethod.unitRef=unitElem.ref
             else:
                raise RuntimeError("no package found with role='Unit'")
+         else:
+            unitElem = None
+         if (semanticsPackage is not None):
+            semanticsPackage.append(compuMethod)
+            if ws.version >= 4.0:
+#               if baseTypeRef is None:
+#                  raise ValueError('baseTypeRef argument must be given to this method')
+               dataConstraint = self.createInternalDataConstraint(name+'_DataConstr', min, max)
+               newType = autosar.datatype.ApplicationPrimitiveDataType(name, 'VALUE')
+               unitRef = unitElem.ref if unitElem is not None else None
+               props = autosar.base.SwDataDefPropsConditional(swCalibrationAccess='READ-ONLY',
+                                                              compuMethodRef=compuMethod.ref,
+                                                              dataConstraintRef=dataConstraint.ref,
+                                                              unitRef = unitRef)
+               newType.variantProps = [props]
+            else:               
+               newType=autosar.datatype.IntegerDataType(name,min,max,compuMethodRef=compuMethod.ref, adminData=adminData)      
+         else:
+            raise RuntimeError("no package found with role='CompuMethod'")
       elif (min is not None) and (max is not None):
          #creates a simple IntegerDataType
          if ws.version >= 4.0:
@@ -712,11 +726,13 @@ class Package(object):
       return value
 
    def _createConstantV4(self, ws, name, dataType, initValue, adminData=None):
-      if isinstance(dataType, autosar.datatype.ImplementationDataType):
-         if dataType.category == 'STRUCTURE':
-           value = self._createRecordValueV4(ws, name, dataType, initValue)
+      if isinstance(dataType, (autosar.datatype.ImplementationDataType, autosar.datatype.ApplicationPrimitiveDataType)):
+         if dataType.category == 'VALUE':
+            value = autosar.constant.NumericalValue(name, initValue)
+         elif dataType.category == 'STRUCTURE':
+           value = self._createRecordValueV4(ws, name, dataType, initValue)         
          else:
-            value = None
+            raise NotImplementedError(dataType.category)
       assert(value is not None)
       constant = autosar.constant.Constant(name, value, parent=self, adminData=adminData)
       self.append(constant)

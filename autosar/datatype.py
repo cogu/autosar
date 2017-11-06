@@ -438,17 +438,15 @@ class ImplementationDataTypeElement(Element):
 
 class ApplicationPrimitiveDataType(Element):
    def tag(self, version=None): return 'APPLICATION-PRIMITIVE-DATA-TYPE'
-   def __init__(self, name, category=None, variants=None, parent=None, adminData=None):
+   def __init__(self, name, category=None, variantProps=None, parent=None, adminData=None):
       super().__init__(name, parent, adminData)
       self.category=category
-      if variants is not None:
+      self.variantProps = []
+      if variantProps is not None:
          if isinstance(variants, autosar.base.SwDataDefPropsConditional):
-            self.variants = [variants]
+            self.variantProps.append(variantProps)
          else:
-            self.variants=variants
-      else:
-         self.variants = []
-
+            self.variantProps = list(variantProps)
 
 class DataTypeMappingSet(Element):
    def tag(self, version): return 'DATA-TYPE-MAPPING-SET'
