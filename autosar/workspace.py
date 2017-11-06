@@ -149,6 +149,7 @@ class Workspace(object):
             package = autosar.package.Package(name, parent=self)
             self.packages.append(package)
             result.append(package)
+            self.map['packages'][name] = package
          self.packageParser.loadXML(package,xmlPackage)
          if (packagename==name) and (role is not None):
             self.setRole(package.ref, role)
