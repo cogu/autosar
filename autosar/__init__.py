@@ -16,7 +16,7 @@ import ntpath
 import os
 import xml.etree.ElementTree as ElementTree
 
-
+### BEGIN DEPRECATED
 class DcfParser:
    def parseXML(self,filename):
       xmltree = ElementTree.ElementTree()
@@ -46,12 +46,6 @@ class DcfParser:
       self.adjustDcfFileRef(dcf,basedir)
       return dcf
 
-
-def workspace(version=3.0, patch = 2, schema=None, EcuName=None, packages=None):
-   if schema is None and version == 3.0 and patch == 2:
-      schema = 'autosar_302_ext.xsd'
-   return autosar.Workspace(version, patch, schema, EcuName, packages)
-
 def dcfImport(filename):
    parser = DcfParser()
    dcf = parser.readFile(filename)
@@ -76,6 +70,15 @@ def loadDcf(filename):
       roles = lookupTable[elem['itemType']]
       result.append({'type': 'FileRef', 'path': elem['path'], 'roles': roles})
    return result
+
+### END DEPRECATED
+
+def workspace(version=3.0, patch = 2, schema=None, EcuName=None, packages=None):
+   if schema is None and ( (version == 3.0 and patch == 2) or (version == "3.0.2") ):
+      schema = 'autosar_302_ext.xsd'
+   return autosar.Workspace(version, patch, schema, EcuName, packages)
+
+
    
 
 def splitRef(ref):

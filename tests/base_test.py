@@ -7,16 +7,6 @@ import unittest
 
 class TestBase(unittest.TestCase):
 
-   # def test_filter_packages(self):
-   #    result = autosar.base.filter_package_refs(['/A', '/B', '/C'], ['/A', '/B', '/D'])
-   #    self.assertEqual(result, ['/A', '/B'])
-   # 
-   #    result = autosar.base.filter_package_refs(['/A'], ['/A/X', '/A/Q', '/A/P'])
-   #    self.assertEqual(result, ['/A'])
-   # 
-   #    result = autosar.base.filter_package_refs(['/A/X', '/A/Q'], ['/A/X', '/A/Q', '/A/P'])
-   #    self.assertEqual(result, ['/A/X', '/A/Q'])
-   
    def test_filter(self):
       ws = autosar.workspace()
       p1 = ws.createPackage('Package1')
@@ -110,5 +100,31 @@ class TestBase(unittest.TestCase):
       self.assertEqual(patch, 2)
       self.assertEqual(schema, 'AUTOSAR_4-2-2.xsd')
 
+   def test_parseVersionString(self):
+      (major, minor, patch) = (autosar.base.parseVersionString("3.0.0"))
+      self.assertEqual(major, 3)
+      self.assertEqual(minor, 0)
+      self.assertEqual(patch, 0)
+
+      (major, minor, patch) = (autosar.base.parseVersionString("4.2.2"))
+      self.assertEqual(major, 4)
+      self.assertEqual(minor, 2)
+      self.assertEqual(patch, 2)
+      
+   def test_ws_version(self):
+      ws = autosar.workspace(version="4.2.2")
+      self.assertEqual(ws.version, 4.2)
+      self.assertEqual(ws.patch, 2)
+      ws.version = "3.0.5"
+      self.assertEqual(ws.version, 3.0)
+      self.assertEqual(ws.patch, 5)
+      ws.version = 4.1
+      ws.patch = 4
+      self.assertEqual(ws.version, 4.1)
+      self.assertEqual(ws.patch, 4)
+      ws = autosar.workspace(version=4.2, patch = 2)
+      self.assertEqual(ws.version, 4.2)
+      self.assertEqual(ws.patch, 2)
+   
 if __name__ == '__main__':
     unittest.main()

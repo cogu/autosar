@@ -1,6 +1,8 @@
 import xml.etree.ElementTree as ElementTree
 import re
 
+pVersion = re.compile("(\d+)\.(\d+)\.(\d+)")
+
 class AdminData(object):
    def __init__(self):
       self.specialDataGroups = []
@@ -186,6 +188,16 @@ def prepareFilter(fstr):
    if fstr[0] == '/': fstr=fstr[1:]
    if fstr[-1] == '/': fstr+='*'
    return fstr.split('/')
+
+def parseVersionString(versionString):
+   """
+   takes a string of the format <major>.<minor>.<patch> (e.g. "3.2.2") and returns a tuple with three integers (major, minor, patch)
+   """   
+   result = pVersion.match(versionString)
+   if result is None:
+      raise ValueError("VersionString argument did not match the pattern '<major>.<minor>.<patch>'")
+   else:      
+      return (int(result.group(1)),int(result.group(2)),int(result.group(3)))
    
 class SwDataDefPropsConditional:
    def tag(self,version=None): return 'SW-DATA-DEF-PROPS-CONDITIONAL'
