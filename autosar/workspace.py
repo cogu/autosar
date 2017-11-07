@@ -1,7 +1,7 @@
 import autosar.package
 import autosar.parser.package_parser
 import autosar.writer
-from autosar.base import parseXMLFile,getXMLNamespace,removeNamespace,parseAutosarVersionAndSchema,prepareFilter
+from autosar.base import (parseXMLFile, getXMLNamespace, removeNamespace, parseAutosarVersionAndSchema, prepareFilter, parseVersionString)
 import json
 import os
 import ntpath
@@ -29,8 +29,13 @@ _validWSRoles = ['DataType', 'Constant', 'PortInterface', 'ComponentType', 'Mode
 class Workspace(object):
    def __init__(self, version, patch, schema, EcuName = None, packages=None):
       self.packages = []
-      self.version=version
-      self.patch=patch
+      if isinstance(version, str):
+         (major, minor, patch) = parseVersionString(version)
+         self._version=float("%s.%s"%(major, minor))
+         self.patch=patch
+      elif isinstance(version, float):
+         self._version=version
+         self.patch=int(patch)
       self.schema=schema
       self.packageParser=None
       self.packageWriter=None
@@ -63,6 +68,19 @@ class Workspace(object):
                raise ValueError("Unknown role name '%s'"%key)
             
 
+   @property
+   def version(self):
+      return self._version
+   
+   @version.setter
+   def version(self, version):
+      if isinstance(version, str):
+         (major, minor, patch) = parseVersionString(version)
+         self._version=float("%s.%s"%(major, minor))
+         self.patch=patch
+      elif isinstance(version, float):
+         self._version=version         
+      
    def __getitem__(self,key):
       if isinstance(key,str):
          return self.find(key)
