@@ -465,6 +465,7 @@ class DataTypeMappingSet(Element):
    def get(self, applicationDataTypeRef):
       if applicationDataTypeRef in self.map:
          return DataTypeMap(applicationDataTypeRef,  self.map[applicationDataTypeRef])
+      return None
 
 class DataTypeMap:
    def __init__(self, applicationDataTypeRef, implementationDataTypeRef):

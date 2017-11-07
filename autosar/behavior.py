@@ -995,7 +995,6 @@ class InternalBehavior(InternalBehaviorCommon):
       self.swcNvBlockNeeds.append(elem)
       return elem
 
-   
 
 class SwcInternalBehavior(InternalBehaviorCommon):
    def __init__(self,name, componentRef, multipleInstance=False,parent=None):
