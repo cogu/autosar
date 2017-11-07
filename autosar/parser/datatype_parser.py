@@ -148,7 +148,7 @@ class DataTypeParser(ElementParser):
          if xmlItem.tag in alreadyProcessed:
             pass
          elif xmlItem.tag == 'SW-DATA-DEF-PROPS':
-            dataType.variants = self.parseSwDataDefProps(xmlItem)
+            dataType.variantProps = self.parseSwDataDefProps(xmlItem)
          elif xmlItem.tag == 'ADMIN-DATA':
             dataType.adminData=parseAdminDataNode(xmlItem)
          elif xmlItem.tag == 'DESC':
