@@ -605,27 +605,37 @@ class InternalBehaviorCommon(Element):
    def calcModeInstanceComponents(self, portName, modeValue):
       self._initSWC()
       ws = self.rootWS()
-      for port in self.swc.requirePorts:
-         if (port.name == portName):            
-            portInterface = ws.find(port.portInterfaceRef, role='PortInterface')
-            if (portInterface is None):
-               raise ValueError('invalid port interface reference: '+port.portInterfaceRef)
-            if (portInterface.modeGroups is None) or (len(portInterface.modeGroups)==0):
-               raise ValueError('port interface %s has no valid mode groups'%portInterface.name)
-            if len(portInterface.modeGroups)>1:
-               raise NotImplementedError('port interfaces with only one mode group is currently supported')
-            modeGroup = portInterface.modeGroups[0]
-            dataType = ws.find(modeGroup.typeRef)
-            if (portInterface is None):
-               raise ValueError('%s has invalid typeRef: %s'%(modeGroup.name, modeGroup.typeRef))
-            assert(isinstance(dataType,autosar.portinterface.ModeDeclarationGroup))
-            modeDeclarationRef = None
-            modeDeclarationGroupRef = modeGroup.ref
-            for modeDeclaration in dataType.modeDeclarations:
-               if modeDeclaration.name == modeValue:
-                  modeDeclarationRef = modeDeclaration.ref
-                  return (modeDeclarationRef,modeDeclarationGroupRef,port.ref)
-            raise ValueError('"%s" did not match any of the mode declarations in %s'%(modeValue,dataType.ref))
+      port = self.swc.find(portName)
+      if port is None:
+         raise ValueError('%s: Invalid port name: %s'%(self.swc.name, portName))
+      if not isinstance(port, autosar.component.RequirePort):
+         raise ValueError('%s: port must be a require-port: %s'%(self.swc.name, portName))
+      portInterface = ws.find(port.portInterfaceRef, role='PortInterface')
+      if (portInterface is None):
+         raise ValueError('invalid port interface reference: '+port.portInterfaceRef)
+      if isinstance(portInterface, autosar.portinterface.SenderReceiverInterface):
+         if (portInterface.modeGroups is None) or (len(portInterface.modeGroups)==0):
+            raise ValueError('port interface %s has no valid mode groups'%portInterface.name)
+         if len(portInterface.modeGroups)>1:
+            raise NotImplementedError('port interfaces with only one mode group is currently supported')
+         modeGroup = portInterface.modeGroups[0]
+      elif isinstance(portInterface, autosar.portinterface.ModeSwitchInterface):
+         modeGroup = portInterface.modeGroup
+      else:
+         raise NotImplementedError(type(portInterface))
+      assert(modeGroup is not None)
+      dataType = ws.find(modeGroup.typeRef)
+      if (dataType is None):
+         raise ValueError('%s has invalid typeRef: %s'%(modeGroup.name, modeGroup.typeRef))
+      assert(isinstance(dataType,autosar.portinterface.ModeDeclarationGroup))
+      modeDeclarationRef = None
+      modeDeclarationGroupRef = modeGroup.ref
+      for modeDeclaration in dataType.modeDeclarations:
+         if modeDeclaration.name == modeValue:
+            modeDeclarationRef = modeDeclaration.ref
+            return (modeDeclarationRef,modeDeclarationGroupRef,port.ref)
+      raise ValueError('"%s" did not match any of the mode declarations in %s'%(modeValue,dataType.ref))
+
          
    def createModeSwitchEvent(self, runnableName, modeRef, activationType='ENTRY', name=None):
       self._initSWC()
@@ -656,7 +666,7 @@ class InternalBehaviorCommon(Element):
          raise ValueError('invalid modeRef, expected "portName/modeValue", got "%s"'%modeRef)         
       portName=result[0]
       modeValue=result[2]
-      event = autosar.behavior.ModeSwitchEvent(eventName,runnable.ref,activationType)
+      event = autosar.behavior.ModeSwitchEvent(eventName,runnable.ref,activationType, version=ws.version)
       (modeDeclarationRef,modeDeclarationGroupRef,portRef) = self.calcModeInstanceComponents(portName,modeValue)
       event.modeInstRef = ModeInstanceRef(modeDeclarationRef, modeDeclarationGroupRef, portRef)
       assert(isinstance(event.modeInstRef, autosar.behavior.ModeInstanceRef))
@@ -680,7 +690,7 @@ class InternalBehaviorCommon(Element):
       event = autosar.behavior.TimingEvent(eventName,runnable.ref,period)
       
       if modeDependency is not None:
-         self._processModeDependency(event, modeDependency)
+         self._processModeDependency(event, modeDependency, ws.version)
       self.events.append(event)
       return event
    
@@ -729,7 +739,7 @@ class InternalBehaviorCommon(Element):
       event.operationInstanceRef=OperationInstanceRef(port.ref, operation.ref)
 
       if modeDependency is not None:
-         self._processModeDependency(event, modeDependency)
+         self._processModeDependency(event, modeDependency, ws.version)
 
       self.events.append(event)
       return event
@@ -783,7 +793,7 @@ class InternalBehaviorCommon(Element):
       event.dataInstanceRef=DataInstanceRef(port.ref, dataElement.ref)
       
       if modeDependency is not None:
-         self._processModeDependency(event, modeDependency)
+         self._processModeDependency(event, modeDependency, ws.version)
          
       self.events.append(event)
       return event      
@@ -813,18 +823,23 @@ class InternalBehaviorCommon(Element):
          eventName = baseName
       return eventName
       
-   def _processModeDependency(self, event, modeDependencyList):
+   def _processModeDependency(self, event, modeDependencyList, version):
       for dependency in list(modeDependencyList):
          result = dependency.partition('/')
          if result[1]=='/':
             portName=result[0]
             modeValue=result[2]
-            (modeDeclarationRef,modeDeclarationGroupRef,portRef) = self.calcModeInstanceComponents(portName,modeValue)               
+            (modeDeclarationRef,modeDeclarationGroupPrototypeRef,portRef) = self.calcModeInstanceComponents(portName,modeValue)               
          else:
             raise ValueError('invalid modeRef, expected "portName/modeValue", got "%s"'%dependency)
-         if event.modeDependency is None:
-            event.modeDependency = ModeDependency()
-         event.modeDependency.append(ModeDependencyRef(modeDeclarationRef, modeDeclarationGroupRef, portRef))
+         if version >= 4.0:
+            if event.disabledInModes is None:
+               event.disabledInModes = []
+            event.disabledInModes.append(DisabledModeInstanceRef(modeDeclarationRef, modeDeclarationGroupPrototypeRef, portRef))
+         else:
+            if event.modeDependency is None:
+               event.modeDependency = ModeDependency()
+            event.modeDependency.append(ModeDependencyRef(modeDeclarationRef, modeDeclarationGroupPrototypeRef, portRef))
    
    def createExclusiveArea(self, name):
       """
