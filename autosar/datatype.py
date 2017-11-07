@@ -443,7 +443,7 @@ class ApplicationPrimitiveDataType(Element):
       self.category=category
       self.variantProps = []
       if variantProps is not None:
-         if isinstance(variants, autosar.base.SwDataDefPropsConditional):
+         if isinstance(variantProps, autosar.base.SwDataDefPropsConditional):
             self.variantProps.append(variantProps)
          else:
             self.variantProps = list(variantProps)
