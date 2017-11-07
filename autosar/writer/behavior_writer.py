@@ -297,19 +297,21 @@ class XMLBehaviorWriter(ElementWriter):
       lines = []
       tag = event.tag(self.version)
       lines.append('<%s>'%tag)
-      lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%event.name,1))
-      if event.modeDependency is not None:
-         lines.append(self.indent('<MODE-DEPENDENCY>',1))
-         lines.append(self.indent('<DEPENDENT-ON-MODE-IREFS>',2))
-         for item in event.modeDependency.modeInstanceRefs:
-            lines.extend(self.indent(self._writeModeInstanceRefXML(ws, item),3))
-         lines.append(self.indent('</DEPENDENT-ON-MODE-IREFS>',2))
-         lines.append(self.indent('</MODE-DEPENDENCY>',1))
-      elif event.disabledInModes is not None:
-         lines.append(self.indent('<DISABLED-MODE-IREFS>',1))
-         for item in event.disabledInModes:
-            lines.extend(self.indent(self._writeModeInstanceRefXML(ws, item),2))
-         lines.append(self.indent('</DISABLED-MODE-IREFS>',1))
+      lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%event.name,1))      
+      if ws.version >= 4.0:
+         if event.disabledInModes is not None:
+            lines.append(self.indent('<DISABLED-MODE-IREFS>',1))
+            for item in event.disabledInModes:
+               lines.extend(self.indent(self._writeModeInstanceRefXML(ws, item),2))
+            lines.append(self.indent('</DISABLED-MODE-IREFS>',1))         
+      else:
+         if event.modeDependency is not None:
+            lines.append(self.indent('<MODE-DEPENDENCY>',1))
+            lines.append(self.indent('<DEPENDENT-ON-MODE-IREFS>',2))
+            for item in event.modeDependency.modeInstanceRefs:
+               lines.extend(self.indent(self._writeModeInstanceRefXML(ws, item),3))
+            lines.append(self.indent('</DEPENDENT-ON-MODE-IREFS>',2))
+            lines.append(self.indent('</MODE-DEPENDENCY>',1))
 
       runnableEntity = ws.find(event.startOnEventRef)
       assert(runnableEntity is not None)
