@@ -511,7 +511,7 @@ class Package(object):
       self.append(dataType)
       return dataType
 
-   def createRecordDataType(self, name, elements, adminData=None):
+   def createRecordDataType(self, name, elements, swCalibrationAccess = None, adminData=None):
       """
       AUTOSAR3: Create a new instance of RecordDataType and appends it to current package
       AUTOSAR4: Creates a new ImplementationDataType and appends it to current package
@@ -521,7 +521,9 @@ class Package(object):
       if ws.version < 4.0:
          dataType=autosar.datatype.RecordDataType(name, elements, self, adminData)
       else:
-         props = autosar.base.SwDataDefPropsConditional(swCalibrationAccess = 'NOT-ACCESSIBLE')
+         if swCalibrationAccess is None:
+            swCalibrationAccess = 'NOT-ACCESSIBLE'
+         props = autosar.base.SwDataDefPropsConditional(swCalibrationAccess = swCalibrationAccess)
          dataType = autosar.datatype.ImplementationDataType(name, 'STRUCTURE', props, 'None', self, adminData)
          for element in elements:
             if not isinstance(element, tuple):
@@ -849,3 +851,23 @@ class Package(object):
       baseType = autosar.datatype.SwBaseType(name, size, encoding, nativeDeclaration, 'FIXED_LENGTH', self, adminData)
       self.append(baseType)
       return baseType
+
+   def createImplementationDataTypeRef(self, name, typeRef, adminData = None):
+      """
+      Create a new implementation data type that is a reference to another implementation data type ref
+      name: name of the new data type
+      typeRef: reference to another implementation data type
+      """
+      ws=self.rootWS()
+      assert(ws is not None)
+
+      if isinstance(adminData, dict):
+         adminDataObj=ws.createAdminData(adminData)
+      else:
+         adminDataObj = adminData
+      if (adminDataObj is not None) and not isinstance(adminDataObj, autosar.base.AdminData):
+         raise ValueError("adminData must be of type dict or AdminData")
+      variantProps = autosar.base.SwDataDefPropsConditional(implementationTypeRef = typeRef)
+      implementationDataType = autosar.datatype.ImplementationDataType(name, 'TYPE_REFERENCE', variantProps, parent = self, adminData = adminData)
+      self.append(implementationDataType)
+      return implementationDataType
