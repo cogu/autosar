@@ -489,7 +489,7 @@ class Package(object):
          #creates a simple IntegerDataType
          if ws.version >= 4.0:
             if baseTypeRef is None:
-                  raise ValueError('baseTypeRef argument must be given to this method')
+               raise ValueError('baseTypeRef argument must be given to this method')
             dataConstraint = self.createInternalDataConstraint(name+'_DataConstr', min, max)
             newType = autosar.datatype.ImplementationDataType(name, 'VALUE')
             props = autosar.base.SwDataDefPropsConditional(baseTypeRef=baseTypeRef,
@@ -505,11 +505,22 @@ class Package(object):
 
    def createRealDataType(self, name, minVal, maxVal, minValType='CLOSED', maxValType='CLOSED', hasNaN=False, encoding='SINGLE', adminData=None):
       """
-      create a new instance of autosar.datatype.RealDataType and appends it to current package
+      AUTOSAR 4: Creates a new ImplementationDataType
+      AUTOSAR 3: Creates a new instance of autosar.datatype.RealDataType and appends it to current package
       """
-      dataType=autosar.datatype.RealDataType(name, minVal, maxVal, minValType, maxValType, hasNaN, encoding, self, adminData)
-      self.append(dataType)
-      return dataType
+      if ws.version >= 4.0:
+         if baseTypeRef is None:
+            raise ValueError('baseTypeRef argument must be given to this method')
+            dataConstraint = self.createInternalDataConstraint(name+'_DataConstr', minVal, maxVal)
+            newType = autosar.datatype.ImplementationDataType(name, 'VALUE')
+            props = autosar.base.SwDataDefPropsConditional(baseTypeRef=baseTypeRef,
+                                                            swCalibrationAccess='NOT-ACCESSIBLE',                                                              
+                                                            dataConstraintRef=dataConstraint.ref)
+            newType.variantProps = [props]
+      else:
+         newType=autosar.datatype.RealDataType(name, minVal, maxVal, minValType, maxValType, hasNaN, encoding, self, adminData)
+      self.append(newType)
+      return newType
 
    def createRecordDataType(self, name, elements, swCalibrationAccess = None, adminData=None):
       """
