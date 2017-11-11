@@ -95,16 +95,22 @@ class Workspace(object):
          retval = retval.replace(r'\\','/')
       return retval
 
+   def getRole(self, role):
+      return self.roles[role]
+   
    def setRole(self, ref, role):
       if (role is not None) and (role not in _validWSRoles):
          raise ValueError('invalid role name: '+role)
-      package = self.find(ref)
-      if package is None:
-         raise ValueError('invalid reference: '+ref)
-      if not isinstance(package, autosar.package.Package):
-         raise ValueError('invalid type "%s"for reference "%s", expected Package type'%(str(type(package)),ref))
-      package.role=role
-      self.roles[role]=package.ref
+      if ref is None:
+         self.roles[role]=None
+      else:
+         package = self.find(ref)
+         if package is None:
+            raise ValueError('invalid reference: '+ref)
+         if not isinstance(package, autosar.package.Package):
+            raise ValueError('invalid type "%s"for reference "%s", expected Package type'%(str(type(package)),ref))
+         package.role=role
+         self.roles[role]=package.ref
 
    def openXML(self,filename):      
       xmlroot = parseXMLFile(filename)
@@ -445,6 +451,7 @@ class Workspace(object):
       Applies template to this workspace
       """
       template.apply(self)
+      template.usageCount+=1
 
    #---DEPRECATED CODE, TO BE REMOVED ---#
    @classmethod
