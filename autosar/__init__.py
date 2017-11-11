@@ -99,6 +99,9 @@ def CompuMethodConst(name, elements, parent=None, adminData=None):
 
 #template support
 class Template(ABC):
+   
+   usageCount = 0 #number of times this template have been applied
+   
    @classmethod
    @abstractmethod
    def apply(cls, ws):
