@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# autosar documentation build configuration file, created by
+# AUTOSAR documentation build configuration file, created by
 # sphinx-quickstart on Sat Nov 11 15:24:59 2017.
 #
 # This file is execfile()d with the current directory set to its
@@ -46,7 +46,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'autosar'
+project = 'AUTOSAR'
 copyright = '2017, Conny Gustafsson'
 author = 'Conny Gustafsson'
 
@@ -141,7 +141,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'autosar.tex', 'autosar Documentation',
+    (master_doc, 'autosar.tex', 'AUTOSAR Documentation',
      'Conny Gustafsson', 'manual'),
 ]
 
@@ -151,7 +151,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'autosar', 'autosar Documentation',
+    (master_doc, 'autosar', 'AUTOSAR Documentation',
      [author], 1)
 ]
 
@@ -162,7 +162,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'autosar', 'autosar Documentation',
+    (master_doc, 'autosar', 'AUTOSAR Documentation',
      author, 'autosar', 'One line description of project.',
      'Miscellaneous'),
 ]
