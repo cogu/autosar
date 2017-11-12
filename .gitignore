@@ -13,5 +13,5 @@ __pycache__/
 /*.egg-info
 
 #sphinx-doc files
-/doc/make.bat
 /doc/_build/
+/doc2/_build/
