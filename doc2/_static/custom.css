@@ -1,0 +1,21 @@
+.table-monospace {
+   font-family: "Consolas", "monospace";
+}
+
+table.center-align td {
+   text-align: center;
+}
+
+body {
+	font-size: 110%;
+   font-family: "Georgia", "serif";
+}
+
+div.sphinxsidebar{
+	font-size: 16px !important;
+   font-family: "Georgia", "serif";
+}
+
+div.body h1, div.body h2 ,div.body h3, div.body h4 {
+    font-weight: bold !important;
+}
