@@ -1,18 +1,16 @@
-Part 1
-======
+SteeringWheelFeedback
+=====================
 
-Our first Component
--------------------
+Let's assume we have a Steering Wheel Switch (SWS) with push buttons. These push buttons can be used for things such as:
 
-In our example vehicle let's assume we have a steering wheel with control buttons. These steering wheel buttons can be used for things such as:
 - Controlling the radio/media functions of the vehicle.
 - Navigating through menu systems in the instrument cluster display.
 
-Our first goal of this tutorial will be to model an AUTOSAR component called SteeringWheelButtonFeedback. This component that is responsible for listening
-to button presses and sending their status as AUTOSAR signals to other components.
+Our first goal of this tutorial will be to model an AUTOSAR component called SteeringWheelButtonFeedback. This component will be responsible for detecting the
+button pushes and sending their statuses as AUTOSAR signals to other components.
 
 +------------------------+------------------------------+
-| Physical Button/Switch | Corresponding AUTOSAR signal |
+| Physical Button        | Corresponding AUTOSAR signal |
 +========================+==============================+
 | Up                     | SWS_PushButtonStatus_Up      |
 +------------------------+------------------------------+
