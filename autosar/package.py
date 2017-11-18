@@ -503,21 +503,27 @@ class Package(object):
       self.append(newType)
       return newType
 
-   def createRealDataType(self, name, minVal, maxVal, minValType='CLOSED', maxValType='CLOSED', hasNaN=False, encoding='SINGLE', adminData=None):
+   def createRealDataType(self, name, minVal, maxVal, minValType='CLOSED', maxValType='CLOSED', hasNaN=False, encoding='SINGLE', baseTypeRef=None, adminData=None):
       """
       AUTOSAR 4: Creates a new ImplementationDataType
       AUTOSAR 3: Creates a new instance of autosar.datatype.RealDataType and appends it to current package
       """
+      ws=self.rootWS()
+      assert(ws is not None)
       if ws.version >= 4.0:
          if baseTypeRef is None:
             raise ValueError('baseTypeRef argument must be given to this method')
-            dataConstraint = self.createInternalDataConstraint(name+'_DataConstr', minVal, maxVal)
-            newType = autosar.datatype.ImplementationDataType(name, 'VALUE')
-            props = autosar.base.SwDataDefPropsConditional(baseTypeRef=baseTypeRef,
+         if (minVal == '-INFINITE' or minVal == 'INFINITE'): minVal = '-INF'
+         if (maxVal == 'INFINITE'): maxVal = 'INF'
+         dataConstraint = self.createInternalDataConstraint(name+'_DataConstr', minVal, maxVal)
+         newType = autosar.datatype.ImplementationDataType(name, 'VALUE')
+         props = autosar.base.SwDataDefPropsConditional(baseTypeRef=baseTypeRef,
                                                             swCalibrationAccess='NOT-ACCESSIBLE',                                                              
                                                             dataConstraintRef=dataConstraint.ref)
-            newType.variantProps = [props]
-      else:
+         newType.variantProps = [props]
+      else:         
+         if (minVal == '-INFINITE' or '-INF'): minVal = 'INFINITE' #the missing '-' here is intentional. I know, AUTOSAR3 is weird.
+         if (maxVal == 'INF'): maxVal = 'INFINITE'
          newType=autosar.datatype.RealDataType(name, minVal, maxVal, minValType, maxValType, hasNaN, encoding, self, adminData)
       self.append(newType)
       return newType
@@ -831,10 +837,9 @@ class Package(object):
       ws = self.rootWS()
       assert(ws is not None)
       dataConstraintPackage = None
-      if ws.roles['DataConstraint'] is not None:
-         dataConstraintPackage=ws.find(ws.roles['DataConstraint'])
-         if dataConstraintPackage is None:
-            raise RuntimeError("no package found with role='DataConstraint'")
+      if ws.roles['DataConstraint'] is None:
+         raise RuntimeError("no package found with role='DataConstraint'")
+      dataConstraintPackage=ws.find(ws.roles['DataConstraint'])
       rules=[]
       try:
          lowerLimit = int(lowerLimit)
@@ -850,6 +855,9 @@ class Package(object):
       return constraint
 
    def createSwBaseType(self, name, size, encoding=None, nativeDeclaration=None, adminData=None):
+      """
+      Creates a SwBaseType object
+      """
       ws=self.rootWS()
       assert(ws is not None)
 
@@ -862,6 +870,13 @@ class Package(object):
       baseType = autosar.datatype.SwBaseType(name, size, encoding, nativeDeclaration, 'FIXED_LENGTH', self, adminData)
       self.append(baseType)
       return baseType
+   
+   def createBaseType(self, name, size, encoding=None, nativeDeclaration=None, adminData=None):
+      """
+      alias for createSwBaseType
+      """
+      return self.createSwBaseType(name, size, encoding, nativeDeclaration, adminData)
+
 
    def createImplementationDataTypeRef(self, name, typeRef, adminData = None):
       """
