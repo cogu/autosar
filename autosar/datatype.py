@@ -361,8 +361,12 @@ class CompuMethodMask(Element):
 class InternalConstraint:
    def __init__(self, lowerLimit=None, upperLimit=None, lowerLimitType='CLOSED', upperLimitType='CLOSED'):
       if lowerLimit is not None:
+         if isinstance(lowerLimit, str) and lowerLimit != '-INF':
+            raise ValueError('Unknown lowerLimit: '+lowerLimit)
          self.lowerLimit = lowerLimit
       if upperLimit is not None:
+         if isinstance(upperLimit, str) and upperLimit != 'INF':
+            raise ValueError('Unknown lowerLimit: '+upperLimit)
          self.upperLimit = upperLimit
       if lowerLimitType == 'CLOSED' or lowerLimitType == 'OPEN':
          self.lowerLimitType = lowerLimitType
