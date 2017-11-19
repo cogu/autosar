@@ -1,5 +1,5 @@
 import sys
-from autosar.base import splitRef
+from autosar.base import splitRef, hasAdminData, parseAdminDataNode
 import autosar.component
 from autosar.parser.behavior_parser import BehaviorParser
 from autosar.parser.parser_base import ElementParser
@@ -60,6 +60,7 @@ class ComponentTypeParser(ElementParser):
             'APPLICATION-SW-COMPONENT-TYPE': self.parseSoftwareComponent,            
             'COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE': self.parseSoftwareComponent,
             'SERVICE-COMPONENT-TYPE': self.parseSoftwareComponent,
+            'PARAMETER-SW-COMPONENT-TYPE': self.parseSoftwareComponent,            
             'COMPOSITION-SW-COMPONENT-TYPE': self.parseCompositionType,
             'SWC-IMPLEMENTATION': self.parseSwcImplementation
          }
@@ -74,18 +75,20 @@ class ComponentTypeParser(ElementParser):
       else:
          return None
 
-   def parseSoftwareComponent(self,xmlRoot,parent=None):
+   def parseSoftwareComponent(self, xmlRoot, parent=None):
       componentType=None
-      handledTags = ['SHORT-NAME','APPLICATION-SOFTWARE-COMPONENT-TYPE', 'COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE', 'APPLICATION-SW-COMPONENT-TYPE']
+      handledTags = ['SHORT-NAME']
       if xmlRoot.tag=='APPLICATION-SOFTWARE-COMPONENT-TYPE': #for AUTOSAR 3.x
          componentType = autosar.component.ApplicationSoftwareComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
-      elif xmlRoot.tag=='COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE':
+      elif xmlRoot.tag=='COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE': #for AUTOSAR 3.x
          componentType = autosar.component.ComplexDeviceDriverComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
       elif xmlRoot.tag == 'APPLICATION-SW-COMPONENT-TYPE': #for AUTOSAR 4.x
          componentType = autosar.component.ApplicationSoftwareComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
       elif xmlRoot.tag == 'SERVICE-COMPONENT-TYPE':
          componentType = autosar.component.ServiceComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
-      elif xmlRoot.tag == 'CALPRM-COMPONENT-TYPE':
+      elif xmlRoot.tag == 'CALPRM-COMPONENT-TYPE': #for AUTOSAR 3.x
+         componentType = autosar.component.ParameterComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
+      elif xmlRoot.tag == 'PARAMETER-SW-COMPONENT-TYPE': #for AUTOSAR 4.x
          componentType = autosar.component.ParameterComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
       else:
          raise NotImplementedError(xmlRoot.tag)
@@ -103,7 +106,7 @@ class ComponentTypeParser(ElementParser):
                print('Unhandled tag: '+xmlElem.tag, file=sys.stderr)
       return componentType
 
-   def parseComponentPorts(self,componentType,xmlRoot):
+   def parseComponentPorts(self, componentType, xmlRoot):
       xmlPorts=xmlRoot.find('PORTS')
       assert(xmlPorts is not None)
       for xmlPort in xmlPorts.findall('*'):
@@ -111,6 +114,8 @@ class ComponentTypeParser(ElementParser):
             portName = xmlPort.find('SHORT-NAME').text
             portInterfaceRef = self.parseTextNode(xmlPort.find('REQUIRED-INTERFACE-TREF'))
             port = autosar.component.RequirePort(portName,portInterfaceRef,parent=componentType)
+            if hasAdminData(xmlPort):
+               port.adminData=parseAdminDataNode(xmlRoot.find('ADMIN-DATA'))
             if xmlPort.findall('./REQUIRED-COM-SPECS') is not None:
                for xmlItem in xmlPort.findall('./REQUIRED-COM-SPECS/*'):
                   if xmlItem.tag == 'CLIENT-COM-SPEC':
@@ -156,6 +161,8 @@ class ComponentTypeParser(ElementParser):
             portName = xmlPort.find('SHORT-NAME').text
             portInterfaceRef = self.parseTextNode(xmlPort.find('PROVIDED-INTERFACE-TREF'))
             port = autosar.component.ProvidePort(portName,portInterfaceRef,parent=componentType)
+            if hasAdminData(xmlPort):
+               port.adminData=parseAdminDataNode(xmlPort.find('ADMIN-DATA'))            
             if xmlPort.findall('./PROVIDED-COM-SPECS') is not None:
                for xmlItem in xmlPort.findall('./PROVIDED-COM-SPECS/*'):
                   if xmlItem.tag == 'SERVER-COM-SPEC':
@@ -186,6 +193,9 @@ class ComponentTypeParser(ElementParser):
                   elif xmlItem.tag == 'QUEUED-SENDER-COM-SPEC':
                      dataElemName = _getDataElemNameFromComSpec(xmlItem,portInterfaceRef)
                      comspec = autosar.component.DataElementComSpec(dataElemName)
+                     port.comspec.append(comspec)
+                  elif xmlItem.tag == 'PARAMETER-PROVIDE-COM-SPEC':
+                     comspec = self._parseParameterComSpec(xmlItem, portInterfaceRef)
                      port.comspec.append(comspec)
                   else:
                      raise NotImplementedError(xmlItem.tag)

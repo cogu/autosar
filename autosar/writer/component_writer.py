@@ -22,7 +22,8 @@ class XMLComponentTypeWriter(ElementWriter):
          self.switcher = {
                            'ApplicationSoftwareComponent': self.writeApplicationSoftwareComponentXML,
                            'SwcImplementation': self.writeSwcImplementationXML,                           
-                           'CompositionComponent': self.writeCompositionComponentXML
+                           'CompositionComponent': self.writeCompositionComponentXML,
+                           'ParameterComponent': self.writeParameterComponentXML
          }
       else:
          switch.keys = {}
@@ -58,6 +59,11 @@ class XMLComponentTypeWriter(ElementWriter):
    def writeServiceComponentXML(self,swc):
       assert(isinstance(swc,autosar.component.ServiceComponent))
       return self._writeComponentXML(swc)
+   
+   def writeParameterComponentXML(self, swc):
+      assert(isinstance(swc,autosar.component.ParameterComponent))
+      return self._writeComponentXML(swc)
+      
 
    def _writeComponentXML(self, swc):
       lines=[]
@@ -99,6 +105,8 @@ class XMLComponentTypeWriter(ElementWriter):
       portInterface=ws.find(port.portInterfaceRef)
       lines.append('<R-PORT-PROTOTYPE>')
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%port.name,1))
+      if port.adminData is not None:
+         lines.extend(self.indent(self.writeAdminDataXML(port.adminData),1))      
       if isinstance(portInterface, autosar.portinterface.ClientServerInterface) and isinstance(port.parent, autosar.component.CompositionComponent) or len(port.comspec)==0:
          if self.version<4.0:
             lines.append(self.indent('<REQUIRED-COM-SPECS></REQUIRED-COM-SPECS>',1))
@@ -221,6 +229,8 @@ class XMLComponentTypeWriter(ElementWriter):
       portInterface=ws.find(port.portInterfaceRef)
       lines.append('<%s>'%port.tag(self.version))
       lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%port.name,1))
+      if port.adminData is not None:
+         lines.extend(self.indent(self.writeAdminDataXML(port.adminData),1))
       if isinstance(portInterface, autosar.portinterface.ClientServerInterface) and isinstance(port.parent, autosar.component.CompositionComponent) or len(port.comspec)==0:
          lines.append(self.indent('<PROVIDED-COM-SPECS></PROVIDED-COM-SPECS>',1))
       else:
@@ -249,6 +259,8 @@ class XMLComponentTypeWriter(ElementWriter):
                lines.append(self.indent('<OPERATION-REF DEST="%s">%s</OPERATION-REF>'%(elem.tag(self.version),elem.ref),3))
                lines.append(self.indent('<QUEUE-LENGTH>%d</QUEUE-LENGTH>'%(int(comspec.queueLength)),3))
                lines.append(self.indent('</SERVER-COM-SPEC>',2))
+            elif isinstance(elem,autosar.portinterface.Parameter):
+               lines.extend(self.indent(self._writeParameterProvideComSpecXML(ws, comspec, elem),2))               
             else:
                raise NotImplementedError(str(type(elem)))
          lines.append(self.indent('</PROVIDED-COM-SPECS>',1))
@@ -402,6 +414,20 @@ class XMLComponentTypeWriter(ElementWriter):
             lines.extend(self.indent(self.writeValueSpecificationXML(comspec.initValue),2))
             lines.append(self.indent('</INIT-VALUE>',1))
          lines.append('</NONQUEUED-SENDER-COM-SPEC>')
+      return lines
+   
+   def _writeParameterProvideComSpecXML(self, ws, comspec, elem):
+      lines = []
+      if self.version<4.0:
+         raise NotImplementedError('_writeParameterProvideComSpecXML')
+      else:
+         lines.append('<PARAMETER-PROVIDE-COM-SPEC>')         
+         if comspec.initValue is not None:
+            lines.append(self.indent('<INIT-VALUE>',1))
+            lines.extend(self.indent(self.writeValueSpecificationXML(comspec.initValue),2))
+            lines.append(self.indent('</INIT-VALUE>',1))
+         lines.append(self.indent('<PARAMETER-REF DEST="%s">%s</PARAMETER-REF>'%(elem.tag(self.version),elem.ref),1))
+         lines.append('</PARAMETER-PROVIDE-COM-SPEC>')
       return lines
    
    def _writeInitValueRefXML(self, ws, initValueRef):
