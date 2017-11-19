@@ -4,12 +4,12 @@ import autosar.constant
 import copy
 import collections
 
-class ComponentType(Element):   
+class ComponentType(Element):
    def __init__(self,name,parent=None):
-      super().__init__(name,parent)      
+      super().__init__(name,parent)
       self.requirePorts=[]
       self.providePorts=[]
-   
+
    def asdict(self):
       data={'type': self.__class__.__name__, 'name':self.name, 'requirePorts':[], 'providePorts':[]}
       for port in self.requirePorts:
@@ -19,9 +19,9 @@ class ComponentType(Element):
       if len(data['requirePorts'])==0: del data['requirePorts']
       if len(data['providePorts'])==0: del data['providePorts']
       return data
-   
+
    def find(self,ref):
-      ref=ref.partition('/')      
+      ref=ref.partition('/')
       for port in self.requirePorts:
          if port.name == ref[0]:
             return port
@@ -29,7 +29,7 @@ class ComponentType(Element):
          if port.name == ref[0]:
             return port
       return None
-   
+
    def append(self, elem):
       if isinstance(elem,RequirePort):
          self.requirePorts.append(elem)
@@ -39,12 +39,12 @@ class ComponentType(Element):
          elem.parent=self
       else:
          raise ValueError("unexpected type:" + str(type(elem)))
-   
+
    def __getitem__(self,key):
       return self.find(key)
 
    def createProvidePort(self,name,portInterfaceRef,elemName=None,initValueRef=None,canInvalidate=False):
-      ws = self.rootWS()      
+      ws = self.rootWS()
       assert(ws is not None)
       portInterface = ws.find(portInterfaceRef, role='PortInterface')
       if portInterface is None:
@@ -54,7 +54,7 @@ class ComponentType(Element):
          if initValueRef is not None:
             comspec['initValueRef']=initValueRef
          if elemName is not None:
-            comspec['name']=elemName         
+            comspec['name']=elemName
       elif isinstance(portInterface,autosar.portinterface.ClientServerInterface):
          comspec=[]
          for operation in portInterface.operations:
@@ -73,11 +73,11 @@ class ComponentType(Element):
       """
       comspec = None
       assert (self.ref is not None)
-      ws = self.rootWS()      
+      ws = self.rootWS()
       assert(ws is not None)
       portInterface = ws.find(portInterfaceRef, role='PortInterface')
       if portInterface is None:
-         raise ValueError('invalid reference: '+portInterfaceRef)    
+         raise ValueError('invalid reference: '+portInterfaceRef)
       if isinstance(portInterface,autosar.portinterface.SenderReceiverInterface):
          if len(portInterface.dataElements)>0:
             comspec={'canInvalidate':canInvalidate,'aliveTimeout':aliveTimeout}
@@ -99,34 +99,34 @@ class ComponentType(Element):
          raise NotImplementedError(type(portInterface))
       port = RequirePort(name,portInterface.ref,comspec,parent=self)
       self.requirePorts.append(port)
-   
+
    def apply(self, template):
       template.apply(self)
-   
+
    def copyPort(self, otherPort):
       """
       Adds a copy of a port (from another component)
       """
       self.append(otherPort.copy())
-   
+
    def mirrorPort(self, otherPort):
       """
       Adds a mirrored copy of a port (from another component)
       """
       self.append(otherPort.mirror())
-      
+
 class AtomicSoftwareComponent(ComponentType):
    """
    base class for ApplicationSoftwareComponent and ComplexDeviceDriverComponent
    """
    def __init__(self,name,parent=None):
-      super().__init__(name,parent)      
+      super().__init__(name,parent)
       self.behavior=None
       self.implementation=None
-   
+
    def find(self,ref):
       ws = self.rootWS()
-      ref=ref.partition('/')      
+      ref=ref.partition('/')
       for port in self.requirePorts:
          if port.name == ref[0]:
             return port
@@ -137,44 +137,44 @@ class AtomicSoftwareComponent(ComponentType):
          if self.behavior.name == ref[0]:
             if len(ref[2])>0:
                return self.behavior.find(ref[2])
-            else:         
+            else:
                return self.behavior
       return None
 
 
 class ApplicationSoftwareComponent(AtomicSoftwareComponent):
-   
+
    def tag(self,version=None): return 'APPLICATION-SW-COMPONENT-TYPE' if version>=4.0 else 'APPLICATION-SOFTWARE-COMPONENT-TYPE'
-   
+
    def __init__(self,name,parent=None):
       super().__init__(name,parent)
 
-class ComplexDeviceDriverComponent(AtomicSoftwareComponent):   
+class ComplexDeviceDriverComponent(AtomicSoftwareComponent):
    def tag(self,version=None): return "COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE"
-   
+
    def __init__(self,name,parent=None):
       super().__init__(name,parent)
 
 
 class ServiceComponent(AtomicSoftwareComponent):
    def tag(self,version=None): return "SERVICE-COMPONENT-TYPE"
-   
+
    def __init__(self,name,parent=None):
       super().__init__(name,parent)
 
 class ServiceComponent(AtomicSoftwareComponent):
    def tag(self,version=None): return "SERVICE-COMPONENT-TYPE"
-   
+
    def __init__(self,name,parent=None):
       super().__init__(name,parent)
 
 class ParameterComponent(AtomicSoftwareComponent):
    def tag(self,version=None):
-      if version < 4.0: 
+      if version < 4.0:
          return "CALPRM-COMPONENT-TYPE"
       else:
          return "PARAMETER-SW-COMPONENT-TYPE"
-   
+
    def __init__(self,name,parent=None):
       super().__init__(name,parent)
 
@@ -182,15 +182,15 @@ class ParameterComponent(AtomicSoftwareComponent):
 class CompositionComponent(ComponentType):
    """
    Composition Component
-   """      
+   """
    def __init__(self,name,parent=None):
-      super().__init__(name,parent) 
+      super().__init__(name,parent)
       self.components=[]
       self.assemblyConnectors=[]
       self.delegationConnectors=[]
-   
+
    def tag(self,version): return 'COMPOSITION-SW-COMPONENT-TYPE' if version >= 4.0 else 'COMPOSITION-TYPE'
-   
+
    def asdict(self):
       data={'type': self.__class__.__name__,'name':self.name,'requirePorts':[],'providePorts':[],'components':[],
          'assemblyConnectors':[], 'delegationConnectors':[]}
@@ -212,7 +212,7 @@ class CompositionComponent(ComponentType):
       return data
 
    def find(self,ref):
-      parts=ref.partition('/')      
+      parts=ref.partition('/')
       for elem in self.components:
          if elem.name == parts[0]:
             return elem
@@ -248,20 +248,20 @@ class CompositionComponent(ComponentType):
       assert (ws is not None)
       port1, component1 = self._analyzePortRef(ws, portRef1)
       port2, component2 = self._analyzePortRef(ws, portRef2)
-      
+
       if isinstance(component1, ComponentPrototype) and isinstance(component2, ComponentPrototype):
-         #create an assembly port between the two ports                  
+         #create an assembly port between the two ports
          providePort=None
          requirePort=None
          if isinstance(port1, RequirePort) and isinstance(port2, ProvidePort):
             requesterComponent, providerComponent = component1, component2
-            requirePort, providePort = port1, port2            
+            requirePort, providePort = port1, port2
          elif isinstance(port2, RequirePort) and isinstance(port1, ProvidePort):
             requesterComponent, providerComponent = component2, component1
             requirePort, providePort = port2, port1
          elif isinstance(port2, RequirePort) and isinstance(port1, RequirePort):
             raise ValueError('cannot create assembly connector between two require ports')
-         else:         
+         else:
             raise ValueError('cannot create assembly connector between two provide ports')
          connectorName='_'.join([providerComponent.name, providePort.name, requesterComponent.name, requirePort.name])
          connector = AssemblyConnector(connectorName, ProviderInstanceRef(providerComponent.ref,providePort.ref), RequesterInstanceRef(requesterComponent.ref,requirePort.ref))
@@ -287,10 +287,10 @@ class CompositionComponent(ComponentType):
       connector = DelegationConnector(connectorName, InnerPortInstanceRef(innerComponent.ref, innerPort.ref), OuterPortRef(outerPort.ref))
       self.delegationConnectors.append(connector)
       return connector
-      
-   def _analyzePortRef(self, ws, portRef):      
+
+   def _analyzePortRef(self, ws, portRef):
       parts=autosar.base.splitRef(portRef)
-      if len(parts)>1:         
+      if len(parts)>1:
          if len(parts)==2:
             #assume format 'componentName/portName' with ComponentType role set
             port=None
@@ -302,7 +302,7 @@ class CompositionComponent(ComponentType):
                   port = component.find(parts[1])
                   component = innerComponent
                   if port is None:
-                     raise ValueError('component %s does not have port with name %s'%(component.name,parts[1]))                  
+                     raise ValueError('component %s does not have port with name %s'%(component.name,parts[1]))
                   break
          else:
             #assume portRef1 is a full reference
@@ -313,18 +313,18 @@ class CompositionComponent(ComponentType):
       if port is None or not isinstance(port, Port):
          raise ValueError('invalid port name: '+parts[-1])
       return port,component
-      
 
 
-      
-class Port(object):
-   def __init__(self,name, portInterfaceRef, comspec=None, parent=None):
-      self.name = name      
+
+
+class Port(Element):
+   def __init__(self,name, portInterfaceRef, comspec=None, parent=None, adminData=None):
+      super().__init__(name, parent, adminData)
       if portInterfaceRef is not None and not isinstance(portInterfaceRef,str):
          raise ValueError('portInterfaceRef needs to be of type None or str')
       self.portInterfaceRef = portInterfaceRef
-      self.comspec=[] 
-      self.parent=parent
+      self.comspec=[]
+
       if comspec is not None:
          ws = self.rootWS()
          assert(ws is not None)
@@ -341,7 +341,7 @@ class Port(object):
                self.comspec.append(comspecObj)
          else:
             raise NotImplementedError("not supported")
-      
+
    @property
    def ref(self):
       if self.parent is not None:
@@ -354,14 +354,14 @@ class Port(object):
          return None
       else:
          return self.parent.rootWS()
-   
+
    def asdict(self):
       data={'type': self.__class__.__name__,'name':self.name, 'portInterfaceRef':self.portInterfaceRef, 'attributes':[]}
       for attribute in self.attributes:
          data['attributes'].append(attribute.asdict())
       if len(data['attributes'])==0: del data['attributes']
       return data
-   
+
    def createComSpecFromDict(self,ws,portInterfaceRef,comspec):
       assert(ws is not None)
       assert(isinstance(comspec,dict))
@@ -390,7 +390,7 @@ class Port(object):
             initValue = ws.find(initValueRef, role='Constant')
             if initValue is None:
                raise ValueError("invalid reference: "+str(initValueRef))
-            if isinstance(initValue,autosar.constant.Constant):               
+            if isinstance(initValue,autosar.constant.Constant):
                if ws.version < 4.0:
                   #this is a convenience implementation for the user. For AUTOSAR3, initValueRef needs to point to the value inside the Constant
                   if dataElement.typeRef != initValue.value.typeRef:
@@ -400,7 +400,7 @@ class Port(object):
                   initValueRef=initValue.ref
             elif isinstance(initValue,autosar.constant.Value):
                initValueRef=initValue.ref
-            else:               
+            else:
                raise ValueError("reference is not a Constant or Value object: '%s'"%initValueRef)
          #automatically set default value of queueLength  to 1 in case the dataElement is queued
          if isinstance(self, RequirePort) and dataElement.isQueued and ( (queueLength is None) or queueLength==0):
@@ -413,18 +413,18 @@ class Port(object):
             return OperationComSpec(operation,queueLength)
       elif isinstance(portInterface, autosar.portinterface.ModeSwitchInterface):
          enhancedMode = comspec.get('enhancedMode', False)
-         supportAsync = comspec.get('supportAsync', False)         
+         supportAsync = comspec.get('supportAsync', False)
          return ModeSwitchComSpec(enhancedMode, supportAsync)
       else:
          raise NotImplementedError(type(portInterface))
       return None
-   
-      
-            
-      
-class RequirePort(Port):      
+
+
+
+
+class RequirePort(Port):
    def tag(self,version=None): return "R-PORT-PROTOTYPE"
-   def __init__(self,name,portInterfaceRef=None,comspec=None,parent=None):      
+   def __init__(self,name,portInterfaceRef=None,comspec=None,parent=None):
       if isinstance(name,str):
          #normal constructor
          super().__init__(name, portInterfaceRef, comspec, parent)
@@ -439,8 +439,8 @@ class RequirePort(Port):
          super().__init__(other.name, other.portInterfaceRef, parent)
          self.comspec=copy.deepcopy(other.comspec)
       else:
-         raise NotImplementedError(type(name))   
-      
+         raise NotImplementedError(type(name))
+
    def copy(self):
       """
       returns a copy of itself
@@ -454,11 +454,11 @@ class RequirePort(Port):
       return ProvidePort(self)
 
 
-class ProvidePort(Port):         
+class ProvidePort(Port):
    def tag(self,version=None): return "P-PORT-PROTOTYPE"
    def __init__(self,name,portInterfaceRef=None,comspec=None,parent=None):
       if isinstance(name,str):
-      #normal constructor      
+      #normal constructor
          super().__init__(name, portInterfaceRef, comspec, parent)
       elif isinstance(name,ProvidePort):
          other=name #alias
@@ -472,13 +472,13 @@ class ProvidePort(Port):
          self.comspec=copy.deepcopy(other.comspec)
       else:
          raise NotImplementedError(type(name))
-      
+
    def copy(self):
       """
       returns a copy of itself
       """
       return ProvidePort(self)
-   
+
    def mirror(self):
       """
       returns a mirrored copy of itself
@@ -507,20 +507,20 @@ class DataElementComSpec(object):
    @property
    def aliveTimeout(self):
       return self._aliveTimeout
-   
+
    @aliveTimeout.setter
-   def aliveTimeout(self,val):      
+   def aliveTimeout(self,val):
       self._aliveTimeout = int(val)
 
    @property
    def queueLength(self):
       return self._queueLength
-   
+
    @queueLength.setter
-   def queueLength(self,val):      
+   def queueLength(self,val):
       self._queueLength = int(val)
-      
-   
+
+
    def asdict(self):
       data={'type': self.__class__.__name__,'name':self.name}
       if self.initValueRef is not None: data['initValueRef']=self.initValueRef
@@ -550,7 +550,7 @@ class ComponentPrototype(Element):
       self.typeRef=typeRef
    def asdict(self):
       return {'type': self.__class__.__name__,'name':self.name,'typeRef':self.typeRef}
-   
+
    def tag(self, version=None): return 'SW-COMPONENT-PROTOTYPE' if version >= 4.0 else'COMPONENT-PROTOTYPE'
 
 class ProviderInstanceRef:
@@ -564,7 +564,7 @@ class ProviderInstanceRef:
       return {'type': self.__class__.__name__,'componentRef':self.componentRef,'portRef':self.portRef}
    def tag(self, version=None):
       return 'PROVIDER-IREF'
-   
+
 
 class RequesterInstanceRef:
    """
@@ -577,7 +577,7 @@ class RequesterInstanceRef:
       return {'type': self.__class__.__name__,'componentRef':self.componentRef,'portRef':self.portRef}
    def tag(self, version=None):
       return 'REQUESTER-IREF'
-   
+
 
 class InnerPortInstanceRef:
    """
@@ -590,7 +590,7 @@ class InnerPortInstanceRef:
       return {'type': self.__class__.__name__,'componentRef':self.componentRef,'portRef':self.portRef}
    def tag(self, version=None):
       return 'INNER-PORT-IREF'
-   
+
 
 class OuterPortRef:
    """
@@ -616,10 +616,10 @@ class AssemblyConnector(Element):
       self.requesterInstanceRef=requesterInstanceRef
    def asdict(self):
       return {'type': self.__class__.__name__,'providerInstanceRef':self.providerInstanceRef.asdict(),'requesterInstanceRef':self.requesterInstanceRef.asdict()}
-   
+
    def tag(self, version):
       return 'ASSEMBLY-SW-CONNECTOR' if version >= 4.0 else 'ASSEMBLY-CONNECTOR-PROTOTYPE'
-   
+
 
 class DelegationConnector(Element):
    """
@@ -631,9 +631,9 @@ class DelegationConnector(Element):
       super().__init__(name, parent)
       self.innerPortInstanceRef = innerPortInstanceRef
       self.outerPortRef = outerPortRef
-      
+
    def asdict(self):
       return {'type': self.__class__.__name__,'innerPortInstanceRef':self.innerPortInstanceRef.asdict()}
-   
+
    def tag(self, version): return 'DELEGATION-SW-CONNECTOR' if version >= 4.0 else 'DELEGATION-CONNECTOR-PROTOTYPE'
 
