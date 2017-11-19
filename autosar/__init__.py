@@ -16,63 +16,6 @@ import ntpath
 import os
 import xml.etree.ElementTree as ElementTree
 
-### BEGIN DEPRECATED
-class DcfParser:
-   def parseXML(self,filename):
-      xmltree = ElementTree.ElementTree()
-      xmltree.parse(filename)
-      xmlroot = xmltree.getroot();
-      return xmlroot
-
-   def parseDCF(self,xmlroot):
-      result = {'fileRef':[]}
-      for elem in xmlroot.findall('./FILEREF'):
-         node = elem.find('./ARXML')
-         result['fileRef'].append({'itemType':node.attrib['ROOTITEM'],'path':node.text})
-      return result
-
-   def adjustDcfFileRef(self,dcf,basedir):
-      for elem in dcf['fileRef']:
-         basename = ntpath.basename(elem['path'])
-         dirname=ntpath.normpath(ntpath.join(basedir,ntpath.dirname(elem['path'])))
-         elem['path']=ntpath.join(dirname,basename)
-         if os.path.sep == '/': #are we running in cygwin/Linux?
-            elem['path'] = elem['path'].replace(r'\\','/')
-
-   def readFile(self,filename):
-      basedir = ntpath.dirname(filename)
-      xmlroot = self.parseXML(filename)
-      dcf = self.parseDCF(xmlroot)
-      self.adjustDcfFileRef(dcf,basedir)
-      return dcf
-
-def dcfImport(filename):
-   parser = DcfParser()
-   dcf = parser.readFile(filename)
-   ws = workspace()
-   result = {}
-   for elem in dcf['fileRef']:
-      ws.loadXML(elem['path'])
-   return ws
-
-def loadDcf(filename):
-   parser = DcfParser()
-   dcf = parser.readFile(filename)
-   ws = workspace()
-   result = []
-   lookupTable = {
-                     'CONSTANT': {'/Constant': 'Constant'},
-                     'DATATYPE': {'/DataType': 'DataType'},
-                     'PORTINTERFACE': {'/PortInterface': 'PortInterface'},
-                     'COMPONENTTYPE': {'/ComponentType': 'ComponentType'}
-                  }
-   for elem in dcf['fileRef']:
-      roles = lookupTable[elem['itemType']]
-      result.append({'type': 'FileRef', 'path': elem['path'], 'roles': roles})
-   return result
-
-### END DEPRECATED
-
 def workspace(version=3.0, patch = 2, schema=None, EcuName=None, packages=None):
    if schema is None and ( (version == 3.0 and patch == 2) or (version == "3.0.2") ):
       schema = 'autosar_302_ext.xsd'
@@ -95,6 +38,9 @@ def ModeGroup(name, typeRef, parent=None, adminData=None):
 
 def CompuMethodConst(name, elements, parent=None, adminData=None):
    return autosar.datatype.CompuMethodConst(name, elements, parent, adminData)
+
+def Parameter(name, typeRef, swAddressMethodRef=None, swCalibrationAccess=None, parent=None, adminData=None):
+   return autosar.portinterface.Parameter(name, typeRef, swAddressMethodRef, swCalibrationAccess, parent, adminData)
 
 
 #template support
