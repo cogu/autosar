@@ -4,7 +4,7 @@ sys.path.insert(0, mod_path)
 import autosar
 import unittest
 
-class TestElementCreate(unittest.TestCase):
+class TestRealTypeCreate(unittest.TestCase):
 
     def test_createRealType_AR3_with_infinite(self):
         ws = autosar.workspace(version="3.0.2")
@@ -79,6 +79,20 @@ class TestElementCreate(unittest.TestCase):
         self.assertIsInstance(dataConstraint, autosar.datatype.DataConstraint)
         self.assertEqual(dataConstraint.rules[0].lowerLimit, '-INF')
         self.assertEqual(dataConstraint.rules[0].upperLimit, 'INF')
+    
+class TestParameterInterfaceCreate(unittest.TestCase):
+    
+    def test_createParameterInterface_AR4(self):
+        ws = autosar.workspace(version="4.2.2")
+        constraints = ws.createPackage('Contraints', role='DataConstraint')
+        basetypes = ws.createPackage('BaseTypes')
+        uint8_base = basetypes.createBaseType('uint8', 8, None)
+        package = ws.createPackage('DataTypes')
+        uint8_type = package.createIntegerDataType('uint8', 0, 255, baseTypeRef = uint8_base.ref)
+        package = ws.createPackage('PortInterfaces')
+        parameter = autosar.Parameter('v', uint8_type.ref)
+        portinterface = package.createParameterInterface('ButtonDebounceTime_I', parameter)
+        self.assertIsInstance(portinterface, autosar.portinterface.ParameterInterface)
 
 
 if __name__ == '__main__':
