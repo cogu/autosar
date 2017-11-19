@@ -38,10 +38,6 @@ class Element(object):
                   data[key]=value
       return data
    
-   # def findWS(self):
-   #    """depcrecated, use root() instead"""
-   #    return self.root()
-         
    def rootWS(self):
       if self.parent is None:
          return None

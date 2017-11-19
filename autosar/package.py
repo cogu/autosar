@@ -541,7 +541,7 @@ class Package(object):
          if swCalibrationAccess is None:
             swCalibrationAccess = 'NOT-ACCESSIBLE'
          props = autosar.base.SwDataDefPropsConditional(swCalibrationAccess = swCalibrationAccess)
-         dataType = autosar.datatype.ImplementationDataType(name, 'STRUCTURE', props, 'None', self, adminData)
+         dataType = autosar.datatype.ImplementationDataType(name, 'STRUCTURE', props, None, self, adminData)
          for element in elements:
             if not isinstance(element, tuple):
                raise ValueError('element must be a tuple')
