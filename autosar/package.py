@@ -417,7 +417,8 @@ class Package(object):
 
       if (valueTable is not None) and (min is not None) and (max is not None):
          #used for enumeration types using valueTables with explicit min and max
-         compuMethod=autosar.CompuMethodConst(str(name),list(valueTable))
+         category = 'TEXTTABLE' if ws.version >= 4.0 else None
+         compuMethod=autosar.CompuMethodConst(str(name),list(valueTable), category)
          if (semanticsPackage is not None):
             semanticsPackage.append(compuMethod)
             if ws.version >= 4.0:
@@ -427,8 +428,9 @@ class Package(object):
          else:
             raise RuntimeError("no package found with role='CompuMethod'")
       elif (valueTable is not None) and (min is None) and (max is None):
-         #used for enumeration types using valueTables with implicitly calculated min and max
-         compuMethod=autosar.CompuMethodConst(str(name),list(valueTable))
+         #used for enumeration types using valueTables with implicitly calculated min and max         
+         category = 'TEXTTABLE' if ws.version >= 4.0 else None
+         compuMethod=autosar.CompuMethodConst(str(name),list(valueTable), category)
          if (semanticsPackage is not None):
             semanticsPackage.append(compuMethod)
             if ws.version >= 4.0:
@@ -474,12 +476,21 @@ class Package(object):
 #               if baseTypeRef is None:
 #                  raise ValueError('baseTypeRef argument must be given to this method')
                dataConstraint = self.createInternalDataConstraint(name+'_DataConstr', min, max)
-               newType = autosar.datatype.ApplicationPrimitiveDataType(name, 'VALUE')
-               unitRef = unitElem.ref if unitElem is not None else None
-               props = autosar.base.SwDataDefPropsConditional(swCalibrationAccess='READ-ONLY',
-                                                              compuMethodRef=compuMethod.ref,
-                                                              dataConstraintRef=dataConstraint.ref,
-                                                              unitRef = unitRef)
+               if baseTypeRef is None:
+                  #creates an application primitive data type by default
+                  newType = autosar.datatype.ApplicationPrimitiveDataType(name, 'VALUE')
+                  unitRef = unitElem.ref if unitElem is not None else None
+                  props = autosar.base.SwDataDefPropsConditional(swCalibrationAccess='READ-ONLY',
+                                                                 compuMethodRef=compuMethod.ref,
+                                                                 dataConstraintRef=dataConstraint.ref,
+                                                                 unitRef = unitRef)
+               else:
+                  #If baseTypeRef has been set, it creates an Implementation data type instead
+                  newType = autosar.datatype.ImplementationDataType(name, 'VALUE')                  
+                  props = autosar.base.SwDataDefPropsConditional(baseTypeRef=baseTypeRef,
+                                                                 swCalibrationAccess='NOT-ACCESSIBLE',
+                                                                 compuMethodRef=compuMethod.ref,
+                                                                 dataConstraintRef=dataConstraint.ref)
                newType.variantProps = [props]
             else:               
                newType=autosar.datatype.IntegerDataType(name,min,max,compuMethodRef=compuMethod.ref, adminData=adminData)      
