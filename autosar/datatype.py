@@ -284,7 +284,7 @@ class CompuMethodRational(Element):
 
 class CompuMethodConst(Element):
    def tag(self, version=3.0): return 'COMPU-METHOD'
-   def __init__(self, name, elements, parent=None, category=None, adminData=None):
+   def __init__(self, name, elements, category=None, parent=None, adminData=None):
       super().__init__(name, parent, adminData)
       self.elements = []
       self.category=category
