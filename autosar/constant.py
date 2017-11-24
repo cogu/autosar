@@ -164,7 +164,7 @@ class TextValue(Value):
 class NumericalValue(Value):
    def tag(self,version=None): return "NUMERICAL-VALUE-SPECIFICATION"
 
-   def __init__(self, name, value=None, parent=None):
+   def __init__(self, name=None, value=None, parent=None):
       super().__init__(name, parent)
       if value is None:
          value=0

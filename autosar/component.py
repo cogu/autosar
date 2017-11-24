@@ -66,7 +66,7 @@ class ComponentType(Element):
       port = ProvidePort(name,portInterface.ref,comspec,parent=self)
       self.providePorts.append(port)
 
-   def createRequirePort(self, name, portInterfaceRef, elemName=None, initValueRef=None, aliveTimeout=0, canInvalidate=False, queueLength=None):
+   def createRequirePort(self, name, portInterfaceRef, elemName=None, initValue=None, initValueRef=None, aliveTimeout=0, canInvalidate=False, queueLength=None):
       """
       creates a require port on this ComponentType
       The ComponentType must have a valid ref (must belong to a valid package in a valid workspace).
@@ -81,7 +81,13 @@ class ComponentType(Element):
       if isinstance(portInterface,autosar.portinterface.SenderReceiverInterface):
          if len(portInterface.dataElements)>0:
             comspec={'canInvalidate':canInvalidate,'aliveTimeout':aliveTimeout}
+            if initValue is not None:
+               if initValueRef is not None:
+                  raise ValueError('A port cannot have both initValue and initValueRef set at the same time')
+               comspec['initValue']=initValue
             if initValueRef is not None:
+               if initValue is not None:
+                  raise ValueError('A port cannot have both initValue and initValueRef set at the same time')
                comspec['initValueRef']=initValueRef
             if elemName is not None:
                comspec['name']=elemName
@@ -92,7 +98,9 @@ class ComponentType(Element):
          for operation in portInterface.operations:
             comspec.append({'operation': operation.name})
       elif isinstance(portInterface,autosar.portinterface.ParameterInterface):
-         pass
+         comspec={}
+         if initValue is not None:            
+            comspec['initValue']=initValue
       elif isinstance(portInterface,autosar.portinterface.ModeSwitchInterface):
          comspec={'enhancedMode':False, 'supportAsync':False}
       else:
@@ -370,42 +378,48 @@ class Port(Element):
          raise ValueError("invalid reference: "+portInterfaceRef)
       if isinstance(portInterface,autosar.portinterface.SenderReceiverInterface):
          name=None
-         initValueRef=None
+         userInitValue=None
+         initValueRef=None #initValue and initValueRef are mutually exclusive, you cannot have both defined at the same time
          aliveTimeout=0
          queueLength=None
          canInvalidate=False if isinstance(self,ProvidePort) else None
          if 'name' in comspec: name=str(comspec['name'])
+         if 'initValue' in comspec: userInitValue=comspec['initValue']
          if 'initValueRef' in comspec: initValueRef=str(comspec['initValueRef'])
          if 'aliveTimeout' in comspec: aliveTimeout=int(comspec['aliveTimeout'])
          if 'queueLength' in comspec: queueLength=int(comspec['queueLength'])
          if 'canInvalidate' in comspec: canInvalidate=bool(comspec['canInvalidate'])
          if name is None:
-            name=portInterface.dataElements[0].name #pick the name of the first available data element in portInterface
+            #pick the name of the first available data element in portInterface
+            name=portInterface.dataElements[0].name
          #verify (user-supplied) name
          dataElement=portInterface.find(name)
          if dataElement is None:
             raise ValueError("unknown element '%s' of portInterface '%s'"%(name,portInterface.name))
          #verify compatibility of initValueRef
          if initValueRef is not None:
-            initValue = ws.find(initValueRef, role='Constant')
-            if initValue is None:
+            initValueTmp = ws.find(initValueRef, role='Constant')
+            if initValueTmp is None:
                raise ValueError("invalid reference: "+str(initValueRef))
-            if isinstance(initValue,autosar.constant.Constant):
+            if isinstance(initValueTmp,autosar.constant.Constant):
                if ws.version < 4.0:
                   #this is a convenience implementation for the user. For AUTOSAR3, initValueRef needs to point to the value inside the Constant
-                  if dataElement.typeRef != initValue.value.typeRef:
+                  if dataElement.typeRef != initValueTmp.value.typeRef:
                      raise ValueError("constant value has different type from data element, expected '%s', found '%s'"%(dataElement.typeRef,initValue.value.typeRef))
-                  initValueRef=initValue.value.ref #correct the reference to the actual value
+                  initValueRef=initValueTmp.value.ref #correct the reference to the actual value
                else:
-                  initValueRef=initValue.ref
-            elif isinstance(initValue,autosar.constant.Value):
-               initValueRef=initValue.ref
+                  initValueRef=initValueTmp.ref
+            elif isinstance(initValueTmp,autosar.constant.Value):
+               initValueRef=initValueTmp.ref
             else:
                raise ValueError("reference is not a Constant or Value object: '%s'"%initValueRef)
          #automatically set default value of queueLength  to 1 in case the dataElement is queued
          if isinstance(self, RequirePort) and dataElement.isQueued and ( (queueLength is None) or queueLength==0):
             queueLength=1
-         return DataElementComSpec(name,initValueRef,aliveTimeout,queueLength,canInvalidate)
+         if userInitValue is not None:
+            if not isinstance(userInitValue, autosar.constant.Value):
+               raise ValueError('initValue must be an instance of autosar.constant.Value or one of its derived classes')
+         return DataElementComSpec(name, userInitValue, initValueRef, aliveTimeout, queueLength, canInvalidate)
       elif isinstance(portInterface,autosar.portinterface.ClientServerInterface):
          operation = comspec.get('operation',None)
          queueLength = comspec.get('queueLength',1)
@@ -415,6 +429,10 @@ class Port(Element):
          enhancedMode = comspec.get('enhancedMode', False)
          supportAsync = comspec.get('supportAsync', False)
          return ModeSwitchComSpec(enhancedMode, supportAsync)
+      elif isinstance(portInterface, autosar.portinterface.ParameterInterface):
+         name=portInterface.elements[0].name
+         initValue=comspec.get('initValue', None)
+         return ParameterComSpec(name, initValue)
       else:
          raise NotImplementedError(type(portInterface))
       return None
@@ -496,13 +514,16 @@ class OperationComSpec(object):
          data['queueLength']=self.queueLength
 
 class DataElementComSpec(object):
-   def __init__(self, name=None, initValueRef=None, aliveTimeout=None, queueLength=None, canInvalidate=None, initValue=None):
+   def __init__(self, name=None, initValue=None, initValueRef=None, aliveTimeout=None, queueLength=None, canInvalidate=None):
       self.name = name
+      if initValue is not None:
+         assert(isinstance(initValue, autosar.constant.Value))
+      self.initValue = initValue
       self.initValueRef = str(initValueRef) if initValueRef is not None else None
       self._aliveTimeout = int(aliveTimeout) if aliveTimeout is not None else None
       self._queueLength = int(queueLength) if queueLength is not None else None
       self.canInvalidate = bool(canInvalidate) if canInvalidate is not None else None
-      self.initValue = initValue
+      
 
    @property
    def aliveTimeout(self):
