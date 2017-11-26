@@ -88,18 +88,19 @@ class PackageWriter(BaseWriter):
       lines.extend(self.endPackage())
       return lines
 
-   def toCode(self, package, filters, ignore, localvars):
+   def toCode(self, package, filters, ignore, localvars, isTemplate):
       lines=[]
-      if package.role is not None:
-         lines.append('package=ws.createPackage("%s", role="%s")'%(package.name, package.role))
-      else:
-         lines.append('package=ws.createPackage("%s")'%(package.name))
-      localvars['package']=package
-      for subPackage in package.subPackages:
-         if subPackage.role is not None:
-            lines.append('package.createSubPackage("%s", role="%s")'%(subPackage.name, subPackage.role))
+      if not isTemplate:
+         if package.role is not None:
+            lines.append('package=ws.createPackage("%s", role="%s")'%(package.name, package.role))
          else:
-            lines.append('package.createSubPackage("%s")'%(subPackage.name))
+            lines.append('package=ws.createPackage("%s")'%(package.name))
+         localvars['package']=package
+         for subPackage in package.subPackages:
+            if subPackage.role is not None:
+               lines.append('package.createSubPackage("%s", role="%s")'%(subPackage.name, subPackage.role))
+            else:
+               lines.append('package.createSubPackage("%s")'%(subPackage.name))
       for elem in package.elements:
          elemRef = elem.ref
          ignoreElem=True if (isinstance(ignore, str) and ignore==elemRef) or (isinstance(ignore, collections.Iterable) and elemRef in ignore) else False

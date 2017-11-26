@@ -16,7 +16,7 @@ from autosar.parser.component_parser import ComponentTypeParser
 from autosar.parser.system_parser import SystemParser
 from autosar.parser.signal_parser import SignalParser
 #default writers
-from autosar.writer.datatype_writer import XMLDataTypeWriter, CodeDataTypeWriter
+from autosar.writer.datatype_writer import XMLDataTypeWriter, CodeDataTypeWriter, TemplateDataTypeWriter
 from autosar.writer.constant_writer import XMLConstantWriter, CodeConstantWriter
 from autosar.writer.portinterface_writer import XMLPortInterfaceWriter, CodePortInterfaceWriter
 from autosar.writer.component_writer import XMLComponentTypeWriter, CodeComponentTypeWriter
@@ -27,7 +27,7 @@ _validWSRoles = ['DataType', 'Constant', 'PortInterface', 'ComponentType', 'Mode
                  'BaseType', 'DataConstraint']
 
 class Workspace(object):
-   def __init__(self, version, patch, schema, EcuName = None, packages=None):
+   def __init__(self, version, patch, schema, EcuName = None, useTemplateWriter=False, packages=None):
       self.packages = []
       if isinstance(version, str):
          (major, minor, patch) = parseVersionString(version)
@@ -41,6 +41,7 @@ class Workspace(object):
       self.packageWriter=None
       self.xmlroot = None
       self.EcuName = EcuName
+      self.useTemplateWriter = bool(useTemplateWriter)
       self.roles = {'DataType': None,
                     'Constant': None,
                     'PortInterface': None,
@@ -51,7 +52,8 @@ class Workspace(object):
                     'BaseType': None,        #AUTOSAR 4 only
                     'DataConstraint': None }  #AUTOSAR 4 only
       self.map = {'packages': {}}
-      
+
+#BEGIN DEPCRECATED
       self.defaultPackages = {'DataType': 'DataType',
                               'Constant': 'Constant',
                               'PortInterface': 'PortInterface',
@@ -59,6 +61,7 @@ class Workspace(object):
                               'ComponentType': 'ComponentType',
                               'CompuMethod': 'DataTypeSemantics',
                               'Unit': 'DataTypeUnits'}
+#END DEPRECATED
       self.errorHandlingOpt = False
       if packages is not None:
          for key,value in packages.items():
@@ -66,12 +69,12 @@ class Workspace(object):
                self.defaultPackages[key]=value
             else:
                raise ValueError("Unknown role name '%s'"%key)
-            
+
 
    @property
    def version(self):
       return self._version
-   
+
    @version.setter
    def version(self, version):
       if isinstance(version, str):
@@ -79,8 +82,8 @@ class Workspace(object):
          self._version=float("%s.%s"%(major, minor))
          self.patch=patch
       elif isinstance(version, float):
-         self._version=version         
-      
+         self._version=version
+
    def __getitem__(self,key):
       if isinstance(key,str):
          return self.find(key)
@@ -97,7 +100,7 @@ class Workspace(object):
 
    def getRole(self, role):
       return self.roles[role]
-   
+
    def setRole(self, ref, role):
       if (role is not None) and (role not in _validWSRoles):
          raise ValueError('invalid role name: '+role)
@@ -112,7 +115,7 @@ class Workspace(object):
          package.role=role
          self.roles[role]=package.ref
 
-   def openXML(self,filename):      
+   def openXML(self,filename):
       xmlroot = parseXMLFile(filename)
       namespace = getXMLNamespace(xmlroot)
 
@@ -126,7 +129,7 @@ class Workspace(object):
       self.schema=schema
       self.xmlroot = xmlroot
       if self.packageParser is None:
-         self.packageParser = autosar.parser.package_parser.PackageParser(self.version)      
+         self.packageParser = autosar.parser.package_parser.PackageParser(self.version)
       self._registerDefaultElementParsers(self.packageParser)
 
    def loadXML(self, filename, roles=None):
@@ -138,7 +141,7 @@ class Workspace(object):
             raise ValueError('roles parameter must be a dictionary or Mapping')
          for ref,role in roles.items():
             self.setRole(ref,role)
-   
+
    def loadPackage(self, packagename, role=None):
       found=False
       result=[]
@@ -149,8 +152,8 @@ class Workspace(object):
             for xmlPackage in self.xmlroot.findall('./TOP-LEVEL-PACKAGES/AR-PACKAGE'):
                if self._loadPackageInternal(result, xmlPackage, packagename, role):
                   found = True
-               
-               
+
+
       elif self.version>=4.0:
          if self.xmlroot.find('AR-PACKAGES'):
             for xmlPackage in self.xmlroot.findall('.AR-PACKAGES/AR-PACKAGE'):
@@ -162,7 +165,7 @@ class Workspace(object):
       if found==False:
          raise KeyError('package not found: '+packagename)
       return result
-   
+
    def _loadPackageInternal(self, result, xmlPackage, packagename, role):
       name = xmlPackage.find("./SHORT-NAME").text
       found = False
@@ -179,7 +182,8 @@ class Workspace(object):
             self.setRole(package.ref, role)
       return found
 
-   # def loadJSON(self, filename):      
+#BEGIN DEPRECATED
+   # def loadJSON(self, filename):
    #    with open(filename) as fp:
    #       basedir = ntpath.dirname(filename)
    #       data = json.load(fp)
@@ -193,17 +197,17 @@ class Workspace(object):
    #                   raise NotImplementedError(adjustedPath)
    #             else:
    #                raise ValueError('Unknown type: %s'%item['type'])
-   
+#END DEPRECATED
 
    def find(self, ref, role=None):
       global _validWSRoles
-      if ref is None: return None      
+      if ref is None: return None
       if (role is not None) and ( ref[0] != '/'):
          if role not in _validWSRoles:
             raise ValueError("unknown role name: "+role)
          if self.roles[role] is not None:
             ref=self.roles[role]+'/'+ref #appends the role packet name in front of ref
-      
+
       if ref[0]=='/': ref=ref[1:] #removes initial '/' if it exists
       ref = ref.partition('/')
       if ref[0] in self.map['packages']:
@@ -252,14 +256,14 @@ class Workspace(object):
                if childPkg.role == roleName:
                   return childPkg
       return None
-   
-   def createPackage(self,name,role=None):      
+
+   def createPackage(self,name,role=None):
       if name not in self.map['packages']:
          package = autosar.package.Package(name,self)
          self.packages.append(package)
          self.map['packages'][name] = package
          if role is not None:
-            self.setRole(package.ref, role)      
+            self.setRole(package.ref, role)
          return package
       else:
          return self.map['packages'][name]
@@ -279,10 +283,10 @@ class Workspace(object):
 
    def findWS(self):
       return self
-   
+
    def rootWS(self):
       return self
-   
+
    def saveXML(self, filename, filters=None, packages=None, ignore=None, version=None, patch=None, schema=None):
       if version is None:
          version = self.version
@@ -307,10 +311,10 @@ class Workspace(object):
                else:
                   filters.append(package+'/*')
          if filters is not None:
-            filters = [prepareFilter(x) for x in filters]         
+            filters = [prepareFilter(x) for x in filters]
          writer.saveXML(self, fp, filters, ignore)
 
-   def toXML(self, filters=None, packages=None, ignore=None, version=None, patch=None, schema=None):      
+   def toXML(self, filters=None, packages=None, ignore=None, version=None, patch=None, schema=None):
       if version is None:
          version = self.version
       if patch is None:
@@ -342,16 +346,16 @@ class Workspace(object):
          elem.parent=self
       else:
          raise ValueError(type(elem))
-   
+
    # def toJSON(self,packages=None,indent=3):
    #    data=ws.asdict(packages)
    #    return json.dumps(data,indent=indent)
-   #    
+   #
    # def saveJSON(self,filename,packages=None,indent=3):
    #    data=self.asdict(packages)
    #    with open(filename,'w') as fp:
    #       json.dump(data,fp,indent=indent)
-         
+
    def toCode(self, filters=None, packages=None, header=None, version=None, patch=None):
       if version is None:
          version = self.version
@@ -371,7 +375,7 @@ class Workspace(object):
       if filters is not None:
          filters = [prepareFilter(x) for x in filters]
       return writer.toCode(self, filters ,str(header))
-         
+
    def saveCode(self, filename, filters=None, packages=None, ignore=None, head=None, tail=None, module=False, version=None, patch=None):
       """
       saves the workspace as python code so it can be recreated later
@@ -399,7 +403,7 @@ class Workspace(object):
          filters = [prepareFilter(x) for x in filters]
 
       with open(filename,'w', encoding="utf-8") as fp:
-         writer.saveCode(self, fp, filters, ignore, head, tail, module)
+         writer.saveCode(self, fp, filters, ignore, head, tail, module, self.useTemplateWriter)
 
    @property
    def ref(self):
@@ -421,7 +425,7 @@ class Workspace(object):
       else:
          raise NotImplementedError('Version %s of ARXML not supported'%version)
       return packageList
-   
+
    def delete(self, ref):
       if ref is None: return
       if ref[0]=='/': ref=ref[1:] #removes initial '/' if it exists
@@ -432,11 +436,11 @@ class Workspace(object):
                return pkg.delete(ref[2])
             else:
                del self.packages[i]
-               break      
+               break
 
    def createAdminData(self, data):
       return autosar.base.createAdminData(data)
-   
+
    # def fromDict(self, data):
    #    for item in data:
    #       if item['type'] == 'FileRef':
@@ -465,7 +469,7 @@ class Workspace(object):
       package.createIntegerDataType('UInt32', 0, 4294967295)
       package.createRealDataType('Float', None, None, minValType='INFINITE', maxValType='INFINITE')
       package.createRealDataType('Double', None, None, minValType='INFINITE', maxValType='INFINITE', hasNaN=True, encoding='DOUBLE')
-   
+
    def getDataTypePackage(self):
       """
       Returns the current data type package from the workspace. If the workspace doesn't yet have such package a default package will be created and returned.
@@ -473,11 +477,11 @@ class Workspace(object):
       package = self.find(self.defaultPackages["DataType"])
       if package is None:
          package=self.createPackage(self.defaultPackages["DataType"], role="DataType")
-         package.createSubPackage(self.defaultPackages["CompuMethod"], role="CompuMethod")   
+         package.createSubPackage(self.defaultPackages["CompuMethod"], role="CompuMethod")
          package.createSubPackage(self.defaultPackages["Unit"], role="Unit")
          Workspace._createDefaultDataTypes(package)
       return package
-      
+
    def getPortInterfacePackage(self):
       """
       Returns the current port interface package from the workspace. If the workspace doesn't yet have such package a default package will be created and returned.
@@ -486,7 +490,7 @@ class Workspace(object):
       if package is None:
          package=self.createPackage(self.defaultPackages["PortInterface"], role="PortInterface")
       return package
-      
+
    def getConstantPackage(self):
       """
       Returns the current constant package from the workspace. If the workspace doesn't yet have such package, a default package will be created and returned.
@@ -495,7 +499,7 @@ class Workspace(object):
       if package is None:
          package=self.createPackage(self.defaultPackages["Constant"], role="Constant")
       return package
-      
+
    def getModeDclrGroupPackage(self):
       """
       Returns the current mode declaration group package from the workspace. If the workspace doesn't yet have such package, a default package will be created and returned.
@@ -504,11 +508,11 @@ class Workspace(object):
       if package is None:
          package=self.createPackage(self.defaultPackages["ModeDclrGroup"], role="ModeDclrGroup")
       return package
-      
+
    def getComponentTypePackage(self):
       """
       Returns the current component type package from the workspace. If the workspace doesn't yet have such package, a default package will be created and returned.
-      """      
+      """
       if self.roles["ComponentType"] is not None:
          packageName = self.roles["ComponentType"]
       else:
@@ -517,9 +521,9 @@ class Workspace(object):
       if package is None:
          package=self.createPackage(packageName, role="ComponentType")
       return package
-   
+
    #--- END DEPCRECATED CODE ---#
-   
+
    def registerElementParser(self, elementParser):
       """
       Registers a custom element parser object
@@ -537,7 +541,7 @@ class Workspace(object):
          self.packageWriter = autosar.writer.package_writer.PackageWriter(self.version, self.patch)
          self._registerDefaultElementWriters(self.packageWriter)
       self.packageWriter.registerElementWriter(elementWriter)
-   
+
    def _registerDefaultElementParsers(self, parser):
       parser.registerElementParser(DataTypeParser(self.version))
       parser.registerElementParser(DataTypeSemanticsParser(self.version))
@@ -552,15 +556,26 @@ class Workspace(object):
       parser.registerElementParser(SignalParser(self.version))
 
    def _registerDefaultElementWriters(self, writer):
-      writer.registerElementWriter(XMLDataTypeWriter(self.version, self.patch))      
-      writer.registerElementWriter(CodeDataTypeWriter(self.version, self.patch))
+      writer.registerElementWriter(XMLDataTypeWriter(self.version, self.patch))
       writer.registerElementWriter(XMLConstantWriter(self.version, self.patch))
-      writer.registerElementWriter(CodeConstantWriter(self.version, self.patch))
       writer.registerElementWriter(XMLPortInterfaceWriter(self.version, self.patch))
-      writer.registerElementWriter(CodePortInterfaceWriter(self.version, self.patch))
       writer.registerElementWriter(XMLComponentTypeWriter(self.version, self.patch))
-      writer.registerElementWriter(CodeComponentTypeWriter(self.version, self.patch))
       writer.registerElementWriter(XMLBehaviorWriter(self.version, self.patch))
-      writer.registerElementWriter(CodeBehaviorWriter(self.version, self.patch))
-      writer.registerElementWriter(SignalWriter(self.version, self.patch))
+      if self.useTemplateWriter:
+         writer.registerElementWriter(TemplateDataTypeWriter(self.version, self.patch))
+      else:
+         writer.registerElementWriter(CodeDataTypeWriter(self.version, self.patch))
+         writer.registerElementWriter(CodeConstantWriter(self.version, self.patch))
+         writer.registerElementWriter(CodePortInterfaceWriter(self.version, self.patch))
+         writer.registerElementWriter(CodeComponentTypeWriter(self.version, self.patch))
+         writer.registerElementWriter(CodeBehaviorWriter(self.version, self.patch))
+         writer.registerElementWriter(SignalWriter(self.version, self.patch))
       
+      
+      
+      
+      
+      
+      
+      
+
