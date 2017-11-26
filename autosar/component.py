@@ -3,6 +3,7 @@ import autosar.portinterface
 import autosar.constant
 import copy
 import collections
+import sys
 
 class ComponentType(Element):
    def __init__(self,name,parent=None):
@@ -271,13 +272,8 @@ class CompositionComponent(ComponentType):
             raise ValueError('cannot create assembly connector between two require ports')
          else:
             raise ValueError('cannot create assembly connector between two provide ports')
-         connectorName='_'.join([providerComponent.name, providePort.name, requesterComponent.name, requirePort.name])
-         connector = AssemblyConnector(connectorName, ProviderInstanceRef(providerComponent.ref,providePort.ref), RequesterInstanceRef(requesterComponent.ref,requirePort.ref))
-         if self.find(connectorName) is not None:
-            raise ValueError('connector "%s" already exists'%connectorName)
-         self.assemblyConnectors.append(connector)
-         return connector
-      elif isinstance(component1, ComponentPrototype) and not component2 is self:
+         return self._createAssemblyPortInternal(providerComponent, providePort, requesterComponent, requirePort)
+      elif isinstance(component1, ComponentPrototype):
          #create a delegation port between port1 and port2
          innerComponent, innerPort=component1,port1
          outerPort = port2
@@ -288,6 +284,17 @@ class CompositionComponent(ComponentType):
       else:
          raise ValueError('invalid connector arguments ("%s", "%s")'%(portRef1, portRef2))
       #create delegation connector
+      return self._createDelegationConnectorInternal(innerComponent, innerPort, outerPort)
+
+   def _createAssemblyPortInternal(self, providerComponent, providePort, requesterComponent, requirePort):
+      connectorName='_'.join([providerComponent.name, providePort.name, requesterComponent.name, requirePort.name])
+      connector = AssemblyConnector(connectorName, ProviderInstanceRef(providerComponent.ref,providePort.ref), RequesterInstanceRef(requesterComponent.ref,requirePort.ref))
+      if self.find(connectorName) is not None:
+         raise ValueError('connector "%s" already exists'%connectorName)
+      self.assemblyConnectors.append(connector)
+      return connector
+   
+   def _createDelegationConnectorInternal(self, innerComponent, innerPort, outerPort):
       if isinstance(outerPort, ProvidePort):
          connectorName = '_'.join([innerComponent.name, innerPort.name, outerPort.name])
       else:
@@ -295,7 +302,7 @@ class CompositionComponent(ComponentType):
       connector = DelegationConnector(connectorName, InnerPortInstanceRef(innerComponent.ref, innerPort.ref), OuterPortRef(outerPort.ref))
       self.delegationConnectors.append(connector)
       return connector
-
+   
    def _analyzePortRef(self, ws, portRef):
       parts=autosar.base.splitRef(portRef)
       if len(parts)>1:
@@ -319,11 +326,106 @@ class CompositionComponent(ComponentType):
          port = self.find(parts[0])
          component=self
       if port is None or not isinstance(port, Port):
-         raise ValueError('invalid port name: '+parts[-1])
+         raise ValueError('%s: invalid port name: %s'%(self.name,parts[-1]))
       return port,component
 
-
-
+   def autoConnect(self):
+      """
+      Connect ports with matching names and matching port interface references
+      """
+      ws = self.rootWS()
+      assert (ws is not None)
+      inner_require_port_map, inner_provide_port_map = self._buildInnerPortMap(ws)
+      self._autoCreateAssemblyConnectors(inner_require_port_map, inner_provide_port_map)
+      self._autoCreateDelegationConnectors(inner_require_port_map, inner_provide_port_map)
+               
+   def _buildInnerPortMap(self, ws):
+      require_ports = {}
+      provide_ports = {}
+      #build inner map
+      for innerComponent in self.components:
+         actualComponent = ws.find(innerComponent.typeRef)
+         if actualComponent is None:
+            raise ValueError('invalid reference: '+innerComponent.typeRef)
+         for innerPort in actualComponent.requirePorts:
+            if innerPort.name not in require_ports:
+               require_ports[innerPort.name] = []
+            require_ports[innerPort.name].append((innerComponent, innerPort))
+         for innerPort in actualComponent.providePorts:
+            if innerPort.name not in provide_ports:
+               provide_ports[innerPort.name] = []
+            provide_ports[innerPort.name].append((innerComponent, innerPort))
+      return require_ports, provide_ports
+   
+   def _autoCreateAssemblyConnectors(self, inner_require_port_map, inner_provide_port_map):
+      for name in sorted(inner_provide_port_map.keys()):
+         if len(inner_provide_port_map[name])>1:
+            print("Warning: Multiple components are providing the same port '%s': "%name+', '.join([x[0].name for x in inner_provide_port_map[name]]), file=sys.stderr)
+         (providerComponent, providePort) = inner_provide_port_map[name][0]
+         if name in inner_require_port_map:
+            for (requesterComponent, requirePort) in inner_require_port_map[name]:
+               if requirePort.portInterfaceRef == providePort.portInterfaceRef:
+                  self._createAssemblyPortInternal(providerComponent, providePort, requesterComponent, requirePort)
+   
+   def _autoCreateDelegationConnectors(self, inner_require_port_map, inner_provide_port_map):
+      for outerPort in sorted(self.providePorts, key=lambda x: x.name):
+         if outerPort.name and outerPort.name in inner_provide_port_map:
+            for (innerComponent, innerPort) in inner_provide_port_map[outerPort.name]:
+               if innerPort.portInterfaceRef == outerPort.portInterfaceRef:
+                  self._createDelegationConnectorInternal(innerComponent, innerPort, outerPort)
+      for outerPort in sorted(self.requirePorts, key=lambda x: x.name):
+         if outerPort.name and outerPort.name in inner_require_port_map:
+            for (innerComponent, innerPort) in inner_require_port_map[outerPort.name]:
+               if innerPort.portInterfaceRef == outerPort.portInterfaceRef:
+                  self._createDelegationConnectorInternal(innerComponent, innerPort, outerPort)
+         
+   def findUnconnectedPorts(self):
+      """
+      Returns a list unconnected ports found in this composition
+      """
+      ws = self.rootWS()
+      assert (ws is not None)
+      unconnected = []
+      inner_require_port_map, inner_provide_port_map = self._buildInnerPortMap(ws)
+      for name in sorted(inner_provide_port_map.keys()):
+         for (innerComponent, providePort) in inner_provide_port_map[name]:         
+            if self._isUnconnectedPortInner(ws, providePort):
+               unconnected.append(providePort)
+      for name in sorted(inner_require_port_map.keys()):
+         for (innerComponent, requirePort) in inner_require_port_map[name]:         
+            if self._isUnconnectedPortInner(ws, requirePort):
+               unconnected.append(requirePort)
+      for port in sorted(self.providePorts,key=lambda x: x.name)+sorted(self.requirePorts,key=lambda x: x.name):
+         if self._isUnconnectedPortOuter(ws, port):
+            unconnected.append(port)
+      return unconnected
+   
+   def _isUnconnectedPortInner(self, ws, innerPort):      
+      innerPortRef = innerPort.ref
+      portInterface = ws.find(innerPort.portInterfaceRef)
+      if portInterface is None:
+         raise ValueError('invalid reference: '+innerPort.portInterfaceRef)
+      if not isinstance(portInterface, autosar.portinterface.SenderReceiverInterface):
+         return False
+      for connector in self.assemblyConnectors:
+         if (connector.providerInstanceRef.portRef == innerPortRef) or (connector.requesterInstanceRef.portRef == innerPortRef):
+            return False
+      for connector in self.delegationConnectors:
+         if connector.innerPortInstanceRef.portRef == innerPortRef:
+            return False
+      return True
+   
+   def _isUnconnectedPortOuter(self, ws, outerPort):
+      outerPortRef = outerPort.ref
+      portInterface = ws.find(outerPort.portInterfaceRef)
+      if portInterface is None:
+         raise ValueError('invalid reference: '+outerPort.portInterfaceRef)
+      if not isinstance(portInterface, autosar.portinterface.SenderReceiverInterface):
+         return False
+      for connector in self.delegationConnectors:         
+         if connector.outerPortRef.portRef == outerPortRef:
+            return False
+      return True   
 
 class Port(Element):
    def __init__(self,name, portInterfaceRef, comspec=None, parent=None, adminData=None):
