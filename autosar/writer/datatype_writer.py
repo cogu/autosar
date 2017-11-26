@@ -682,3 +682,83 @@ class CodeDataTypeWriter(ElementWriter):
    def writeDataConstraintCode(self, dataType, localvars):
       lines = []
       return lines
+
+class TemplateDataTypeWriter(ElementWriter):
+   def __init__(self, version, patch):
+      super().__init__(version, patch)
+
+      if self.version >= 3.0 and self.version < 4.0:
+         self.switcher = {
+#                           'ArrayDataType': self.writeArrayDataTypeCode,
+#                           'BooleanDataType': self.writeBooleanDataTypeCode,
+                          'IntegerDataType': self.writeIntegerTypeTemplate,
+#                          'RealDataType': self.writeRealDataTypeCode,
+#                          'RecordDataType': self.writeRecordDataTypeCode,
+#                          'StringDataType': self.writeStringTypeCode,
+#                          'CompuMethodConst': self.writeCompuMethodCode,
+#                          'CompuMethodRational': self.writeCompuMethodCode,
+#                          'DataTypeUnitElement': self.writeDataTypeUnitElementCode
+         }
+      elif self.version >= 4.0:
+         self.switcher = {
+         }
+      else:
+         switch.keys = {}
+
+   def getSupportedXML(self):
+      return []
+
+   def getSupportedCode(self):
+      return self.switcher.keys()
+
+   def writeElementXML(self, elem):
+      raise NotImplementedError('writeElementXML')
+
+   def writeElementCode(self, elem, localvars):      
+      codeWriteFunc = self.switcher.get(type(elem).__name__)
+      if codeWriteFunc is not None:
+         return codeWriteFunc(elem, localvars)
+      else:
+         return None
+   def writeIntegerTypeTemplate(self, dataType, localvars):
+      lines = []
+      ws=localvars['ws']
+      params=[repr(dataType.name)]
+
+      if dataType.compuMethodRef is not None:
+         compuMethod = ws.find(dataType.compuMethodRef)
+         if compuMethod is None:
+            raise ValueError('invalid reference: '+dataType.compuMethodRef)
+         if isinstance(compuMethod, autosar.datatype.CompuMethodConst):
+            isUnconventionalType=False
+            if (dataType.minVal != 0) or (dataType.maxVal != (len(compuMethod.elements)-1)):
+               isUnconventionalType=True
+            else:
+               params2=[]
+               index=0
+               for element in compuMethod.elements:
+                  if isinstance(element, autosar.datatype.CompuConstElement):
+                     if (element.lowerLimit==index) and (element.upperLimit==index):
+                        params2.append(repr(element.textValue))
+                     else:
+                        isUnconventionalType=True
+                        break
+                  else:
+                     raise ValueError('unsupported value found of type: '+str(type(element)))
+                  index+=1
+            if isUnconventionalType:
+               params.append(str(dataType.minVal))
+               params.append(str(dataType.maxVal))
+               params2=[]
+               for element in compuMethod.elements:
+                  if isinstance(element, autosar.datatype.CompuConstElement):
+                     if element.lowerLimit==element.upperLimit:
+                        params2.append('(%d, %s)'%(element.lowerLimit, repr(element.textValue)))
+                     else:
+                        params2.append('(%d, %d, %s)'%(element.lowerLimit, element.upperLimit, repr(element.textValue)))
+                  else:
+                     raise ValueError('unsupported value found of type: '+str(type(element)))
+            text='['+','.join(params2)+']'
+            params.append('valueTable='+text)
+            lines.append("{0.name} = createEnumerationDataTypeTemplate({1})".format(dataType, ', '.join(params)))
+      return lines

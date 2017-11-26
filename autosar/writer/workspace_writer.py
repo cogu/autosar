@@ -52,14 +52,16 @@ class WorkspaceWriter(BaseWriter):
       lines=self.endFile()
       return result+'\n'.join(lines)+'\n'
    
-   def toCode(self, ws, filters=None, ignore=None, head=None, tail=None, module=False, indent=3):
+   def toCode(self, ws, filters=None, ignore=None, head=None, tail=None, isModule=False, isTemplate=False, indent=3):
       localvars = collections.OrderedDict()
       localvars['ws']=ws
       indentStr=indent*' '
-      if module == False:
+      if isModule == False:
          #head
-         if head is None:
-            lines=['import autosar', 'ws=autosar.workspace()']
+         if head is None:            
+            lines=['import autosar']
+            if not isTemplate:
+               lines.append('ws=autosar.workspace()')            
             result='\n'.join(lines)+'\n\n'
          else:            
             if isinstance(head,list):
@@ -71,17 +73,18 @@ class WorkspaceWriter(BaseWriter):
          #body
          for package in ws.packages:
             if applyFilter(package.ref, filters):
-               lines=self.packageWriter.toCode(package, filters, ignore, localvars)
+               lines=self.packageWriter.toCode(package, filters, ignore, localvars, isTemplate)
                if len(lines)>0:
                   result+='\n'.join(lines)+'\n'
          #tail
-         if tail is None:
-            result+='\n'+'print(ws.toXML())\n'
-         else:
-            if isinstance(tail,list):
-               tail = '\n'.join(tail)
-            assert(isinstance(tail,str))
-            result+='\n'+tail
+         if not isTemplate:
+            if tail is None:            
+               result+='\n'+'print(ws.toXML())\n'
+            else:
+               if isinstance(tail,list):
+                  tail = '\n'.join(tail)
+               assert(isinstance(tail,str))
+               result+='\n'+tail
          return result
       else:
          if head is None:
@@ -99,7 +102,7 @@ class WorkspaceWriter(BaseWriter):
          result+='def apply(ws):\n'
          for package in ws.packages:
             if applyFilter(package.ref, filters):
-               lines=self.packageWriter.toCode(package, filters, ignore, localvars)
+               lines=self.packageWriter.toCode(package, filters, ignore, localvars, isTemplate)
                if len(lines)>0:
                   lines=[indentStr+x for x in lines]
                   result+='\n'.join(lines)+'\n'
@@ -113,18 +116,20 @@ class WorkspaceWriter(BaseWriter):
          assert(isinstance(head[1],str))
          result+=head[1]+'\n'
          result+=indentStr+'apply(ws)\n'
-         if tail is None:
-            result+=indentStr+'print(ws.toXML())\n'
-         else:
-            if isinstance(tail,list):
-               tail = '\n'.join([indentStr+x for x in tail])
+         if not isTemplate:
+            if tail is None:
+               result+=indentStr+'print(ws.toXML())\n'
             else:
-               tail = '\n'.join([indentStr+x for x in tail.split('\n')])
-            assert(isinstance(tail,str))
-            result+=tail+'\n'
+               if isinstance(tail,list):
+                  tail = '\n'.join([indentStr+x for x in tail])
+               else:
+                  tail = '\n'.join([indentStr+x for x in tail.split('\n')])
+               assert(isinstance(tail,str))
+               result+=tail+'\n'
          return result
       
 
       
-   def saveCode(self, ws, fp, filters=None, ignore=None, head=None, tail=None, module=False):
-      fp.write(self.toCode(ws, filters, ignore, head, tail, module))
+   def saveCode(self, ws, fp, filters=None, ignore=None, head=None, tail=None, isModule=False, isTemplate=False):
+      fp.write(self.toCode(ws, filters, ignore, head, tail, isModule, isTemplate))
+      
