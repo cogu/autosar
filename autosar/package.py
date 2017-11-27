@@ -386,20 +386,36 @@ class Package(object):
       return item
 
    def createArrayDataType(self, name, typeRef, length, adminData=None):
-      """creates an ArrayDataType and adds it to current package"""
-      ws = self.rootWS()
-      typeRefOrig=typeRef
+      """
+      AUTOSAR3:
+         Creates an ArrayDataType and adds it to current package
+      AUTOSAR4:
+         Creates an ImplementationDataType and adds it to current package         
+      """
+      ws = self.rootWS()      
       assert(ws is not None)
       if (not typeRef.startswith('/')) and (ws.roles['DataType'] is not None):
          typeRef=ws.roles['DataType']+'/'+typeRef
-      dataType = autosar.datatype.ArrayDataType(name, typeRef, length, adminData)
-      self.append(dataType)
-      return dataType
+      if ws.version >= 4.0:
+         newType = autosar.datatype.ImplementationDataType(name, 'ARRAY', adminData=adminData)
+         outerProps = autosar.base.SwDataDefPropsConditional(swCalibrationAccess='NOT-ACCESSIBLE')
+         newType.variantProps = [outerProps]
+         innerProps = autosar.base.SwDataDefPropsConditional(implementationTypeRef=typeRef)
+         subElement = autosar.datatype.ImplementationDataTypeElement(name, 'TYPE_REFERENCE', length, variantProps=innerProps)
+         newType.subElements.append(subElement)
+      else:
+         newType = autosar.datatype.ArrayDataType(name, typeRef, length, adminData)
+      self.append(newType)
+      return newType
 
-   def createIntegerDataType(self,name,min=None,max=None,valueTable=None,offset=None, scaling=None, unit=None, baseTypeRef=None, adminData=None, forceFloatScaling=False):
+   def createIntegerDataType(self,name,min=None,max=None,valueTable=None,offset=None, scaling=None, unit=None, baseTypeRef=None, adminData=None, forceFloatScaling=False, typeEmitter=None):
       """
+      AUTOSAR3:
       Helper method for creating integer datatypes in a package.
       In order to use this function you must have a subpackage present with role='CompuMethod'.
+      
+      AUTOSAR4:
+      Helper method for creating implementation datatypes or application datatypes.
 
       """
       semanticsPackage=None
@@ -511,6 +527,8 @@ class Package(object):
             newType=autosar.datatype.IntegerDataType(name,min,max, adminData=adminData)
       else:
          raise NotImplementedError("not implemented")
+      if typeEmitter is not None and isinstance(newType, autosar.datatype.ImplementationDataType):
+         newType.typeEmitter = str(typeEmitter)
       self.append(newType)
       return newType
 
