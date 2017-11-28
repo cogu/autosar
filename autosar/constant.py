@@ -125,19 +125,24 @@ class RecordValue(Value):
 
 class ArrayValue(Value):
    """
-   typeRef is only necessary for AUTOSAR 3 constants
+   name and typeRef is only necessary for AUTOSAR 3 constants
    """
    def tag(self,version=None): return "ARRAY-VALUE-SPECIFICATION" if version >= 4.0 else "ARRAY-SPECIFICATION"
 
-   def __init__(self, name, typeRef=None, parent=None):
+   def __init__(self, name=None, typeRef=None, elements=None, parent=None):
       super().__init__(name, parent)
       self.typeRef=typeRef
-      self.elements=[]
+      if elements is None:
+         self.elements=[]
+      else:
+         self.elements = list(elements)
+#DEPRECATED BEGIN
    def asdict(self):
       data={'type': self.__class__.__name__,'name':self.name,'typeRef':self.typeRef,'elements':[]}
       for element in self.elements:
          data['elements'].append(element.asdict())
       return data
+#DEPRECATED END
 
 #AUTOSAR 4 constant values
 
