@@ -385,7 +385,7 @@ class Package(object):
       self.append(item)
       return item
 
-   def createArrayDataType(self, name, typeRef, length, adminData=None):
+   def createArrayDataType(self, name, typeRef, length, swCalibrationAccess=None, adminData=None):
       """
       AUTOSAR3:
          Creates an ArrayDataType and adds it to current package
@@ -394,11 +394,13 @@ class Package(object):
       """
       ws = self.rootWS()      
       assert(ws is not None)
+      if swCalibrationAccess is None:
+         swCalibrationAccess = 'NOT-ACCESSIBLE'      
       if (not typeRef.startswith('/')) and (ws.roles['DataType'] is not None):
          typeRef=ws.roles['DataType']+'/'+typeRef
       if ws.version >= 4.0:
          newType = autosar.datatype.ImplementationDataType(name, 'ARRAY', adminData=adminData)
-         outerProps = autosar.base.SwDataDefPropsConditional(swCalibrationAccess='NOT-ACCESSIBLE')
+         outerProps = autosar.base.SwDataDefPropsConditional(swCalibrationAccess=swCalibrationAccess)
          newType.variantProps = [outerProps]
          innerProps = autosar.base.SwDataDefPropsConditional(implementationTypeRef=typeRef)
          subElement = autosar.datatype.ImplementationDataTypeElement(name, 'TYPE_REFERENCE', length, variantProps=innerProps)
