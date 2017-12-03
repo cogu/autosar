@@ -2,7 +2,7 @@ import copy
 import autosar.component
 import autosar.portinterface
 import autosar.base
-from autosar.element import Element,DataElement
+from autosar.element import Element, DataElement
 import collections
 
 ###################################### Events ###########################################
@@ -26,17 +26,17 @@ class ModeSwitchEvent(Event):
          if (activationType!='ON-ENTRY') and (activationType != 'ON-EXIT'):
             raise ValueError('activationType argument must be either "ON-ENTRY" or "ON-EXIT"')
       self.activationType = activationType
-      
+
    def tag(self,version): return 'SWC-MODE-SWITCH-EVENT' if version >= 4.0 else 'MODE-SWITCH-EVENT'
 
 class TimingEvent(Event):
    def __init__(self,name,startOnEventRef=None, period=0, parent=None):
       super().__init__(name, startOnEventRef, parent)
       self.period=int(period)
-   
+
    def tag(self, version=None):
       return 'TIMING-EVENT'
-   
+
 
 class DataReceivedEvent(Event):
    def __init__(self, name, startOnEventRef=None, parent=None):
@@ -52,29 +52,29 @@ class OperationInvokedEvent(Event):
       super().__init__(name, startOnEventRef, parent)
       self.operationInstanceRef=None
       self.swDataDefsProps=[]
-      
+
    def tag(self, version=None):
       return "OPERATION-INVOKED-EVENT"
 
 class InitEvent(Event):
    def __init__(self,name,startOnEventRef=None, parent=None):
-      super().__init__(name, startOnEventRef, parent)      
-   
+      super().__init__(name, startOnEventRef, parent)
+
    def tag(self, version=None):
       return 'INIT-EVENT'
 
-   
-####################################################################################################   
+
+####################################################################################################
 
 class ModeDependency(object):
-   def __init__(self):      
+   def __init__(self):
       self.modeInstanceRefs=[]
    def asdict(self):
       data={'type': self.__class__.__name__,'modeInstanceRefs':[]}
       for modeInstanceRef in self.modeInstanceRefs:
          data['modeInstanceRefs'].append(modeInstanceRef.asdict())
       if len(data['modeInstanceRefs'])==0: del data['modeInstanceRefs']
-   
+
    def append(self, item):
       if isinstance(item, ModeInstanceRef) or isinstance(item, ModeDependencyRef):
          self.modeInstanceRefs.append(item)
@@ -82,7 +82,7 @@ class ModeDependency(object):
          raise ValueError('invalid type: '+str(type(item)))
 
 class ModeInstanceRef(object):
-   def __init__(self,modeDeclarationRef,modeDeclarationGroupPrototypeRef=None,requirePortPrototypeRef=None):      
+   def __init__(self,modeDeclarationRef,modeDeclarationGroupPrototypeRef=None,requirePortPrototypeRef=None):
       self.modeDeclarationRef=modeDeclarationRef #MODE-DECLARATION-REF
       self.modeDeclarationGroupPrototypeRef=modeDeclarationGroupPrototypeRef #MODE-DECLARATION-GROUP-PROTOTYPE-REF
       self.requirePortPrototypeRef=requirePortPrototypeRef #R-PORT-PROTOTYPE-REF
@@ -91,12 +91,12 @@ class ModeInstanceRef(object):
       for key, value in self.__dict__.items():
          data[key]=value
       return data
-   
+
    def tag(self,version=None):
       return 'MODE-IREF'
 
 class ModeDependencyRef(object):
-   def __init__(self,modeDeclarationRef,modeDeclarationGroupPrototypeRef=None,requirePortPrototypeRef=None):      
+   def __init__(self,modeDeclarationRef,modeDeclarationGroupPrototypeRef=None,requirePortPrototypeRef=None):
       self.modeDeclarationRef=modeDeclarationRef #MODE-DECLARATION-REF
       self.modeDeclarationGroupPrototypeRef=modeDeclarationGroupPrototypeRef #MODE-DECLARATION-GROUP-PROTOTYPE-REF
       self.requirePortPrototypeRef=requirePortPrototypeRef #R-PORT-PROTOTYPE-REF
@@ -105,12 +105,12 @@ class ModeDependencyRef(object):
       for key, value in self.__dict__.items():
          data[key]=value
       return data
-   
+
    def tag(self,version=None):
       return 'DEPENDENT-ON-MODE-IREF'
 
 class DisabledModeInstanceRef(object):
-   def __init__(self,modeDeclarationRef,modeDeclarationGroupPrototypeRef=None,requirePortPrototypeRef=None):      
+   def __init__(self,modeDeclarationRef,modeDeclarationGroupPrototypeRef=None,requirePortPrototypeRef=None):
       self.modeDeclarationRef=modeDeclarationRef #MODE-DECLARATION-REF
       self.modeDeclarationGroupPrototypeRef=modeDeclarationGroupPrototypeRef #MODE-DECLARATION-GROUP-PROTOTYPE-REF
       self.requirePortPrototypeRef=requirePortPrototypeRef #R-PORT-PROTOTYPE-REF
@@ -119,7 +119,7 @@ class DisabledModeInstanceRef(object):
       for key, value in self.__dict__.items():
          data[key]=value
       return data
-   
+
    def tag(self,version=None):
       return 'DISABLED-MODE-IREF'
 
@@ -127,7 +127,7 @@ class ModeGroupInstanceRef:
    def __init__(self, requirePortRef, modeGroupRef):
       self.requirePortRef = requirePortRef
       self.modeGroupRef = modeGroupRef
-   
+
    def tag(self, version):
       if version >= 4.0:
          return 'R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF'
@@ -138,20 +138,20 @@ class PortAPIOption():
    def __init__(self,portRef,takeAddress=False,indirectAPI=False):
       self.portRef = portRef
       self.takeAddress = bool(takeAddress)
-      self.indirectAPI = bool(indirectAPI)      
+      self.indirectAPI = bool(indirectAPI)
    def asdict(self):
       data={'type': self.__class__.__name__,'takeAddress':self.takeAddress, 'indirectAPI':self.indirectAPI, 'portRef':self.portRef}
       return data
-   
+
    def tag(self,version=None): return "PORT-API-OPTION"
-   
+
 class DataReceivePoint:
    def __init__(self,portRef,dataElemRef=None,name=None,parent=None):
       self.portRef=portRef
       self.dataElemRef=dataElemRef
       self.name=name
       self.parent=parent
-   
+
    def tag(self,version): return "VARIABLE-ACCESS" if version >= 4.0 else "DATA-RECEIVE-POINT"
 
 class DataSendPoint:
@@ -160,9 +160,9 @@ class DataSendPoint:
       self.dataElemRef=dataElemRef
       self.name=name
       self.parent=parent
-   
+
    def tag(self,version): return "VARIABLE-ACCESS" if version >= 4.0 else "DATA-SEND-POINT"
-      
+
 class RunnableEntity(Element):
    def __init__(self, name, invokeConcurrently=False, symbol=None, parent=None, adminData=None):
       super().__init__(name,parent,adminData)
@@ -178,10 +178,10 @@ class RunnableEntity(Element):
       self.exclusiveAreaRefs=[]
       self.modeAccessPoints=[] #AUTOSAR4 only
       self.parameterAccessPoints = [] #AUTOSAR4 only
-   
+
    def tag(self,version=None):
       return 'RUNNABLE-ENTITY'
-   
+
    def asdict(self):
       data={'type': self.__class__.__name__,
             'name':self.name,
@@ -200,7 +200,7 @@ class RunnableEntity(Element):
       if len(data['dataReceivePoints'])==0: del data['dataReceivePoints']
       if len(data['dataSendPoints'])==0: del data['dataSendPoints']
       return data
-   
+
    def append(self,elem):
       if isinstance(elem, autosar.behavior.DataReceivePoint):
          dataReceivePoint=self._verifyDataReceivePoint(copy.copy(elem))
@@ -212,7 +212,7 @@ class RunnableEntity(Element):
          dataSendPoint.parent=self
       else:
          raise NotImplementedError(str(type(elem)))
-   
+
    def _verifyDataReceivePoint(self,dataReceivePoint):
       ws=self.rootWS()
       assert(ws is not None)
@@ -237,7 +237,7 @@ class RunnableEntity(Element):
       else:
          raise ValueError('%s: portRef must be of type string'%self.ref)
       return dataReceivePoint
-   
+
    def _verifyDataSendPoint(self,dataSendPoint):
       ws=self.rootWS()
       assert(ws is not None)
@@ -261,9 +261,9 @@ class RunnableEntity(Element):
             dataSendPoint.name="SEND_{0.name}_{1.name}".format(port,dataElement)
       else:
          raise ValueError('%s: portRef must be of type string'%self.ref)
-      return dataSendPoint   
+      return dataSendPoint
 
-   
+
    def rootWS(self):
       if self.parent is None:
          return autosar.getCurrentWS()
@@ -305,32 +305,32 @@ class DataInstanceRef(object):
    def asdict(self):
       data={'type': self.__class__.__name__,'portRef':self.portRef, 'dataElemRef':self.dataElemRef}
       return data
-   
+
    def tag(self, version=None):
       return 'DATA-IREF'
-   
+
 
 class OperationInstanceRef(object):
    """
-   <OBJECT-IREF>   
+   <OBJECT-IREF>
    """
    def __init__(self,portRef,operationRef):
       self.portRef = portRef
       self.operationRef = operationRef
-   
+
    def asdict(self):
       data={'type': self.__class__.__name__,'portRef':self.portRef, 'operationRef':self.operationRef}
       return data
-   
+
    def tag(self, version=None):
       return 'OPERATION-IREF'
-   
-   
+
+
 
 
 class PerInstanceMemory(Element):
    """
-   <PER-INSTANCE-MEMORY>
+   AUTOSAR 3 <PER-INSTANCE-MEMORY>
    Note: I don't know why this XML object has both <TYPE> and <TYPE-DEFINITION> where a simple TYPE-TREF should suffice.
    Internally use a typeRef for PerInstanceMemory. We can transform it back to <TYPE> and <TYPE-DEFINITION> when serializing to XML
    """
@@ -340,10 +340,10 @@ class PerInstanceMemory(Element):
    def asdict(self):
       data={'type': self.__class__.__name__,'name':self.name, 'typeRef':self.typeRef}
       return data
-   
+
    def tag(self, version = None):
       return 'PER-INSTANCE-MEMORY'
-   
+
 
 class SwcNvBlockNeeds(object):
    """
@@ -352,7 +352,7 @@ class SwcNvBlockNeeds(object):
    def __init__(self,name,numberOfDataSets,readOnly,reliability,resistantToChangedSW,
                 restoreAtStart,writeOnlyOnce,writingFrequency,writingPriority,
                 defaultBlockRef,mirrorBlockRef):
-      self.name=name      
+      self.name=name
       self.numberOfDataSets=numberOfDataSets
       assert(isinstance(readOnly,bool))
       self.readOnly=readOnly
@@ -367,7 +367,7 @@ class SwcNvBlockNeeds(object):
       self.writingPriority=writingPriority
       self.defaultBlockRef=defaultBlockRef
       self.mirrorBlockRef=mirrorBlockRef
-      self.serviceCallPorts=[]      
+      self.serviceCallPorts=[]
    def asdict(self):
       data={'type': self.__class__.__name__,'serviceCallPorts':[]}
       for key, value in self.__dict__.items():
@@ -377,15 +377,15 @@ class SwcNvBlockNeeds(object):
             data[key]=value
       if len(data['serviceCallPorts'])==0: del data['serviceCallPorts']
       return data
-   
+
    def tag(self, version=None):
       return 'SWC-NV-BLOCK-NEEDS'
 
 class NvBlockNeeds(Element):
-   """   
+   """
    AUTOSAR 4 representation of NV-BLOCK-NEEDS
    """
-   def __init__(self, name, numberOfDataSets, ramBlockStatusControl, reliability, restoreAtStart, storeAtShutdown, parent=None, adminData=None):
+   def __init__(self, name, numberOfDataSets = 0, ramBlockStatusControl = 'NV-RAM-MANAGER', reliability='NO-PROTECTION', restoreAtStart=True, storeAtShutdown=True, parent=None, adminData=None):
       super().__init__(name, parent, adminData)
       self.numberOfDataSets=numberOfDataSets
       self.ramBlockStatusControl = ramBlockStatusControl
@@ -394,7 +394,7 @@ class NvBlockNeeds(Element):
       self.restoreAtStart = restoreAtStart
       assert(isinstance(storeAtShutdown,bool))
       self.storeAtShutdown = storeAtShutdown
-   
+
    def tag(self, version): return 'NV-BLOCK-NEEDS'
 
 class RoleBasedRPortAssignment(object):
@@ -406,7 +406,7 @@ class RoleBasedRPortAssignment(object):
       for key, value in self.__dict__.items():
          data[key]=value
       return data
-   
+
    def tag(self, version=None):
       return 'ROLE-BASED-R-PORT-ASSIGNMENT'
 
@@ -424,26 +424,26 @@ class CalPrmElemPrototype(Element):
       if self.adminData is not None:
          data['adminData']=self.adminData.asdict()
       for elem in self.swDataDefsProps:
-         data['swDataDefsProps'].append(elem)         
+         data['swDataDefsProps'].append(elem)
       return data
-   
+
    def tag(self, version=None):
       return 'CALPRM-ELEMENT-PROTOTYPE'
-  
+
 
 class ExclusiveArea(Element):
    def __init__(self, name, parent=None, adminData=None):
       super().__init__(name,parent,adminData)
-   
+
    def asdict(self):
       data={'type': self.__class__.__name__,'name':self.name}
       return data
-   
+
    def tag(self, version=None):
       return 'EXCLUSIVE-AREA'
 
-      
- 
+
+
 class SyncServerCallPoint(object):
    """
    <SYNCHRONOUS-SERVER-CALL-POINT>
@@ -452,7 +452,7 @@ class SyncServerCallPoint(object):
       self.name=name
       self.timeout=timeout
       self.operationInstanceRefs=[]
-   
+
    def asdict(self):
       data={'type': self.__class__.__name__,'name':self.name,'timeout':self.timeout}
       data['operationInstanceRefs'] = [x.asdict() for x in self.operationInstanceRefs]
@@ -479,14 +479,14 @@ class InternalBehaviorCommon(Element):
       self.perInstanceMemories = []
       self.swc = None
 
-   
+
    def createPortAPIOptionDefaults(self):
       self.portAPIOptions = []
       self._initSWC()
       ws = self.rootWS()
       tmp = self.swc.providePorts+self.swc.requirePorts
       for port in sorted(tmp,key=lambda x: x.name.lower()):
-         self.portAPIOptions.append(PortAPIOption(port.ref))               
+         self.portAPIOptions.append(PortAPIOption(port.ref))
 
    def _initSWC(self):
       """
@@ -504,13 +504,13 @@ class InternalBehaviorCommon(Element):
       ref=ref.partition('/')
       name=ref[0]
       for elem in self.runnables:
-         if elem.name == name: return elem      
+         if elem.name == name: return elem
       for elem in self.perInstanceMemories:
          if elem.name == name: return elem
       for elem in self.exclusiveAreas:
          if elem.name == name: return elem
       return None
-   
+
    def createRunnable(self, name, portAccess=None, symbol=None, concurrent=False, exclusiveAreas=None, adminData=None):
       runnable = RunnableEntity(name, concurrent, symbol, self, adminData)
       self.runnables.append(runnable)
@@ -524,7 +524,7 @@ class InternalBehaviorCommon(Element):
                #this section is for portAccess where only the port name is mentioned.
                #This method only works if the port interface has only 1 data element,
                # i.e. no ambiguity as to what data element is meant
-               port = self.swc.find(ref[0])               
+               port = self.swc.find(ref[0])
                if port is None:
                   raise ValueError('invalid port reference: '+str(elem))
                portInterface = ws.find(port.portInterfaceRef, role='PortInterface')
@@ -541,8 +541,8 @@ class InternalBehaviorCommon(Element):
                else:
                   raise NotImplementedError(type(portInterface))
             else:
-               #this section is for portAccess where both port name and dataelement is represented as "portName/dataElementName"               
-               port = self.swc.find(ref[0])               
+               #this section is for portAccess where both port name and dataelement is represented as "portName/dataElementName"
+               port = self.swc.find(ref[0])
                if port is None:
                   raise ValueError('invalid port reference: '+str(elem))
                portInterface = ws.find(port.portInterfaceRef)
@@ -576,7 +576,7 @@ class InternalBehaviorCommon(Element):
          else:
             raise ValueError('exclusiveAreas must be either string or list')
       return runnable
-   
+
    def _createSendReceivePoint(self,port,dataElement,runnable):
       """
       internal function that create a DataReceivePoint of the the port is a require port or
@@ -636,7 +636,7 @@ class InternalBehaviorCommon(Element):
             return (modeDeclarationRef,modeDeclarationGroupRef,port.ref)
       raise ValueError('"%s" did not match any of the mode declarations in %s'%(modeValue,dataType.ref))
 
-         
+
    def createModeSwitchEvent(self, runnableName, modeRef, activationType='ENTRY', name=None):
       self._initSWC()
       ws = self.rootWS()
@@ -663,7 +663,7 @@ class InternalBehaviorCommon(Element):
 
       result = modeRef.partition('/')
       if result[1]!='/':
-         raise ValueError('invalid modeRef, expected "portName/modeValue", got "%s"'%modeRef)         
+         raise ValueError('invalid modeRef, expected "portName/modeValue", got "%s"'%modeRef)
       portName=result[0]
       modeValue=result[2]
       event = autosar.behavior.ModeSwitchEvent(eventName,runnable.ref,activationType, version=ws.version)
@@ -686,20 +686,20 @@ class InternalBehaviorCommon(Element):
          #try to find a suitable name for the event
          baseName = "TMT_"+runnable.name
          eventName = self._findEventName(baseName)
-      
+
       event = autosar.behavior.TimingEvent(eventName,runnable.ref,period)
-      
+
       if modeDependency is not None:
          self._processModeDependency(event, modeDependency, ws.version)
       self.events.append(event)
       return event
-   
+
    def createTimingEvent(self, runnableName, period, modeDependency=None, name=None):
       """
       alias for createTimerEvent
       """
       self.createTimerEvent(runnableName, period, modeDependency, name)
-   
+
    def createOperationInvokedEvent(self, runnableName, operationRef, modeDependency=None, name=None ):
       """
       creates a new OperationInvokedEvent
@@ -709,7 +709,7 @@ class InternalBehaviorCommon(Element):
       """
       self._initSWC()
       ws = self.rootWS()
-      
+
       runnable=self.find(runnableName)
       if runnable is None:
          raise ValueError('invalid runnable name: '+runnableName)
@@ -732,7 +732,7 @@ class InternalBehaviorCommon(Element):
          raise ValueError('The referenced port "%s" does not have a ClientServerInterface'%(port.name))
       operation = portInterface.find(operationName)
       if (operation is None) or not isinstance(operation, autosar.portinterface.Operation):
-         raise ValueError('invalid operation name: '+operationName)      
+         raise ValueError('invalid operation name: '+operationName)
       if eventName is None:
          eventName=self._findEventName('OIT_%s_%s_%s'%(runnable.name, port.name, operation.name))
       event = OperationInvokedEvent(eventName, runnable.ref, self)
@@ -743,7 +743,7 @@ class InternalBehaviorCommon(Element):
 
       self.events.append(event)
       return event
-   
+
    def createDataReceivedEvent(self, runnableName, dataElementRef, modeDependency=None, name=None ):
       """
       creates a new DataReceivedEvent
@@ -753,7 +753,7 @@ class InternalBehaviorCommon(Element):
       """
       self._initSWC()
       ws = self.rootWS()
-      
+
       runnable=self.find(runnableName)
       if runnable is None:
          raise ValueError('invalid runnable name: '+runnableName)
@@ -791,13 +791,13 @@ class InternalBehaviorCommon(Element):
          eventName=self._findEventName('DRT_%s_%s_%s'%(runnable.name, port.name, dataElement.name))
       event = DataReceivedEvent(eventName, runnable.ref, self)
       event.dataInstanceRef=DataInstanceRef(port.ref, dataElement.ref)
-      
+
       if modeDependency is not None:
          self._processModeDependency(event, modeDependency, ws.version)
-         
+
       self.events.append(event)
-      return event      
-   
+      return event
+
    def _findEventName(self, baseName):
       found = False
       for event in self.events:
@@ -806,7 +806,7 @@ class InternalBehaviorCommon(Element):
             break
       if found:
          event.name=event.name+'_0'
-         index = 1     
+         index = 1
          eventName = None
          while(True):
             eventName= "%s_%d"%(baseName,index)
@@ -822,14 +822,14 @@ class InternalBehaviorCommon(Element):
       else:
          eventName = baseName
       return eventName
-      
+
    def _processModeDependency(self, event, modeDependencyList, version):
       for dependency in list(modeDependencyList):
          result = dependency.partition('/')
          if result[1]=='/':
             portName=result[0]
             modeValue=result[2]
-            (modeDeclarationRef,modeDeclarationGroupPrototypeRef,portRef) = self.calcModeInstanceComponents(portName,modeValue)               
+            (modeDeclarationRef,modeDeclarationGroupPrototypeRef,portRef) = self.calcModeInstanceComponents(portName,modeValue)
          else:
             raise ValueError('invalid modeRef, expected "portName/modeValue", got "%s"'%dependency)
          if version >= 4.0:
@@ -840,11 +840,11 @@ class InternalBehaviorCommon(Element):
             if event.modeDependency is None:
                event.modeDependency = ModeDependency()
             event.modeDependency.append(ModeDependencyRef(modeDeclarationRef, modeDeclarationGroupPrototypeRef, portRef))
-   
+
    def createExclusiveArea(self, name):
       """
       creates a new ExclusiveArea
-      """      
+      """
       self._initSWC()
       ws = self.rootWS()
       exclusiveArea = ExclusiveArea(str(name), self)
@@ -856,11 +856,11 @@ class InternalBehavior(InternalBehaviorCommon):
    """ InternalBehavior class (AUTOSAR 3)"""
    def __init__(self,name, componentRef, multipleInstance=False,parent=None):
       super().__init__(name, componentRef,multipleInstance, parent)
-      
+
       self.swcNvBlockNeeds = []
       self.sharedCalParams=[]
-      
-      
+
+
    # def asdict(self):
    #    data={'type': self.__class__.__name__,'name':self.name, 'multipleInstance':self.multipleInstance,
    #          'componentRef':self.componentRef, 'events':[],'portAPIOptions':[],'runnables':[],'perInstanceMemories':[],
@@ -887,8 +887,8 @@ class InternalBehavior(InternalBehaviorCommon):
    #    if len(data['sharedCalPrms'])==0: del data['sharedCalPrms']
    #    if len(data['exclusiveAreas'])==0: del data['exclusiveAreas']
    #    return data
-   
-         
+
+
    def tag(self, version): return 'INTERNAL-BEHAVIOR'
 
    def append(self,elem):
@@ -910,17 +910,17 @@ class InternalBehavior(InternalBehaviorCommon):
       else:
          return result
       return None
-            
 
-   
+
+
    def __getitem__(self,key):
       return self.find(key)
-   
 
 
-   
-   
-   
+
+
+
+
    def createPerInstanceMemory(self, name, typeRef):
       """
       creates a new PerInstanceMemory object
@@ -935,18 +935,18 @@ class InternalBehavior(InternalBehaviorCommon):
       perInstanceMemory = PerInstanceMemory(name, dataType.ref, self)
       self.perInstanceMemories.append(perInstanceMemory)
       return perInstanceMemory
-   
+
    def createSharedCalParam(self, name, typeRef, SwAddrMethodRef, adminData=None):
       self._initSWC()
       ws = self.rootWS()
       dataType = ws.find(typeRef, role='DataType')
       if dataType is None:
-         raise ValueError('invalid reference: '+typeRef)      
+         raise ValueError('invalid reference: '+typeRef)
       elem = CalPrmElemPrototype(name, dataType.ref, self, adminData)
       elem.swDataDefsProps.append(SwAddrMethodRef)
       self.sharedCalParams.append(elem)
       return elem
-   
+
    def createNvmBlock(self, name, blockParams):
       """
       creates a new SwcNvBlockNeeds object
@@ -967,7 +967,7 @@ class InternalBehavior(InternalBehaviorCommon):
       mirrorBlockRef=None
       #defaultBlockRef
       defaultBlock = blockParams['defaultBlock']
-      if '/' in defaultBlock:         
+      if '/' in defaultBlock:
          defaultBlockRef = defaultBlock #use as is
       else:
          for sharedCalParam in self.sharedCalParams:
@@ -978,7 +978,7 @@ class InternalBehavior(InternalBehaviorCommon):
          raise ValueError('no SharedCalParam found with name: ' +defaultBlock)
       #mirrorBlockref
       mirrorBlock = blockParams['mirrorBlock']
-      if '/' in mirrorBlock:         
+      if '/' in mirrorBlock:
          mirrorBlockRef = mirrorBlock #use as is
       else:
          for perInstanceMemory in self.perInstanceMemories:
@@ -989,7 +989,7 @@ class InternalBehavior(InternalBehaviorCommon):
          raise ValueError('no PerInstanceMemory found with name: ' +mirrorBlock)
       elem = SwcNvBlockNeeds(name, numberOfDataSets, readOnly, reliability, resistantToChangedSW, restoreAtStart,
                                         writeOnlyOnce, writingFrequency, writingPriority, defaultBlockRef, mirrorBlockRef)
-      #serviceCallPorts      
+      #serviceCallPorts
       if isinstance(blockParams['serviceCallPorts'],str):
          serviceCallPorts=[blockParams['serviceCallPorts']]
       else:
@@ -1006,21 +1006,24 @@ class InternalBehavior(InternalBehaviorCommon):
             elem.serviceCallPorts.append(RoleBasedRPortAssignment(port.ref,operationName))
       else:
          raise ValueError('serviceCallPorts must be either string or list of string of format the "portName/operationName"')
-            
+
       self.swcNvBlockNeeds.append(elem)
       return elem
 
 
 class SwcInternalBehavior(InternalBehaviorCommon):
+   """
+   AUTOSAR 4 Internal Behavior
+   """
    def __init__(self,name, componentRef, multipleInstance=False,parent=None):
       super().__init__(name, componentRef, multipleInstance, parent)
       self.serviceDependencies = [] #list of SwcServiceDependency objects
       self.parameterDataPrototype = [] #list of ParameterDataPrototye objects
       self.dataTypeMappingRefs = [] #list of strings
-      
-      
+
+
    def tag(self, version): return "SWC-INTERNAL-BEHAVIOR"
-   
+
    def find(self, ref):
       if ref is None: return None
       result = super().find(ref)
@@ -1032,14 +1035,74 @@ class SwcInternalBehavior(InternalBehaviorCommon):
             if elem.name == name: return elem
       else:
          return result
-      return None 
+      return None
+
+   def createPerInstanceMemory(self, name, implementationTypeRef, swAddressMethodRef = None, swCalibrationAccess = None):
+      """
+      AUTOSAR4: Creates a DataElement object and appends to to the internal perInstanceMemories list
+      name: name of the object (str)
+      implementationTypeRef: dataType reference (str)
+      swAddressMethodRef: Software address method reference (str)
+      swCalibrationAccess: software calibration access (str)
+      """
+      self._initSWC()
+      ws = self.rootWS()
+      dataType = ws.find(implementationTypeRef, role='DataType')
+      if dataType is None:
+         raise ValueError('invalid reference: '+implementationTypeRef)
+      dataElement = DataElement(name, dataType.ref, swAddressMethodRef = swAddressMethodRef, swCalibrationAccess=swCalibrationAccess, parent=self)
+      self.perInstanceMemories.append(dataElement)
+      return dataElement
+
+   def createSharedParameter(self, name, implementationTypeRef, swAddressMethodRef = None, swCalibrationAccess = None):
+      """
+      AUTOSAR4: Creates a ParameterDataPrototype object and appends it to the internal parameterDataPrototype list
+      """
+      self._initSWC()
+      ws = self.rootWS()
+      dataType = ws.find(implementationTypeRef, role='DataType')
+      if dataType is None:
+         raise ValueError('invalid reference: '+implementationTypeRef)
+      parameter = ParameterDataPrototype(name, dataType.ref, swAddressMethodRef = swAddressMethodRef, swCalibrationAccess=swCalibrationAccess, parent=self)
+      self.parameterDataPrototype.append(parameter)
+      return parameter
+
+   def createNvmBlock(self, name, portName, perInstanceMemoryName, perInstanceMemoryRole='RamBlock', nvBlockNeeds = None):
+      """
+      AUTOSAR 4: Creates a ServiceNeeds object and appends it to the internal serviceDependencies list
+      This assumes the service needed is related to NVM
+      """
+      self._initSWC()
+      ws = self.rootWS()
+      if nvBlockNeeds is None:
+         nvBlockNeeds = NvBlockNeeds(name)
+      dependency = SwcServiceDependency(name)
+      service = dependency.serviceNeeds = ServiceNeeds()
+      service.nvBlockNeeds = nvBlockNeeds
+      
+      for port in self.swc.requirePorts:         
+         if port.name == portName:
+            dependency.roleBasedPortAssignments.append(RoleBasedPortAssignment(port.ref))
+            break
+      else:
+         raise ValueError('%s: No require port found with name "%s"'%(self.swc.name, portName))
+
+      for pim in self.perInstanceMemories:
+         if pim.name == perInstanceMemoryName:
+            dependency.roleBasedDataAssignments.append(RoleBasedDataAssignment(perInstanceMemoryRole, pim.ref))
+            break
+      else:
+         raise ValueError('%s: No per-instance-memory found with name "%s"'%(self.swc.name, perInstanceMemoryName))
+      self.serviceDependencies.append(dependency)
+      return dependency
+
 
 class VariableAccess(Element):
    def __init__(self, name, portPrototypeRef, targetDataPrototypeRef, parent=None):
       super().__init__(name, parent)
       self.portPrototypeRef=portPrototypeRef
       self.targetDataPrototypeRef = targetDataPrototypeRef
-   
+
    def tag(self, version=None):
       return 'VARIABLE-ACCESS'
 
@@ -1048,7 +1111,7 @@ class ServiceNeeds(Element):
    Represents <SERVICE-NEEDS> (AUTODSAR 4)
    """
    def tag(self, version): return 'SERVICE-NEEDS'
-   
+
    def __init__(self, name = None, nvBlockNeeds = None, parent=None, adminData = None):
       super().__init__(name, parent, adminData)
       self.nvBlockNeeds = nvBlockNeeds
@@ -1058,17 +1121,17 @@ class SwcServiceDependency(Element):
    Represents <SWC-SERVICE-DEPENDENCY> (AUTODSAR 4)
    """
    def tag(self, version): return 'SWC-SERVICE-DEPENDENCY'
-   
+
    def __init__(self, name=None, parent=None, adminData = None):
       super().__init__(name, parent, adminData)
       self._serviceNeeds = None
       self.roleBasedDataAssignments = []
       self.roleBasedPortAssignments = []
-      
+
    @property
    def serviceNeeds(self):
       return self._serviceNeeds
-   
+
    @serviceNeeds.setter
    def serviceNeeds(self, elem):
       elem.parent = self
@@ -1082,7 +1145,7 @@ class RoleBasedDataAssignment:
       self.role = role
       self.localVariableRef = localVariableRef
       self.localParameterRef = localParameterRef
-   
+
    def tag(self, version): return 'ROLE-BASED-DATA-ASSIGNMENT'
 
 class RoleBasedPortAssignment:
@@ -1091,20 +1154,20 @@ class RoleBasedPortAssignment:
    """
    def __init__(self, portRef):
       self.portRef = portRef
-   
+
    def tag(self, version): return 'ROLE-BASED-PORT-ASSIGNMENT'
 
 class ParameterDataPrototype(Element):
    """
    Represents <PARAMETER-DATA-PROTOTYPE> (AUTOSAR 4)
    """
-   
+
    def __init__(self, name, typeRef, swAddressMethodRef=None, swCalibrationAccess=None, parent=None, adminData=None):
       super().__init__(name, parent, adminData)
-      self.typeRef = typeRef      
+      self.typeRef = typeRef
       self.swAddressMethodRef = swAddressMethodRef
       self.swCalibrationAccess = swCalibrationAccess
-   
+
    def tag(self, version): return 'PARAMETER-DATA-PROTOTYPE'
 
 class ParameterInstanceRef:
@@ -1114,7 +1177,7 @@ class ParameterInstanceRef:
    def __init__(self, portRef, parameterDataRef):
       self.portRef = portRef
       self.parameterDataRef = parameterDataRef
-   
+
    def tag(self, version): return 'AUTOSAR-PARAMETER-IREF'
 
 class LocalParameterRef:
@@ -1123,16 +1186,16 @@ class LocalParameterRef:
    """
    def __init__(self, parameterDataRef):
       self.parameterDataRef = parameterDataRef
-   
+
    def tag(self, version): return 'LOCAL-PARAMETER-REF'
 
 class ParameterAccessPoint(Element):
    """
    Represents <PARAMETER-ACCESS> (AUTOSAR 4)
    """
-   
+
    def __init__(self, name, accessedParameter = None, parent = None, adminData = None):
       super().__init__(name, parent, adminData)
       self.accessedParameter = accessedParameter #this can be NoneType or LocalParameterRef or ParameterInstanceRef
-   
+
    def tag(self, version): return 'PARAMETER-ACCESS'
