@@ -126,14 +126,19 @@ def indexByName(lst,name):
       if item.name == name: return i
    raise ValueError('%s not in list'%name)
 
-def createAdminData(data):
-   if isinstance(data, dict):
-      data=[data]
+def createAdminData(data):      
    adminData = AdminData()
-   for item in data:
-      SDG_GID = item.get('SDG_GID',None)
-      SD_GID = item.get('SD_GID',None)
-      SD = item.get('SD',None)         
+   SDG_GID = data.get('SDG_GID',None)
+   if 'SDG' in data:
+      group = SpecialDataGroup(SDG_GID)
+      for item in data['SDG']:
+         SD_GID = item.get('SD_GID',None)
+         SD = item.get('SD',None)
+         group.SD.append(SpecialData(SD, SD_GID))
+      adminData.specialDataGroups.append(group)
+   else:
+      SD_GID = data.get('SD_GID',None)
+      SD = data.get('SD',None)
       adminData.specialDataGroups.append(SpecialDataGroup(SDG_GID,SD,SD_GID))
    return adminData
 
@@ -201,14 +206,14 @@ def parseVersionString(versionString):
    
 class SwDataDefPropsConditional:
    def tag(self,version=None): return 'SW-DATA-DEF-PROPS-CONDITIONAL'
-   def __init__(self, baseTypeRef = None, implementationTypeRef = None, swAddressMethodRef = None, swCalibrationAccess = None, swImplPolicy = None, compuMethodRef = None, dataConstraintRef = None, unitRef = None, parent = None):
+   def __init__(self, baseTypeRef = None, implementationTypeRef = None, swAddressMethodRef = None, swCalibrationAccess = None, swImplPolicy = None, swPointerTargetProps = None, compuMethodRef = None, dataConstraintRef = None, unitRef = None, parent = None):
       self.baseTypeRef = baseTypeRef
       self.swCalibrationAccess = swCalibrationAccess
       self.swAddressMethodRef = swAddressMethodRef
       self.compuMethodRef = compuMethodRef
       self.dataConstraintRef = dataConstraintRef
       self.implementationTypeRef = implementationTypeRef      
-      self.swPointerTargetProps = None
+      self.swPointerTargetProps = swPointerTargetProps
       self.unitRef = unitRef
       self.swImplPolicy = swImplPolicy
       self.parent = parent
@@ -231,9 +236,15 @@ class SwDataDefPropsConditional:
 
 class SwPointerTargetProps:
    def tag(self, version=None): return 'SW-POINTER-TARGET-PROPS'
-   def __init__(self, targetCategory=None):
+   def __init__(self, targetCategory=None, variants = None):
       self.targetCategory = targetCategory
-      self.variants = []
+      if variants is None:
+         self.variants = []
+      else:
+         if isinstance(variants, SwDataDefPropsConditional):
+            self.variants = [variants]
+         else:
+            self.variants = list(variants)
 
 
 
