@@ -271,33 +271,33 @@ class Operation(Element):
             data['errorRefs'].append(errorRef)
       return data
    
-   def createOutArgument(self, name, typeRef):
+   def createOutArgument(self, name, typeRef, swCalibrationAccess = None, serverArgumentImplPolicy=None):
       ws = self.rootWS()
       assert(ws is not None)
       dataType = ws.find(typeRef, role='DataType')
       if dataType is None:
          raise ValueError("invalid name or reference: "+typeRef)
-      argument=Argument(name, dataType.ref, 'OUT')
+      argument=Argument(name, dataType.ref, 'OUT', swCalibrationAccess, serverArgumentImplPolicy)
       self.arguments.append(argument)
       return argument
    
-   def createInOutArgument(self, name, typeRef):
+   def createInOutArgument(self, name, typeRef, swCalibrationAccess = None, serverArgumentImplPolicy=None):
       ws = self.rootWS()
       assert(ws is not None)
       dataType = ws.find(typeRef, role='DataType')
       if dataType is None:
          raise ValueError("invalid name or reference: "+typeRef)
-      argument=Argument(name, dataType.ref, 'INOUT')
+      argument=Argument(name, dataType.ref, 'INOUT', swCalibrationAccess, serverArgumentImplPolicy)
       self.arguments.append(argument)
       return argument
 
-   def createInArgument(self, name, typeRef):
+   def createInArgument(self, name, typeRef, swCalibrationAccess = None, serverArgumentImplPolicy=None):
       ws = self.rootWS()
       assert(ws is not None)
       dataType = ws.find(typeRef, role='DataType')
       if dataType is None:
          raise ValueError("invalid name or reference: "+typeRef)
-      argument=Argument(name, dataType.ref, 'IN')
+      argument=Argument(name, dataType.ref, 'IN', swCalibrationAccess, serverArgumentImplPolicy)
       self.arguments.append(argument)
       return argument
 
@@ -343,12 +343,12 @@ class Argument(Element):
    def tag(self,version=None):
       return 'ARGUMENT-DATA-PROTOTYPE' if version>=4.0 else 'ARGUMENT-PROTOTYPE'
 
-   def __init__(self, name, typeRef, direction, parent=None, adminData=None):
+   def __init__(self, name, typeRef, direction, swCalibrationAccess = None, serverArgumentImplPolicy=None, parent=None, adminData=None):
       super().__init__(name, parent, adminData)
       self.typeRef=typeRef
       self.direction = direction
-      self.swCalibrationAccess = None
-      self.serverArgumentImplPolicy = None
+      self.swCalibrationAccess = swCalibrationAccess
+      self.serverArgumentImplPolicy = serverArgumentImplPolicy
    
    @property
    def direction(self):

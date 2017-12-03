@@ -450,11 +450,14 @@ class Workspace(object):
    #          else:
    #             raise ValueError('invalid file path "%s"'%item['path'])
 
-   def apply(self, template):
+   def apply(self, template, **kwargs):
       """
       Applies template to this workspace
       """
-      template.apply(self)
+      if len(kwargs) == 0:
+         template.apply(self)
+      else:
+         template.apply(self, **kwargs)
       template.usageCount+=1
 
    #---DEPRECATED CODE, TO BE REMOVED ---#

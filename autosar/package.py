@@ -928,3 +928,22 @@ class Package(object):
       implementationDataType = autosar.datatype.ImplementationDataType(name, 'TYPE_REFERENCE', variantProps, parent = self, adminData = adminData)
       self.append(implementationDataType)
       return implementationDataType
+
+   def createImplementationDataTypeData(self, name, baseTypeRef, swImplPolicy=None, adminData = None):
+      """
+      Creates an implementation data type that is a data reference of a base type
+      """
+      ws=self.rootWS()
+      assert(ws is not None)
+
+      if isinstance(adminData, dict):
+         adminDataObj=ws.createAdminData(adminData)
+      else:
+         adminDataObj = adminData
+      if (adminDataObj is not None) and not isinstance(adminDataObj, autosar.base.AdminData):
+         raise ValueError("adminData must be of type dict or AdminData")
+      targetProps = autosar.base.SwPointerTargetProps('VALUE', autosar.base.SwDataDefPropsConditional(baseTypeRef = baseTypeRef, swImplPolicy=swImplPolicy))
+      variantProps =  autosar.base.SwDataDefPropsConditional(swPointerTargetProps = targetProps)
+      implementationDataType = autosar.datatype.ImplementationDataType(name, 'DATA_REFERENCE', variantProps, parent = self, adminData = adminData)
+      self.append(implementationDataType)
+      return implementationDataType
