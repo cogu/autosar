@@ -49,7 +49,7 @@ class Element(object):
 
 class DataElement(Element):
    def tag(self,version): return "VARIABLE-DATA-PROTOTYPE" if version >= 4.0 else "DATA-ELEMENT-PROTOTYPE"
-   def __init__(self, name, typeRef, isQueued=False, softwareAddressMethodRef=None, swCalibrationAccess=None, swImplPolicy = None, parent=None, adminData=None):
+   def __init__(self, name, typeRef, isQueued=False, swAddressMethodRef=None, swCalibrationAccess=None, swImplPolicy = None, parent=None, adminData=None):
       super().__init__(name,parent,adminData)
       if isinstance(typeRef,str):
          self.typeRef=typeRef
@@ -60,7 +60,7 @@ class DataElement(Element):
          raise ValueError("unsupported type for argument: typeRef")
       assert(isinstance(isQueued,bool))
       self.isQueued=isQueued
-      self.swAddressMethodRef = softwareAddressMethodRef
+      self.swAddressMethodRef = swAddressMethodRef
       self.swCalibrationAccess = swCalibrationAccess
       self.swImplPolicy = swImplPolicy
       self.dataConstraintRef = None
