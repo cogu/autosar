@@ -66,6 +66,7 @@ class ComponentType(Element):
          raise NotImplementedError(type(portInterface))
       port = ProvidePort(name,portInterface.ref,comspec,parent=self)
       self.providePorts.append(port)
+      return port
 
    def createRequirePort(self, name, portInterfaceRef, elemName=None, initValue=None, initValueRef=None, aliveTimeout=0, canInvalidate=False, queueLength=None):
       """
@@ -108,9 +109,18 @@ class ComponentType(Element):
          raise NotImplementedError(type(portInterface))
       port = RequirePort(name,portInterface.ref,comspec,parent=self)
       self.requirePorts.append(port)
+      return port
 
-   def apply(self, template):
-      template.apply(self)
+   def apply(self, template, **kwargs):
+      """
+      Applies template to this component
+      This is typically used for port templates
+      """
+      if len(kwargs) == 0:
+         template.apply(self)
+      else:
+         template.apply(self, **kwargs)
+      template.usageCount+=1      
 
    def copyPort(self, otherPort):
       """

@@ -49,8 +49,15 @@ class Template(ABC):
    usageCount = 0 #number of times this template have been applied
    
    @classmethod
+   def get(cls, ws):
+      ref = cls.ref(ws)
+      if ws.find(ref) is None:
+         ws.apply(cls)
+      return ws.find(ref)
+   
+   @classmethod
    @abstractmethod
-   def apply(cls, ws):
+   def apply(cls, ws, **kwargs):
       """
       Applies this class template to the workspace ws
       """
