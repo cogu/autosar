@@ -909,11 +909,11 @@ class Package(object):
       return self.createSwBaseType(name, size, encoding, nativeDeclaration, adminData)
 
 
-   def createImplementationDataTypeRef(self, name, typeRef, adminData = None):
+   def createImplementationTypeReference(self, name, typeRef, adminData = None):
       """
-      Create a new implementation data type that is a reference to another implementation data type ref
+      Creates a new type reference to existing implementation type
       name: name of the new data type
-      typeRef: reference to another implementation data type
+      typeRef: reference to implementation data type
       """
       ws=self.rootWS()
       assert(ws is not None)
@@ -929,9 +929,9 @@ class Package(object):
       self.append(implementationDataType)
       return implementationDataType
 
-   def createImplementationDataTypeData(self, name, baseTypeRef, swImplPolicy=None, adminData = None):
+   def createImplementationDataReference(self, name, baseTypeRef, swImplPolicy=None, adminData = None):
       """
-      Creates an implementation data type that is a data reference of a base type
+      Creates an implementation data reference type
       """
       ws=self.rootWS()
       assert(ws is not None)
@@ -947,3 +947,22 @@ class Package(object):
       implementationDataType = autosar.datatype.ImplementationDataType(name, 'DATA_REFERENCE', variantProps, parent = self, adminData = adminData)
       self.append(implementationDataType)
       return implementationDataType
+
+   def createImplementationDataType(self, name, baseTypeRef, category='VALUE', adminData = None):
+      """
+      Creates a new implementation data type
+      """
+      ws=self.rootWS()
+      assert(ws is not None)
+
+      if isinstance(adminData, dict):
+         adminDataObj=ws.createAdminData(adminData)
+      else:
+         adminDataObj = adminData
+      if (adminDataObj is not None) and not isinstance(adminDataObj, autosar.base.AdminData):
+         raise ValueError("adminData must be of type dict or AdminData")
+      variantProps = autosar.base.SwDataDefPropsConditional(baseTypeRef = baseTypeRef)
+      implementationDataType = autosar.datatype.ImplementationDataType(name, category, variantProps, parent = self, adminData = adminData)
+      self.append(implementationDataType)
+      return implementationDataType
+      
