@@ -690,7 +690,7 @@ class TemplateDataTypeWriter(ElementWriter):
       if self.version >= 3.0 and self.version < 4.0:
          self.switcher = {
 #                           'ArrayDataType': self.writeArrayDataTypeCode,
-#                           'BooleanDataType': self.writeBooleanDataTypeCode,
+                          'BooleanDataType': self.writeBooleanDataTypeTemplate,
                           'IntegerDataType': self.writeIntegerTypeTemplate,
 #                          'RealDataType': self.writeRealDataTypeCode,
 #                          'RecordDataType': self.writeRecordDataTypeCode,
@@ -761,4 +761,9 @@ class TemplateDataTypeWriter(ElementWriter):
             text='['+','.join(params2)+']'
             params.append('valueTable='+text)
             lines.append("{0.name} = createEnumerationDataTypeTemplate({1})".format(dataType, ', '.join(params)))
+      return lines
+   
+   def writeBooleanDataTypeTemplate(self, dataType, localvars):
+      lines = []         
+      lines.append("{0.name} = createBooleanDataTypeTemplate('{0.name}')".format(dataType))
       return lines
