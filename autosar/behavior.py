@@ -1067,7 +1067,7 @@ class SwcInternalBehavior(InternalBehaviorCommon):
       self.parameterDataPrototype.append(parameter)
       return parameter
 
-   def createNvmBlock(self, name, portName, perInstanceMemoryName, perInstanceMemoryRole='RamBlock', nvBlockNeeds = None):
+   def createNvmBlock(self, name, portName, perInstanceMemoryName, perInstanceMemoryRole='ramBlock', nvBlockNeeds = None):
       """
       AUTOSAR 4: Creates a ServiceNeeds object and appends it to the internal serviceDependencies list
       This assumes the service needed is related to NVM
