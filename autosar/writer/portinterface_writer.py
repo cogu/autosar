@@ -513,3 +513,4 @@ class CodePortInterfaceWriter(ElementWriter):
          
       lines.append('package.createModeDeclarationGroup(%s)'%(', '.join(params)))
       return lines
+

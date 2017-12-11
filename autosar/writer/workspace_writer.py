@@ -127,9 +127,7 @@ class WorkspaceWriter(BaseWriter):
                assert(isinstance(tail,str))
                result+=tail+'\n'
          return result
-      
-
-      
+            
    def saveCode(self, ws, fp, filters=None, ignore=None, head=None, tail=None, isModule=False, isTemplate=False):
       fp.write(self.toCode(ws, filters, ignore, head, tail, isModule, isTemplate))
       
