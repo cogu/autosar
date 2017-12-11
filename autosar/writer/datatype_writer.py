@@ -693,8 +693,8 @@ class TemplateDataTypeWriter(ElementWriter):
                           'BooleanDataType': self.writeBooleanDataTypeTemplate,
                           'IntegerDataType': self.writeIntegerTypeTemplate,
 #                          'RealDataType': self.writeRealDataTypeCode,
-#                          'RecordDataType': self.writeRecordDataTypeCode,
-#                          'StringDataType': self.writeStringTypeCode,
+                          'RecordDataType': self.writeRecordDataTypeTemplate,
+                          'StringDataType': self.writeStringDataTypeTemplate,
 #                          'CompuMethodConst': self.writeCompuMethodCode,
 #                          'CompuMethodRational': self.writeCompuMethodCode,
 #                          'DataTypeUnitElement': self.writeDataTypeUnitElementCode
@@ -766,4 +766,32 @@ class TemplateDataTypeWriter(ElementWriter):
    def writeBooleanDataTypeTemplate(self, dataType, localvars):
       lines = []         
       lines.append("{0.name} = createBooleanDataTypeTemplate('{0.name}')".format(dataType))
+      return lines
+
+   def writeRecordDataTypeTemplate(self, dataType, localvars):
+      lines=[]
+      ws=localvars['ws']
+      params=[repr(dataType.name)]
+      params2=[]
+      for elem in dataType.elements:
+         childType=ws.find(elem.typeRef)
+         if childType is None:
+            raise ValueError('invalid reference: '+dataType.typeRef)
+         params2.append('(%s, %s)'%(repr(elem.name), childType.name)) #we use the tuple option since this is most convenient
+      params.append('['+', '.join(params2)+']')
+      lines.append("%s = createRecordDataTypeTemplate(%s)"%(dataType.name, ', '.join(params)))
+      return lines
+   
+   def writeStringDataTypeTemplate(self, dataType, localvars):
+      lines=[]
+      ws=localvars['ws']
+      #name
+      params=[repr(dataType.name)]
+      #length
+      params.append(str(dataType.length))
+      #encoding
+      if dataType.encoding != 'ISO-8859-1':
+         params.append('encoding='+repr(dataType.encoding))
+      else:
+         lines.append('%s = createStringDataTypeTemplate(%s)'%(dataType.name, ', '.join(params)))
       return lines
