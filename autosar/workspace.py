@@ -16,7 +16,7 @@ from autosar.parser.component_parser import ComponentTypeParser
 from autosar.parser.system_parser import SystemParser
 from autosar.parser.signal_parser import SignalParser
 #default writers
-from autosar.writer.datatype_writer import XMLDataTypeWriter, CodeDataTypeWriter, TemplateDataTypeWriter
+from autosar.writer.datatype_writer import XMLDataTypeWriter, CodeDataTypeWriter
 from autosar.writer.constant_writer import XMLConstantWriter, CodeConstantWriter
 from autosar.writer.portinterface_writer import XMLPortInterfaceWriter, CodePortInterfaceWriter
 from autosar.writer.component_writer import XMLComponentTypeWriter, CodeComponentTypeWriter
@@ -27,7 +27,7 @@ _validWSRoles = ['DataType', 'Constant', 'PortInterface', 'ComponentType', 'Mode
                  'BaseType', 'DataConstraint']
 
 class Workspace(object):
-   def __init__(self, version, patch, schema, EcuName = None, useTemplateWriter=False, packages=None):
+   def __init__(self, version, patch, schema, attributes = None, useDefaultWriters=True):
       self.packages = []
       if isinstance(version, str):
          (major, minor, patch) = parseVersionString(version)
@@ -40,8 +40,8 @@ class Workspace(object):
       self.packageParser=None
       self.packageWriter=None
       self.xmlroot = None
-      self.EcuName = EcuName
-      self.useTemplateWriter = bool(useTemplateWriter)
+      self.attributes = attributes
+      self.useDefaultWriters = bool(useDefaultWriters)
       self.roles = {'DataType': None,
                     'Constant': None,
                     'PortInterface': None,
@@ -52,23 +52,7 @@ class Workspace(object):
                     'BaseType': None,        #AUTOSAR 4 only
                     'DataConstraint': None }  #AUTOSAR 4 only
       self.map = {'packages': {}}
-
-#BEGIN DEPCRECATED
-      self.defaultPackages = {'DataType': 'DataType',
-                              'Constant': 'Constant',
-                              'PortInterface': 'PortInterface',
-                              'ModeDclrGroup': 'ModeDclrGroup',
-                              'ComponentType': 'ComponentType',
-                              'CompuMethod': 'DataTypeSemantics',
-                              'Unit': 'DataTypeUnits'}
-#END DEPRECATED
       self.errorHandlingOpt = False
-      if packages is not None:
-         for key,value in packages.items():
-            if key in self.defaultPackages:
-               self.defaultPackages[key]=value
-            else:
-               raise ValueError("Unknown role name '%s'"%key)
 
 
    @property
@@ -296,7 +280,8 @@ class Workspace(object):
          schema = self.schema
       if self.packageWriter is None:
          self.packageWriter = autosar.writer.package_writer.PackageWriter(version, patch)
-         self._registerDefaultElementWriters(self.packageWriter)
+         if self.useDefaultWriters:
+            self._registerDefaultElementWriters(self.packageWriter)
       writer=autosar.writer.WorkspaceWriter(version, patch, schema, self.packageWriter)
       with open(filename, 'w', encoding="utf-8") as fp:
          if isinstance(filters,str): filters=[filters]
@@ -323,7 +308,8 @@ class Workspace(object):
          schema = self.schema
       if self.packageWriter is None:
          self.packageWriter = autosar.writer.package_writer.PackageWriter(version, patch)
-         self._registerDefaultElementWriters(self.packageWriter)
+         if self.useDefaultWriters:
+            self._registerDefaultElementWriters(self.packageWriter)
       writer=autosar.writer.WorkspaceWriter(version, patch, schema, self.packageWriter)
       if isinstance(filters,str): filters=[filters]
       if isinstance(packages,str): packages=[packages]
@@ -374,9 +360,9 @@ class Workspace(object):
                filters.append(package+'/*')
       if filters is not None:
          filters = [prepareFilter(x) for x in filters]
-      return writer.toCode(self, filters ,str(header))
+      return writer.toCode(self, filters ,str(header), ws.noDefault)
 
-   def saveCode(self, filename, filters=None, packages=None, ignore=None, head=None, tail=None, module=False, version=None, patch=None):
+   def saveCode(self, filename, filters=None, packages=None, ignore=None, head=None, tail=None, module=False, template=False, version=None, patch=None):
       """
       saves the workspace as python code so it can be recreated later
       """
@@ -386,7 +372,8 @@ class Workspace(object):
          patch = self.patch
       if self.packageWriter is None:
          self.packageWriter = autosar.writer.package_writer.PackageWriter(version, patch)
-         self._registerDefaultElementWriters(self.packageWriter)
+         if self.useDefaultWriters:
+            self._registerDefaultElementWriters(self.packageWriter)
       writer=autosar.writer.WorkspaceWriter(version, patch, None, self.packageWriter)
       if isinstance(packages,str): packages=[packages]
       if isinstance(filters,str): filters=[filters]
@@ -403,7 +390,7 @@ class Workspace(object):
          filters = [prepareFilter(x) for x in filters]
 
       with open(filename,'w', encoding="utf-8") as fp:
-         writer.saveCode(self, fp, filters, ignore, head, tail, module, self.useTemplateWriter)
+         writer.saveCode(self, fp, filters, ignore, head, tail, module, template)
 
    @property
    def ref(self):
@@ -542,7 +529,8 @@ class Workspace(object):
       """
       if self.packageWriter is None:
          self.packageWriter = autosar.writer.package_writer.PackageWriter(self.version, self.patch)
-         self._registerDefaultElementWriters(self.packageWriter)
+         if self.useDefaultWriters:
+            self._registerDefaultElementWriters(self.packageWriter)
       self.packageWriter.registerElementWriter(elementWriter)
 
    def _registerDefaultElementParsers(self, parser):
@@ -564,21 +552,9 @@ class Workspace(object):
       writer.registerElementWriter(XMLPortInterfaceWriter(self.version, self.patch))
       writer.registerElementWriter(XMLComponentTypeWriter(self.version, self.patch))
       writer.registerElementWriter(XMLBehaviorWriter(self.version, self.patch))
-      if self.useTemplateWriter:
-         writer.registerElementWriter(TemplateDataTypeWriter(self.version, self.patch))
-      else:
-         writer.registerElementWriter(CodeDataTypeWriter(self.version, self.patch))
-         writer.registerElementWriter(CodeConstantWriter(self.version, self.patch))
-         writer.registerElementWriter(CodePortInterfaceWriter(self.version, self.patch))
-         writer.registerElementWriter(CodeComponentTypeWriter(self.version, self.patch))
-         writer.registerElementWriter(CodeBehaviorWriter(self.version, self.patch))
-         writer.registerElementWriter(SignalWriter(self.version, self.patch))
-      
-      
-      
-      
-      
-      
-      
-      
-
+      writer.registerElementWriter(CodeDataTypeWriter(self.version, self.patch))
+      writer.registerElementWriter(CodeConstantWriter(self.version, self.patch))
+      writer.registerElementWriter(CodePortInterfaceWriter(self.version, self.patch))
+      writer.registerElementWriter(CodeComponentTypeWriter(self.version, self.patch))
+      writer.registerElementWriter(CodeBehaviorWriter(self.version, self.patch))
+      writer.registerElementWriter(SignalWriter(self.version, self.patch))

@@ -247,3 +247,5 @@ class CodeConstantWriter(ElementWriter):
          else:
             return text
       return None
+
+   
