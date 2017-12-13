@@ -817,10 +817,15 @@ class Package(object):
                      compuMethod = ws.find(childProps.compuMethodRef, role='CompuMethod')
                      if compuMethod is None:
                         raise ValueError('Invalid CompuMethod reference: '+childProps.compuMethodRef)
-                     textValue = compuMethod.textValue(v)
-                     if textValue is None:
-                        raise ValueError('Could not find a text value that matches numerical value %s'%v )
-                     value.elements.append(autosar.constant.TextValue(elem.name,textValue))
+                     if isinstance(compuMethod, autosar.datatype.CompuMethodConst):
+                        textValue = compuMethod.textValue(v)
+                        if textValue is None:
+                           raise ValueError('Could not find a text value that matches numerical value %s'%v )
+                        value.elements.append(autosar.constant.TextValue(elem.name,textValue))
+                     elif isinstance(compuMethod, autosar.datatype.CompuMethodRational):
+                        value.elements.append(autosar.constant.NumericalValue(elem.name, v))
+                     else:
+                        raise NotImplementedError(type(compuMethod))
                else:
                   raise NotImplementedError(type(childType))
             else:
