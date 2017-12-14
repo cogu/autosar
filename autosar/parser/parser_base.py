@@ -111,7 +111,7 @@ class BaseParser():
             unitRef = self.parseTextNode(xmlItem)
          else:
             raise NotImplementedError(xmlItem.tag)
-      variant = SwDataDefPropsConditional(baseTypeRef, implementationTypeRef, swAddressMethodRef, swCalibrationAccess, swImplPolicy, compuMethodRef, dataConstraintRef, unitRef)
+      variant = SwDataDefPropsConditional(baseTypeRef, implementationTypeRef, swAddressMethodRef, swCalibrationAccess, swImplPolicy, None, compuMethodRef, dataConstraintRef, unitRef)
       if swPointerTargetPropsXML is not None:
          variant.swPointerTargetProps = self.parseSwPointerTargetProps(swPointerTargetPropsXML, variant)
       return variant
