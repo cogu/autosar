@@ -483,7 +483,7 @@ class Package(object):
                   #create new unit if not found
                   unitElem = autosar.datatype.DataTypeUnitElement(unit,unit)
                   unitPackage.append(unitElem)
-                  compuMethod.unitRef=unitElem.ref
+               compuMethod.unitRef=unitElem.ref
             else:
                raise RuntimeError("no package found with role='Unit'")
          else:
