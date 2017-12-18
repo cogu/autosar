@@ -139,7 +139,7 @@ class XMLComponentTypeWriter(ElementWriter):
                   if operation is None:
                      raise ValueError("%s: invalid comspec name '%s'"%(port.ref,comspec.name))
                   lines.extend(self.indent(self._writeOperationComSpec(operation),2))
-               if isinstance(portInterface, autosar.portinterface.ParameterInterface):
+               elif isinstance(portInterface, autosar.portinterface.ParameterInterface):
                   pass #not supported in AUTOSAR 3
                else:
                   dataElem=portInterface.find(comspec.name)
