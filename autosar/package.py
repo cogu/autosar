@@ -113,9 +113,10 @@ class Package(object):
       for i,element in enumerate(self.elements):
          if element.name == ref[0]:
             if len(ref[2])>0:
-               return element.delete(ref[2])
+               return element.delete(ref[2])               
             else:
                del self.elements[i]
+               del self.map['elements'][ref[0]]
                break
 
 
@@ -685,7 +686,7 @@ class Package(object):
                      pass
                   else:
                      raise ValueError('v: expected type Mapping or Iterable, got '+str(type(v)))
-                  value.elements.append(self._createRecordValue(ws, elem.name, childType, v, value))
+                  value.elements.append(self._createRecordValueV3(ws, elem.name, childType, v, value))
                elif isinstance(childType, autosar.datatype.ArrayDataType):
                   if isinstance(v, collections.Iterable):
                      pass
@@ -722,7 +723,7 @@ class Package(object):
 
 
    def _createArrayValue(self, ws, name, dataType, initValue, parent=None):
-      value = autosar.constant.ArrayValue(name, dataType.ref, parent)
+      value = autosar.constant.ArrayValue(name, dataType.ref, parent=parent)
       childType = ws.find(dataType.typeRef, role='DataType')
       if childType is None:
          raise ValueError('invalid reference: '+str(elem.typeRef))
@@ -742,7 +743,10 @@ class Package(object):
                   pass
                else:
                   raise ValueError('v: expected type Mapping or Iterable, got '+str(type(v)))
-               value.elements.append(self._createRecordValue(ws, elemName, childType, v, value))
+               if ws.version <= 4.0:
+                  value.elements.append(self._createRecordValueV3(ws, elemName, childType, v, value))
+               else:
+                  value.elements.append(self._createRecordValueV4(ws, elemName, childType, v, value))
             elif isinstance(childType, autosar.datatype.ArrayDataType):
                if isinstance(v, collections.Iterable):
                   pass

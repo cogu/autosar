@@ -423,6 +423,7 @@ class Workspace(object):
                return pkg.delete(ref[2])
             else:
                del self.packages[i]
+               del self.map['packages'][ref[0]]
                break
 
    def createAdminData(self, data):
