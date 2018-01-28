@@ -455,7 +455,7 @@ class Package(object):
             if ws.version >= 4.0:
                if baseTypeRef is None:
                   raise ValueError('baseTypeRef argument must be given to this method')
-               dataConstraint = self.createInternalDataConstraint(name+'_DataConstr', 0, len(valueTable)-1)
+               dataConstraint = self.createInternalDataConstraint(name+'_DataConstr', compuMethod.elements[0].lowerLimit, compuMethod.elements[-1].upperLimit)
                newType = autosar.datatype.ImplementationDataType(name, 'VALUE')
                props = autosar.base.SwDataDefPropsConditional(baseTypeRef=baseTypeRef,
                                                               swCalibrationAccess='NOT-ACCESSIBLE',
@@ -463,7 +463,7 @@ class Package(object):
                                                               dataConstraintRef=dataConstraint.ref)
                newType.variantProps = [props]
             else:
-               newType=autosar.datatype.IntegerDataType(name,0,len(valueTable)-1,compuMethodRef=compuMethod.ref, adminData=adminData)
+               newType=autosar.datatype.IntegerDataType(name, compuMethod.elements[0].lowerLimit, compuMethod.elements[-1].upperLimit, compuMethodRef=compuMethod.ref, adminData=adminData)
          else:
             raise RuntimeError("no package found with role='CompuMethod'")
       elif (min is not None) and (max is not None) and (offset is not None) and (scaling is not None):
