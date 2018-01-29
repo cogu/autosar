@@ -134,8 +134,9 @@ class BaseWriter:
       for sdg in adminData.specialDataGroups:
          data=collections.OrderedDict()
          if sdg.SDG_GID is not None: data['SDG_GID']=sdg.SDG_GID
-         if sdg.SD_GID is not None: data['SD_GID']=sdg.SD_GID
-         if sdg.SD is not None: data['SD']=sdg.SD
+         if len(sdg.SD) == 1:
+            if sdg.SD[0].GID is not None: data['SD_GID']=sdg.SD[0].GID
+            if sdg.SD[0].TEXT is not None: data['SD']=sdg.SD[0].TEXT
          items.append(data)
       if len(items)==0:
          raise ValueError("adminData doesn't seem to contain any SpecialDataGroups")
