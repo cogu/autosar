@@ -319,7 +319,7 @@ class CompuMethodConst(Element):
             return None
          i+=1
       return retval if len(retval)>0 else None
-   
+
    def textValue(self, numericValue):
       for elem in self.elements:
          if (elem.lowerLimit <= numericValue) and (numericValue <= elem.upperLimit):
@@ -377,15 +377,28 @@ class InternalConstraint:
       else:
          raise ValueError(upperLimitType)
 
+   def check_value(self, value):
+      if ((self.lowerLimitType=='CLOSED') and (value<self.lowerLimit)) or ((self.lowerLimitType=='OPEN') and (value<=self.lowerLimit)) :
+         raise autosar.base.DataConstraintError('Value {} outside lower data constraint ({}) '.format(str(value), str(self.lowerLimit)))
+      if ((self.upperLimitType=='CLOSED') and (value>self.upperLimit)) or ((self.upperLimitType=='OPEN') and (value>=self.upperLimit)) :
+         raise autosar.base.DataConstraintError('Value {} outside upper data constraint ({}) '.format(str(value), str(self.upperLimit)))
 
 class DataConstraint(Element):
    def tag(self,version=None): return 'DATA-CONSTR'
+
    def __init__(self, name, rules, parent=None, adminData=None):
       super().__init__(name, parent, adminData)
       self.rules = []
       for rule in rules:
          if rule['type'] == 'internalConstraint':
             self.rules.append(InternalConstraint(lowerLimit=rule['lowerLimit'], upperLimit=rule['upperLimit'], lowerLimitType=rule['lowerLimitType'], upperLimitType=rule['upperLimitType']))
+
+   def check_value(self, v):
+      if len(self.rules) == 1:
+         self.rules[0].check_value(v)
+      else:
+         raise NotImplementedError('Only a single rule supported')
+
 
 class ImplementationDataType(Element):
    def tag(self, version=None): return 'IMPLEMENTATION-DATA-TYPE'
@@ -430,7 +443,7 @@ class ImplementationDataTypeElement(Element):
             self.arraySizeSemantics = 'FIXED-SIZE'
       else:
          self.arraySizeSemantics = None
-      if variantProps is not None:         
+      if variantProps is not None:
          if isinstance(variantProps, (autosar.base.SwDataDefPropsConditional, autosar.base.SwPointerTargetProps)):
             self.variantProps.append(variantProps)
          elif isinstance(variantProps, collections.Iterable):

@@ -263,3 +263,6 @@ class InvalidPortRef(ValueError):
 
 class InvalidInitValueRef(ValueError):
    pass
+
+class DataConstraintError(ValueError):
+   pass
