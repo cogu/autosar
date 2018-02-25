@@ -817,19 +817,30 @@ class Package(object):
                   raise ValueError('Invalid reference: '+str(typeRef))
                if isinstance(childType, autosar.datatype.ImplementationDataType):
                   childProps = childType.variantProps[0]
+                  dataConstraint = None
+                  if childProps.dataConstraintRef is not None:
+                     dataConstraint = ws.find(childProps.dataConstraintRef, role='DataConstraint')
+                     if dataConstraint is None:
+                        raise ValueError('{0.name}: Invalid DataConstraint reference: {1.dataConstraintRef}'.format(childType, childProps))
                   if childProps.compuMethodRef is not None:
                      compuMethod = ws.find(childProps.compuMethodRef, role='CompuMethod')
                      if compuMethod is None:
-                        raise ValueError('Invalid CompuMethod reference: '+childProps.compuMethodRef)
+                        raise ValueError('{0.name}: Invalid CompuMethod reference: {1.compuMethodRef}'.format(childType, childProps))
                      if isinstance(compuMethod, autosar.datatype.CompuMethodConst):
                         textValue = compuMethod.textValue(v)
                         if textValue is None:
-                           raise ValueError('Could not find a text value that matches numerical value %s'%v )
+                           raise ValueError('{0.name}: Could not find a text value that matches numerical value {1:d}'.format(childType, v) )
                         value.elements.append(autosar.constant.TextValue(elem.name,textValue))
                      elif isinstance(compuMethod, autosar.datatype.CompuMethodRational):
+                        if dataConstraint is not None:
+                           dataConstraint.check_value(v)
                         value.elements.append(autosar.constant.NumericalValue(elem.name, v))
                      else:
                         raise NotImplementedError(type(compuMethod))
+                  else:
+                     if dataConstraint is not None:
+                        dataConstraint.check_value(v)
+                     value.elements.append(autosar.constant.NumericalValue(elem.name, v))
                else:
                   raise NotImplementedError(type(childType))
             else:
