@@ -287,49 +287,68 @@ class Package(object):
         It also creates an InternalBehavior object as well as an SwcImplementation object.
 
         """
-
-        if behaviorName is None:
-            behaviorName = str(swcName)+'_InternalBehavior'
-        if implementationName is None:
-            implementationName = str(swcName)+'_Implementation'
-        swc = autosar.component.ApplicationSoftwareComponent(swcName,self)
         ws = self.rootWS()
         assert(ws is not None)
+        swc = autosar.component.ApplicationSoftwareComponent(swcName,self)
+        self.append(swc)
+        self._createsInternalBehavior(ws, swc, behaviorName, multipleInstance)
+        self._createImplementation(swc, implementationName)
+        return swc
+
+    def createServiceComponent(self, swcName, behaviorName=None, implementationName=None, multipleInstance=False):
+        """
+        Creates a new ApplicationSoftwareComponent object and adds it to the package.
+        It also creates an InternalBehavior object as well as an SwcImplementation object.
+        """
+        ws = self.rootWS()
+        assert(ws is not None)
+
+        swc = autosar.component.ServiceComponent(swcName,self)
+        self.append(swc)
+        self._createsInternalBehavior(ws, swc, behaviorName, multipleInstance)
+        self._createImplementation(swc, implementationName)
+        return swc
+
+    def createComplexDeviceDriverComponent(self,swcName,behaviorName=None,implementationName=None,multipleInstance=False):
+        ws = self.rootWS()
+        assert(ws is not None)
+        swc=autosar.component.ComplexDeviceDriverComponent(swcName, parent=self)
+        self.append(swc)
+        self._createsInternalBehavior(ws, swc, behaviorName, multipleInstance)
+        self._createImplementation(swc, implementationName)
+        return swc
+
+    def createCompositionComponent(self, componentName, adminData=None):
+        component = autosar.component.CompositionComponent(str(componentName), self)
+        self.append(component)
+        return component
+
+    def _createsInternalBehavior(self, ws, swc, behaviorName, multipleInstance):
+        """
+        Initializes swc.behavior object
+        For AUTOSAR3, an instance of InternalBehavior is created
+        For AUTOSAR4, an instance of SwcInternalBehavior is created
+        """
+        if behaviorName is None:
+            behaviorName = swc.name+'_InternalBehavior'
         if ws.version < 4.0:
             # In AUTOSAR 3.x the internal behavior is a sub-element of the package.
             internalBehavior = autosar.behavior.InternalBehavior(behaviorName,swc.ref,multipleInstance,self)
         else:
             # In AUTOSAR 4.x the internal behavior is a sub-element of the swc.
             internalBehavior = autosar.behavior.SwcInternalBehavior(behaviorName,swc.ref,multipleInstance, swc)
-        implementation=autosar.component.SwcImplementation(implementationName,internalBehavior.ref,parent=self)
         swc.behavior=internalBehavior
-        swc.implementation=implementation
-        self.append(swc)
         if ws.version < 4.0:
             # In AUTOSAR 3.x the internal behavior is a sub-element of the package.
             self.append(internalBehavior)
-        self.append(implementation)
-        return swc
 
-    def createServiceComponent(self,swcName,behaviorName=None,implementationName=None,multipleInstance=False):
-        """
-        Creates a new ApplicationSoftwareComponent object and adds it to the package.
-        It also creates an InternalBehavior object as well as an SwcImplementation object.
-        """
+    def _createImplementation(self, swc, implementationName):
 
-        if behaviorName is None:
-            behaviorName = str(swcName)+'_InternalBehavior'
         if implementationName is None:
-            implementationName = str(swcName)+'_Implementation'
-        swc = autosar.component.ServiceComponent(swcName,self)
-        internalBehavior = autosar.behavior.InternalBehavior(behaviorName,swc.ref,multipleInstance,self)
-        implementation=autosar.component.SwcImplementation(implementationName,internalBehavior.ref,parent=self)
-        swc.behavior=internalBehavior
-        swc.implementation=implementation
-        self.append(swc)
-        self.append(internalBehavior)
-        self.append(implementation)
-        return swc
+            implementationName = swc.name+'_Implementation'
+        swc.implementation=autosar.component.SwcImplementation(implementationName,swc.behavior.ref,parent=self)
+        self.append(swc.implementation)
+
 
     def createModeDeclarationGroup(self, name, modeDeclarations, initialMode, category=None, adminData=None):
         """
@@ -861,27 +880,6 @@ class Package(object):
         self.append(constant)
         return constant
 
-
-
-    def createComplexDeviceDriverComponent(self,swcName,behaviorName=None,implementationName=None,multipleInstance=False):
-        if behaviorName is None:
-            behaviorName = str(swcName)+'_InternalBehavior'
-        if implementationName is None:
-            implementationName = str(swcName)+'_Implementation'
-        swc=autosar.component.ComplexDeviceDriverComponent(swcName, parent=self)
-        internalBehavior = autosar.behavior.InternalBehavior(behaviorName, swc.ref, multipleInstance, self)
-        implementation=autosar.component.SwcImplementation(implementationName, internalBehavior.ref, parent=self)
-        swc.behavior=internalBehavior
-        swc.implementation=implementation
-        self.append(swc)
-        self.append(internalBehavior)
-        self.append(implementation)
-        return swc
-
-    def createCompositionComponent(self, componentName, adminData=None):
-        component = autosar.component.CompositionComponent(str(componentName), self)
-        self.append(component)
-        return component
 
     def createInternalDataConstraint(self, name, lowerLimit, upperLimit, lowerLimitType="CLOSED", upperLimitType="CLOSED"):
         ws = self.rootWS()
