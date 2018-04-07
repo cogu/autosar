@@ -21,6 +21,8 @@ class XMLComponentTypeWriter(ElementWriter):
         elif self.version >= 4.0:
             self.switcher = {
                               'ApplicationSoftwareComponent': self.writeApplicationSoftwareComponentXML,
+                              'ComplexDeviceDriverComponent': self.writeComplexDeviceDriverComponentXML,
+                              'ServiceComponent': self.writeServiceComponentXML,
                               'SwcImplementation': self.writeSwcImplementationXML,
                               'CompositionComponent': self.writeCompositionComponentXML,
                               'ParameterComponent': self.writeParameterComponentXML

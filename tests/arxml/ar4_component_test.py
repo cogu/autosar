@@ -62,20 +62,35 @@ class TestBehaviorARXML(unittest.TestCase):
             expected_text=fp.read()
         self.assertEqual(generated_text, expected_text)
 
-    # def test_create_service_software_component(self):
-    #     ws = autosar.workspace(version="4.2.2")
-    #     _create_packages(ws)
-    #     package = ws.find('/ComponentTypes')
-    #     swc = package.createServiceComponent('MyService')
-    #     swc.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV')
-    #     generated_file = os.path.join(_output_dir, 'ar4_service_swc.arxml')
-    #     expected_file = os.path.join( 'expected_gen', 'component', 'ar4_service_swc.arxml')
-    #     ws.saveXML(generated_file, filters=['/ComponentTypes'])
-    #     with open (generated_file, "r") as fp:
-    #         generated_text=fp.read()
-    #     with open (expected_file, "r") as fp:
-    #         expected_text=fp.read()
-    #     self.assertEqual(generated_text, expected_text)
+    def test_create_service_software_component(self):
+        ws = autosar.workspace(version="4.2.2")
+        _create_packages(ws)
+        package = ws.find('/ComponentTypes')
+        swc = package.createServiceComponent('MyService')
+        swc.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV')
+        generated_file = os.path.join(_output_dir, 'ar4_service_swc.arxml')
+        expected_file = os.path.join( 'expected_gen', 'component', 'ar4_service_swc.arxml')
+        ws.saveXML(generated_file, filters=['/ComponentTypes'])
+        with open (generated_file, "r") as fp:
+            generated_text=fp.read()
+        with open (expected_file, "r") as fp:
+            expected_text=fp.read()
+        self.assertEqual(generated_text, expected_text)
+
+    def test_create_cdd_software_component(self):
+        ws = autosar.workspace(version="4.2.2")
+        _create_packages(ws)
+        package = ws.find('/ComponentTypes')
+        swc = package.createComplexDeviceDriverComponent('MyService')
+        swc.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV')
+        generated_file = os.path.join(_output_dir, 'ar4_cdd_swc.arxml')
+        expected_file = os.path.join( 'expected_gen', 'component', 'ar4_cdd_swc.arxml')
+        ws.saveXML(generated_file, filters=['/ComponentTypes'])
+        with open (generated_file, "r") as fp:
+            generated_text=fp.read()
+        with open (expected_file, "r") as fp:
+            expected_text=fp.read()
+        self.assertEqual(generated_text, expected_text)
 
 
 if __name__ == '__main__':
