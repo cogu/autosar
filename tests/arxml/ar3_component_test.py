@@ -12,8 +12,7 @@ def _create_packages(ws):
     package=ws.createPackage('DataTypes', role='DataType')
     package.createSubPackage('CompuMethods', role='CompuMethod')
     package.createSubPackage('DataConstrs', role='DataConstraint')
-    package.createSubPackage('Units', role='Unit')
-    basetypes=package.createSubPackage('BaseTypes')
+    package.createSubPackage('Units', role='Unit')    
 
     package.createIntegerDataType('UInt8', min=0, max=255)
     package.createIntegerDataType('UInt16', min=0, max=65535)

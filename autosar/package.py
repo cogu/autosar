@@ -417,6 +417,9 @@ class Package(object):
             swCalibrationAccess = 'NOT-ACCESSIBLE'
         if (not typeRef.startswith('/')) and (ws.roles['DataType'] is not None):
             typeRef=ws.roles['DataType']+'/'+typeRef
+        dataType = ws.find(typeRef)
+        if dataType is None:
+            raise autosar.base.InvalidDataTypeRef(typeRef)
         if ws.version >= 4.0:
             newType = autosar.datatype.ImplementationDataType(name, 'ARRAY', adminData=adminData)
             outerProps = autosar.base.SwDataDefPropsConditional(swCalibrationAccess=swCalibrationAccess)
@@ -635,7 +638,7 @@ class Package(object):
         dataType = ws.find(typeRef, role='DataType')
         value=None
         if dataType is None:
-            raise ValueError('invalid reference:' + str(typeRef))
+            raise autosar.base.InvalidDataTypeRef(str(typeRef))
         if ws.version < 4.0:
             self._createConstantV3(ws, name, dataType, initValue, adminData)
         else:
@@ -658,7 +661,7 @@ class Package(object):
                 pass
             else:
                 raise ValueError('initValue: expected type Iterable, got '+str(type(initValue)))
-            value=self._createArrayValue(ws, name, dataType, initValue)
+            value=self._createArrayValueV3(ws, name, dataType, initValue)
         elif isinstance(dataType, autosar.datatype.BooleanDataType):
             if isinstance(initValue, bool):
                 pass
@@ -710,7 +713,7 @@ class Package(object):
                             pass
                         else:
                             raise ValueError('v: expected type Iterable, got '+str(type(v)))
-                        value.elements.append(self._createArrayValue(ws, elem.name, childType, v, value))
+                        value.elements.append(self._createArrayValueV3(ws, elem.name, childType, v, value))
                     elif isinstance(childType, autosar.datatype.BooleanDataType):
                         if isinstance(v, bool):
                             pass
@@ -740,7 +743,7 @@ class Package(object):
         return value
 
 
-    def _createArrayValue(self, ws, name, dataType, initValue, parent=None):
+    def _createArrayValueV3(self, ws, name, dataType, initValue, parent=None):
         value = autosar.constant.ArrayValue(name, dataType.ref, parent=parent)
         childType = ws.find(dataType.typeRef, role='DataType')
         if childType is None:
@@ -761,16 +764,13 @@ class Package(object):
                         pass
                     else:
                         raise ValueError('v: expected type Mapping or Iterable, got '+str(type(v)))
-                    if ws.version <= 4.0:
                         value.elements.append(self._createRecordValueV3(ws, elemName, childType, v, value))
-                    else:
-                        value.elements.append(self._createRecordValueV4(ws, elemName, childType, v, value))
                 elif isinstance(childType, autosar.datatype.ArrayDataType):
                     if isinstance(v, collections.Iterable):
                         pass
                     else:
                         raise ValueError('v: expected type Iterable, got '+str(type(v)))
-                    value.elements.append(self._createArrayValue(ws, elemName, childType, v, value))
+                    value.elements.append(self._createArrayValueV3(ws, elemName, childType, v, value))
                 elif isinstance(childType, autosar.datatype.BooleanDataType):
                     if isinstance(v, bool):
                         pass
@@ -800,9 +800,14 @@ class Package(object):
     def _createConstantV4(self, ws, name, dataType, initValue, adminData=None):
         if isinstance(dataType, (autosar.datatype.ImplementationDataType, autosar.datatype.ApplicationPrimitiveDataType)):
             if dataType.category == 'VALUE':
-                value = autosar.constant.NumericalValue(name, initValue)
+                if isinstance(initValue, str):
+                    value = autosar.constant.TextValue(name, initValue)
+                else:
+                    value = autosar.constant.NumericalValue(name, initValue)
             elif dataType.category == 'STRUCTURE':
                 value = self._createRecordValueV4(ws, name, dataType, initValue)
+            elif dataType.category == 'ARRAY':
+                value = self._createArrayValueV4(ws, name, dataType, initValue)
             else:
                 raise NotImplementedError(dataType.category)
         assert(value is not None)
@@ -812,7 +817,7 @@ class Package(object):
 
     def _createRecordValueV4(self, ws, name, dataType, initValue, parent=None):
         value = autosar.constant.RecordValue(name, dataType.ref, parent)
-        if isinstance(initValue, collections.Mapping):
+        if isinstance(initValue, collections.abc.Mapping):
             a = set() #datatype elements
             b = set() #initvalue elements
             for subElem in dataType.subElements:
@@ -863,6 +868,27 @@ class Package(object):
                         raise NotImplementedError(type(childType))
                 else:
                     raise ValueError('%s: missing initValue field: %s'%(name, elem.name))
+        return value
+
+    def _createArrayValueV4(self, ws, name, dataType, initValue, parent=None):        
+        value = autosar.constant.ArrayValue(name, dataType.ref, parent)
+        typeArrayLength = dataType.getArrayLength()
+        if not isinstance(typeArrayLength, int):
+            raise ValueError('dataType has no valid array length')
+        if isinstance(initValue, collections.abc.Sequence):
+            if len(initValue) > typeArrayLength:
+                print("%s: Excess array init values detected. Expected length=%d, got %d items"%(name, typeArrayLength, len(initValue)), file=sys.stderr)
+            if len(initValue) < typeArrayLength:
+                print("%s: Not enough array init values. Expected length=%d, got %d items"%(name, typeArrayLength, len(initValue)), file=sys.stderr)
+            i=0
+            for v in initValue:
+                if isinstance(v, str):
+                    value.elements.append(autosar.constant.TextValue(None, v))
+                else:
+                    value.elements.append(autosar.constant.NumericalValue(None, v))
+                i+=1
+                if i>=typeArrayLength:
+                    break
         return value
 
 
