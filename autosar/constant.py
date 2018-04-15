@@ -112,10 +112,14 @@ class RecordValue(Value):
     """
     def tag(self,version=None): return "RECORD-VALUE-SPECIFICATION" if version >= 4.0 else "RECORD-SPECIFICATION"
 
-    def __init__(self, name, typeRef=None, parent=None):
+    def __init__(self, name, typeRef=None, elements=None, parent=None):
         super().__init__(name, parent)
         self.typeRef=typeRef
-        self.elements=[]
+        if elements is None:
+            self.elements=[]
+        else:
+            self.elements = list(elements)
+    
     def asdict(self):
         data={'type': self.__class__.__name__,'name':self.name,'typeRef':self.typeRef,'elements':[]}
         for element in self.elements:
