@@ -54,16 +54,16 @@ class XMLBehaviorWriter(ElementWriter):
             lines.append(self.indent('</DATA-TYPE-MAPPING-REFS>',1))
         if self.version < 4.0:
             lines.append(self.indent('<COMPONENT-REF DEST="%s">%s</COMPONENT-REF>'%(swc.tag(self.version),swc.ref),1))
-        if len(internalBehavior.events):
-            lines.append(self.indent('<EVENTS>',1))
-            for event in internalBehavior.events:
-                lines.extend(self.indent(self._writeEventXML(ws,event),2))
-            lines.append(self.indent('</EVENTS>',1))
         if len(internalBehavior.exclusiveAreas)>0:
             lines.append(self.indent('<EXCLUSIVE-AREAS>',1))
             for exclusiveArea in internalBehavior.exclusiveAreas:
                 lines.extend(self.indent(self._writeExclusiveAreaXML(ws,exclusiveArea),2))
             lines.append(self.indent('</EXCLUSIVE-AREAS>',1))
+        if len(internalBehavior.events):
+            lines.append(self.indent('<EVENTS>',1))
+            for event in internalBehavior.events:
+                lines.extend(self.indent(self._writeEventXML(ws,event),2))
+            lines.append(self.indent('</EVENTS>',1))
         if len(internalBehavior.portAPIOptions)==0:
             internalBehavior.createPortAPIOptionDefaults() #try to automatically create PortAPIOption objects on behavior object
         if isinstance(internalBehavior, autosar.behavior.InternalBehavior) and len(internalBehavior.perInstanceMemories)>0:
