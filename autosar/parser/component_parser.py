@@ -115,7 +115,7 @@ class ComponentTypeParser(ElementParser):
                 portInterfaceRef = self.parseTextNode(xmlPort.find('REQUIRED-INTERFACE-TREF'))
                 port = autosar.component.RequirePort(portName,portInterfaceRef,parent=componentType)
                 if hasAdminData(xmlPort):
-                    port.adminData=parseAdminDataNode(xmlRoot.find('ADMIN-DATA'))
+                    port.adminData=parseAdminDataNode(xmlPort.find('ADMIN-DATA'))
                 if xmlPort.findall('./REQUIRED-COM-SPECS') is not None:
                     for xmlItem in xmlPort.findall('./REQUIRED-COM-SPECS/*'):
                         if xmlItem.tag == 'CLIENT-COM-SPEC':
