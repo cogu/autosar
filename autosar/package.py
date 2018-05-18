@@ -798,22 +798,61 @@ class Package(object):
         return value
 
     def _createConstantV4(self, ws, name, dataType, initValue, adminData=None):
-        if isinstance(dataType, (autosar.datatype.ImplementationDataType, autosar.datatype.ApplicationPrimitiveDataType)):
-            if dataType.category == 'VALUE':
-                if isinstance(initValue, str):
-                    value = autosar.constant.TextValue(name, initValue)
-                else:
-                    value = autosar.constant.NumericalValue(name, initValue)
-            elif dataType.category == 'STRUCTURE':
-                value = self._createRecordValueV4(ws, name, dataType, initValue)
-            elif dataType.category == 'ARRAY':
-                value = self._createArrayValueV4(ws, name, dataType, initValue)
-            else:
-                raise NotImplementedError(dataType.category)
+        value = self._createValueV4(ws, name, dataType, initValue)
         assert(value is not None)
         constant = autosar.constant.Constant(name, value, parent=self, adminData=adminData)
         self.append(constant)
         return constant
+
+    def _createValueV4(self, ws, name, dataType, rawValue, parent = None):
+        if isinstance(dataType, (autosar.datatype.ImplementationDataType, autosar.datatype.ApplicationPrimitiveDataType)):
+            value = None
+            dataConstraint = None
+            if isinstance(dataType, autosar.datatype.ImplementationDataType):
+                variantProps = dataType.variantProps[0]
+            if variantProps is not None:
+                if variantProps.dataConstraintRef is not None:
+                    dataConstraint = ws.find(variantProps.dataConstraintRef, role='DataConstraint')
+                    if dataConstraint is None:
+                        raise ValueError('{0.name}: Invalid DataConstraint reference: {1.dataConstraintRef}'.format(dataType, variantProps))
+                if variantProps.compuMethodRef is not None:
+                    compuMethod = ws.find(variantProps.compuMethodRef, role='CompuMethod')
+                    if compuMethod is None:
+                        raise ValueError('{0.name}: Invalid CompuMethod reference: {1.compuMethodRef}'.format(dataType, variantProps))
+                    if isinstance(compuMethod, autosar.datatype.CompuMethodConst):
+                        textValue = compuMethod.textValue(rawValue)
+                        if textValue is None:
+                            raise ValueError('{0.name}: Could not find a text value that matches numerical value {1:d}'.format(dataType, rawValue) )
+                        value = autosar.constant.TextValue(name,textValue)
+                    elif isinstance(compuMethod, autosar.datatype.CompuMethodRational):
+                        if dataConstraint is not None:
+                            dataConstraint.check_value(rawValue)
+                        value = autosar.constant.NumericalValue(name, rawValue)
+                    else:
+                        raise NotImplementedError(type(compuMethod))
+            if value is None:
+                if dataType.category == 'VALUE':
+                    if isinstance(rawValue, str):
+                        value = autosar.constant.TextValue(name, rawValue)
+                    else:
+                        if dataConstraint is not None:
+                            dataConstraint.check_value(rawValue)
+                        value = autosar.constant.NumericalValue(name, rawValue)
+                elif dataType.category == 'ARRAY':
+                    value = self._createArrayValueV4(ws, name, dataType, rawValue, parent)
+                elif dataType.category == 'STRUCTURE':
+                    value = self._createRecordValueV4(ws, name, dataType, rawValue, parent)
+                elif dataType.category == 'TYPE_REFERENCE':
+                    referencedTypeRef = dataType.getTypeReference()
+                    referencedType = ws.find(referencedTypeRef, role='DataType')
+                    if referencedType is None:
+                        raise ValueError('Invalid reference: '+str(referencedTypeRef))
+                    value = self._createValueV4(ws, name, referencedType, rawValue, parent)
+                else:
+                    raise NotImplementedError(dataType.category)
+        else:
+            raise NotImplementedError(type(dataType))
+        return value
 
     def _createRecordValueV4(self, ws, name, dataType, initValue, parent=None):
         value = autosar.constant.RecordValue(name, dataType.ref, parent)
@@ -830,52 +869,35 @@ class Package(object):
             for elem in dataType.subElements:
                 if elem.name in initValue:
                     v = initValue[elem.name]
-                    variantProps = elem.variantProps[0]
-                    if variantProps.implementationTypeRef is not None:
-                        typeRef = variantProps.implementationTypeRef
+                    childProps = elem.variantProps[0]
+                    if childProps.implementationTypeRef is not None:
+                        childTypeRef = childProps.implementationTypeRef
                     else:
                         raise NotImplementedError('could not deduce the type of element "%s"'%(elem.name))
-                    childType = ws.find(typeRef, role='DataType')
+                    childType = ws.find(childTypeRef, role='DataType')
                     if childType is None:
-                        raise ValueError('Invalid reference: '+str(typeRef))
-                    if isinstance(childType, autosar.datatype.ImplementationDataType):
-                        childProps = childType.variantProps[0]
-                        dataConstraint = None
-                        if childProps.dataConstraintRef is not None:
-                            dataConstraint = ws.find(childProps.dataConstraintRef, role='DataConstraint')
-                            if dataConstraint is None:
-                                raise ValueError('{0.name}: Invalid DataConstraint reference: {1.dataConstraintRef}'.format(childType, childProps))
-                        if childProps.compuMethodRef is not None:
-                            compuMethod = ws.find(childProps.compuMethodRef, role='CompuMethod')
-                            if compuMethod is None:
-                                raise ValueError('{0.name}: Invalid CompuMethod reference: {1.compuMethodRef}'.format(childType, childProps))
-                            if isinstance(compuMethod, autosar.datatype.CompuMethodConst):
-                                textValue = compuMethod.textValue(v)
-                                if textValue is None:
-                                    raise ValueError('{0.name}: Could not find a text value that matches numerical value {1:d}'.format(childType, v) )
-                                value.elements.append(autosar.constant.TextValue(elem.name,textValue))
-                            elif isinstance(compuMethod, autosar.datatype.CompuMethodRational):
-                                if dataConstraint is not None:
-                                    dataConstraint.check_value(v)
-                                value.elements.append(autosar.constant.NumericalValue(elem.name, v))
-                            else:
-                                raise NotImplementedError(type(compuMethod))
-                        else:
-                            if dataConstraint is not None:
-                                dataConstraint.check_value(v)
-                            value.elements.append(autosar.constant.NumericalValue(elem.name, v))
-                    else:
-                        raise NotImplementedError(type(childType))
+                        raise autosar.base.InvalidDataTypeRef(str(childTypeRef))
+                    childValue = self._createValueV4(ws, elem.name, childType, v, value)
+                    assert(childValue is not None)
+                    value.elements.append(childValue)
                 else:
                     raise ValueError('%s: missing initValue field: %s'%(name, elem.name))
+        else:
+            raise ValueError('initValue must be a dict')
         return value
 
-    def _createArrayValueV4(self, ws, name, dataType, initValue, parent=None):        
-        value = autosar.constant.ArrayValue(name, dataType.ref, parent)
+    def _createArrayValueV4(self, ws, name, dataType, initValue, parent=None):
+        value = autosar.constant.ArrayValue(name, dataType.ref, None, parent)
         typeArrayLength = dataType.getArrayLength()
         if not isinstance(typeArrayLength, int):
             raise ValueError('dataType has no valid array length')
         if isinstance(initValue, collections.abc.Sequence):
+            if isinstance(initValue, str):
+                initValue = list(initValue)
+                if len(initValue)<typeArrayLength:
+                    #pad with zeros until length matches
+                    initValue += [0]*(typeArrayLength-len(initValue))
+                    assert(len(initValue) == typeArrayLength)
             if len(initValue) > typeArrayLength:
                 print("%s: Excess array init values detected. Expected length=%d, got %d items"%(name, typeArrayLength, len(initValue)), file=sys.stderr)
             if len(initValue) < typeArrayLength:
@@ -891,7 +913,6 @@ class Package(object):
                     break
         return value
 
-
     def createTextValueConstant(self, name, value):
         """AUTOSAR 4 text value constant"""
         constant = autosar.constant.Constant(name, None, self)
@@ -905,7 +926,6 @@ class Package(object):
         constant.value = autosar.constant.NumericalValue(name, value, constant)
         self.append(constant)
         return constant
-
 
     def createInternalDataConstraint(self, name, lowerLimit, upperLimit, lowerLimitType="CLOSED", upperLimitType="CLOSED"):
         ws = self.rootWS()
@@ -951,8 +971,13 @@ class Package(object):
         """
         return self.createSwBaseType(name, size, encoding, nativeDeclaration, adminData)
 
+    def createImplTypeReference(self, name, implementationTypeRef, adminData = None):
+        """
+        Same as createImplementationTypeReference
+        """
+        self.createImplementationTypeReference(name, implementationTypeRef, adminData)
 
-    def createImplementationTypeReference(self, name, typeRef, adminData = None):
+    def createImplementationTypeReference(self, name, implementationTypeRef, adminData = None):
         """
         Creates a new type reference to existing implementation type
         name: name of the new data type
@@ -967,7 +992,7 @@ class Package(object):
             adminDataObj = adminData
         if (adminDataObj is not None) and not isinstance(adminDataObj, autosar.base.AdminData):
             raise ValueError("adminData must be of type dict or AdminData")
-        variantProps = autosar.base.SwDataDefPropsConditional(implementationTypeRef = typeRef)
+        variantProps = autosar.base.SwDataDefPropsConditional(implementationTypeRef = implementationTypeRef)
         implementationDataType = autosar.datatype.ImplementationDataType(name, 'TYPE_REFERENCE', variantProps, parent = self, adminData = adminData)
         self.append(implementationDataType)
         return implementationDataType

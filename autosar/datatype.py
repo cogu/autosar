@@ -417,12 +417,19 @@ class ImplementationDataType(Element):
                     self.variantProps.append(elem)
                 else:
                     raise ValueError('Invalid type: ', type(elem))
-    
+
     def getArrayLength(self):
         if self.category == 'ARRAY' and len(self.subElements)>0:
             return self.subElements[0].arraySize
         else:
-            raise RunTimeError('Not an array: '+self.name)
+            raise RunTimeError('Not categorized as an array: '+self.name)
+
+    def getTypeReference(self):
+        if self.category == 'TYPE_REFERENCE' and len(self.variantProps)>0:
+            return self.variantProps[0].implementationTypeRef
+        else:
+            raise RunTimeError('Not categorized as a type reference: '+self.name)
+
 
 class SwBaseType(Element):
     def tag(self, version=None): return 'SW-BASE-TYPE'
