@@ -568,15 +568,25 @@ class Package(object):
                 raise ValueError('baseTypeRef argument must be given to this method')
             if (minVal == '-INFINITE' or minVal == 'INFINITE'): minVal = '-INF'
             if (maxVal == 'INFINITE'): maxVal = 'INF'
-            dataConstraint = self.createInternalDataConstraint(name+'_DataConstr', minVal, maxVal)
+            if minVal == '-INF' and minValType == 'CLOSED':
+                minValType = 'OPEN' #automatic correction
+            if maxVal == 'INF' and maxValType == 'CLOSED':
+                maxValType = 'OPEN' #automatic correction
+            dataConstraint = self.createInternalDataConstraint(name+'_DataConstr', minVal, maxVal, minValType, maxValType)
             newType = autosar.datatype.ImplementationDataType(name, 'VALUE')
             props = autosar.base.SwDataDefPropsConditional(baseTypeRef=baseTypeRef,
                                                                swCalibrationAccess='NOT-ACCESSIBLE',
                                                                dataConstraintRef=dataConstraint.ref)
             newType.variantProps = [props]
         else:
-            if (minVal == '-INFINITE' or '-INF'): minVal = 'INFINITE' #the missing '-' here is intentional. I know, AUTOSAR3 is weird.
-            if (maxVal == 'INF'): maxVal = 'INFINITE'
+            if ( (minVal == '-INFINITE') or (minVal == '-INF') or (minVal == 'INFINITE') or (minVal == 'INF') ):
+                #automatic correction
+                minVal = None
+                minValType = 'INFINITE'
+            if ( (maxVal == 'INF') or (maxVal == 'INFINITE') ):
+                #automatic correction
+                maxVal = None
+                maxValType = 'INFINITE'
             newType=autosar.datatype.RealDataType(name, minVal, maxVal, minValType, maxValType, hasNaN, encoding, self, adminData)
         self.append(newType)
         return newType
