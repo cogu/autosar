@@ -981,15 +981,9 @@ class Package(object):
         """
         return self.createSwBaseType(name, size, encoding, nativeDeclaration, adminData)
 
-    def createImplTypeReference(self, name, implementationTypeRef, adminData = None):
+    def createImplementationRefDataType(self, name, implementationTypeRef, adminData = None):
         """
-        Same as createImplementationTypeReference
-        """
-        self.createImplementationTypeReference(name, implementationTypeRef, adminData)
-
-    def createImplementationTypeReference(self, name, implementationTypeRef, adminData = None):
-        """
-        Creates a new type reference to existing implementation type
+        Creates an implementation data type that is a reference (typedef) of another implementation data type
         name: name of the new data type
         typeRef: reference to implementation data type
         """
@@ -1007,9 +1001,13 @@ class Package(object):
         self.append(implementationDataType)
         return implementationDataType
 
-    def createImplementationDataReference(self, name, baseTypeRef, swImplPolicy=None, adminData = None):
+    def createImplementationTypeReference(self, name, implementationTypeRef, adminData = None):
+        print("WARNING: createImplementationTypeReference has been deprecated. Use createImplementationRefDataType instead.", file=sys.stderr)
+        self.createImplementationRefDataType(name, implementationTypeRef, adminData)
+
+    def createImplementationPtrDataType(self, name, baseTypeRef, swImplPolicy=None, adminData = None):
         """
-        Creates an implementation data reference type
+        Creates an implementation type that is a pointer to another type
         """
         ws=self.rootWS()
         assert(ws is not None)
@@ -1026,9 +1024,16 @@ class Package(object):
         self.append(implementationDataType)
         return implementationDataType
 
+    def createImplementationDataReference(self, name, baseTypeRef, swImplPolicy=None, adminData = None):
+        """
+        Deprecated method name, use createImplementationPtrDataType instead
+        """
+        print("WARNING: createImplementationDataReference has been deprecated. Use createImplementationPtrDataType instead.", file=sys.stderr)
+        self.createImplementationPtrDataType(name, baseTypeRef, swImplPolicy, adminData)
+
     def createImplementationDataType(self, name, baseTypeRef, category='VALUE', adminData = None):
         """
-        Creates a new implementation data type
+        Creates an implementation data type that wraps a base type
         """
         ws=self.rootWS()
         assert(ws is not None)
