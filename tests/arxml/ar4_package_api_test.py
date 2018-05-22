@@ -62,11 +62,11 @@ class TestPackageApiXml(unittest.TestCase):
         expected_file = os.path.join( 'expected_gen', 'package', file_name)
         self.save_and_check(ws, expected_file, generated_file, filters=['/DataTypes'])
 
-    def test_create_implementation_type_ref(self):
+    def test_create_implementation_ref_type(self):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
         package = ws['DataTypes']
-        package.createImplTypeReference('U32Type_T', '/DataTypes/uint32')
+        package.createImplementationRefDataType('U32Type_T', '/DataTypes/uint32')
         file_name = 'ar4_implementation_type_ref.arxml'
         generated_file = os.path.join(_output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'package', file_name)
@@ -76,7 +76,7 @@ class TestPackageApiXml(unittest.TestCase):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
         package = ws['DataTypes']
-        package.createImplTypeReference('U32Test_T', '/DataTypes/uint32')
+        package.createImplementationRefDataType('U32Test_T', '/DataTypes/uint32')
         package.createArrayDataType('Array4_T', '/DataTypes/U32Test_T', 4)
         file_name = 'ar4_array_type.arxml'
         generated_file = os.path.join(_output_dir, file_name)
@@ -97,7 +97,7 @@ class TestPackageApiXml(unittest.TestCase):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
         package = ws['DataTypes']
-        package.createImplTypeReference('U32Type_T', '/DataTypes/uint32')
+        package.createImplementationRefDataType('U32Type_T', '/DataTypes/uint32')
         package.createRecordDataType('RecordType1_T', [('Elem1', '/DataTypes/uint8'), ('Elem2', '/DataTypes/U32Type_T')] )
         file_name = 'ar4_record_type1.arxml'
         generated_file = os.path.join(_output_dir, file_name)
@@ -108,7 +108,7 @@ class TestPackageApiXml(unittest.TestCase):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
         package = ws['DataTypes']
-        package.createImplTypeReference('U32Type_T', '/DataTypes/uint32')
+        package.createImplementationRefDataType('U32Type_T', '/DataTypes/uint32')
         package.createArrayDataType('UserName_T', '/DataTypes/uint8', 32)
         package.createRecordDataType('RecordType2_T', [('Elem1', '/DataTypes/U32Type_T'), ('Elem2', '/DataTypes/UserName_T')] )
         file_name = 'ar4_record_type2.arxml'
@@ -120,7 +120,7 @@ class TestPackageApiXml(unittest.TestCase):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
         package = ws['DataTypes']
-        package.createImplTypeReference('U32Type_T', '/DataTypes/uint32')
+        package.createImplementationRefDataType('U32Type_T', '/DataTypes/uint32')
         package = ws['Constants']
         package.createNumericalValueConstant('U32Value_IV', 2**32-1)
         file_name = 'ar4_num_value_constant.arxml'
@@ -145,7 +145,7 @@ class TestPackageApiXml(unittest.TestCase):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
         package = ws['DataTypes']
-        package.createImplTypeReference('U32Test_T', '/DataTypes/uint32')
+        package.createImplementationRefDataType('U32Test_T', '/DataTypes/uint32')
         package.createArrayDataType('Array4_T', '/DataTypes/U32Test_T', 4)
 
         package.createRecordDataType('RecordType1_T', [('Elem1', '/DataTypes/Array4_T'), ('Elem2', '/DataTypes/U32Test_T')] )
@@ -161,7 +161,7 @@ class TestPackageApiXml(unittest.TestCase):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
         package = ws['DataTypes']
-        package.createImplTypeReference('U32Type_T', '/DataTypes/uint32')
+        package.createImplementationRefDataType('U32Type_T', '/DataTypes/uint32')
         package.createArrayDataType('UserName_T', '/DataTypes/uint8', 32)
         package.createRecordDataType('RecordType2_T', [('Elem1', '/DataTypes/U32Type_T'), ('Elem2', '/DataTypes/UserName_T')] )
         package = ws['Constants']
@@ -176,7 +176,7 @@ class TestPackageApiXml(unittest.TestCase):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
         package = ws['DataTypes']
-        package.createImplTypeReference('U32Type_T', '/DataTypes/uint32')
+        package.createImplementationRefDataType('U32Type_T', '/DataTypes/uint32')
         package.createArrayDataType('UserName_T', '/DataTypes/uint8', 32)
         package.createRecordDataType('RecordType2_T', [('Elem1', '/DataTypes/U32Type_T'), ('Elem2', '/DataTypes/UserName_T')] )
         package = ws['Constants']
