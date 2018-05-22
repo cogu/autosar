@@ -28,14 +28,14 @@ class TestBehaviorARXML(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        output_dir_full = os.path.join(os.path.dirname(__file__), _output_dir)
-        if not os.path.exists(output_dir_full):
-            os.makedirs(output_dir_full)
+        cls.output_dir_full = os.path.join(os.path.dirname(__file__), _output_dir)
+        if not os.path.exists(cls.output_dir_full):
+            os.makedirs(cls.output_dir_full)
             time.sleep(0.1)
 
     @classmethod
     def tearDownClass(cls):
-        os.rmdir(_output_dir)
+        os.rmdir(cls.output_dir_full)
 
     def test_create_application_software_component(self):
         ws = autosar.workspace(version="3.0.2")
