@@ -555,9 +555,8 @@ class Package(object):
         if unitElem is not None:
             if unitPackage is not None:
                 if unitElem.ref is None:
-                    unitPackage.append(unitElem)                    
+                    unitPackage.append(unitElem)
                 unitRef = unitElem.ref
-                print(unitRef)
                 if isinstance(compuMethodElem, autosar.datatype.CompuMethodRational):
                     compuMethodElem.unitRef = unitRef
             else:
@@ -997,7 +996,7 @@ class Package(object):
         """
         return self.createSwBaseType(name, size, encoding, nativeDeclaration, adminData)
 
-    def createImplementationRefDataType(self, name, implementationTypeRef, minVal = None, maxVal = None, valueTable = None, offset = None, scaling = None, unit = None, forceFloatScaling = False, swCalibrationAccess = None, typeEmitter = None, adminData = None):
+    def createTypeRefImplementationType(self, name, implementationTypeRef, minVal = None, maxVal = None, valueTable = None, offset = None, scaling = None, unit = None, forceFloatScaling = False, swCalibrationAccess = None, typeEmitter = None, adminData = None):
         """
         AUTOSAR4
 
@@ -1022,10 +1021,10 @@ class Package(object):
 
     def createImplementationTypeReference(self, name, implementationTypeRef, adminData = None):
         if not _supress_warnings:
-            print("WARNING: createImplementationTypeReference has been deprecated. Use createImplementationRefDataType instead.", file=sys.stderr)
-        self.createImplementationRefDataType(name, implementationTypeRef, adminData)
+            print("WARNING: createImplementationTypeReference has been deprecated. Use createTypeRefImplementationType instead.", file=sys.stderr)
+        self.createTypeRefImplementationType(name, implementationTypeRef, adminData)
 
-    def createImplementationPtrType(self, name, baseTypeRef, swImplPolicy=None, adminData = None):
+    def createPointerImplementationType(self, name, baseTypeRef, swImplPolicy=None, adminData = None):
         """
         Creates an implementation type that is a pointer to another type
         """
@@ -1045,8 +1044,8 @@ class Package(object):
         Deprecated method name, use createImplementationPtrDataType instead
         """
         if not _supress_warnings:
-            print("WARNING: createImplementationDataReference has been deprecated. Use createImplementationPtrDataType instead.", file=sys.stderr)
-        self.createImplementationPtrDataType(name, baseTypeRef, swImplPolicy, adminData)
+            print("WARNING: createImplementationDataReference has been deprecated. Use createPointerImplementationType instead.", file=sys.stderr)
+        self.createPointerImplementationType(name, baseTypeRef, swImplPolicy, adminData)
 
     def createImplementationDataType(self, name, baseTypeRef, category='VALUE', minVal = None, maxVal = None, valueTable = None, offset = None, scaling = None, unit = None, forceFloatScaling = False, swCalibrationAccess = None, typeEmitter = None, adminData = None):
         """
