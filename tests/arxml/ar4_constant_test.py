@@ -30,7 +30,7 @@ def _create_packages(ws):
 
     package = ws.createPackage('ComponentTypes', role='ComponentType')
 
-class TestBehaviorARXML(unittest.TestCase):
+class TestConstantARXML4(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):

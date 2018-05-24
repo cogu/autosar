@@ -61,7 +61,7 @@ class TestPackageApiXml(unittest.TestCase):
         generated_file = os.path.join(_output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'package', file_name)
         self.save_and_check(ws, expected_file, generated_file, filters=['/DataTypes'])
-
+    
     def test_create_implementation_ref_type(self):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
@@ -71,7 +71,7 @@ class TestPackageApiXml(unittest.TestCase):
         generated_file = os.path.join(_output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'package', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
-
+    
     def test_create_array_type(self):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
@@ -82,7 +82,7 @@ class TestPackageApiXml(unittest.TestCase):
         generated_file = os.path.join(_output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'package', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
-
+    
     def test_create_impl_string_type(self):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
@@ -92,7 +92,7 @@ class TestPackageApiXml(unittest.TestCase):
         generated_file = os.path.join(_output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'package', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
-
+    
     def test_create_record_type1(self):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
@@ -103,7 +103,7 @@ class TestPackageApiXml(unittest.TestCase):
         generated_file = os.path.join(_output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'package', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
-
+    
     def test_create_record_type2(self):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
@@ -116,6 +116,16 @@ class TestPackageApiXml(unittest.TestCase):
         expected_file = os.path.join( 'expected_gen', 'package', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
 
+    def test_create_ref_type_with_valueTable(self):
+        ws = autosar.workspace(version="4.2.2")
+        _create_packages(ws)
+        package = ws['DataTypes']
+        package.createImplementationRefDataType('OffOn_T', '/DataTypes/uint8', valueTable=['OffOn_Off', 'OffOn_On', 'OffOn_Error', 'OffOn_NotAvailable'])
+        file_name = 'ar4_ref_type_vt.arxml'
+        generated_file = os.path.join(_output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'package', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'], True)
+
     def test_create_num_value_constant(self):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
@@ -127,7 +137,7 @@ class TestPackageApiXml(unittest.TestCase):
         generated_file = os.path.join(_output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'package', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/Constants'])
-
+    
     def test_create_impl_string_constant(self):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
@@ -139,24 +149,24 @@ class TestPackageApiXml(unittest.TestCase):
         generated_file = os.path.join(_output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'package', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/Constants'])
-
-
+    
+    
     def test_create_record_constant1(self):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
         package = ws['DataTypes']
         package.createImplementationRefDataType('U32Test_T', '/DataTypes/uint32')
         package.createArrayDataType('Array4_T', '/DataTypes/U32Test_T', 4)
-
+    
         package.createRecordDataType('RecordType1_T', [('Elem1', '/DataTypes/Array4_T'), ('Elem2', '/DataTypes/U32Test_T')] )
-
+    
         package = ws['Constants']
         package.createConstant('Record1_IV','/DataTypes/RecordType1_T', {'Elem1': [2**32-1,2**32-1,0,0], 'Elem2': 2**32-1})
         file_name = 'ar4_record_constant1.arxml'
         generated_file = os.path.join(_output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'package', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/Constants'])
-
+    
     def test_create_record_constant2(self):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
@@ -170,7 +180,7 @@ class TestPackageApiXml(unittest.TestCase):
         generated_file = os.path.join(_output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'package', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/Constants'])
-
+    
     def test_create_record_constant3(self):
         #same as test_create_record_constant2 but uses an empty string as initializer
         ws = autosar.workspace(version="4.2.2")

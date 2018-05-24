@@ -12,7 +12,7 @@ def _create_packages(ws):
     package=ws.createPackage('DataTypes', role='DataType')
     package.createSubPackage('CompuMethods', role='CompuMethod')
     package.createSubPackage('DataConstrs', role='DataConstraint')
-    package.createSubPackage('Units', role='Unit')    
+    package.createSubPackage('Units', role='Unit')
 
     package.createIntegerDataType('UInt8', min=0, max=255)
     package.createIntegerDataType('UInt16', min=0, max=65535)
@@ -28,7 +28,7 @@ def _create_packages(ws):
 
     package = ws.createPackage('ComponentTypes', role='ComponentType')
 
-class TestBehaviorARXML(unittest.TestCase):
+class TestComponentARXML3(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -90,4 +90,3 @@ class TestBehaviorARXML(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
