@@ -39,7 +39,7 @@ def _create_packages(ws):
 
     package = ws.createPackage('ComponentTypes', role='ComponentType')
 
-class TestBehaviorARXML(unittest.TestCase):
+class TestComponentARXML4(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -47,10 +47,10 @@ class TestBehaviorARXML(unittest.TestCase):
         if not os.path.exists(output_dir_full):
             os.makedirs(output_dir_full)
             time.sleep(0.1)
-    
+
     @classmethod
     def tearDownClass(cls):
-        os.rmdir(_output_dir)        
+        os.rmdir(_output_dir)
 
     def test_create_application_software_component(self):
         ws = autosar.workspace(version="4.2.2")
@@ -105,6 +105,4 @@ class TestBehaviorARXML(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()    
-    
-
+    unittest.main()

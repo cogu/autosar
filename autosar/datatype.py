@@ -402,11 +402,11 @@ class DataConstraint(Element):
 
 class ImplementationDataType(Element):
     def tag(self, version=None): return 'IMPLEMENTATION-DATA-TYPE'
-    def __init__(self, name, category='VALUE', variantProps=None, dynamicArraySizeProfile=None, parent=None, adminData=None):
+    def __init__(self, name, category='VALUE', variantProps=None, dynamicArraySizeProfile=None, typeEmitter=None, adminData=None, parent=None):
         super().__init__(name, parent, adminData)
         self.category = category
-        self.typeEmitter = None
         self.dynamicArraySizeProfile = dynamicArraySizeProfile
+        self.typeEmitter = typeEmitter
         self.variantProps = []
         self.subElements = []
         if isinstance(variantProps, (autosar.base.SwDataDefPropsConditional, autosar.base.SwPointerTargetProps)):

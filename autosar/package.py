@@ -11,6 +11,8 @@ import collections
 import decimal
 import sys
 
+_supress_warnings = True
+
 class Package(object):
     packageName = None
     def __init__(self, name, parent=None, role=None):
@@ -432,7 +434,7 @@ class Package(object):
         self.append(newType)
         return newType
 
-    def createIntegerDataType(self,name,min=None,max=None,valueTable=None,offset=None, scaling=None, unit=None, baseTypeRef=None, adminData=None, forceFloatScaling=False, typeEmitter=None):
+    def createIntegerDataType(self, name, min=None, max=None, valueTable=None, offset=None, scaling=None, unit=None, baseTypeRef=None, adminData=None, swCalibrationAccess='NOT-ACCESSIBLE', typeEmitter=None, forceFloatScaling=False):
         """
         AUTOSAR3:
         Helper method for creating integer datatypes in a package.
@@ -440,11 +442,49 @@ class Package(object):
 
         AUTOSAR4:
         Helper method for creating implementation datatypes or application datatypes.
-
         """
-        semanticsPackage=None
-        unitPackage=None
         ws=self.rootWS()
+        assert(ws is not None)
+        if ws.version >= 4.0:
+            if baseTypeRef is None:
+                return self.createApplicationDataType(name, min, max, valueTable, offset, scaling, unit, forceFloatScaling, swCalibrationAccess, typeEmitter, adminData)
+            else:
+                return self.createImplementationDataType(name, baseTypeRef, 'VALUE', min, max, valueTable, offset, scaling, unit, forceFloatScaling, swCalibrationAccess, typeEmitter, adminData)
+        else:
+            (compuMethodRef, unitRef, dataConstraintRef) = self._createCompuMethodUnitDataConstraint(ws, name, min, max, valueTable, offset, scaling, unit, forceFloatScaling)
+            minVal, maxVal = min, max
+            if compuMethodRef is not None:
+                compuMethod = ws.find(compuMethodRef)
+                if isinstance(compuMethod, autosar.datatype.CompuMethodConst):
+                    if minVal is None:
+                        minVal = compuMethod.elements[0].lowerLimit
+                    if maxVal is None:
+                        maxVal = compuMethod.elements[-1].upperLimit
+            newType=autosar.datatype.IntegerDataType(name, minVal, maxVal, compuMethodRef=compuMethodRef, adminData=adminData)
+            assert(newType is not None)
+            self.append(newType)
+            return newType
+
+    def _createCompuMethodUnitDataConstraint(self, ws, name, minVal, maxVal, valueTable, offset, scaling, unit, forceFloatScaling=False):
+        """
+        AUTOSAR3:
+
+        If both compuMethod and unit: Returns (compuMethodRef, unitRef, None)
+        Else if compuMethod only: Returns (compuMethodRef, None, None)
+        Else: Returns (None, None, None)
+
+        AUTOSAR4:
+
+        If both compuMethod and unit: Returns (compuMethodRed, unitRed, dataConstraintRef)
+        Else if  compuMethod only: Returns (compuMethodRef, None, dataConstraintRef
+        Else: Returns (None, None, None)
+        """
+        semanticsPackage = None
+        unitPackage = None
+        dataConstraintPackage = None
+        compuMethodElem = None
+        dataConstraintElem = None
+        unitElem = None
         assert(ws is not None)
         if ws.roles['CompuMethod'] is not None:
             semanticsPackage=ws.find(ws.roles['CompuMethod'])
@@ -454,41 +494,29 @@ class Package(object):
             unitPackage=ws.find(ws.roles['Unit'])
             if unitPackage is None:
                 raise RuntimeError("no package found with role='Unit'")
+        if ws.roles['DataConstraint'] is not None:
+            dataConstraintPackage=ws.find(ws.roles['DataConstraint'])
+            if dataConstraintPackage is None:
+                raise RuntimeError("no package found with role='DataConstraint'")
 
-        if (valueTable is not None) and (min is not None) and (max is not None):
-            #used for enumeration types using valueTables with explicit min and max
+        if (minVal is None) and (maxVal is None) and (valueTable is None) and (offset is None) and (scaling is None) and (unit is None):
+            return (None, None, None)
+
+        if (valueTable is not None) and (minVal is not None) and (maxVal is not None):
+            #used for enumeration types with explicit min and max
             category = 'TEXTTABLE' if ws.version >= 4.0 else None
-            compuMethod=autosar.CompuMethodConst(str(name),list(valueTable), category)
-            if (semanticsPackage is not None):
-                semanticsPackage.append(compuMethod)
-                if ws.version >= 4.0:
-                    pass
-                else:
-                    newType=autosar.datatype.IntegerDataType(name,min,max,compuMethodRef=compuMethod.ref, adminData=adminData)
-            else:
-                raise RuntimeError("no package found with role='CompuMethod'")
-        elif (valueTable is not None) and (min is None) and (max is None):
-            #used for enumeration types using valueTables with implicitly calculated min and max
+            compuMethodElem=autosar.CompuMethodConst(str(name),list(valueTable), category)
+            if ws.version >= 4.0:
+                dataConstraintElem = self.createInternalDataConstraint(name+'_DataConstr', minVal, maxVal)
+
+        elif (valueTable is not None) and (minVal is None) and (maxVal is None):
+            #used for enumeration types with implicit min and max
             category = 'TEXTTABLE' if ws.version >= 4.0 else None
-            compuMethod=autosar.CompuMethodConst(str(name),list(valueTable), category)
-            if (semanticsPackage is not None):
-                semanticsPackage.append(compuMethod)
-                if ws.version >= 4.0:
-                    if baseTypeRef is None:
-                        raise ValueError('baseTypeRef argument must be given to this method')
-                    dataConstraint = self.createInternalDataConstraint(name+'_DataConstr', compuMethod.elements[0].lowerLimit, compuMethod.elements[-1].upperLimit)
-                    newType = autosar.datatype.ImplementationDataType(name, 'VALUE')
-                    props = autosar.base.SwDataDefPropsConditional(baseTypeRef=baseTypeRef,
-                                                                   swCalibrationAccess='NOT-ACCESSIBLE',
-                                                                   compuMethodRef=compuMethod.ref,
-                                                                   dataConstraintRef=dataConstraint.ref)
-                    newType.variantProps = [props]
-                else:
-                    newType=autosar.datatype.IntegerDataType(name, compuMethod.elements[0].lowerLimit, compuMethod.elements[-1].upperLimit, compuMethodRef=compuMethod.ref, adminData=adminData)
-            else:
-                raise RuntimeError("no package found with role='CompuMethod'")
-        elif (min is not None) and (max is not None) and (offset is not None) and (scaling is not None):
-            #creates an integer data type with rational scaling
+            compuMethodElem=autosar.CompuMethodConst(str(name),list(valueTable), category)
+            if ws.version >= 4.0:
+                dataConstraintElem = self.createInternalDataConstraint(name+'_DataConstr', compuMethodElem.elements[0].lowerLimit, compuMethodElem.elements[-1].upperLimit)
+
+        elif (offset is not None) and (scaling is not None):
             if forceFloatScaling:
                 semanticElements=[{'offset':offset, 'numerator':scaling, 'denominator':1}]
             else:
@@ -497,64 +525,50 @@ class Package(object):
                     semanticElements=[{'offset':offset, 'numerator':scaling, 'denominator':1}]
                 else:
                     semanticElements=[{'offset':offset, 'numerator':f.numerator, 'denominator':f.denominator}]
-            compuMethod=autosar.datatype.CompuMethodRational(name,None,semanticElements)
-            if unit is not None:
-                if unitPackage is not None:
-                    unitElem = unitPackage.find(str(unit))
-                    if unitElem is None:
-                        #create new unit if not found
-                        unitElem = autosar.datatype.DataTypeUnitElement(unit,unit)
-                        unitPackage.append(unitElem)
-                    compuMethod.unitRef=unitElem.ref
-                else:
-                    raise RuntimeError("no package found with role='Unit'")
-            else:
-                unitElem = None
-            if (semanticsPackage is not None):
-                semanticsPackage.append(compuMethod)
+            compuMethodElem=autosar.datatype.CompuMethodRational(name,None,semanticElements)
+            if (minVal is not None) and (maxVal is not None):
                 if ws.version >= 4.0:
-#               if baseTypeRef is None:
-#                  raise ValueError('baseTypeRef argument must be given to this method')
-                    dataConstraint = self.createInternalDataConstraint(name+'_DataConstr', min, max)
-                    if baseTypeRef is None:
-                        #creates an application primitive data type by default
-                        newType = autosar.datatype.ApplicationPrimitiveDataType(name, 'VALUE')
-                        unitRef = unitElem.ref if unitElem is not None else None
-                        props = autosar.base.SwDataDefPropsConditional(swCalibrationAccess='READ-ONLY',
-                                                                       compuMethodRef=compuMethod.ref,
-                                                                       dataConstraintRef=dataConstraint.ref,
-                                                                       unitRef = unitRef)
-                    else:
-                        #If baseTypeRef has been set, it creates an Implementation data type instead
-                        newType = autosar.datatype.ImplementationDataType(name, 'VALUE')
-                        props = autosar.base.SwDataDefPropsConditional(baseTypeRef=baseTypeRef,
-                                                                       swCalibrationAccess='NOT-ACCESSIBLE',
-                                                                       compuMethodRef=compuMethod.ref,
-                                                                       dataConstraintRef=dataConstraint.ref)
-                    newType.variantProps = [props]
-                else:
-                    newType=autosar.datatype.IntegerDataType(name,min,max,compuMethodRef=compuMethod.ref, adminData=adminData)
+                    dataConstraintElem = self.createInternalDataConstraint(name+'_DataConstr', minVal, maxVal)
+            elif (minVal is not None) or (maxVal is not None):
+                raise ValueError('Invalid combination of arguments')
+
+        elif (minVal is not None) and (maxVal is not None):
+            if ws.version >= 4.0:
+                dataConstraintElem = self.createInternalDataConstraint(name+'_DataConstr', minVal, maxVal)
+        else:
+            raise ValueError('Invalid combination of arguments')
+
+        if unit is not None:
+            unitElem = None
+            if unitPackage is not None:
+                unitElem = ws.find(unit, role='Unit')
+            if unitElem is None:
+                unitElem = autosar.datatype.DataTypeUnitElement(unit,unit)
+
+        compuMethodRef, unitRef, dataConstraintRef = None, None, None
+        if compuMethodElem is not None:
+            if semanticsPackage is not None:
+                semanticsPackage.append(compuMethodElem)
+                compuMethodRef = compuMethodElem.ref
             else:
                 raise RuntimeError("no package found with role='CompuMethod'")
-        elif (min is not None) and (max is not None):
-            #creates a simple IntegerDataType
-            if ws.version >= 4.0:
-                if baseTypeRef is None:
-                    raise ValueError('baseTypeRef argument must be given to this method')
-                dataConstraint = self.createInternalDataConstraint(name+'_DataConstr', min, max)
-                newType = autosar.datatype.ImplementationDataType(name, 'VALUE')
-                props = autosar.base.SwDataDefPropsConditional(baseTypeRef=baseTypeRef,
-                                                                swCalibrationAccess='NOT-ACCESSIBLE',
-                                                                dataConstraintRef=dataConstraint.ref)
-                newType.variantProps = [props]
+        if unitElem is not None:
+            if unitPackage is not None:
+                if unitElem.ref is None:
+                    unitPackage.append(unitElem)                    
+                unitRef = unitElem.ref
+                print(unitRef)
+                if isinstance(compuMethodElem, autosar.datatype.CompuMethodRational):
+                    compuMethodElem.unitRef = unitRef
             else:
-                newType=autosar.datatype.IntegerDataType(name,min,max, adminData=adminData)
-        else:
-            raise NotImplementedError("not implemented")
-        if typeEmitter is not None and isinstance(newType, autosar.datatype.ImplementationDataType):
-            newType.typeEmitter = str(typeEmitter)
-        self.append(newType)
-        return newType
+                raise RuntimeError("no package found with role='Unit'")
+        if dataConstraintElem is not None:
+            if dataConstraintPackage is not None:
+                dataConstraintPackage.append(dataConstraintElem)
+                dataConstraintRef = dataConstraintElem.ref
+            else:
+                raise RuntimeError("no package found with role='DataConstraint'")
+        return (compuMethodRef, unitRef, dataConstraintRef)
 
     def createRealDataType(self, name, minVal, maxVal, minValType='CLOSED', maxValType='CLOSED', hasNaN=False, encoding='SINGLE', baseTypeRef=None, adminData=None):
         """
@@ -604,7 +618,7 @@ class Package(object):
             if swCalibrationAccess is None:
                 swCalibrationAccess = 'NOT-ACCESSIBLE'
             props = autosar.base.SwDataDefPropsConditional(swCalibrationAccess = swCalibrationAccess)
-            dataType = autosar.datatype.ImplementationDataType(name, 'STRUCTURE', props, None, self, adminData)
+            dataType = autosar.datatype.ImplementationDataType(name, 'STRUCTURE', props, adminData = adminData)
             for element in elements:
                 if not isinstance(element, tuple):
                     raise ValueError('element must be a tuple')
@@ -977,12 +991,16 @@ class Package(object):
 
     def createBaseType(self, name, size, encoding=None, nativeDeclaration=None, adminData=None):
         """
+        AUTOSAR4
+
         alias for createSwBaseType
         """
         return self.createSwBaseType(name, size, encoding, nativeDeclaration, adminData)
 
-    def createImplementationRefDataType(self, name, implementationTypeRef, adminData = None):
+    def createImplementationRefDataType(self, name, implementationTypeRef, minVal = None, maxVal = None, valueTable = None, offset = None, scaling = None, unit = None, forceFloatScaling = False, swCalibrationAccess = None, typeEmitter = None, adminData = None):
         """
+        AUTOSAR4
+
         Creates an implementation data type that is a reference (typedef) of another implementation data type
         name: name of the new data type
         typeRef: reference to implementation data type
@@ -990,37 +1008,35 @@ class Package(object):
         ws=self.rootWS()
         assert(ws is not None)
 
-        if isinstance(adminData, dict):
-            adminDataObj=ws.createAdminData(adminData)
-        else:
-            adminDataObj = adminData
-        if (adminDataObj is not None) and not isinstance(adminDataObj, autosar.base.AdminData):
-            raise ValueError("adminData must be of type dict or AdminData")
-        variantProps = autosar.base.SwDataDefPropsConditional(implementationTypeRef = implementationTypeRef)
-        implementationDataType = autosar.datatype.ImplementationDataType(name, 'TYPE_REFERENCE', variantProps, parent = self, adminData = adminData)
+        adminDataObj = self._checkAdminData(adminData)
+
+        (compuMethodRef, unitRef, dataConstraintRef) = self._createCompuMethodUnitDataConstraint(ws, name, minVal, maxVal, valueTable, offset, scaling, unit, forceFloatScaling)
+        variantProps = autosar.base.SwDataDefPropsConditional(swCalibrationAccess = swCalibrationAccess,
+                                                              compuMethodRef = compuMethodRef,
+                                                              dataConstraintRef = dataConstraintRef,
+                                                              implementationTypeRef = implementationTypeRef,
+                                                              unitRef = unitRef)
+        implementationDataType = autosar.datatype.ImplementationDataType(name, 'TYPE_REFERENCE', variantProps, parent = self, adminData = adminDataObj)
         self.append(implementationDataType)
         return implementationDataType
 
     def createImplementationTypeReference(self, name, implementationTypeRef, adminData = None):
-        print("WARNING: createImplementationTypeReference has been deprecated. Use createImplementationRefDataType instead.", file=sys.stderr)
+        if not _supress_warnings:
+            print("WARNING: createImplementationTypeReference has been deprecated. Use createImplementationRefDataType instead.", file=sys.stderr)
         self.createImplementationRefDataType(name, implementationTypeRef, adminData)
 
-    def createImplementationPtrDataType(self, name, baseTypeRef, swImplPolicy=None, adminData = None):
+    def createImplementationPtrType(self, name, baseTypeRef, swImplPolicy=None, adminData = None):
         """
         Creates an implementation type that is a pointer to another type
         """
         ws=self.rootWS()
         assert(ws is not None)
 
-        if isinstance(adminData, dict):
-            adminDataObj=ws.createAdminData(adminData)
-        else:
-            adminDataObj = adminData
-        if (adminDataObj is not None) and not isinstance(adminDataObj, autosar.base.AdminData):
-            raise ValueError("adminData must be of type dict or AdminData")
+        adminDataObj = self._checkAdminData(adminData)
+
         targetProps = autosar.base.SwPointerTargetProps('VALUE', autosar.base.SwDataDefPropsConditional(baseTypeRef = baseTypeRef, swImplPolicy=swImplPolicy))
         variantProps =  autosar.base.SwDataDefPropsConditional(swPointerTargetProps = targetProps)
-        implementationDataType = autosar.datatype.ImplementationDataType(name, 'DATA_REFERENCE', variantProps, parent = self, adminData = adminData)
+        implementationDataType = autosar.datatype.ImplementationDataType(name, 'DATA_REFERENCE', variantProps, parent = self, adminData = adminDataObj)
         self.append(implementationDataType)
         return implementationDataType
 
@@ -1028,23 +1044,38 @@ class Package(object):
         """
         Deprecated method name, use createImplementationPtrDataType instead
         """
-        print("WARNING: createImplementationDataReference has been deprecated. Use createImplementationPtrDataType instead.", file=sys.stderr)
+        if not _supress_warnings:
+            print("WARNING: createImplementationDataReference has been deprecated. Use createImplementationPtrDataType instead.", file=sys.stderr)
         self.createImplementationPtrDataType(name, baseTypeRef, swImplPolicy, adminData)
 
-    def createImplementationDataType(self, name, baseTypeRef, category='VALUE', adminData = None):
+    def createImplementationDataType(self, name, baseTypeRef, category='VALUE', minVal = None, maxVal = None, valueTable = None, offset = None, scaling = None, unit = None, forceFloatScaling = False, swCalibrationAccess = None, typeEmitter = None, adminData = None):
         """
         Creates an implementation data type that wraps a base type
         """
         ws=self.rootWS()
         assert(ws is not None)
 
+        adminDataObj = self._checkAdminData(adminData)
+
+        (compuMethodRef, unitRef, dataConstraintRef) = self._createCompuMethodUnitDataConstraint(ws, name, minVal, maxVal, valueTable, offset, scaling, unit, forceFloatScaling)
+        variantProps = autosar.base.SwDataDefPropsConditional(baseTypeRef = baseTypeRef,
+                                                              swCalibrationAccess = swCalibrationAccess,
+                                                              compuMethodRef = compuMethodRef,
+                                                              dataConstraintRef = dataConstraintRef,
+                                                              unitRef = unitRef)
+
+        implementationDataType = autosar.datatype.ImplementationDataType(name, category, variantProps, typeEmitter=typeEmitter, parent = self, adminData = adminDataObj)
+        self.append(implementationDataType)
+        return implementationDataType
+
+    def createApplicationDataType(name, minVal, maxVal, valueTable, offset, scaling, unit, forceFloatScaling, swCalibrationAccess, typeEmitter, adminData):
+        raise NotImplementedError('createApplicationDataType')
+
+    def _checkAdminData(self, adminData):
         if isinstance(adminData, dict):
             adminDataObj=ws.createAdminData(adminData)
         else:
             adminDataObj = adminData
         if (adminDataObj is not None) and not isinstance(adminDataObj, autosar.base.AdminData):
             raise ValueError("adminData must be of type dict or AdminData")
-        variantProps = autosar.base.SwDataDefPropsConditional(baseTypeRef = baseTypeRef)
-        implementationDataType = autosar.datatype.ImplementationDataType(name, category, variantProps, parent = self, adminData = adminData)
-        self.append(implementationDataType)
-        return implementationDataType
+        return adminDataObj
