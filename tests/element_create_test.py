@@ -117,6 +117,5 @@ class TestParameterInterfaceCreate(unittest.TestCase):
         portinterface = package.createParameterInterface('ButtonDebounceTime_I', parameter)
         self.assertIsInstance(portinterface, autosar.portinterface.ParameterInterface)
 
-
 if __name__ == '__main__':
     unittest.main()
