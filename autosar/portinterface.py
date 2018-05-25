@@ -128,11 +128,11 @@ class Parameter(Element):
         self.swCalibrationAccess = swCalibrationAccess
 
 class ClientServerInterface(PortInterface):
-    def __init__(self, name, isService=False, parent=None, adminData=None):
+    def __init__(self, name, isService=False, serviceKind = None, parent=None, adminData=None):
         super().__init__(name, isService, parent, adminData)
         self.operations=[]
         self.applicationErrors=[]
-        self.serviceKind = None
+        self.serviceKind = serviceKind
 
 
     def tag(self,version=None):

@@ -195,6 +195,25 @@ class TestPackageApiXml(unittest.TestCase):
         generated_file = os.path.join(_output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'package', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/Constants'])
+        
+    def test_create_ref_type_with_bitmask(self):
+        ws = autosar.workspace(version="4.2.2")
+        _create_packages(ws)
+        package = ws['DataTypes']
+        package.createTypeRefImplementationType('DataTypeWithBitMask_T', '/DataTypes/uint8', bitmask=[
+            'MASK1',
+            'MASK2',
+            'MASK4',
+            'MASK8',
+            'MASK16',
+            'MASK32',
+            'MASK64',
+            'MASK128',
+            ])
+        file_name = 'ar4_ref_type_bitmask.arxml'
+        generated_file = os.path.join(_output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'package', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
 
 if __name__ == '__main__':
     unittest.main()
