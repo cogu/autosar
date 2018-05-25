@@ -340,14 +340,17 @@ class CompuMethodMask(Element):
         super().__init__(name, parent, adminData)
         self.elements = []
         self.category=category
+        self.minVal = 0
+        self.maxVal = 0
         for elem in elements:
             if isinstance(elem,str):
                 mask= (1 << len(self.elements))
-                self.elements.append(CompuMaskElement(lowerLimit=mask,upperLimit=mask,mask=mask))
+                self.elements.append(CompuMaskElement(lowerLimit=mask, upperLimit=mask, mask=mask, label=elem, symbol=elem))
             elif isinstance(elem,dict):
                 self.elements.append(CompuMaskElement(**elem))
             else:
                 raise ValueError('type not supported:%s'%str(type(elem)))
+        self._calc_maxVal()
 
     def __eq__(self,other):
         if self is other: return True
@@ -357,6 +360,13 @@ class CompuMethodMask(Element):
                 if self.elements[i] != other.elements[i]: return False
             return True
         return False
+
+    def _calc_maxVal(self):
+        tmp = 0
+        for elem in self.elements:
+            if elem.upperLimit > tmp:
+                tmp = elem.upperLimit
+        self.maxVal = 2**int.bit_length(tmp)-1
 
 class InternalConstraint:
     def __init__(self, lowerLimit=None, upperLimit=None, lowerLimitType='CLOSED', upperLimitType='CLOSED'):
@@ -443,6 +453,11 @@ class SwBaseType(Element):
 
 class ImplementationDataTypeElement(Element):
     def tag(self, version=None): return 'IMPLEMENTATION-DATA-TYPE-ELEMENT'
+
+    @classmethod
+    def createTypeRef(cls, name, arraySize=None, arraySizeSemantics=None, variantProps=None, parent=None, adminData=None):
+        return ImplementationDataTypeElement(name, 'TYPE_REFERENCE', arraySize, arraySizeSemantics, variantProps, parent, adminData)
+
     def __init__(self, name, category=None, arraySize=None, arraySizeSemantics=None, variantProps=None, parent=None, adminData=None):
         super().__init__(name, parent, adminData)
         self.category=category
