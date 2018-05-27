@@ -107,20 +107,60 @@
               <COMPU-INTERNAL-TO-PHYS>
                 <COMPU-SCALES>
                   <COMPU-SCALE>
+                    <SHORT-LABEL>MASK1</SHORT-LABEL>
+                    <SYMBOL>MASK1</SYMBOL>
+                    <MASK>1</MASK>
+                    <LOWER-LIMIT INTERVAL-TYPE="CLOSED">1</LOWER-LIMIT>
+                    <UPPER-LIMIT INTERVAL-TYPE="CLOSED">1</UPPER-LIMIT>
                   </COMPU-SCALE>
                   <COMPU-SCALE>
+                    <SHORT-LABEL>MASK2</SHORT-LABEL>
+                    <SYMBOL>MASK2</SYMBOL>
+                    <MASK>2</MASK>
+                    <LOWER-LIMIT INTERVAL-TYPE="CLOSED">2</LOWER-LIMIT>
+                    <UPPER-LIMIT INTERVAL-TYPE="CLOSED">2</UPPER-LIMIT>
                   </COMPU-SCALE>
                   <COMPU-SCALE>
+                    <SHORT-LABEL>MASK4</SHORT-LABEL>
+                    <SYMBOL>MASK4</SYMBOL>
+                    <MASK>4</MASK>
+                    <LOWER-LIMIT INTERVAL-TYPE="CLOSED">4</LOWER-LIMIT>
+                    <UPPER-LIMIT INTERVAL-TYPE="CLOSED">4</UPPER-LIMIT>
                   </COMPU-SCALE>
                   <COMPU-SCALE>
+                    <SHORT-LABEL>MASK8</SHORT-LABEL>
+                    <SYMBOL>MASK8</SYMBOL>
+                    <MASK>8</MASK>
+                    <LOWER-LIMIT INTERVAL-TYPE="CLOSED">8</LOWER-LIMIT>
+                    <UPPER-LIMIT INTERVAL-TYPE="CLOSED">8</UPPER-LIMIT>
                   </COMPU-SCALE>
                   <COMPU-SCALE>
+                    <SHORT-LABEL>MASK16</SHORT-LABEL>
+                    <SYMBOL>MASK16</SYMBOL>
+                    <MASK>16</MASK>
+                    <LOWER-LIMIT INTERVAL-TYPE="CLOSED">16</LOWER-LIMIT>
+                    <UPPER-LIMIT INTERVAL-TYPE="CLOSED">16</UPPER-LIMIT>
                   </COMPU-SCALE>
                   <COMPU-SCALE>
+                    <SHORT-LABEL>MASK32</SHORT-LABEL>
+                    <SYMBOL>MASK32</SYMBOL>
+                    <MASK>32</MASK>
+                    <LOWER-LIMIT INTERVAL-TYPE="CLOSED">32</LOWER-LIMIT>
+                    <UPPER-LIMIT INTERVAL-TYPE="CLOSED">32</UPPER-LIMIT>
                   </COMPU-SCALE>
                   <COMPU-SCALE>
+                    <SHORT-LABEL>MASK64</SHORT-LABEL>
+                    <SYMBOL>MASK64</SYMBOL>
+                    <MASK>64</MASK>
+                    <LOWER-LIMIT INTERVAL-TYPE="CLOSED">64</LOWER-LIMIT>
+                    <UPPER-LIMIT INTERVAL-TYPE="CLOSED">64</UPPER-LIMIT>
                   </COMPU-SCALE>
                   <COMPU-SCALE>
+                    <SHORT-LABEL>MASK128</SHORT-LABEL>
+                    <SYMBOL>MASK128</SYMBOL>
+                    <MASK>128</MASK>
+                    <LOWER-LIMIT INTERVAL-TYPE="CLOSED">128</LOWER-LIMIT>
+                    <UPPER-LIMIT INTERVAL-TYPE="CLOSED">128</UPPER-LIMIT>
                   </COMPU-SCALE>
                 </COMPU-SCALES>
               </COMPU-INTERNAL-TO-PHYS>
