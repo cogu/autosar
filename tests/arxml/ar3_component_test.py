@@ -1,9 +1,9 @@
 import os, sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 import autosar
+from tests.arxml.common import ARXMLTestClass
 import unittest
-import time
-import shutil
+
 
 _output_dir = 'derived'
 
@@ -28,19 +28,7 @@ def _create_packages(ws):
 
     package = ws.createPackage('ComponentTypes', role='ComponentType')
 
-class TestComponentARXML3(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-
-        output_dir_full = os.path.join(os.path.dirname(__file__), _output_dir)
-        if not os.path.exists(output_dir_full):
-            os.makedirs(output_dir_full)
-            time.sleep(0.1)
-
-    @classmethod
-    def tearDownClass(cls):
-        shutil.rmtree(_output_dir)
+class ARXML3ComponentTest(ARXMLTestClass):
 
     def test_create_application_software_component(self):
         ws = autosar.workspace(version="3.0.2")
@@ -48,29 +36,21 @@ class TestComponentARXML3(unittest.TestCase):
         package = ws.find('/ComponentTypes')
         swc = package.createApplicationSoftwareComponent('MyApplication')
         swc.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV')
-        generated_file = os.path.join(_output_dir, 'ar3_application_swc.arxml')
-        expected_file = os.path.join( 'expected_gen', 'component', 'ar3_application_swc.arxml')
-        ws.saveXML(generated_file, filters=['/ComponentTypes'])
-        with open (generated_file, "r") as fp:
-            generated_text=fp.read()
-        with open (expected_file, "r") as fp:
-            expected_text=fp.read()
-        self.assertEqual(generated_text, expected_text)
-
+        file_name = 'ar3_integer_types.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
+        
     def test_create_service_software_component(self):
         ws = autosar.workspace(version="3.0.2")
         _create_packages(ws)
         package = ws.find('/ComponentTypes')
         swc = package.createServiceComponent('MyService')
         swc.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV')
-        generated_file = os.path.join(_output_dir, 'ar3_service_swc.arxml')
-        expected_file = os.path.join( 'expected_gen', 'component', 'ar3_service_swc.arxml')
-        ws.saveXML(generated_file, filters=['/ComponentTypes'])
-        with open (generated_file, "r") as fp:
-            generated_text=fp.read()
-        with open (expected_file, "r") as fp:
-            expected_text=fp.read()
-        self.assertEqual(generated_text, expected_text)
+        file_name = 'ar3_service_swc.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])        
 
     def test_create_cdd_software_component(self):
         ws = autosar.workspace(version="3.0.2")
@@ -78,15 +58,11 @@ class TestComponentARXML3(unittest.TestCase):
         package = ws.find('/ComponentTypes')
         swc = package.createComplexDeviceDriverComponent('MyComplexDeviceDriver')
         swc.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV')
+        file_name = 'ar3_cdd_swc.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])          
         generated_file = os.path.join(_output_dir, 'ar3_cdd_swc.arxml')
-        expected_file = os.path.join( 'expected_gen', 'component', 'ar3_cdd_swc.arxml')
-        ws.saveXML(generated_file, filters=['/ComponentTypes'])
-        with open (generated_file, "r") as fp:
-            generated_text=fp.read()
-        with open (expected_file, "r") as fp:
-            expected_text=fp.read()
-        self.assertEqual(generated_text, expected_text)
-
 
 if __name__ == '__main__':
     unittest.main()
