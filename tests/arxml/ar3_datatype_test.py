@@ -1,11 +1,8 @@
 import os, sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 import autosar
+from tests.arxml.common import ARXMLTestClass
 import unittest
-import time
-import shutil
-
-_output_dir = 'derived'
 
 def _create_packages(ws):
 
@@ -19,33 +16,7 @@ def _create_base_types(ws):
     package.createIntegerDataType('UInt16', min=0, max=65535)
     package.createIntegerDataType('UInt32', min=0, max=4294967295)
   
-
-class TestDataTypeARXML3(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        output_dir_full = os.path.join(os.path.dirname(__file__), _output_dir)
-        if not os.path.exists(output_dir_full):
-            os.makedirs(output_dir_full)
-            time.sleep(0.1)
-
-    @classmethod
-    def tearDownClass(cls):
-        output_dir_full = os.path.join(os.path.dirname(__file__), _output_dir)
-        os.rmdir(output_dir_full)
-
-    def save_and_check(self, ws, expected_file, generated_file, filters, force_copy=False):
-        expected_path = os.path.join(os.path.dirname(__file__), expected_file)
-        generated_path = os.path.join(os.path.dirname(__file__), generated_file)
-        ws.saveXML(generated_path, filters=filters)
-        if force_copy:
-            shutil.copyfile(generated_path, expected_path)
-        with open (generated_path, "r") as fp:
-            expected_text=fp.read()
-        with open (generated_path, "r") as fp:
-            generated_text=fp.read()
-        self.assertEqual(expected_text, generated_text)
-        os.remove(generated_path)
+class ARXML3DataTypeTest(ARXMLTestClass):
 
     def test_create_integer_types(self):
         ws = autosar.workspace(version="3.0.2")
@@ -55,7 +26,7 @@ class TestDataTypeARXML3(unittest.TestCase):
         package.createIntegerDataType('UInt16', min=0, max=65535)
         package.createIntegerDataType('UInt32', min=0, max=4294967295)
         file_name = 'ar3_integer_types.arxml'
-        generated_file = os.path.join(_output_dir, file_name)
+        generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataType'])
    
@@ -72,7 +43,7 @@ class TestDataTypeARXML3(unittest.TestCase):
                                 ('UserId3', 'UInt16')
                                 ])
         file_name = 'ar3_record_type_simple.arxml'
-        generated_file = os.path.join(_output_dir, file_name)
+        generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataType'])
 
@@ -89,13 +60,9 @@ class TestDataTypeARXML3(unittest.TestCase):
                                 ])
         package.createArrayDataType('MyArray_T', record_type.ref, 8)
         file_name = 'ar3_record_type_array.arxml'
-        generated_file = os.path.join(_output_dir, file_name)
+        generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataType'], True)
-
-
-
-
 
 if __name__ == '__main__':
     unittest.main()
