@@ -47,7 +47,7 @@ class ARXML4ConstantTest(ARXMLTestClass):
         package.createNumericalValueConstant('U32Value_IV', 2**32-1)
         file_name = 'ar4_num_value_constant.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
-        expected_file = os.path.join( 'expected_gen', 'package', file_name)
+        expected_file = os.path.join( 'expected_gen', 'constant', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/Constants'])
 
     def test_create_impl_string_constant(self):
@@ -59,7 +59,7 @@ class ARXML4ConstantTest(ARXMLTestClass):
         package.createConstant('UserName_IV','/DataTypes/UserName_T', '')
         file_name = 'ar4_impl_string_constant.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
-        expected_file = os.path.join( 'expected_gen', 'package', file_name)
+        expected_file = os.path.join( 'expected_gen', 'constant', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/Constants'])
 
 
@@ -76,7 +76,7 @@ class ARXML4ConstantTest(ARXMLTestClass):
         package.createConstant('Record1_IV','/DataTypes/RecordType1_T', {'Elem1': [2**32-1,2**32-1,0,0], 'Elem2': 2**32-1})
         file_name = 'ar4_record_constant1.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
-        expected_file = os.path.join( 'expected_gen', 'package', file_name)
+        expected_file = os.path.join( 'expected_gen', 'constant', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/Constants'])
 
     def test_create_record_constant2(self):
@@ -90,7 +90,7 @@ class ARXML4ConstantTest(ARXMLTestClass):
         package.createConstant('Record2_IV','/DataTypes/RecordType2_T', {'Elem1': 2**32-1, 'Elem2': 'Default'})
         file_name = 'ar4_record_constant2.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
-        expected_file = os.path.join( 'expected_gen', 'package', file_name)
+        expected_file = os.path.join( 'expected_gen', 'constant', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/Constants'])
 
     def test_create_record_constant3(self):
@@ -105,7 +105,7 @@ class ARXML4ConstantTest(ARXMLTestClass):
         package.createConstant('Record2_IV','/DataTypes/RecordType2_T', {'Elem1': 2**32-1, 'Elem2': ''})
         file_name = 'ar4_record_constant3.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
-        expected_file = os.path.join( 'expected_gen', 'package', file_name)
+        expected_file = os.path.join( 'expected_gen', 'constant', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/Constants'])        
     
 if __name__ == '__main__':

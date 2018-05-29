@@ -49,7 +49,7 @@ class ARXML4ComponentTest(ARXMLTestClass):
         swc.behavior.createTimerEvent('Run', 20) #execute the Run function every 20ms in all modes
         file_name = 'ar4_application_swc.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
-        expected_file = os.path.join( 'expected_gen', 'constant', file_name)
+        expected_file = os.path.join( 'expected_gen', 'component', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
 
     def test_create_service_software_component(self):
@@ -60,7 +60,7 @@ class ARXML4ComponentTest(ARXMLTestClass):
         swc.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV')
         file_name = 'ar4_service_swc.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
-        expected_file = os.path.join( 'expected_gen', 'constant', file_name)
+        expected_file = os.path.join( 'expected_gen', 'component', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])        
 
     def test_create_cdd_software_component(self):
@@ -71,7 +71,7 @@ class ARXML4ComponentTest(ARXMLTestClass):
         swc.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV')
         file_name = 'ar4_cdd_swc.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
-        expected_file = os.path.join( 'expected_gen', 'constant', file_name)
+        expected_file = os.path.join( 'expected_gen', 'component', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])          
 
 if __name__ == '__main__':

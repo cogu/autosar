@@ -59,7 +59,7 @@ class ARXML3ConstantTest(ARXMLTestClass):
         file_name = 'ar3_array_record_constant.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'constant', file_name)
-        self.save_and_check(ws, expected_file, generated_file, ['/Constant'], True)
+        self.save_and_check(ws, expected_file, generated_file, ['/Constant'])
    
 if __name__ == '__main__':
     unittest.main()
