@@ -436,7 +436,7 @@ class Package(object):
         self.append(newType)
         return newType
 
-    def createIntegerDataType(self, name, min=None, max=None, valueTable=None, offset=None, scaling=None, unit=None, baseTypeRef=None, adminData=None, swCalibrationAccess='NOT-ACCESSIBLE', typeEmitter=None, forceFloatScaling=False):
+    def createIntegerDataType(self, name, min=None, max=None, valueTable=None, offset=None, scaling=None, unit=None, baseTypeRef=None, adminData=None, swCalibrationAccess='NOT-ACCESSIBLE', typeEmitter=None, forceFloatScaling=False, dataConstraint=''):
         """
         AUTOSAR3:
         Helper method for creating integer datatypes in a package.
@@ -448,12 +448,13 @@ class Package(object):
         ws=self.rootWS()
         assert(ws is not None)
         if ws.version >= 4.0:
+            dataConstraint = '' #use default rule
             if baseTypeRef is None:
                 return self.createApplicationDataType(name, min, max, valueTable, offset, scaling, unit, forceFloatScaling, swCalibrationAccess, typeEmitter, adminData)
-            else:
-                return self.createImplementationDataType(name, baseTypeRef, 'VALUE', min, max, valueTable, None, offset, scaling, unit, forceFloatScaling, swCalibrationAccess, typeEmitter, adminData)
+            else:                
+                return self.createImplementationDataType(name, baseTypeRef, 'VALUE', min, max, valueTable, None, offset, scaling, unit, forceFloatScaling, dataConstraint, swCalibrationAccess, typeEmitter, adminData)
         else:
-            (compuMethodRef, unitRef, dataConstraintRef) = self._createCompuMethodUnitDataConstraint(ws, name, min, max, valueTable, None, offset, scaling, unit, forceFloatScaling)
+            (compuMethodRef, unitRef, dataConstraintRef) = self._createCompuMethodUnitDataConstraint(ws, name, min, max, valueTable, None, offset, scaling, unit, forceFloatScaling, dataConstraint)
             minVal, maxVal = min, max
             if compuMethodRef is not None:
                 compuMethod = ws.find(compuMethodRef)
@@ -467,7 +468,7 @@ class Package(object):
             self.append(newType)
             return newType
 
-    def _createCompuMethodUnitDataConstraint(self, ws, name, minVal, maxVal, valueTable, bitmask, offset, scaling, unit, forceFloatScaling=False):
+    def _createCompuMethodUnitDataConstraint(self, ws, name, minVal, maxVal, valueTable, bitmask, offset, scaling, unit, forceFloatScaling, dataConstraint):
         """
         AUTOSAR3:
 
@@ -504,25 +505,33 @@ class Package(object):
         if (minVal is None) and (maxVal is None) and (valueTable is None) and (bitmask is None) and (offset is None) and (scaling is None) and (unit is None):
             return (None, None, None)
 
+        if ws.version >= 4.0:
+            if dataConstraint is None: #disable rule
+                dataConstraintName = None
+            elif dataConstraint=='': #default rule
+                dataConstraintName = name+'_DataConstr'
+            else:
+                dataConstraintName = str(dataConstraint) #overide rule (lets the user select the name)
+
         if (valueTable is not None) and (minVal is not None) and (maxVal is not None):
             #used for enumeration types with explicit min and max
             category = 'TEXTTABLE' if ws.version >= 4.0 else None
-            compuMethodElem=autosar.CompuMethodConst(str(name),list(valueTable), category)
-            if ws.version >= 4.0:
-                dataConstraintElem = self.createInternalDataConstraint(name+'_DataConstr', minVal, maxVal)        
+            compuMethodElem=autosar.CompuMethodConst(str(name), list(valueTable), category)
+            if (ws.version >= 4.0) and (dataConstraintName is not None):
+                dataConstraintElem = self.createInternalDataConstraint(dataConstraintName, minVal, maxVal)        
 
         elif (valueTable is not None) and (minVal is None) and (maxVal is None):
             #used for enumeration types with implicit min and max
             category = 'TEXTTABLE' if ws.version >= 4.0 else None
             compuMethodElem=autosar.CompuMethodConst(str(name),list(valueTable), category)
-            if ws.version >= 4.0:
-                dataConstraintElem = self.createInternalDataConstraint(name+'_DataConstr', compuMethodElem.elements[0].lowerLimit, compuMethodElem.elements[-1].upperLimit)
+            if (ws.version >= 4.0) and (dataConstraintName is not None):
+                dataConstraintElem = self.createInternalDataConstraint(dataConstraintName, compuMethodElem.elements[0].lowerLimit, compuMethodElem.elements[-1].upperLimit)
         
         elif (bitmask is not None):
             if ws.version < 3.0:
                 raise RunTimeError('bit masks not supported in AUTOSAR3')
             compuMethodElem = autosar.datatype.CompuMethodMask(name, bitmask, category='BITFIELD_TEXTTABLE')
-            dataConstraintElem = self.createInternalDataConstraint(name+'_DataConstr', compuMethodElem.minVal, compuMethodElem.maxVal)            
+            dataConstraintElem = self.createInternalDataConstraint(dataConstraintName, compuMethodElem.minVal, compuMethodElem.maxVal)            
 
         elif (offset is not None) and (scaling is not None):
             if forceFloatScaling:
@@ -535,14 +544,14 @@ class Package(object):
                     semanticElements=[{'offset':offset, 'numerator':f.numerator, 'denominator':f.denominator}]
             compuMethodElem=autosar.datatype.CompuMethodRational(name,None,semanticElements)
             if (minVal is not None) and (maxVal is not None):
-                if ws.version >= 4.0:
-                    dataConstraintElem = self.createInternalDataConstraint(name+'_DataConstr', minVal, maxVal)
+                if (ws.version >= 4.0) and (dataConstraintName is not None):
+                    dataConstraintElem = self.createInternalDataConstraint(dataConstraintName, minVal, maxVal)
             elif (minVal is not None) or (maxVal is not None):
                 raise ValueError('Invalid combination of arguments')
 
         elif (minVal is not None) and (maxVal is not None):
-            if ws.version >= 4.0:
-                dataConstraintElem = self.createInternalDataConstraint(name+'_DataConstr', minVal, maxVal)
+            if (ws.version >= 4.0) and (dataConstraintName is not None):
+                dataConstraintElem = self.createInternalDataConstraint(dataConstraintName, minVal, maxVal)
         else:
             raise ValueError('Invalid combination of arguments')
 
@@ -1004,7 +1013,7 @@ class Package(object):
         """
         return self.createSwBaseType(name, size, encoding, nativeDeclaration, adminData)
 
-    def createTypeRefImplementationType(self, name, implementationTypeRef, minVal = None, maxVal = None, valueTable = None, bitmask = None, offset = None, scaling = None, unit = None, forceFloatScaling = False, swCalibrationAccess = None, typeEmitter = None, adminData = None):
+    def createTypeRefImplementationType(self, name, implementationTypeRef, minVal = None, maxVal = None, valueTable = None, bitmask = None, offset = None, scaling = None, unit = None, forceFloatScaling = False, dataConstraint = '', swCalibrationAccess = None, typeEmitter = None, adminData = None):
         """
         AUTOSAR4
 
@@ -1017,7 +1026,7 @@ class Package(object):
 
         adminDataObj = self._checkAdminData(adminData)
 
-        (compuMethodRef, unitRef, dataConstraintRef) = self._createCompuMethodUnitDataConstraint(ws, name, minVal, maxVal, valueTable, bitmask, offset, scaling, unit, forceFloatScaling)
+        (compuMethodRef, unitRef, dataConstraintRef) = self._createCompuMethodUnitDataConstraint(ws, name, minVal, maxVal, valueTable, bitmask, offset, scaling, unit, forceFloatScaling, dataConstraint)
         variantProps = autosar.base.SwDataDefPropsConditional(swCalibrationAccess = swCalibrationAccess,
                                                               compuMethodRef = compuMethodRef,
                                                               dataConstraintRef = dataConstraintRef,
@@ -1055,7 +1064,7 @@ class Package(object):
             print("WARNING: createImplementationDataReference has been deprecated. Use createPointerImplementationType instead.", file=sys.stderr)
         self.createPointerImplementationType(name, baseTypeRef, swImplPolicy, adminData)
 
-    def createImplementationDataType(self, name, baseTypeRef, category='VALUE', minVal = None, maxVal = None, valueTable = None, bitmask = None, offset = None, scaling = None, unit = None, forceFloatScaling = False, swCalibrationAccess = None, typeEmitter = None, adminData = None):
+    def createImplementationDataType(self, name, baseTypeRef, category='VALUE', minVal = None, maxVal = None, valueTable = None, bitmask = None, offset = None, scaling = None, unit = None, forceFloatScaling = False, dataConstraint='', swCalibrationAccess = None, typeEmitter = None, adminData = None):
         """
         Creates an implementation data type that wraps a base type
         """
@@ -1064,7 +1073,7 @@ class Package(object):
 
         adminDataObj = self._checkAdminData(adminData)
 
-        (compuMethodRef, unitRef, dataConstraintRef) = self._createCompuMethodUnitDataConstraint(ws, name, minVal, maxVal, valueTable, bitmask, offset, scaling, unit, forceFloatScaling)
+        (compuMethodRef, unitRef, dataConstraintRef) = self._createCompuMethodUnitDataConstraint(ws, name, minVal, maxVal, valueTable, bitmask, offset, scaling, unit, forceFloatScaling, dataConstraint)
         variantProps = autosar.base.SwDataDefPropsConditional(baseTypeRef = baseTypeRef,
                                                               swCalibrationAccess = swCalibrationAccess,
                                                               compuMethodRef = compuMethodRef,

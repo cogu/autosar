@@ -62,7 +62,7 @@ class ARXML3DataTypeTest(ARXMLTestClass):
         file_name = 'ar3_record_type_array.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
-        self.save_and_check(ws, expected_file, generated_file, ['/DataType'], True)
+        self.save_and_check(ws, expected_file, generated_file, ['/DataType'])
 
 if __name__ == '__main__':
     unittest.main()
