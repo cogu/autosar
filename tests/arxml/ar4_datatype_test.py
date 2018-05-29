@@ -34,7 +34,7 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         package.createArrayDataType('u8Array2_T', '/DataTypes/uint8', 2)
         file_name = 'ar4_array_datatype.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
-        expected_file = os.path.join( 'expected_gen', 'package', file_name)
+        expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
         self.save_and_check(ws, expected_file, generated_file, filters=['/DataTypes'])
 
     def test_create_implementation_ref_type(self):
@@ -46,21 +46,10 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         package.createTypeRefImplementationType('U32Type_T', '/DataTypes/uint32')
         file_name = 'ar4_implementation_type_ref.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
-        expected_file = os.path.join( 'expected_gen', 'package', file_name)
+        expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
 
-    def test_create_array_type(self):
-        ws = autosar.workspace(version="4.2.2")
-        _create_packages(ws)
-        _create_base_types(ws)
 
-        package = ws['DataTypes']
-        package.createTypeRefImplementationType('U32Test_T', '/DataTypes/uint32')
-        package.createArrayDataType('Array4_T', '/DataTypes/U32Test_T', 4)
-        file_name = 'ar4_array_type.arxml'
-        generated_file = os.path.join(self.output_dir, file_name)
-        expected_file = os.path.join( 'expected_gen', 'package', file_name)
-        self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
 
     def test_create_impl_string_type(self):
         ws = autosar.workspace(version="4.2.2")
@@ -71,7 +60,7 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         package.createArrayDataType('UserName_T', '/DataTypes/uint8', 32)
         file_name = 'ar4_impl_string_type.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
-        expected_file = os.path.join( 'expected_gen', 'package', file_name)
+        expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
 
     def test_create_record_type1(self):
@@ -84,7 +73,7 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         package.createRecordDataType('RecordType1_T', [('Elem1', '/DataTypes/uint8'), ('Elem2', '/DataTypes/U32Type_T')] )
         file_name = 'ar4_record_type1.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
-        expected_file = os.path.join( 'expected_gen', 'package', file_name)
+        expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
 
     def test_create_record_type2(self):
@@ -98,7 +87,7 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         package.createRecordDataType('RecordType2_T', [('Elem1', '/DataTypes/U32Type_T'), ('Elem2', '/DataTypes/UserName_T')] )
         file_name = 'ar4_record_type2.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
-        expected_file = os.path.join( 'expected_gen', 'package', file_name)
+        expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
 
     def test_create_ref_type_with_valueTable(self):
@@ -110,8 +99,8 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         package.createTypeRefImplementationType('OffOn_T', '/DataTypes/uint8', valueTable=['OffOn_Off', 'OffOn_On', 'OffOn_Error', 'OffOn_NotAvailable'])
         file_name = 'ar4_ref_type_vt.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
-        expected_file = os.path.join( 'expected_gen', 'package', file_name)
-        self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'], True)
+        expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
 
     def test_create_ref_type_with_bitmask(self):
         ws = autosar.workspace(version="4.2.2")
@@ -130,8 +119,35 @@ class ARXML4DataTypeTest(ARXMLTestClass):
             ])
         file_name = 'ar4_ref_type_bitmask.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
-        expected_file = os.path.join( 'expected_gen', 'package', file_name)
+        expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
+    
+    def test_create_data_constraint_with_custom_name(self):
+        ws = autosar.workspace(version="4.2.2")
+        _create_packages(ws)
+        _create_base_types(ws)
+        package = ws['DataTypes']
+        
+        package = ws['DataTypes']
+        package.createTypeRefImplementationType('OffOn_T', '/DataTypes/uint8', valueTable=['OffOn_Off', 'OffOn_On', 'OffOn_Error', 'OffOn_NotAvailable'], dataConstraint=None)
+        file_name = 'ar4_disable_auto_data_constraint.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
+
+    def test_disable_auto_constraint(self):
+        ws = autosar.workspace(version="4.2.2")
+        _create_packages(ws)
+        _create_base_types(ws)
+        package = ws['DataTypes']
+        
+        package = ws['DataTypes']
+        package.createTypeRefImplementationType('U32RefCustom_T', '/DataTypes/uint32', minVal=0, maxVal=100000, dataConstraint='CustomConstraintName')
+        file_name = 'ar4_custom_data_constraint_ref.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
+
     
 if __name__ == '__main__':
     unittest.main()

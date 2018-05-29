@@ -25,7 +25,7 @@ class ARXMLTestClass(unittest.TestCase):
         ws.saveXML(generated_path, filters=filters)
         if force_copy:
             shutil.copyfile(generated_path, expected_path)
-        with open (generated_path, "r") as fp:
+        with open (expected_path, "r") as fp:
             expected_text=fp.read()
         with open (generated_path, "r") as fp:
             generated_text=fp.read()
