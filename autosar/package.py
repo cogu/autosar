@@ -451,7 +451,7 @@ class Package(object):
             dataConstraint = '' #use default rule
             if baseTypeRef is None:
                 return self.createApplicationDataType(name, min, max, valueTable, offset, scaling, unit, forceFloatScaling, swCalibrationAccess, typeEmitter, adminData)
-            else:                
+            else:
                 return self.createImplementationDataType(name, baseTypeRef, 'VALUE', min, max, valueTable, None, offset, scaling, unit, forceFloatScaling, dataConstraint, swCalibrationAccess, typeEmitter, adminData)
         else:
             (compuMethodRef, unitRef, dataConstraintRef) = self._createCompuMethodUnitDataConstraint(ws, name, min, max, valueTable, None, offset, scaling, unit, forceFloatScaling, dataConstraint)
@@ -468,123 +468,7 @@ class Package(object):
             self.append(newType)
             return newType
 
-    def _createCompuMethodUnitDataConstraint(self, ws, name, minVal, maxVal, valueTable, bitmask, offset, scaling, unit, forceFloatScaling, dataConstraint):
-        """
-        AUTOSAR3:
 
-        If both compuMethod and unit: Returns (compuMethodRef, unitRef, None)
-        Else if compuMethod only: Returns (compuMethodRef, None, None)
-        Else: Returns (None, None, None)
-
-        AUTOSAR4:
-
-        If both compuMethod and unit: Returns (compuMethodRed, unitRed, dataConstraintRef)
-        Else if  compuMethod only: Returns (compuMethodRef, None, dataConstraintRef
-        Else: Returns (None, None, None)
-        """
-        semanticsPackage = None
-        unitPackage = None
-        dataConstraintPackage = None
-        compuMethodElem = None
-        dataConstraintElem = None
-        unitElem = None
-        assert(ws is not None)
-        if ws.roles['CompuMethod'] is not None:
-            semanticsPackage=ws.find(ws.roles['CompuMethod'])
-            if semanticsPackage is None:
-                raise RuntimeError("no package found with role='CompuMethod'")
-        if ws.roles['Unit'] is not None:
-            unitPackage=ws.find(ws.roles['Unit'])
-            if unitPackage is None:
-                raise RuntimeError("no package found with role='Unit'")
-        if ws.roles['DataConstraint'] is not None:
-            dataConstraintPackage=ws.find(ws.roles['DataConstraint'])
-            if dataConstraintPackage is None:
-                raise RuntimeError("no package found with role='DataConstraint'")
-
-        if (minVal is None) and (maxVal is None) and (valueTable is None) and (bitmask is None) and (offset is None) and (scaling is None) and (unit is None):
-            return (None, None, None)
-
-        if ws.version >= 4.0:
-            if dataConstraint is None: #disable rule
-                dataConstraintName = None
-            elif dataConstraint=='': #default rule
-                dataConstraintName = name+'_DataConstr'
-            else:
-                dataConstraintName = str(dataConstraint) #overide rule (lets the user select the name)
-
-        if (valueTable is not None) and (minVal is not None) and (maxVal is not None):
-            #used for enumeration types with explicit min and max
-            category = 'TEXTTABLE' if ws.version >= 4.0 else None
-            compuMethodElem=autosar.CompuMethodConst(str(name), list(valueTable), category)
-            if (ws.version >= 4.0) and (dataConstraintName is not None):
-                dataConstraintElem = self.createInternalDataConstraint(dataConstraintName, minVal, maxVal)        
-
-        elif (valueTable is not None) and (minVal is None) and (maxVal is None):
-            #used for enumeration types with implicit min and max
-            category = 'TEXTTABLE' if ws.version >= 4.0 else None
-            compuMethodElem=autosar.CompuMethodConst(str(name),list(valueTable), category)
-            if (ws.version >= 4.0) and (dataConstraintName is not None):
-                dataConstraintElem = self.createInternalDataConstraint(dataConstraintName, compuMethodElem.elements[0].lowerLimit, compuMethodElem.elements[-1].upperLimit)
-        
-        elif (bitmask is not None):
-            if ws.version < 3.0:
-                raise RunTimeError('bit masks not supported in AUTOSAR3')
-            compuMethodElem = autosar.datatype.CompuMethodMask(name, bitmask, category='BITFIELD_TEXTTABLE')
-            dataConstraintElem = self.createInternalDataConstraint(dataConstraintName, compuMethodElem.minVal, compuMethodElem.maxVal)            
-
-        elif (offset is not None) and (scaling is not None):
-            if forceFloatScaling:
-                semanticElements=[{'offset':offset, 'numerator':scaling, 'denominator':1}]
-            else:
-                f=Fraction.from_float(scaling)
-                if f.denominator > 1000: #use the float version in case its not a rational number
-                    semanticElements=[{'offset':offset, 'numerator':scaling, 'denominator':1}]
-                else:
-                    semanticElements=[{'offset':offset, 'numerator':f.numerator, 'denominator':f.denominator}]
-            compuMethodElem=autosar.datatype.CompuMethodRational(name,None,semanticElements)
-            if (minVal is not None) and (maxVal is not None):
-                if (ws.version >= 4.0) and (dataConstraintName is not None):
-                    dataConstraintElem = self.createInternalDataConstraint(dataConstraintName, minVal, maxVal)
-            elif (minVal is not None) or (maxVal is not None):
-                raise ValueError('Invalid combination of arguments')
-
-        elif (minVal is not None) and (maxVal is not None):
-            if (ws.version >= 4.0) and (dataConstraintName is not None):
-                dataConstraintElem = self.createInternalDataConstraint(dataConstraintName, minVal, maxVal)
-        else:
-            raise ValueError('Invalid combination of arguments')
-
-        if unit is not None:
-            unitElem = None
-            if unitPackage is not None:
-                unitElem = ws.find(unit, role='Unit')
-            if unitElem is None:
-                unitElem = autosar.datatype.DataTypeUnitElement(unit,unit)
-
-        compuMethodRef, unitRef, dataConstraintRef = None, None, None
-        if compuMethodElem is not None:
-            if semanticsPackage is not None:
-                semanticsPackage.append(compuMethodElem)
-                compuMethodRef = compuMethodElem.ref
-            else:
-                raise RuntimeError("no package found with role='CompuMethod'")
-        if unitElem is not None:
-            if unitPackage is not None:
-                if unitElem.ref is None:
-                    unitPackage.append(unitElem)
-                unitRef = unitElem.ref
-                if isinstance(compuMethodElem, autosar.datatype.CompuMethodRational):
-                    compuMethodElem.unitRef = unitRef
-            else:
-                raise RuntimeError("no package found with role='Unit'")
-        if dataConstraintElem is not None:
-            if dataConstraintPackage is not None:
-                dataConstraintPackage.append(dataConstraintElem)
-                dataConstraintRef = dataConstraintElem.ref
-            else:
-                raise RuntimeError("no package found with role='DataConstraint'")
-        return (compuMethodRef, unitRef, dataConstraintRef)
 
     def createRealDataType(self, name, minVal, maxVal, minValType='CLOSED', maxValType='CLOSED', hasNaN=False, encoding='SINGLE', baseTypeRef=None, adminData=None):
         """
@@ -1013,7 +897,7 @@ class Package(object):
         """
         return self.createSwBaseType(name, size, encoding, nativeDeclaration, adminData)
 
-    def createTypeRefImplementationType(self, name, implementationTypeRef, minVal = None, maxVal = None, valueTable = None, bitmask = None, offset = None, scaling = None, unit = None, forceFloatScaling = False, dataConstraint = '', swCalibrationAccess = None, typeEmitter = None, adminData = None):
+    def createImplementationDataTypeRef(self, name, implementationTypeRef, minVal = None, maxVal = None, valueTable = None, bitmask = None, offset = None, scaling = None, unit = None, forceFloatScaling = False, dataConstraint = '', swCalibrationAccess = None, typeEmitter = None, adminData = None):
         """
         AUTOSAR4
 
@@ -1038,12 +922,12 @@ class Package(object):
 
     def createImplementationTypeReference(self, name, implementationTypeRef, adminData = None):
         if not _supress_warnings:
-            print("WARNING: createImplementationTypeReference has been deprecated. Use createTypeRefImplementationType instead.", file=sys.stderr)
-        self.createTypeRefImplementationType(name, implementationTypeRef, adminData)
+            print("WARNING: createImplementationTypeReference has been deprecated. Use createImplementationDataTypeRef instead.", file=sys.stderr)
+        self.createImplementationDataTypeRef(name, implementationTypeRef, adminData)
 
-    def createPointerImplementationType(self, name, baseTypeRef, swImplPolicy=None, adminData = None):
+    def createImplementationDataTypePtr(self, name, baseTypeRef, swImplPolicy=None, adminData = None):
         """
-        Creates an implementation type that is a pointer to another type
+        Creates an implementation type that is a C-type pointer to another type
         """
         ws=self.rootWS()
         assert(ws is not None)
@@ -1061,12 +945,12 @@ class Package(object):
         Deprecated method name, use createImplementationPtrDataType instead
         """
         if not _supress_warnings:
-            print("WARNING: createImplementationDataReference has been deprecated. Use createPointerImplementationType instead.", file=sys.stderr)
-        self.createPointerImplementationType(name, baseTypeRef, swImplPolicy, adminData)
+            print("WARNING: createImplementationDataReference has been deprecated. Use createImplementationDataTypePtr instead.", file=sys.stderr)
+        self.createImplementationDataTypePtr(name, baseTypeRef, swImplPolicy, adminData)
 
     def createImplementationDataType(self, name, baseTypeRef, category='VALUE', minVal = None, maxVal = None, valueTable = None, bitmask = None, offset = None, scaling = None, unit = None, forceFloatScaling = False, dataConstraint='', swCalibrationAccess = None, typeEmitter = None, adminData = None):
         """
-        Creates an implementation data type that wraps a base type
+        Creates an implementation data type that wraps a base type. Defaults to value type category
         """
         ws=self.rootWS()
         assert(ws is not None)
@@ -1083,7 +967,7 @@ class Package(object):
         implementationDataType = autosar.datatype.ImplementationDataType(name, category, variantProps, typeEmitter=typeEmitter, parent = self, adminData = adminDataObj)
         self.append(implementationDataType)
         return implementationDataType
-            
+
     def createApplicationDataType(self, name, minVal, maxVal, valueTable, offset, scaling, unit, forceFloatScaling, swCalibrationAccess, typeEmitter, adminData):
         raise NotImplementedError('createApplicationDataType')
 
@@ -1095,3 +979,121 @@ class Package(object):
         if (adminDataObj is not None) and not isinstance(adminDataObj, autosar.base.AdminData):
             raise ValueError("adminData must be of type dict or AdminData")
         return adminDataObj
+
+    def _createCompuMethodUnitDataConstraint(self, ws, name, minVal, maxVal, valueTable, bitmask, offset, scaling, unit, forceFloatScaling, dataConstraint):
+        """
+        AUTOSAR3:
+
+        If both compuMethod and unit: Returns (compuMethodRef, unitRef, None)
+        Else if compuMethod only: Returns (compuMethodRef, None, None)
+        Else: Returns (None, None, None)
+
+        AUTOSAR4:
+
+        If both compuMethod and unit: Returns (compuMethodRed, unitRed, dataConstraintRef)
+        Else if  compuMethod only: Returns (compuMethodRef, None, dataConstraintRef
+        Else: Returns (None, None, None)
+        """
+        semanticsPackage = None
+        unitPackage = None
+        dataConstraintPackage = None
+        compuMethodElem = None
+        dataConstraintElem = None
+        unitElem = None
+        assert(ws is not None)
+        if ws.roles['CompuMethod'] is not None:
+            semanticsPackage=ws.find(ws.roles['CompuMethod'])
+            if semanticsPackage is None:
+                raise RuntimeError("no package found with role='CompuMethod'")
+        if ws.roles['Unit'] is not None:
+            unitPackage=ws.find(ws.roles['Unit'])
+            if unitPackage is None:
+                raise RuntimeError("no package found with role='Unit'")
+        if ws.roles['DataConstraint'] is not None:
+            dataConstraintPackage=ws.find(ws.roles['DataConstraint'])
+            if dataConstraintPackage is None:
+                raise RuntimeError("no package found with role='DataConstraint'")
+
+        if (minVal is None) and (maxVal is None) and (valueTable is None) and (bitmask is None) and (offset is None) and (scaling is None) and (unit is None):
+            return (None, None, None)
+
+        if ws.version >= 4.0:
+            if dataConstraint is None: #disable rule
+                dataConstraintName = None
+            elif dataConstraint=='': #default rule
+                dataConstraintName = name+'_DataConstr'
+            else:
+                dataConstraintName = str(dataConstraint) #overide rule (lets the user select the name)
+
+        if (valueTable is not None) and (minVal is not None) and (maxVal is not None):
+            #used for enumeration types with explicit min and max
+            category = 'TEXTTABLE' if ws.version >= 4.0 else None
+            compuMethodElem=autosar.CompuMethodConst(str(name), list(valueTable), category)
+            if (ws.version >= 4.0) and (dataConstraintName is not None):
+                dataConstraintElem = self.createInternalDataConstraint(dataConstraintName, minVal, maxVal)
+
+        elif (valueTable is not None) and (minVal is None) and (maxVal is None):
+            #used for enumeration types with implicit min and max
+            category = 'TEXTTABLE' if ws.version >= 4.0 else None
+            compuMethodElem=autosar.CompuMethodConst(str(name),list(valueTable), category)
+            if (ws.version >= 4.0) and (dataConstraintName is not None):
+                dataConstraintElem = self.createInternalDataConstraint(dataConstraintName, compuMethodElem.elements[0].lowerLimit, compuMethodElem.elements[-1].upperLimit)
+
+        elif (bitmask is not None):
+            if ws.version < 3.0:
+                raise RunTimeError('bit masks not supported in AUTOSAR3')
+            compuMethodElem = autosar.datatype.CompuMethodMask(name, bitmask, category='BITFIELD_TEXTTABLE')
+            dataConstraintElem = self.createInternalDataConstraint(dataConstraintName, compuMethodElem.minVal, compuMethodElem.maxVal)
+
+        elif (offset is not None) and (scaling is not None):
+            if forceFloatScaling:
+                semanticElements=[{'offset':offset, 'numerator':scaling, 'denominator':1}]
+            else:
+                f=Fraction.from_float(scaling)
+                if f.denominator > 1000: #use the float version in case its not a rational number
+                    semanticElements=[{'offset':offset, 'numerator':scaling, 'denominator':1}]
+                else:
+                    semanticElements=[{'offset':offset, 'numerator':f.numerator, 'denominator':f.denominator}]
+            compuMethodElem=autosar.datatype.CompuMethodRational(name,None,semanticElements)
+            if (minVal is not None) and (maxVal is not None):
+                if (ws.version >= 4.0) and (dataConstraintName is not None):
+                    dataConstraintElem = self.createInternalDataConstraint(dataConstraintName, minVal, maxVal)
+            elif (minVal is not None) or (maxVal is not None):
+                raise ValueError('Invalid combination of arguments')
+
+        elif (minVal is not None) and (maxVal is not None):
+            if (ws.version >= 4.0) and (dataConstraintName is not None):
+                dataConstraintElem = self.createInternalDataConstraint(dataConstraintName, minVal, maxVal)
+        else:
+            raise ValueError('Invalid combination of arguments')
+
+        if unit is not None:
+            unitElem = None
+            if unitPackage is not None:
+                unitElem = ws.find(unit, role='Unit')
+            if unitElem is None:
+                unitElem = autosar.datatype.DataTypeUnitElement(unit,unit)
+
+        compuMethodRef, unitRef, dataConstraintRef = None, None, None
+        if compuMethodElem is not None:
+            if semanticsPackage is not None:
+                semanticsPackage.append(compuMethodElem)
+                compuMethodRef = compuMethodElem.ref
+            else:
+                raise RuntimeError("no package found with role='CompuMethod'")
+        if unitElem is not None:
+            if unitPackage is not None:
+                if unitElem.ref is None:
+                    unitPackage.append(unitElem)
+                unitRef = unitElem.ref
+                if isinstance(compuMethodElem, autosar.datatype.CompuMethodRational):
+                    compuMethodElem.unitRef = unitRef
+            else:
+                raise RuntimeError("no package found with role='Unit'")
+        if dataConstraintElem is not None:
+            if dataConstraintPackage is not None:
+                dataConstraintPackage.append(dataConstraintElem)
+                dataConstraintRef = dataConstraintElem.ref
+            else:
+                raise RuntimeError("no package found with role='DataConstraint'")
+        return (compuMethodRef, unitRef, dataConstraintRef)

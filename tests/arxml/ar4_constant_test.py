@@ -42,7 +42,7 @@ class ARXML4ConstantTest(ARXMLTestClass):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
         package = ws['DataTypes']
-        package.createTypeRefImplementationType('U32Type_T', '/DataTypes/uint32')
+        package.createImplementationDataTypeRef('U32Type_T', '/DataTypes/uint32')
         package = ws['Constants']
         package.createNumericalValueConstant('U32Value_IV', 2**32-1)
         file_name = 'ar4_num_value_constant.arxml'
@@ -67,7 +67,7 @@ class ARXML4ConstantTest(ARXMLTestClass):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
         package = ws['DataTypes']
-        package.createTypeRefImplementationType('U32Test_T', '/DataTypes/uint32')
+        package.createImplementationDataTypeRef('U32Test_T', '/DataTypes/uint32')
         package.createArrayDataType('Array4_T', '/DataTypes/U32Test_T', 4)
 
         package.createRecordDataType('RecordType1_T', [('Elem1', '/DataTypes/Array4_T'), ('Elem2', '/DataTypes/U32Test_T')] )
@@ -83,7 +83,7 @@ class ARXML4ConstantTest(ARXMLTestClass):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
         package = ws['DataTypes']
-        package.createTypeRefImplementationType('U32Type_T', '/DataTypes/uint32')
+        package.createImplementationDataTypeRef('U32Type_T', '/DataTypes/uint32')
         package.createArrayDataType('UserName_T', '/DataTypes/uint8', 32)
         package.createRecordDataType('RecordType2_T', [('Elem1', '/DataTypes/U32Type_T'), ('Elem2', '/DataTypes/UserName_T')] )
         package = ws['Constants']
@@ -98,7 +98,7 @@ class ARXML4ConstantTest(ARXMLTestClass):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
         package = ws['DataTypes']
-        package.createTypeRefImplementationType('U32Type_T', '/DataTypes/uint32')
+        package.createImplementationDataTypeRef('U32Type_T', '/DataTypes/uint32')
         package.createArrayDataType('UserName_T', '/DataTypes/uint8', 32)
         package.createRecordDataType('RecordType2_T', [('Elem1', '/DataTypes/U32Type_T'), ('Elem2', '/DataTypes/UserName_T')] )
         package = ws['Constants']
