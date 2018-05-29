@@ -43,7 +43,7 @@ In AUTOSAR4 you can create different variants of implementation data types.
 Type References
 ~~~~~~~~~~~~~~~
 
-.. py:method:: Package.createTypeRefImplementationType(name : str, implementationTypeRef : str, adminData = None)
+.. py:method:: Package.createImplementationDataTypeRef(name : str, implementationTypeRef : str, adminData = None)
 
    Creates a new implementation data type that is a reference to another implementation type (similar to a typedef in C).
 
@@ -56,13 +56,13 @@ Arguments:
 Example:
 ^^^^^^^
 
-.. include:: examples/createImplementationRefDataType.py
+.. include:: examples/createImplementationDataTypeRef.py
     :code: python
 
 Implementation Pointer Data Types
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. py:method:: Package.createPointerImplementationType(name : str, implementationTypeRef : str, swImplPolicy = None, adminData = None)
+.. py:method:: Package.createImplementationDataTypePtr(name : str, implementationTypeRef : str, swImplPolicy = None, adminData = None)
 
    Creates a new implementation data type that is a pointer to a base type (Similar to a pointer type definition in C).
 
@@ -76,5 +76,5 @@ Arguments:
 Example:
 ^^^^^^^
 
-.. include:: examples/createImplementationPtrDataType.py
+.. include:: examples/createImplementationDataTypePtr.py
     :code: python
