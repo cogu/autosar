@@ -23,7 +23,7 @@ class WorkspaceWriter(BaseWriter):
             lines.append(self.indentChar+'<TOP-LEVEL-PACKAGES>')
         elif self.version >= 4.0:
             lines.append('<?xml version="1.0" encoding="utf-8"?>')
-            lines.append('<AUTOSAR xsi:schemaLocation="http://autosar.org/schema/r4.0 AUTOSAR_{0}-{1}-{2}.xsd" xmlns="http://autosar.org/schema/r4.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'.format(self.major, self.minor, self.patch))
+            lines.append('<AUTOSAR xmlns="http://autosar.org/schema/r4.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://autosar.org/schema/r4.0 AUTOSAR_{0}-{1}-{2}.xsd">'.format(self.major, self.minor, self.patch))
             lines.append(self.indentChar+'<AR-PACKAGES>')
         return lines
 
