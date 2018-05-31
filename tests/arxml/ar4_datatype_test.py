@@ -18,6 +18,7 @@ def _create_base_types(ws):
     basetypes.createSwBaseType('uint8', 8, nativeDeclaration='uint8')
     basetypes.createSwBaseType('uint16', 16, nativeDeclaration='uint16')
     basetypes.createSwBaseType('uint32', 32, nativeDeclaration='uint32')
+    basetypes.createSwBaseType('float32', 32, encoding='IEEE754')
 
     package.createIntegerDataType('boolean', valueTable=['FALSE','TRUE'], baseTypeRef='/DataTypes/BaseTypes/boolean', typeEmitter='Platform_Type')
     package.createIntegerDataType('uint8', min=0, max=255, baseTypeRef='/DataTypes/BaseTypes/uint8', typeEmitter='Platform_Type')
@@ -35,7 +36,7 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         file_name = 'ar4_array_datatype.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
-        self.save_and_check(ws, expected_file, generated_file, filters=['/DataTypes'])
+        self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
 
     def test_create_implementation_ref_type(self):
         ws = autosar.workspace(version="4.2.2")
@@ -121,13 +122,13 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
-    
+
     def test_create_data_constraint_with_custom_name(self):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
         _create_base_types(ws)
         package = ws['DataTypes']
-                
+
         package.createImplementationDataTypeRef('OffOn_T', '/DataTypes/uint8', valueTable=['OffOn_Off', 'OffOn_On', 'OffOn_Error', 'OffOn_NotAvailable'], dataConstraint=None)
         file_name = 'ar4_disable_auto_data_constraint.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
@@ -138,13 +139,39 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
         _create_base_types(ws)
-        
+
         package = ws['DataTypes']
         package.createImplementationDataTypeRef('U32RefCustom_T', '/DataTypes/uint32', minVal=0, maxVal=100000, dataConstraint='CustomConstraintName')
         file_name = 'ar4_custom_data_constraint_ref.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
-    
+
+    def test_create_float_value_type(self):
+        ws = autosar.workspace(version="4.2.2")
+        _create_packages(ws)
+        _create_base_types(ws)
+
+        package = ws['DataTypes']
+        package.createRealDataType('float32', '-INF', 'INF', baseTypeRef='/DataTypes/BaseTypes/float32')
+        file_name = 'ar4_float_value_type.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
+
+    def test_create_float_value_type_with_type_emitter(self):
+        ws = autosar.workspace(version="4.2.2")
+        _create_packages(ws)
+        _create_base_types(ws)
+
+        package = ws['DataTypes']
+        package.createRealDataType('float32', '-INF', 'INF', baseTypeRef='/DataTypes/BaseTypes/float32', typeEmitter='PlatformType')
+        file_name = 'ar4_float_value_type_with_type_emitter.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
+
+
+
 if __name__ == '__main__':
     unittest.main()

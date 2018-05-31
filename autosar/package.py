@@ -470,7 +470,7 @@ class Package(object):
 
 
 
-    def createRealDataType(self, name, minVal, maxVal, minValType='CLOSED', maxValType='CLOSED', hasNaN=False, encoding='SINGLE', baseTypeRef=None, adminData=None):
+    def createRealDataType(self, name, minVal, maxVal, minValType='CLOSED', maxValType='CLOSED', hasNaN=False, encoding='SINGLE', baseTypeRef=None, typeEmitter=None, adminData=None):
         """
         AUTOSAR 4: Creates a new ImplementationDataType
         AUTOSAR 3: Creates a new instance of autosar.datatype.RealDataType and appends it to current package
@@ -487,7 +487,7 @@ class Package(object):
             if maxVal == 'INF' and maxValType == 'CLOSED':
                 maxValType = 'OPEN' #automatic correction
             dataConstraint = self.createInternalDataConstraint(name+'_DataConstr', minVal, maxVal, minValType, maxValType)
-            newType = autosar.datatype.ImplementationDataType(name, 'VALUE')
+            newType = autosar.datatype.ImplementationDataType(name, 'VALUE', typeEmitter=typeEmitter)
             props = autosar.base.SwDataDefPropsConditional(baseTypeRef=baseTypeRef,
                                                                swCalibrationAccess='NOT-ACCESSIBLE',
                                                                dataConstraintRef=dataConstraint.ref)
