@@ -244,6 +244,12 @@
               <BASE-TYPE-ENCODING>NONE</BASE-TYPE-ENCODING>
               <NATIVE-DECLARATION>uint32</NATIVE-DECLARATION>
             </SW-BASE-TYPE>
+            <SW-BASE-TYPE>
+              <SHORT-NAME>float32</SHORT-NAME>
+              <CATEGORY>FIXED_LENGTH</CATEGORY>
+              <BASE-TYPE-SIZE>32</BASE-TYPE-SIZE>
+              <BASE-TYPE-ENCODING>IEEE754</BASE-TYPE-ENCODING>
+            </SW-BASE-TYPE>
           </ELEMENTS>
         </AR-PACKAGE>
       </AR-PACKAGES>

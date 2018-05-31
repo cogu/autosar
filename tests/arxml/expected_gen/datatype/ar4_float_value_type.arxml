@@ -62,13 +62,14 @@
           <TYPE-EMITTER>Platform_Type</TYPE-EMITTER>
         </IMPLEMENTATION-DATA-TYPE>
         <IMPLEMENTATION-DATA-TYPE>
-          <SHORT-NAME>U32RefCustom_T</SHORT-NAME>
-          <CATEGORY>TYPE_REFERENCE</CATEGORY>
+          <SHORT-NAME>float32</SHORT-NAME>
+          <CATEGORY>VALUE</CATEGORY>
           <SW-DATA-DEF-PROPS>
             <SW-DATA-DEF-PROPS-VARIANTS>
               <SW-DATA-DEF-PROPS-CONDITIONAL>
-                <DATA-CONSTR-REF DEST="DATA-CONSTR">/DataTypes/DataConstrs/CustomConstraintName</DATA-CONSTR-REF>
-                <IMPLEMENTATION-DATA-TYPE-REF DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/uint32</IMPLEMENTATION-DATA-TYPE-REF>
+                <BASE-TYPE-REF DEST="SW-BASE-TYPE">/DataTypes/BaseTypes/float32</BASE-TYPE-REF>
+                <SW-CALIBRATION-ACCESS>NOT-ACCESSIBLE</SW-CALIBRATION-ACCESS>
+                <DATA-CONSTR-REF DEST="DATA-CONSTR">/DataTypes/DataConstrs/float32_DataConstr</DATA-CONSTR-REF>
               </SW-DATA-DEF-PROPS-CONDITIONAL>
             </SW-DATA-DEF-PROPS-VARIANTS>
           </SW-DATA-DEF-PROPS>
@@ -150,12 +151,12 @@
               </DATA-CONSTR-RULES>
             </DATA-CONSTR>
             <DATA-CONSTR>
-              <SHORT-NAME>CustomConstraintName</SHORT-NAME>
+              <SHORT-NAME>float32_DataConstr</SHORT-NAME>
               <DATA-CONSTR-RULES>
                 <DATA-CONSTR-RULE>
                   <INTERNAL-CONSTRS>
-                    <LOWER-LIMIT INTERVAL-TYPE="CLOSED">0</LOWER-LIMIT>
-                    <UPPER-LIMIT INTERVAL-TYPE="CLOSED">100000</UPPER-LIMIT>
+                    <LOWER-LIMIT INTERVAL-TYPE="OPEN">-INF</LOWER-LIMIT>
+                    <UPPER-LIMIT INTERVAL-TYPE="OPEN">INF</UPPER-LIMIT>
                   </INTERNAL-CONSTRS>
                 </DATA-CONSTR-RULE>
               </DATA-CONSTR-RULES>
