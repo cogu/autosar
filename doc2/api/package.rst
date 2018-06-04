@@ -1,5 +1,7 @@
-:mod:`autosar.package` --- Packages
-===================================
+:noindex:
+
+To be reworked
+===============
 
 The AUTOSAR Package class.
 
@@ -13,8 +15,6 @@ The AUTOSAR Package class.
    package = ws.createPackage('ComponentType')
    
    print(ws.toXML())
-
-.. _Package:
    
 .. py:class:: Package(name : str)
       
