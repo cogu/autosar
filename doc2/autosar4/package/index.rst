@@ -31,3 +31,10 @@ Attributes
 
    List of elements in the package. Elements can be basically anything (except for packages and workspaces).
 
+AUTOSAR 4 Package API
+---------------------
+
+Data Types
+~~~~~~~~~~
+
+ * :ref:`createImplementationDataType <datatype-createImplementationDataType>`
