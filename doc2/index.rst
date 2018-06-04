@@ -9,8 +9,7 @@ Welcome to autosar's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-   
-   api/index   
+
    autosar3/index
    autosar4/index
    
