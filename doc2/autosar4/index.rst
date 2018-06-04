@@ -2,20 +2,10 @@ AUTOSAR 4
 =========
 
 .. toctree::
-   :maxdepth: 2   
+   :maxdepth: 3
+   :glob:
    
    behavior
    modes
-   package
-   
-   
-
-
-
-
-
-   
-   
-
-
-
+   package/index
+   package/datatype
