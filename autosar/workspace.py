@@ -53,7 +53,14 @@ class Workspace(object):
                       'DataConstraint': None }  #AUTOSAR 4 only
         self.map = {'packages': {}}
         self.errorHandlingOpt = False
-
+        self.defaultPackages = {'DataType':'DataType',
+                                  'CompuMethod':'DataTypeSemantics',
+                                  'Unit':'DataTypeUnits',
+                                'Constant':'Constant',
+                                'PortInterface':'PortInterface',
+                                'ModeDclrGroup':'ModeDclrGroup',
+                                'ComponentType':'ComponentType',
+                                }
 
     @property
     def version(self):
