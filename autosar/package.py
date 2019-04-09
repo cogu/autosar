@@ -3,6 +3,7 @@ import autosar.behavior
 import autosar.element
 import autosar.portinterface
 import autosar.datatype
+import autosar.builder
 import copy
 import autosar.base
 import re
@@ -722,120 +723,13 @@ class Package(object):
         return value
 
     def _createConstantV4(self, ws, name, dataType, initValue, adminData=None):
-        value = self._createValueV4(ws, name, dataType, initValue)
+        builder = autosar.builder.ValueBuilder()
+        value = builder.buildFromDataType(dataType, initValue, name, ws)        
         assert(value is not None)
         constant = autosar.constant.Constant(name, value, parent=self, adminData=adminData)
         self.append(constant)
         return constant
 
-    def _createValueV4(self, ws, name, dataType, rawValue, parent = None):
-        if isinstance(dataType, (autosar.datatype.ImplementationDataType, autosar.datatype.ApplicationPrimitiveDataType)):
-            value = None
-            dataConstraint = None
-            if isinstance(dataType, autosar.datatype.ImplementationDataType):
-                variantProps = dataType.variantProps[0]
-            if variantProps is not None:
-                if variantProps.dataConstraintRef is not None:
-                    dataConstraint = ws.find(variantProps.dataConstraintRef, role='DataConstraint')
-                    if dataConstraint is None:
-                        raise ValueError('{0.name}: Invalid DataConstraint reference: {1.dataConstraintRef}'.format(dataType, variantProps))
-                if variantProps.compuMethodRef is not None:
-                    compuMethod = ws.find(variantProps.compuMethodRef, role='CompuMethod')
-                    if compuMethod is None:
-                        raise ValueError('{0.name}: Invalid CompuMethod reference: {1.compuMethodRef}'.format(dataType, variantProps))
-                    if isinstance(compuMethod, autosar.datatype.CompuMethodConst):
-                        textValue = compuMethod.textValue(rawValue)
-                        if textValue is None:
-                            raise ValueError('{0.name}: Could not find a text value that matches numerical value {1:d}'.format(dataType, rawValue) )
-                        value = autosar.constant.TextValue(name,textValue)
-                    elif isinstance(compuMethod, autosar.datatype.CompuMethodRational):
-                        if dataConstraint is not None:
-                            dataConstraint.check_value(rawValue)
-                        value = autosar.constant.NumericalValue(name, rawValue)
-                    else:
-                        raise NotImplementedError(type(compuMethod))
-            if value is None:
-                if dataType.category == 'VALUE':
-                    if isinstance(rawValue, str):
-                        value = autosar.constant.TextValue(name, rawValue)
-                    else:
-                        if dataConstraint is not None:
-                            dataConstraint.check_value(rawValue)
-                        value = autosar.constant.NumericalValue(name, rawValue)
-                elif dataType.category == 'ARRAY':
-                    value = self._createArrayValueV4(ws, name, dataType, rawValue, parent)
-                elif dataType.category == 'STRUCTURE':
-                    value = self._createRecordValueV4(ws, name, dataType, rawValue, parent)
-                elif dataType.category == 'TYPE_REFERENCE':
-                    referencedTypeRef = dataType.getTypeReference()
-                    referencedType = ws.find(referencedTypeRef, role='DataType')
-                    if referencedType is None:
-                        raise ValueError('Invalid reference: '+str(referencedTypeRef))
-                    value = self._createValueV4(ws, name, referencedType, rawValue, parent)
-                else:
-                    raise NotImplementedError(dataType.category)
-        else:
-            raise NotImplementedError(type(dataType))
-        return value
-
-    def _createRecordValueV4(self, ws, name, dataType, initValue, parent=None):
-        value = autosar.constant.RecordValue(name, dataType.ref, parent)
-        if isinstance(initValue, collections.abc.Mapping):
-            a = set() #datatype elements
-            b = set() #initvalue elements
-            for subElem in dataType.subElements:
-                a.add(subElem.name)
-            for key in initValue.keys():
-                b.add(key)
-            extra_keys = b-a
-            for elem in extra_keys:
-                print('Unknown name in initializer: %s.%s'%(name,elem), file=sys.stderr)
-            for elem in dataType.subElements:
-                if elem.name in initValue:
-                    v = initValue[elem.name]
-                    childProps = elem.variantProps[0]
-                    if childProps.implementationTypeRef is not None:
-                        childTypeRef = childProps.implementationTypeRef
-                    else:
-                        raise NotImplementedError('could not deduce the type of element "%s"'%(elem.name))
-                    childType = ws.find(childTypeRef, role='DataType')
-                    if childType is None:
-                        raise autosar.base.InvalidDataTypeRef(str(childTypeRef))
-                    childValue = self._createValueV4(ws, elem.name, childType, v, value)
-                    assert(childValue is not None)
-                    value.elements.append(childValue)
-                else:
-                    raise ValueError('%s: missing initValue field: %s'%(name, elem.name))
-        else:
-            raise ValueError('initValue must be a dict')
-        return value
-
-    def _createArrayValueV4(self, ws, name, dataType, initValue, parent=None):
-        value = autosar.constant.ArrayValue(name, dataType.ref, None, parent)
-        typeArrayLength = dataType.getArrayLength()
-        if not isinstance(typeArrayLength, int):
-            raise ValueError('dataType has no valid array length')
-        if isinstance(initValue, collections.abc.Sequence):
-            if isinstance(initValue, str):
-                initValue = list(initValue)
-                if len(initValue)<typeArrayLength:
-                    #pad with zeros until length matches
-                    initValue += [0]*(typeArrayLength-len(initValue))
-                    assert(len(initValue) == typeArrayLength)
-            if len(initValue) > typeArrayLength:
-                print("%s: Excess array init values detected. Expected length=%d, got %d items"%(name, typeArrayLength, len(initValue)), file=sys.stderr)
-            if len(initValue) < typeArrayLength:
-                print("%s: Not enough array init values. Expected length=%d, got %d items"%(name, typeArrayLength, len(initValue)), file=sys.stderr)
-            i=0
-            for v in initValue:
-                if isinstance(v, str):
-                    value.elements.append(autosar.constant.TextValue(None, v))
-                else:
-                    value.elements.append(autosar.constant.NumericalValue(None, v))
-                i+=1
-                if i>=typeArrayLength:
-                    break
-        return value
 
     def createTextValueConstant(self, name, value):
         """AUTOSAR 4 text value constant"""

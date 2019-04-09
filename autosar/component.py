@@ -169,7 +169,7 @@ class ApplicationSoftwareComponent(AtomicSoftwareComponent):
         super().__init__(name,parent)
 
 class ComplexDeviceDriverComponent(AtomicSoftwareComponent):
-    def tag(self,version=None): return "COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE"
+    def tag(self,version=None): return 'COMPLEX-DEVICE-DRIVER-SW-COMPONENT-TYPE' if version>=4.0 else 'COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE'    
 
     def __init__(self,name,parent=None):
         super().__init__(name,parent)

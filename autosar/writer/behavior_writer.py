@@ -37,6 +37,11 @@ class XMLBehaviorWriter(ElementWriter):
         assert(ws is not None)
         lines.append('<%s>'%internalBehavior.tag(self.version))
         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%internalBehavior.name,1))
+        if len(internalBehavior.exclusiveAreas)>0:
+            lines.append(self.indent('<EXCLUSIVE-AREAS>',1))
+            for exclusiveArea in internalBehavior.exclusiveAreas:
+                lines.extend(self.indent(self._writeExclusiveAreaXML(ws,exclusiveArea),2))
+            lines.append(self.indent('</EXCLUSIVE-AREAS>',1))
         swc=ws.find(internalBehavior.componentRef)
         assert(swc is not None)
         if isinstance(internalBehavior, autosar.behavior.SwcInternalBehavior) and len(internalBehavior.perInstanceMemories)>0:
@@ -54,11 +59,6 @@ class XMLBehaviorWriter(ElementWriter):
             lines.append(self.indent('</DATA-TYPE-MAPPING-REFS>',1))
         if self.version < 4.0:
             lines.append(self.indent('<COMPONENT-REF DEST="%s">%s</COMPONENT-REF>'%(swc.tag(self.version),swc.ref),1))
-        if len(internalBehavior.exclusiveAreas)>0:
-            lines.append(self.indent('<EXCLUSIVE-AREAS>',1))
-            for exclusiveArea in internalBehavior.exclusiveAreas:
-                lines.extend(self.indent(self._writeExclusiveAreaXML(ws,exclusiveArea),2))
-            lines.append(self.indent('</EXCLUSIVE-AREAS>',1))
         if len(internalBehavior.events):
             lines.append(self.indent('<EVENTS>',1))
             for event in internalBehavior.events:
@@ -515,17 +515,18 @@ class XMLBehaviorWriter(ElementWriter):
         assert(isinstance(elem, autosar.behavior.ServiceNeeds))
         lines = []
         lines.append("<%s>"%elem.tag(self.version))
-        if elem.name is not None:
-            lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
         tmp = self.writeDescXML(elem)
         if tmp is not None: lines.extend(self.indent(tmp,1))
-        if elem.nvBlockNeeds is not None:
-            lines.extend(self.indent(self._writeNvBlockNeedsXML(ws, elem.nvBlockNeeds),1))
+        if isinstance(elem, autosar.behavior.NvmBlockServiceNeeds):            
+            if elem.nvmBlockNeeds is not None:
+                lines.extend(self.indent(self._writeNvmBlockNeedsXML(ws, elem.nvmBlockNeeds),1))
+        else:
+            raise NotImplementedError(type(elem))
         lines.append("</%s>"%elem.tag(self.version))
         return lines
 
-    def _writeNvBlockNeedsXML(self, ws, elem):
-        assert(isinstance(elem, autosar.behavior.NvBlockNeeds))
+    def _writeNvmBlockNeedsXML(self, ws, elem):
+        assert(isinstance(elem, autosar.behavior.NvmBlockNeeds))
         lines = []
         lines.append("<%s>"%elem.tag(self.version))
         if elem.name is not None:
@@ -534,12 +535,46 @@ class XMLBehaviorWriter(ElementWriter):
             lines.extend(self.indent(self.writeAdminDataXML(elem.adminData),1))
         tmp = self.writeDescXML(elem)
         if tmp is not None: lines.extend(self.indent(tmp,1))
-        lines.append(self.indent('<N-DATA-SETS>%d</N-DATA-SETS>'%(int(elem.numberOfDataSets)),1))
-        lines.append(self.indent('<RAM-BLOCK-STATUS-CONTROL>%s</RAM-BLOCK-STATUS-CONTROL>'%(elem.ramBlockStatusControl),1))
-        lines.append(self.indent('<RELIABILITY>%s</RELIABILITY>'%(elem.reliability),1))
-        lines.append(self.indent('<RESTORE-AT-START>%s</RESTORE-AT-START>'%('true' if elem.restoreAtStart else 'false'),1))
-        lines.append(self.indent('<STORE-AT-SHUTDOWN>%s</STORE-AT-SHUTDOWN>'%('true' if elem.storeAtShutdown else 'false'),1))
-
+        if elem.cfg.calcRamBlockCrc is not None:
+            lines.append(self.indent('<CALC-RAM-BLOCK-CRC>%s</CALC-RAM-BLOCK-CRC>'%(self.toBoolean(elem.cfg.calcRamBlockCrc)),1))
+        if elem.cfg.checkStaticBlockId is not None:
+            lines.append(self.indent('<CHECK-STATIC-BLOCK-ID>%s</CHECK-STATIC-BLOCK-ID>'%(self.toBoolean(elem.cfg.checkStaticBlockId)),1))
+        if elem.cfg.cyclicWritePeriod is not None:
+            lines.append(self.indent('<CYCLIC-WRITING-PERIOD>%d</CYCLIC-WRITING-PERIOD>'%(int(elem.cfg.cyclicWritePeriod)),1))
+        if elem.cfg.numberOfDataSets is not None:
+            lines.append(self.indent('<N-DATA-SETS>%d</N-DATA-SETS>'%(int(elem.cfg.numberOfDataSets)),1))
+        if elem.cfg.numberOfRomBlocks is not None:
+            lines.append(self.indent('<N-ROM-BLOCKS>%d</N-ROM-BLOCKS>'%(int(elem.cfg.numberOfRomBlocks)),1))
+        if elem.cfg.ramBlockStatusControl is not None:
+            lines.append(self.indent('<RAM-BLOCK-STATUS-CONTROL>%s</RAM-BLOCK-STATUS-CONTROL>'%(str(elem.cfg.ramBlockStatusControl)),1))
+        if elem.cfg.readOnly is not None:
+            lines.append(self.indent('<READONLY>%s</READONLY>'%(self.toBoolean(elem.cfg.readOnly)),1))
+        if elem.cfg.reliability is not None:
+            lines.append(self.indent('<RELIABILITY>%s</RELIABILITY>'%(str(elem.cfg.reliability)),1))
+        if elem.cfg.resistantToChangedSw is not None:
+            lines.append(self.indent('<RESISTANT-TO-CHANGED-SW>%s</RESISTANT-TO-CHANGED-SW>'%(self.toBoolean(elem.cfg.resistantToChangedSw)),1))
+        if elem.cfg.restoreAtStartup is not None:
+            lines.append(self.indent('<RESTORE-AT-START>%s</RESTORE-AT-START>'%(self.toBoolean(elem.cfg.restoreAtStartup)),1))
+        if elem.cfg.storeAtShutdown is not None:
+            lines.append(self.indent('<STORE-AT-SHUTDOWN>%s</STORE-AT-SHUTDOWN>'%(self.toBoolean(elem.cfg.storeAtShutdown)),1))
+        if elem.cfg.storeCyclic is not None:
+            lines.append(self.indent('<STORE-CYCLIC>%s</STORE-CYCLIC>'%(self.toBoolean(elem.cfg.storeCyclic)),1))
+        if elem.cfg.storeEmergency is not None:
+            lines.append(self.indent('<STORE-EMERGENCY>%s</STORE-EMERGENCY>'%(self.toBoolean(elem.cfg.storeEmergency)),1))
+        if elem.cfg.storeImmediate is not None:
+            lines.append(self.indent('<STORE-IMMEDIATE>%s</STORE-IMMEDIATE>'%(self.toBoolean(elem.cfg.storeImmediate)),1))
+        if elem.cfg.autoValidationAtShutdown is not None:
+            lines.append(self.indent('<USE-AUTO-VALIDATION-AT-SHUT-DOWN>%s</USE-AUTO-VALIDATION-AT-SHUT-DOWN>'%(self.toBoolean(elem.cfg.autoValidationAtShutdown)),1))
+        if elem.cfg.useCrcCompMechanism is not None:
+            lines.append(self.indent('<USE-CRC-COMP-MECHANISM>%s</USE-CRC-COMP-MECHANISM>'%(self.toBoolean(elem.cfg.useCrcCompMechanism)),1))
+        if elem.cfg.writeOnlyOnce is not None:
+            lines.append(self.indent('<WRITE-ONLY-ONCE>%s</WRITE-ONLY-ONCE>'%(self.toBoolean(elem.cfg.writeOnlyOnce)),1))
+        if elem.cfg.writeVerification is not None:
+            lines.append(self.indent('<WRITE-VERIFICATION>%s</WRITE-VERIFICATION>'%(self.toBoolean(elem.cfg.writeVerification)),1))
+        if elem.cfg.writingFrequency is not None:
+            lines.append(self.indent('<WRITING-FREQUENCY>%d</WRITING-FREQUENCY>'%(int(elem.cfg.writingFrequency)),1))
+        if elem.cfg.writingPriority is not None:
+            lines.append(self.indent('<WRITING-PRIORITY>%s</WRITING-PRIORITY>'%(str(elem.cfg.writingPriority)),1))
         lines.append("</%s>"%elem.tag(self.version))
         return lines
 
@@ -553,9 +588,9 @@ class XMLBehaviorWriter(ElementWriter):
         else:
             localVariable = None
         if elem.localParameterRef is not None:
-            localParameter = ws.find(elem.localParameterRef.parameterDataRef)
+            localParameter = ws.find(elem.localParameterRef)
             if localParameter is None:
-                raise ValueError('Invalid reference: '+elem.localParameterRef.parameterDataRef)
+                raise ValueError('Invalid reference: '+elem.localParameterRef)
         else:
             localParameter = None
         lines.append('<%s>'%elem.tag(self.version))
@@ -598,6 +633,10 @@ class XMLBehaviorWriter(ElementWriter):
             lines.extend(self.indent(self.writeSwDataDefPropsVariantsXML(ws, variants),2))
             lines.append(self.indent('</SW-DATA-DEF-PROPS>',1))
             lines.append(self.indent('<TYPE-TREF DEST="%s">%s</TYPE-TREF>'%(datatype.tag(self.version), datatype.ref),1))
+            if elem.initValue is not None:
+                lines.append(self.indent('<INIT-VALUE>',1))
+                lines.extend(self.indent(self.writeValueSpecificationXML(elem.initValue),2))
+                lines.append(self.indent('</INIT-VALUE>',1))
         lines.append('</%s>'%elem.tag(self.version))
         return lines
 
