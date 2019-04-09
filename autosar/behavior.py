@@ -381,20 +381,113 @@ class SwcNvBlockNeeds(object):
     def tag(self, version=None):
         return 'SWC-NV-BLOCK-NEEDS'
 
-class NvBlockNeeds(Element):
+class NvmBlockConfig:
     """
-    AUTOSAR 4 representation of NV-BLOCK-NEEDS
+    Represents NVM block config, used inside an NvmBlockNeeds object.
+    All options by default is set to None which means "default configuration".
+    In practice a None value means that no XML will be generated for that option.
+    Option List:
+    - numberOfDataSets: None or int
+    - numberOfRomBlocks: None or int
+    - ramBlockStatusControl: None or str ('NV-RAM-MANAGER', 'API')
+    - reliability: None or str('NO-PROTECTION', 'ERROR-DETECTION', 'ERROR-CORRECTION')
+    - writingPriority: None or str ('LOW', 'MEDIUM', 'HIGH')
+    - writingFrequency: None or int
+    - calcRamBlockCrc: None or bool
+    - checkStaticBlockId: None or bool
+    - readOnly: None or bool
+    - resistantToChangedSw: None or bool
+    - restoreAtStartup: None or bool
+    - storeAtShutdown: None or bool
+    - writeVerification: None or bool
+    - writeOnlyOnce: None or bool
+    - autoValidationAtShutdown: None or bool
+    - useCrcCompMechanism: None or bool
+    - storeEmergency: None or bool
+    - storeImmediate: None or bool
+    - storeCyclic: None or bool
+    - cyclicWritePeriod: None or int
+
     """
-    def __init__(self, name, numberOfDataSets = 0, ramBlockStatusControl = 'NV-RAM-MANAGER', reliability='NO-PROTECTION', restoreAtStart=True, storeAtShutdown=True, parent=None, adminData=None):
-        super().__init__(name, parent, adminData)
-        self.numberOfDataSets=numberOfDataSets
+
+    def __init__(self, numberOfDataSets = None,
+                 numberOfRomBlocks = None,
+                 ramBlockStatusControl = None,
+                 reliability = None,
+                 writingPriority = None,
+                 writingFrequency = None,
+                 calcRamBlockCrc = None,
+                 checkStaticBlockId = None,
+                 readOnly = None,
+                 resistantToChangedSw = None,
+                 restoreAtStartup = None,
+                 storeAtShutdown = None,
+                 writeVerification = None,
+                 writeOnlyOnce = None,
+                 autoValidationAtShutdown = None,
+                 useCrcCompMechanism = None,
+                 storeEmergency = None,
+                 storeImmediate = None,
+                 storeCyclic = None,
+                 cyclicWritePeriod = None,
+                 check_input = True):
+        if check_input:
+            assert(numberOfDataSets is None or isinstance(numberOfDataSets, int))
+            assert(numberOfRomBlocks is None or isinstance(numberOfRomBlocks, int))
+            assert(ramBlockStatusControl is None or isinstance(ramBlockStatusControl, str))
+            assert(reliability is None or isinstance(reliability, str))
+            assert(writingPriority is None or isinstance(writingPriority, str))
+            assert(writingFrequency is None or isinstance(writingFrequency, int))
+            assert(calcRamBlockCrc is None or isinstance(calcRamBlockCrc, bool))
+            assert(checkStaticBlockId is None or isinstance(checkStaticBlockId, bool))
+            assert(readOnly is None or isinstance(readOnly, bool))
+            assert(resistantToChangedSw is None or isinstance(resistantToChangedSw, bool))
+            assert(restoreAtStartup is None or isinstance(restoreAtStartup, bool))
+            assert(storeAtShutdown is None or isinstance(storeAtShutdown, bool))
+            assert(writeVerification is None or isinstance(writeVerification, bool))
+            assert(writeOnlyOnce is None or isinstance(writeOnlyOnce, bool))
+            assert(autoValidationAtShutdown is None or isinstance(autoValidationAtShutdown, bool))
+            assert(useCrcCompMechanism is None or isinstance(useCrcCompMechanism, bool))            
+            assert(storeEmergency is None or isinstance(storeEmergency, bool))
+            assert(storeImmediate is None or isinstance(storeImmediate, bool))
+            assert(storeCyclic is None or isinstance(storeCyclic, bool))
+            assert(cyclicWritePeriod is None or isinstance(cyclicWritePeriod, int))
+
+        self.numberOfDataSets = numberOfDataSets
+        self.numberOfRomBlocks = numberOfRomBlocks
         self.ramBlockStatusControl = ramBlockStatusControl
         self.reliability = reliability
-        assert(isinstance(restoreAtStart,bool))
-        self.restoreAtStart = restoreAtStart
-        assert(isinstance(storeAtShutdown,bool))
+        self.writingPriority = writingPriority
+        self.writingFrequency = writingFrequency
+        self.calcRamBlockCrc = calcRamBlockCrc
+        self.checkStaticBlockId = checkStaticBlockId
+        self.readOnly = readOnly
+        self.resistantToChangedSw = resistantToChangedSw
+        self.restoreAtStartup = restoreAtStartup
         self.storeAtShutdown = storeAtShutdown
+        self.writeVerification = writeVerification
+        self.writeOnlyOnce = writeOnlyOnce
+        self.autoValidationAtShutdown = autoValidationAtShutdown
+        self.useCrcCompMechanism = useCrcCompMechanism
+        self.storeEmergency = storeEmergency
+        self.storeImmediate = storeImmediate
+        self.storeCyclic = storeCyclic
+        self.cyclicWritePeriod = cyclicWritePeriod
 
+
+class NvmBlockNeeds(Element):
+    """
+    AUTOSAR 4 representation of NV-BLOCK-NEEDS
+
+    second argument to the init function should be an instance of (a previously configured) NvmBlockConfig
+
+    """
+    def __init__(self, name, blockConfig = None, parent=None, adminData=None):
+        super().__init__(name, parent, adminData)
+        assert(blockConfig is None or isinstance(blockConfig, NvmBlockConfig))
+        if blockConfig is None:
+            blockConfig = NvmBlockConfig() #create a default configuration
+        self.cfg = blockConfig
     def tag(self, version): return 'NV-BLOCK-NEEDS'
 
 class RoleBasedRPortAssignment(object):
@@ -1054,7 +1147,7 @@ class SwcInternalBehavior(InternalBehaviorCommon):
         self.perInstanceMemories.append(dataElement)
         return dataElement
 
-    def createSharedParameter(self, name, implementationTypeRef, swAddressMethodRef = None, swCalibrationAccess = None):
+    def createSharedDataParameter(self, name, implementationTypeRef, swAddressMethodRef = None, swCalibrationAccess = None, initValue = None):
         """
         AUTOSAR4: Creates a ParameterDataPrototype object and appends it to the internal parameterDataPrototype list
         """
@@ -1063,39 +1156,49 @@ class SwcInternalBehavior(InternalBehaviorCommon):
         dataType = ws.find(implementationTypeRef, role='DataType')
         if dataType is None:
             raise ValueError('invalid reference: '+implementationTypeRef)
-        parameter = ParameterDataPrototype(name, dataType.ref, swAddressMethodRef = swAddressMethodRef, swCalibrationAccess=swCalibrationAccess, parent=self)
+        parameter = ParameterDataPrototype(name, dataType.ref, swAddressMethodRef = swAddressMethodRef, swCalibrationAccess=swCalibrationAccess, initValue=initValue, parent=self)
         self.parameterDataPrototype.append(parameter)
         return parameter
 
-    def createNvmBlock(self, name, portName, perInstanceMemoryName, perInstanceMemoryRole='ramBlock', nvBlockNeeds = None):
+    def createNvmBlock(self, name, portName, perInstanceMemoryName, nvmBlockConfig = None, defaultValueName = None, perInstanceMemoryRole='ramBlock', defaultValueRole = 'defaultValue', blockAdminData = None):
         """
         AUTOSAR 4: Creates a ServiceNeeds object and appends it to the internal serviceDependencies list
         This assumes the service needed is related to NVM
         """
         self._initSWC()
         ws = self.rootWS()
-        if nvBlockNeeds is None:
-            nvBlockNeeds = NvBlockNeeds(name)
-        dependency = SwcServiceDependency(name)
-        service = dependency.serviceNeeds = ServiceNeeds()
-        service.nvBlockNeeds = nvBlockNeeds
+        if nvmBlockConfig is None:
+            nvmBlockConfig = NvmBlockConfig()
+        else:
+            assert(isinstance(nvmBlockConfig, NvmBlockConfig))
+
+        nvmBlockNeeds = NvmBlockNeeds(name, nvmBlockConfig, adminData = blockAdminData)
+        nvmBlockServiceNeeds = NvmBlockServiceNeeds(name, nvmBlockNeeds)
+        serviceDependency = SwcServiceDependency(name, nvmBlockServiceNeeds)
 
         for port in self.swc.requirePorts:
             if port.name == portName:
-                dependency.roleBasedPortAssignments.append(RoleBasedPortAssignment(port.ref))
+                serviceDependency.roleBasedPortAssignments.append(RoleBasedPortAssignment(port.ref))
                 break
         else:
             raise ValueError('%s: No require port found with name "%s"'%(self.swc.name, portName))
 
         for pim in self.perInstanceMemories:
             if pim.name == perInstanceMemoryName:
-                dependency.roleBasedDataAssignments.append(RoleBasedDataAssignment(perInstanceMemoryRole, pim.ref))
+                serviceDependency.roleBasedDataAssignments.append(RoleBasedDataAssignment(perInstanceMemoryRole, localVariableRef = pim.ref))
                 break
         else:
             raise ValueError('%s: No per-instance-memory found with name "%s"'%(self.swc.name, perInstanceMemoryName))
-        self.serviceDependencies.append(dependency)
-        return dependency
+        if defaultValueName is not None:
+            for param in self.parameterDataPrototype:
+                if param.name == defaultValueName:
+                    serviceDependency.roleBasedDataAssignments.append(RoleBasedDataAssignment(defaultValueRole, localParameterRef = param.ref))
+                    break
+            else:
+                raise ValueError('%s: No shared data parameter found with name "%s"'%(self.swc.name, defaultValueName))
 
+        self.serviceDependencies.append(serviceDependency)
+        return serviceDependency
 
 class VariableAccess(Element):
     def __init__(self, name, portPrototypeRef, targetDataPrototypeRef, parent=None):
@@ -1108,13 +1211,20 @@ class VariableAccess(Element):
 
 class ServiceNeeds(Element):
     """
-    Represents <SERVICE-NEEDS> (AUTODSAR 4)
+    Represents <SERVICE-NEEDS> (AUTOSAR 4)
+    This is a base class, it is expected that different service needs derive from this class
     """
     def tag(self, version): return 'SERVICE-NEEDS'
 
-    def __init__(self, name = None, nvBlockNeeds = None, parent=None, adminData = None):
+    def __init__(self, name = None, nvmBlockNeeds = None, parent=None, adminData = None):
         super().__init__(name, parent, adminData)
-        self.nvBlockNeeds = nvBlockNeeds
+        self.nvmBlockNeeds = nvmBlockNeeds
+
+class NvmBlockServiceNeeds(ServiceNeeds):
+    def __init__(self, name, nvmBlockNeeds = None, parent=None, adminData = None):
+        super().__init__(name, parent, adminData)
+        assert(nvmBlockNeeds is None or isinstance(nvmBlockNeeds, NvmBlockNeeds))
+        self.nvmBlockNeeds = nvmBlockNeeds
 
 class SwcServiceDependency(Element):
     """
@@ -1122,11 +1232,14 @@ class SwcServiceDependency(Element):
     """
     def tag(self, version): return 'SWC-SERVICE-DEPENDENCY'
 
-    def __init__(self, name=None, parent=None, adminData = None):
+    def __init__(self, name=None, serviceNeeds = None, parent=None, adminData = None):
         super().__init__(name, parent, adminData)
-        self._serviceNeeds = None
+        self._serviceNeeds = None #None or ServiceNeeds object
         self.roleBasedDataAssignments = []
         self.roleBasedPortAssignments = []
+        if serviceNeeds is not None:
+            assert(isinstance(serviceNeeds, ServiceNeeds))
+            self.serviceNeeds = serviceNeeds #this uses the setter method
 
     @property
     def serviceNeeds(self):
@@ -1142,6 +1255,9 @@ class RoleBasedDataAssignment:
     Represents <ROLE-BASED-DATA-ASSIGNMENT> (AUTOSAR 4)
     """
     def __init__(self, role, localVariableRef=None, localParameterRef=None):
+        assert(isinstance(role, str))
+        assert(localVariableRef is None or isinstance(localVariableRef, str))
+        assert(localParameterRef is None or isinstance(localParameterRef, str))
         self.role = role
         self.localVariableRef = localVariableRef
         self.localParameterRef = localParameterRef
@@ -1153,6 +1269,7 @@ class RoleBasedPortAssignment:
     Represents <ROLE-BASED-PORT-ASSIGNMENT> (AUTOSAR 4)
     """
     def __init__(self, portRef):
+        assert(isinstance(portRef, str))
         self.portRef = portRef
 
     def tag(self, version): return 'ROLE-BASED-PORT-ASSIGNMENT'
@@ -1162,11 +1279,12 @@ class ParameterDataPrototype(Element):
     Represents <PARAMETER-DATA-PROTOTYPE> (AUTOSAR 4)
     """
 
-    def __init__(self, name, typeRef, swAddressMethodRef=None, swCalibrationAccess=None, parent=None, adminData=None):
+    def __init__(self, name, typeRef, swAddressMethodRef=None, swCalibrationAccess=None, initValue = None, parent=None, adminData=None):
         super().__init__(name, parent, adminData)
         self.typeRef = typeRef
         self.swAddressMethodRef = swAddressMethodRef
         self.swCalibrationAccess = swCalibrationAccess
+        self.initValue = initValue
 
     def tag(self, version): return 'PARAMETER-DATA-PROTOTYPE'
 

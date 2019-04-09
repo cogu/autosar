@@ -695,7 +695,7 @@ class BehaviorParser(ElementParser):
             else:
                 raise NotImplementedError(xmlElem.tag)
         if (name is not None) and (typeRef is not None):
-            elem = ParameterDataPrototype(name, typeRef, swAddressMethodRef, swCalibrationAccess, parent)
+            elem = ParameterDataPrototype(name, typeRef, swAddressMethodRef, swCalibrationAccess, None, parent)
             if desc is not None:
                 elem.desc=desc[0]
                 elem.descAttr=desc[1]
