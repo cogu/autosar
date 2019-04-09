@@ -228,7 +228,11 @@ class XMLPortInterfaceWriter(ElementWriter):
             lines.append(self.indent('<TYPE-TREF DEST="%s">%s</TYPE-TREF>'%(typeElem.tag(self.version),typeElem.ref),1))
         lines.append(self.indent('<DIRECTION>%s</DIRECTION>'%argument.direction,1))
         if self.version >= 4.0:
-            lines.append(self.indent('<SERVER-ARGUMENT-IMPL-POLICY>USE-ARGUMENT-TYPE</SERVER-ARGUMENT-IMPL-POLICY>',1))
+            if argument.serverArgumentImplPolicy != None:
+                policy = argument.serverArgumentImplPolicy
+            else:
+                policy = 'USE-ARGUMENT-TYPE'
+            lines.append(self.indent('<SERVER-ARGUMENT-IMPL-POLICY>%s</SERVER-ARGUMENT-IMPL-POLICY>' % (policy), 1))
         lines.append('</%s>'%argument.tag(self.version))
         return lines
 
