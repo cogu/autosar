@@ -2,6 +2,7 @@ import abc
 import autosar.base
 import xml.sax.saxutils
 import json
+import math
 import collections
 from autosar.element import DataElement
 from decimal import Decimal
@@ -290,6 +291,14 @@ class BaseWriter:
             lines.append(self.indent('<IS-QUEUED>%s</IS-QUEUED>'%self.toBoolean(elem.isQueued),1))
         lines.append('</%s>'%elem.tag(self.version))
         return lines
+
+    def _numberToString(self, x):        
+        if math.isinf(x) and x > 0:
+            return 'INFINITE' if self.version < 4.0 else 'INF'
+        elif math.isinf(x) and x < 0:
+            return '-INFINITE' if self.version < 4.0 else '-INF'
+        else:
+            return str(x)
 
 class ElementWriter(BaseWriter, metaclass=abc.ABCMeta):
 

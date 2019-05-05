@@ -8,7 +8,7 @@ class ConstantParser(ElementParser):
     Constant package parser
     """
     def __init__(self,version=3.0):
-        self.version=version
+        super().__init__(version)
 
     def getSupportedTags(self):
         return ['CONSTANT-SPECIFICATION']
@@ -87,6 +87,8 @@ class ConstantParser(ElementParser):
                 result.append(self._parseNumericalValueSpecification(xmlElem, parent))
             elif xmlElem.tag == 'ARRAY-VALUE-SPECIFICATION':
                 result.append(self._parseArrayValueSpecification(xmlElem, parent))
+            elif xmlElem.tag == 'CONSTANT-REFERENCE':
+                result.append(self._parseConstantReference(xmlElem, parent))
             else:
                 raise NotImplementedError(xmlElem.tag)
         return result
@@ -101,10 +103,10 @@ class ConstantParser(ElementParser):
             else:
                 raise NotImplementedError(xmlElem.tag)
 
-        if (label is not None) and (value is not None):
+        if value is not None:
             return autosar.constant.TextValue(label, value, parent)
         else:
-            raise RuntimeError("both label and value must not be None")
+            raise RuntimeError("Value must not be None")
 
     def _parseNumericalValueSpecification(self, xmlValue, parent):
         (label, value) = (None, None)
@@ -155,3 +157,19 @@ class ConstantParser(ElementParser):
 
         else:
             raise RuntimeError("<ELEMENTS> must not be None")
+    
+    def _parseConstantReference(self, xmlRoot, parent):
+        constantRef = None
+        self.push()
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == 'CONSTANT-REF':
+                constantRef = self.parseTextNode(xmlElem)
+            else:
+                self.baseHandler(xmlElem)
+        if constantRef is not None:
+            obj = autosar.constant.ConstantReference(self.name, constantRef, parent, self.adminData)
+            self.pop(obj)
+            return obj
+        else:            
+            raise RunTimeError('<CONSTANT-REF> must not be None')
+        

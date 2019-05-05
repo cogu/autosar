@@ -20,17 +20,17 @@ def _create_packages(ws):
     package.createIntegerDataType('uint8', min=0, max=255, baseTypeRef='/DataTypes/BaseTypes/uint8', typeEmitter='Platform_Type')
     package.createIntegerDataType('uint16', min=0, max=65535, baseTypeRef='/DataTypes/BaseTypes/uint16', typeEmitter='Platform_Type')
     package.createIntegerDataType('uint32', min=0, max=4294967295, baseTypeRef='/DataTypes/BaseTypes/uint32', typeEmitter='Platform_Type')
-    
+
 
     ws.createPackage('Constants', role='Constant')
-    
-    
+
+
 
 class ARXML4ConstantTest(ARXMLTestClass):
 
     def test_create_array_constant(self):
         ws = autosar.workspace(version="4.2.2")
-        _create_packages(ws)        
+        _create_packages(ws)
         ws['/DataTypes'].createArrayDataType('u8Array2_T', '/DataTypes/uint8', 2)
         ws['/Constants'].createConstant('u8Array2_IV', 'u8Array2_T', [0,0])
         file_name = 'ar4_array_constant.arxml'
@@ -106,7 +106,7 @@ class ARXML4ConstantTest(ARXMLTestClass):
         file_name = 'ar4_record_constant3.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'constant', file_name)
-        self.save_and_check(ws, expected_file, generated_file, ['/Constants'])        
-    
+        self.save_and_check(ws, expected_file, generated_file, ['/Constants'])
+
 if __name__ == '__main__':
     unittest.main()

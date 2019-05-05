@@ -1,4 +1,5 @@
 import abc
+from collections import deque
 from autosar.base import (AdminData, SpecialDataGroup, SpecialData, SwDataDefPropsConditional, SwPointerTargetProps)
 from autosar.element import DataElement
 
@@ -10,11 +11,77 @@ def _parseBoolean(value):
         elif value =='false': return False
     raise ValueError(value)
 
-class BaseParser():
-    def __init__(self,version=None):
-        self.version=version
+class CommonTagsResult:
+    def __init__(self):
+        self.reset()
+    
+    def reset(self):
+        self.adminData = None
+        self.desc = None
+        self.descAttr = None
+        self.name = None
+        self.category = None
 
-    def parseDesc(self,xmlRoot,elem):
+
+class BaseParser:
+    def __init__(self,version=None):
+        self.version = version
+        self.common = deque()
+    
+    def push(self):
+        self.common.append(CommonTagsResult())
+    
+    def pop(self, obj = None):
+        if obj is not None:
+            self.applyDesc(obj)
+        self.common.pop()
+
+    
+        
+
+    def baseHandler(self, xmlElem):
+        """
+        Alias for defaultHandler
+        """
+        self.defaultHandler(xmlElem)
+        
+    def defaultHandler(self, xmlElem):
+        """
+        A default handler that parses common tags found under most XML elements
+        """
+        if xmlElem.tag == 'SHORT-NAME':
+            self.common[-1].name = self.parseTextNode(xmlElem)
+        elif xmlElem.tag == 'ADMIN-DATA':
+            self.common[-1].adminData = self.parseAdminDataNode(xmlElem)
+        elif xmlElem.tag == 'CATEGORY':
+            self.common[-1].category = self.parseTextNode(xmlElem)
+        elif xmlElem.tag == 'DESC':
+            self.common[-1].desc, self.common[-1].desc_attr = self.parseDescDirect(xmlElem)
+        else:
+            raise NotImplementedError(xmlElem.tag)
+    
+    def applyDesc(self, obj):
+        if self.common[-1].desc is not None:            
+            obj.desc=L2Text
+            obj.descAttr=L2Attr        
+    
+    @property
+    def name(self):
+        return self.common[-1].name
+
+    @property
+    def adminData(self):
+        return self.common[-1].adminData
+
+    @property
+    def category(self):
+        return self.common[-1].category
+
+    @property
+    def desc(self):
+        return self.common[-1].desc, self.common[-1].descAttr
+
+    def parseDesc(self, xmlRoot, elem):
         xmlDesc = xmlRoot.find('DESC')
         if xmlDesc is not None:
             L2Xml = xmlDesc.find('L-2')
@@ -24,7 +91,7 @@ class BaseParser():
                 elem.desc=L2Text
                 elem.descAttr=L2Attr
 
-    def parseDescDirect(self,xmlDesc):
+    def parseDescDirect(self, xmlDesc):
         assert(xmlDesc.tag == 'DESC')
         L2Xml = xmlDesc.find('L-2')
         if L2Xml is not None:
@@ -44,6 +111,18 @@ class BaseParser():
 
     def parseBooleanNode(self, xmlElem):
         return None if xmlElem is None else _parseBoolean(xmlElem.text)
+
+    def parseNumberNode(self, xmlElem):
+        textValue = self.parseTextNode(xmlElem)
+        retval = None
+        try:
+            retval = int(textValue)
+        except ValueError:
+            try:
+                retval = float(textValue)
+            except ValueError:
+                retval = textValue
+        return retval
 
     def hasAdminData(self, xmlRoot):
         return True if xmlRoot.find('ADMIN-DATA') is not None else False
@@ -128,7 +207,7 @@ class BaseParser():
 
     def parseVariableDataPrototype(self, xmlRoot, parent):
         assert(xmlRoot.tag == 'VARIABLE-DATA-PROTOTYPE')
-        (name, typeRef, props_variants, isQueued) = (None, None, None, False)
+        (name, typeRef, props_variants, isQueued, adminData) = (None, None, None, False, None)
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'SHORT-NAME':
                 name = self.parseTextNode(xmlElem)
@@ -136,10 +215,12 @@ class BaseParser():
                 typeRef = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'SW-DATA-DEF-PROPS':
                 props_variants = self.parseSwDataDefProps(xmlElem)
+            elif xmlElem.tag == 'ADMIN-DATA':
+                adminData = self.parseAdminDataNode(xmlElem)
             else:
                 raise NotImplementedError(xmlElem.tag)
         if (name is not None) and (typeRef is not None):
-            dataElement = DataElement(name, typeRef, isQueued, parent=parent)
+            dataElement = DataElement(name, typeRef, isQueued, parent = parent, adminData = adminData)
             dataElement.setProps(props_variants[0])
             return dataElement
         else:

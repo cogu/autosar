@@ -5,26 +5,16 @@ import json
 import copy
 import collections
 
-class ConstElement:
-    def __init__(self,parent=None):
-        self.parent=parent
+class RecordTypeElement(Element):
+    """
+    (AUTOSAR3)
+    Implemenetation of <RECORD-ELEMENT> (found inside <RECORD-TYPE>).
 
-    def asdict(self):
-        data={'type': self.__class__.__name__}
-        data.update(self.__dict__)
-        return data
-    def find(self,ref):
-        if ref.startswith('/'):
-            return self.root().find(ref)
-        return None
-    def rootWS(self):
-        if self.parent is None: return None
-        return self.parent.rootWS()
+    """
+    def tag(self, version=None): return 'RECORD-ELEMENT'
 
-class RecordTypeElement(ConstElement):
-    def __init__(self,name,typeRef,parent=None):
-        super().__init__(parent)
-        self.name=name
+    def __init__(self, name, typeRef, parent = None, adminData = None):
+        super().__init__(parent, adminData)
         self.typeRef=typeRef
     def __eq__(self,other):
         if self is other: return True
@@ -37,51 +27,33 @@ class RecordTypeElement(ConstElement):
                 return lhs==rhs
         return False
 
-class CompuConstElement(ConstElement):
-    def __init__(self, lowerLimit, upperLimit, textValue, label=None, symbol=None, adminData=None):
-        self.lowerLimit=lowerLimit
-        self.upperLimit=upperLimit
-        self.textValue=textValue
-        self.symbol=symbol
-        self.label=label
-        self.adminData=adminData
-    def __eq__(self,other):
-        if self is other: return True
-        if type(self) is type(other):
-            return (self.lowerLimit == other.lowerLimit) and (self.upperLimit == other.upperLimit) and (self.textValue == self.textValue)
-        return False
+class CompuScaleElement:
+    """
+    Base class for <COMPU-SCALE>
+    """
+    def tag(self, version=None): return 'COMPU-SCALE'
 
+    def __init__(self, lowerLimit, upperLimit, lowerLimitType = 'CLOSED', upperLimitType = 'CLOSED', label=None, symbol=None, textValue = None, numerator = None, denominator = None, offset = None, mask = None, adminData=None):
+        self.lowerLimit = lowerLimit
+        self.upperLimit = upperLimit
+        self.lowerLimitType = lowerLimitType
+        self.upperLimitType = upperLimitType
+        self.symbol = symbol
+        self.label = label
+        self.adminData = adminData
+        self.textValue = textValue
+        self.offset = offset
+        self.numerator = numerator
+        self.denominator = denominator
+        self.mask = mask
 
-class CompuRationalElement(ConstElement):
-    def __init__(self, offset, numerator, denominator, label=None, symbol = None, adminData=None):
-        self.offset=offset
-        self.numerator=numerator
-        self.denominator=denominator
-        self.label=label
-        self.symbol=symbol
-        self.adminData=adminData
-    def __eq__(self,other):
-        if self is other: return True
-        if type(self) is type(other):
-            return (self.offset == other.offset) and (self.numerator == other.numerator) and (self.denominator == self.denominator)
-        return False
+class Unit(Element):
+    """
+    Implementation of <UNIT>
+    """
 
-class CompuMaskElement(ConstElement):
-    def __init__(self, lowerLimit, upperLimit, mask, label=None, symbol=None, adminData=None):
-        self.lowerLimit=lowerLimit
-        self.upperLimit=upperLimit
-        self.label=label
-        self.mask=mask
-        self.symbol=symbol
-        self.adminData=adminData
-    def __eq__(self,other):
-        if self is other: return True
-        if type(self) is type(other):
-            return (self.lowerLimit == other.lowerLimit) and (self.upperLimit == other.upperLimit) and (self.mask == self.mask)
-        return False
-
-class DataTypeUnitElement(Element):
     def tag(self, version=None): return 'UNIT'
+
     def __init__(self, name, displayName, factor=None, offset=None, parent=None):
         super().__init__(name, parent)
         self.displayName=displayName
@@ -195,7 +167,9 @@ class RecordDataType(DataType):
 
 
 class ArrayDataType(DataType):
-
+    """
+    Array data type (AUTOSAR 3)
+    """
     def tag(self,version=None): return 'ARRAY-TYPE'
 
     def __init__(self, name, typeRef, length, parent=None, adminData=None):
@@ -245,131 +219,210 @@ class RealDataType(DataType):
         self.hasNaN=hasNaN
         self.encoding=encoding
 
+class Computation:
+    """
+    Represents one computation (COMPU-INTERNAL-TO-PHYS or COMPU-PHYS-TO-INTERNAL).
+    Contains a list of CompuScaleElement objects as well as an optional defaultValue.
+    """
+    def __init__(self, defaultValue = None):
+        self.elements = [] #list of CompuScaleElement
+        self.defaultValue = defaultValue
 
-class CompuMethodRational(Element):
-    def tag(self,version=None): return 'COMPU-INTERNAL-TO-PHYS'
-    def __init__(self,name,unitRef,elements, category=None, adminData=None):
-        super().__init__(name)
-        self.category=category
-        self.unitRef = unitRef
-        self.adminData = adminData
-        self.elements = []
+    @property
+    def lowerLimit(self):
+        """
+        Returns lowerLimit of first element
+        """
+        if len(self.elements) > 0:
+            return self.elements[0].lowerLimit
+        else:
+            raise KeyError('No elements in Computation object')
 
+    @property
+    def upperLimit(self):
+        """
+        Returns upperLimit of last element
+        """
+        if len(self.elements) > 0:
+            return self.elements[-1].upperLimit
+        else:
+            raise KeyError('No elements in Computation object')
+
+    def createValueTable(self, elements, autoLabel = True):
+        """
+        Creates a list of CompuScaleElements based on contents of the elements argument
+
+        When elements is a list of strings:
+            Creates one CompuScaleElement per list item and automatically calculates lower and upper limits
+
+        When elements is a list of tuples:
+            If 2-tuple: First element is both lowerLimit and upperLimit, second element is textValue.
+            If 3-tuple: First element is lowerLimit, second element is upperLimit, third element is exitValue.
+
+        autoLabel: automatically creates a <SHORT-LABEL> based on the element.textValue (bool). Default=True
+        """
+        lowerLimitType, upperLimitType = 'CLOSED', 'CLOSED'
         for elem in elements:
-            self.elements.append(CompuRationalElement(**elem))
-    def asdict(self):
-        data={'type': self.__class__.__name__,'name':self.name,'elements':[]}
-        for element in self.elements:
-            data['elements'].append(element.asdict())
-        return data
-
-    def find(self,ref):
-        if ref.startswith('/'):
-            root=self.rootWS()
-            return root.find(ref)
-        return None
-
-    def __eq__(self,other):
-        if self is other: return True
-        if self.name == other.name:
-            lhs = None if self.unitRef is None else self.find(self.unitRef)
-            rhs = None if other.unitRef is None else other.find(other.unitRef)
-            if lhs == rhs:
-                if len(self.elements)!=len(other.elements): return False
-                for i in range(len(self.elements)):
-                    if self.elements[i] != other.elements[i]: return False
-                return True
-        return False
-
-
-class CompuMethodConst(Element):
-    def tag(self, version=3.0): return 'COMPU-METHOD'
-    def __init__(self, name, elements, category=None, parent=None, adminData=None):
-        super().__init__(name, parent, adminData)
-        self.elements = []
-        self.category=category
-        for elem in elements:
-            if isinstance(elem,str):
-                index=len(self.elements)
-                self.elements.append(CompuConstElement(lowerLimit=index,upperLimit=index,textValue=elem))
-            elif isinstance(elem,dict):
-                self.elements.append(CompuConstElement(**elem))
-            elif isinstance(elem,tuple):
-                if len(elem)==2:
-                    self.elements.append(CompuConstElement(lowerLimit=elem[0],upperLimit=elem[0],textValue=elem[1]))
-                elif len(elem)==3:
-                    self.elements.append(CompuConstElement(*elem))
+            if isinstance(elem, str):
+                limit = len(self.elements)
+                (lowerLimit, upperLimit, textValue) = (limit, limit, elem)
+            elif isinstance(elem, tuple):
+                if len(elem) == 2:
+                    (limit, textValue) = elem
+                    (lowerLimit, upperLimit, textValue) = (limit, limit, textValue)
+                elif len(elem) == 3:
+                    lowerLimit, upperLimit, textValue = elem
                 else:
                     raise ValueError('invalid length: %d'%len(elem))
             else:
                 raise ValueError('type not supported:%s'%str(type(elem)))
-    # def asdict(self):
-    #    data={'type': self.__class__.__name__,'name':self.name,'elements':[]}
-    #    for element in self.elements:
-    #       data['elements'].append(element.asdict())
-    #    return data
+            label = textValue if autoLabel else None
+            self.elements.append(CompuScaleElement(lowerLimit, upperLimit, lowerLimitType, upperLimitType, textValue = textValue, label = label))
 
-    def getValueTable(self):
-        retval = []
-        i = 0
-        for elem in self.elements:
-            if (elem.lowerLimit == elem.upperLimit) and elem.lowerLimit==i:
-                retval.append(elem.textValue)
-            else:
-                return None
-            i+=1
-        return retval if len(retval)>0 else None
+    def createRationalScaling(self, offset, numerator, denominator, lowerLimit, upperLimit, lowerLimitType = 'CLOSED', upperLimitType = 'CLOSED', label = None, symbol = None, adminData = None):
+        """
+        Creates COMPU-SCALE based a rational scaling
+        """
+        element = CompuScaleElement(lowerLimit, upperLimit, lowerLimitType, upperLimitType, label = label, symbol = symbol, offset = offset, numerator = numerator, denominator = denominator, adminData = adminData)
+        self.elements.append(element)
+        return element
 
-    def textValue(self, numericValue):
-        for elem in self.elements:
-            if (elem.lowerLimit <= numericValue) and (numericValue <= elem.upperLimit):
-                return (elem.textValue)
-        return None
+    def createBitMask(self, elements, autoLabel = True):
+        """
+        When elements is a list of tuples:
 
-    def __eq__(self,other):
-        if self is other: return True
-        if self.name == other.name:
-            if len(self.elements)!=len(other.elements): return False
-            for i in range(len(self.elements)):
-                if self.elements[i] != other.elements[i]: return False
-            return True
-        return False
-
-class CompuMethodMask(Element):
-    def __init__(self, name, elements, parent=None, category=None, adminData=None):
-        super().__init__(name, parent, adminData)
-        self.elements = []
-        self.category=category
-        self.minVal = 0
-        self.maxVal = 0
+            If 2-tuple: First element is the bitmask (int), second element is the symbol (str)
+        """
+        lowerLimitType, upperLimitType = 'CLOSED', 'CLOSED'
         for elem in elements:
-            if isinstance(elem,str):
-                mask= (1 << len(self.elements))
-                self.elements.append(CompuMaskElement(lowerLimit=mask, upperLimit=mask, mask=mask, label=elem, symbol=elem))
-            elif isinstance(elem,dict):
-                self.elements.append(CompuMaskElement(**elem))
+            if isinstance(elem, tuple):
+                if len(elem) == 2:
+                    (mask, symbol) = elem
+                    (lowerLimit, upperLimit) = (mask, mask)
+                else:
+                    raise ValueError('invalid length: %d'%len(elem))
             else:
                 raise ValueError('type not supported:%s'%str(type(elem)))
-        self._calc_maxVal()
+            label = symbol if autoLabel else None
+            self.elements.append(CompuScaleElement(lowerLimit, upperLimit, lowerLimitType, upperLimitType, symbol = symbol, label = label, mask = mask))
 
-    def __eq__(self,other):
-        if self is other: return True
-        if self.name == other.name:
-            if len(self.elements)!=len(other.elements): return False
-            for i in range(len(self.elements)):
-                if self.elements[i] != other.elements[i]: return False
-            return True
-        return False
+class CompuMethod(Element):
+    """
+    Base class for CompuMethod
+    """
+    def tag(self,version=None): return 'COMPU-METHOD'
 
-    def _calc_maxVal(self):
-        tmp = 0
-        for elem in self.elements:
-            if elem.upperLimit > tmp:
-                tmp = elem.upperLimit
-        self.maxVal = 2**int.bit_length(tmp)-1
+    def __init__(self, name, useIntToPhys, usePhysToInt, unitRef = None, category = None, parent = None, adminData = None):
+        super().__init__(name, parent, adminData, category)
+        self.unitRef = unitRef
+        self.intToPhys = None
+        self.physToInt = None
+        if useIntToPhys:
+            self.intToPhys = Computation()
+        if usePhysToInt:
+            self.physToInt = Computation()
 
-class InternalConstraint:
-    def __init__(self, lowerLimit=None, upperLimit=None, lowerLimitType='CLOSED', upperLimitType='CLOSED'):
+# Deprecated code, to be removed
+# class CompuMethodRational(CompuMethod):
+#     """
+#     Implementation of <COMPU-METHOD> with <COMPU-INTERNAL-TO-PHYS> (Linear Computation Method)
+#     contained within it.
+#
+#     """
+#
+#     def __init__(self, name, elements, unitRef = None, category = 'LINEAR', parent = None, adminData = None):
+#         super().__init__(name, unitRef, category, parent, adminData)
+#
+#         for elem in elements:
+#             if isinstance(elem, dict):
+#                 self.elements.append(CompuRationalElement(**elem))
+#             elif isinstance(elem, CompuRationalElement):
+#                 self.elements.append(elem)
+#             else:
+#                 raise ValueError('elements must contain dict or CompuRationalElement items')
+#
+#     def __eq__(self, other):
+#         if self is other: return True
+#         if self.name == other.name:
+#             lhs = None if self.unitRef is None else self.find(self.unitRef)
+#             rhs = None if other.unitRef is None else other.find(other.unitRef)
+#             if lhs == rhs:
+#                 if len(self.elements)!=len(other.elements): return False
+#                 for i in range(len(self.elements)):
+#                     if self.elements[i] != other.elements[i]: return False
+#                 return True
+#         return False
+#
+#
+# class CompuMethodConst(Element):
+#     def tag(self, version=3.0): return 'COMPU-METHOD'
+#     def __init__(self, name, elements, category=None, parent=None, adminData=None):
+#         super().__init__(name, parent, adminData)
+#         self.elements = []
+#         self.category=category
+#
+#
+#     def getValueTable(self):
+#         retval = []
+#         i = 0
+#         for elem in self.elements:
+#             if (elem.lowerLimit == elem.upperLimit) and elem.lowerLimit==i:
+#                 retval.append(elem.textValue)
+#             else:
+#                 return None
+#             i+=1
+#         return retval if len(retval)>0 else None
+#
+#     def textValue(self, numericValue):
+#         for elem in self.elements:
+#             if (elem.lowerLimit <= numericValue) and (numericValue <= elem.upperLimit):
+#                 return (elem.textValue)
+#         return None
+#
+#     def __eq__(self,other):
+#         if self is other: return True
+#         if self.name == other.name:
+#             if len(self.elements)!=len(other.elements): return False
+#             for i in range(len(self.elements)):
+#                 if self.elements[i] != other.elements[i]: return False
+#             return True
+#         return False
+#
+# class CompuMethodMask(Element):
+#     def __init__(self, name, elements, parent=None, category=None, adminData=None):
+#         super().__init__(name, parent, adminData)
+#         self.elements = []
+#         self.category=category
+#         self.minVal = 0
+#         self.maxVal = 0
+#         for elem in elements:
+#             if isinstance(elem,str):
+#                 mask= (1 << len(self.elements))
+#                 self.elements.append(CompuMaskElement(lowerLimit=mask, upperLimit=mask, mask=mask, label=elem, symbol=elem))
+#             elif isinstance(elem,dict):
+#                 self.elements.append(CompuMaskElement(**elem))
+#             else:
+#                 raise ValueError('type not supported:%s'%str(type(elem)))
+#         self._calc_maxVal()
+#
+#     def __eq__(self,other):
+#         if self is other: return True
+#         if self.name == other.name:
+#             if len(self.elements)!=len(other.elements): return False
+#             for i in range(len(self.elements)):
+#                 if self.elements[i] != other.elements[i]: return False
+#             return True
+#         return False
+#
+#     def _calc_maxVal(self):
+#         tmp = 0
+#         for elem in self.elements:
+#             if elem.upperLimit > tmp:
+#                 tmp = elem.upperLimit
+#         self.maxVal = 2**int.bit_length(tmp)-1
+
+class ConstraintBase:
+    def __init__(self, lowerLimit, upperLimit, lowerLimitType, upperLimitType):
         if lowerLimit is not None:
             if isinstance(lowerLimit, str) and lowerLimit != '-INF':
                 raise ValueError('Unknown lowerLimit: '+lowerLimit)
@@ -393,6 +446,14 @@ class InternalConstraint:
         if ((self.upperLimitType=='CLOSED') and (value>self.upperLimit)) or ((self.upperLimitType=='OPEN') and (value>=self.upperLimit)) :
             raise autosar.base.DataConstraintError('Value {} outside upper data constraint ({}) '.format(str(value), str(self.upperLimit)))
 
+class InternalConstraint(ConstraintBase):
+    def __init__(self, lowerLimit=None, upperLimit=None, lowerLimitType='CLOSED', upperLimitType='CLOSED'):
+        super().__init__(lowerLimit, upperLimit, lowerLimitType, upperLimitType)
+
+class PhysicalConstraint(ConstraintBase):
+    def __init__(self, lowerLimit=None, upperLimit=None, lowerLimitType='CLOSED', upperLimitType='CLOSED'):
+        super().__init__(lowerLimit, upperLimit, lowerLimitType, upperLimitType)
+
 class DataConstraint(Element):
     def tag(self,version=None): return 'DATA-CONSTR'
 
@@ -402,17 +463,50 @@ class DataConstraint(Element):
         for rule in rules:
             if rule['type'] == 'internalConstraint':
                 self.rules.append(InternalConstraint(lowerLimit=rule['lowerLimit'], upperLimit=rule['upperLimit'], lowerLimitType=rule['lowerLimitType'], upperLimitType=rule['upperLimitType']))
+            elif rule['type'] == 'physicalConstraint':
+                self.rules.append(PhysicalConstraint(lowerLimit=rule['lowerLimit'], upperLimit=rule['upperLimit'], lowerLimitType=rule['lowerLimitType'], upperLimitType=rule['upperLimitType']))
+            else:
+                raise NotImplementedError
 
     def check_value(self, v):
         if len(self.rules) == 1:
             self.rules[0].check_value(v)
         else:
-            raise NotImplementedError('Only a single rule supported')
+            raise NotImplementedError('Only a single rule constraint supported')
+
+    @property
+    def lowerLimit(self):
+        if len(self.rules) == 1:
+            return self.rules[0].lowerLimit
+        else:
+            raise NotImplementedError('Only a single constraint rule supported')
+
+    @property
+    def upperLimit(self):
+        if len(self.rules) == 1:
+            return self.rules[0].upperLimit
+        else:
+            raise NotImplementedError('Only a single constraint rule supported')
+
+    @property
+    def lowerLimitType(self):
+        if len(self.rules) == 1:
+            return self.rules[0].lowerLimitType
+        else:
+            raise NotImplementedError('Only a single constraint rule supported')
+
+    @property
+    def upperLimitType(self):
+        if len(self.rules) == 1:
+            return self.rules[0].upperLimitType
+        else:
+            raise NotImplementedError('Only a single constraint rule supported')
+
 
 
 class ImplementationDataType(Element):
     def tag(self, version=None): return 'IMPLEMENTATION-DATA-TYPE'
-    def __init__(self, name, category='VALUE', variantProps=None, dynamicArraySizeProfile=None, typeEmitter=None, adminData=None, parent=None):
+    def __init__(self, name, variantProps = None, dynamicArraySizeProfile = None, typeEmitter = None, category='VALUE', adminData=None, parent=None):
         super().__init__(name, parent, adminData)
         self.category = category
         self.dynamicArraySizeProfile = dynamicArraySizeProfile
@@ -429,17 +523,52 @@ class ImplementationDataType(Element):
                     raise ValueError('Invalid type: ', type(elem))
 
     def getArrayLength(self):
-        if self.category == 'ARRAY' and len(self.subElements)>0:
-            return self.subElements[0].arraySize
-        else:
-            raise RunTimeError('Not categorized as an array: '+self.name)
+        """
+        Deprecated, use arraySize property instead
+        """
+        return self.arraySize
+
 
     def getTypeReference(self):
-        if self.category == 'TYPE_REFERENCE' and len(self.variantProps)>0:
+        """
+        Deprecated, use implementationTypeRef property instead
+        """
+        return self.implementationTypeRef
+
+    @property
+    def arraySize(self):
+        if len(self.subElements)>0:
+            return self.subElements[0].arraySize
+        else:
+            raise RunTimeError('ImplementationDataType has no subElement')
+
+    @property
+    def implementationTypeRef(self):
+        if len(self.variantProps)>0:
             return self.variantProps[0].implementationTypeRef
         else:
-            raise RunTimeError('Not categorized as a type reference: '+self.name)
+            raise RunTimeError('ImplementationDataType has no variantProps')
 
+    @property
+    def baseTypeRef(self):
+        if len(self.variantProps)>0:
+            return self.variantProps[0].baseTypeRef
+        else:
+            raise RunTimeError('Element has no variantProps set')
+
+    @property
+    def dataConstraintRef(self):
+        if len(self.variantProps)>0:
+            return self.variantProps[0].dataConstraintRef
+        else:
+            raise RunTimeError('Element has no variantProps set')
+
+    @property
+    def compuMethodRef(self):
+        if len(self.variantProps)>0:
+            return self.variantProps[0].compuMethodRef
+        else:
+            raise RunTimeError('Element has no variantProps set')
 
 class SwBaseType(Element):
     def tag(self, version=None): return 'SW-BASE-TYPE'
@@ -480,17 +609,141 @@ class ImplementationDataTypeElement(Element):
                     else:
                         raise ValueError('Invalid type: ', type(elem))
 
-class ApplicationPrimitiveDataType(Element):
-    def tag(self, version=None): return 'APPLICATION-PRIMITIVE-DATA-TYPE'
-    def __init__(self, name, category=None, variantProps=None, parent=None, adminData=None):
-        super().__init__(name, parent, adminData)
-        self.category=category
+class ApplicationDataType(Element):
+    """
+    Base type for AUTOSAR application data types (AUTOSAR4)
+
+    Arguments:
+    name: <SHORT-NAME> (None or str)
+    variantProps: <SW-DATA-DEF-PROPS-VARIANTS> (instance (or list) of autosar.base.SwDataDefPropsConditional)
+    category: <CATEGORY> (None or str)
+    parent: parent object instance (usually the package it will belong to), (object)
+    adminData: <ADMIN-DATA> (instance of autosar.base.AdminData or dict)
+    """
+    def __init__(self, name, variantProps=None, category=None, parent=None, adminData=None):
+        super().__init__(name, parent, adminData, category)
         self.variantProps = []
         if variantProps is not None:
             if isinstance(variantProps, autosar.base.SwDataDefPropsConditional):
                 self.variantProps.append(variantProps)
             else:
                 self.variantProps = list(variantProps)
+
+    @property
+    def compuMethodRef(self):
+        if len(self.variantProps)>0:
+            return self.variantProps[0].compuMethodRef
+        else:
+            raise RunTimeError('Element has no variantProps')
+
+    @property
+    def dataConstraintRef(self):
+        if len(self.variantProps)>0:
+            return self.variantProps[0].dataConstraintRef
+        else:
+            raise RunTimeError('Element has no variantProps')
+
+    @property
+    def unitRef(self):
+        if len(self.variantProps)>0:
+            return self.variantProps[0].unitRef
+        else:
+            raise RunTimeError('Element has no variantProps')
+
+class ApplicationPrimitiveDataType(ApplicationDataType):
+    """
+    Implementation of <APPLICATION-PRIMITIVE-DATA-TYPE> (AUTOSAR 4)
+
+    Arguments:
+    (see base class)
+    """
+    def tag(self, version): return 'APPLICATION-PRIMITIVE-DATA-TYPE'
+
+    def __init__(self, name, variantProps=None, category=None, parent=None, adminData=None):
+        super().__init__(name, variantProps, category, parent, adminData)
+
+class ApplicationArrayDataType(ApplicationDataType):
+    """
+    Implementation of <APPLICATION-ARRAY-DATA-TYPE> (AUTOSAR 4)
+
+    Arguments:
+    element: <ELEMENT> (instance of ApplicationArrayElement)
+    """
+    def tag(self, version): return 'APPLICATION-ARRAY-DATA-TYPE'
+
+    def __init__(self, name, element, variantProps = None, category = 'ARRAY', parent=None, adminData=None):
+        super().__init__(name, variantProps, category, parent, adminData)
+        if element is None or isinstance(element, ApplicationArrayElement):
+            self.element = element
+            element.parent = self
+        else:
+            raise ValueError("element argument must be None or instance of ApplicationArrayElement")
+
+class ApplicationArrayElement(Element):
+    """
+    An application array element (AUTOSAR 4).
+    This is to be used as the element property of ApplicationArrayDataType.
+
+    arguments:
+    name: <SHORT-NAME> (None or str)
+    typeRef: <TYPE-TREF> (None or str)
+    arraySize: <MAX-NUMBER-OF-ELEMENTS> (None or int)
+    sizeHandling: <ARRAY-SIZE-HANDLING> (None or str['ALL-INDICES-DIFFERENT-ARRAY-SIZE', 'ALL-INDICES-SAME-ARRAY-SIZE', 'INHERITED-FROM-ARRAY-ELEMENT-TYPE-SIZE', ])
+    sizeSemantics: <ARRAY-SIZE-SEMANTICS> (None or str['FIXED-SIZE', 'VARIABLE-SIZE']])
+    """
+    def tag(self, version=None): return 'ELEMENT'
+
+    def __init__(self, name = None, typeRef = None, arraySize = None, sizeHandling = None, sizeSemantics = 'FIXED-SIZE', category = 'VALUE', parent = None, adminData = None):
+        super().__init__(name, parent, adminData, category)
+        self.typeRef = None if typeRef is None else str(typeRef)
+        self.arraySize = None if arraySize is None else int(arraySize)
+        self.sizeHandling = None if sizeHandling is None else str(sizeHandling)
+        self.sizeSemantics = None if sizeSemantics is None else str(sizeSemantics)
+
+class ApplicationRecordDataType(ApplicationDataType):
+    """
+    Implementation of <APPLICATION-RECORD-DATA-TYPE> (AUTOSAR 4)
+
+    Arguments:
+    elements: list of ApplicationRecordElement or None
+    """
+    def tag(self, version): return 'APPLICATION-RECORD-DATA-TYPE'
+
+    def __init__(self, name, elements = None, variantProps=None, category=None, parent=None, adminData=None):
+        super().__init__(name, variantProps, category, parent, adminData)
+        if elements is None:
+            self.elements = []
+        else:
+            self.elements = list(elements)
+
+    def append(self, element):
+        """
+        Append element to self.elements list
+        """
+        if not isinstance(element, ApplicationRecordElement):
+            raise ValueError('element must be an instance of ApplicationRecordElement')
+        element.parent = self
+        self.elements.append(element)
+
+    def createElement(self, name, typeRef, category = 'VALUE', adminData = None):
+        """
+        Creates a new instance of ApplicationRecordElement and appends it to internal elements list
+        """
+        element = ApplicationRecordElement(name, typeRef, category, self, adminData)
+        self.elements.append(element)
+
+class ApplicationRecordElement(Element):
+    """
+    Implements <APPLICATION-RECORD-ELEMENT> (AUTOSAR4)
+    """
+
+    def tag(self, version): return 'APPLICATION-RECORD-ELEMENT'
+
+    def __init__(self, name, typeRef, category = None, parent=None, adminData=None):
+        super().__init__(name, parent, adminData, category)
+        if not isinstance(typeRef, str):
+            raise autosar.base.InvalidDataTypeRef(typeRef)
+        self.typeRef = typeRef
 
 class DataTypeMappingSet(Element):
     def tag(self, version): return 'DATA-TYPE-MAPPING-SET'
