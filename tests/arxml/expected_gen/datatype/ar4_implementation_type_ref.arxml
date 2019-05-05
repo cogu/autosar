@@ -67,6 +67,7 @@
           <SW-DATA-DEF-PROPS>
             <SW-DATA-DEF-PROPS-VARIANTS>
               <SW-DATA-DEF-PROPS-CONDITIONAL>
+                <SW-CALIBRATION-ACCESS>NOT-ACCESSIBLE</SW-CALIBRATION-ACCESS>
                 <IMPLEMENTATION-DATA-TYPE-REF DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/uint32</IMPLEMENTATION-DATA-TYPE-REF>
               </SW-DATA-DEF-PROPS-CONDITIONAL>
             </SW-DATA-DEF-PROPS-VARIANTS>
@@ -83,6 +84,7 @@
               <COMPU-INTERNAL-TO-PHYS>
                 <COMPU-SCALES>
                   <COMPU-SCALE>
+                    <SHORT-LABEL>FALSE</SHORT-LABEL>
                     <LOWER-LIMIT INTERVAL-TYPE="CLOSED">0</LOWER-LIMIT>
                     <UPPER-LIMIT INTERVAL-TYPE="CLOSED">0</UPPER-LIMIT>
                     <COMPU-CONST>
@@ -90,6 +92,7 @@
                     </COMPU-CONST>
                   </COMPU-SCALE>
                   <COMPU-SCALE>
+                    <SHORT-LABEL>TRUE</SHORT-LABEL>
                     <LOWER-LIMIT INTERVAL-TYPE="CLOSED">1</LOWER-LIMIT>
                     <UPPER-LIMIT INTERVAL-TYPE="CLOSED">1</UPPER-LIMIT>
                     <COMPU-CONST>

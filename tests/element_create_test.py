@@ -56,52 +56,23 @@ class TestRealTypeCreate(unittest.TestCase):
         float32_base = basetypes.createBaseType('float32', 32, 'IEEE754')
         package = ws.createPackage('DataTypes')
         with self.assertRaises(RuntimeError) as context:
-            dataType = package.createRealDataType('float32', '-INFINITE', 'INFINITE', baseTypeRef = float32_base.ref)
+            dataType = package.createImplementationDataType('float32', float32_base.ref, '-INFINITE', 'INFINITE', lowerLimitType = 'OPEN', upperLimitType = 'OPEN')
 
-    def test_createRealType_AR4_with_infinite(self):
+    def test_createFloat_AR4_type(self):
         ws = autosar.workspace(version="4.2.2")
         constraints = ws.createPackage('Contraints', role='DataConstraint')
         basetypes = ws.createPackage('BaseTypes')
         float32_base = basetypes.createBaseType('float32', 32, 'IEEE754')
         package = ws.createPackage('DataTypes')
-        dataType = package.createRealDataType('float32', 'INFINITE', 'INFINITE', baseTypeRef = float32_base.ref)
+        dataType = package.createImplementationDataType('float32', float32_base.ref, '-INF', 'INF', lowerLimitType = 'OPEN', upperLimitType = 'OPEN')
         self.assertIsInstance(dataType, autosar.datatype.ImplementationDataType)
         dataConstraint = ws.find(dataType.variantProps[0].dataConstraintRef)
         self.assertIsInstance(dataConstraint, autosar.datatype.DataConstraint)
-        self.assertEqual(dataConstraint.rules[0].lowerLimit, '-INF')
-        self.assertEqual(dataConstraint.rules[0].upperLimit, 'INF')
-        self.assertEqual(dataConstraint.rules[0].lowerLimitType, 'OPEN')
-        self.assertEqual(dataConstraint.rules[0].upperLimitType, 'OPEN')
+        self.assertEqual(dataConstraint.lowerLimit, float('-inf'))
+        self.assertEqual(dataConstraint.upperLimit, float('inf'))
+        self.assertEqual(dataConstraint.lowerLimitType, 'OPEN')
+        self.assertEqual(dataConstraint.upperLimitType, 'OPEN')
 
-    def test_createRealType_AR4_with_infinite_negative(self):
-        ws = autosar.workspace(version="4.2.2")
-        constraints = ws.createPackage('Contraints', role='DataConstraint')
-        basetypes = ws.createPackage('BaseTypes')
-        float32_base = basetypes.createBaseType('float32', 32, 'IEEE754')
-        package = ws.createPackage('DataTypes')
-        dataType = package.createRealDataType('float32', '-INFINITE', 'INFINITE', baseTypeRef = float32_base.ref)
-        self.assertIsInstance(dataType, autosar.datatype.ImplementationDataType)
-        dataConstraint = ws.find(dataType.variantProps[0].dataConstraintRef)
-        self.assertIsInstance(dataConstraint, autosar.datatype.DataConstraint)
-        self.assertEqual(dataConstraint.rules[0].lowerLimit, '-INF')
-        self.assertEqual(dataConstraint.rules[0].upperLimit, 'INF')
-        self.assertEqual(dataConstraint.rules[0].lowerLimitType, 'OPEN')
-        self.assertEqual(dataConstraint.rules[0].upperLimitType, 'OPEN')
-
-    def test_createRealType_AR4_with_inf(self):
-        ws = autosar.workspace(version="4.2.2")
-        constraints = ws.createPackage('Contraints', role='DataConstraint')
-        basetypes = ws.createPackage('BaseTypes')
-        float32_base = basetypes.createBaseType('float32', 32, 'IEEE754')
-        package = ws.createPackage('DataTypes')
-        dataType = package.createRealDataType('float32', '-INF', 'INF', baseTypeRef = float32_base.ref)
-        self.assertIsInstance(dataType, autosar.datatype.ImplementationDataType)
-        dataConstraint = ws.find(dataType.variantProps[0].dataConstraintRef)
-        self.assertIsInstance(dataConstraint, autosar.datatype.DataConstraint)
-        self.assertEqual(dataConstraint.rules[0].lowerLimit, '-INF')
-        self.assertEqual(dataConstraint.rules[0].upperLimit, 'INF')
-        self.assertEqual(dataConstraint.rules[0].lowerLimitType, 'OPEN')
-        self.assertEqual(dataConstraint.rules[0].upperLimitType, 'OPEN')
 
 class TestParameterInterfaceCreate(unittest.TestCase):
 
@@ -111,7 +82,7 @@ class TestParameterInterfaceCreate(unittest.TestCase):
         basetypes = ws.createPackage('BaseTypes')
         uint8_base = basetypes.createBaseType('uint8', 8, None)
         package = ws.createPackage('DataTypes')
-        uint8_type = package.createIntegerDataType('uint8', 0, 255, baseTypeRef = uint8_base.ref)
+        uint8_type = package.createImplementationDataType('uint8', uint8_base.ref, 0, 255)
         package = ws.createPackage('PortInterfaces')
         parameter = autosar.Parameter('v', uint8_type.ref)
         portinterface = package.createParameterInterface('ButtonDebounceTime_I', parameter)

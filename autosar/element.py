@@ -2,7 +2,7 @@ import xml.etree.ElementTree as ElementTree
 import autosar.base
 
 class Element(object):
-    def __init__(self, name, parent=None, adminData=None):
+    def __init__(self, name, parent = None, adminData = None, category = None):
         if isinstance(adminData, dict):
             adminDataObj=autosar.base.createAdminData(adminData)
         else:
@@ -12,6 +12,7 @@ class Element(object):
         self.name=name
         self.adminData=adminDataObj
         self.parent=parent
+        self.category=category
 
     @property
     def ref(self):

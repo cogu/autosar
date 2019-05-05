@@ -15,21 +15,20 @@ class XMLDataTypeWriter(ElementWriter):
                               'RealDataType': self.writeRealDataTypeXML,
                               'RecordDataType': self.writeRecordDataTypeXML,
                               'StringDataType': self.writeStringTypeXML,
-                              'CompuMethodConst': self.writeCompuMethodXML,
-                              'CompuMethodRational': self.writeCompuMethodXML,
-                              'DataTypeUnitElement': self.writeDataTypeUnitElementXML,
+                              'CompuMethod': self.writeCompuMethodXML,                              
+                              'Unit': self.writeUnitXML,
             }
         elif self.version >= 4.0:
             self.switcher = {
-                              'CompuMethodConst': self.writeCompuMethodXML,
-                              'CompuMethodRational': self.writeCompuMethodXML,
-                              'CompuMethodMask': self.writeCompuMethodXML,
+                              'CompuMethod': self.writeCompuMethodXML,
                               'DataConstraint': self.writeDataConstraintXML,
                               'ImplementationDataType': self.writeImplementationDataTypeXML,
                               'SwBaseType': self.writeSwBaseTypeXML,
-                              'DataTypeUnitElement': self.writeDataTypeUnitElementXML,
+                              'Unit': self.writeUnitXML,
                               'DataTypeMappingSet': self.writeDataTypeMappingSetXML,
                               'ApplicationPrimitiveDataType': self.writeApplicationPrimitiveDataTypeXML,
+                              'ApplicationArrayDataType': self.writeApplicationArrayDataTypeXML,
+                              'ApplicationRecordDataType': self.writeApplicationRecordDataTypeXML
             }
         else:
             switch.keys = {}
@@ -89,89 +88,92 @@ class XMLDataTypeWriter(ElementWriter):
         return lines
 
     def writeCompuMethodXML(self, elem):
+        assert(isinstance(elem, autosar.datatype.CompuMethod))
+        ws=elem.rootWS()
+        assert(isinstance(ws,autosar.Workspace))
         lines=[]
-        lines.append('<COMPU-METHOD>')
-        lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
+        lines.append('<{}>'.format(elem.tag(self.version)))
+        lines.append(self.indent('<SHORT-NAME>{}</SHORT-NAME>'.format(elem.name),1))
         if elem.category is not None:
-            lines.append(self.indent('<CATEGORY>%s</CATEGORY>'%elem.category,1))
+            lines.append(self.indent('<CATEGORY>{}</CATEGORY>'.format(elem.category),1))
         if elem.adminData is not None:
             lines.extend(self.indent(self.writeAdminDataXML(elem.adminData),1))
-        if isinstance(elem,autosar.datatype.CompuMethodConst):
-            lines.extend(self.indent(self.writeCompuMethodConstXML(elem),1))
-        elif isinstance(elem,autosar.datatype.CompuMethodMask):
-            lines.extend(self.indent(self.writeCompuMethodMaskXML(elem),1))
-        else:
-            if elem.unitRef is not None:
-                lines.append(self.indent('<UNIT-REF DEST="UNIT">%s</UNIT-REF>'%elem.unitRef,1))
-            lines.extend(self.indent(self.writeCompuMethodRationalXML(elem),1))
-        lines.append('</COMPU-METHOD>')
+        if elem.unitRef is not None:
+            unit = ws.find(elem.unitRef)
+            if unit is None:
+                raise autosar.base.InvalidUnitRef(elem.unitRef)
+            lines.append(self.indent('<UNIT-REF DEST="{0}">{1}</UNIT-REF>'.format(unit.tag(self.version),elem.unitRef),1))
+        if elem.intToPhys is not None:
+            tag = 'COMPU-INTERNAL-TO-PHYS'
+            lines.extend(self.indent(self._writeComputationXML(ws, elem.intToPhys, tag),1))
+        if elem.physToInt is not None:
+            tag = 'COMPU-PHYS-TO-INTERNAL'
+            lines.extend(self.indent(self._writeComputationXML(ws, elem.physToInt, tag),1))        
+        lines.append('</{}>'.format(elem.tag(self.version)))
+        return lines
+    
+    def _writeComputationXML(self, ws, computation, tag):
+        assert(isinstance(computation, autosar.datatype.Computation))
+        lines=[]
+        lines.append('<{}>'.format(tag))
+        lines.append(self.indent('<COMPU-SCALES>',1))
+        for compuScale in computation.elements:
+            lines.extend(self.indent(self._writeCompuScaleXML(ws, compuScale), 2))
+        lines.append(self.indent('</COMPU-SCALES>',1))
+        if computation.defaultValue is not None:
+            lines.append(self.indent('<COMPU-DEFAULT-VALUE>', 1))
+            lines.append(self.indent('<V>{}</V>'.format(str(computation.defaultValue)), 2))
+            lines.append(self.indent('</COMPU-DEFAULT-VALUE>', 1))
+        lines.append('</{}>'.format(tag))
         return lines
 
-    def writeCompuMethodConstXML(self,item):
-        lines=[]
-        lines.append('<COMPU-INTERNAL-TO-PHYS>')
-        lines.append(self.indent('<COMPU-SCALES>',1))
-        for elem in item.elements:
-            lines.append(self.indent('<COMPU-SCALE>',2))
-            if elem.label is not None:
-                lines.append(self.indent('<SHORT-LABEL>%s</SHORT-LABEL>'%elem.label,3))
+    def _writeCompuScaleXML(self, ws, elem):
+        lines = []
+        lines.append('<{}>'.format(elem.tag(self.version)))
+        if elem.label is not None:
+            lines.append(self.indent('<SHORT-LABEL>%s</SHORT-LABEL>'%elem.label, 1))
+        if elem.symbol is not None:
+            lines.append(self.indent('<SYMBOL>%s</SYMBOL>'%elem.symbol, 1))
+        if elem.mask is not None: 
+            lines.append(self.indent('<MASK>%d</MASK>'%elem.mask, 1))
+            
+        if elem.lowerLimit is not None or elem.upperLimit is not None:
             if self.version>=4.0:
-                lines.append(self.indent('<LOWER-LIMIT INTERVAL-TYPE="CLOSED">%d</LOWER-LIMIT>'%elem.lowerLimit,3))
-                lines.append(self.indent('<UPPER-LIMIT INTERVAL-TYPE="CLOSED">%d</UPPER-LIMIT>'%elem.upperLimit,3))
+                lines.append(self.indent('<LOWER-LIMIT INTERVAL-TYPE="{0}">{1}</LOWER-LIMIT>'.format(elem.lowerLimitType,elem.lowerLimit), 1))
+                lines.append(self.indent('<UPPER-LIMIT INTERVAL-TYPE="{0}">{1}</UPPER-LIMIT>'.format(elem.upperLimitType,elem.upperLimit), 1))
             else:
-                lines.append(self.indent('<LOWER-LIMIT>%d</LOWER-LIMIT>'%elem.lowerLimit,3))
-                lines.append(self.indent('<UPPER-LIMIT>%d</UPPER-LIMIT>'%elem.upperLimit,3))
-            lines.append(self.indent('<COMPU-CONST>',3))
-            lines.append(self.indent('<VT>%s</VT>'%elem.textValue,4))
-            lines.append(self.indent('</COMPU-CONST>',3))
-            lines.append(self.indent('</COMPU-SCALE>',2))
-        lines.append(self.indent('</COMPU-SCALES>',1))
-        lines.append('</COMPU-INTERNAL-TO-PHYS>')
+                lines.append(self.indent('<LOWER-LIMIT>%d</LOWER-LIMIT>'%elem.lowerLimit, 1))
+                lines.append(self.indent('<UPPER-LIMIT>%d</UPPER-LIMIT>'%elem.upperLimit, 1))
+        if elem.offset is not None or elem.numerator is not None or elem.denominator is not None:
+            lines.extend(self.indent(self._writeCompuRationalXML(elem),1))
+        if elem.textValue is not None:
+            lines.extend(self.indent(self._writeCompuConstXML(elem),1))
+        lines.append('</{}>'.format(elem.tag(self.version)))
+        return lines
+    
+    def _writeCompuRationalXML(self, elem):
+        lines = []
+        lines.append('<COMPU-RATIONAL-COEFFS>')
+        lines.append(self.indent('<COMPU-NUMERATOR>', 1))
+        lines.append(self.indent('<V>{}</V>'.format(elem.offset), 2))
+        lines.append(self.indent('<V>{}</V>'.format(elem.numerator), 2))
+        lines.append(self.indent('</COMPU-NUMERATOR>', 1))
+        lines.append(self.indent('<COMPU-DENOMINATOR>',1))
+        lines.append(self.indent('<V>{}</V>'.format(elem.denominator),2))
+        lines.append(self.indent('</COMPU-DENOMINATOR>', 1))
+        lines.append('</COMPU-RATIONAL-COEFFS>')
+        return lines
+    
+    def _writeCompuConstXML(self, elem):
+        lines = []
+        lines.append('<COMPU-CONST>')
+        lines.append(self.indent('<VT>{0}</VT>'.format(elem.textValue), 1))
+        lines.append('</COMPU-CONST>')            
         return lines
 
-    def writeCompuMethodMaskXML(self,item):
+    def writeUnitXML(self, elem):
         lines=[]
-        lines.append('<COMPU-INTERNAL-TO-PHYS>')
-        lines.append(self.indent('<COMPU-SCALES>',1))
-        for elem in item.elements:
-            lines.append(self.indent('<COMPU-SCALE>',2))
-            if elem.label is not None:
-                lines.append(self.indent('<SHORT-LABEL>%s</SHORT-LABEL>'%elem.label,3))
-                if elem.symbol is not None:
-                    lines.append(self.indent('<SYMBOL>%s</SYMBOL>'%elem.symbol,3))
-                lines.append(self.indent('<MASK>%d</MASK>'%elem.mask,3))
-                lines.append(self.indent('<LOWER-LIMIT INTERVAL-TYPE="CLOSED">%d</LOWER-LIMIT>'%elem.lowerLimit,3))
-                lines.append(self.indent('<UPPER-LIMIT INTERVAL-TYPE="CLOSED">%d</UPPER-LIMIT>'%elem.upperLimit,3))
-            lines.append(self.indent('</COMPU-SCALE>',2))
-        lines.append(self.indent('</COMPU-SCALES>',1))
-        lines.append('</COMPU-INTERNAL-TO-PHYS>')
-        return lines
-
-    def writeCompuMethodRationalXML(self,item):
-        lines=[]
-        lines.append('<COMPU-INTERNAL-TO-PHYS>')
-        lines.append(self.indent('<COMPU-SCALES>',1))
-        for elem in item.elements:
-            lines.append(self.indent('<COMPU-SCALE>',2))
-            if elem.label is not None:
-                lines.append(self.indent('<SHORT-LABEL>%s</SHORT-LABEL>'%elem.label,3))
-            lines.append(self.indent('<COMPU-RATIONAL-COEFFS>',3))
-            lines.append(self.indent('<COMPU-NUMERATOR>',4))
-            lines.append(self.indent('<V>%s</V>'%elem.offset,5))
-            lines.append(self.indent('<V>%s</V>'%elem.numerator,5))
-            lines.append(self.indent('</COMPU-NUMERATOR>',4))
-            lines.append(self.indent('<COMPU-DENOMINATOR>',4))
-            lines.append(self.indent('<V>%s</V>'%elem.denominator,5))
-            lines.append(self.indent('</COMPU-DENOMINATOR>',4))
-            lines.append(self.indent('</COMPU-RATIONAL-COEFFS>',3))
-            lines.append(self.indent('</COMPU-SCALE>',2))
-        lines.append(self.indent('</COMPU-SCALES>',1))
-        lines.append('</COMPU-INTERNAL-TO-PHYS>')
-        return lines
-
-    def writeDataTypeUnitElementXML(self, elem):
-        lines=[]
-        lines.append('<UNIT>')
+        lines.append('<{}>'.format(elem.tag(self.version)))
         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
         if elem.displayName is not None:
             lines.append(self.indent('<DISPLAY-NAME>%s</DISPLAY-NAME>'%elem.displayName,1))
@@ -180,7 +182,7 @@ class XMLDataTypeWriter(ElementWriter):
                 lines.append(self.indent('<FACTOR-SI-TO-UNIT>%s</FACTOR-SI-TO-UNIT>'%elem.factor,1))
             if elem.offset is not None:
                 lines.append(self.indent('<OFFSET-SI-TO-UNIT>%s</OFFSET-SI-TO-UNIT>'%elem.offset,1))
-        lines.append('</UNIT>')
+        lines.append('</{}>'.format(elem.tag(self.version)))
         return lines
 
     def writeArrayDataTypeXML(self, elem):
@@ -272,12 +274,18 @@ class XMLDataTypeWriter(ElementWriter):
         lines = []
         lines.append("<DATA-CONSTR-RULE>")
         if isinstance(rule, autosar.datatype.InternalConstraint):
-            lines.append(self.indent('<INTERNAL-CONSTRS>', 1))
-            lines.append(self.indent('<LOWER-LIMIT INTERVAL-TYPE="{0}">{1}</LOWER-LIMIT>'.format(rule.lowerLimitType, rule.lowerLimit), 2))
-            lines.append(self.indent('<UPPER-LIMIT INTERVAL-TYPE="{0}">{1}</UPPER-LIMIT>'.format(rule.lowerLimitType, rule.upperLimit), 2))
-            lines.append(self.indent('</INTERNAL-CONSTRS>', 1))
+            tag_name = 'INTERNAL-CONSTRS'
+        elif isinstance(rule, autosar.datatype.PhysicalConstraint):
+            tag_name = 'PHYS-CONSTRS'
         else:
-            raise NotImplementedError(str(type(rule)))
+            raise NotImplementedError(str(type(rule)))            
+        lines.append(self.indent('<{}>'.format(tag_name), 1))
+        lowerLimit = self._numberToString(rule.lowerLimit)
+        upperLimit = self._numberToString(rule.upperLimit)
+        
+        lines.append(self.indent('<LOWER-LIMIT INTERVAL-TYPE="{0}">{1}</LOWER-LIMIT>'.format(rule.lowerLimitType, lowerLimit), 2))
+        lines.append(self.indent('<UPPER-LIMIT INTERVAL-TYPE="{0}">{1}</UPPER-LIMIT>'.format(rule.lowerLimitType, upperLimit), 2))
+        lines.append(self.indent('</{}>'.format(tag_name), 1))        
         lines.append("</DATA-CONSTR-RULE>")
         return lines
 
@@ -415,6 +423,86 @@ class XMLDataTypeWriter(ElementWriter):
             lines.append(self.indent("</SW-DATA-DEF-PROPS>", 1))
         lines.append("</%s>"%elem.tag(self.version))
         return lines
+    
+    def writeApplicationArrayDataTypeXML(self, elem):
+        assert(isinstance(elem, autosar.datatype.ApplicationArrayDataType))
+        ws=elem.rootWS()
+        assert(ws is not None)
+
+        lines = []
+        lines.append("<%s>"%elem.tag(self.version))
+        lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
+        tmp = self.writeDescXML(elem)
+        if tmp is not None:
+            lines.extend(self.indent(tmp,1))
+        if elem.category is not None:
+            lines.append(self.indent('<CATEGORY>%s</CATEGORY>'%elem.category,1))
+        if len(elem.variantProps)>=0:
+            lines.append(self.indent("<SW-DATA-DEF-PROPS>", 1))
+            lines.extend(self.indent(self.writeSwDataDefPropsVariantsXML(ws, elem.variantProps),2))
+            lines.append(self.indent("</SW-DATA-DEF-PROPS>", 1))
+        lines.extend(self.indent(self.writeApplicationArrayDataElementXml(ws, elem.element), 1))
+        lines.append("</%s>"%elem.tag(self.version))
+        return lines
+    
+    def writeApplicationArrayDataElementXml(self, ws, elem):
+        assert(isinstance(elem, autosar.datatype.ApplicationArrayElement))
+
+        lines = []
+        lines.append("<%s>"%elem.tag(self.version))
+        if elem.name is not None:
+            lines.append(self.indent('<SHORT-NAME>{}</SHORT-NAME>'.format(elem.name),1))
+        if elem.category is not None:
+            lines.append(self.indent('<CATEGORY>{}</CATEGORY>'.format(elem.category),1))
+        if elem.typeRef is not None:
+            dataType = ws.find(elem.typeRef)
+            if dataType is None:
+                raise autosar.base.InvalidDataTypeRef(elem.typeRef)
+            lines.append(self.indent('<TYPE-TREF DEST="{0}">{1}</TYPE-TREF>'.format(dataType.tag(ws.version), elem.typeRef),1))
+        if elem.sizeHandling is not None:
+            lines.append(self.indent('<ARRAY-SIZE-HANDLING>{}</ARRAY-SIZE-HANDLING>'.format(elem.sizeHandling),1))
+        if elem.sizeSemantics is not None:
+            lines.append(self.indent('<ARRAY-SIZE-SEMANTICS>{}</ARRAY-SIZE-SEMANTICS>'.format(elem.sizeSemantics),1))
+        if elem.arraySize is not None:
+            lines.append(self.indent('<MAX-NUMBER-OF-ELEMENTS>{:d}</MAX-NUMBER-OF-ELEMENTS>'.format(elem.arraySize),1))
+        lines.append("</%s>"%elem.tag(self.version))
+        return lines
+    
+    def writeApplicationRecordDataTypeXML(self, elem):
+        assert(isinstance(elem, autosar.datatype.ApplicationRecordDataType))
+        ws=elem.rootWS()
+        assert(ws is not None)
+
+        lines = []
+        lines.append("<%s>"%elem.tag(self.version))
+        if elem.name is not None:
+            lines.append(self.indent('<SHORT-NAME>{}</SHORT-NAME>'.format(elem.name),1))
+        if elem.category is not None:
+            lines.append(self.indent('<CATEGORY>{}</CATEGORY>'.format(elem.category),1))        
+        lines.append(self.indent('<ELEMENTS>', 1))
+        for childElem in elem.elements:
+            lines.extend(self.indent(self._ApplicationRecordElementXML(ws, childElem), 2))
+        lines.append(self.indent('</ELEMENTS>', 1))
+        lines.append("</%s>"%elem.tag(self.version))
+        return lines
+
+    def _ApplicationRecordElementXML(self, ws, elem):
+        assert(isinstance(elem, autosar.datatype.ApplicationRecordElement))
+
+        lines = []
+        lines.append("<%s>"%elem.tag(self.version))
+        if elem.name is not None:
+            lines.append(self.indent('<SHORT-NAME>{}</SHORT-NAME>'.format(elem.name), 1))
+        if elem.category is not None:
+            lines.append(self.indent('<CATEGORY>{}</CATEGORY>'.format(elem.category),1))        
+        if elem.typeRef is not None:
+            dataType = ws.find(elem.typeRef, role = 'DataType')
+            if dataType is None:
+                raise autosar.base.InvalidDataTypeRef(elem.typeRef)
+            lines.append(self.indent('<TYPE-TREF DEST="{0}">{1}</TYPE-TREF>'.format(dataType.tag(self.version), dataType.ref), 1))            
+        lines.append("</%s>"%elem.tag(self.version))
+        return lines
+        
 
 class CodeDataTypeWriter(ElementWriter):
     def __init__(self, version, patch):

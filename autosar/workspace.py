@@ -26,7 +26,20 @@ from autosar.writer.signal_writer import SignalWriter
 _validWSRoles = ['DataType', 'Constant', 'PortInterface', 'ComponentType', 'ModeDclrGroup', 'CompuMethod', 'Unit',
                  'BaseType', 'DataConstraint']
 
-class Workspace(object):
+class WorkspaceProfile:
+    """
+    A Workspace profile allows custom settings for the behavior of the Workspace
+    """
+    def __init__(self):
+        self.compuMethodSuffix = ''
+        self.dataConstraintSuffix = '_DataConstr'
+        self.errorHandlingOpt = False
+        self.swCalibrationAccessDefault = 'NOT-ACCESSIBLE'
+
+class Workspace:
+    """
+    An autosar worspace
+    """
     def __init__(self, version, patch, schema, attributes = None, useDefaultWriters=True):
         self.packages = []
         if isinstance(version, str):
@@ -51,9 +64,8 @@ class Workspace(object):
                       'Unit': None,
                       'BaseType': None,        #AUTOSAR 4 only
                       'DataConstraint': None }  #AUTOSAR 4 only
-        self.map = {'packages': {}}
-        self.errorHandlingOpt = False
-
+        self.map = {'packages': {}}        
+        self.profile = WorkspaceProfile()
 
     @property
     def version(self):
@@ -67,6 +79,10 @@ class Workspace(object):
             self.patch=patch
         elif isinstance(version, float):
             self._version=version
+    
+    @property
+    def version_str(self):
+        return str(self._version)+'.'+str(self.patch)
 
     def __getitem__(self,key):
         if isinstance(key,str):
@@ -146,7 +162,7 @@ class Workspace(object):
 
         else:
             raise NotImplementedError('Version %s of ARXML not supported'%version)
-        if found==False:
+        if found==False and packagename != '*':
             raise KeyError('package not found: '+packagename)
         return result
 

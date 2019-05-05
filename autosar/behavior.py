@@ -431,28 +431,7 @@ class NvmBlockConfig:
                  storeCyclic = None,
                  cyclicWritePeriod = None,
                  check_input = True):
-        if check_input:
-            assert(numberOfDataSets is None or isinstance(numberOfDataSets, int))
-            assert(numberOfRomBlocks is None or isinstance(numberOfRomBlocks, int))
-            assert(ramBlockStatusControl is None or isinstance(ramBlockStatusControl, str))
-            assert(reliability is None or isinstance(reliability, str))
-            assert(writingPriority is None or isinstance(writingPriority, str))
-            assert(writingFrequency is None or isinstance(writingFrequency, int))
-            assert(calcRamBlockCrc is None or isinstance(calcRamBlockCrc, bool))
-            assert(checkStaticBlockId is None or isinstance(checkStaticBlockId, bool))
-            assert(readOnly is None or isinstance(readOnly, bool))
-            assert(resistantToChangedSw is None or isinstance(resistantToChangedSw, bool))
-            assert(restoreAtStartup is None or isinstance(restoreAtStartup, bool))
-            assert(storeAtShutdown is None or isinstance(storeAtShutdown, bool))
-            assert(writeVerification is None or isinstance(writeVerification, bool))
-            assert(writeOnlyOnce is None or isinstance(writeOnlyOnce, bool))
-            assert(autoValidationAtShutdown is None or isinstance(autoValidationAtShutdown, bool))
-            assert(useCrcCompMechanism is None or isinstance(useCrcCompMechanism, bool))            
-            assert(storeEmergency is None or isinstance(storeEmergency, bool))
-            assert(storeImmediate is None or isinstance(storeImmediate, bool))
-            assert(storeCyclic is None or isinstance(storeCyclic, bool))
-            assert(cyclicWritePeriod is None or isinstance(cyclicWritePeriod, int))
-
+        
         self.numberOfDataSets = numberOfDataSets
         self.numberOfRomBlocks = numberOfRomBlocks
         self.ramBlockStatusControl = ramBlockStatusControl
@@ -473,6 +452,51 @@ class NvmBlockConfig:
         self.storeImmediate = storeImmediate
         self.storeCyclic = storeCyclic
         self.cyclicWritePeriod = cyclicWritePeriod
+        
+        if check_input:
+            self.check()
+
+    def check(self):
+        if not (self.numberOfDataSets is None or isinstance(self.numberOfDataSets, int) ):
+            raise ValueError('numberOfDataSets is incorrectly formatted (None or int expected)')
+        if not (self.numberOfRomBlocks is None or isinstance(self.numberOfRomBlocks, int) ):
+            raise ValueError('numberOfRomBlocks is incorrectly formatted (None or int expected)')
+        if not (self.ramBlockStatusControl is None or isinstance(self.ramBlockStatusControl, str) ):
+            raise ValueError('numberOfRomBlocks is incorrectly formatted (None or str expected)')
+        if not (self.reliability is None or isinstance(self.reliability, str) ):
+            raise ValueError('reliability is incorrectly formatted (None or str expected)')
+        if not (self.writingPriority is None or isinstance(self.writingPriority, str) ):
+            raise ValueError('writingPriority is incorrectly formatted (None or str expected)')
+        if not (self.writingFrequency is None or isinstance(self.writingFrequency, int) ):
+            raise ValueError('writingFrequency is incorrectly formatted (None or int expected)')
+        if not (self.calcRamBlockCrc is None or isinstance(self.calcRamBlockCrc, bool) ):
+            raise ValueError('calcRamBlockCrc is incorrectly formatted (None or bool expected)')
+        if not (self.checkStaticBlockId is None or isinstance(self.checkStaticBlockId, bool) ):
+            raise ValueError('checkStaticBlockId is incorrectly formatted (None or bool expected)')
+        if not (self.readOnly is None or isinstance(self.readOnly, bool) ):
+            raise ValueError('readOnly is incorrectly formatted (None or bool expected)')
+        if not (self.resistantToChangedSw is None or isinstance(self.resistantToChangedSw, bool) ):
+            raise ValueError('resistantToChangedSw is incorrectly formatted (None or bool expected)')
+        if not (self.restoreAtStartup is None or isinstance(self.restoreAtStartup, bool) ):
+            raise ValueError('restoreAtStartup is incorrectly formatted (None or bool expected)')
+        if not (self.storeAtShutdown is None or isinstance(self.storeAtShutdown, bool) ):
+            raise ValueError('storeAtShutdown is incorrectly formatted (None or bool expected)')
+        if not (self.writeVerification is None or isinstance(self.writeVerification, bool) ):
+            raise ValueError('writeVerification is incorrectly formatted (None or bool expected)')
+        if not (self.writeOnlyOnce is None or isinstance(self.writeOnlyOnce, bool) ):
+            raise ValueError('writeOnlyOnce is incorrectly formatted (None or bool expected)')
+        if not (self.autoValidationAtShutdown is None or isinstance(self.autoValidationAtShutdown, bool) ):
+            raise ValueError('autoValidationAtShutdown is incorrectly formatted (None or bool expected)')
+        if not (self.useCrcCompMechanism is None or isinstance(self.useCrcCompMechanism, bool) ):
+            raise ValueError('useCrcCompMechanism is incorrectly formatted (None or bool expected)')
+        if not (self.storeEmergency is None or isinstance(self.storeEmergency, bool) ):
+            raise ValueError('storeEmergency is incorrectly formatted (None or bool expected)')
+        if not (self.storeImmediate is None or isinstance(self.storeImmediate, bool) ):
+            raise ValueError('storeImmediate is incorrectly formatted (None or bool expected)')
+        if not (self.storeCyclic is None or isinstance(self.storeCyclic, bool) ):
+            raise ValueError('storeCyclic is incorrectly formatted (None or bool expected)')
+        if not (self.cyclicWritePeriod is None or isinstance(self.cyclicWritePeriod, int) ):
+            raise ValueError('cyclicWritePeriod is incorrectly formatted (None or bool expected)')
 
 
 class NvmBlockNeeds(Element):
@@ -541,7 +565,7 @@ class SyncServerCallPoint(object):
     """
     <SYNCHRONOUS-SERVER-CALL-POINT>
     """
-    def __init__(self,name,timeout=0.0):
+    def __init__(self, name, timeout=0.0):
         self.name=name
         self.timeout=timeout
         self.operationInstanceRefs=[]
@@ -1257,7 +1281,7 @@ class RoleBasedDataAssignment:
     def __init__(self, role, localVariableRef=None, localParameterRef=None):
         assert(isinstance(role, str))
         assert(localVariableRef is None or isinstance(localVariableRef, str))
-        assert(localParameterRef is None or isinstance(localParameterRef, str))
+        assert(localParameterRef is None or isinstance(localParameterRef, autosar.behavior.LocalParameterRef) or isinstance(localParameterRef, str))
         self.role = role
         self.localVariableRef = localVariableRef
         self.localParameterRef = localParameterRef
@@ -1268,9 +1292,10 @@ class RoleBasedPortAssignment:
     """
     Represents <ROLE-BASED-PORT-ASSIGNMENT> (AUTOSAR 4)
     """
-    def __init__(self, portRef):
+    def __init__(self, portRef, role = None):
         assert(isinstance(portRef, str))
         self.portRef = portRef
+        self.role = role
 
     def tag(self, version): return 'ROLE-BASED-PORT-ASSIGNMENT'
 

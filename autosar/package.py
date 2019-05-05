@@ -407,7 +407,7 @@ class Package(object):
         self.append(item)
         return item
 
-    def createArrayDataType(self, name, typeRef, length, elementName=None, swCalibrationAccess=None, adminData=None):
+    def createArrayDataType(self, name, typeRef, arraySize, elementName=None, swCalibrationAccess=None, adminData=None):
         """
         AUTOSAR3:
            Creates an ArrayDataType and adds it to current package
@@ -416,26 +416,18 @@ class Package(object):
         """
         ws = self.rootWS()
         assert(ws is not None)
-        if swCalibrationAccess is None:
-            swCalibrationAccess = 'NOT-ACCESSIBLE'
-        if (not typeRef.startswith('/')) and (ws.roles['DataType'] is not None):
-            typeRef=ws.roles['DataType']+'/'+typeRef
-        dataType = ws.find(typeRef)
-        if dataType is None:
-            raise autosar.base.InvalidDataTypeRef(typeRef)
         if ws.version >= 4.0:
-            if elementName is None:
-                elementName = name
-            newType = autosar.datatype.ImplementationDataType(name, 'ARRAY', adminData=adminData)
-            outerProps = autosar.base.SwDataDefPropsConditional(swCalibrationAccess=swCalibrationAccess)
-            newType.variantProps = [outerProps]
-            innerProps = autosar.base.SwDataDefPropsConditional(implementationTypeRef=typeRef)
-            subElement = autosar.datatype.ImplementationDataTypeElement(elementName, 'TYPE_REFERENCE', length, variantProps=innerProps)
-            newType.subElements.append(subElement)
+            return self.createImplementationArrayDataType(name, typeRef, arraySize, elementName, swCalibrationAccess, adminData = adminData)
         else:
+            if typeRef.startswith('/'):
+                dataType = ws.find(typeRef)
+            else:
+                dataType = ws.find(typeRef, role='DataType')
+            if dataType is None:
+                raise autosar.base.InvalidDataTypeRef(typeRef)
             newType = autosar.datatype.ArrayDataType(name, typeRef, length, adminData)
-        self.append(newType)
-        return newType
+            self.append(newType)
+            return newType
 
     def createIntegerDataType(self, name, min=None, max=None, valueTable=None, offset=None, scaling=None, unit=None, baseTypeRef=None, adminData=None, swCalibrationAccess='NOT-ACCESSIBLE', typeEmitter=None, forceFloatScaling=False, dataConstraint=''):
         """
@@ -515,28 +507,10 @@ class Package(object):
         assert(ws is not None)
         if ws.version < 4.0:
             dataType=autosar.datatype.RecordDataType(name, elements, self, adminData)
+            self.append(dataType)
+            return dataType
         else:
-            if swCalibrationAccess is None:
-                swCalibrationAccess = 'NOT-ACCESSIBLE'
-            props = autosar.base.SwDataDefPropsConditional(swCalibrationAccess = swCalibrationAccess)
-            dataType = autosar.datatype.ImplementationDataType(name, 'STRUCTURE', props, adminData = adminData)
-            for element in elements:
-                if not isinstance(element, tuple):
-                    raise ValueError('element must be a tuple')
-                (elementName, elemTypeRef) = element
-                elemType = ws.find(elemTypeRef, role='DataType')
-                if elemType is None:
-                    raise ValueError('Unknown data type name: '+elemTypeRef)
-                if isinstance(elemType, autosar.datatype.ImplementationDataType):
-                    props = autosar.base.SwDataDefPropsConditional(implementationTypeRef = elemType.ref)
-                elif isinstance(elemType, autosar.datatype.SwBaseType):
-                    props = autosar.base.SwDataDefPropsConditional(baseTypeRef = elemType.ref)
-                else:
-                    raise NotImplementedError(type(elemType))
-                implementationDataTypeElement = autosar.datatype.ImplementationDataTypeElement(elementName, 'TYPE_REFERENCE', variantProps=props)
-                dataType.subElements.append(implementationDataTypeElement)
-        self.append(dataType)
-        return dataType
+            return self.createImplementationRecordDataType(name, elements, swCalibrationAccess, adminData)
 
     def createStringDataType(self, name, length, encoding='ISO-8859-1', adminData=None):
         """
@@ -724,7 +698,7 @@ class Package(object):
 
     def _createConstantV4(self, ws, name, dataType, initValue, adminData=None):
         builder = autosar.builder.ValueBuilder()
-        value = builder.buildFromDataType(dataType, initValue, name, ws)        
+        value = builder.buildFromDataType(dataType, initValue, name, ws)
         assert(value is not None)
         constant = autosar.constant.Constant(name, value, parent=self, adminData=adminData)
         self.append(constant)
@@ -745,26 +719,16 @@ class Package(object):
         self.append(constant)
         return constant
 
-    def createInternalDataConstraint(self, name, lowerLimit, upperLimit, lowerLimitType="CLOSED", upperLimitType="CLOSED"):
-        ws = self.rootWS()
+    def createInternalDataConstraint(self, name, lowerLimit, upperLimit, lowerLimitType="CLOSED", upperLimitType="CLOSED", adminData = None):
+        ws=self.rootWS()
         assert(ws is not None)
-        dataConstraintPackage = None
-        if ws.roles['DataConstraint'] is None:
-            raise RuntimeError("no package found with role='DataConstraint'")
-        dataConstraintPackage=ws.find(ws.roles['DataConstraint'])
-        rules=[]
-        try:
-            lowerLimit = int(lowerLimit)
-        except ValueError:
-            lowerLimit = str(lowerLimit)
-        try:
-            upperLimit = int(upperLimit)
-        except ValueError:
-            upperLimit = str(upperLimit)
-        rules.append({'type': 'internalConstraint', 'lowerLimit':lowerLimit, 'upperLimit':upperLimit, 'lowerLimitType':lowerLimitType, 'upperLimitType':upperLimitType})
-        constraint = autosar.datatype.DataConstraint(name, rules, self)
-        dataConstraintPackage.append(constraint)
-        return constraint
+        return self._checkAndCreateDataConstraint(ws, name, 'internalConstraint', lowerLimit, upperLimit, lowerLimitType, upperLimitType, adminData)
+
+    def createPhysicalDataConstraint(self, name, lowerLimit, upperLimit, lowerLimitType = 'CLOSED', upperLimitType = 'CLOSED', adminData = None):
+        ws=self.rootWS()
+        assert(ws is not None)
+        return self._checkAndCreateDataConstraint(ws, name, 'physicalConstraint', lowerLimit, upperLimit, lowerLimitType, upperLimitType, adminData)
+
 
     def createSwBaseType(self, name, size, encoding=None, nativeDeclaration=None, adminData=None):
         """
@@ -791,7 +755,110 @@ class Package(object):
         """
         return self.createSwBaseType(name, size, encoding, nativeDeclaration, adminData)
 
-    def createImplementationDataTypeRef(self, name, implementationTypeRef, minVal = None, maxVal = None, valueTable = None, bitmask = None, offset = None, scaling = None, unit = None, forceFloatScaling = False, dataConstraint = '', swCalibrationAccess = None, typeEmitter = None, adminData = None):
+
+    def createApplicationPrimitiveDataType(self, name, dataConstraint = '', compuMethod = None, unit = None, swCalibrationAccess = None, category = None, adminData = None):
+        """
+        AUTOSAR4
+
+        Creates a new ApplicationPrimitiveDataType in current package.
+
+        name: <SHORT-NAME> (str)
+        dataConstraint: Name or reference to autosar.datatype.DataConstraint object (or None). Default is to automatically create a constraint based on given compuMethod
+        compuMethod: Name or reference to autosar.datatype.CompuMethod object (or None).
+        swCalibrationAccess: Sets the SW-CALIBRATION-ACCESS property (str['NOT-ACCESSIBLE', 'READ-ONLY', 'READ-WRITE']).
+        category: The category of this element (str)
+        """
+        ws=self.rootWS()
+        assert(ws is not None)
+
+        adminDataObj = self._checkAdminData(adminData)
+        unitObj = self._checkAndCreateUnit(ws, unit)
+        dataConstraintObj, compuMethodObj = None, None
+        if compuMethod is not None:
+            compuMethodObj = self._findElementByRole(ws, compuMethod, 'CompuMethod')
+            if compuMethodObj is None:
+                raise autosar.base.InvalidCompuMethodRef(compuMethod)
+        if dataConstraint is not None:
+            if len(dataConstraint)==0:
+                dataConstraintName = self._createDataConstraintName(ws, name)
+                if compuMethodObj is not None:
+                    dataConstraintObj = self._checkAndCreateDataConstraintFromCompuMethod(ws, dataConstraintName, compuMethodObj)
+            else:
+                dataConstraintObj = self._findElementByRole(ws, dataConstraint, 'DataConstraint')
+                if dataConstraintObj is None:
+                    raise autosar.base.InvalidDataConstraintRef(dataConstraint)
+
+        unitRef = None if unitObj is None else unitObj.ref
+        compuMethodRef = None if compuMethodObj is None else compuMethodObj.ref
+        dataConstraintRef = None if dataConstraintObj is None else dataConstraintObj.ref
+
+        if swCalibrationAccess is not None or dataConstraintRef is not None or compuMethodRef is not None or unitRef is not None:
+            variantProps = autosar.base.SwDataDefPropsConditional(
+                swCalibrationAccess = swCalibrationAccess,
+                dataConstraintRef = dataConstraintRef,
+                compuMethodRef = compuMethodRef,
+                unitRef = unitRef
+                )
+        else:
+            variantProps = None
+        dataType = autosar.datatype.ApplicationPrimitiveDataType(name, variantProps, category, parent = self, adminData = adminDataObj)
+        self.append(dataType)
+        return dataType
+
+    def createApplicationArrayDataType(self, name, element, swCalibrationAccess = None, category = None, adminData = None):
+        """
+        AUTOSAR4
+
+        Creates a new ApplicationPrimitiveDataType in current package.
+
+        name: <SHORT-NAME> (str)
+        swCalibrationAccess: Sets the SW-CALIBRATION-ACCESS property (str['NOT-ACCESSIBLE', 'READ-ONLY', 'READ-WRITE']).
+        element: <ELEMENT> (autosar.datatype.ApplicationArrayElement)
+        category: The category of this element (str). Default='ARRAY'
+        """
+        ws=self.rootWS()
+        assert(ws is not None)
+
+        adminDataObj = self._checkAdminData(adminData)
+        if swCalibrationAccess is not None:
+            variantProps = autosar.base.SwDataDefPropsConditional(
+                swCalibrationAccess = swCalibrationAccess
+                )
+        else:
+            variantProps = None
+        dataType = autosar.datatype.ApplicationArrayDataType(name, element, variantProps, category, parent = self, adminData = adminDataObj)
+        self.append(dataType)
+        return dataType
+
+    def createApplicationRecordDataType(self, name, elements, swCalibrationAccess = '', category = 'STRUCTURE', adminData=None):
+        """
+        (AUTOSAR4)
+        Creates a new ImplementationDataType containing sub elements
+        """
+        ws=self.rootWS()
+        assert(ws is not None)
+        adminDataObj = self._checkAdminData(adminData)
+        if swCalibrationAccess is not None and len(swCalibrationAccess)==0:
+            swCalibrationAccess = ws.profile.swCalibrationAccessDefault
+
+        if swCalibrationAccess is not None:
+            variantProps = autosar.base.SwDataDefPropsConditional(swCalibrationAccess = swCalibrationAccess)
+        else:
+            variantProps = None
+
+        dataType = autosar.datatype.ApplicationRecordDataType(name, variantProps = variantProps, category = category, adminData = adminDataObj)
+        for element in elements:
+            if not isinstance(element, tuple):
+                raise ValueError('element must be a tuple')
+            (elemName, elemTypeRef) = element
+            elemType = ws.find(elemTypeRef, role='DataType')
+            if elemType is None:
+                raise autosar.base.InvalidDataTypeRef(elemTypeRef)
+            dataType.createElement(elemName, elemType.ref)
+        self.append(dataType)
+        return dataType
+
+    def createImplementationDataTypeRef(self, name, implementationTypeRef, lowerLimit = None, upperLimit = None, valueTable = None, bitmask = None, offset = None, factor = None, unit = None, forceFloat = False, dataConstraint = '', swCalibrationAccess = '', typeEmitter = None, lowerLimitType = None, upperLimitType = None, category = 'TYPE_REFERENCE', adminData = None):
         """
         AUTOSAR4
 
@@ -799,27 +866,28 @@ class Package(object):
         name: name of the new data type
         typeRef: reference to implementation data type
         """
-        ws=self.rootWS()
-        assert(ws is not None)
+        return self._createImplementationDataTypeInternal(
+            name,
+            None,
+            implementationTypeRef,
+            lowerLimit,
+            upperLimit,
+            valueTable,
+            bitmask,
+            offset,
+            factor,
+            unit,
+            forceFloat,
+            dataConstraint,
+            swCalibrationAccess,
+            typeEmitter,
+            lowerLimitType,
+            upperLimitType,
+            category,
+            adminData
+        )
 
-        adminDataObj = self._checkAdminData(adminData)
-
-        (compuMethodRef, unitRef, dataConstraintRef) = self._createCompuMethodUnitDataConstraint(ws, name, minVal, maxVal, valueTable, bitmask, offset, scaling, unit, forceFloatScaling, dataConstraint)
-        variantProps = autosar.base.SwDataDefPropsConditional(swCalibrationAccess = swCalibrationAccess,
-                                                              compuMethodRef = compuMethodRef,
-                                                              dataConstraintRef = dataConstraintRef,
-                                                              implementationTypeRef = implementationTypeRef,
-                                                              unitRef = unitRef)
-        implementationDataType = autosar.datatype.ImplementationDataType(name, 'TYPE_REFERENCE', variantProps, parent = self, adminData = adminDataObj)
-        self.append(implementationDataType)
-        return implementationDataType
-
-    def createImplementationTypeReference(self, name, implementationTypeRef, adminData = None):
-        if not _supress_warnings:
-            print("WARNING: createImplementationTypeReference has been deprecated. Use createImplementationDataTypeRef instead.", file=sys.stderr)
-        self.createImplementationDataTypeRef(name, implementationTypeRef, adminData)
-
-    def createImplementationDataTypePtr(self, name, baseTypeRef, swImplPolicy=None, adminData = None):
+    def createImplementationDataTypePtr(self, name, baseTypeRef, swImplPolicy=None, category = 'DATA_REFERENCE', targetCategory = 'VALUE', adminData = None):
         """
         Creates an implementation type that is a C-type pointer to another type
         """
@@ -828,42 +896,368 @@ class Package(object):
 
         adminDataObj = self._checkAdminData(adminData)
 
-        targetProps = autosar.base.SwPointerTargetProps('VALUE', autosar.base.SwDataDefPropsConditional(baseTypeRef = baseTypeRef, swImplPolicy=swImplPolicy))
+        targetProps = autosar.base.SwPointerTargetProps(targetCategory, autosar.base.SwDataDefPropsConditional(baseTypeRef = baseTypeRef, swImplPolicy=swImplPolicy))
         variantProps =  autosar.base.SwDataDefPropsConditional(swPointerTargetProps = targetProps)
-        implementationDataType = autosar.datatype.ImplementationDataType(name, 'DATA_REFERENCE', variantProps, parent = self, adminData = adminDataObj)
+        implementationDataType = autosar.datatype.ImplementationDataType(name, variantProps, category = category, parent = self, adminData = adminDataObj)
         self.append(implementationDataType)
         return implementationDataType
 
-    def createImplementationDataReference(self, name, baseTypeRef, swImplPolicy=None, adminData = None):
+    def createImplementationArrayDataType(self, name, implementationTypeRef, arraySize, elementName = None, swCalibrationAccess = '', typeEmitter = None, category = 'ARRAY', targetCategory = 'TYPE_REFERENCE', adminData = None):
         """
-        Deprecated method name, use createImplementationPtrDataType instead
+        (AUTOSAR4)
+        Creates a new ImplementationDataType that references another type as an array
         """
-        if not _supress_warnings:
-            print("WARNING: createImplementationDataReference has been deprecated. Use createImplementationDataTypePtr instead.", file=sys.stderr)
-        self.createImplementationDataTypePtr(name, baseTypeRef, swImplPolicy, adminData)
+        ws=self.rootWS()
+        assert(ws is not None)
+        if elementName is None:
+            elementName = name
+        if  swCalibrationAccess is not None and len(swCalibrationAccess)==0:
+            swCalibrationAccess = ws.profile.swCalibrationAccessDefault
 
-    def createImplementationDataType(self, name, baseTypeRef, category='VALUE', minVal = None, maxVal = None, valueTable = None, bitmask = None, offset = None, scaling = None, unit = None, forceFloatScaling = False, dataConstraint='', swCalibrationAccess = None, typeEmitter = None, adminData = None):
+        if implementationTypeRef.startswith('/'):
+            dataType = ws.find(implementationTypeRef)
+        else:
+            dataType = ws.find(implementationTypeRef, role='DataType')
+        if dataType is None:
+            raise autosar.base.InvalidDataTypeRef(typeRef)
+
+        newType = autosar.datatype.ImplementationDataType(name, category = category, adminData = adminData)
+        outerProps = autosar.base.SwDataDefPropsConditional(swCalibrationAccess = swCalibrationAccess)
+        newType.variantProps = [outerProps]
+        innerProps = autosar.base.SwDataDefPropsConditional(implementationTypeRef = implementationTypeRef)
+        subElement = autosar.datatype.ImplementationDataTypeElement(elementName, targetCategory, arraySize, variantProps = innerProps)
+        newType.subElements.append(subElement)
+        self.append(newType)
+        return newType
+
+    def createImplementationDataType(self, name, baseTypeRef, lowerLimit = None, upperLimit = None, valueTable = None, bitmask = None, offset = None, factor = None, unit = None, forceFloat = False, dataConstraint='', swCalibrationAccess = '', typeEmitter = None, lowerLimitType = None, upperLimitType = None, category='VALUE', adminData = None):
+        return self._createImplementationDataTypeInternal(
+            name,
+            baseTypeRef,
+            None,
+            lowerLimit,
+            upperLimit,
+            valueTable,
+            bitmask,
+            offset,
+            factor,
+            unit,
+            forceFloat,
+            dataConstraint,
+            swCalibrationAccess,
+            typeEmitter,
+            lowerLimitType,
+            upperLimitType,
+            category,
+            adminData
+        )
+    def _createImplementationDataTypeInternal(self, name, baseTypeRef, implementationTypeRef, lowerLimit, upperLimit, valueTable, bitmask, offset, factor, unit, forceFloat, dataConstraint, swCalibrationAccess, typeEmitter, lowerLimitType, upperLimitType, category, adminData):
         """
         Creates an implementation data type that wraps a base type. Defaults to value type category
         """
         ws=self.rootWS()
         assert(ws is not None)
+        lowerLimit = self._convertNumber(lowerLimit)
+        upperLimit = self._convertNumber(upperLimit)
+
+        if swCalibrationAccess is not None and len(swCalibrationAccess)==0:
+            swCalibrationAccess = ws.profile.swCalibrationAccessDefault
 
         adminDataObj = self._checkAdminData(adminData)
+        unitObj = self._checkAndCreateUnit(ws, unit)
+        compuMethodObj = self._checkAndCreateCompuMethod(ws, self._createCompuMethodName(ws, name), unitObj, lowerLimit, upperLimit, offset, factor, bitmask, valueTable)
+        if dataConstraint is None:
+            dataConstraintObj = None
+        else:
+            if not isinstance(dataConstraint, str):
+                raise ValueError('dataConstraint argument must be None or str')
+            if len(dataConstraint)==0:
+            #Automatically create a data constraint on empty string
+                if compuMethodObj is not None:
+                    dataConstraintObj = self._checkAndCreateDataConstraintFromCompuMethod(ws, self._createDataConstraintName(ws, name), compuMethodObj)
+                else:
+                    if lowerLimit is None and upperLimit is None:
+                        dataConstraintObj = None
+                    else:
+                        if upperLimit is None:
+                            raise ValueError('lowerLimit cannot be None')
+                        if upperLimit is None:
+                            raise ValueError('upperLimit cannot be None')
+                        if lowerLimitType is None:
+                            lowerLimitType = 'CLOSED'
+                        if upperLimitType is None:
+                            upperLimitType = 'CLOSED'
+                        dataConstraintObj = self._checkAndCreateDataConstraint(ws, self._createDataConstraintName(ws, name), 'internalConstraint', lowerLimit, upperLimit, lowerLimitType, upperLimitType)
+            else:
+                if dataConstraint.startswith('/'):
+                    dataConstraintObj = ws.find(dataConstraint)
+                else:
+                    dataConstraintObj = ws.find(dataConstraint, role = 'DataConstraint')
+                if dataConstraintObj is None:
+                    raise autosar.base.InvalidDataConstraintRef(dataConstraint)
 
-        (compuMethodRef, unitRef, dataConstraintRef) = self._createCompuMethodUnitDataConstraint(ws, name, minVal, maxVal, valueTable, bitmask, offset, scaling, unit, forceFloatScaling, dataConstraint)
-        variantProps = autosar.base.SwDataDefPropsConditional(baseTypeRef = baseTypeRef,
-                                                              swCalibrationAccess = swCalibrationAccess,
+        unitRef = None if unitObj is None else unitObj.ref
+        compuMethodRef = None if compuMethodObj is None else compuMethodObj.ref
+        dataConstraintRef = None if dataConstraintObj is None else dataConstraintObj.ref
+
+        variantProps = autosar.base.SwDataDefPropsConditional(swCalibrationAccess = swCalibrationAccess,
                                                               compuMethodRef = compuMethodRef,
                                                               dataConstraintRef = dataConstraintRef,
+                                                              baseTypeRef = baseTypeRef,
+                                                              implementationTypeRef = implementationTypeRef,
                                                               unitRef = unitRef)
-
-        implementationDataType = autosar.datatype.ImplementationDataType(name, category, variantProps, typeEmitter=typeEmitter, parent = self, adminData = adminDataObj)
+        implementationDataType = autosar.datatype.ImplementationDataType(name, variantProps, typeEmitter=typeEmitter, category = category, parent = self, adminData = adminDataObj)
         self.append(implementationDataType)
         return implementationDataType
 
-    def createApplicationDataType(self, name, minVal, maxVal, valueTable, offset, scaling, unit, forceFloatScaling, swCalibrationAccess, typeEmitter, adminData):
-        raise NotImplementedError('createApplicationDataType')
+    def createImplementationRecordDataType(self, name, elements, swCalibrationAccess = '', category = 'STRUCTURE', adminData = None):
+        """
+        (AUTOSAR4)
+        Creates a new ImplementationDataType containing sub elements
+        """
+        ws=self.rootWS()
+        assert(ws is not None)
+
+        if swCalibrationAccess is not None and len(swCalibrationAccess)==0:
+            swCalibrationAccess = ws.profile.swCalibrationAccessDefault
+
+        if swCalibrationAccess is not None:
+            variantProps = autosar.base.SwDataDefPropsConditional(swCalibrationAccess = swCalibrationAccess)
+        else:
+            variantProps = None
+        dataType = autosar.datatype.ImplementationDataType(name, variantProps, category = category, adminData = adminData)
+        for element in elements:
+            if not isinstance(element, tuple):
+                raise ValueError('element must be a tuple')
+            (elementName, elemTypeRef) = element
+            elemType = ws.find(elemTypeRef, role='DataType')
+            if elemType is None:
+                raise autosar.base.InvalidDataTypeRef(elemTypeRef)
+            if isinstance(elemType, autosar.datatype.ImplementationDataType):
+                elementProps = autosar.base.SwDataDefPropsConditional(implementationTypeRef = elemType.ref)
+            elif isinstance(elemType, autosar.datatype.SwBaseType):
+                elementProps = autosar.base.SwDataDefPropsConditional(baseTypeRef = elemType.ref)
+            else:
+                raise NotImplementedError(type(elemType))
+            implementationDataTypeElement = autosar.datatype.ImplementationDataTypeElement(elementName, 'TYPE_REFERENCE', variantProps = elementProps)
+            dataType.subElements.append(implementationDataTypeElement)
+        self.append(dataType)
+        return dataType
+
+
+    def createUnit(self, shortName, displayName = None, factor = None, offset = None):
+        ws = self.rootWS()
+        assert(ws is not None)
+        if ws.roles['Unit'] is None:
+            unitPackage = self
+        else:
+            unitPackage = ws.find(ws.roles['Unit'])
+        unitElem = self._checkAndCreateUnit(ws, shortName, displayName, factor, offset, unitPackage)
+        return unitElem
+
+    def createCompuMethodLinear(self, name, offset, factor, lowerLimit = None, upperLimit = None, lowerLimitType = 'CLOSED', upperLimitType = 'CLOSED', unit = None, defaultValue = None, label = 'SCALING', forceFloat = True, category = 'LINEAR', adminData = None):
+        """
+        Alias for createCompuMethodRational
+        """
+        return self.createCompuMethodRational(name, offset, factor, lowerLimit, upperLimit, lowerLimitType, upperLimitType, unit, defaultValue, label, forceFloat, category, adminData)
+
+    def createCompuMethodRationalPhys(self, name, offset, factor, lowerLimit = None, upperLimit = None, lowerLimitType = 'CLOSED', upperLimitType = 'CLOSED', unit = None, defaultValue = None, label = 'SCALING', forceFloat = False, useIntToPhys=False, usePhysToInt = True, category = 'LINEAR', adminData = None):
+        """
+        Alias for createCompuMethodRational but creates a PHYSICAL-TO-INTERNAL mapping by default
+        """
+        return self.createCompuMethodRational(name, offset, factor, lowerLimit, upperLimit, lowerLimitType, upperLimitType, unit, defaultValue, label, forceFloat, useIntToPhys, usePhysToInt, category, adminData)
+
+    def createCompuMethodRational(self, name, offset, factor, lowerLimit = None, upperLimit = None, lowerLimitType = 'CLOSED', upperLimitType = 'CLOSED', unit = None, defaultValue = None, label = 'SCALING', forceFloat = False, useIntToPhys=True, usePhysToInt = False, category = 'LINEAR', adminData = None):
+        """
+        Creates a new CompuMethodRational object and appends it to the package with package-role 'CompuMethod'
+
+        name: <SHORT-NAME> (str)
+        offset: offset (int or float)
+        factor: scaling factor (int, float or rational number). This together with offset creates the numerator and denominator.
+        lowerLimit: <LOWER-LIMIT> (int). Default = None.
+        uppwerLimit: <UPPER-LIMIT> (int). Default = None.
+        lowerLimitType: "INTERVAL-TYPE" of lowerLimit, str['OPEN', 'CLOSED']. Default='CLOSED'. Only applies when lowerLimit is not None.
+        upperLimitType: "INTERVAL-TYPE" of upperLimit, str['OPEN', 'CLOSED']. Default='CLOSED'. Only applies when lowerLimit is not None.
+        unit: Name of the unit (str). Default = None
+        defaultValue: default value for the computation (None, int, float, str). Default = None.
+        label: Label for the internally created <COMPU-SCALE> (str). Default = 'SCALING'.
+        forceFloat: Forces numerator to become a floating point number (bool). Default = False.
+        intToPhys: Enable internal-to-physical computation (bool). Default = True.
+        physToInt: Enable physical-to-internal computation (bool). Default = False.
+        category: <CATEGORY> of the CompuMethodRational (str). Default = 'LINEAR'.
+        adminData: <ADMIN-DATA> for <COMPU-METHOD> (dict). Default = None.
+
+        """
+        ws = self.rootWS()
+        assert(ws is not None)
+
+        if ws.roles['CompuMethod'] is None:
+            compuMethodPackage = self
+        else:
+            compuMethodPackage = ws.find(ws.roles['CompuMethod'])
+
+        unitRef = None
+        unitObj = self._checkAndCreateUnit(ws, unit)
+        if unitObj is not None:
+            unitRef = unitObj.ref
+
+        adminDataObj = self._checkAdminData(adminData)
+
+        compuMethod = autosar.datatype.CompuMethod(name, useIntToPhys, usePhysToInt, unitRef, category, compuMethodPackage, adminDataObj)
+        (numerator, denominator) = self._calcNumeratorDenominator(factor, forceFloat)
+        if useIntToPhys:
+            compuMethod.intToPhys.createRationalScaling(
+                offset,
+                numerator,
+                denominator,
+                lowerLimit,
+                upperLimit,
+                lowerLimitType,
+                upperLimitType,
+                label = label
+                )
+            if defaultValue is not None:
+                compuMethod.intToPhys.defaultValue = defaultValue
+        elif usePhysToInt:
+            compuMethod.physToInt.createRationalScaling(
+                offset,
+                numerator,
+                denominator,
+                lowerLimit,
+                upperLimit,
+                lowerLimitType,
+                upperLimitType,
+                label = label
+                )
+            if defaultValue is not None:
+                if useIntToPhys:
+                    compuMethod.intToPhys.defaultValue = defaultValue
+                elif usePhysToInt:
+                    compuMethod.physToInt.defaultValue = defaultValue
+
+        compuMethodPackage.append(compuMethod)
+        return compuMethod
+
+    def createCompuMethodConst(self, name, valueTable, unit = None, defaultValue = None, label = 'SCALING', category = 'TEXTTABLE', adminData = None, elementAdminData = None):
+        useIntToPhys, usePhysToInt = True, False
+
+        ws = self.rootWS()
+        assert(ws is not None)
+
+        if ws.roles['CompuMethod'] is None:
+            compuMethodPackage = self
+        else:
+            compuMethodPackage = ws.find(ws.roles['CompuMethod'])
+        unitRef = None
+        unitObj = self._checkAndCreateUnit(ws, unit)
+        if unitObj is not None:
+            unitRef = unitObj.ref
+        if isinstance(adminData, dict):
+            adminData = autosar.base.createAdminData(adminData)
+
+        compuMethod = autosar.datatype.CompuMethod(name, useIntToPhys, usePhysToInt, unitRef, category, compuMethodPackage, adminData)
+        compuMethod.intToPhys.createValueTable(valueTable)
+        if defaultValue is not None:
+            compuMethod.intToPhys.defaultValue = defaultValue
+
+        compuMethodPackage.append(compuMethod)
+        return compuMethod
+
+
+
+    def _calcNumeratorDenominator(self, factor, forceFloat = False):
+
+        if forceFloat:
+           (numerator, denominator) = (float(factor), 1)
+        else:
+            f=Fraction.from_float(factor)
+            if f.denominator > 10000: #use the float version in case its not a rational number
+                (numerator, denominator) = (float(factor), 1)
+            else:
+                (numerator, denominator) = (f.numerator, f.denominator)
+        return (numerator, denominator)
+
+    def _checkAndCreateCompuMethod(self, ws, name, unitObj, lowerLimit, upperLimit, offset, factor, bitmaskTable, valueTable):
+        """
+        Returns CompuMethod object from the package with role 'CompuMethod'.
+        If no CompuMethod exists with that name it will be created and then returned.
+        """
+        if name is None:
+            return None
+
+        category = None
+        computation = autosar.datatype.Computation()
+        if bitmaskTable is not None:
+            category = 'BITFIELD_TEXTTABLE'
+            computation.createBitMask(bitmaskTable)
+        elif valueTable is not None:
+            category = 'TEXTTABLE'
+            computation.createValueTable(valueTable)
+        elif offset is not None and factor is not None:
+            category = 'LINEAR'
+            computation.createRationalScaling(offset, numerator, denominator, lowerLimit, upperLimit)
+        if category is None:
+            return None #Creating a compu method does not seem necessary
+
+        compuMethodPackage = None
+        if ws.roles['CompuMethod'] is not None:
+            compuMethodPackage=ws.find(ws.roles['CompuMethod'])
+        if compuMethodPackage is None:
+            raise RuntimeError("No package found with role='CompuMethod'")
+        compuMethodObj = compuMethodPackage.find(name)
+        if compuMethodObj is not None: #Element already exists with that name?
+            return compuMethodObj
+        unitRef = None if unitObj is None else unitObj.ref
+
+        useIntToPhys, usePhysToInt = True, False
+        compuMethodObj = autosar.datatype.CompuMethod(name, useIntToPhys, usePhysToInt, unitRef, category, compuMethodPackage)
+        compuMethodObj.intToPhys = computation
+        compuMethodPackage.append(compuMethodObj)
+        return compuMethodObj
+
+    def _checkAndCreateDataConstraintFromCompuMethod(self, ws, name, compuMethodObj):
+        constraintType = 'internalConstraint'
+        if compuMethodObj.category == 'BITFIELD_TEXTTABLE':
+            lowerLimit = 0
+            tmp = compuMethodObj.intToPhys.upperLimit
+            upperLimit = 2**int.bit_length(tmp)-1
+        else:
+            lowerLimit = compuMethodObj.intToPhys.lowerLimit
+            upperLimit = compuMethodObj.intToPhys.upperLimit
+
+        return self._checkAndCreateDataConstraint(ws, name, constraintType, lowerLimit, upperLimit)
+
+    def _checkAndCreateDataConstraint(self, ws, name, constraintType, lowerLimit, upperLimit, lowerLimitType = 'CLOSED', upperLimitType = 'CLOSED', adminData = None):
+        if name is None:
+            return None
+        dataConstraintPackage = None
+        if ws.roles['DataConstraint'] is not None:
+            dataConstraintPackage = ws.find(ws.roles['DataConstraint'])
+        if dataConstraintPackage is None:
+            raise RuntimeError("No package found with role='DataConstraint'")
+        dataConstraintObj = dataConstraintPackage.find(name)
+        if dataConstraintObj is not None: #Element already exists with that name?
+            return dataConstraintObj
+        else:
+            return self._createDataConstraintInPackage(dataConstraintPackage, name, constraintType, lowerLimit, upperLimit, lowerLimitType, upperLimitType, adminData)
+
+    def _findElementByRole(self, ws, name, role):
+        if name.startswith('/'):
+            return ws.find(name)
+        else:
+            return ws.find(name, role = role)
+
+    def _createDataConstraintInPackage(self, dataConstraintPackage, name, constraintType, lowerLimit, upperLimit, lowerLimitType, upperLimitType, adminData):
+        """
+        Returns DataConstraint object from the package with role 'DataConstraint'.
+        If no DataConstraint exists with that name it will be created and then returned.
+        """
+        rules=[]
+
+        rules.append({'type': constraintType, 'lowerLimit':lowerLimit, 'upperLimit':upperLimit, 'lowerLimitType':lowerLimitType, 'upperLimitType':upperLimitType})
+        constraint = autosar.datatype.DataConstraint(name, rules, self)
+        dataConstraintPackage.append(constraint)
+        return constraint
 
     def _checkAdminData(self, adminData):
         if isinstance(adminData, dict):
@@ -874,120 +1268,151 @@ class Package(object):
             raise ValueError("adminData must be of type dict or AdminData")
         return adminDataObj
 
-    def _createCompuMethodUnitDataConstraint(self, ws, name, minVal, maxVal, valueTable, bitmask, offset, scaling, unit, forceFloatScaling, dataConstraint):
-        """
-        AUTOSAR3:
+    # Deprecated code, to be removed
+    # def _createCompuMethodUnitDataConstraint(self, ws, name, minVal, maxVal, valueTable, bitmask, offset, scaling, unit, forceFloatScaling, dataConstraint):
+    #     """
+    #     AUTOSAR3:
+    #
+    #     If both compuMethod and unit: Returns (compuMethodRef, unitRef, None)
+    #     Else if compuMethod only: Returns (compuMethodRef, None, None)
+    #     Else: Returns (None, None, None)
+    #
+    #     AUTOSAR4:
+    #
+    #     If both compuMethod and unit: Returns (compuMethodRed, unitRed, dataConstraintRef)
+    #     Else if  compuMethod only: Returns (compuMethodRef, None, dataConstraintRef
+    #     Else: Returns (None, None, None)
+    #     """
+    #     semanticsPackage = None
+    #     unitPackage = None
+    #     dataConstraintPackage = None
+    #     compuMethodElem = None
+    #     dataConstraintElem = None
+    #     unitElem = None
+    #     assert(ws is not None)
+    #     if ws.roles['CompuMethod'] is not None:
+    #         semanticsPackage=ws.find(ws.roles['CompuMethod'])
+    #         if semanticsPackage is None:
+    #             raise RuntimeError("no package found with role='CompuMethod'")
+    #     if ws.roles['Unit'] is not None:
+    #         unitPackage=ws.find(ws.roles['Unit'])
+    #         if unitPackage is None:
+    #             raise RuntimeError("no package found with role='Unit'")
+    #     if ws.roles['DataConstraint'] is not None:
+    #         dataConstraintPackage=ws.find(ws.roles['DataConstraint'])
+    #         if dataConstraintPackage is None:
+    #             raise RuntimeError("no package found with role='DataConstraint'")
+    #
+    #     if (minVal is None) and (maxVal is None) and (valueTable is None) and (bitmask is None) and (offset is None) and (scaling is None) and (unit is None):
+    #         return (None, None, None)
+    #
+    #     if ws.version >= 4.0:
+    #         if dataConstraint is None: #disable rule
+    #             dataConstraintName = None
+    #         elif dataConstraint=='': #default rule
+    #             dataConstraintName = name+'_DataConstr'
+    #         else:
+    #             dataConstraintName = str(dataConstraint) #overide rule (lets the user select the name)
+    #
+    #     if (valueTable is not None) and (minVal is not None) and (maxVal is not None):
+    #         #used for enumeration types with explicit min and max
+    #         category = 'TEXTTABLE' if ws.version >= 4.0 else None
+    #         compuMethodElem=autosar.CompuMethodConst(str(name), list(valueTable), category)
+    #         if (ws.version >= 4.0) and (dataConstraintName is not None):
+    #             dataConstraintElem = self.createInternalDataConstraint(dataConstraintName, minVal, maxVal)
+    #
+    #     elif (valueTable is not None) and (minVal is None) and (maxVal is None):
+    #         #used for enumeration types with implicit min and max
+    #         category = 'TEXTTABLE' if ws.version >= 4.0 else None
+    #         compuMethodElem=autosar.CompuMethodConst(str(name),list(valueTable), category)
+    #         if (ws.version >= 4.0) and (dataConstraintName is not None):
+    #             dataConstraintElem = self.createInternalDataConstraint(dataConstraintName, compuMethodElem.elements[0].lowerLimit, compuMethodElem.elements[-1].upperLimit)
+    #
+    #     elif (bitmask is not None):
+    #         if ws.version < 3.0:
+    #             raise RunTimeError('bit masks not supported in AUTOSAR3')
+    #         compuMethodElem = autosar.datatype.CompuMethodMask(name, bitmask, category='BITFIELD_TEXTTABLE')
+    #         dataConstraintElem = self.createInternalDataConstraint(dataConstraintName, compuMethodElem.minVal, compuMethodElem.maxVal)
+    #
+    #     elif (offset is not None) and (scaling is not None):
+    #         if forceFloatScaling:
+    #             semanticElements=[{'offset':offset, 'numerator':scaling, 'denominator':1}]
+    #         else:
+    #             f=Fraction.from_float(scaling)
+    #             if f.denominator > 1000: #use the float version in case its not a rational number
+    #                 semanticElements=[{'offset':offset, 'numerator':scaling, 'denominator':1}]
+    #             else:
+    #                 semanticElements=[{'offset':offset, 'numerator':f.numerator, 'denominator':f.denominator}]
+    #         compuMethodElem=autosar.datatype.CompuMethodRational(name,None,semanticElements)
+    #         if (minVal is not None) and (maxVal is not None):
+    #             if (ws.version >= 4.0) and (dataConstraintName is not None):
+    #                 dataConstraintElem = self.createInternalDataConstraint(dataConstraintName, minVal, maxVal)
+    #         elif (minVal is not None) or (maxVal is not None):
+    #             raise ValueError('Invalid combination of arguments')
+    #
+    #     elif (minVal is not None) and (maxVal is not None):
+    #         if (ws.version >= 4.0) and (dataConstraintName is not None):
+    #             dataConstraintElem = self.createInternalDataConstraint(dataConstraintName, minVal, maxVal)
+    #     else:
+    #         raise ValueError('Invalid combination of arguments')
+    #
+    #     if unit is not None:
+    #         unitElem = self._checkAndCreateUnit(ws, unit, unitPackage = unitPackage)
+    #         compuMethodElem.unitRef = unitElem.ref
+    #     compuMethodRef, unitRef, dataConstraintRef = None, None, None
+    #     if compuMethodElem is not None:
+    #         if semanticsPackage is not None:
+    #             semanticsPackage.append(compuMethodElem)
+    #             compuMethodRef = compuMethodElem.ref
+    #         else:
+    #             raise RuntimeError("no package found with role='CompuMethod'")
+    #     if dataConstraintElem is not None:
+    #         if dataConstraintPackage is not None:
+    #             dataConstraintPackage.append(dataConstraintElem)
+    #             dataConstraintRef = dataConstraintElem.ref
+    #         else:
+    #             raise RuntimeError("no package found with role='DataConstraint'")
+    #     return (compuMethodRef, unitRef, dataConstraintRef)
 
-        If both compuMethod and unit: Returns (compuMethodRef, unitRef, None)
-        Else if compuMethod only: Returns (compuMethodRef, None, None)
-        Else: Returns (None, None, None)
-
-        AUTOSAR4:
-
-        If both compuMethod and unit: Returns (compuMethodRed, unitRed, dataConstraintRef)
-        Else if  compuMethod only: Returns (compuMethodRef, None, dataConstraintRef
-        Else: Returns (None, None, None)
-        """
-        semanticsPackage = None
-        unitPackage = None
-        dataConstraintPackage = None
-        compuMethodElem = None
-        dataConstraintElem = None
-        unitElem = None
-        assert(ws is not None)
-        if ws.roles['CompuMethod'] is not None:
-            semanticsPackage=ws.find(ws.roles['CompuMethod'])
-            if semanticsPackage is None:
-                raise RuntimeError("no package found with role='CompuMethod'")
-        if ws.roles['Unit'] is not None:
-            unitPackage=ws.find(ws.roles['Unit'])
+    def _checkAndCreateUnit(self, ws, shortName, displayName = None, factor = None, offset = None, unitPackage = None):
+        if shortName is None:
+            return None
+        if unitPackage is None:
+            unitPackage = ws.find(ws.roles['Unit'])
             if unitPackage is None:
                 raise RuntimeError("no package found with role='Unit'")
-        if ws.roles['DataConstraint'] is not None:
-            dataConstraintPackage=ws.find(ws.roles['DataConstraint'])
-            if dataConstraintPackage is None:
-                raise RuntimeError("no package found with role='DataConstraint'")
+        assert(isinstance(unitPackage, autosar.package.Package))
+        unitElem = unitPackage.find(shortName)
+        if unitElem is None:
+            unitElem = self._createUnitInPackage(unitPackage, shortName, displayName, factor, offset)
+        return unitElem
 
-        if (minVal is None) and (maxVal is None) and (valueTable is None) and (bitmask is None) and (offset is None) and (scaling is None) and (unit is None):
-            return (None, None, None)
+    def _createUnitInPackage(self, unitPackage, shortName, displayName, factor, offset):
+        if displayName is None:
+            displayName = shortName
+        unitElem = autosar.datatype.Unit(shortName, displayName, factor, offset)
+        unitPackage.append(unitElem)
+        return unitElem
 
-        if ws.version >= 4.0:
-            if dataConstraint is None: #disable rule
-                dataConstraintName = None
-            elif dataConstraint=='': #default rule
-                dataConstraintName = name+'_DataConstr'
-            else:
-                dataConstraintName = str(dataConstraint) #overide rule (lets the user select the name)
+    def _convertNumber(self, number):
+        """
+        Attempts to convert argument to int.
+        If that fails it tries to convert to float.
+        If that fails it returns the argument as a string.
+        """
+        retval = None
+        if number is not None:
+            try:
+                retval = int(number)
+            except ValueError:
+                try:
+                    retval = float(number)
+                except ValueError:
+                    retval = str(number)
+        return retval
 
-        if (valueTable is not None) and (minVal is not None) and (maxVal is not None):
-            #used for enumeration types with explicit min and max
-            category = 'TEXTTABLE' if ws.version >= 4.0 else None
-            compuMethodElem=autosar.CompuMethodConst(str(name), list(valueTable), category)
-            if (ws.version >= 4.0) and (dataConstraintName is not None):
-                dataConstraintElem = self.createInternalDataConstraint(dataConstraintName, minVal, maxVal)
+    def _createCompuMethodName(self, ws, name):
+        return name + ws.profile.compuMethodSuffix
 
-        elif (valueTable is not None) and (minVal is None) and (maxVal is None):
-            #used for enumeration types with implicit min and max
-            category = 'TEXTTABLE' if ws.version >= 4.0 else None
-            compuMethodElem=autosar.CompuMethodConst(str(name),list(valueTable), category)
-            if (ws.version >= 4.0) and (dataConstraintName is not None):
-                dataConstraintElem = self.createInternalDataConstraint(dataConstraintName, compuMethodElem.elements[0].lowerLimit, compuMethodElem.elements[-1].upperLimit)
-
-        elif (bitmask is not None):
-            if ws.version < 3.0:
-                raise RunTimeError('bit masks not supported in AUTOSAR3')
-            compuMethodElem = autosar.datatype.CompuMethodMask(name, bitmask, category='BITFIELD_TEXTTABLE')
-            dataConstraintElem = self.createInternalDataConstraint(dataConstraintName, compuMethodElem.minVal, compuMethodElem.maxVal)
-
-        elif (offset is not None) and (scaling is not None):
-            if forceFloatScaling:
-                semanticElements=[{'offset':offset, 'numerator':scaling, 'denominator':1}]
-            else:
-                f=Fraction.from_float(scaling)
-                if f.denominator > 1000: #use the float version in case its not a rational number
-                    semanticElements=[{'offset':offset, 'numerator':scaling, 'denominator':1}]
-                else:
-                    semanticElements=[{'offset':offset, 'numerator':f.numerator, 'denominator':f.denominator}]
-            compuMethodElem=autosar.datatype.CompuMethodRational(name,None,semanticElements)
-            if (minVal is not None) and (maxVal is not None):
-                if (ws.version >= 4.0) and (dataConstraintName is not None):
-                    dataConstraintElem = self.createInternalDataConstraint(dataConstraintName, minVal, maxVal)
-            elif (minVal is not None) or (maxVal is not None):
-                raise ValueError('Invalid combination of arguments')
-
-        elif (minVal is not None) and (maxVal is not None):
-            if (ws.version >= 4.0) and (dataConstraintName is not None):
-                dataConstraintElem = self.createInternalDataConstraint(dataConstraintName, minVal, maxVal)
-        else:
-            raise ValueError('Invalid combination of arguments')
-
-        if unit is not None:
-            unitElem = None
-            if unitPackage is not None:
-                unitElem = ws.find(unit, role='Unit')
-            if unitElem is None:
-                unitElem = autosar.datatype.DataTypeUnitElement(unit,unit)
-
-        compuMethodRef, unitRef, dataConstraintRef = None, None, None
-        if compuMethodElem is not None:
-            if semanticsPackage is not None:
-                semanticsPackage.append(compuMethodElem)
-                compuMethodRef = compuMethodElem.ref
-            else:
-                raise RuntimeError("no package found with role='CompuMethod'")
-        if unitElem is not None:
-            if unitPackage is not None:
-                if unitElem.ref is None:
-                    unitPackage.append(unitElem)
-                unitRef = unitElem.ref
-                if isinstance(compuMethodElem, autosar.datatype.CompuMethodRational):
-                    compuMethodElem.unitRef = unitRef
-            else:
-                raise RuntimeError("no package found with role='Unit'")
-        if dataConstraintElem is not None:
-            if dataConstraintPackage is not None:
-                dataConstraintPackage.append(dataConstraintElem)
-                dataConstraintRef = dataConstraintElem.ref
-            else:
-                raise RuntimeError("no package found with role='DataConstraint'")
-        return (compuMethodRef, unitRef, dataConstraintRef)
+    def _createDataConstraintName(self, ws, name):
+        return name + ws.profile.dataConstraintSuffix

@@ -16,27 +16,15 @@ def initializer_string(constant):
         raise NotImplementedError(str(type(constant)))
 
 
-class Value(object):
-    def __init__(self,name,parent=None):
-        self.name = name
-        self.parent=parent
+class Value(Element):
+    def __init__(self, name, parent=None, adminData = None):
+        super().__init__(name, parent, adminData)
+    
     def asdict(self):
         data={'type': self.__class__.__name__}
         data.update(self.__dict__)
         return data
-    @property
-    def ref(self):
-        if self.parent is not None:
-            return self.parent.ref+'/%s'%self.name
-        else:
-            return '/%s'%self.name
-
-    def rootWS(self):
-        if self.parent is None:
-            return None
-        else:
-            return self.parent.rootWS()
-
+    
 #AUTOSAR 3 constant values
 class IntegerValue(Value):
 
@@ -189,6 +177,17 @@ class NumericalValue(Value):
             self._value=str(val)
         else:
             self._value=None
+
+class ConstantReference(Value):
+    """
+    Container class for <CONSTANT-REFERENCE> (AUTOSAR 4)
+    """
+    
+    def tag(self, version): return 'CONSTANT-REFERENCE'
+    
+    def __init__(self, name=None, value=None, parent=None, adminData=None):
+        super().__init__(name, parent, adminData)
+        self.value = value
 
 #Common class
 class Constant(Element):

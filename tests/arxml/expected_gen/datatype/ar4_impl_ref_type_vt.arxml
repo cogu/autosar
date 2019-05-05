@@ -62,76 +62,18 @@
           <TYPE-EMITTER>Platform_Type</TYPE-EMITTER>
         </IMPLEMENTATION-DATA-TYPE>
         <IMPLEMENTATION-DATA-TYPE>
-          <SHORT-NAME>U32Type_T</SHORT-NAME>
+          <SHORT-NAME>OffOn_T</SHORT-NAME>
           <CATEGORY>TYPE_REFERENCE</CATEGORY>
           <SW-DATA-DEF-PROPS>
             <SW-DATA-DEF-PROPS-VARIANTS>
               <SW-DATA-DEF-PROPS-CONDITIONAL>
-                <IMPLEMENTATION-DATA-TYPE-REF DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/uint32</IMPLEMENTATION-DATA-TYPE-REF>
-              </SW-DATA-DEF-PROPS-CONDITIONAL>
-            </SW-DATA-DEF-PROPS-VARIANTS>
-          </SW-DATA-DEF-PROPS>
-        </IMPLEMENTATION-DATA-TYPE>
-        <IMPLEMENTATION-DATA-TYPE>
-          <SHORT-NAME>UserName_T</SHORT-NAME>
-          <CATEGORY>ARRAY</CATEGORY>
-          <SW-DATA-DEF-PROPS>
-            <SW-DATA-DEF-PROPS-VARIANTS>
-              <SW-DATA-DEF-PROPS-CONDITIONAL>
                 <SW-CALIBRATION-ACCESS>NOT-ACCESSIBLE</SW-CALIBRATION-ACCESS>
+                <COMPU-METHOD-REF DEST="COMPU-METHOD">/DataTypes/CompuMethods/OffOn_T</COMPU-METHOD-REF>
+                <DATA-CONSTR-REF DEST="DATA-CONSTR">/DataTypes/DataConstrs/OffOn_T_DataConstr</DATA-CONSTR-REF>
+                <IMPLEMENTATION-DATA-TYPE-REF DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/uint8</IMPLEMENTATION-DATA-TYPE-REF>
               </SW-DATA-DEF-PROPS-CONDITIONAL>
             </SW-DATA-DEF-PROPS-VARIANTS>
           </SW-DATA-DEF-PROPS>
-          <SUB-ELEMENTS>
-            <IMPLEMENTATION-DATA-TYPE-ELEMENT>
-              <SHORT-NAME>UserName_T</SHORT-NAME>
-              <CATEGORY>TYPE_REFERENCE</CATEGORY>
-              <ARRAY-SIZE>32</ARRAY-SIZE>
-              <ARRAY-SIZE-SEMANTICS>FIXED-SIZE</ARRAY-SIZE-SEMANTICS>
-              <SW-DATA-DEF-PROPS>
-                <SW-DATA-DEF-PROPS-VARIANTS>
-                  <SW-DATA-DEF-PROPS-CONDITIONAL>
-                    <IMPLEMENTATION-DATA-TYPE-REF DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/uint8</IMPLEMENTATION-DATA-TYPE-REF>
-                  </SW-DATA-DEF-PROPS-CONDITIONAL>
-                </SW-DATA-DEF-PROPS-VARIANTS>
-              </SW-DATA-DEF-PROPS>
-            </IMPLEMENTATION-DATA-TYPE-ELEMENT>
-          </SUB-ELEMENTS>
-        </IMPLEMENTATION-DATA-TYPE>
-        <IMPLEMENTATION-DATA-TYPE>
-          <SHORT-NAME>RecordType2_T</SHORT-NAME>
-          <CATEGORY>STRUCTURE</CATEGORY>
-          <SW-DATA-DEF-PROPS>
-            <SW-DATA-DEF-PROPS-VARIANTS>
-              <SW-DATA-DEF-PROPS-CONDITIONAL>
-                <SW-CALIBRATION-ACCESS>NOT-ACCESSIBLE</SW-CALIBRATION-ACCESS>
-              </SW-DATA-DEF-PROPS-CONDITIONAL>
-            </SW-DATA-DEF-PROPS-VARIANTS>
-          </SW-DATA-DEF-PROPS>
-          <SUB-ELEMENTS>
-            <IMPLEMENTATION-DATA-TYPE-ELEMENT>
-              <SHORT-NAME>Elem1</SHORT-NAME>
-              <CATEGORY>TYPE_REFERENCE</CATEGORY>
-              <SW-DATA-DEF-PROPS>
-                <SW-DATA-DEF-PROPS-VARIANTS>
-                  <SW-DATA-DEF-PROPS-CONDITIONAL>
-                    <IMPLEMENTATION-DATA-TYPE-REF DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/U32Type_T</IMPLEMENTATION-DATA-TYPE-REF>
-                  </SW-DATA-DEF-PROPS-CONDITIONAL>
-                </SW-DATA-DEF-PROPS-VARIANTS>
-              </SW-DATA-DEF-PROPS>
-            </IMPLEMENTATION-DATA-TYPE-ELEMENT>
-            <IMPLEMENTATION-DATA-TYPE-ELEMENT>
-              <SHORT-NAME>Elem2</SHORT-NAME>
-              <CATEGORY>TYPE_REFERENCE</CATEGORY>
-              <SW-DATA-DEF-PROPS>
-                <SW-DATA-DEF-PROPS-VARIANTS>
-                  <SW-DATA-DEF-PROPS-CONDITIONAL>
-                    <IMPLEMENTATION-DATA-TYPE-REF DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/UserName_T</IMPLEMENTATION-DATA-TYPE-REF>
-                  </SW-DATA-DEF-PROPS-CONDITIONAL>
-                </SW-DATA-DEF-PROPS-VARIANTS>
-              </SW-DATA-DEF-PROPS>
-            </IMPLEMENTATION-DATA-TYPE-ELEMENT>
-          </SUB-ELEMENTS>
         </IMPLEMENTATION-DATA-TYPE>
       </ELEMENTS>
       <AR-PACKAGES>
@@ -144,6 +86,7 @@
               <COMPU-INTERNAL-TO-PHYS>
                 <COMPU-SCALES>
                   <COMPU-SCALE>
+                    <SHORT-LABEL>FALSE</SHORT-LABEL>
                     <LOWER-LIMIT INTERVAL-TYPE="CLOSED">0</LOWER-LIMIT>
                     <UPPER-LIMIT INTERVAL-TYPE="CLOSED">0</UPPER-LIMIT>
                     <COMPU-CONST>
@@ -151,10 +94,51 @@
                     </COMPU-CONST>
                   </COMPU-SCALE>
                   <COMPU-SCALE>
+                    <SHORT-LABEL>TRUE</SHORT-LABEL>
                     <LOWER-LIMIT INTERVAL-TYPE="CLOSED">1</LOWER-LIMIT>
                     <UPPER-LIMIT INTERVAL-TYPE="CLOSED">1</UPPER-LIMIT>
                     <COMPU-CONST>
                       <VT>TRUE</VT>
+                    </COMPU-CONST>
+                  </COMPU-SCALE>
+                </COMPU-SCALES>
+              </COMPU-INTERNAL-TO-PHYS>
+            </COMPU-METHOD>
+            <COMPU-METHOD>
+              <SHORT-NAME>OffOn_T</SHORT-NAME>
+              <CATEGORY>TEXTTABLE</CATEGORY>
+              <COMPU-INTERNAL-TO-PHYS>
+                <COMPU-SCALES>
+                  <COMPU-SCALE>
+                    <SHORT-LABEL>OffOn_Off</SHORT-LABEL>
+                    <LOWER-LIMIT INTERVAL-TYPE="CLOSED">0</LOWER-LIMIT>
+                    <UPPER-LIMIT INTERVAL-TYPE="CLOSED">0</UPPER-LIMIT>
+                    <COMPU-CONST>
+                      <VT>OffOn_Off</VT>
+                    </COMPU-CONST>
+                  </COMPU-SCALE>
+                  <COMPU-SCALE>
+                    <SHORT-LABEL>OffOn_On</SHORT-LABEL>
+                    <LOWER-LIMIT INTERVAL-TYPE="CLOSED">1</LOWER-LIMIT>
+                    <UPPER-LIMIT INTERVAL-TYPE="CLOSED">1</UPPER-LIMIT>
+                    <COMPU-CONST>
+                      <VT>OffOn_On</VT>
+                    </COMPU-CONST>
+                  </COMPU-SCALE>
+                  <COMPU-SCALE>
+                    <SHORT-LABEL>OffOn_Error</SHORT-LABEL>
+                    <LOWER-LIMIT INTERVAL-TYPE="CLOSED">2</LOWER-LIMIT>
+                    <UPPER-LIMIT INTERVAL-TYPE="CLOSED">2</UPPER-LIMIT>
+                    <COMPU-CONST>
+                      <VT>OffOn_Error</VT>
+                    </COMPU-CONST>
+                  </COMPU-SCALE>
+                  <COMPU-SCALE>
+                    <SHORT-LABEL>OffOn_NotAvailable</SHORT-LABEL>
+                    <LOWER-LIMIT INTERVAL-TYPE="CLOSED">3</LOWER-LIMIT>
+                    <UPPER-LIMIT INTERVAL-TYPE="CLOSED">3</UPPER-LIMIT>
+                    <COMPU-CONST>
+                      <VT>OffOn_NotAvailable</VT>
                     </COMPU-CONST>
                   </COMPU-SCALE>
                 </COMPU-SCALES>
@@ -205,6 +189,17 @@
                   <INTERNAL-CONSTRS>
                     <LOWER-LIMIT INTERVAL-TYPE="CLOSED">0</LOWER-LIMIT>
                     <UPPER-LIMIT INTERVAL-TYPE="CLOSED">4294967295</UPPER-LIMIT>
+                  </INTERNAL-CONSTRS>
+                </DATA-CONSTR-RULE>
+              </DATA-CONSTR-RULES>
+            </DATA-CONSTR>
+            <DATA-CONSTR>
+              <SHORT-NAME>OffOn_T_DataConstr</SHORT-NAME>
+              <DATA-CONSTR-RULES>
+                <DATA-CONSTR-RULE>
+                  <INTERNAL-CONSTRS>
+                    <LOWER-LIMIT INTERVAL-TYPE="CLOSED">0</LOWER-LIMIT>
+                    <UPPER-LIMIT INTERVAL-TYPE="CLOSED">3</UPPER-LIMIT>
                   </INTERNAL-CONSTRS>
                 </DATA-CONSTR-RULE>
               </DATA-CONSTR-RULES>
