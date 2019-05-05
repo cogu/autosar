@@ -655,9 +655,10 @@ class DataElementComSpec(object):
         return data
 
 class ModeSwitchComSpec:
-    def __init__(self, enhancedMode=False, supportAsync=False):
+    def __init__(self, enhancedMode=False, supportAsync=False, modeGroupRef=None):
         self.enhancedMode = enhancedMode
         self.supportAsync = supportAsync
+        self.modeGroupRef = modeGroupRef
 
 class ParameterComSpec:
     def __init__(self, name, initValue=None):

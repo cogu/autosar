@@ -5,21 +5,6 @@
       <SHORT-NAME>DataTypes</SHORT-NAME>
       <ELEMENTS>
         <IMPLEMENTATION-DATA-TYPE>
-          <SHORT-NAME>boolean</SHORT-NAME>
-          <CATEGORY>VALUE</CATEGORY>
-          <SW-DATA-DEF-PROPS>
-            <SW-DATA-DEF-PROPS-VARIANTS>
-              <SW-DATA-DEF-PROPS-CONDITIONAL>
-                <BASE-TYPE-REF DEST="SW-BASE-TYPE">/DataTypes/BaseTypes/boolean</BASE-TYPE-REF>
-                <SW-CALIBRATION-ACCESS>NOT-ACCESSIBLE</SW-CALIBRATION-ACCESS>
-                <COMPU-METHOD-REF DEST="COMPU-METHOD">/DataTypes/CompuMethods/boolean</COMPU-METHOD-REF>
-                <DATA-CONSTR-REF DEST="DATA-CONSTR">/DataTypes/DataConstrs/boolean_DataConstr</DATA-CONSTR-REF>
-              </SW-DATA-DEF-PROPS-CONDITIONAL>
-            </SW-DATA-DEF-PROPS-VARIANTS>
-          </SW-DATA-DEF-PROPS>
-          <TYPE-EMITTER>Platform_Type</TYPE-EMITTER>
-        </IMPLEMENTATION-DATA-TYPE>
-        <IMPLEMENTATION-DATA-TYPE>
           <SHORT-NAME>uint8</SHORT-NAME>
           <CATEGORY>VALUE</CATEGORY>
           <SW-DATA-DEF-PROPS>
@@ -61,95 +46,14 @@
           </SW-DATA-DEF-PROPS>
           <TYPE-EMITTER>Platform_Type</TYPE-EMITTER>
         </IMPLEMENTATION-DATA-TYPE>
-        <IMPLEMENTATION-DATA-TYPE>
-          <SHORT-NAME>U32Type_T</SHORT-NAME>
-          <CATEGORY>TYPE_REFERENCE</CATEGORY>
-          <SW-DATA-DEF-PROPS>
-            <SW-DATA-DEF-PROPS-VARIANTS>
-              <SW-DATA-DEF-PROPS-CONDITIONAL>
-                <IMPLEMENTATION-DATA-TYPE-REF DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/uint32</IMPLEMENTATION-DATA-TYPE-REF>
-              </SW-DATA-DEF-PROPS-CONDITIONAL>
-            </SW-DATA-DEF-PROPS-VARIANTS>
-          </SW-DATA-DEF-PROPS>
-        </IMPLEMENTATION-DATA-TYPE>
-        <IMPLEMENTATION-DATA-TYPE>
-          <SHORT-NAME>RecordType1_T</SHORT-NAME>
-          <CATEGORY>STRUCTURE</CATEGORY>
-          <SW-DATA-DEF-PROPS>
-            <SW-DATA-DEF-PROPS-VARIANTS>
-              <SW-DATA-DEF-PROPS-CONDITIONAL>
-                <SW-CALIBRATION-ACCESS>NOT-ACCESSIBLE</SW-CALIBRATION-ACCESS>
-              </SW-DATA-DEF-PROPS-CONDITIONAL>
-            </SW-DATA-DEF-PROPS-VARIANTS>
-          </SW-DATA-DEF-PROPS>
-          <SUB-ELEMENTS>
-            <IMPLEMENTATION-DATA-TYPE-ELEMENT>
-              <SHORT-NAME>Elem1</SHORT-NAME>
-              <CATEGORY>TYPE_REFERENCE</CATEGORY>
-              <SW-DATA-DEF-PROPS>
-                <SW-DATA-DEF-PROPS-VARIANTS>
-                  <SW-DATA-DEF-PROPS-CONDITIONAL>
-                    <IMPLEMENTATION-DATA-TYPE-REF DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/uint8</IMPLEMENTATION-DATA-TYPE-REF>
-                  </SW-DATA-DEF-PROPS-CONDITIONAL>
-                </SW-DATA-DEF-PROPS-VARIANTS>
-              </SW-DATA-DEF-PROPS>
-            </IMPLEMENTATION-DATA-TYPE-ELEMENT>
-            <IMPLEMENTATION-DATA-TYPE-ELEMENT>
-              <SHORT-NAME>Elem2</SHORT-NAME>
-              <CATEGORY>TYPE_REFERENCE</CATEGORY>
-              <SW-DATA-DEF-PROPS>
-                <SW-DATA-DEF-PROPS-VARIANTS>
-                  <SW-DATA-DEF-PROPS-CONDITIONAL>
-                    <IMPLEMENTATION-DATA-TYPE-REF DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/U32Type_T</IMPLEMENTATION-DATA-TYPE-REF>
-                  </SW-DATA-DEF-PROPS-CONDITIONAL>
-                </SW-DATA-DEF-PROPS-VARIANTS>
-              </SW-DATA-DEF-PROPS>
-            </IMPLEMENTATION-DATA-TYPE-ELEMENT>
-          </SUB-ELEMENTS>
-        </IMPLEMENTATION-DATA-TYPE>
       </ELEMENTS>
       <AR-PACKAGES>
         <AR-PACKAGE>
           <SHORT-NAME>CompuMethods</SHORT-NAME>
-          <ELEMENTS>
-            <COMPU-METHOD>
-              <SHORT-NAME>boolean</SHORT-NAME>
-              <CATEGORY>TEXTTABLE</CATEGORY>
-              <COMPU-INTERNAL-TO-PHYS>
-                <COMPU-SCALES>
-                  <COMPU-SCALE>
-                    <LOWER-LIMIT INTERVAL-TYPE="CLOSED">0</LOWER-LIMIT>
-                    <UPPER-LIMIT INTERVAL-TYPE="CLOSED">0</UPPER-LIMIT>
-                    <COMPU-CONST>
-                      <VT>FALSE</VT>
-                    </COMPU-CONST>
-                  </COMPU-SCALE>
-                  <COMPU-SCALE>
-                    <LOWER-LIMIT INTERVAL-TYPE="CLOSED">1</LOWER-LIMIT>
-                    <UPPER-LIMIT INTERVAL-TYPE="CLOSED">1</UPPER-LIMIT>
-                    <COMPU-CONST>
-                      <VT>TRUE</VT>
-                    </COMPU-CONST>
-                  </COMPU-SCALE>
-                </COMPU-SCALES>
-              </COMPU-INTERNAL-TO-PHYS>
-            </COMPU-METHOD>
-          </ELEMENTS>
         </AR-PACKAGE>
         <AR-PACKAGE>
           <SHORT-NAME>DataConstrs</SHORT-NAME>
           <ELEMENTS>
-            <DATA-CONSTR>
-              <SHORT-NAME>boolean_DataConstr</SHORT-NAME>
-              <DATA-CONSTR-RULES>
-                <DATA-CONSTR-RULE>
-                  <INTERNAL-CONSTRS>
-                    <LOWER-LIMIT INTERVAL-TYPE="CLOSED">0</LOWER-LIMIT>
-                    <UPPER-LIMIT INTERVAL-TYPE="CLOSED">1</UPPER-LIMIT>
-                  </INTERNAL-CONSTRS>
-                </DATA-CONSTR-RULE>
-              </DATA-CONSTR-RULES>
-            </DATA-CONSTR>
             <DATA-CONSTR>
               <SHORT-NAME>uint8_DataConstr</SHORT-NAME>
               <DATA-CONSTR-RULES>
@@ -192,12 +96,6 @@
           <SHORT-NAME>BaseTypes</SHORT-NAME>
           <ELEMENTS>
             <SW-BASE-TYPE>
-              <SHORT-NAME>boolean</SHORT-NAME>
-              <CATEGORY>FIXED_LENGTH</CATEGORY>
-              <BASE-TYPE-SIZE>1</BASE-TYPE-SIZE>
-              <BASE-TYPE-ENCODING>BOOLEAN</BASE-TYPE-ENCODING>
-            </SW-BASE-TYPE>
-            <SW-BASE-TYPE>
               <SHORT-NAME>uint8</SHORT-NAME>
               <CATEGORY>FIXED_LENGTH</CATEGORY>
               <BASE-TYPE-SIZE>8</BASE-TYPE-SIZE>
@@ -217,12 +115,6 @@
               <BASE-TYPE-SIZE>32</BASE-TYPE-SIZE>
               <BASE-TYPE-ENCODING>NONE</BASE-TYPE-ENCODING>
               <NATIVE-DECLARATION>uint32</NATIVE-DECLARATION>
-            </SW-BASE-TYPE>
-            <SW-BASE-TYPE>
-              <SHORT-NAME>float32</SHORT-NAME>
-              <CATEGORY>FIXED_LENGTH</CATEGORY>
-              <BASE-TYPE-SIZE>32</BASE-TYPE-SIZE>
-              <BASE-TYPE-ENCODING>IEEE754</BASE-TYPE-ENCODING>
             </SW-BASE-TYPE>
           </ELEMENTS>
         </AR-PACKAGE>

@@ -249,6 +249,9 @@ class SwPointerTargetProps:
 
 
 #Exceptions
+class InvalidUnitRef(ValueError):
+    pass
+
 class InvalidPortInterfaceRef(ValueError):
     pass
 
@@ -262,6 +265,12 @@ class InvalidPortRef(ValueError):
     pass
 
 class InvalidInitValueRef(ValueError):
+    pass
+
+class InvalidDataConstraintRef(ValueError):
+    pass
+
+class InvalidCompuMethodRef(ValueError):
     pass
 
 class DataConstraintError(ValueError):

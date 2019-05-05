@@ -1,10 +1,12 @@
 from autosar.base import parseBooleanNode,parseBoolean,parseTextNode,parseIntNode,parseFloatNode,parseAdminDataNode
 from autosar.behavior import *
 from autosar.parser.parser_base import ElementParser
+from autosar.parser.constant_parser import ConstantParser
 
 class BehaviorParser(ElementParser):
     def __init__(self,version=3.0):
-        self.version=version
+        super().__init__(version)
+        self.constantParser = ConstantParser(version)
 
     def getSupportedTags(self):
         if (self.version >=3.0) and (self.version < 4.0):
@@ -182,13 +184,14 @@ class BehaviorParser(ElementParser):
             return internalBehavior
 
     def parseRunnableEntity(self, xmlRoot, parent):
-        xmlDataReceivePoints=None
-        xmlDataSendPoints=None
-        xmlServerCallPoints=None
-        xmlCanEnterExclusiveAreas=None
+        xmlDataReceivePoints = None
+        xmlDataSendPoints = None
+        xmlServerCallPoints = None
+        xmlCanEnterExclusiveAreas = None
         adminData = None
         xmlModeAccessPoints = None
         xmlParameterAccessPoints = None
+        canBeInvokedConcurrently = False
         if self.version < 4.0:
             for xmlElem in xmlRoot.findall('*'):
                 if xmlElem.tag=='SHORT-NAME':
@@ -596,6 +599,7 @@ class BehaviorParser(ElementParser):
         parses <SYNCHRONOUS-SERVER-CALL-POINT>
         """
         assert(xmlRoot.tag=='SYNCHRONOUS-SERVER-CALL-POINT')
+        timeout=0.0
         if self.version >= 4.0:
             operationInstanceRefs=[]
             for xmlElem in xmlRoot.findall('*'):
@@ -663,7 +667,7 @@ class BehaviorParser(ElementParser):
                 serviceNeeds = self.parseServiceNeeds(xmlElem)
             else:
                 raise NotImplementedError(xmlElem.tag)
-        swcServiceDependency = SwcServiceDependency(name, parent)
+        swcServiceDependency = SwcServiceDependency(name, parent = parent)
         if desc is not None:
             swcServiceDependency.desc=desc[0]
             swcServiceDependency.descAttr=desc[1]
@@ -679,29 +683,22 @@ class BehaviorParser(ElementParser):
     def parseParameterDataPrototype(self, xmlRoot, parent = None):
         """parses <PARAMETER-DATA-PROTOTYPE> (AUTOSAR 4)"""
         assert(xmlRoot.tag == 'PARAMETER-DATA-PROTOTYPE')
-        (name, desc, variants, typeRef, swAddressMethodRef, swCalibrationAccess) = (None, None, None, None, None, None)
+        (variants, typeRef, swAddressMethodRef, swCalibrationAccess, initValue) = (None, None, None, None, None)
+        self.push()
         for xmlElem in xmlRoot.findall('./*'):
-            if xmlElem.tag == 'SHORT-NAME':
-                name = self.parseTextNode(xmlElem)
-            elif xmlElem.tag == 'DESC':
-                desc = self.parseDescDirect(xmlElem)
-            elif xmlElem.tag == 'SW-DATA-DEF-PROPS':
+            if xmlElem.tag == 'SW-DATA-DEF-PROPS':
                 variants = self.parseSwDataDefProps(xmlElem)
                 if len(variants) > 0:
                     swAddressMethodRef = variants[0].swAddressMethodRef
                     swCalibrationAccess = variants[0].swCalibrationAccess
+            elif xmlElem.tag == 'INIT-VALUE':
+                initValue = self.constantParser.parseValueV4(xmlElem, None)
             elif xmlElem.tag == 'TYPE-TREF':
                 typeRef = self.parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
-        if (name is not None) and (typeRef is not None):
-            elem = ParameterDataPrototype(name, typeRef, swAddressMethodRef, swCalibrationAccess, None, parent)
-            if desc is not None:
-                elem.desc=desc[0]
-                elem.descAttr=desc[1]
-            return elem
-        return None
-
+                self.baseHandler(xmlElem)
+        obj = ParameterDataPrototype(self.name, typeRef, swAddressMethodRef, swCalibrationAccess, initValue, parent, self.adminData)
+        self.pop(obj)
 
     def parseServiceNeeds(self, xmlRoot, parent = None):
         """parses <SERVICE-NEEDS> (AUTOSAR 4)"""
@@ -714,45 +711,65 @@ class BehaviorParser(ElementParser):
                 raise NotImplementedError(xmlElem.tag)
         serviceNeeds = ServiceNeeds(None, parent)
         if xmlNvBlockNeeds is not None:
-            serviceNeeds.nvBlockNeeds = self.parseNvBlockNeeds(xmlElem, serviceNeeds)
+            serviceNeeds.nvmBlockNeeds = self.parseNvmBlockNeeds(xmlElem, serviceNeeds)
         return serviceNeeds
 
 
-    def parseNvBlockNeeds(self, xmlRoot, parent = None):
+    def parseNvmBlockNeeds(self, xmlRoot, parent = None):
         """parses <NV-BLOCK-NEEDS> (AUTOSAR 4)"""
-        (name, adminData, numberOfDataSets, ramBlockStatusControl, reliability, restoreAtStart, storeAtShutdown) = (
-           None, None, None, None, None, None, None)
+        config = autosar.behavior.NvmBlockConfig()
+        
+        self.push()
         for xmlElem in xmlRoot.findall('./*'):
-            if xmlElem.tag == 'SHORT-NAME':
-                name = self.parseTextNode(xmlElem)
-            elif xmlElem.tag == 'ADMIN-DATA':
-                adminData = self.parseAdminDataNode(xmlElem)
-            elif xmlElem.tag == 'N-DATA-SETS':
-                numberOfDataSets = self.parseIntNode(xmlElem)
+            if xmlElem.tag == 'N-DATA-SETS':
+                config.numberOfDataSets = self.parseIntNode(xmlElem)
+            elif xmlElem.tag == 'N-ROM-BLOCKS':
+                config.numberOfRomBlocks = self.parseIntNode(xmlElem)
             elif xmlElem.tag == 'RAM-BLOCK-STATUS-CONTROL':
-                ramBlockStatusControl = self.parseTextNode(xmlElem)
+                config.ramBlockStatusControl = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'RELIABILITY':
-                reliability = self.parseTextNode(xmlElem)
+                config.reliability = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'WRITING-PRIORITY':
+                config.writingPriority = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'WRITING-FREQUENCY':
+                config.writingFrequency = self.parseIntNode(xmlElem)
+            elif xmlElem.tag == 'CALC-RAM-BLOCK-CRC':
+                config.calcRamBlockCrc = self.parseBooleanNode(xmlElem)
+            elif xmlElem.tag == 'CHECK-STATIC-BLOCK-ID':
+                config.checkStaticBlockId = self.parseBooleanNode(xmlElem)                
+            elif xmlElem.tag == 'READONLY':
+                config.readOnly = self.parseBooleanNode(xmlElem)
+            elif xmlElem.tag == 'RESISTANT-TO-CHANGED-SW':
+                config.resistantToChangedSw = self.parseBooleanNode(xmlElem)                
             elif xmlElem.tag == 'RESTORE-AT-START':
-                restoreAtStart = self.parseBooleanNode(xmlElem)
+                config.restoreAtStartup = self.parseBooleanNode(xmlElem)
             elif xmlElem.tag == 'STORE-AT-SHUTDOWN':
-                storeAtShutdown = self.parseBooleanNode(xmlElem)
+                config.storeAtShutdown = self.parseBooleanNode(xmlElem)
+            elif xmlElem.tag == 'WRITE-VERIFICATION':
+                config.writeVerification = self.parseBooleanNode(xmlElem)
+            elif xmlElem.tag == 'WRITE-ONLY-ONCE':
+                config.writeOnlyOnce = self.parseBooleanNode(xmlElem)
+            elif xmlElem.tag == 'USE-AUTO-VALIDATION-AT-SHUT-DOWN':
+                config.autoValidationAtShutdown = self.parseBooleanNode(xmlElem)
+            elif xmlElem.tag == 'USE-CRC-COMP-MECHANISM':
+                config.useCrcCompMechanism = self.parseBooleanNode(xmlElem)
+            elif xmlElem.tag == 'STORE-EMERGENCY':
+                config.storeEmergency = self.parseBooleanNode(xmlElem)
+            elif xmlElem.tag == 'STORE-IMMEDIATE':
+                config.storeImmediate = self.parseBooleanNode(xmlElem)
+            elif xmlElem.tag == 'STORE-CYCLIC':
+                config.storeCyclic = self.parseBooleanNode(xmlElem)
+            elif xmlElem.tag == 'CYCLIC-WRITING-PERIOD':
+                config.cyclicWritePeriod = self.parseIntNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
-        #TODO: check if any of the below items has default values that can be set automatically if item is missing
-        if name is None:
+                self.baseHandler(xmlElem)
+        
+        if self.name is None:
             raise RuntimeError('<SHORT-NAME> is missing or incorrectly formatted')
-        if numberOfDataSets is None:
-            raise RuntimeError('<N-DATA-SETS> is missing or incorrectly formatted')
-        if ramBlockStatusControl is None:
-            raise RuntimeError('<RAM-BLOCK-STATUS-CONTROL> is missing or incorrectly formatted')
-        if reliability is None:
-            raise RuntimeError('<RELIABILITY> is missing or incorrectly formatted')
-        if restoreAtStart is None:
-            raise RuntimeError('<RESTORE-AT-START> is missing or incorrectly formatted')
-        if storeAtShutdown is None:
-            raise RuntimeError('<STORE-AT-SHUTDOWN> is missing or incorrectly formatted')
-        return NvBlockNeeds(name, numberOfDataSets, ramBlockStatusControl, reliability, restoreAtStart, storeAtShutdown, parent, adminData)
+        config.check()
+        obj = autosar.behavior.NvmBlockNeeds(self.name, blockConfig = config, parent = parent, adminData = self.adminData)
+        self.pop(obj)
+        return obj
 
     def _parseRoleBasedDataAssignment(self, xmlRoot):
         assert(xmlRoot.tag == 'ROLE-BASED-DATA-ASSIGNMENT')
@@ -783,12 +800,14 @@ class BehaviorParser(ElementParser):
 
     def _parseRoleBasedPortAssignment(self, xmlRoot):
         assert(xmlRoot.tag == 'ROLE-BASED-PORT-ASSIGNMENT')
-        portRef = None
+        (portRef, role) = (None, None)
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'PORT-PROTOTYPE-REF':
                 portRef = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'ROLE':
+                portRef = self.parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                self.baseHandler(xmlElem)
         if portRef is not None:
-            return RoleBasedPortAssignment(portRef)
+            return autosar.behavior.RoleBasedPortAssignment(portRef, role)
         return None

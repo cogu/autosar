@@ -31,9 +31,11 @@ class PortInterfacePackageParser(ElementParser):
         else:
             return None
 
-    def parseSenderReceiverInterface(self,xmlRoot,parent=None):
+    def parseSenderReceiverInterface(self, xmlRoot, parent=None):
         (name, adminData, isService, serviceKind, xmlDataElements, xmlModeGroups, xmlInvalidationPolicys) = (None, None, False, None, None, None, None)
         for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == 'DESC':
+                continue
             if xmlElem.tag == 'SHORT-NAME':
                 name = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'ADMIN-DATA':
@@ -54,6 +56,7 @@ class PortInterfacePackageParser(ElementParser):
 
         if (name is not None) and (xmlDataElements is not None):
             portInterface = autosar.portinterface.SenderReceiverInterface(name, isService, serviceKind, parent, adminData)
+            self.parseDesc(xmlRoot, portInterface)
             if self.version >= 4.0:
                 elemParser = self.parseVariableDataPrototype
                 dataElemTag = 'VARIABLE-DATA-PROTOTYPE'

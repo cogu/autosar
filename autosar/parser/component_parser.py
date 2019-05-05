@@ -214,26 +214,30 @@ class ComponentTypeParser(ElementParser):
                 swc.implementation=implementation
         return implementation
 
-    def parseCompositionType(self,xmlRoot,parent=None):
+    def parseCompositionType(self, xmlRoot, parent=None):
         """
         parses COMPOSITION-TYPE
         """
         assert (xmlRoot.tag=='COMPOSITION-TYPE') or (xmlRoot.tag=='COMPOSITION-SW-COMPONENT-TYPE')
         swc=autosar.component.CompositionComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
-        for elem in xmlRoot.findall('./*'):
-            if elem.tag=='SHORT-NAME':
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == 'DESC':
+                self.parseDesc(xmlElem, swc)
+            elif xmlElem.tag=='SHORT-NAME':
                 continue
-            if elem.tag=='PORTS':
+            elif xmlElem.tag=='PORTS':
                 self.parseComponentPorts(swc,xmlRoot)
-            elif elem.tag=='COMPONENTS':
-                self.parseComponents(elem,swc)
-            elif elem.tag=='CONNECTORS':
+            elif xmlElem.tag=='COMPONENTS':
+                self.parseComponents(xmlElem,swc)
+            elif xmlElem.tag=='CONNECTORS':
                 if self.version >= 4.0:
-                    self.parseConnectorsV4(elem,swc)
+                    self.parseConnectorsV4(xmlElem,swc)
                 else:
-                    self.parseConnectorsV3(elem,swc)
+                    self.parseConnectorsV3(xmlElem,swc)
+            elif xmlElem.tag == 'DATA-TYPE-MAPPING-REFS':
+                continue #implement later
             else:
-                raise NotImplementedError(elem.tag)
+                raise NotImplementedError(xmlElem.tag)
         return swc
 
     def parseComponents(self,xmlRoot,parent):
@@ -318,15 +322,18 @@ class ComponentTypeParser(ElementParser):
                 raise NotImplementedError(xmlElem.tag)
 
     def _parseModeSwitchComSpec(self, xmlRoot):
-        (enhancedMode, supportAsync) = (False, False)
+        (enhancedMode, supportAsync, modeGroupRef) = (False, False, None)
+        assert(xmlRoot.tag == 'MODE-SWITCH-RECEIVER-COM-SPEC')
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'ENHANCED-MODE-API':
                 enhancedMode = self.parseBooleanNode(xmlElem)
             elif xmlElem.tag == 'SUPPORTS-ASYNCHRONOUS-MODE-SWITCH':
                 supportAsync = self.parseBooleanNode(xmlElem)
+            elif xmlElem.tag == 'MODE-GROUP-REF':
+                modeGroupRef = self.parseTextNode(xmlElem)
             else:
                 raise NotImplementedError(xmlElem.tag)
-        return autosar.component.ModeSwitchComSpec(enhancedMode, supportAsync)
+        return autosar.component.ModeSwitchComSpec(enhancedMode, supportAsync, modeGroupRef)
 
     def _parseParameterComSpec(self, xmlRoot, portInterfaceRef):
         (initValue, name) = (None, None)

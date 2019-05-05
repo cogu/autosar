@@ -86,6 +86,7 @@
               <COMPU-INTERNAL-TO-PHYS>
                 <COMPU-SCALES>
                   <COMPU-SCALE>
+                    <SHORT-LABEL>FALSE</SHORT-LABEL>
                     <LOWER-LIMIT INTERVAL-TYPE="CLOSED">0</LOWER-LIMIT>
                     <UPPER-LIMIT INTERVAL-TYPE="CLOSED">0</UPPER-LIMIT>
                     <COMPU-CONST>
@@ -93,6 +94,7 @@
                     </COMPU-CONST>
                   </COMPU-SCALE>
                   <COMPU-SCALE>
+                    <SHORT-LABEL>TRUE</SHORT-LABEL>
                     <LOWER-LIMIT INTERVAL-TYPE="CLOSED">1</LOWER-LIMIT>
                     <UPPER-LIMIT INTERVAL-TYPE="CLOSED">1</UPPER-LIMIT>
                     <COMPU-CONST>

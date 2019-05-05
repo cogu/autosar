@@ -283,7 +283,7 @@ class XMLBehaviorWriter(ElementWriter):
     def _writePortAPIOption(self, ws,option):
         lines=['<%s>'%option.tag(self.version)]
         lines.append(self.indent('<ENABLE-TAKE-ADDRESS>%s</ENABLE-TAKE-ADDRESS>'%('true' if option.takeAddress else 'false'),1))
-        if ws.errorHandlingOpt:
+        if ws.profile.errorHandlingOpt:
             lines.append(self.indent('<ERROR-HANDLING>NO-TRANSFORMER-ERROR-HANDLING</ERROR-HANDLING>',1))
         lines.append(self.indent('<INDIRECT-API>%s</INDIRECT-API>'%('true' if option.indirectAPI else 'false'),1))
         port = ws.find(option.portRef)
