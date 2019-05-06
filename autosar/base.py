@@ -144,8 +144,14 @@ def createAdminData(data):
 
 def parseAutosarVersionAndSchema(xmlRoot):
     """
-    Parses AUTOSAR version from the attributes in the root AUTOSAR tag
-    Returns a tuple with major,minor,patch,schemaFile (all integers except schemaFile which is string)
+    Parses AUTOSAR version from the schemaLocation attribute in the root AUTOSAR tag
+    
+    For AUTOSAR versions 4.3 and below (e.g. "http://autosar.org/schema/r4.0 AUTOSAR_4-3-0.xsd")
+    Returns a tuple with major, minor, patch, None, schemaFile. Types are (int, int, int, NoneType, str)
+    
+    For AUTOSAR versions 4.4 and above (e.g. "http://autosar.org/schema/r4.0 AUTOSAR_00044.xsd")
+    Returns a tuple with major, minor, None, release, schemaFile
+    This will now report (major,minor) as (4,0) since it will now extract from the "r4.0"-part of the attribute.     
     """
     schemaLocation = None
     for key in xmlRoot.attrib.keys():
@@ -161,14 +167,19 @@ def parseAutosarVersionAndSchema(xmlRoot):
             #Is this AUTOSAR 3?
             result = re.search(r'(\d)\.(\d)\.(\d)', value)
             if result is not None:
-                return (int(result.group(1)),int(result.group(2)),int(result.group(3)), schemaFile)
+                return (int(result.group(1)), int(result.group(2)), int(result.group(3)), None,  schemaFile)
             else:
-                #Is this AUTOSAR 4?
+                #Is this AUTOSAR 4.0 to 4.3?
                 result = re.search(r'(\d)-(\d)-(\d).*\.xsd', value)
                 if result is not None:
-                    return (int(result.group(1)),int(result.group(2)),int(result.group(3)), schemaFile)
+                    return (int(result.group(1)),int(result.group(2)),int(result.group(3)), None, schemaFile)
+                else:
+                    #Is this AUTOSAR 4.4 or above?
+                    result = re.search(r'r(\d+)\.(\d+)\s+AUTOSAR_(\d+).xsd', value)
+                    if result is not None:
+                        return (int(result.group(1)),int(result.group(2)),None, int(result.group(3)), schemaFile)                        
 
-    return (None, None, None)
+    return (None, None, None, None, None)
 
 def applyFilter(ref, filters):
     if filters is None:
