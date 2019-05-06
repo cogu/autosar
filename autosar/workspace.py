@@ -40,7 +40,10 @@ class Workspace:
     """
     An autosar worspace
     """
-    def __init__(self, version, patch, schema, attributes = None, useDefaultWriters=True):
+    def __init__(self, version, patch, schema, release = None, attributes = None, useDefaultWriters=True):
+        """
+        For AUTOSAR 
+        """
         self.packages = []
         if isinstance(version, str):
             (major, minor, patch) = parseVersionString(version)
@@ -49,6 +52,7 @@ class Workspace:
         elif isinstance(version, float):
             self._version=version
             self.patch=int(patch)
+        self.release = None if release is None else int(release)
         self.schema=schema
         self.packageParser=None
         self.packageWriter=None
@@ -82,7 +86,10 @@ class Workspace:
     
     @property
     def version_str(self):
-        return str(self._version)+'.'+str(self.patch)
+        if self.patch is None:
+            return str(self._version)
+        else:
+            return str(self._version)+'.'+str(self.patch)
 
     def __getitem__(self,key):
         if isinstance(key,str):
@@ -120,13 +127,14 @@ class Workspace:
         namespace = getXMLNamespace(xmlroot)
 
         assert (namespace is not None)
-        (major, minor, patch, schema) = parseAutosarVersionAndSchema(xmlroot)
+        (major, minor, patch, release, schema) = parseAutosarVersionAndSchema(xmlroot)
         removeNamespace(xmlroot,namespace)
         self.version=float('%s.%s'%(major,minor))
-        self.major=major
-        self.minor=minor
-        self.patch=patch
-        self.schema=schema
+        self.major = major
+        self.minor = minor
+        self.patch = patch
+        self.release = release
+        self.schema = schema
         self.xmlroot = xmlroot
         if self.packageParser is None:
             self.packageParser = autosar.parser.package_parser.PackageParser(self.version)

@@ -61,20 +61,22 @@ class TestBase(unittest.TestCase):
       </AUTOSAR>
       """
       xmlRoot = ElementTree.fromstring(xmlData)
-      (major, minor, patch, schema) = autosar.base.parseAutosarVersionAndSchema(xmlRoot)
+      (major, minor, patch, release, schema) = autosar.base.parseAutosarVersionAndSchema(xmlRoot)
       self.assertEqual(major, 3)
       self.assertEqual(minor, 0)
       self.assertEqual(patch, 2)
+      self.assertIsNone(release)
       self.assertEqual(schema, 'autosar_302_ext.xsd')
       
       xmlData="""<?xml version="1.0" encoding="UTF-8"?>
       <AUTOSAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://autosar.org/3.2.2" xsi:schemaLocation="http://autosar.org/3.2.2 AUTOSAR.xsd">
       </AUTOSAR>"""
       xmlRoot = ElementTree.fromstring(xmlData)
-      (major, minor, patch, schema) = autosar.base.parseAutosarVersionAndSchema(xmlRoot)
+      (major, minor, patch, release, schema) = autosar.base.parseAutosarVersionAndSchema(xmlRoot)
       self.assertEqual(major, 3)
       self.assertEqual(minor, 2)
       self.assertEqual(patch, 2)
+      self.assertIsNone(release)
       self.assertEqual(schema, 'AUTOSAR.xsd')
    
    def test_parseAutosarVersionAndSchema4(self):
@@ -83,10 +85,11 @@ class TestBase(unittest.TestCase):
       </AUTOSAR>
       """
       xmlRoot = ElementTree.fromstring(xmlData)
-      (major, minor, patch, schema) = autosar.base.parseAutosarVersionAndSchema(xmlRoot)
+      (major, minor, patch, release, schema) = autosar.base.parseAutosarVersionAndSchema(xmlRoot)
       self.assertEqual(major, 4)
       self.assertEqual(minor, 2)
       self.assertEqual(patch, 1)
+      self.assertIsNone(release)
       self.assertEqual(schema, 'AUTOSAR_4-2-1.xsd')
 
       xmlData="""<?xml version="1.0" encoding="utf-8"?>
@@ -94,11 +97,26 @@ class TestBase(unittest.TestCase):
       </AUTOSAR>
       """      
       xmlRoot = ElementTree.fromstring(xmlData)
-      (major, minor, patch, schema) = autosar.base.parseAutosarVersionAndSchema(xmlRoot)
+      (major, minor, patch, release, schema) = autosar.base.parseAutosarVersionAndSchema(xmlRoot)
       self.assertEqual(major, 4)
       self.assertEqual(minor, 2)
       self.assertEqual(patch, 2)
+      self.assertIsNone(release)
       self.assertEqual(schema, 'AUTOSAR_4-2-2.xsd')
+   
+   def test_parseAutosarVersionAndSchemaWithReleaseVersion(self):
+      xsi:schemaLocation="http://autosar.org/schema/r4.0 AUTOSAR_00044.xsd"
+      xmlData = """<?xml version="1.0" encoding="utf-8"?>
+      <AUTOSAR xsi:schemaLocation="http://autosar.org/schema/r4.0 AUTOSAR_00044.xsd" xmlns="http://autosar.org/schema/r4.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+      </AUTOSAR>
+      """
+      xmlRoot = ElementTree.fromstring(xmlData)
+      (major, minor, patch, release, schema) = autosar.base.parseAutosarVersionAndSchema(xmlRoot)
+      self.assertEqual(major, 4)
+      self.assertEqual(minor, 0)
+      self.assertEqual(patch, None)
+      self.assertEqual(release, 44)
+      self.assertEqual(schema, 'AUTOSAR_00044.xsd')
 
    def test_parseVersionString(self):
       (major, minor, patch) = (autosar.base.parseVersionString("3.0.0"))
