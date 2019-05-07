@@ -17,13 +17,34 @@ def initializer_string(constant):
 
 
 class Value(Element):
-    def __init__(self, name, parent=None, adminData = None):
-        super().__init__(name, parent, adminData)
+    def __init__(self, name, parent=None, adminData = None, category = None):
+        super().__init__(name, parent, adminData, category)
     
     def asdict(self):
         data={'type': self.__class__.__name__}
         data.update(self.__dict__)
         return data
+
+class ValueAR4:
+    def __init__(self, label, parent=None, adminData = None, category = None):
+        if isinstance(adminData, dict):
+            adminDataObj=autosar.base.createAdminData(adminData)
+        else:
+            adminDataObj = adminData
+        if (adminDataObj is not None) and not isinstance(adminDataObj, autosar.base.AdminData):
+            raise ValueError("adminData must be of type dict or autosar.base.AdminData")
+        self.label = label
+        self.adminData=adminDataObj
+        self.parent=parent
+        self.category=category
+
+    def rootWS(self):
+        if self.parent is None:
+            return None
+        else:
+            return self.parent.rootWS()
+
+    
     
 #AUTOSAR 3 constant values
 class IntegerValue(Value):
@@ -159,13 +180,14 @@ class TextValue(Value):
             self._value=None
 
 class NumericalValue(Value):
-    def tag(self,version=None): return "NUMERICAL-VALUE-SPECIFICATION"
+    
+    def tag(self, version=None): return "NUMERICAL-VALUE-SPECIFICATION"
 
-    def __init__(self, name=None, value=None, parent=None):
+    def __init__(self, name = None, value = None, parent = None):
         super().__init__(name, parent)
         if value is None:
-            value=0
-        self.value=value
+            value = 0
+        self.value = value
 
     @property
     def value(self):
@@ -174,9 +196,25 @@ class NumericalValue(Value):
     @value.setter
     def value(self,val):
         if val is not None:
-            self._value=str(val)
+            self._value = str(val)
         else:
-            self._value=None
+            self._value = None
+
+class ApplicationValue(ValueAR4):
+    """
+    (AUTOSAR4)
+    Implements <APPLICATION-VALUE-SPECIFICATION>
+    """
+    def tag(self, version=None): return "APPLICATION-VALUE-SPECIFICATION"
+    
+    def __init__(self, label = None, swValueCont = None, swAxisCont = None, category = None, parent = None, adminData = None):
+        super().__init__(label, parent, adminData, category)
+        if (swAxisCont is not None) and (not isinstance(swAxisCont, SwAxisCont)):
+            raise ValueError('swAxisCont argument must be None or instance of SwAxisCont')
+        if (swValueCont is not None) and (not isinstance(swValueCont, SwValueCont)):
+            raise ValueError('swValueCont argument must be None or instance of SwValueCont')
+        self.swAxisCont = swAxisCont
+        self.swValueCont = swValueCont
 
 class ConstantReference(Value):
     """
@@ -209,3 +247,49 @@ class Constant(Element):
         if self.value.name==ref:
             return self.value
         return None
+
+class SwValueCont:
+    """
+    (AUTOSAR4)
+    Implements <SW-VALUE-CONT>
+    """    
+    
+    def tag(self, version = None): return 'SW-VALUE-CONT'
+    
+    def __init__(self, values = None, unitRef = None, unitDisplayName = None, swArraySize = None):
+        if values is None:
+            self.values = None
+        else:
+            if isinstance(values, list):
+                self.values = list(values)
+            else:
+                self.values = values
+        self.unitRef = unitRef
+        self.unitDisplayName = unitDisplayName
+        self.swArraySize = swArraySize
+        
+
+class SwAxisCont:
+    """
+    (AUTOSAR4)
+    Implements <SW-AXIS-CONT>
+    """    
+    
+    def tag(self, version = None): return 'SW-AXIS-CONT'
+    
+    def __init__(self, values = None, unitRef = None, unitDisplayName = None, swAxisIndex = None, swArraySize = None, category = None):        
+        self.unitRef = unitRef
+        self.unitDisplayName = unitDisplayName
+        self.swAxisIndex = swAxisIndex
+        self.swArraySize = swArraySize
+        self.category = category
+        if values is None:
+            self.values = None
+        else:
+            if isinstance(values, list):
+                self.values = list(values)
+            else:
+                self.values = values
+
+    
+        

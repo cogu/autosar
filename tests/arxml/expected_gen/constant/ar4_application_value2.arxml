@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AUTOSAR xmlns="http://autosar.org/schema/r4.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://autosar.org/schema/r4.0 AUTOSAR_4-2-2.xsd">
+  <AR-PACKAGES>
+    <AR-PACKAGE>
+      <SHORT-NAME>Constants</SHORT-NAME>
+      <ELEMENTS>
+        <CONSTANT-SPECIFICATION>
+          <SHORT-NAME>Phys_Calibration_IV</SHORT-NAME>
+          <VALUE-SPEC>
+            <APPLICATION-VALUE-SPECIFICATION>
+              <SW-AXIS-CONTS>
+                <SW-AXIS-CONT>
+                  <UNIT-REF TARGET="UNIT">/DataTypes/Units/kg</UNIT-REF>
+                </SW-AXIS-CONT>
+              </SW-AXIS-CONTS>
+              <SW-VALUE-CONT>
+                <SW-VALUES-PHYS>
+                  <V>63</V>
+                </SW-VALUES-PHYS>
+              </SW-VALUE-CONT>
+            </APPLICATION-VALUE-SPECIFICATION>
+          </VALUE-SPEC>
+        </CONSTANT-SPECIFICATION>
+      </ELEMENTS>
+    </AR-PACKAGE>
+  </AR-PACKAGES>
+</AUTOSAR>

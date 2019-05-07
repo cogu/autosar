@@ -429,7 +429,7 @@ class ConstraintBase:
             self.lowerLimit = lowerLimit
         if upperLimit is not None:
             if isinstance(upperLimit, str) and upperLimit != 'INF':
-                raise ValueError('Unknown lowerLimit: '+upperLimit)
+                raise ValueError('Unknown upperLimit: '+upperLimit)
             self.upperLimit = upperLimit
         if lowerLimitType == 'CLOSED' or lowerLimitType == 'OPEN':
             self.lowerLimitType = lowerLimitType
