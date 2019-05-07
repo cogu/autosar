@@ -230,13 +230,15 @@ class BaseWriter:
         lines=[]
         lines.append('<%s>'%value.tag(self.version))
         if isinstance(value, autosar.constant.TextValue):
-            lines.extend(self.indent(self._writeSimpleValueSpecificationXML(value),1))
+            lines.extend(self.indent(self._writeSimpleValueSpecificationXML(value), 1))
         elif isinstance(value, autosar.constant.NumericalValue):
-            lines.extend(self.indent(self._writeSimpleValueSpecificationXML(value),1))
+            lines.extend(self.indent(self._writeSimpleValueSpecificationXML(value), 1))
         elif isinstance(value, autosar.constant.RecordValue):
-            lines.extend(self.indent(self._writeRecordValueSpecificationXML(value),1))
+            lines.extend(self.indent(self._writeRecordValueSpecificationXML(value), 1))
         elif isinstance(value, autosar.constant.ArrayValue):
-            lines.extend(self.indent(self._writeArrayValueSpecificationXML(value),1))
+            lines.extend(self.indent(self._writeArrayValueSpecificationXML(value), 1))
+        elif isinstance(value, autosar.constant.ApplicationValue):
+            lines.extend(self.indent(self._writeApplicationValueSpecificationXML(value), 1))
         else:
             raise NotImplementedError(str(type(value)))
         lines.append('</%s>'%value.tag(self.version))
@@ -269,6 +271,60 @@ class BaseWriter:
         lines.append('</ELEMENTS>')
         return lines
 
+    def _writeApplicationValueSpecificationXML(self, value):
+        ws=value.rootWS()
+        assert(ws is not None)
+        lines=[]
+        if value.label is not None:
+            lines.append('<SHORT-LABEL>{}</SHORT-LABEL>'.format(value.label))
+        if value.swAxisCont is not None:
+            lines.extend(self._writeSwAxisContXML(ws, value.swAxisCont))
+        if value.swValueCont is not None:
+            lines.extend(self._writeSwValueContXML(ws, value.swValueCont))
+        return lines
+
+    def _writeSwAxisContXML(self, ws, elem):
+        lines = []
+        lines.append('<SW-AXIS-CONTS>')
+        lines.append(self.indent('<%s>'%elem.tag(self.version), 1))
+        if elem.unitRef is not None:
+            unitObj = ws.find(elem.unitRef)
+            if unitObj is None:
+                raise autosar.base.InvalidUnitRef(elem.unitRef)
+            lines.append(self.indent('<UNIT-REF TARGET="{0}">{1}</UNIT-REF>'.format(unitObj.tag(self.version), unitObj.ref), 2))
+        if elem.values is not None:
+            lines.append(self.indent('<SW-VALUES-PHYS>', 2))
+            if not isinstance(elem.values, list):
+                valueList = [elem.values]
+            else:
+                valueList = elem.values
+            for v in valueList:
+                lines.append(self.indent('<V>{}</V>'.format(str(v)), 3))
+            lines.append(self.indent('</SW-VALUES-PHYS>', 2))
+        lines.append(self.indent('</%s>'%elem.tag(self.version), 1))
+        lines.append('</SW-AXIS-CONTS>')
+        return lines
+
+    def _writeSwValueContXML(self, ws, elem):
+        lines = []
+        lines.append('<%s>'%elem.tag(self.version))
+        if elem.unitRef is not None:
+            unitObj = ws.find(elem.unitRef)
+            if unitObj is None:
+                raise autosar.base.InvalidUnitRef(elem.unitRef)
+            lines.append(self.indent('<UNIT-REF TARGET="{0}">{1}</UNIT-REF>'.format(unitObj.tag(self.version), unitObj.ref), 1))
+        if elem.values is not None:
+            lines.append(self.indent('<SW-VALUES-PHYS>', 1))
+            if not isinstance(elem.values, list):
+                valueList = [elem.values]
+            else:
+                valueList = elem.values
+            for v in valueList:
+                lines.append(self.indent('<V>{}</V>'.format(str(v)), 2))
+            lines.append(self.indent('</SW-VALUES-PHYS>', 1))
+        lines.append('</%s>'%elem.tag(self.version))
+        return lines
+
     def writeDataElementXML(self, elem):
         assert(isinstance(elem,DataElement))
         lines=[]
@@ -292,7 +348,7 @@ class BaseWriter:
         lines.append('</%s>'%elem.tag(self.version))
         return lines
 
-    def _numberToString(self, x):        
+    def _numberToString(self, x):
         if math.isinf(x) and x > 0:
             return 'INFINITE' if self.version < 4.0 else 'INF'
         elif math.isinf(x) and x < 0:

@@ -539,9 +539,9 @@ class Package(object):
         if dataType is None:
             raise autosar.base.InvalidDataTypeRef(str(typeRef))
         if ws.version < 4.0:
-            self._createConstantV3(ws, name, dataType, initValue, adminData)
+            return self._createConstantV3(ws, name, dataType, initValue, adminData)
         else:
-            self._createConstantV4(ws, name, dataType, initValue, adminData)
+            return self._createConstantV4(ws, name, dataType, initValue, adminData)
 
     def _createConstantV3(self, ws, name, dataType, initValue, adminData=None):
         """Creates an AUTOSAR 3 Constant"""
@@ -718,6 +718,22 @@ class Package(object):
         constant.value = autosar.constant.NumericalValue(name, value, constant)
         self.append(constant)
         return constant
+    
+    def createApplicationValueConstant(self, name, swValueCont = None, swAxisCont = None, valueCategory = None, valueLabel = None):
+        """
+        (AUTOSAR4)
+        Creates a new Constant containing a application value specification
+        """
+        ws=self.rootWS()
+        assert(ws is not None)
+        constant = autosar.constant.Constant(name, None, self)
+        innerValue = autosar.constant.ApplicationValue(valueLabel, swValueCont, swAxisCont, valueCategory, parent = self)
+        constant.value = innerValue
+        self.append(constant)
+        return constant
+            
+        
+
 
     def createInternalDataConstraint(self, name, lowerLimit, upperLimit, lowerLimitType="CLOSED", upperLimitType="CLOSED", adminData = None):
         ws=self.rootWS()
@@ -919,7 +935,7 @@ class Package(object):
         else:
             dataType = ws.find(implementationTypeRef, role='DataType')
         if dataType is None:
-            raise autosar.base.InvalidDataTypeRef(typeRef)
+            raise autosar.base.InvalidDataTypeRef(implementationTypeRef)
 
         newType = autosar.datatype.ImplementationDataType(name, category = category, adminData = adminData)
         outerProps = autosar.base.SwDataDefPropsConditional(swCalibrationAccess = swCalibrationAccess)
