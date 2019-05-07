@@ -62,8 +62,8 @@ class BaseParser:
     
     def applyDesc(self, obj):
         if self.common[-1].desc is not None:            
-            obj.desc=L2Text
-            obj.descAttr=L2Attr        
+            obj.desc=self.common[-1].desc
+            obj.descAttr=self.common[-1].desc_attr
     
     @property
     def name(self):
@@ -188,6 +188,8 @@ class BaseParser:
                 swAddressMethodRef = self.parseTextNode(xmlItem)
             elif xmlItem.tag == 'UNIT-REF':
                 unitRef = self.parseTextNode(xmlItem)
+            elif xmlItem.tag == 'ADDITIONAL-NATIVE-TYPE-QUALIFIER':
+                pass #implement later
             else:
                 raise NotImplementedError(xmlItem.tag)
         variant = SwDataDefPropsConditional(baseTypeRef, implementationTypeRef, swAddressMethodRef, swCalibrationAccess, swImplPolicy, None, compuMethodRef, dataConstraintRef, unitRef)
@@ -209,7 +211,9 @@ class BaseParser:
         assert(xmlRoot.tag == 'VARIABLE-DATA-PROTOTYPE')
         (name, typeRef, props_variants, isQueued, adminData) = (None, None, None, False, None)
         for xmlElem in xmlRoot.findall('./*'):
-            if xmlElem.tag == 'SHORT-NAME':
+            if xmlElem.tag == 'DESC':
+                pass #implement later
+            elif xmlElem.tag == 'SHORT-NAME':
                 name = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'TYPE-TREF':
                 typeRef = self.parseTextNode(xmlElem)

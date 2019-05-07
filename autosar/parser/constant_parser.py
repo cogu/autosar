@@ -21,23 +21,20 @@ class ConstantParser(ElementParser):
 
     def parseConstantSpecification(self, xmlElem, rootProject=None, parent=None):
         assert(xmlElem.tag == 'CONSTANT-SPECIFICATION')
-        (name, adminData, xmlValue, xmlValueSpec) = (None, None, None, None)
+        (xmlValue, xmlValueSpec) = (None, None)
+        self.push()
         for xmlElem in xmlElem.findall('./*'):
-            if xmlElem.tag == 'SHORT-NAME':
-                name = self.parseTextNode(xmlElem)
-            elif xmlElem.tag == 'ADMIN-DATA':
-                adminData = self.parseAdminDataNode(xmlElem)
-            elif self.version < 4.0 and xmlElem.tag == 'VALUE':
+            if self.version < 4.0 and xmlElem.tag == 'VALUE':
                 xmlValue = xmlElem
             elif self.version >= 4.0 and xmlElem.tag == 'VALUE-SPEC':
                 xmlValueSpec = xmlElem
             elif xmlElem.tag == 'TYPE-TREF':
                 typeRef = self.parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                self.defaultHandler(xmlElem)
 
-        if (name is not None) and ((xmlValue is not None) or (xmlValueSpec is not None)):
-            constant = autosar.constant.Constant(name, parent=parent, adminData=adminData)
+        if (self.name is not None) and ((xmlValue is not None) or (xmlValueSpec is not None)):
+            constant = autosar.constant.Constant(self.name, parent=parent, adminData=self.adminData)
             if xmlValue is not None:
                 constant.value = self._parseValueV3(xmlValue.find('./*') , constant)
             elif xmlValueSpec is not None:
@@ -45,7 +42,11 @@ class ConstantParser(ElementParser):
                 if len(values) != 1:
                     raise ValueError('A value specification must contain exactly one element')
                 constant.value = values[0]
-            return constant
+            retval = constant
+        else:
+            retval = None
+        self.pop(retval)
+        return retval
 
     def _parseValueV3(self, xmlValue, parent):
         constantValue = None
@@ -89,6 +90,8 @@ class ConstantParser(ElementParser):
                 result.append(self._parseArrayValueSpecification(xmlElem, parent))
             elif xmlElem.tag == 'CONSTANT-REFERENCE':
                 result.append(self._parseConstantReference(xmlElem, parent))
+            elif xmlElem.tag == 'APPLICATION-VALUE-SPECIFICATION':
+                result.append(self._parseApplicationValueSpecification(xmlElem, parent))
             else:
                 raise NotImplementedError(xmlElem.tag)
         return result
@@ -157,19 +160,75 @@ class ConstantParser(ElementParser):
 
         else:
             raise RuntimeError("<ELEMENTS> must not be None")
-    
+
     def _parseConstantReference(self, xmlRoot, parent):
-        constantRef = None
+        label, constantRef = None, None
         self.push()
         for xmlElem in xmlRoot.findall('./*'):
-            if xmlElem.tag == 'CONSTANT-REF':
+            if xmlElem.tag == 'SHORT-LABEL':
+                label = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'CONSTANT-REF':
                 constantRef = self.parseTextNode(xmlElem)
             else:
                 self.baseHandler(xmlElem)
         if constantRef is not None:
-            obj = autosar.constant.ConstantReference(self.name, constantRef, parent, self.adminData)
+            obj = autosar.constant.ConstantReference(label, constantRef, parent, self.adminData)
             self.pop(obj)
             return obj
-        else:            
+        else:
             raise RunTimeError('<CONSTANT-REF> must not be None')
-        
+
+    def _parseApplicationValueSpecification(self, xmlRoot, parent):
+        label, swValueCont, swAxisCont, category = None, None, None, None
+
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == 'SHORT-LABEL':
+                label = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'CATEGORY':
+                category = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'SW-VALUE-CONT':
+                swValueCont = self._parseSwValueCont(xmlElem)
+            elif xmlElem.tag == 'SW-AXIS-CONTS':
+                xmlChild = xmlElem.find('./SW-AXIS-CONT')
+                if xmlChild is not None:
+                    swAxisCont = self._parseSwAxisCont(xmlChild)
+            else:
+                raise NotImplementedError(xmlElem.tag)
+        value = autosar.constant.ApplicationValue(label, swValueCont = swValueCont, swAxisCont = swAxisCont, category = category, parent = parent)
+        return value
+
+    def _parseSwValueCont(self, xmlRoot):
+        unitRef = None
+        valueList = []
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == 'UNIT-REF':
+                unitRef = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'SW-VALUES-PHYS':
+                for xmlChild in xmlElem.findall('./*'):
+                    if xmlChild.tag == 'V':
+                        valueList.append(self.parseNumberNode(xmlChild))
+                    else:
+                        raise NotImplementedError(xmlChild.tag)
+            else:
+                raise NotImplementedError(xmlElem.tag)
+        if len(valueList)==0:
+            valueList = None
+        return autosar.constant.SwValueCont(valueList, unitRef)
+
+    def _parseSwAxisCont(self, xmlRoot):
+        unitRef = None
+        valueList = []
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == 'UNIT-REF':
+                unitRef = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'SW-VALUES-PHYS':
+                for xmlChild in xmlElem.findall('./*'):
+                    if xmlChild.tag == 'V':
+                        valueList.append(self.parseNumberNode(xmlChild))
+                    else:
+                        raise NotImplementedError(xmlChild.tag)
+            else:
+                raise NotImplementedError(xmlElem.tag)
+        if len(valueList)==0:
+            valueList = None
+        return autosar.constant.SwAxisCont(valueList, unitRef)
