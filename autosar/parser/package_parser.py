@@ -58,6 +58,12 @@ class PackageParser:
         elif self.version >= 4.0:
             for subPackageXML in xmlRoot.findall('./AR-PACKAGES/AR-PACKAGE'):
                 name = parseTextNode(subPackageXML.find("./SHORT-NAME"))
-                subPackage = autosar.package.Package(name)
+                subPackage = package.find(name)
+                if subPackage is None:
+                    isNewPackage = True
+                    subPackage = autosar.package.Package(name)
+                else:
+                    isNewPackage = False
                 self.loadXML(subPackage, subPackageXML)
-                package.append(subPackage)
+                if isNewPackage:
+                    package.append(subPackage)
