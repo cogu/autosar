@@ -286,3 +286,6 @@ class InvalidCompuMethodRef(ValueError):
 
 class DataConstraintError(ValueError):
     pass
+
+class InvalidMappingRef(ValueError):
+    pass

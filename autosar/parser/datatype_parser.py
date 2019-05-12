@@ -130,22 +130,15 @@ class DataTypeParser(ElementParser):
     def _parseDataConstraintRule(self, xmlElem, constraintType):
         lowerLimitXML = xmlElem.find('./LOWER-LIMIT')
         upperLimitXML = xmlElem.find('./UPPER-LIMIT')
-        lowerLimit = self.parseTextNode(lowerLimitXML)
-        upperLimit = self.parseTextNode(upperLimitXML)
+        lowerLimit = None if lowerLimitXML is None else self.parseNumberNode(lowerLimitXML)
+        upperLimit = None if upperLimitXML is None else self.parseNumberNode(upperLimitXML)
         lowerLimitType = 'CLOSED'
         upperLimitType = 'CLOSED'
-        if lowerLimitXML.attrib['INTERVAL-TYPE']=='OPEN':
+        key = 'INTERVAL-TYPE'
+        if lowerLimitXML is not None and key in lowerLimitXML.attrib and lowerLimitXML.attrib[key]=='OPEN':
             lowerLimitType='OPEN'
-        if upperLimitXML.attrib['INTERVAL-TYPE']=='OPEN':
+        if upperLimitXML is not None and key in upperLimitXML.attrib and upperLimitXML.attrib[key]=='OPEN':
             upperLimitType='OPEN'
-        try:
-            lowerLimit = int(lowerLimit)
-        except ValueError:
-            lowerLimit = str(lowerLimit)
-        try:
-            upperLimit = int(upperLimit)
-        except ValueError:
-            upperLimit = str(upperLimit)
         return {
             'type': constraintType,
             'lowerLimit': lowerLimit,
@@ -167,6 +160,8 @@ class DataTypeParser(ElementParser):
                 dynamicArraySizeProfile = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'SUB-ELEMENTS':
                 subElementsXML = xmlElem
+            elif xmlElem.tag == 'SYMBOL-PROPS':
+                pass #implement later
             else:
                 self.defaultHandler(xmlElem)
 
@@ -205,6 +200,8 @@ class DataTypeParser(ElementParser):
                 arraySize = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'ARRAY-SIZE-SEMANTICS':
                 arraySizeSemantics = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'SUB-ELEMENTS':
+                pass #implement later
             else:
                 self.defaultHandler(xmlElem)
         elem = autosar.datatype.ImplementationDataTypeElement(self.name, self.category, arraySize, arraySizeSemantics, variants, parent, self.adminData)
@@ -223,6 +220,10 @@ class DataTypeParser(ElementParser):
                 baseTypeEncoding = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'NATIVE-DECLARATION':
                 nativeDeclaration = self.parseTextNode(xmlElem)            
+            elif xmlElem.tag == 'MEM-ALIGNMENT':
+                pass #implement later
+            elif xmlElem.tag == 'BYTE-ORDER':
+                pass #implement later
             else:
                 self.defaultHandler(xmlElem)
         elem = autosar.datatype.SwBaseType(self.name, baseTypeSize, baseTypeEncoding, nativeDeclaration, self.category, parent, self.adminData)
@@ -246,11 +247,13 @@ class DataTypeParser(ElementParser):
                         dataTypeMaps.append(dataTypeMap)
                     else:
                         raise NotImplementedError(xmlElem.tag)
+            elif xmlElem.tag == 'MODE-REQUEST-TYPE-MAPS':
+                pass #Implement later
             else:
                 raise NotImplementedError(xmlElem.tag)
         if (name is None):
             raise RuntimeError('SHORT-NAME cannot be None')
-        elem = DataTypeMappingSet(name, parent, adminData)
+        elem = autosar.datatype.DataTypeMappingSet(name, parent, adminData)
         for dataTypeMap in dataTypeMaps:
             elem.add(dataTypeMap)
         return elem
@@ -279,6 +282,8 @@ class DataTypeParser(ElementParser):
                 element = self.parseApplicationArrayElement(xmlElem)
             elif xmlElem.tag == 'SW-DATA-DEF-PROPS':
                 variantProps = self.parseSwDataDefProps(xmlElem)
+            elif xmlElem.tag == 'DYNAMIC-ARRAY-SIZE-PROFILE':
+                pass #implement later
             else:
                 self.defaultHandler(xmlElem)
         if element is None:
@@ -313,6 +318,8 @@ class DataTypeParser(ElementParser):
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'ELEMENTS':
                 elementsXML = xmlElem
+            elif xmlElem.tag == 'SW-DATA-DEF-PROPS':
+                variantProps = self.parseSwDataDefProps(xmlElem)
             else:
                 self.defaultHandler(xmlElem)
         elem = autosar.datatype.ApplicationRecordDataType(self.name, None, variantProps, self.category, parent, self.adminData)
@@ -327,11 +334,13 @@ class DataTypeParser(ElementParser):
     
     def _parseApplicationRecordElementXML(self, xmlRoot, parent):
         assert (xmlRoot.tag == 'APPLICATION-RECORD-ELEMENT')
-        typeRef = None
+        typeRef, variantProps = None, None
         self.push()
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'TYPE-TREF':
                 typeRef = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'SW-DATA-DEF-PROPS':
+                variantProps = self.parseSwDataDefProps(xmlElem)                
             else:
                 self.defaultHandler(xmlElem)
         elem = autosar.datatype.ApplicationRecordElement(self.name, typeRef, self.category, parent, self.adminData)
@@ -410,7 +419,9 @@ class DataTypeSemanticsParser(ElementParser):
         offset, numerator, denominator, textValue, mask = None, None, None, None, None
 
         for xmlElem in xmlRoot.findall('./*'):
-            if xmlElem.tag == 'SHORT-LABEL':
+            if xmlElem.tag == 'DESC':
+                pass #implement later
+            elif xmlElem.tag == 'SHORT-LABEL':
                 label = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'LOWER-LIMIT':
                 lowerLimit = self.parseNumberNode(xmlElem)

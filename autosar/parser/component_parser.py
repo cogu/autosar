@@ -62,6 +62,8 @@ class ComponentTypeParser(ElementParser):
                'SERVICE-COMPONENT-TYPE': self.parseSoftwareComponent,
                'PARAMETER-SW-COMPONENT-TYPE': self.parseSoftwareComponent,
                'COMPOSITION-SW-COMPONENT-TYPE': self.parseCompositionType,
+               'SENSOR-ACTUATOR-SW-COMPONENT-TYPE': self.parseSoftwareComponent,
+               'SERVICE-SW-COMPONENT-TYPE': self.parseSoftwareComponent,
                'SWC-IMPLEMENTATION': self.parseSwcImplementation
             }
 
@@ -84,17 +86,21 @@ class ComponentTypeParser(ElementParser):
             componentType = autosar.component.ComplexDeviceDriverComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
         elif xmlRoot.tag == 'APPLICATION-SW-COMPONENT-TYPE': #for AUTOSAR 4.x
             componentType = autosar.component.ApplicationSoftwareComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
-        elif xmlRoot.tag == 'SERVICE-COMPONENT-TYPE':
+        elif (xmlRoot.tag == 'SERVICE-COMPONENT-TYPE') or (xmlRoot.tag == 'SERVICE-SW-COMPONENT-TYPE'):
             componentType = autosar.component.ServiceComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
         elif xmlRoot.tag == 'CALPRM-COMPONENT-TYPE': #for AUTOSAR 3.x
             componentType = autosar.component.ParameterComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
         elif xmlRoot.tag == 'PARAMETER-SW-COMPONENT-TYPE': #for AUTOSAR 4.x
             componentType = autosar.component.ParameterComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
+        elif xmlRoot.tag == 'SENSOR-ACTUATOR-SW-COMPONENT-TYPE': #for AUTOSAR 4.x
+            componentType = autosar.component.SensorActuatorComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
         else:
             raise NotImplementedError(xmlRoot.tag)
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag not in handledTags:
-                if xmlElem.tag == 'PORTS':
+                if (xmlElem.tag == 'ADMIN-DATA') or (xmlElem.tag == 'DESC'):
+                    pass #Implement later
+                elif xmlElem.tag == 'PORTS':
                     self.parseComponentPorts(componentType,xmlRoot)
                 elif xmlElem.tag == 'INTERNAL-BEHAVIORS':
                     behaviors = xmlElem.findall('./SWC-INTERNAL-BEHAVIOR')
@@ -197,6 +203,8 @@ class ComponentTypeParser(ElementParser):
                         elif xmlItem.tag == 'PARAMETER-PROVIDE-COM-SPEC':
                             comspec = self._parseParameterComSpec(xmlItem, portInterfaceRef)
                             port.comspec.append(comspec)
+                        elif xmlItem.tag == 'MODE-SWITCH-SENDER-COM-SPEC':
+                            pass #implement later
                         else:
                             raise NotImplementedError(xmlItem.tag)
                 componentType.providePorts.append(port)
@@ -219,6 +227,7 @@ class ComponentTypeParser(ElementParser):
         parses COMPOSITION-TYPE
         """
         assert (xmlRoot.tag=='COMPOSITION-TYPE') or (xmlRoot.tag=='COMPOSITION-SW-COMPONENT-TYPE')
+        dataTypeMappingRefs = None
         swc=autosar.component.CompositionComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'DESC':
@@ -235,9 +244,16 @@ class ComponentTypeParser(ElementParser):
                 else:
                     self.parseConnectorsV3(xmlElem,swc)
             elif xmlElem.tag == 'DATA-TYPE-MAPPING-REFS':
-                continue #implement later
+                dataTypeMappingRefs = []
+                for xmlChild in xmlElem.findall('./*'):
+                    if xmlChild.tag == 'DATA-TYPE-MAPPING-REF':
+                        tmp = self.parseTextNode(xmlChild)
+                        assert(tmp is not None)
+                        dataTypeMappingRefs.append(tmp)
             else:
                 raise NotImplementedError(xmlElem.tag)
+        if dataTypeMappingRefs is not None:
+            swc.dataTypeMappingRefs = dataTypeMappingRefs
         return swc
 
     def parseComponents(self,xmlRoot,parent):

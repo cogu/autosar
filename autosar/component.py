@@ -175,7 +175,11 @@ class ComplexDeviceDriverComponent(AtomicSoftwareComponent):
         super().__init__(name,parent)
 
 class ServiceComponent(AtomicSoftwareComponent):
-    def tag(self,version=None): return "SERVICE-COMPONENT-TYPE"
+    def tag(self,version=None):
+        if version < 4.0:
+            return "SERVICE-COMPONENT-TYPE"
+        else:
+            return "SERVICE-SW-COMPONENT-TYPE"        
 
     def __init__(self,name,parent=None):
         super().__init__(name,parent)
@@ -189,38 +193,27 @@ class ParameterComponent(AtomicSoftwareComponent):
 
     def __init__(self,name,parent=None):
         super().__init__(name,parent)
+        
 
+class SensorActuatorComponent(AtomicSoftwareComponent):
+    def tag(self,version=None):
+        return "SENSOR-ACTUATOR-SW-COMPONENT-TYPE"
+
+    def __init__(self, name, parent=None):
+        super().__init__(name, parent)
+        
 class CompositionComponent(ComponentType):
     """
     Composition Component
     """
     def __init__(self,name,parent=None):
         super().__init__(name,parent)
-        self.components=[]
-        self.assemblyConnectors=[]
-        self.delegationConnectors=[]
+        self.components = []
+        self.assemblyConnectors = []
+        self.delegationConnectors = []
+        self.dataTypeMappingRefs = []
 
     def tag(self,version): return 'COMPOSITION-SW-COMPONENT-TYPE' if version >= 4.0 else 'COMPOSITION-TYPE'
-
-    def asdict(self):
-        data={'type': self.__class__.__name__,'name':self.name,'requirePorts':[],'providePorts':[],'components':[],
-           'assemblyConnectors':[], 'delegationConnectors':[]}
-        for port in self.requirePorts:
-            data['requirePorts'].append(port.asdict())
-        for port in self.providePorts:
-            data['providePorts'].append(port.asdict())
-        for component in self.components:
-            data['components'].append(component.asdict())
-        for connector in self.assemblyConnectors:
-            data['assemblyConnectors'].append(connector.asdict())
-        for connector in self.delegationConnectors:
-            data['delegationConnectors'].append(connector.asdict())
-        if len(data['requirePorts'])==0: del data['requirePorts']
-        if len(data['providePorts'])==0: del data['providePorts']
-        if len(data['components'])==0: del data['components']
-        if len(data['assemblyConnectors'])==0: del data['assemblyConnectors']
-        if len(data['delegationConnectors'])==0: del data['delegationConnectors']
-        return data
 
     def find(self,ref):
         parts=ref.partition('/')
@@ -428,6 +421,28 @@ class CompositionComponent(ComponentType):
             if connector.outerPortRef.portRef == outerPortRef:
                 return False
         return True
+    
+    def findMappedDataTypeRef(self, applicationDataTypeRef):
+        """
+        Returns a reference to the mapped implementation data type or None if not in map
+        """
+        ws = self.rootWS()
+        assert(ws is not None)
+        alreadyProcessed = set()
+        for mappingRef in self.dataTypeMappingRefs:
+            if mappingRef in alreadyProcessed:
+                continue
+            else:                
+                alreadyProcessed.add(mappingRef)
+                mappingSet = ws.find(mappingRef)
+                if mappingSet is None:
+                    raise autosar.base.InvalidMappingRef()
+                typeRef = mappingSet.findMappedDataTypeRef(applicationDataTypeRef)
+                if typeRef is not None:
+                    return typeRef
+        return None
+            
+        
 
 class Port(Element):
     def __init__(self,name, portInterfaceRef, comspec=None, parent=None, adminData=None):
@@ -635,7 +650,10 @@ class DataElementComSpec(object):
 
     @aliveTimeout.setter
     def aliveTimeout(self,val):
-        self._aliveTimeout = int(val)
+        try:
+            self._aliveTimeout = int(val)
+        except ValueError:
+            self._aliveTimeout = str(val)
 
     @property
     def queueLength(self):

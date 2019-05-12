@@ -162,7 +162,9 @@ class PortInterfacePackageParser(ElementParser):
             if hasAdminData(xmlRoot):
                 portInterface.adminData=parseAdminDataNode(xmlRoot.find('ADMIN-DATA'))
             for xmlElem in xmlRoot.findall('./*'):
-                if (xmlElem.tag == 'SHORT-NAME') or (xmlElem.tag == 'ADMIN-DATA'):
+                if xmlElem.tag == 'DESC':
+                    pass #implement later
+                elif (xmlElem.tag == 'SHORT-NAME') or (xmlElem.tag == 'ADMIN-DATA'):
                     continue
                 elif xmlElem.tag == 'IS-SERVICE':
                     if self.parseTextNode(xmlElem) == 'true':
@@ -242,7 +244,9 @@ class PortInterfacePackageParser(ElementParser):
     def _parseOperationPrototype(self, xmlOperation, parent):
         (name, xmlDesc, xmlArguments, xmlPossibleErrorRefs) = (None, None, None, None)
         for xmlElem in xmlOperation.findall('./*'):
-            if xmlElem.tag == 'SHORT-NAME':
+            if xmlElem.tag == 'ADMIN-DATA':
+                pass #implement later
+            elif xmlElem.tag == 'SHORT-NAME':
                 name = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'DESC':
                 xmlDesc = xmlElem
@@ -295,7 +299,9 @@ class PortInterfacePackageParser(ElementParser):
     def _parseOperationArgumentV4(self, xmlArgument, parent):
         (name, typeRef, direction, props_variants, serverArgumentImplPolicy) = (None, None, None, None, None)
         for xmlElem in xmlArgument.findall('./*'):
-            if xmlElem.tag == 'SHORT-NAME':
+            if xmlElem.tag == 'ADMIN-DATA':
+                pass #implement later
+            elif xmlElem.tag == 'SHORT-NAME':
                 name = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'TYPE-TREF':
                 typeRef = self.parseTextNode(xmlElem)
