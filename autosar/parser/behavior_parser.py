@@ -179,6 +179,14 @@ class BehaviorParser(ElementParser):
                             internalBehavior.exclusiveAreas.append(exclusiveArea)
                         else:
                             raise NotImplementedError(xmlChild.tag)
+                elif xmlElem.tag == 'PER-INSTANCE-PARAMETERS':
+                    pass #implement later
+                elif xmlElem.tag == 'EXPLICIT-INTER-RUNNABLE-VARIABLES':
+                    pass #implement later
+                elif xmlElem.tag == 'HANDLE-TERMINATION-AND-RESTART':
+                    pass #implement later
+                elif xmlElem.tag == 'STATIC-MEMORYS':
+                    pass #implement later
                 else:
                     raise NotImplementedError(xmlElem.tag)
             return internalBehavior
@@ -236,6 +244,18 @@ class BehaviorParser(ElementParser):
                     adminData=parseAdminDataNode(xmlElem)
                 elif xmlElem.tag == 'PARAMETER-ACCESSS':
                     xmlParameterAccessPoints = xmlElem
+                elif xmlElem.tag == 'MODE-SWITCH-POINTS':
+                    pass #implement later
+                elif xmlElem.tag == 'READ-LOCAL-VARIABLES':
+                    pass #implement later
+                elif xmlElem.tag == 'WRITTEN-LOCAL-VARIABLES':
+                    pass #implement later
+                elif xmlElem.tag == 'DATA-READ-ACCESSS':
+                    pass #implement later
+                elif xmlElem.tag == 'DATA-WRITE-ACCESSS':
+                    pass #implement later
+                elif xmlElem.tag == 'RUNS-INSIDE-EXCLUSIVE-AREA-REFS':
+                    pass #implement later                
                 else:
                     raise NotImplementedError(xmlElem.tag)
         runnableEntity = RunnableEntity(name, canBeInvokedConcurrently, symbol, parent)
@@ -306,9 +326,14 @@ class BehaviorParser(ElementParser):
                 for childElem in xmlElem.findall('./*'):
                     if childElem.tag == 'R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF':
                         if modeGroupInstanceRef is None:
-                            modeGroupInstanceRef=self._parseModeGroupInstanceRef(childElem)
+                            modeGroupInstanceRef=self._parseRequireModeGroupInstanceRef(childElem)
                         else:
                             NotImplementedError('Multiple instances of R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF not implemented')
+                    elif childElem.tag == 'P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF':
+                        if modeGroupInstanceRef is None:
+                            modeGroupInstanceRef=self._parseProvideModeGroupInstanceRef(childElem)
+                        else:
+                            NotImplementedError('Multiple instances of P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF not implemented')
                     else:
                         raise NotImplementedError(childElem.tag)
             else:
@@ -336,7 +361,7 @@ class BehaviorParser(ElementParser):
         if (name is not None) and (accessedParameter is not None):
             return ParameterAccessPoint(name, accessedParameter)
 
-    def _parseModeGroupInstanceRef(self, xmlRoot):
+    def _parseRequireModeGroupInstanceRef(self, xmlRoot):
         """parses <R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF>"""
         assert(xmlRoot.tag == 'R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF')
         (requirePortRef, modeGroupRef ) = (None, None)
@@ -349,9 +374,26 @@ class BehaviorParser(ElementParser):
                 raise NotImplementedError(xmlElem.tag)
         if requirePortRef is None:
             raise RuntimeError('CONTEXT-R-PORT-REF not set')
-        if requirePortRef is None:
+        if modeGroupRef is None:
             raise RuntimeError('TARGET-MODE-GROUP-REF not set')
         return ModeGroupInstanceRef(requirePortRef, modeGroupRef)
+
+    def _parseProvideModeGroupInstanceRef(self, xmlRoot):
+        """parses <P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF>"""
+        assert(xmlRoot.tag == 'P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF')
+        (providePortRef, modeGroupRef ) = (None, None)
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == 'CONTEXT-P-PORT-REF':
+                providePortRef = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'TARGET-MODE-GROUP-REF':
+                modeGroupRef = self.parseTextNode(xmlElem)
+            else:
+                raise NotImplementedError(xmlElem.tag)
+        if providePortRef is None:
+            raise RuntimeError('CONTEXT-P-PORT-REF not set')
+        if modeGroupRef is None:
+            raise RuntimeError('TARGET-MODE-GROUP-REF not set')
+        return ModeGroupInstanceRef(providePortRef, modeGroupRef)
 
 
     def parseModeInstanceRef(self, xmlRoot):

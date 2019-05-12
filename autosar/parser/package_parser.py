@@ -60,10 +60,6 @@ class PackageParser:
                 name = parseTextNode(subPackageXML.find("./SHORT-NAME"))
                 subPackage = package.find(name)
                 if subPackage is None:
-                    isNewPackage = True
                     subPackage = autosar.package.Package(name)
-                else:
-                    isNewPackage = False
-                self.loadXML(subPackage, subPackageXML)
-                if isNewPackage:
                     package.append(subPackage)
+                self.loadXML(subPackage, subPackageXML)

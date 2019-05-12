@@ -213,6 +213,8 @@ class BaseParser:
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'DESC':
                 pass #implement later
+            elif xmlElem.tag == 'CATEGORY':
+                pass #implement later
             elif xmlElem.tag == 'SHORT-NAME':
                 name = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'TYPE-TREF':
