@@ -207,6 +207,8 @@ class ConstantParser(ElementParser):
                 for xmlChild in xmlElem.findall('./*'):
                     if xmlChild.tag == 'V':
                         valueList.append(self.parseNumberNode(xmlChild))
+                    elif xmlChild.tag == 'VT':
+                        valueList.append(self.parseTextNode(xmlChild))
                     else:
                         raise NotImplementedError(xmlChild.tag)
             else:

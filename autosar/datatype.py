@@ -478,7 +478,7 @@ class DataConstraint(Element):
     def lowerLimit(self):
         if len(self.rules) == 1:
             return self.rules[0].lowerLimit
-        else:
+        else:            
             raise NotImplementedError('Only a single constraint rule supported')
 
     @property
@@ -502,7 +502,13 @@ class DataConstraint(Element):
         else:
             raise NotImplementedError('Only a single constraint rule supported')
 
-
+    def findByType(self, constraintType = 'internalConstraint'):
+        """
+        Returns the first constraint of the given constraint type (internalConstraint or physicalConstraint)
+        """
+        for rule in self.rules:
+            if (isinstance(rule, InternalConstraint) and constraintType == 'internalConstraint') or (isinstance(rule, PhysicalConstraint) and constraintType == 'physicalConstraint'):
+                return rule
 
 class ImplementationDataType(Element):
     def tag(self, version=None): return 'IMPLEMENTATION-DATA-TYPE'
@@ -760,8 +766,31 @@ class DataTypeMappingSet(Element):
         self.addDirect(dataTypeMap.applicationDataTypeRef, dataTypeMap.implementationDataTypeRef)
 
     def get(self, applicationDataTypeRef):
+        """
+        Returns an instance of DataTypeMap or None if not found.
+        """
         if applicationDataTypeRef in self.map:
             return DataTypeMap(applicationDataTypeRef,  self.map[applicationDataTypeRef])
+        return None
+    
+    def findMappedDataTypeRef(self, applicationDataTypeRef):
+        """
+        Returns a reference (str) to the mapped implementation data type or None if not found.
+        """
+        if applicationDataTypeRef in self.map:
+            return self.map[applicationDataTypeRef]
+        return None
+    
+    def findMappedDataType(self, applicationDataTypeRef):
+        """
+        Returns the instance of the mapped implementation data type.
+        This requires that both the DataTypeMappingSet and the implementation data type reference are in the same AUTOSAR workspace.
+        """
+        ws = self.rootWS()
+        if ws is not None:
+            implementationDataTypeRef = self.getDirect(applicationDataTypeRef)
+            if implementationDataTypeRef is not None:
+                return ws.find(implementationDataTypeRef)
         return None
 
 class DataTypeMap:
