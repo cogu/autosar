@@ -3,6 +3,33 @@ Data Types API (AR4)
 
 In AUTOSAR4 you can create different variants of implementation data types.
 
+.. _datatype-createImplementationDataType:
+
+.. py:method:: Package.createImplementationDataType(name : str, baseTypeRef : str, options)
+
+Arguments
+---------
+   
+   * name:
+   * baseTypeRef
+
+Optional Arguments
+------------------
+
+   * minVal:
+   * maxVal:
+   * valueTable:
+   * bitmask:
+   * offset:
+   * scaling:
+   * unit:
+   * forceFloatScaling:
+   * dataConstraint:
+   * swCalibrationAccess:
+   * typeEmitter:
+   * adminData:
+ 
+
 Type References
 ---------------
 

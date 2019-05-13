@@ -1,6 +1,6 @@
 import abc
 from collections import deque
-from autosar.base import (AdminData, SpecialDataGroup, SpecialData, SwDataDefPropsConditional, SwPointerTargetProps)
+from autosar.base import (AdminData, SpecialDataGroup, SpecialData, SwDataDefPropsConditional, SwPointerTargetProps, SymbolProps)
 from autosar.element import DataElement
 
 def _parseBoolean(value):
@@ -231,7 +231,19 @@ class BaseParser:
             return dataElement
         else:
             raise RuntimeError('SHORT-NAME and TYPE-TREF must not be None')
-
+    
+    def parseSymbolProps(self, xmlRoot):
+        assert(xmlRoot.tag == 'SYMBOL-PROPS')
+        name, symbol = None, None
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == 'SHORT-NAME':
+                name = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'SYMBOL':
+                symbol = self.parseTextNode(xmlElem)
+            else:
+                raise NotImplementedError(xmlElem.tag)
+        return SymbolProps(name, symbol)
+            
 class ElementParser(BaseParser, metaclass=abc.ABCMeta):
 
     def __init__(self, version=None):
