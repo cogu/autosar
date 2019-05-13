@@ -348,6 +348,18 @@ class BaseWriter:
         lines.append('</%s>'%elem.tag(self.version))
         return lines
 
+    def writeSymbolPropsXML(self, elem):
+        assert(isinstance(elem, autosar.base.SymbolProps))
+        lines=[]
+        lines.append('<%s>'%elem.tag(self.version))
+        if elem.name is not None:
+            lines.append(self.indent('<SHORT-NAME>{}</SHORT-NAME>'.format(elem.name),1))
+        if elem.symbol is not None:
+            lines.append(self.indent('<SYMBOL>{}</SYMBOL>'.format(elem.symbol),1))
+        lines.append('</%s>'%elem.tag(self.version))
+        return lines
+
+
     def _numberToString(self, x):
         if math.isinf(x) and x > 0:
             return 'INFINITE' if self.version < 4.0 else 'INF'

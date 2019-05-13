@@ -519,6 +519,7 @@ class ImplementationDataType(Element):
         self.typeEmitter = typeEmitter
         self.variantProps = []
         self.subElements = []
+        self.symbolProps = None
         if isinstance(variantProps, (autosar.base.SwDataDefPropsConditional, autosar.base.SwPointerTargetProps)):
             self.variantProps.append(variantProps)
         elif isinstance(variantProps, collections.Iterable):
@@ -575,6 +576,16 @@ class ImplementationDataType(Element):
             return self.variantProps[0].compuMethodRef
         else:
             raise RunTimeError('Element has no variantProps set')
+    
+    def setSymbolProps(self, name, symbol):
+        """
+        Sets SymbolProps for this data type
+        
+        Arguments:
+        name: <SHORT-NAME> (str)
+        symbol: <SYMBOL> (str)
+        """
+        self.symbolProps = autosar.base.SymbolProps( str(name), str(symbol))
 
 class SwBaseType(Element):
     def tag(self, version=None): return 'SW-BASE-TYPE'
