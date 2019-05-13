@@ -312,6 +312,8 @@ class XMLDataTypeWriter(ElementWriter):
             for subElem in elem.subElements:
                 lines.extend(self.indent(self.writeImplementationDataElementXML(ws, subElem),2))
             lines.append(self.indent("</SUB-ELEMENTS>", 1))
+        if elem.symbolProps is not None:
+            lines.extend(self.indent(self.writeSymbolPropsXML(elem.symbolProps),1))
         if elem.typeEmitter is not None:
             lines.append(self.indent("<TYPE-EMITTER>%s</TYPE-EMITTER>"%(elem.typeEmitter), 1))
         lines.append("</%s>"%elem.tag(self.version))

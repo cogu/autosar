@@ -246,6 +246,10 @@ class SwDataDefPropsConditional:
                 raise ValueError('invalid swImplPolicy value: ' +  value)
 
 class SwPointerTargetProps:
+    """
+    (AUTOSAR 4)
+    Implements <SW-POINTER-TARGET-PROPS>
+    """
     def tag(self, version=None): return 'SW-POINTER-TARGET-PROPS'
     def __init__(self, targetCategory=None, variants = None):
         self.targetCategory = targetCategory
@@ -257,7 +261,16 @@ class SwPointerTargetProps:
             else:
                 self.variants = list(variants)
 
-
+class SymbolProps:
+    """
+    (AUTOSAR 4)
+    Implements <SYMBOL-PROPS>
+    """
+    def tag(self, version=None): return 'SYMBOL-PROPS'
+    
+    def __init__(self, name = None, symbol = None):
+        self.name = name
+        self.symbol = symbol
 
 #Exceptions
 class InvalidUnitRef(ValueError):

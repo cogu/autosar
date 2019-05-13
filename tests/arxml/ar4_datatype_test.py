@@ -550,7 +550,7 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
         dt2 = ws2.find(dt1.ref)
         self.assertIsInstance(dt2, autosar.datatype.ImplementationDataType)        
-        compu2 = ws.find(dt2.compuMethodRef)
+        compu2 = ws2.find(dt2.compuMethodRef)
         self.assertIsInstance(compu2, autosar.datatype.CompuMethod)
         self.assertEqual(compu2.intToPhys.elements[0].mask, 1)
         self.assertEqual(compu2.intToPhys.elements[1].mask, 2)
@@ -560,9 +560,6 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         self.assertEqual(compu2.intToPhys.elements[5].mask, 32)
         self.assertEqual(compu2.intToPhys.elements[6].mask, 64)
         self.assertEqual(compu2.intToPhys.elements[7].mask, 128)
-        
-    
-    
     
     def test_create_float_value_type(self):
         ws = autosar.workspace(version="4.2.2")
@@ -600,6 +597,30 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
+    
+    def test_create_implementation_data_type_with_symbol_props(self):
+        ws = autosar.workspace(version="4.2.2")
+        _create_packages(ws)
+        _create_base_types(ws)
+    
+        package = ws['DataTypes']
+        dt1 = package.createImplementationDataType('RTCTime_T', '/DataTypes/BaseTypes/uint32', lowerLimit = 0, upperLimit = 0xFFFFFFFF, typeEmitter='RTE')
+        dt1.setSymbolProps('TimeStamp', 'TimeStampSym')
+        self.assertEqual(dt1.symbolProps.name, 'TimeStamp')
+        self.assertEqual(dt1.symbolProps.symbol, 'TimeStampSym')
+
+        file_name = 'ar4_implementation_data_type_with_symbol_props.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
+        
+        ws2 = autosar.workspace(ws.version_str)
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        dt2 = ws2.find(dt1.ref)
+        self.assertIsInstance(dt2, autosar.datatype.ImplementationDataType)
+        self.assertIsInstance(dt2.symbolProps, autosar.base.SymbolProps)
+        self.assertEqual(dt2.symbolProps.name, dt1.symbolProps.name)
+        self.assertEqual(dt2.symbolProps.symbol, dt1.symbolProps.symbol)
 
 if __name__ == '__main__':
     unittest.main()

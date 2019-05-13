@@ -149,7 +149,7 @@ class DataTypeParser(ElementParser):
 
     def parseImplementationDataType(self, xmlRoot, parent=None):
         assert (xmlRoot.tag == 'IMPLEMENTATION-DATA-TYPE')
-        variantProps, typeEmitter, parseTextNode, dynamicArraySizeProfile, subElementsXML  = None, None, None, None, None
+        variantProps, typeEmitter, parseTextNode, dynamicArraySizeProfile, subElementsXML, symbolProps = None, None, None, None, None, None
         self.push()
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'SW-DATA-DEF-PROPS':
@@ -161,7 +161,7 @@ class DataTypeParser(ElementParser):
             elif xmlElem.tag == 'SUB-ELEMENTS':
                 subElementsXML = xmlElem
             elif xmlElem.tag == 'SYMBOL-PROPS':
-                pass #implement later
+                symbolProps = self.parseSymbolProps(xmlElem)
             else:
                 self.defaultHandler(xmlElem)
 
@@ -176,6 +176,8 @@ class DataTypeParser(ElementParser):
             )
         if subElementsXML is not None:
             dataType.subElements = self.parseImplementationDataTypeSubElements(subElementsXML, dataType)
+        if symbolProps is not None:
+            dataType.symbolProps = symbolProps
         self.pop(dataType)
         return dataType
 
@@ -440,7 +442,7 @@ class DataTypeSemanticsParser(ElementParser):
             elif xmlElem.tag == 'COMPU-CONST':
                 textValue = self.parseTextNode(xmlElem.find('./VT'))
             elif xmlElem.tag == 'MASK':
-                mask = self.parseIntNode(xmlElem.find('./VT'))
+                mask = self.parseIntNode(xmlElem)
             else:
                 raise NotImplementedError(xmlElem.tag)
         compuScale = autosar.datatype.CompuScaleElement(lowerLimit, upperLimit, lowerLimitType, upperLimitType, label, symbol, adminData)
