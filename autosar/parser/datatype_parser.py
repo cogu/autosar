@@ -427,11 +427,11 @@ class DataTypeSemanticsParser(ElementParser):
                 label = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'LOWER-LIMIT':
                 lowerLimit = self.parseNumberNode(xmlElem)
-                if self.version >= 4.0:
+                if (self.version >= 4.0) and 'INTERVAL-TYPE' in xmlElem.attrib:
                     lowerLimitType = xmlElem.attrib['INTERVAL-TYPE']
             elif xmlElem.tag == 'UPPER-LIMIT':
                 upperLimit = self.parseNumberNode(xmlElem)
-                if self.version >= 4.0:
+                if (self.version >= 4.0) and 'INTERVAL-TYPE' in xmlElem.attrib:
                     upperLimitType = xmlElem.attrib['INTERVAL-TYPE']
             elif xmlElem.tag == 'COMPU-RATIONAL-COEFFS':
                 offset, numerator, denominator = self._parseCompuRationalXML(xmlElem)

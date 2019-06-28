@@ -4,7 +4,7 @@
     <AR-PACKAGE>
       <SHORT-NAME>ComponentTypes</SHORT-NAME>
       <ELEMENTS>
-        <SERVICE-COMPONENT-TYPE>
+        <SERVICE-SW-COMPONENT-TYPE>
           <SHORT-NAME>MyService</SHORT-NAME>
           <CATEGORY>ServiceComponent</CATEGORY>
           <PORTS>
@@ -43,7 +43,7 @@
               <SUPPORTS-MULTIPLE-INSTANTIATION>false</SUPPORTS-MULTIPLE-INSTANTIATION>
             </SWC-INTERNAL-BEHAVIOR>
           </INTERNAL-BEHAVIORS>
-        </SERVICE-COMPONENT-TYPE>
+        </SERVICE-SW-COMPONENT-TYPE>
         <SWC-IMPLEMENTATION>
           <SHORT-NAME>MyService_Implementation</SHORT-NAME>
           <CODE-DESCRIPTORS>
