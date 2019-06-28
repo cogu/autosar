@@ -163,7 +163,7 @@ class BaseParser:
                         raise NotImplementedError(subItemXML.tag)
             else:
                 raise NotImplementedError(itemXML.tag)
-        return variants
+        return variants if len(variants)>0 else None
 
     def parseSwDataDefPropsConditional(self, xmlRoot):
         assert (xmlRoot.tag == 'SW-DATA-DEF-PROPS-CONDITIONAL')
