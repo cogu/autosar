@@ -622,5 +622,19 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         self.assertEqual(dt2.symbolProps.name, dt1.symbolProps.name)
         self.assertEqual(dt2.symbolProps.symbol, dt1.symbolProps.symbol)
 
+    def test_auto_create_compumethod_and_unit(self):
+        ws = autosar.workspace(version="4.2.2")
+        _create_packages(ws)
+        _create_base_types(ws)
+    
+        datatypes = ws['DataTypes']
+        datatypes.createImplementationDataTypeRef('VehicleSpeed_T',
+                                                    implementationTypeRef = '/DataTypes/uint16',
+                                                    lowerLimit = 0,
+                                                    upperLimit = 65535,
+                                                    offset = 0,
+                                                    factor = 1/64)
+
+
 if __name__ == '__main__':
     unittest.main()
