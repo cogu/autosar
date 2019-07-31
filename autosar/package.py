@@ -981,7 +981,7 @@ class Package(object):
 
         adminDataObj = self._checkAdminData(adminData)
         unitObj = self._checkAndCreateUnit(ws, unit)
-        compuMethodObj = self._checkAndCreateCompuMethod(ws, self._createCompuMethodName(ws, name), unitObj, lowerLimit, upperLimit, offset, factor, bitmask, valueTable)
+        compuMethodObj = self._checkAndCreateCompuMethod(ws, self._createCompuMethodName(ws, name), unitObj, lowerLimit, upperLimit, offset, factor, bitmask, valueTable, forceFloat)
         if dataConstraint is None:
             dataConstraintObj = None
         else:
@@ -1193,7 +1193,7 @@ class Package(object):
                 (numerator, denominator) = (f.numerator, f.denominator)
         return (numerator, denominator)
 
-    def _checkAndCreateCompuMethod(self, ws, name, unitObj, lowerLimit, upperLimit, offset, factor, bitmaskTable, valueTable):
+    def _checkAndCreateCompuMethod(self, ws, name, unitObj, lowerLimit, upperLimit, offset, factor, bitmaskTable, valueTable, forceFloatScaling):
         """
         Returns CompuMethod object from the package with role 'CompuMethod'.
         If no CompuMethod exists with that name it will be created and then returned.
@@ -1211,6 +1211,18 @@ class Package(object):
             computation.createValueTable(valueTable)
         elif offset is not None and factor is not None:
             category = 'LINEAR'
+            if forceFloatScaling:
+                numerator = factor
+                denominator = 1
+            else:
+                f=Fraction.from_float(factor)
+                if f.denominator > 1000: #use the float version in case its not a rational number
+                    numerator = factor
+                    denominator = 1
+                else:
+                    numerator = f.numerator
+                    denominator = f.denominator
+            
             computation.createRationalScaling(offset, numerator, denominator, lowerLimit, upperLimit)
         if category is None:
             return None #Creating a compu method does not seem necessary
