@@ -35,7 +35,7 @@ datatypes.createImplementationDataTypeRef('VehicleSpeed_T',
                                        lowerLimit = 0,
                                        upperLimit = 65535,
                                        offset = 0,
-                                       factor = 1/64,
+                                       scaling = 1/64,
                                        unit = 'KmPerHour')
 
 #Example of using reference strings to find our data types

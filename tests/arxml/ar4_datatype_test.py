@@ -144,7 +144,7 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         _create_packages(ws)
         package = ws['DataTypes']
         unit_deg = package.createUnit('deg')
-        compuMethod1 = package.createCompuMethodLinear('Pitch_T', lowerLimit=0, upperLimit = 20340, offset = -90, factor = 1/128, unit = 'deg', forceFloat=False)
+        compuMethod1 = package.createCompuMethodLinear('Pitch_T', lowerLimit=0, upperLimit = 20340, offset = -90, scaling = 1/128, unit = 'deg', forceFloat=False)
         self.assertIsInstance(compuMethod1, autosar.datatype.CompuMethod)
         self.assertEqual('/DataTypes/CompuMethods/Pitch_T', compuMethod1.ref)        
         self.assertIsInstance(compuMethod1.intToPhys, autosar.datatype.Computation)
@@ -337,7 +337,7 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         _create_packages(ws)
         package = ws['DataTypes']        
         package.createUnit('deg')
-        package.createCompuMethodLinear('Pitch_T', lowerLimit=0, upperLimit = 20340, offset = -90, factor = 1/128, unit = 'deg')
+        package.createCompuMethodLinear('Pitch_T', lowerLimit=0, upperLimit = 20340, offset = -90, scaling = 1/128, unit = 'deg')
         dt1 = package.createApplicationPrimitiveDataType('Pitch_ADT', compuMethod='Pitch_T', unit = 'deg')
         self.assertIsInstance(dt1, autosar.datatype.ApplicationPrimitiveDataType)
         self.assertEqual(dt1.ref, '/DataTypes/Pitch_ADT')
@@ -360,7 +360,7 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         _create_packages(ws)
         package = ws['DataTypes']        
         package.createUnit('deg')
-        compuMethod = package.createCompuMethodLinear('Pitch_T', lowerLimit=0, upperLimit = 20340, offset = -90, factor = 1/128, unit = 'deg')
+        compuMethod = package.createCompuMethodLinear('Pitch_T', lowerLimit=0, upperLimit = 20340, offset = -90, scaling = 1/128, unit = 'deg')
         dataConstraint = package.createInternalDataConstraint('Pitch_T_DataConstr', lowerLimit = compuMethod.intToPhys.lowerLimit, upperLimit = compuMethod.intToPhys.upperLimit)
         dt1 = package.createApplicationPrimitiveDataType('Pitch_ADT', compuMethod = compuMethod.ref, dataConstraint = dataConstraint.ref, unit = 'deg')
         self.assertIsInstance(dt1, autosar.datatype.ApplicationPrimitiveDataType)
@@ -489,16 +489,16 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         package.createUnit('deg')
         package.createUnit('m')
         package.createUnit('kmPerHour')
-        compu = package.createCompuMethodLinear('Pitch_T', lowerLimit=0, upperLimit = 20340, offset = -90, factor = 1/128, unit = 'deg')
+        compu = package.createCompuMethodLinear('Pitch_T', lowerLimit=0, upperLimit = 20340, offset = -90, scaling = 1/128, unit = 'deg')
         constr = package.createInternalDataConstraint('Pitch_DataConstr', lowerLimit = compu.intToPhys.lowerLimit, upperLimit = compu.intToPhys.upperLimit)
         package.createApplicationPrimitiveDataType('Pitch_ADT', compuMethod = compu.ref, dataConstraint = constr.ref, unit = 'deg')
-        compu = package.createCompuMethodLinear('Yaw_T', lowerLimit=0, upperLimit = 46080, offset = 0, factor = 1/128, unit = 'deg')
+        compu = package.createCompuMethodLinear('Yaw_T', lowerLimit=0, upperLimit = 46080, offset = 0, scaling = 1/128, unit = 'deg')
         constr = package.createInternalDataConstraint('Yaw_DataConstr', lowerLimit = compu.intToPhys.lowerLimit, upperLimit = compu.intToPhys.upperLimit)
         package.createApplicationPrimitiveDataType('Yaw_ADT', compuMethod = compu.ref, dataConstraint = constr.ref, unit = 'deg')
-        compu = package.createCompuMethodLinear('Altitude_T', lowerLimit=0, upperLimit = 65535, offset = -2500, factor = 1/8, unit = 'm')
+        compu = package.createCompuMethodLinear('Altitude_T', lowerLimit=0, upperLimit = 65535, offset = -2500, scaling = 1/8, unit = 'm')
         constr = package.createInternalDataConstraint('Altitude_DataConstr', lowerLimit = compu.intToPhys.lowerLimit, upperLimit = compu.intToPhys.upperLimit)
         package.createApplicationPrimitiveDataType('Altitude_ADT', compuMethod = compu.ref, dataConstraint = constr.ref, unit = 'm')
-        compu = package.createCompuMethodLinear('VehicleSpeed_T', lowerLimit=0, upperLimit = 65535, offset = 0, factor = 1/64, unit = 'kmPerHour')
+        compu = package.createCompuMethodLinear('VehicleSpeed_T', lowerLimit=0, upperLimit = 65535, offset = 0, scaling = 1/64, unit = 'kmPerHour')
         constr = package.createInternalDataConstraint('VehicleSpeed_DataConstr', lowerLimit = compu.intToPhys.lowerLimit, upperLimit = compu.intToPhys.upperLimit)
         package.createApplicationPrimitiveDataType('VehicleSpeed_ADT', compuMethod = compu.ref, dataConstraint = constr.ref, unit = 'kmPerHour')
         
@@ -633,7 +633,7 @@ class ARXML4DataTypeTest(ARXMLTestClass):
                                                     lowerLimit = 0,
                                                     upperLimit = 65535,
                                                     offset = 0,
-                                                    factor = 1/64)
+                                                    scaling = 1/64)
 
 
 if __name__ == '__main__':
