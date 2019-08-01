@@ -14,7 +14,7 @@ class RecordTypeElement(Element):
     def tag(self, version=None): return 'RECORD-ELEMENT'
 
     def __init__(self, name, typeRef, parent = None, adminData = None):
-        super().__init__(parent, adminData)
+        super().__init__(name, parent, adminData)
         self.typeRef=typeRef
     def __eq__(self,other):
         if self is other: return True
@@ -135,19 +135,8 @@ class RecordDataType(DataType):
                 if isinstance(elem, RecordTypeElement):
                     self.elements.append(elem)
                     elem.parent=self
-                elif isinstance(elem, tuple):
-                    self.elements.append(RecordTypeElement(elem[0],elem[1],self))
-                elif isinstance(elem, collections.Mapping):
-                    self.elements.append(RecordTypeElement(elem['name'],elem['typeRef'],self))
                 else:
-                    raise ValueError('element must be either Mapping, RecordTypeElement or tuple')
-    def asdict(self):
-        data={'type': self.__class__.__name__,'name':self.name,'elements':[]}
-        if self.adminData is not None:
-            data['adminData']=self.adminData.asdict()
-        for elem in self.elements:
-            data['elements'].append(elem.asdict())
-        return data
+                    raise ValueError('Element must be an instance of RecordTypeElement')
     def __eq__(self, other):
         if self is other: return True
         if (self.name == other.name) and (len(self.elements)==len(other.elements)):
@@ -513,8 +502,7 @@ class DataConstraint(Element):
 class ImplementationDataType(Element):
     def tag(self, version=None): return 'IMPLEMENTATION-DATA-TYPE'
     def __init__(self, name, variantProps = None, dynamicArraySizeProfile = None, typeEmitter = None, category='VALUE', adminData=None, parent=None):
-        super().__init__(name, parent, adminData)
-        self.category = category
+        super().__init__(name, parent, adminData, category)        
         self.dynamicArraySizeProfile = dynamicArraySizeProfile
         self.typeEmitter = typeEmitter
         self.variantProps = []

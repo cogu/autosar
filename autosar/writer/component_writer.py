@@ -2,6 +2,7 @@ from autosar.writer.writer_base import ElementWriter
 import autosar.base
 import autosar.workspace
 import autosar.constant
+import autosar.mode
 from autosar.writer.behavior_writer import XMLBehaviorWriter
 
 class XMLComponentTypeWriter(ElementWriter):

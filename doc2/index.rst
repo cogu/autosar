@@ -1,24 +1,13 @@
-.. autosar documentation master file, created by
-   sphinx-quickstart on Sat Nov 11 15:24:59 2017.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
 
-Welcome to autosar's documentation!
-===================================
+The AUTOSAR Python module
+=========================
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
-
-   autosar3/index
-   autosar4/index
    
-
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   start
+   autosar3_api/index
+   autosar4_ref/index
+   autosar4_api/index
+   
+.. warning:: This is a preview of the new package documentation. If you want to try any code examples, checkout and install the feature/ar4_api branch from the autosar github repo.

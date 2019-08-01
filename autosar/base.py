@@ -3,7 +3,7 @@ import re
 
 pVersion = re.compile("(\d+)\.(\d+)\.(\d+)")
 
-class AdminData(object):
+class AdminData:
     def __init__(self):
         self.specialDataGroups = []
     def asdict(self):
@@ -244,6 +244,28 @@ class SwDataDefPropsConditional:
                 self._swImplPolicy = ucvalue
             else:
                 raise ValueError('invalid swImplPolicy value: ' +  value)
+    
+    def hasAnyProp(self):
+        """
+        Returns True if any internal attribute is not None, else False
+        Excludes attributes such as name, category and parent
+        """
+        retval = False
+        attr_names = ['baseTypeRef',
+                      'swCalibrationAccess',
+                      'swAddressMethodRef',
+                      'compuMethodRef',
+                      'dataConstraintRef',
+                      'implementationTypeRef',
+                      'swPointerTargetProps',
+                      'unitRef',
+                      'swImplPolicy'
+                      ]
+        for name in attr_names:
+            if getattr(self, name) is not None:
+                retval = True
+                break
+        return retval
 
 class SwPointerTargetProps:
     """

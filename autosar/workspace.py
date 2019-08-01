@@ -7,14 +7,15 @@ import os
 import ntpath
 import collections
 import re
-from autosar.parser.datatype_parser import (DataTypeParser, DataTypeSemanticsParser, DataTypeUnitsParser)
-from autosar.parser.portinterface_parser import (PortInterfacePackageParser,SoftwareAddressMethodParser,ModeDeclarationGroupPackageParser)
 #default parsers
+from autosar.parser.datatype_parser import (DataTypeParser, DataTypeSemanticsParser, DataTypeUnitsParser)
+from autosar.parser.portinterface_parser import (PortInterfacePackageParser,SoftwareAddressMethodParser)
 from autosar.parser.constant_parser import ConstantParser
 from autosar.parser.behavior_parser import BehaviorParser
 from autosar.parser.component_parser import ComponentTypeParser
 from autosar.parser.system_parser import SystemParser
 from autosar.parser.signal_parser import SignalParser
+from autosar.parser.mode_parser import ModeDeclarationParser
 #default writers
 from autosar.writer.datatype_writer import XMLDataTypeWriter, CodeDataTypeWriter
 from autosar.writer.constant_writer import XMLConstantWriter, CodeConstantWriter
@@ -22,6 +23,7 @@ from autosar.writer.portinterface_writer import XMLPortInterfaceWriter, CodePort
 from autosar.writer.component_writer import XMLComponentTypeWriter, CodeComponentTypeWriter
 from autosar.writer.behavior_writer import XMLBehaviorWriter, CodeBehaviorWriter
 from autosar.writer.signal_writer import SignalWriter
+from autosar.writer.mode_writer import XMLModeWriter
 
 _validWSRoles = ['DataType', 'Constant', 'PortInterface', 'ComponentType', 'ModeDclrGroup', 'CompuMethod', 'Unit',
                  'BaseType', 'DataConstraint']
@@ -564,7 +566,7 @@ class Workspace:
         parser.registerElementParser(DataTypeUnitsParser(self.version))
         parser.registerElementParser(PortInterfacePackageParser(self.version))
         parser.registerElementParser(SoftwareAddressMethodParser(self.version))
-        parser.registerElementParser(ModeDeclarationGroupPackageParser(self.version))
+        parser.registerElementParser(ModeDeclarationParser(self.version))
         parser.registerElementParser(ConstantParser(self.version))
         parser.registerElementParser(ComponentTypeParser(self.version))
         parser.registerElementParser(BehaviorParser(self.version))
@@ -583,3 +585,4 @@ class Workspace:
         writer.registerElementWriter(CodeComponentTypeWriter(self.version, self.patch))
         writer.registerElementWriter(CodeBehaviorWriter(self.version, self.patch))
         writer.registerElementWriter(SignalWriter(self.version, self.patch))
+        writer.registerElementWriter(XMLModeWriter(self.version, self.patch))

@@ -7,8 +7,7 @@ class XMLPortInterfaceWriter(ElementWriter):
 
         if self.version >= 3.0 and self.version < 4.0:
             self.switcher = {
-                             'SoftwareAddressMethod': self.writeSoftwareAddressMethodXML,
-                             'ModeDeclarationGroup': self.writeModeDeclarationGroupXML,
+                             'SoftwareAddressMethod': self.writeSoftwareAddressMethodXML,                             
                              'SenderReceiverInterface': self.writeSenderReceiverInterfaceXML,
                              'ParameterInterface': self.writeCalPrmInterfaceXML,
                              'ClientServerInterface': self.writeClientServerInterfaceXML,
@@ -16,7 +15,6 @@ class XMLPortInterfaceWriter(ElementWriter):
             }
         elif self.version >= 4.0:
             self.switcher = {
-                              'ModeDeclarationGroup': self.writeModeDeclarationGroupXML,
                               'ClientServerInterface': self.writeClientServerInterfaceXML,
                               'ModeSwitchInterface': self.writeModeSwitchInterfaceXML,
                               'SenderReceiverInterface': self.writeSenderReceiverInterfaceXML,
@@ -60,7 +58,7 @@ class XMLPortInterfaceWriter(ElementWriter):
             lines.append(self.indent('</DATA-ELEMENTS>',1))
         else:
             lines.append(self.indent('<DATA-ELEMENTS/>',1))
-        if portInterface.modeGroups is not None:
+        if len(portInterface.modeGroups) > 0:
             lines.append(self.indent('<MODE-GROUPS>',1))
             for group in portInterface.modeGroups:
                 lines.extend(self.indent(self.writeModeGroupXML(group),2))
@@ -123,9 +121,9 @@ class XMLPortInterfaceWriter(ElementWriter):
         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%portInterface.name,1))
         if portInterface.adminData is not None:
             lines.extend(self.indent(self.writeAdminDataXML(portInterface.adminData),1))
-        if len(portInterface.elements)>0:
+        if len(portInterface.parameters)>0:
             lines.append(self.indent('<PARAMETERS>',1))
-            for elem in portInterface.elements:
+            for elem in portInterface.parameters:
                 lines.extend(self.indent(self._writeParameterElement(elem, ws),2))
             lines.append(self.indent('</PARAMETERS>',1))
         else:
@@ -267,34 +265,6 @@ class XMLPortInterfaceWriter(ElementWriter):
         lines.append('<%s>'%addressMethod.tag(self.version))
         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%addressMethod.name,1))
         lines.append('</%s>'%addressMethod.tag(self.version))
-        return lines
-
-    def writeModeDeclarationGroupXML(self, modeDeclGroup):
-        assert(isinstance(modeDeclGroup,autosar.portinterface.ModeDeclarationGroup))
-        lines=[]
-        ws = modeDeclGroup.rootWS()
-        assert(ws is not None)
-
-        lines.append('<%s>'%modeDeclGroup.tag(self.version))
-        lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%modeDeclGroup.name,1))
-        if modeDeclGroup.category is not None:
-            lines.append(self.indent('<CATEGORY>%s</CATEGORY>'%modeDeclGroup.category,1))
-        if modeDeclGroup.adminData is not None:
-            lines.extend(self.indent(self.writeAdminDataXML(modeDeclGroup.adminData),1))
-        if modeDeclGroup.initialModeRef is not None:
-            modeElem = ws.find(modeDeclGroup.initialModeRef)
-            if (modeElem is None):
-                raise ValueError("invalid mode reference: '%s'"%modeDeclGroup.typeRef)
-            else:
-                lines.append(self.indent('<INITIAL-MODE-REF DEST="%s">%s</INITIAL-MODE-REF>'%(modeElem.tag(self.version),modeElem.ref),1))
-        if len(modeDeclGroup.modeDeclarations)>0:
-            lines.append(self.indent('<MODE-DECLARATIONS>',1))
-            for elem in modeDeclGroup.modeDeclarations:
-                lines.append(self.indent('<%s>'%elem.tag(self.version),2))
-                lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,3))
-                lines.append(self.indent('</%s>'%elem.tag(self.version),2))
-            lines.append(self.indent('</MODE-DECLARATIONS>',1))
-        lines.append('</%s>'%modeDeclGroup.tag(self.version))
         return lines
 
     def writeModeSwitchInterfaceXML(self, portInterface):

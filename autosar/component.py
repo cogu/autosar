@@ -1,6 +1,7 @@
 from autosar.element import Element
 import autosar.portinterface
 import autosar.constant
+import autosar.builder
 import copy
 import collections
 import sys
@@ -10,16 +11,6 @@ class ComponentType(Element):
         super().__init__(name,parent)
         self.requirePorts=[]
         self.providePorts=[]
-
-    def asdict(self):
-        data={'type': self.__class__.__name__, 'name':self.name, 'requirePorts':[], 'providePorts':[]}
-        for port in self.requirePorts:
-            data['requirePorts'].append(port.asdict())
-        for port in self.providePorts:
-            data['providePorts'].append(port.asdict())
-        if len(data['requirePorts'])==0: del data['requirePorts']
-        if len(data['providePorts'])==0: del data['providePorts']
-        return data
 
     def find(self,ref):
         ref=ref.partition('/')
@@ -44,70 +35,93 @@ class ComponentType(Element):
     def __getitem__(self,key):
         return self.find(key)
 
-    def createProvidePort(self,name,portInterfaceRef,elemName=None,initValueRef=None,canInvalidate=False):
-        ws = self.rootWS()
-        assert(ws is not None)
-        portInterface = ws.find(portInterfaceRef, role='PortInterface')
-        if portInterface is None:
-            raise ValueError('invalid reference: '+portInterfaceRef)
-        if isinstance(portInterface, autosar.portinterface.SenderReceiverInterface):
-            comspec={'canInvalidate':canInvalidate}
-            if initValueRef is not None:
-                comspec['initValueRef']=initValueRef
-            if elemName is not None:
-                comspec['name']=elemName
-        elif isinstance(portInterface,autosar.portinterface.ClientServerInterface):
-            comspec=[]
-            for operation in portInterface.operations:
-                comspec.append({'operation': operation.name})
-        elif isinstance(portInterface,autosar.portinterface.ParameterInterface):
-            pass
-        else:
-            raise NotImplementedError(type(portInterface))
-        port = ProvidePort(name,portInterface.ref,comspec,parent=self)
-        self.providePorts.append(port)
-        return port
-
-    def createRequirePort(self, name, portInterfaceRef, elemName=None, initValue=None, initValueRef=None, aliveTimeout=0, canInvalidate=False, queueLength=None):
+    def createProvidePort(self, name, portInterfaceRef, **kwargs):
         """
-        creates a require port on this ComponentType
+        Creates a provide port on this ComponentType
         The ComponentType must have a valid ref (must belong to a valid package in a valid workspace).
+        Parameters:
+
+        - name: Name of the port
+        - portInterfaceRef: Reference to existing port interface
+        - comspec: This is an advanced way to create comspecs directly in the port.
+
+        For SenderReceiver port interfaces which contains exactly one data element there is another way of creating ComSpecs.
+        - comspec: Should be left as None.
+        - initValue: Used to set an init value literal.
+        - initValueRef: Used instead of initValue when you want to reference an existing constant specification.
+        - aliveTimeout: Alive timeout setting (in seconds).
+        - queueLength: Length of queue (only applicable for port interface with isQueued property).
+        - canInvalidate: Invalidation property (boolean). (AUTOSAR3 only?)
+
+        For Parameter port interfaces you can use these parameters:
+        - initValue (int, float or str): Init value literal
+
+        For ModeSwitch port interfaces these parameters are valid:
+        - enhancedMode (bool): sets the enhancedMode property
+        - supportAsync (bool): sets the supportAsync property
+
         """
-        comspec = None
+        comspec = kwargs.get('comspec', None)
+        if comspec is not None:
+            if isinstance(comspec, collections.Mapping):
+                comspecList = [comspec]
+            elif isinstance(comspec, collections.Iterable):
+                comspecList = list(comspec)
+            else:
+                raise ValueError('comspec argument must be of type dict or list')
+        else:
+            comspecList = None
         assert (self.ref is not None)
         ws = self.rootWS()
         assert(ws is not None)
         portInterface = ws.find(portInterfaceRef, role='PortInterface')
         if portInterface is None:
-            raise ValueError('invalid reference: '+portInterfaceRef)
-        if isinstance(portInterface,autosar.portinterface.SenderReceiverInterface):
-            if len(portInterface.dataElements)>0:
-                comspec={'canInvalidate':canInvalidate,'aliveTimeout':aliveTimeout}
-                if initValue is not None:
-                    if initValueRef is not None:
-                        raise ValueError('A port cannot have both initValue and initValueRef set at the same time')
-                    comspec['initValue']=initValue
-                if initValueRef is not None:
-                    if initValue is not None:
-                        raise ValueError('A port cannot have both initValue and initValueRef set at the same time')
-                    comspec['initValueRef']=initValueRef
-                if elemName is not None:
-                    comspec['name']=elemName
-                if queueLength is not None:
-                    comspec['queueLength']=int(queueLength)
-        elif isinstance(portInterface,autosar.portinterface.ClientServerInterface):
-            comspec=[]
-            for operation in portInterface.operations:
-                comspec.append({'operation': operation.name})
-        elif isinstance(portInterface,autosar.portinterface.ParameterInterface):
-            comspec={}
-            if initValue is not None:
-                comspec['initValue']=initValue
-        elif isinstance(portInterface,autosar.portinterface.ModeSwitchInterface):
-            comspec={'enhancedMode':False, 'supportAsync':False}
+            raise autosar.base.InvalidPortInterfaceRef(portInterfaceRef)
+        if comspecList is None:
+            comspecList = self._autoCreateComSpecListFromPortInterface(ws, portInterface, kwargs)
+        port = ProvidePort(name, portInterface.ref, comspec, parent=self)
+        self.providePorts.append(port)
+        return port
+
+    def createRequirePort(self, name, portInterfaceRef, **kwargs):
+        #comspec=None, initValue=None, initValueRef=None, aliveTimeout=0, queueLength=None, canInvalidate=False , enhancedMode = None, supportAsync = None, api=None
+        """
+        Creates a require port on this ComponentType
+        The ComponentType must have a valid ref (must belong to a valid package in a valid workspace).
+        Parameters:
+
+        - name: Name of the port
+        - portInterfaceRef: Reference to existing port interface        
+        
+        For SenderReceiver port interfaces which contains one data element there is another way of creating ComSpecs.
+        - initValue (int, float, str): Used to set an init value literal.
+        - initValueRef (str): Used when you want an existing constant specification as your initValue.
+        - aliveTimeout(int): Alive timeout setting (in seconds).
+        - queueLength(int): Length of queue (only applicable for port interface with isQueued property).
+        - canInvalidate(bool): Invalidation property (boolean). (AUTOSAR3 only)
+
+        For Parameter port interfaces you can use these parameters:
+        - initValue (int, float or str): Init value literal
+
+        For ModeSwitch port interfaces these parameters are valid:
+        - enhancedMode (bool): sets the enhancedMode property
+        - supportAsync (bool): sets the supportAsync property
+
+        """
+        comspec = kwargs.get('comspec', None)
+        if comspec is not None:
+            comspecList = comspec
         else:
-            raise NotImplementedError(type(portInterface))
-        port = RequirePort(name,portInterface.ref,comspec,parent=self)
+            comspecList = None
+        assert (self.ref is not None)
+        ws = self.rootWS()
+        assert(ws is not None)
+        portInterface = ws.find(portInterfaceRef, role='PortInterface')
+        if portInterface is None:
+            raise autosar.base.InvalidPortInterfaceRef(portInterfaceRef)
+        if comspecList is None:
+            comspecList = self._autoCreateComSpecListFromPortInterface(ws, portInterface, kwargs)
+        port = RequirePort(name,portInterface.ref, comspecList, parent=self)
         self.requirePorts.append(port)
         return port
 
@@ -133,6 +147,61 @@ class ComponentType(Element):
         Adds a mirrored copy of a port (from another component)
         """
         self.append(otherPort.mirror())
+
+    def _autoCreateComSpecListFromPortInterface(self, ws, portInterface, kwargs):
+        """
+        Attempts to auto create comspec arguments for an R-Port-Prototpe based on port interface and user arguments
+        """
+        comspecList = []
+        if isinstance(portInterface, autosar.portinterface.SenderReceiverInterface):
+            if len(portInterface.dataElements)==1:
+                comspec={'dataElement': portInterface.dataElements[0].name}
+                initValue = kwargs.get('initValue', None)
+                initValueRef = kwargs.get('initValueRef', None)
+                queueLength = kwargs.get('queueLength', None)
+                
+                if initValue is not None:
+                    if initValueRef is not None:
+                        raise ValueError('A port cannot have both initValue and initValueRef set at the same time')
+                    comspec['initValue'] = initValue
+                if initValueRef is not None:
+                    if initValue is not None:
+                        raise ValueError('A port cannot have both initValue and initValueRef set at the same time')
+                    comspec['initValueRef'] = initValueRef
+                if queueLength is not None:
+                    comspec['queueLength'] = int(queueLength)
+                if ws.version >= 4.0:
+                    usesEndToEndProtection = kwargs.get('usesEndToEndProtection', None)
+                    if usesEndToEndProtection is not None:
+                        comspec['usesEndToEndProtection'] = bool(usesEndToEndProtection)                    
+                comspecList.append(comspec)
+
+        elif isinstance(portInterface,autosar.portinterface.ClientServerInterface):
+            for operation in portInterface.operations:
+                comspecList.append({'operation': operation.name})
+
+        elif isinstance(portInterface,autosar.portinterface.ParameterInterface):
+            if len(portInterface.parameters)==1:
+                initValue = kwargs.get('initValue', None)
+                comspec={'parameter': portInterface.parameters[0].name}
+                if initValue is not None:
+                    comspec['initValue'] = initValue
+                comspecList.append(comspec)
+
+        elif isinstance(portInterface,autosar.portinterface.ModeSwitchInterface):
+            enhancedMode = kwargs.get('enhancedMode', None)
+            supportAsync = kwargs.get('supportAsync', None)
+            comspec = {}        
+            if enhancedMode is not None:
+                comspec['enhancedMode']=bool(enhancedMode)
+            if supportAsync is not None:
+                comspec['supportAsync']=bool(supportAsync)
+            comspecList.append(comspec)
+        else:
+            raise NotImplementedError(type(portInterface))
+
+        return comspecList if len(comspecList) > 0 else None
+
 
 class AtomicSoftwareComponent(ComponentType):
     """
@@ -169,7 +238,7 @@ class ApplicationSoftwareComponent(AtomicSoftwareComponent):
         super().__init__(name,parent)
 
 class ComplexDeviceDriverComponent(AtomicSoftwareComponent):
-    def tag(self,version=None): return 'COMPLEX-DEVICE-DRIVER-SW-COMPONENT-TYPE' if version>=4.0 else 'COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE'    
+    def tag(self,version=None): return 'COMPLEX-DEVICE-DRIVER-SW-COMPONENT-TYPE' if version>=4.0 else 'COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE'
 
     def __init__(self,name,parent=None):
         super().__init__(name,parent)
@@ -179,7 +248,7 @@ class ServiceComponent(AtomicSoftwareComponent):
         if version < 4.0:
             return "SERVICE-COMPONENT-TYPE"
         else:
-            return "SERVICE-SW-COMPONENT-TYPE"        
+            return "SERVICE-SW-COMPONENT-TYPE"
 
     def __init__(self,name,parent=None):
         super().__init__(name,parent)
@@ -193,7 +262,7 @@ class ParameterComponent(AtomicSoftwareComponent):
 
     def __init__(self,name,parent=None):
         super().__init__(name,parent)
-        
+
 
 class SensorActuatorComponent(AtomicSoftwareComponent):
     def tag(self,version=None):
@@ -201,7 +270,7 @@ class SensorActuatorComponent(AtomicSoftwareComponent):
 
     def __init__(self, name, parent=None):
         super().__init__(name, parent)
-        
+
 class CompositionComponent(ComponentType):
     """
     Composition Component
@@ -231,6 +300,12 @@ class CompositionComponent(ComponentType):
 
     def createComponentRef(self, componentRef):
         """
+        Alias for createComponentPrototype
+        """
+        return self.createComponentPrototype(self, componentRef)
+
+    def createComponentPrototype(self, componentRef):
+        """
         creates a new ComponentPrototype object and appends it to the CompositionComponent
         """
         ws = self.rootWS()
@@ -240,6 +315,8 @@ class CompositionComponent(ComponentType):
         elem = ComponentPrototype(component.name, component.ref, self)
         self.components.append(elem)
         return elem
+
+
 
 
     def createConnector(self, portRef1, portRef2):
@@ -421,7 +498,7 @@ class CompositionComponent(ComponentType):
             if connector.outerPortRef.portRef == outerPortRef:
                 return False
         return True
-    
+
     def findMappedDataTypeRef(self, applicationDataTypeRef):
         """
         Returns a reference to the mapped implementation data type or None if not in map
@@ -432,7 +509,7 @@ class CompositionComponent(ComponentType):
         for mappingRef in self.dataTypeMappingRefs:
             if mappingRef in alreadyProcessed:
                 continue
-            else:                
+            else:
                 alreadyProcessed.add(mappingRef)
                 mappingSet = ws.find(mappingRef)
                 if mappingSet is None:
@@ -441,8 +518,8 @@ class CompositionComponent(ComponentType):
                 if typeRef is not None:
                     return typeRef
         return None
-            
-        
+
+
 
 class Port(Element):
     def __init__(self,name, portInterfaceRef, comspec=None, parent=None, adminData=None):
@@ -469,52 +546,34 @@ class Port(Element):
             else:
                 raise NotImplementedError("not supported")
 
-    @property
-    def ref(self):
-        if self.parent is not None:
-            return self.parent.ref+'/%s'%self.name
-        else:
-            return '/%s'%self.name
-
-    def rootWS(self):
-        if self.parent is None:
-            return None
-        else:
-            return self.parent.rootWS()
-
-    def asdict(self):
-        data={'type': self.__class__.__name__,'name':self.name, 'portInterfaceRef':self.portInterfaceRef, 'attributes':[]}
-        for attribute in self.attributes:
-            data['attributes'].append(attribute.asdict())
-        if len(data['attributes'])==0: del data['attributes']
-        return data
-
-    def createComSpecFromDict(self,ws,portInterfaceRef,comspec):
+    def createComSpecFromDict(self, ws, portInterfaceRef, comspec):
         assert(ws is not None)
         assert(isinstance(comspec,dict))
+        valueBuilder = autosar.builder.ValueBuilder()
         portInterface=ws.find(portInterfaceRef, role='PortInterface')
         if portInterface is None:
             raise ValueError("invalid reference: "+portInterfaceRef)
         if isinstance(portInterface,autosar.portinterface.SenderReceiverInterface):
-            name=None
-            userInitValue=None
+            dataElementName=None
+            rawInitValue=None
+            initValue = None
             initValueRef=None #initValue and initValueRef are mutually exclusive, you cannot have both defined at the same time
             aliveTimeout=0
             queueLength=None
             canInvalidate=False if isinstance(self,ProvidePort) else None
-            if 'name' in comspec: name=str(comspec['name'])
-            if 'initValue' in comspec: userInitValue=comspec['initValue']
+
+            if 'dataElement' in comspec: dataElementName=str(comspec['dataElement'])
+            if 'initValue' in comspec: rawInitValue=comspec['initValue']
             if 'initValueRef' in comspec: initValueRef=str(comspec['initValueRef'])
             if 'aliveTimeout' in comspec: aliveTimeout=int(comspec['aliveTimeout'])
             if 'queueLength' in comspec: queueLength=int(comspec['queueLength'])
             if 'canInvalidate' in comspec: canInvalidate=bool(comspec['canInvalidate'])
-            if name is None:
-                #pick the name of the first available data element in portInterface
-                name=portInterface.dataElements[0].name
-            #verify (user-supplied) name
-            dataElement=portInterface.find(name)
+            if (dataElementName is None) and (len(portInterface.dataElements)==1):
+                dataElementName=portInterface.dataElements[0].name
+            #verify dataElementName
+            dataElement=portInterface.find(dataElementName)
             if dataElement is None:
-                raise ValueError("unknown element '%s' of portInterface '%s'"%(name,portInterface.name))
+                raise ValueError("unknown element '%s' of portInterface '%s'"%(dataElementName,portInterface.name))
             #verify compatibility of initValueRef
             if initValueRef is not None:
                 initValueTmp = ws.find(initValueRef, role='Constant')
@@ -535,13 +594,20 @@ class Port(Element):
             #automatically set default value of queueLength  to 1 in case the dataElement is queued
             if isinstance(self, RequirePort) and dataElement.isQueued and ( (queueLength is None) or queueLength==0):
                 queueLength=1
-            if userInitValue is not None:
-                if not isinstance(userInitValue, autosar.constant.Value):
-                    raise ValueError('initValue must be an instance of autosar.constant.Value or one of its derived classes')
-            return DataElementComSpec(name, userInitValue, initValueRef, aliveTimeout, queueLength, canInvalidate)
+            if rawInitValue is not None:
+                if isinstance(rawInitValue, autosar.constant.Value):
+                    initValue = rawInitValue
+                elif isinstance(rawInitValue, (int, float, str)):
+                    dataType = ws.find(dataElement.typeRef, role='DataType')
+                    if dataType is None:
+                        raise autosar.base.InvalidDataTypeRef(dataElement.typeRef)
+                    initValue = valueBuilder.buildFromDataType(dataType, rawInitValue)
+                else:
+                    raise ValueError('initValue must be an instance of (autosar.constant.Value, int, float, str)')
+            return DataElementComSpec(dataElement.name, initValue, initValueRef, aliveTimeout, queueLength, canInvalidate)
         elif isinstance(portInterface,autosar.portinterface.ClientServerInterface):
-            operation = comspec.get('operation',None)
-            queueLength = comspec.get('queueLength',1)
+            operation = comspec.get('operation', None)
+            queueLength = comspec.get('queueLength', 1)
             if operation is not None:
                 return OperationComSpec(operation,queueLength)
         elif isinstance(portInterface, autosar.portinterface.ModeSwitchInterface):
@@ -556,21 +622,13 @@ class Port(Element):
             raise NotImplementedError(type(portInterface))
         return None
 
-
-
-
 class RequirePort(Port):
     def tag(self,version=None): return "R-PORT-PROTOTYPE"
-    def __init__(self,name,portInterfaceRef=None,comspec=None,parent=None):
-        if isinstance(name,str):
+    def __init__(self,name , portInterfaceRef=None, comspec=None, parent=None):
+        if isinstance(name, str):
             #normal constructor
             super().__init__(name, portInterfaceRef, comspec, parent)
-        elif isinstance(name,RequirePort):
-            other=name #alias
-            #copy constructor
-            super().__init__(other.name, other.portInterfaceRef, parent)
-            self.comspec=copy.deepcopy(other.comspec)
-        elif isinstance(name,ProvidePort):
+        elif isinstance(name, (RequirePort, ProvidePort)):
             other=name #alias
             #copy constructor
             super().__init__(other.name, other.portInterfaceRef, parent)
@@ -597,12 +655,7 @@ class ProvidePort(Port):
         if isinstance(name,str):
         #normal constructor
             super().__init__(name, portInterfaceRef, comspec, parent)
-        elif isinstance(name,ProvidePort):
-            other=name #alias
-            #copy constructor
-            super().__init__(other.name,other.portInterfaceRef,None)
-            self.comspec=copy.deepcopy(other.comspec)
-        elif isinstance(name,RequirePort):
+        elif isinstance(name, (RequirePort, ProvidePort)):
             other=name #alias
             #copy constructor
             super().__init__(other.name, other.portInterfaceRef, parent)
@@ -692,8 +745,6 @@ class ComponentPrototype(Element):
     def __init__(self,name,typeRef,parent=None):
         super().__init__(name,parent)
         self.typeRef=typeRef
-    def asdict(self):
-        return {'type': self.__class__.__name__,'name':self.name,'typeRef':self.typeRef}
 
     def tag(self, version=None): return 'SW-COMPONENT-PROTOTYPE' if version >= 4.0 else'COMPONENT-PROTOTYPE'
 

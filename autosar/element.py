@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as ElementTree
 import autosar.base
 
-class Element(object):
+class Element:
     def __init__(self, name, parent = None, adminData = None, category = None):
         if isinstance(adminData, dict):
             adminDataObj=autosar.base.createAdminData(adminData)
@@ -50,8 +50,8 @@ class Element(object):
 
 class DataElement(Element):
     def tag(self,version): return "VARIABLE-DATA-PROTOTYPE" if version >= 4.0 else "DATA-ELEMENT-PROTOTYPE"
-    def __init__(self, name, typeRef, isQueued=False, swAddressMethodRef=None, swCalibrationAccess=None, swImplPolicy = None, parent=None, adminData=None):
-        super().__init__(name,parent,adminData)
+    def __init__(self, name, typeRef, isQueued=False, swAddressMethodRef=None, swCalibrationAccess=None, swImplPolicy = None, category = None, parent=None, adminData=None):
+        super().__init__(name, parent, adminData, category)
         if isinstance(typeRef,str):
             self.typeRef=typeRef
         elif hasattr(typeRef,'ref'):
@@ -92,10 +92,3 @@ class DataElement(Element):
             self.dataConstraintRef = variant.dataConstraintRef
         else:
             raise NotImplementedError(type(variant))
-
-    # def asdict(self):
-    #    data = {'type': self.__class__.__name__, 'name': self.name, 'isQueued': self.isQueued, 'typeRef': self.typeRef}
-    #    data['adminData']=self.adminData.asdict() if self.adminData is not None else None
-    #    if len(self.swAddrMethodRefList)>0:
-    #       data['swAddrMethodRef']=self.swAddrMethodRefList[:]
-    #    return data
