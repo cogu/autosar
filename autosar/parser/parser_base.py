@@ -1,7 +1,7 @@
 import abc
 from collections import deque
 from autosar.base import (AdminData, SpecialDataGroup, SpecialData, SwDataDefPropsConditional, SwPointerTargetProps, SymbolProps)
-from autosar.element import DataElement
+import autosar.element
 
 def _parseBoolean(value):
     if value is None:
@@ -207,30 +207,29 @@ class BaseParser:
                 props.variants = self.parseSwDataDefProps(itemXML)
         return props
 
-    def parseVariableDataPrototype(self, xmlRoot, parent):
+    def parseVariableDataPrototype(self, xmlRoot, parent = None):
         assert(xmlRoot.tag == 'VARIABLE-DATA-PROTOTYPE')
-        (name, typeRef, props_variants, isQueued, adminData) = (None, None, None, False, None)
+        (typeRef, props_variants, isQueued) = (None, None, False)
+        self.push()
         for xmlElem in xmlRoot.findall('./*'):
-            if xmlElem.tag == 'DESC':
-                pass #implement later
-            elif xmlElem.tag == 'CATEGORY':
-                pass #implement later
-            elif xmlElem.tag == 'SHORT-NAME':
-                name = self.parseTextNode(xmlElem)
-            elif xmlElem.tag == 'TYPE-TREF':
+            if xmlElem.tag == 'TYPE-TREF':
                 typeRef = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'SW-DATA-DEF-PROPS':
                 props_variants = self.parseSwDataDefProps(xmlElem)
             elif xmlElem.tag == 'ADMIN-DATA':
                 adminData = self.parseAdminDataNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
-        if (name is not None) and (typeRef is not None):
-            dataElement = DataElement(name, typeRef, isQueued, parent = parent, adminData = adminData)
-            dataElement.setProps(props_variants[0])
+                self.defaultHandler(xmlElem)
+        if (self.name is not None) and (typeRef is not None):
+            dataElement = autosar.element.DataElement(self.name, typeRef, isQueued, category=self.category, parent = parent, adminData = self.adminData)
+            if (props_variants is not None) and len(props_variants) > 0:
+                dataElement.setProps(props_variants[0])
+            self.pop(dataElement)
             return dataElement
         else:
+            self.pop()
             raise RuntimeError('SHORT-NAME and TYPE-TREF must not be None')
+        
     
     def parseSymbolProps(self, xmlRoot):
         assert(xmlRoot.tag == 'SYMBOL-PROPS')

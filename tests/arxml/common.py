@@ -19,7 +19,7 @@ class ARXMLTestClass(unittest.TestCase):
         output_dir_full = os.path.join(os.path.dirname(__file__), cls.output_dir)
         os.rmdir(output_dir_full)
 
-    def save_and_check(self, ws, expected_file, generated_file, filters, force_copy=False):
+    def save_and_check(self, ws, expected_file, generated_file, filters = None, force_copy=False):
         expected_path = os.path.join(os.path.dirname(__file__), expected_file)
         generated_path = os.path.join(os.path.dirname(__file__), generated_file)
         ws.saveXML(generated_path, filters=filters)

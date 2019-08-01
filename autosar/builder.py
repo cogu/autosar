@@ -32,17 +32,13 @@ class ValueBuilder:
                     compuMethod = ws.find(variantProps.compuMethodRef, role='CompuMethod')
                     if compuMethod is None:
                         raise ValueError('{0.name}: Invalid CompuMethod reference: {1.compuMethodRef}'.format(dataType, variantProps))
-                    if isinstance(compuMethod, autosar.datatype.CompuMethodConst):
-                        textValue = compuMethod.textValue(rawValue)
-                        if textValue is None:
-                            raise ValueError('{0.name}: Could not find a text value that matches numerical value {1:d}'.format(dataType, rawValue) )
-                        value = autosar.constant.TextValue(name,textValue)
-                    elif isinstance(compuMethod, autosar.datatype.CompuMethodRational):
-                        if dataConstraint is not None:
-                            dataConstraint.check_value(rawValue)
-                        value = autosar.constant.NumericalValue(name, rawValue)
+                    computation = compuMethod.intToPhys
+                    if compuMethod.category == 'TEXTTABLE':
+                        #TODO: check textValue value here
+                        value = autosar.constant.TextValue(name, str(rawValue))
                     else:
-                        raise NotImplementedError(type(compuMethod))
+                        #TODO: check rawValue here
+                        value = autosar.constant.NumericalValue(name, rawValue)
             if value is None:
                 if dataType.category == 'VALUE':
                     if isinstance(rawValue, str):

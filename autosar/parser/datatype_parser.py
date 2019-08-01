@@ -1,6 +1,4 @@
 import sys
-#from autosar.base import parseXMLFile,splitRef,parseTextNode,hasAdminData,parseAdminDataNode
-
 from autosar.parser.parser_base import ElementParser
 import autosar.datatype
 

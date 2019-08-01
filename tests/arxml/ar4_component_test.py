@@ -87,6 +87,22 @@ class ARXML4ComponentTest(ARXMLTestClass):
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'component', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
+    
+    def test_create_composition_component(self):
+        ws = autosar.workspace(version="4.2.2")
+        _init_ws(ws)
+        package = ws.find('/ComponentTypes')
+        swc = package.createCompositionComponent('MyComposition')
+        swc.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV')
+        file_name = 'ar4_composition_swc.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'component', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
+        ws2 = autosar.workspace(ws.version_str)
+        
+
+        
+        
 
 if __name__ == '__main__':
     unittest.main()

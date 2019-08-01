@@ -29,6 +29,20 @@ class ARXML3DataTypeTest(ARXMLTestClass):
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataType'])
+    
+    def test_create_enumeration_types(self):
+        ws = autosar.workspace(version="3.0.2")
+        _create_packages(ws)
+        package = ws.find('/DataType')
+        package.createIntegerDataType('InactiveActive_T', valueTable=[
+            'InactiveActive_Inactive',
+            'InactiveActive_Active',
+            'InactiveActive_Error',
+            'InactiveActive_NotAvailable'])
+        file_name = 'ar3_enumeration_types.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/DataType'])
    
     def test_create_record_type_simple(self):
         ws = autosar.workspace(version="3.0.2")
@@ -36,7 +50,7 @@ class ARXML3DataTypeTest(ARXMLTestClass):
         _create_base_types(ws)
         package = ws.find('/DataType')
         
-        package.createRecordDataType('MyRecord_T',
+        dt1 = package.createRecordDataType('MyRecord_T',
                              elements = [
                                 ('UserId1', 'UInt16'),
                                 ('UserId2', 'UInt16'),

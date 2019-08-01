@@ -332,11 +332,15 @@ class BaseWriter:
         lines.append('<%s>'%elem.tag(self.version))
         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
         if self.version >= 4.0:
-            lines.append(self.indent('<SW-DATA-DEF-PROPS>',1))
+            variantList = []
             variant = autosar.base.SwDataDefPropsConditional(swAddressMethodRef = elem.swAddressMethodRef, swCalibrationAccess = elem.swCalibrationAccess, swImplPolicy = elem.swImplPolicy)
-            variant.dataConstraintRef = elem.dataConstraintRef
-            lines.extend(self.indent(self.writeSwDataDefPropsVariantsXML(ws, [variant]),2))
-            lines.append(self.indent('</SW-DATA-DEF-PROPS>',1))
+            if variant.hasAnyProp():
+                variantList.append(variant)
+            if len(variantList) > 0:
+                lines.append(self.indent('<SW-DATA-DEF-PROPS>',1))            
+                variant.dataConstraintRef = elem.dataConstraintRef
+                lines.extend(self.indent(self.writeSwDataDefPropsVariantsXML(ws, variantList),2))
+                lines.append(self.indent('</SW-DATA-DEF-PROPS>',1))
 
         typeElem = ws.find(elem.typeRef, role="DataType")
         if (typeElem is None):
