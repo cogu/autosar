@@ -874,7 +874,7 @@ class Package(object):
         self.append(dataType)
         return dataType
 
-    def createImplementationDataTypeRef(self, name, implementationTypeRef, lowerLimit = None, upperLimit = None, valueTable = None, bitmask = None, offset = None, factor = None, unit = None, forceFloat = False, dataConstraint = '', swCalibrationAccess = '', typeEmitter = None, lowerLimitType = None, upperLimitType = None, category = 'TYPE_REFERENCE', adminData = None):
+    def createImplementationDataTypeRef(self, name, implementationTypeRef, lowerLimit = None, upperLimit = None, valueTable = None, bitmask = None, offset = None, scaling = None, unit = None, forceFloat = False, dataConstraint = '', swCalibrationAccess = '', typeEmitter = None, lowerLimitType = None, upperLimitType = None, category = 'TYPE_REFERENCE', adminData = None):
         """
         AUTOSAR4
 
@@ -891,7 +891,7 @@ class Package(object):
             valueTable,
             bitmask,
             offset,
-            factor,
+            scaling,
             unit,
             forceFloat,
             dataConstraint,
@@ -946,7 +946,7 @@ class Package(object):
         self.append(newType)
         return newType
 
-    def createImplementationDataType(self, name, baseTypeRef, lowerLimit = None, upperLimit = None, valueTable = None, bitmask = None, offset = None, factor = None, unit = None, forceFloat = False, dataConstraint='', swCalibrationAccess = '', typeEmitter = None, lowerLimitType = None, upperLimitType = None, category='VALUE', adminData = None):
+    def createImplementationDataType(self, name, baseTypeRef, lowerLimit = None, upperLimit = None, valueTable = None, bitmask = None, offset = None, scaling = None, unit = None, forceFloat = False, dataConstraint='', swCalibrationAccess = '', typeEmitter = None, lowerLimitType = None, upperLimitType = None, category='VALUE', adminData = None):
         return self._createImplementationDataTypeInternal(
             name,
             baseTypeRef,
@@ -956,7 +956,7 @@ class Package(object):
             valueTable,
             bitmask,
             offset,
-            factor,
+            scaling,
             unit,
             forceFloat,
             dataConstraint,
@@ -1071,25 +1071,25 @@ class Package(object):
         unitElem = self._checkAndCreateUnit(ws, shortName, displayName, factor, offset, unitPackage)
         return unitElem
 
-    def createCompuMethodLinear(self, name, offset, factor, lowerLimit = None, upperLimit = None, lowerLimitType = 'CLOSED', upperLimitType = 'CLOSED', unit = None, defaultValue = None, label = 'SCALING', forceFloat = True, category = 'LINEAR', adminData = None):
+    def createCompuMethodLinear(self, name, offset, scaling, lowerLimit = None, upperLimit = None, lowerLimitType = 'CLOSED', upperLimitType = 'CLOSED', unit = None, defaultValue = None, label = 'SCALING', forceFloat = True, category = 'LINEAR', adminData = None):
         """
         Alias for createCompuMethodRational
         """
-        return self.createCompuMethodRational(name, offset, factor, lowerLimit, upperLimit, lowerLimitType, upperLimitType, unit, defaultValue, label, forceFloat, category, adminData)
+        return self.createCompuMethodRational(name, offset, scaling, lowerLimit, upperLimit, lowerLimitType, upperLimitType, unit, defaultValue, label, forceFloat, category, adminData)
 
-    def createCompuMethodRationalPhys(self, name, offset, factor, lowerLimit = None, upperLimit = None, lowerLimitType = 'CLOSED', upperLimitType = 'CLOSED', unit = None, defaultValue = None, label = 'SCALING', forceFloat = False, useIntToPhys=False, usePhysToInt = True, category = 'LINEAR', adminData = None):
+    def createCompuMethodRationalPhys(self, name, offset, scaling, lowerLimit = None, upperLimit = None, lowerLimitType = 'CLOSED', upperLimitType = 'CLOSED', unit = None, defaultValue = None, label = 'SCALING', forceFloat = False, useIntToPhys=False, usePhysToInt = True, category = 'LINEAR', adminData = None):
         """
         Alias for createCompuMethodRational but creates a PHYSICAL-TO-INTERNAL mapping by default
         """
-        return self.createCompuMethodRational(name, offset, factor, lowerLimit, upperLimit, lowerLimitType, upperLimitType, unit, defaultValue, label, forceFloat, useIntToPhys, usePhysToInt, category, adminData)
+        return self.createCompuMethodRational(name, offset, scaling, lowerLimit, upperLimit, lowerLimitType, upperLimitType, unit, defaultValue, label, forceFloat, useIntToPhys, usePhysToInt, category, adminData)
 
-    def createCompuMethodRational(self, name, offset, factor, lowerLimit = None, upperLimit = None, lowerLimitType = 'CLOSED', upperLimitType = 'CLOSED', unit = None, defaultValue = None, label = 'SCALING', forceFloat = False, useIntToPhys=True, usePhysToInt = False, category = 'LINEAR', adminData = None):
+    def createCompuMethodRational(self, name, offset, scaling, lowerLimit = None, upperLimit = None, lowerLimitType = 'CLOSED', upperLimitType = 'CLOSED', unit = None, defaultValue = None, label = 'SCALING', forceFloat = False, useIntToPhys=True, usePhysToInt = False, category = 'LINEAR', adminData = None):
         """
         Creates a new CompuMethodRational object and appends it to the package with package-role 'CompuMethod'
 
         name: <SHORT-NAME> (str)
         offset: offset (int or float)
-        factor: scaling factor (int, float or rational number). This together with offset creates the numerator and denominator.
+        scaling: scaling factor (int, float or rational number). This together with offset creates the numerator and denominator.
         lowerLimit: <LOWER-LIMIT> (int). Default = None.
         uppwerLimit: <UPPER-LIMIT> (int). Default = None.
         lowerLimitType: "INTERVAL-TYPE" of lowerLimit, str['OPEN', 'CLOSED']. Default='CLOSED'. Only applies when lowerLimit is not None.
@@ -1120,7 +1120,7 @@ class Package(object):
         adminDataObj = self._checkAdminData(adminData)
 
         compuMethod = autosar.datatype.CompuMethod(name, useIntToPhys, usePhysToInt, unitRef, category, compuMethodPackage, adminDataObj)
-        (numerator, denominator) = self._calcNumeratorDenominator(factor, forceFloat)
+        (numerator, denominator) = self._calcNumeratorDenominator(scaling, forceFloat)
         if useIntToPhys:
             compuMethod.intToPhys.createRationalScaling(
                 offset,
@@ -1181,19 +1181,19 @@ class Package(object):
 
 
 
-    def _calcNumeratorDenominator(self, factor, forceFloat = False):
+    def _calcNumeratorDenominator(self, scalingFactor, forceFloat = False):
 
         if forceFloat:
-           (numerator, denominator) = (float(factor), 1)
+           (numerator, denominator) = (float(scalingFactor), 1)
         else:
-            f=Fraction.from_float(factor)
+            f=Fraction.from_float(scalingFactor)
             if f.denominator > 10000: #use the float version in case its not a rational number
-                (numerator, denominator) = (float(factor), 1)
+                (numerator, denominator) = (float(scalingFactor), 1)
             else:
                 (numerator, denominator) = (f.numerator, f.denominator)
         return (numerator, denominator)
 
-    def _checkAndCreateCompuMethod(self, ws, name, unitObj, lowerLimit, upperLimit, offset, factor, bitmaskTable, valueTable, forceFloatScaling):
+    def _checkAndCreateCompuMethod(self, ws, name, unitObj, lowerLimit, upperLimit, offset, scaling, bitmaskTable, valueTable, forceFloatScaling):
         """
         Returns CompuMethod object from the package with role 'CompuMethod'.
         If no CompuMethod exists with that name it will be created and then returned.
@@ -1209,20 +1209,9 @@ class Package(object):
         elif valueTable is not None:
             category = 'TEXTTABLE'
             computation.createValueTable(valueTable)
-        elif offset is not None and factor is not None:
+        elif offset is not None and scaling is not None:
             category = 'LINEAR'
-            if forceFloatScaling:
-                numerator = factor
-                denominator = 1
-            else:
-                f=Fraction.from_float(factor)
-                if f.denominator > 1000: #use the float version in case its not a rational number
-                    numerator = factor
-                    denominator = 1
-                else:
-                    numerator = f.numerator
-                    denominator = f.denominator
-            
+            (numerator, denominator) = self._calcNumeratorDenominator(scaling, forceFloatScaling)            
             computation.createRationalScaling(offset, numerator, denominator, lowerLimit, upperLimit)
         if category is None:
             return None #Creating a compu method does not seem necessary
