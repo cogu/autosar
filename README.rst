@@ -1,47 +1,35 @@
 AUTOSAR
---------
+-------
 
-A set of python modules for working with `AUTOSAR <https://www.autosar.org/>`_ XML files
+A set of Python modules for working with `AUTOSAR <https://www.autosar.org/>`_ XML files.
 
-Current Status (last updated 2017-11-03)
-----------------------------------------
+The primary purpose of this package is to allow developers to programmatically create AUTOSAR components using Python scripting.
 
-Current Version: 0.3.4
-~~~~~~~~~~~~~~~~~~~~~~
+Advantages:
 
-* Basic AUTOAR 4 support (supports reading/writing existing XML files).
-* Supports custom XML readers and writers.
-* Filters support.
-* Template support.
+* Python scripts are easy to modify and can be versioned controlled.
+* Executing a Python script can quickly regenerate ARXML files (no need to store generated ARXML files under version control).
+* Allows teams to incrementally develop and maintain AUTOSAR models using Python.
 
-Installation (Requires Python3)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-**Windows**::
-
-   >pip install https://github.com/cogu/cfile/archive/v0.1.4.tar.gz
-   >pip install https://github.com/cogu/autosar/archive/v0.3.4.tar.gz
-
-**Linux/Cygwin**::
-   
-   $pip3 install https://github.com/cogu/cfile/archive/v0.1.4.tar.gz
-   $pip3 install https://github.com/cogu/autosar/archive/v0.3.4.tar.gz
-   
-Upcoming Version: 0.3.5 
-~~~~~~~~~~~~~~~~~~~~~~~
-
-* Update the documentation.
-* AUTOSAR 4 programmers API (create XML files programmatically).
-
+It is recommended that you use a commercial AUTOSAR toolchain to open and/or integrate ARXML files generated from Python.
 
 Prerequisites
 -------------
 
-- `Python 3.x <https://www.python.org/>`_
-- `cfile <https://github.com/cogu/cfile/>`_
+* `Python 3.x <https://www.python.org/>`_
+* `cfile <https://github.com/cogu/cfile/>`_
 
 Documentation
 -------------
-Documentation is currently outdated and requires major update. You can see the documentation for v0.3.3 `here <http://autosar.readthedocs.io/en/latest/>`_.
 
+The Python API and its documentation are currently being reworked in the feature/ar4_api branch. You can find an early preview `here <http://autosar.readthedocs.io/en/latest/>`_.
 
+Upcoming Releases
+-----------------
+
+autosar 0.3.6
+~~~~~~~~~~~~~~
+
+* New data type API (AUTOSAR4)
+* Documentation overhaul (AUTOSAR4)
+* Comprehensive unit tests (AUTOSAR3, AUTOSAR4)
