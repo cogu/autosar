@@ -41,13 +41,13 @@ Attributes
 Public Methods
 --------------
 
-* :ref:`portinterface_append`
+* :ref:`SenderReceiverInterface_append`
 
 
 Method Description
 ------------------
 
-.. _portinterface_append:
+.. _SenderReceiverInterface_append:
 
 append
 ~~~~~~

@@ -371,7 +371,7 @@ class Package(object):
         creates a new client server interface in current package
         name: name of the interface (string)
         operations: names of the operations in the interface (list of strings)
-        errors: possible errors dict containing key-value pair where key is the name and value is the error code (must be integer)
+        errors: Possible errors that can be returned. Can be a single instance of ApplicationError or a list of ApplicationError
         isService: True if this interface is a service interface (bool)
         adminData: optional admindata (dict or autosar.base.AdminData object)
         """

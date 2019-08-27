@@ -81,6 +81,7 @@ Public Methods
 **PortInterface**
 
 * :ref:`package_createSenderReceiverInterface`
+* :ref:`package_createClientServerInterface`
     
 Method Description
 ------------------
@@ -165,6 +166,25 @@ createSenderReceiverInterface
     :param str serviceKind: Optional serviceKind string
     :param adminData: Optional adminData
     :rtype: :ref:`portinterface_SenderReceiverInterface`
+
+.. _package_createClientServerInterface:
+
+createClientServerInterface
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+..  method:: Package.createClientServerInterface(name, operations, [errors=None], [isService=False], [serviceKind = None], [adminData=None])
+    
+    Creates a new :ref:`portinterface_clientServerInterface` and adds it to the package.
+    
+    :param str name: ShortName of the port interface
+    :param operations: List of names to be created as of :ref:`portinterface_Operation`
+    :type operations: list(str)
+    :param errors: Possible errors that can be returned. Errors must be assigned here first, before you can use them in individual operations.
+    :type errors: ApplicationError or list(ApplicationError)
+    :param bool isService: Set this to True for service interfaces
+    :param str serviceKind: Optional serviceKind string
+    :param adminData: Optional adminData
+    :rtype: :ref:`portinterface_clientServerInterface`
 
 .. _package_createCompositionComponent:
 

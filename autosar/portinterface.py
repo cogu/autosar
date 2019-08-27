@@ -148,7 +148,7 @@ class ClientServerInterface(PortInterface):
 
     def append(self,elem):
         """
-        adds elem to the self.operations or self.applicationErrors lists depending on type
+        Adds elem to the self.operations or self.applicationErrors lists depending on type
         """
         if isinstance(elem, Operation):
             self.operations.append(elem)
@@ -184,16 +184,6 @@ class Operation(Element):
     def __ne__(self, other):
         return not (self == other)
 
-    def asdict(self):
-        data = {'type': self.__class__.__name__, 'name':self.name, 'arguments':[]}
-        for arg in self.arguments:
-            data['arguments'].append(arg.asdict())
-        if len(self.errorRefs)>0:
-            data['errorRefs']=[]
-            for errorRef in self.errorRefs:
-                data['errorRefs'].append(errorRef)
-        return data
-
     def createOutArgument(self, name, typeRef, swCalibrationAccess = None, serverArgumentImplPolicy=None):
         ws = self.rootWS()
         assert(ws is not None)
@@ -224,9 +214,9 @@ class Operation(Element):
         self.arguments.append(argument)
         return argument
 
-    def append(self,elem):
+    def append(self, elem):
         """
-        adds elem to the self.arguments or self.errorRefs lists depending on type
+        Adds elem to the self.arguments or self.errorRefs lists depending on type
         """
         if isinstance(elem, Argument):
             self.arguments.append(elem)
@@ -242,14 +232,15 @@ class Operation(Element):
         return None
 
     @possibleErrors.setter
-    def possibleErrors(self, data):
+    def possibleErrors(self, values):
         if self.parent is None:
             raise ValueError('cannot call this method without valid parent object')
-        if isinstance(data, str):
-            data=[data]
-        if isinstance(data, collections.Iterable):
+        if isinstance(values, str):
+            values=[values]
+            
+        if isinstance(values, collections.Iterable):
             del self.errorRefs[:]
-            for name in data:
+            for name in values:
                 found=False
                 for error in self.parent.applicationErrors:
                     if error.name == name:

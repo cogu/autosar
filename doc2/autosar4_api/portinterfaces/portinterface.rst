@@ -16,7 +16,10 @@ PortInterface
 
 Base class for AUTOSAR port interfaces.
 
+**Derived Classes**:
+
 * :ref:`portinterface_SenderReceiverInterface`
+* :ref:`portinterface_ClientServerInterface`
 
 
 Attributes
@@ -28,8 +31,6 @@ Attributes
     +--------------------------+--------------------------+-------------------------------+
     | Name                     | Type                     | Description                   |
     +==========================+==========================+===============================+        
-    | **dataElements**         | list[DataElement]        | List of data elements         |
-    +--------------------------+--------------------------+-------------------------------+
     | **isService**            | Boolean                  | Is this a service interface?  |
     +--------------------------+--------------------------+-------------------------------+
     | **serviceKind**          | str                      | Optional service kind string  |
