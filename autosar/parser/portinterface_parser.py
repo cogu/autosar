@@ -286,6 +286,7 @@ class PortInterfacePackageParser(ElementParser):
                         else:
                             argument = self._parseOperationArgumentV3(xmlChild, operation)
                         operation.arguments.append(argument)
+                        argument.parent=operation
                     else:
                         raise NotImplementedError(xmlChild.tag)
             if xmlPossibleErrorRefs is not None:
@@ -330,7 +331,7 @@ class PortInterfacePackageParser(ElementParser):
             else:
                 raise NotImplementedError(xmlElem.tag)
         if (name is not None) and (typeRef is not None) and (direction is not None):
-            argument = autosar.portinterface.Argument(name, typeRef, direction)
+            argument = autosar.portinterface.Argument(name, typeRef, direction, serverArgumentImplPolicy = serverArgumentImplPolicy)
             if props_variants is not None:
                 argument.swCalibrationAccess = props_variants[0].swCalibrationAccess
             return argument

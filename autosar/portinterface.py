@@ -7,7 +7,7 @@ class PortInterface(Element):
     def __init__(self, name, isService=False, serviceKind = None, parent=None, adminData=None):
         super().__init__(name, parent, adminData)
         self.isService=bool(isService)
-        self.serviceKind = serviceKind        
+        self.serviceKind = serviceKind
 
     def __getitem__(self,key):
         if isinstance(key,str):
@@ -24,7 +24,7 @@ class SenderReceiverInterface(PortInterface):
         super().__init__(name, isService, serviceKind, parent, adminData)
         self.dataElements=[]
         self.modeGroups=[] #AUTOSAR3 only
-        self.invalidationPolicies=[] #AUTOSAR4 only        
+        self.invalidationPolicies=[] #AUTOSAR4 only
 
     def __iter__(self):
         return iter(self.dataElements)
@@ -190,7 +190,7 @@ class Operation(Element):
         dataType = ws.find(typeRef, role='DataType')
         if dataType is None:
             raise ValueError("invalid name or reference: "+typeRef)
-        argument=Argument(name, dataType.ref, 'OUT', swCalibrationAccess, serverArgumentImplPolicy)
+        argument=Argument(name, dataType.ref, 'OUT', swCalibrationAccess, serverArgumentImplPolicy, parent=self)
         self.arguments.append(argument)
         return argument
 
@@ -237,7 +237,7 @@ class Operation(Element):
             raise ValueError('cannot call this method without valid parent object')
         if isinstance(values, str):
             values=[values]
-            
+
         if isinstance(values, collections.Iterable):
             del self.errorRefs[:]
             for name in values:
@@ -274,8 +274,30 @@ class Argument(Element):
             raise ValueError('invalid value :%s'%value)
         self._direction=value
 
-    def asdict(self):
-        return {'type': self.__class__.__name__, 'name':self.name, 'typeRef':self.typeRef, 'direction': self.direction}
+    def __eq__(self, other):
+        left_ws = self.rootWS()
+        right_ws = other.rootWS()
+        assert(left_ws is not None)
+        assert(right_ws is not None)
+        left_type = left_ws.find(self.typeRef)
+        if (left_type is None):
+            raise autosar.base.InvalidDataTypeRef(self.typeRef)
+        right_type = right_ws.find(other.typeRef)
+        if (right_type is None):
+            raise autosar.base.InvalidDataTypeRef(other.typeRef)
+        if self.direction != other.direction: return False
+        if (self.swCalibrationAccess is None and other.swCalibrationAccess is not None) or (self.swCalibrationAccess is not None and other.swCalibrationAccess is None):
+             return False
+        if self.swCalibrationAccess is not None and other.swCalibrationAccess is not None:
+            if self.swCalibrationAccess != other.swCalibrationAccess: return False
+        if (self.serverArgumentImplPolicy is None and other.serverArgumentImplPolicy is not None) or (self.serverArgumentImplPolicy is not None and other.serverArgumentImplPolicy is None):
+            return False
+        if self.serverArgumentImplPolicy is not None and other.serverArgumentImplPolicy is not None:
+            if self.serverArgumentImplPolicy != other.serverArgumentImplPolicy: return False
+        return left_type == right_type
+
+    def __ne__(self, other):
+        return not (self == other)
 
 class ApplicationError(Element):
     def __init__(self, name, errorCode, parent=None, adminData=None):
