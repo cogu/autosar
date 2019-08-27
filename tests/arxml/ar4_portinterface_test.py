@@ -50,21 +50,22 @@ class ARXML4PortInterfaceTest(ARXMLTestClass):
         ws = autosar.workspace(version="4.2.2")
         _init_ws(ws)
         package = ws.find('/PortInterfaces')
-        itf1 =  package.createSenderReceiverInterface('HeaterPwrStat_I', autosar.element.DataElement('HeaterPwrStat', 'OffOn_T'))
+        pif1 =  package.createSenderReceiverInterface('HeaterPwrStat_I', autosar.element.DataElement('HeaterPwrStat', 'OffOn_T'))
         file_name = 'ar4_sender_receiver_interface_single_element.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'portinterface', file_name)        
         self.save_and_check(ws, expected_file, generated_file)
         ws2 = autosar.workspace(version="4.2.2")
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
-        itf2 = portInterface = ws2.find(itf1.ref)
-        self.assertIsInstance(itf2, autosar.portinterface.SenderReceiverInterface)
+        pif2 = portInterface = ws2.find(pif1.ref)
+        self.assertIsInstance(pif2, autosar.portinterface.SenderReceiverInterface)
+        self.assertEqual(len(pif2.dataElements), 1)
         
-    def test_create_sender_receiver_interface_multiple_elements_explicit(self):
+    def test_create_sender_receiver_interface_multiple_elements(self):
         ws = autosar.workspace(version="4.2.2")
         _init_ws(ws)
         package = ws.find('/PortInterfaces')
-        itf1 = package.createSenderReceiverInterface('SystemTime_I', [
+        pif1 = package.createSenderReceiverInterface('SystemTime_I', [
             autosar.element.DataElement('Seconds', '/DataTypes/Seconds_T'),
             autosar.element.DataElement('Minutes', '/DataTypes/Minutes_T'),
             autosar.element.DataElement('Hours', '/DataTypes/Hours_T')
@@ -75,8 +76,48 @@ class ARXML4PortInterfaceTest(ARXMLTestClass):
         self.save_and_check(ws, expected_file, generated_file)
         ws2 = autosar.workspace(version="4.2.2")
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
-        itf2 = portInterface = ws2.find(itf1.ref)
-        self.assertIsInstance(itf2, autosar.portinterface.SenderReceiverInterface)        
+        pif2 = portInterface = ws2.find(pif1.ref)
+        self.assertIsInstance(pif2, autosar.portinterface.SenderReceiverInterface)
+        self.assertEqual(len(pif2.dataElements), 3)
+    
+    def test_create_client_server_interface_single_operation_no_return_no_service(self):
+        ws = autosar.workspace(version="4.2.2")
+        _init_ws(ws)
+        package = ws.find('/PortInterfaces')        
+        pif1=package.createClientServerInterface('FreeRunningTimer_I', ['GetTimeStamp'] )
+        pif1['GetTimeStamp'].createOutArgument('value', '/DataTypes/uint32')
+        file_name = 'ar4_client_server_interface_single_operation_no_return_no_service.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'portinterface', file_name)        
+        self.save_and_check(ws, expected_file, generated_file, force_copy=True)
+        ws2 = autosar.workspace(version="4.2.2")
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        pif2 = portInterface = ws2.find(pif1.ref)
+        self.assertIsInstance(pif2, autosar.portinterface.ClientServerInterface)
+        self.assertEqual(pif2.isService, False)
+        self.assertEqual(len(pif2.operations), 1)
+        operation = pif2['GetTimeStamp']
+        self.assertIsInstance(operation, autosar.portinterface.Operation)
+        
+    def test_create_client_server_interface_single_operation_no_return_is_service(self):
+        ws = autosar.workspace(version="4.2.2")
+        _init_ws(ws)
+        package = ws.find('/PortInterfaces')        
+        pif1=package.createClientServerInterface('FreeRunningTimer_I', ['GetTimeStamp'], isService=True )
+        pif1['GetTimeStamp'].createOutArgument('value', '/DataTypes/uint32')
+        file_name = 'ar4_client_server_interface_single_operation_no_return_is_service.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'portinterface', file_name)        
+        self.save_and_check(ws, expected_file, generated_file, force_copy=True)
+        ws2 = autosar.workspace(version="4.2.2")
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        pif2 = portInterface = ws2.find(pif1.ref)
+        self.assertIsInstance(pif2, autosar.portinterface.ClientServerInterface)
+        self.assertEqual(pif2.isService, True)
+        self.assertEqual(len(pif2.operations), 1)
+        operation = pif2['GetTimeStamp']
+        self.assertIsInstance(operation, autosar.portinterface.Operation)
+        
         
 if __name__ == '__main__':
     unittest.main()
