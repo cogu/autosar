@@ -1,21 +1,6 @@
 import autosar
 
-def main():
-    #init
-    ws = init_workspace()    
-    #Create SWC
-    package = ws.createPackage('ComponentTypes', role='ComponentType')
-    swc = package.createApplicationSoftwareComponent('MySWC')
-    #Create new RequirePort in the swc
-    swc.createRequirePort('BatteryStat', 'BatteryStat_I', comspec = [
-        {'dataElement': 'ChargeLevel', 'initValue': 255, 'aliveTimeout': 30},
-        {'dataElement': 'VoltageLevel', 'initValue': 65535, 'aliveTimeout': 30}
-    ])    
-    #save SWC to XML
-    ws.saveXML('MySWC.arxml', filters=['/ComponentTypes/MySWC'])
-
-
-def init_workspace():
+def init_ws():
     ws = autosar.workspace(version="4.2.2")
     package = ws.createPackage('DataTypes', role='DataType')
     package.createSubPackage('CompuMethods', role='CompuMethod')
@@ -43,5 +28,15 @@ def init_workspace():
                                         ])
     return ws
 
-if __name__ == '__main__':
-    main()
+
+ws = init_ws()    
+#Create SWC
+package = ws.createPackage('ComponentTypes', role='ComponentType')
+swc = package.createApplicationSoftwareComponent('SWC2')
+#Create new RequirePort with multiple comspecs
+swc.createRequirePort('BatteryStat', 'BatteryStat_I', comspec = [
+    {'dataElement': 'ChargeLevel', 'initValue': 255, 'aliveTimeout': 30},
+    {'dataElement': 'VoltageLevel', 'initValue': 65535, 'aliveTimeout': 30}
+])    
+#save SWC to XML
+ws.saveXML('{}.arxml'.format(swc.name), filters=['/ComponentTypes/{}'.format(swc.name)])
