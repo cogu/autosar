@@ -1,18 +1,6 @@
 import autosar
 
-def main():    
-    #init
-    ws = init_workspace()
-    #Create SWC
-    package = ws.createPackage('ComponentTypes', role='ComponentType')
-    swc = package.createApplicationSoftwareComponent('MySWC')
-    #Create new RequirePort in the swc
-    port = swc.createRequirePort('HeaterStat', 'HeaterStat_I', initValue = 'OffOn_NotAvailable', aliveTimeout = 30)    
-    #save SWC to XML
-    ws.saveXML('MySWC.arxml', filters=['/ComponentTypes/MySWC'])
-
-
-def init_workspace():
+def init_ws():
     ws = autosar.workspace(version="4.2.2")
     package = ws.createPackage('DataTypes', role='DataType')
     package.createSubPackage('CompuMethods', role='CompuMethod')
@@ -30,7 +18,15 @@ def init_workspace():
                                                         ])
     package = ws.createPackage('PortInterfaces', role='PortInterface')
     package.createSenderReceiverInterface('HeaterStat_I', autosar.element.DataElement('HeaterStat', '/DataTypes/ImplementationTypes/OffOn_T'))
+    ws.createPackage('ComponentTypes', role='ComponentType')
     return ws
 
-if __name__ == '__main__':
-    main()
+
+ws = init_ws()
+#Create SWC
+components = ws.find('/ComponentTypes')
+swc = components.createApplicationSoftwareComponent('SWC1')
+#Create new RequirePort in the swc
+swc.createRequirePort('HeaterStat', 'HeaterStat_I', initValue = 'OffOn_NotAvailable', aliveTimeout = 30)
+#save SWC to XML
+ws.saveXML('{}.arxml'.format(swc.name), filters=['/ComponentTypes/{}'.format(swc.name)])

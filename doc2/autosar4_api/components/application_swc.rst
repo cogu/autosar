@@ -1,4 +1,4 @@
-.. _application_swc:
+.. _component_applicationSoftwareComponent:
 
 ApplicationSoftwareComponent
 ============================
@@ -14,34 +14,27 @@ ApplicationSoftwareComponent
    | Inherits     | :ref:`autosar.component.AtomicSoftwareComponent <atomic_swc>`  |
    +--------------+----------------------------------------------------------------+
    
+Application software component.
+
+Usage
+-----
+
+..  include:: examples/usage_application_swc.py
+    :code: python3
+
+
 Factory Methods
 ---------------
 
-* :ref:`Package.createApplicationSoftwareComponent <createApplicationSoftwareComponent>`
+* :ref:`Package.createApplicationSoftwareComponent <package_createApplicationSoftwareComponent>`
 
 
 Attributes
 -----------
 
-Detailed Description
---------------------
+Public Methods
+--------------
 
-Factory Method Description
---------------------------
+Method Description
+------------------
 
-.. _createApplicationSoftwareComponent:
-
-.. py:method:: Package.createApplicationSoftwareComponent(self, swcName, behaviorName, implementationName, multipleInstance)
-
-Arguments
-~~~~~~~~~
-
-* (str) **swcName**: shortName of this SWC
-
-
-Optional Arguments
-~~~~~~~~~~~~~~~~~~
-
-* (str) **behaviorName**: shortName for associated InternalBehavior object. Default=None (auto).
-* (str) **implementationName**: shortName for associated SwcImplementation object. Default=None (auto).
-* (bool) **multipleInstance**: Multiple instance support. Default=False.

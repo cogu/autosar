@@ -82,6 +82,10 @@ Public Methods
 
 * :ref:`package_createSenderReceiverInterface`
 * :ref:`package_createClientServerInterface`
+
+**ComponentType**
+
+* :ref:`package_createApplicationSoftwareComponent`
     
 Method Description
 ------------------
@@ -185,6 +189,22 @@ createClientServerInterface
     :param str serviceKind: Optional serviceKind string
     :param adminData: Optional adminData
     :rtype: :ref:`portinterface_clientServerInterface`
+
+.. _package_createApplicationSoftwareComponent:
+
+createApplicationSoftwareComponent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+self,swcName,behaviorName=None,implementationName=None,multipleInstance=False
+
+.. py:method:: Package.createApplicationSoftwareComponent(self, swcName, [behaviorName = None], [implementationName = None], [multipleInstance = False])
+
+    Creates a new :ref:`component_applicationSoftwareComponent` and adds it to the package.
+    
+    :param str swcName: ShortName of the component type
+    :param str behaviorName: ShortName of the associated Behavior object. If not set an automatic name is selected.
+    :param str implementationName: ShortName of the associated Implementation object. If not set an automatic name is selected.
+    :rtype: :ref:`component_applicationSoftwareComponent`
+
 
 .. _package_createCompositionComponent:
 
