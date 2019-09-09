@@ -1,4 +1,4 @@
-.. _atomic_swc:
+.. _component_atomic_swc:
 
 AtomicSoftwareComponent
 =======================
@@ -13,12 +13,38 @@ AtomicSoftwareComponent
    +--------------------+------------------------------------------------------------+
    | Inherits           | :ref:`autosar.component.ComponentType <component_type>`    |
    +--------------------+------------------------------------------------------------+
+   
+Base class for all component type classes except :ref:`component_compositionComponent`.
 
 Attributes
 -----------
 
+..  table::
+    :align: left
+
+    +--------------------------+--------------------------------------+---------------------------+
+    | Name                     | Type                                 | Description               |
+    +==========================+======================================+===========================+
+    | **behavior**             | autosar.behavior.SwcInternalBehavior | InternalBehavior object   |
+    +--------------------------+--------------------------------------+---------------------------+
+    | **implementation**       | autosar.component.SwcImplementation  | Implementation object     |
+    +--------------------------+--------------------------------------+---------------------------+
+
+Public Methods
+--------------
+
+* :ref:`find <component_atomic_swc_find>`
 
 
-Detailed Description
+Method Description
 --------------------
+
+.. _component_atomic_swc_find:
+
+find
+~~~~~
+
+..  method:: AtomicSoftwareComponent.find(ref : str)
+
+    Similar to :ref:`ComponentType.find <component_type_find>` but also finds objects inside the behavior object.
 

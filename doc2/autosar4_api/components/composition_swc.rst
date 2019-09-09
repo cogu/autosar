@@ -1,4 +1,4 @@
-.. _composition_swc:
+.. _component_compositionComponent:
 
 CompositionComponent
 ====================
@@ -30,7 +30,6 @@ Attributes
    +==============+=============================+==================+
    | list         | :ref:`components`           |  \[ \]           |
    +--------------+-----------------------------+------------------+
-
 
 Detailed Description
 --------------------

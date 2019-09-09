@@ -194,7 +194,6 @@ createClientServerInterface
 
 createApplicationSoftwareComponent
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-self,swcName,behaviorName=None,implementationName=None,multipleInstance=False
 
 .. py:method:: Package.createApplicationSoftwareComponent(self, swcName, [behaviorName = None], [implementationName = None], [multipleInstance = False])
 
@@ -205,10 +204,15 @@ self,swcName,behaviorName=None,implementationName=None,multipleInstance=False
     :param str implementationName: ShortName of the associated Implementation object. If not set an automatic name is selected.
     :rtype: :ref:`component_applicationSoftwareComponent`
 
-
 .. _package_createCompositionComponent:
 
 createCompositionComponent
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-TBD
+.. py:method:: Package.createCompositionComponent(self, componentName, [adminData = None])
+
+    Creates a new :ref:`component_compositionComponent` and adds it to the package.
+    
+    :param str componentName: ShortName of the component type
+    :param adminData: Optional adminData
+    :rtype: :ref:`component_compositionComponent`

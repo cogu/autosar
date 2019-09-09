@@ -14,18 +14,21 @@ ComponentType
    | Inherits           | autosar.element.Element            |
    +--------------------+------------------------------------+
    
-The ComponentType class is the base class for :ref:`atomic_swc` and :ref:`composition_swc`.
+The ComponentType class is the base class for :ref:`component_atomic_swc` and :ref:`component_compositionComponent`.
 
 Attributes
 ----------
-    
-.. attribute:: ComponentType.providePorts
-        
-        List of provide ports in this component. Default is an empty list.
-        
-.. attribute:: ComponentType.requirePorts
-        
-        List of provide ports in this component. Default is an empty list.
+
+..  table::
+    :align: left
+
+    +------------------------+---------------------------------------------+---------------------------------+
+    | Name                   | Type                                        | Description                     |
+    +========================+=============================================+=================================+
+    | **providePorts**       | list(:ref:`ProvidePort <port_ProvidePort>`) | Provide ports in this component |
+    +------------------------+---------------------------------------------+---------------------------------+
+    | **requirePorts**       | list(:ref:`ProvidePort <port_RequirePort>`) | Require ports in this componen  |
+    +------------------------+---------------------------------------------+---------------------------------+    
 
 Public Methods
 --------------
@@ -69,7 +72,7 @@ createProvidePort
 .. _component_type_createRequirePort:
 
 createRequirePort
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
 
 .. method::  ComponentType.createRequirePort(name, portInterfaceRef, \*\*kwargs)
    
