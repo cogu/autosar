@@ -11,7 +11,7 @@ def init_ws():
     baseTypes.createSwBaseType('uint16', 16, nativeDeclaration='uint16')
     implTypes = package.createSubPackage('ImplementationTypes')
     implTypes.createImplementationDataType('uint16', lowerLimit=0, upperLimit=65535,
-                                                        baseTypeRef='/DataTypes/BaseTypes/uint16', typeEmitter='Platform_Type')    
+                                                        baseTypeRef='/DataTypes/BaseTypes/uint16', typeEmitter='Platform_Type')
     implTypes.createImplementationDataType('uint8', lowerLimit=0, upperLimit=255,
                                                         baseTypeRef='/DataTypes/BaseTypes/uint8', typeEmitter='Platform_Type')
     implTypes.createImplementationDataTypeRef('PercentLevel_T', lowerLimit=0, upperLimit = 255,
@@ -29,7 +29,7 @@ def init_ws():
     return ws
 
 
-ws = init_ws()    
+ws = init_ws()
 #Create SWC
 package = ws.createPackage('ComponentTypes', role='ComponentType')
 swc = package.createApplicationSoftwareComponent('SWC2')
@@ -37,6 +37,6 @@ swc = package.createApplicationSoftwareComponent('SWC2')
 swc.createRequirePort('BatteryStat', 'BatteryStat_I', comspec = [
     {'dataElement': 'ChargeLevel', 'initValue': 255, 'aliveTimeout': 30},
     {'dataElement': 'VoltageLevel', 'initValue': 65535, 'aliveTimeout': 30}
-])    
+])
 #save SWC to XML
 ws.saveXML('{}.arxml'.format(swc.name), filters=['/ComponentTypes/{}'.format(swc.name)])
