@@ -95,7 +95,7 @@ Method Description
 createSwBaseType
 ~~~~~~~~~~~~~~~~~
 
-..  py:method:: Package.createSwBaseType(name , size, [encoding=None], [nativeDeclaration=None], [adminData=None])
+..  py:method:: Package.createSwBaseType(name , [size=None], [encoding=None], [nativeDeclaration=None], [adminData=None])
 
     Creates a new SwBaseType object add appends it to this package.
 

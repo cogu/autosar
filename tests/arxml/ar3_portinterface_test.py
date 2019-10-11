@@ -43,7 +43,7 @@ class ARXML3PortInterfaceTest(ARXMLTestClass):
         file_name = 'ar3_sender_receiver_interface_single_element.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'portinterface', file_name)        
-        self.save_and_check(ws, expected_file, generated_file, force_copy=True)
+        self.save_and_check(ws, expected_file, generated_file)
         # ws2 = autosar.workspace(version="4.2.2")
         # ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
         # itf2 = portInterface = ws2.find(itf1.ref)

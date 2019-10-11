@@ -746,7 +746,7 @@ class Package(object):
         return self._checkAndCreateDataConstraint(ws, name, 'physicalConstraint', lowerLimit, upperLimit, lowerLimitType, upperLimitType, adminData)
 
 
-    def createSwBaseType(self, name, size, encoding=None, nativeDeclaration=None, adminData=None):
+    def createSwBaseType(self, name, size=None, encoding=None, nativeDeclaration=None, adminData=None):
         """
         Creates a SwBaseType object
         """

@@ -577,9 +577,9 @@ class ImplementationDataType(Element):
 
 class SwBaseType(Element):
     def tag(self, version=None): return 'SW-BASE-TYPE'
-    def __init__(self, name, size, typeEncoding=None, nativeDeclaration=None, category=None, parent=None, adminData=None):
+    def __init__(self, name, size=None, typeEncoding=None, nativeDeclaration=None, category=None, parent=None, adminData=None):
         super().__init__(name, parent, adminData)
-        self.size = int(size)
+        self.size = None if size is None else int(size)
         self.typeEncoding=typeEncoding
         self.nativeDeclaration=nativeDeclaration
         if category is None: category='FIXED_LENGTH'
