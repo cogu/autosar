@@ -343,7 +343,8 @@ class XMLDataTypeWriter(ElementWriter):
             lines.append(self.indent('<CATEGORY>%s</CATEGORY>'%elem.category,1))
         if elem.adminData is not None:
             lines.extend(self.indent(self.writeAdminDataXML(elem.adminData),1))
-        lines.append(self.indent('<BASE-TYPE-SIZE>%d</BASE-TYPE-SIZE>'%elem.size,1))
+        if elem.size is not None:
+            lines.append(self.indent('<BASE-TYPE-SIZE>%d</BASE-TYPE-SIZE>'%elem.size,1))
         if elem.typeEncoding is None:
             lines.append(self.indent('<BASE-TYPE-ENCODING>NONE</BASE-TYPE-ENCODING>',1))
         else:

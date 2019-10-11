@@ -146,7 +146,7 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         unit_deg = package.createUnit('deg')
         compuMethod1 = package.createCompuMethodLinear('Pitch_T', lowerLimit=0, upperLimit = 20340, offset = -90, scaling = 1/128, unit = 'deg', forceFloat=False)
         self.assertIsInstance(compuMethod1, autosar.datatype.CompuMethod)
-        self.assertEqual('/DataTypes/CompuMethods/Pitch_T', compuMethod1.ref)        
+        self.assertEqual('/DataTypes/CompuMethods/Pitch_T', compuMethod1.ref)
         self.assertIsInstance(compuMethod1.intToPhys, autosar.datatype.Computation)
         self.assertIsNone(compuMethod1.physToInt)
         self.assertEqual(-90, compuMethod1.intToPhys.elements[0].offset)
@@ -163,7 +163,7 @@ class ARXML4DataTypeTest(ARXMLTestClass):
 
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
         compuMethod2 = ws.find(compuMethod1.ref)
-        self.assertIsInstance(compuMethod2, autosar.datatype.CompuMethod)        
+        self.assertIsInstance(compuMethod2, autosar.datatype.CompuMethod)
         self.assertIsInstance(compuMethod2.intToPhys, autosar.datatype.Computation)
         self.assertIsNone(compuMethod2.physToInt)
         self.assertEqual(compuMethod2.intToPhys.elements[0].offset, compuMethod1.intToPhys.elements[0].offset)
@@ -227,9 +227,9 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         self.assertEqual(dt1.ref, '/DataTypes/boolean')
         constr = ws.find(dt1.dataConstraintRef)
         self.assertIsInstance(constr, autosar.datatype.DataConstraint)
-        self.assertIsInstance(constr.rules[0], autosar.datatype.InternalConstraint)        
+        self.assertIsInstance(constr.rules[0], autosar.datatype.InternalConstraint)
         self.assertEqual(constr.lowerLimit, 0)
-        self.assertEqual(constr.upperLimit, 1)        
+        self.assertEqual(constr.upperLimit, 1)
         file_name = 'ar4_boolean_implementation_datatype.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
@@ -275,7 +275,7 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         self.assertEqual(uint8_dt2.baseTypeRef, uint8_dt1.baseTypeRef)
         self.assertEqual(uint16_dt2.baseTypeRef, uint16_dt1.baseTypeRef)
         self.assertEqual(uint32_dt2.baseTypeRef, uint32_dt1.baseTypeRef)
-        
+
     def test_create_implementation_array_datatype(self):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
@@ -284,22 +284,22 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         dt1 = package.createImplementationArrayDataType('u8Array2_T', '/DataTypes/uint8', 2)
         self.assertIsInstance(dt1, autosar.datatype.ImplementationDataType)
         self.assertEqual(dt1.ref, '/DataTypes/u8Array2_T')
-        
+
         file_name = 'ar4_array_implementation_datatype.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
-        
+
         ws2 = autosar.workspace(ws.version_str)
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
         dt2 = ws2.find(dt1.ref)
-        self.assertIsInstance(dt2, autosar.datatype.ImplementationDataType)        
-    
+        self.assertIsInstance(dt2, autosar.datatype.ImplementationDataType)
+
     def test_create_implementation_ref_type(self):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
         _create_base_types(ws)
-    
+
         package = ws['DataTypes']
         dt1 = package.createImplementationDataTypeRef('U32Type_T', '/DataTypes/uint32')
         self.assertIsInstance(dt1, autosar.datatype.ImplementationDataType)
@@ -308,11 +308,11 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
-                
+
         ws2 = autosar.workspace(ws.version_str)
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
         dt2 = ws2.find(dt1.ref)
-        self.assertIsInstance(dt2, autosar.datatype.ImplementationDataType)        
+        self.assertIsInstance(dt2, autosar.datatype.ImplementationDataType)
 
     def test_create_u8_application_data_type(self):
         ws = autosar.workspace(version="4.2.2")
@@ -335,7 +335,7 @@ class ARXML4DataTypeTest(ARXMLTestClass):
     def test_create_adt_with_auto_constraint(self):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
-        package = ws['DataTypes']        
+        package = ws['DataTypes']
         package.createUnit('deg')
         package.createCompuMethodLinear('Pitch_T', lowerLimit=0, upperLimit = 20340, offset = -90, scaling = 1/128, unit = 'deg')
         dt1 = package.createApplicationPrimitiveDataType('Pitch_ADT', compuMethod='Pitch_T', unit = 'deg')
@@ -344,7 +344,7 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         self.assertEqual(dt1.unitRef, '/DataTypes/Units/deg')
         self.assertEqual(dt1.compuMethodRef, '/DataTypes/CompuMethods/Pitch_T')
         self.assertEqual(dt1.dataConstraintRef, '/DataTypes/DataConstrs/Pitch_ADT_DataConstr')
-                
+
         file_name = 'ar4_adt_with_auto_constraint.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
@@ -354,11 +354,11 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
         dt2 = ws2.find(dt1.ref)
         self.assertIsInstance(dt2, autosar.datatype.ApplicationPrimitiveDataType)
-        
+
     def test_create_adt_with_data_constraint_and_compu_method(self):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
-        package = ws['DataTypes']        
+        package = ws['DataTypes']
         package.createUnit('deg')
         compuMethod = package.createCompuMethodLinear('Pitch_T', lowerLimit=0, upperLimit = 20340, offset = -90, scaling = 1/128, unit = 'deg')
         dataConstraint = package.createInternalDataConstraint('Pitch_T_DataConstr', lowerLimit = compuMethod.intToPhys.lowerLimit, upperLimit = compuMethod.intToPhys.upperLimit)
@@ -368,7 +368,7 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         self.assertEqual(dt1.unitRef, '/DataTypes/Units/deg')
         self.assertEqual(dt1.compuMethodRef, '/DataTypes/CompuMethods/Pitch_T')
         self.assertEqual(dt1.dataConstraintRef, '/DataTypes/DataConstrs/Pitch_T_DataConstr')
-                
+
         file_name = 'ar4_adt_with_data_constraint_and_compu_method.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
@@ -377,8 +377,8 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         ws2 = autosar.workspace(ws.version_str)
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
         dt2 = ws2.find(dt1.ref)
-        self.assertIsInstance(dt2, autosar.datatype.ApplicationPrimitiveDataType)           
-    
+        self.assertIsInstance(dt2, autosar.datatype.ApplicationPrimitiveDataType)
+
     def test_create_u8_application_array_data_type(self):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
@@ -405,13 +405,13 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         ws2 = autosar.workspace(ws.version_str)
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
         array_dt2 = ws2.find('/DataTypes/Data2ByteType_ADT')
-        self.assertIsInstance(array_dt2, autosar.datatype.ApplicationArrayDataType)        
-    
+        self.assertIsInstance(array_dt2, autosar.datatype.ApplicationArrayDataType)
+
     def test_create_implentation_record_type1(self):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
         _create_base_types(ws)
-    
+
         package = ws['DataTypes']
         package.createImplementationDataTypeRef('U32Type_T', '/DataTypes/uint32')
         dt1 = package.createImplementationRecordDataType('RecordType1_T', [('Elem1', '/DataTypes/uint8'), ('Elem2', '/DataTypes/U32Type_T')] )
@@ -420,59 +420,59 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
-        
+
         ws2 = autosar.workspace(ws.version_str)
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
         dt2 = ws2.find(dt1.ref)
-        self.assertIsInstance(dt2, autosar.datatype.ImplementationDataType)        
+        self.assertIsInstance(dt2, autosar.datatype.ImplementationDataType)
 
-    
+
     def test_create_record_type2(self):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
         _create_base_types(ws)
-    
+
         package = ws['DataTypes']
         package.createImplementationDataTypeRef('U32Type_T', '/DataTypes/uint32')
         package.createImplementationArrayDataType('UserName_T', '/DataTypes/uint8', 32)
         dt1 = package.createImplementationRecordDataType('RecordType2_T', [('Elem1', '/DataTypes/U32Type_T'), ('Elem2', '/DataTypes/UserName_T')] )
         self.assertEqual(dt1.ref, '/DataTypes/RecordType2_T')
-        
+
         file_name = 'ar4_implementation_record_type2.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
-        
+
         ws2 = autosar.workspace(ws.version_str)
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
         dt2 = ws2.find(dt1.ref)
-        self.assertIsInstance(dt2, autosar.datatype.ImplementationDataType)        
-        
-    
+        self.assertIsInstance(dt2, autosar.datatype.ImplementationDataType)
+
+
     def test_create_ref_type_with_valueTable(self):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
         _create_base_types(ws)
-    
+
         package = ws['DataTypes']
         dt1 = package.createImplementationDataTypeRef('OffOn_T', '/DataTypes/uint8', valueTable=['OffOn_Off', 'OffOn_On', 'OffOn_Error', 'OffOn_NotAvailable'])
         self.assertEqual(dt1.ref, '/DataTypes/OffOn_T')
-        
+
         file_name = 'ar4_impl_ref_type_vt.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
-        
+
         ws2 = autosar.workspace(ws.version_str)
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
         dt2 = ws2.find(dt1.ref)
-        self.assertIsInstance(dt2, autosar.datatype.ImplementationDataType)       
+        self.assertIsInstance(dt2, autosar.datatype.ImplementationDataType)
 
     def test_custom_constraint_on_impl_typ(self):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
         _create_base_types(ws)
-    
+
         package = ws['DataTypes']
         package.createInternalDataConstraint('CustomConstraintName', lowerLimit=0, upperLimit=100000)
         package.createImplementationDataTypeRef('U32RefCustom_T', '/DataTypes/uint32', dataConstraint='CustomConstraintName')
@@ -501,28 +501,28 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         compu = package.createCompuMethodLinear('VehicleSpeed_T', lowerLimit=0, upperLimit = 65535, offset = 0, scaling = 1/64, unit = 'kmPerHour')
         constr = package.createInternalDataConstraint('VehicleSpeed_DataConstr', lowerLimit = compu.intToPhys.lowerLimit, upperLimit = compu.intToPhys.upperLimit)
         package.createApplicationPrimitiveDataType('VehicleSpeed_ADT', compuMethod = compu.ref, dataConstraint = constr.ref, unit = 'kmPerHour')
-        
+
         dt1 = package.createApplicationRecordDataType('Velocity_ADT',
                                                       [
                                                         ('Bearing', '/DataTypes/Yaw_ADT'),
                                                         ('VehicleSpeed', '/DataTypes/VehicleSpeed_ADT'),
-                                                        ('Pitch', '/DataTypes/Pitch_ADT'),                                                        
-                                                        ('Altitude', '/DataTypes/Altitude_ADT'),                                                        
-                                                      ])        
+                                                        ('Pitch', '/DataTypes/Pitch_ADT'),
+                                                        ('Altitude', '/DataTypes/Altitude_ADT'),
+                                                      ])
         self.assertIsInstance(dt1, autosar.datatype.ApplicationRecordDataType)
-        
+
         file_name = 'ar4_application_record_adt.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
-        
+
         ws2 = autosar.workspace(ws.version_str)
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
         dt2 = ws2.find(dt1.ref)
         self.assertIsInstance(dt2, autosar.datatype.ApplicationRecordDataType)
         self.assertEqual(len(dt2.elements), 4)
-        
-    
+
+
     def test_create_ref_type_with_bitmask(self):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
@@ -549,7 +549,7 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         ws2 = autosar.workspace(ws.version_str)
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
         dt2 = ws2.find(dt1.ref)
-        self.assertIsInstance(dt2, autosar.datatype.ImplementationDataType)        
+        self.assertIsInstance(dt2, autosar.datatype.ImplementationDataType)
         compu2 = ws2.find(dt2.compuMethodRef)
         self.assertIsInstance(compu2, autosar.datatype.CompuMethod)
         self.assertEqual(compu2.intToPhys.elements[0].mask, 1)
@@ -560,12 +560,12 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         self.assertEqual(compu2.intToPhys.elements[5].mask, 32)
         self.assertEqual(compu2.intToPhys.elements[6].mask, 64)
         self.assertEqual(compu2.intToPhys.elements[7].mask, 128)
-    
+
     def test_create_float_value_type(self):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
         _create_base_types(ws)
-    
+
         package = ws['DataTypes']
         dt1 = package.createImplementationDataType('float32', '/DataTypes/BaseTypes/float32', '-INF', 'INF', lowerLimitType = 'OPEN', upperLimitType = 'OPEN')
         self.assertIsInstance(dt1, autosar.datatype.ImplementationDataType)
@@ -575,18 +575,18 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
-        
+
         ws2 = autosar.workspace(ws.version_str)
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
         dt2 = ws2.find(dt1.ref)
-        self.assertIsInstance(dt2, autosar.datatype.ImplementationDataType)        
+        self.assertIsInstance(dt2, autosar.datatype.ImplementationDataType)
 
-    
+
     def test_create_float_value_type_with_type_emitter(self):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
         _create_base_types(ws)
-    
+
         package = ws['DataTypes']
         dt1 = package.createImplementationDataType('float32', '/DataTypes/BaseTypes/float32', '-INF', 'INF', typeEmitter='PlatformType', lowerLimitType = 'OPEN', upperLimitType = 'OPEN')
         self.assertIsInstance(dt1, autosar.datatype.ImplementationDataType)
@@ -597,12 +597,12 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
-    
+
     def test_create_implementation_data_type_with_symbol_props(self):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
         _create_base_types(ws)
-    
+
         package = ws['DataTypes']
         dt1 = package.createImplementationDataType('RTCTime_T', '/DataTypes/BaseTypes/uint32', lowerLimit = 0, upperLimit = 0xFFFFFFFF, typeEmitter='RTE')
         dt1.setSymbolProps('TimeStamp', 'TimeStampSym')
@@ -613,7 +613,7 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
-        
+
         ws2 = autosar.workspace(ws.version_str)
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
         dt2 = ws2.find(dt1.ref)
@@ -621,19 +621,19 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         self.assertIsInstance(dt2.symbolProps, autosar.base.SymbolProps)
         self.assertEqual(dt2.symbolProps.name, dt1.symbolProps.name)
         self.assertEqual(dt2.symbolProps.symbol, dt1.symbolProps.symbol)
-        
+
     def test_auto_create_constraint(self):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
         _create_base_types(ws)
-    
+
         datatypes = ws['DataTypes']
         dt1 = datatypes.createImplementationDataTypeRef('Seconds_T', '/DataTypes/uint8', lowerLimit=0, upperLimit=63)
         file_name = 'ar4_auto_create_constraint.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
-        
+
         ws2 = autosar.workspace(ws.version_str)
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
         dt2 = ws2.find(dt1.ref)
@@ -642,7 +642,7 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)
         _create_base_types(ws)
-    
+
         datatypes = ws['DataTypes']
         dt1 = datatypes.createImplementationDataTypeRef('VehicleSpeed_T',
                                                     implementationTypeRef = '/DataTypes/uint16',
@@ -655,13 +655,29 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
-        
+
         ws2 = autosar.workspace(ws.version_str)
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
-        dt1 = ws2.find(dt1.ref)
+        dt2 = ws2.find(dt1.ref)
+        self.assertEqual(dt1.name, dt2.name)
 
+    def test_create_base_type_without_size(self):
+        ws = autosar.workspace(version="4.2.2")
+        _create_packages(ws)
+        base_types = ws.find('DataTypes/BaseTypes')
+        self.assertIsNotNone(base_types)
 
-
+        dt1 = base_types.createSwBaseType('uint8')
+        self.assertIsNone(dt1.size)
+        file_name = 'ar4_create_base_type_without_size.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
+        ws2 = autosar.workspace(ws.version_str)
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        dt2 = ws2.find(dt1.ref)
+        self.assertEqual(dt1.name, dt2.name)
+        self.assertIsNone(dt2.size)
 
 if __name__ == '__main__':
     unittest.main()
