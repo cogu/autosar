@@ -2,6 +2,7 @@ from autosar.base import hasAdminData,parseAdminDataNode,parseTextNode
 import autosar.portinterface
 import autosar.base
 import autosar.element
+import autosar.mode
 from autosar.parser.parser_base import ElementParser
 
 class PortInterfacePackageParser(ElementParser):
@@ -110,7 +111,7 @@ class PortInterfacePackageParser(ElementParser):
     def _parseInvalidationPolicys(self, xmlRoot):
         assert(xmlRoot.tag == 'INVALIDATION-POLICYS')
         policyList = []
-        for xmlChild in xmlInvalidationPolicys.findall('./*'):
+        for xmlChild in xmlRoot.findall('./*'):
             if xmlChild.tag == 'INVALIDATION-POLICY':
                 invalidationPolicy = self._parseInvalidationPolicy(xmlChild)
                 if invalidationPolicy is not None:
@@ -255,7 +256,7 @@ class PortInterfacePackageParser(ElementParser):
             assert(xmlModeGroup.tag == "MODE-DECLARATION-GROUP-PROTOTYPE")
         name = self.parseTextNode(xmlModeGroup.find('SHORT-NAME'))
         typeRef = self.parseTextNode(xmlModeGroup.find('TYPE-TREF'))
-        return autosar.portinterface.ModeGroup(name, typeRef, parent)
+        return autosar.mode.ModeGroup(name, typeRef, parent)
 
     def _parseOperationPrototype(self, xmlOperation, parent):
         (name, xmlDesc, xmlArguments, xmlPossibleErrorRefs) = (None, None, None, None)
