@@ -135,12 +135,13 @@ class BehaviorParser(ElementParser):
                             event = self.parseDataReceivedEvent(xmlEvent,internalBehavior)
                         elif xmlEvent.tag == 'OPERATION-INVOKED-EVENT':
                             event = self.parseOperationInvokedEvent(xmlEvent,internalBehavior)
+                        elif xmlEvent.tag == 'DATA-RECEIVE-ERROR-EVENT':
+                            #TODO: Implement later
+                            pass
                         else:
                             raise NotImplementedError(xmlEvent.tag)
                         if event is not None:
                             internalBehavior.events.append(event)
-                        else:
-                            raise NotImplementedError(xmlEvent.tag)
                 elif xmlElem.tag == 'PORT-API-OPTIONS':
                     for xmlOption in xmlElem.findall('./PORT-API-OPTION'):
                         portAPIOption = PortAPIOption(parseTextNode(xmlOption.find('PORT-REF')),parseBooleanNode(xmlOption.find('ENABLE-TAKE-ADDRESS')),parseBooleanNode(xmlOption.find('INDIRECT-API')))
