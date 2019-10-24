@@ -110,7 +110,7 @@ class RecordValue(Value):
    """
    typeRef is only necessary for AUTOSAR 3 constants
    """
-   def tag(self,version=None): return "RECORD-VALUE-SPECIFICATION" if version >= 4.0 else "RECORD-VALUE"
+   def tag(self,version=None): return "RECORD-VALUE-SPECIFICATION" if version >= 4.0 else "RECORD-SPECIFICATION"
 
    def __init__(self, name, typeRef=None, parent=None):
       super().__init__(name, parent)
