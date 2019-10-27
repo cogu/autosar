@@ -11,4 +11,4 @@ AUTOSAR 4 API
     portinterfaces/index
     components/index
     ports/index
-    behavior
+    behavior/index
