@@ -339,12 +339,13 @@ class Package(object):
         self.append(swc.implementation)
 
 
-    def createModeDeclarationGroup(self, name, modeDeclarations, initialMode, category=None, adminData=None):
+    def createModeDeclarationGroup(self, name, modeDeclarations = None, initialMode = None, category=None, adminData=None):
         """
         creates an instance of autosar.portinterface.ModeDeclarationGroup
         name: name of the ModeDeclarationGroup
         modeDeclarations: list of strings where each string is a mode name
         initialMode: string with name of the initial mode (must be one of the strings in modeDeclarations list)
+        category: optional category string
         adminData: optional adminData object (use ws.createAdminData() as constructor)
         """
         ws = self.rootWS()
@@ -356,14 +357,15 @@ class Package(object):
         if (adminDataObj is not None) and not isinstance(adminDataObj, autosar.base.AdminData):
             raise ValueError("adminData must be of type dict or AdminData")
         group = autosar.mode.ModeDeclarationGroup(name,None,None,category,self,adminDataObj)
-        for declarationName in modeDeclarations:
-            item=autosar.mode.ModeDeclaration(declarationName,group)
-            group.modeDeclarations.append(item)
-            if declarationName == initialMode:
-                group.initialModeRef = item.ref
-        if group.initialModeRef is None:
-            raise ValueError('initalMode "%s" not a valid modeDeclaration name'%initialMode)
-        self.append(group)
+        if modeDeclarations is not None:
+            for declarationName in modeDeclarations:
+                item=autosar.mode.ModeDeclaration(declarationName,group)
+                group.modeDeclarations.append(item)
+                if (initialMode is not None) and (declarationName == initialMode):
+                    group.initialModeRef = item.ref
+            if (initialMode is not None) and (group.initialModeRef is None):
+                raise ValueError('initalMode "%s" not a valid modeDeclaration name'%initialMode)
+            self.append(group)
         return group
 
     def createClientServerInterface(self, name, operations, errors=None, isService=False, serviceKind=None, adminData=None):

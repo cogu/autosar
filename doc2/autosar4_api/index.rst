@@ -12,3 +12,4 @@ AUTOSAR 4 API
     components/index
     ports/index
     behavior/index
+    mode/index

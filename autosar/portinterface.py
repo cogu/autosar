@@ -311,6 +311,14 @@ class ApplicationError(Element):
         return {'type': self.__class__.__name__, 'name':self.name, 'errorCode':self.errorCode}
 
 class ModeSwitchInterface(PortInterface):
+    """
+    Implementation of <MODE-SWITCH-INTERFACE> (AUTOSAR 4)
+
+    Arguments:
+    name: <SHORT-NAME> (None or str)
+    isService: <IS-SERVICE> (None or bool)
+    """
+
     def tag(self, version): return 'MODE-SWITCH-INTERFACE'
 
     def __init__(self, name, isService=None, parent=None, adminData=None):

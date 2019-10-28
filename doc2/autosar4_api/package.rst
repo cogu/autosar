@@ -5,7 +5,7 @@ Package
 
 .. table::
    :align: left
-   
+
    +--------------------+-------------------------------------------+
    | XML tag            | <AR-PACKAGE>                              |
    +--------------------+-------------------------------------------+
@@ -13,7 +13,7 @@ Package
    +--------------------+-------------------------------------------+
    | Inherits           |                                           |
    +--------------------+-------------------------------------------+
-   
+
 An AUTOSAR package is a container for elements. Elements can be basically anything that are not packages.
 
 Usage
@@ -22,18 +22,18 @@ Usage
 .. code-block:: python
 
    import autosar
-   
+
    ws = autosar.workspace("4.2.2")
    package = ws.createPackage('ComponentTypes', role = 'ComponentType')
-   
+
 Attributes
 ----------
 
 ..  table::
     :align: left
-    
+
     +-----------------+--------------------+-----------------------------+
-    | Name            | Type               | Description                 |       
+    | Name            | Type               | Description                 |
     +=================+====================+=============================+
     | **name**        | str                | Name of the package         |
     +-----------------+--------------------+-----------------------------+
@@ -49,7 +49,7 @@ Package Roles
 
 ..  table::
     :align: left
-    
+
     +------------------+--------------------------------------------+
     | *Constant*       |  Main container for Constants              |
     +------------------+--------------------------------------------+
@@ -67,11 +67,11 @@ Package Roles
     +------------------+--------------------------------------------+
     | *Unit*           | Main Container for Units                   |
     +------------------+--------------------------------------------+
-    
-  
+
+
 Public Methods
 --------------
-    
+
 **DataType**
 
 * :ref:`package_createSwBaseType`
@@ -86,7 +86,11 @@ Public Methods
 **ComponentType**
 
 * :ref:`package_createApplicationSoftwareComponent`
-    
+
+**Mode**
+
+* :ref:`package_createModeDeclarationGroup`
+
 Method Description
 ------------------
 
@@ -119,7 +123,7 @@ createImplementationDataTypeRef
 
     Creates a new implementation data type that is a reference to another implementation type.
     This is similar in concept to a typedef in the C programming language
-   
+
     :param str name: ShortName of the datatype
     :param str implementationTypeRef: Reference to existing implementation type
     :param adminData: Optional AdminData
@@ -141,7 +145,7 @@ createImplementationDataTypePtr
 
    Creates a new implementation data type that is a pointer to a base data type.
    This is similar to a pointer type definition in C.
-   
+
    :param str name: ShortName of the datatype
    :param str baseTypeRef: Reference to (existing) base type object
    :param str swImplPolicy: Set this to 'CONST' in order to create a const pointer data type
@@ -160,9 +164,9 @@ createSenderReceiverInterface
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ..  method:: Package.createSenderReceiverInterface(name, [dataElements=None], [isService=False], [serviceKind = None], [adminData=None])
-    
+
     Creates a new SenderReceiver port interface and adds it to the package.
-    
+
     :param str name: ShortName of the port interface
     :param dataElements: Data element(s) in this port interface
     :type dataElements: list(DataElement) or DataElement
@@ -177,9 +181,9 @@ createClientServerInterface
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ..  method:: Package.createClientServerInterface(name, operations, [errors=None], [isService=False], [serviceKind = None], [adminData=None])
-    
+
     Creates a new :ref:`portinterface_clientServerInterface` and adds it to the package.
-    
+
     :param str name: ShortName of the port interface
     :param operations: List of names to be created as of :ref:`portinterface_Operation`
     :type operations: list(str)
@@ -198,7 +202,7 @@ createApplicationSoftwareComponent
 .. py:method:: Package.createApplicationSoftwareComponent(self, swcName, [behaviorName = None], [implementationName = None], [multipleInstance = False])
 
     Creates a new :ref:`component_applicationSoftwareComponent` and adds it to the package.
-    
+
     :param str swcName: ShortName of the component type
     :param str behaviorName: ShortName of the associated Behavior object. If not set an automatic name is selected.
     :param str implementationName: ShortName of the associated Implementation object. If not set an automatic name is selected.
@@ -212,7 +216,24 @@ createCompositionComponent
 .. py:method:: Package.createCompositionComponent(self, componentName, [adminData = None])
 
     Creates a new :ref:`component_compositionComponent` and adds it to the package.
-    
+
     :param str componentName: ShortName of the component type
     :param adminData: Optional adminData
     :rtype: :ref:`component_compositionComponent`
+
+.. _package_createModeDeclarationGroup:
+
+createModeDeclarationGroup
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:method:: Package.createModeDeclarationGroup(self, name, [modeDeclarations=None], [initialMode=None], [category=None], [adminData=None])
+
+    Creates a new :ref:`mode_modeDeclarationGroup` and adds it to the package.
+
+    :param str name: ShortName of the object
+    :param modeDeclarations: List of mode declaration names
+    :type modeDeclarations: list(str)
+    :param str initialMode: Initial mode value (must be one of strings from modeDeclarations list)
+    :param str category: Optional category
+    :param adminData: Optional adminData
+    :rtype: :ref:`mode_modeDeclarationGroup`

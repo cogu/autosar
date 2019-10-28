@@ -4,6 +4,12 @@ import autosar.base
 
 
 class ModeGroup(Element):
+    """
+    Implements <MODE-GROUP> (AUTOSAR4)
+    Implements <MODE-DECLARATION-GROUP-PROTOTYPE> (AUTOSAR3)
+
+    A ModeGroup inside a ModeSwitchInterface is what a DataElement is to a SenderReceiverInterface.
+    """
     def __init__(self, name, typeRef, parent=None, adminData=None):
         super().__init__(name, parent, adminData)
         self.typeRef=typeRef
@@ -14,9 +20,6 @@ class ModeGroup(Element):
         else:
             return "MODE-DECLARATION-GROUP-PROTOTYPE"
 
-    def asdict(self):
-        return {'type': self.__class__.__name__, 'name':self.name, 'typeRef':self.typeRef}
-
     def __eq__(self, other):
         if isinstance(other, self.__class__):
             if self.name == other.name and self.adminData == other.adminData and self.typeRef == other.typeRef: return True
@@ -26,10 +29,20 @@ class ModeGroup(Element):
         return not (self == other)
 
 class ModeDeclarationGroup(Element):
+    """
+    Implements <MODE-DECLARATION-GROUP> (AUTOSAR 4)
+
+    Objects created from this class is expected to be placed inside a package with the role name "ModeDclrGroup".
+
+    Attributes:
+    modeDeclarations: A list of ModeDeclaration objects
+    initialModeRef: Initial mode value
+
+    """
     def tag(self, version=None): return "MODE-DECLARATION-GROUP"
 
     def __init__(self, name, initialModeRef=None, modeDeclarations=None, category=None, parent=None, adminData=None):
-        super().__init__(name, parent, adminData)
+        super().__init__(name, parent, adminData, category)
         self.initialModeRef = initialModeRef
         if modeDeclarations is None:
             self.modeDeclarations = []
@@ -60,14 +73,14 @@ class ModeDeclarationGroup(Element):
         return not (self == other)
 
 class ModeDeclaration(Element):
-    def __init__(self,name,parent=None):
-        super().__init__(name,parent)
+    def tag(self,version=None): return "MODE-DECLARATION"
+
+    def __init__(self, name, parent=None, adminData=None):
+        super().__init__(name, parent, adminData)
+
     def __eq__(self, other):
         if isinstance(other, self.__class__):
             if self.name == other.name: return True
         return False
 
     def __ne__(self, other): return not (self == other)
-
-    def tag(self,version=None): return "MODE-DECLARATION"
-    
