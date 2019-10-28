@@ -8,3 +8,4 @@ PortInterfaces
    sender_receiver_interface
    client_server_interface
    operation
+   mode_switch_interface

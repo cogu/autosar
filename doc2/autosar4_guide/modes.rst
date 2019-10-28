@@ -33,7 +33,7 @@ Here is an example containing a made up mode declaration group called *BswM_Mode
 .. code-block:: python
 
     import autosar
-    
+
     ws = autosar.workspace(version="4.2.2")
     package = ws.createPackage('ModeDclrGroups', role="ModeDclrGroup")
     package.createModeDeclarationGroup('BswM_Mode', ["POSTRUN",
