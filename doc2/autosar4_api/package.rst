@@ -82,6 +82,8 @@ Public Methods
 
 * :ref:`package_createSenderReceiverInterface`
 * :ref:`package_createClientServerInterface`
+* :ref:`package_createModeSwitchInterface`
+
 
 **ComponentType**
 
@@ -119,7 +121,7 @@ Example - Platform Types
 createImplementationDataTypeRef
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-..  py:method:: Package.createImplementationDataTypeRef(self, name, implementationTypeRef, [lowerLimit = None], [upperLimit = None], [valueTable = None], [bitmask = None], [offset = None], [scaling = None], [unit = None], [forceFloat = False], [dataConstraint = ''], [swCalibrationAccess = ''], [typeEmitter = None], [lowerLimitType = None], [upperLimitType = None], [category = 'TYPE_REFERENCE'], [adminData = None])
+..  py:method:: Package.createImplementationDataTypeRef(name, implementationTypeRef, [lowerLimit = None], [upperLimit = None], [valueTable = None], [bitmask = None], [offset = None], [scaling = None], [unit = None], [forceFloat = False], [dataConstraint = ''], [swCalibrationAccess = ''], [typeEmitter = None], [lowerLimitType = None], [upperLimitType = None], [category = 'TYPE_REFERENCE'], [adminData = None])
 
     Creates a new implementation data type that is a reference to another implementation type.
     This is similar in concept to a typedef in the C programming language
@@ -141,7 +143,7 @@ Example
 createImplementationDataTypePtr
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. py:method:: Package.createImplementationDataTypePtr(self, name, baseTypeRef, [swImplPolicy=None], [category='DATA_REFERENCE', [targetCategory=VALUE], [adminData=None])
+.. py:method:: Package.createImplementationDataTypePtr(name, baseTypeRef, [swImplPolicy=None], [category='DATA_REFERENCE', [targetCategory=VALUE], [adminData=None])
 
    Creates a new implementation data type that is a pointer to a base data type.
    This is similar to a pointer type definition in C.
@@ -194,12 +196,29 @@ createClientServerInterface
     :param adminData: Optional adminData
     :rtype: :ref:`portinterface_clientServerInterface`
 
+.. _package_createModeSwitchInterface:
+
+createModeSwitchInterface
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:method:: Package.createModeSwitchInterface(name, [modeGroup = None], [isService=False], [adminData=None])
+
+    Creates a new :ref:`portinterface_ModeSwitchInterface` and adds it to the package.
+
+    :param str name: ShortName of the port interface
+    :param modeGroup: mode group object
+    :type modeGroup: :ref:`mode_modeGroup`
+    :param bool isService: Set this to True for service interfaces
+    :param adminData: Optional adminData
+    :rtype: :ref:`portinterface_ModeSwitchInterface`
+
+
 .. _package_createApplicationSoftwareComponent:
 
 createApplicationSoftwareComponent
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. py:method:: Package.createApplicationSoftwareComponent(self, swcName, [behaviorName = None], [implementationName = None], [multipleInstance = False])
+.. py:method:: Package.createApplicationSoftwareComponent(swcName, [behaviorName = None], [implementationName = None], [multipleInstance = False])
 
     Creates a new :ref:`component_applicationSoftwareComponent` and adds it to the package.
 
@@ -213,7 +232,7 @@ createApplicationSoftwareComponent
 createCompositionComponent
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. py:method:: Package.createCompositionComponent(self, componentName, [adminData = None])
+.. py:method:: Package.createCompositionComponent(componentName, [adminData = None])
 
     Creates a new :ref:`component_compositionComponent` and adds it to the package.
 
@@ -226,7 +245,7 @@ createCompositionComponent
 createModeDeclarationGroup
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. py:method:: Package.createModeDeclarationGroup(self, name, [modeDeclarations=None], [initialMode=None], [category=None], [adminData=None])
+.. py:method:: Package.createModeDeclarationGroup(name, [modeDeclarations=None], [initialMode=None], [category=None], [adminData=None])
 
     Creates a new :ref:`mode_modeDeclarationGroup` and adds it to the package.
 
@@ -237,3 +256,4 @@ createModeDeclarationGroup
     :param str category: Optional category
     :param adminData: Optional adminData
     :rtype: :ref:`mode_modeDeclarationGroup`
+

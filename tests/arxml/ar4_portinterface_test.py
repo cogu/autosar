@@ -11,10 +11,10 @@ def _create_packages(ws):
     package.createSubPackage('DataConstrs', role='DataConstraint')
     package.createSubPackage('Units', role='Unit')
     package.createSubPackage('BaseTypes')
-    package = ws.createPackage('ModeDclrGroups', role = 'ModeDclrGroup')
-    package = ws.createPackage('Constants', role='Constant')
-    package = ws.createPackage('ComponentTypes', role='ComponentType')
-    package = ws.createPackage('PortInterfaces', role="PortInterface")
+    ws.createPackage('ModeDclrGroups', role = 'ModeDclrGroup')
+    ws.createPackage('Constants', role='Constant')
+    ws.createPackage('ComponentTypes', role='ComponentType')
+    ws.createPackage('PortInterfaces', role="PortInterface")
 
 
 def _create_data_types(ws):
@@ -39,10 +39,19 @@ def _create_data_types(ws):
     package.createImplementationDataTypeRef('Minutes_T', '/DataTypes/uint8', lowerLimit=0, upperLimit=63)
     package.createImplementationDataTypeRef('Hours_T', '/DataTypes/uint8', lowerLimit=0, upperLimit=31)
 
+def _create_mode_declarations(ws):
+    package = ws.find('ModeDclrGroups')
+    package.createModeDeclarationGroup('VehicleMode', ["OFF",
+                                                       "ACCESSORY",
+                                                        "RUNNING",
+                                                        "CRANKING",
+                                                    ], "OFF")
+
 
 def _init_ws(ws):
     _create_packages(ws)
     _create_data_types(ws)
+    _create_mode_declarations(ws)
 
 class ARXML4PortInterfaceTest(ARXMLTestClass):
 
@@ -51,6 +60,7 @@ class ARXML4PortInterfaceTest(ARXMLTestClass):
         _init_ws(ws)
         package = ws.find('/PortInterfaces')
         pif1 =  package.createSenderReceiverInterface('HeaterPwrStat_I', autosar.element.DataElement('HeaterPwrStat', 'OffOn_T'))
+        self.assertEqual(pif1.dataElements[0].typeRef, '/DataTypes/OffOn_T')
         file_name = 'ar4_sender_receiver_interface_single_element.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'portinterface', file_name)
@@ -110,6 +120,7 @@ class ARXML4PortInterfaceTest(ARXMLTestClass):
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'portinterface', file_name)
         self.save_and_check(ws, expected_file, generated_file)
+
         ws2 = autosar.workspace(version="4.2.2")
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
         pif2 = portInterface = ws2.find(pif1.ref)
@@ -118,6 +129,26 @@ class ARXML4PortInterfaceTest(ARXMLTestClass):
         self.assertEqual(len(pif2.operations), 1)
         operation = pif2['GetTimeStamp']
         self.assertIsInstance(operation, autosar.portinterface.Operation)
+
+    def test_create_mode_switch_interface(self):
+        ws = autosar.workspace(version="4.2.2")
+        _init_ws(ws)
+        package = ws.find('/PortInterfaces')
+        pif1 = package.createModeSwitchInterface('VehicleMode_I', autosar.mode.ModeGroup('mode', 'VehicleMode'))
+        self.assertEqual(pif1.modeGroup.typeRef, '/ModeDclrGroups/VehicleMode')
+
+        file_name = 'ar4_create_mode_switch_interface.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'portinterface', file_name)
+        self.save_and_check(ws, expected_file, generated_file)
+
+        ws2 = autosar.workspace(version="4.2.2")
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        pif2 = portInterface = ws2.find(pif1.ref)
+        self.assertIsInstance(pif2, autosar.portinterface.ModeSwitchInterface)
+        self.assertEqual(pif1.modeGroup.name, pif2.modeGroup.name)
+        self.assertEqual(pif1.modeGroup.typeRef, pif2.modeGroup.typeRef)
+
 
 
 if __name__ == '__main__':

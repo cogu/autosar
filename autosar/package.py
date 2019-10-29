@@ -200,8 +200,17 @@ class Package(object):
     def createModeSwitchInterface(self, name, modeGroup = None, isService=False, adminData=None):
         portInterface = autosar.portinterface.ModeSwitchInterface(name, isService, self, adminData)
         if modeGroup is not None:
-            portInterface.modeGroup = modeGroup
-            modeGroup.parent = portInterface
+            if isinstance(modeGroup, autosar.mode.ModeGroup):
+                ws = self.rootWS()
+                assert (ws is not None)
+                modeDeclarationGroup = ws.find(modeGroup.typeRef, role='ModeDclrGroup')
+                if modeDeclarationGroup is None:
+                    raise ValueError('invalid type reference: '+dataElements.typeRef)
+                modeGroup.typeRef=modeDeclarationGroup.ref #normalize reference string
+                portInterface.modeGroup = modeGroup
+                modeGroup.parent = portInterface
+            else:
+                raise ValueError('modeGroup must be an instance of autosar.mode.ModeGroup or None')
         self.append(portInterface)
         return portInterface
 

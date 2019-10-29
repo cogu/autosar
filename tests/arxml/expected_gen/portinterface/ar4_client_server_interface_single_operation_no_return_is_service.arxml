@@ -323,6 +323,26 @@
     </AR-PACKAGE>
     <AR-PACKAGE>
       <SHORT-NAME>ModeDclrGroups</SHORT-NAME>
+      <ELEMENTS>
+        <MODE-DECLARATION-GROUP>
+          <SHORT-NAME>VehicleMode</SHORT-NAME>
+          <INITIAL-MODE-REF DEST="MODE-DECLARATION">/ModeDclrGroups/VehicleMode/OFF</INITIAL-MODE-REF>
+          <MODE-DECLARATIONS>
+            <MODE-DECLARATION>
+              <SHORT-NAME>OFF</SHORT-NAME>
+            </MODE-DECLARATION>
+            <MODE-DECLARATION>
+              <SHORT-NAME>ACCESSORY</SHORT-NAME>
+            </MODE-DECLARATION>
+            <MODE-DECLARATION>
+              <SHORT-NAME>RUNNING</SHORT-NAME>
+            </MODE-DECLARATION>
+            <MODE-DECLARATION>
+              <SHORT-NAME>CRANKING</SHORT-NAME>
+            </MODE-DECLARATION>
+          </MODE-DECLARATIONS>
+        </MODE-DECLARATION-GROUP>
+      </ELEMENTS>
     </AR-PACKAGE>
     <AR-PACKAGE>
       <SHORT-NAME>Constants</SHORT-NAME>

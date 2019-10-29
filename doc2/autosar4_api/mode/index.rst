@@ -6,3 +6,4 @@ Modes
       
    mode_declaration_group
    mode_declaration
+   mode_group
