@@ -56,7 +56,9 @@ class DataTypeParser(ElementParser):
             elements = []
             name=root.find("./SHORT-NAME").text
             for elem in root.findall('./ELEMENTS/RECORD-ELEMENT'):
-                elements.append({"name":elem.find("./SHORT-NAME").text,"typeRef":elem.find("./TYPE-TREF").text})
+                elemName = self.parseTextNode(elem.find("./SHORT-NAME"))
+                elemTypeRef = self.parseTextNode(elem.find("./TYPE-TREF"))
+                elements.append(autosar.datatype.RecordTypeElement(elemName, elemTypeRef))
             dataType=autosar.datatype.RecordDataType(name,elements);
             self.parseDesc(root,dataType)
             return dataType
@@ -164,11 +166,11 @@ class DataTypeParser(ElementParser):
                 self.defaultHandler(xmlElem)
 
         dataType = autosar.datatype.ImplementationDataType(
-            self.name,            
+            self.name,
             variantProps = variantProps,
             dynamicArraySizeProfile = dynamicArraySizeProfile,
             typeEmitter = typeEmitter,
-            category = self.category,            
+            category = self.category,
             parent = parent,
             adminData = self.adminData
             )
@@ -211,7 +213,7 @@ class DataTypeParser(ElementParser):
 
     def parseSwBaseType(self, xmlRoot, parent = None):
         assert (xmlRoot.tag == 'SW-BASE-TYPE')
-        baseTypeSize, baseTypeEncoding, nativeDeclaration = None, None, None        
+        baseTypeSize, baseTypeEncoding, nativeDeclaration = None, None, None
         self.push()
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'BASE-TYPE-SIZE':
@@ -219,7 +221,7 @@ class DataTypeParser(ElementParser):
             elif xmlElem.tag == 'BASE-TYPE-ENCODING':
                 baseTypeEncoding = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'NATIVE-DECLARATION':
-                nativeDeclaration = self.parseTextNode(xmlElem)            
+                nativeDeclaration = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'MEM-ALIGNMENT':
                 pass #implement later
             elif xmlElem.tag == 'BYTE-ORDER':
@@ -331,7 +333,7 @@ class DataTypeParser(ElementParser):
                     raise NotImplementedError(xmlChild.tag)
         self.pop(elem)
         return elem
-    
+
     def _parseApplicationRecordElementXML(self, xmlRoot, parent):
         assert (xmlRoot.tag == 'APPLICATION-RECORD-ELEMENT')
         typeRef, variantProps = None, None
@@ -340,7 +342,7 @@ class DataTypeParser(ElementParser):
             if xmlElem.tag == 'TYPE-TREF':
                 typeRef = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'SW-DATA-DEF-PROPS':
-                variantProps = self.parseSwDataDefProps(xmlElem)                
+                variantProps = self.parseSwDataDefProps(xmlElem)
             else:
                 self.defaultHandler(xmlElem)
         elem = autosar.datatype.ApplicationRecordElement(self.name, typeRef, self.category, parent, self.adminData)

@@ -432,7 +432,7 @@ class Package(object):
             compuMethodRef = self._createCompuMethodAndUnitV3(ws, name, min, max, valueTable, None, offset, scaling, unit, forceFloatScaling)
             lowerLimit, upperLimit = min, max
             if compuMethodRef is not None:
-                compuMethod = ws.find(compuMethodRef)                
+                compuMethod = ws.find(compuMethodRef)
                 if lowerLimit is None:
                     lowerLimit = compuMethod.intToPhys.lowerLimit
                 if upperLimit is None:
@@ -481,7 +481,7 @@ class Package(object):
 
     def createRecordDataType(self, name, elements, adminData=None):
         """
-        AUTOSAR3: Create a new instance of RecordDataType and appends it to current package        
+        AUTOSAR3: Create a new instance of RecordDataType and appends it to current package
         """
         ws = self.rootWS()
         assert(ws is not None)
@@ -498,7 +498,7 @@ class Package(object):
                     elemUnitRef = elem[1]
                 elif isinstance(elem, collections.Mapping):
                     elemName = elem['name']
-                    elemUnitRef = elem['typeRef']                    
+                    elemUnitRef = elem['typeRef']
                 else:
                     raise ValueError('element must be either Mapping, RecordTypeElement or tuple')
                 if elemUnitRef is not None:
@@ -509,7 +509,7 @@ class Package(object):
                     if dataType is None:
                         raise autosar.base.InvalidDataTypeRef(elemUnitRef)
                     elem = autosar.datatype.RecordTypeElement(elemName, dataType.ref)
-                    processed.append(elem)            
+                    processed.append(elem)
             dataType = autosar.datatype.RecordDataType(name, processed, self, adminData)
             self.append(dataType)
             return dataType
@@ -720,7 +720,7 @@ class Package(object):
         constant.value = autosar.constant.NumericalValue(name, value, constant)
         self.append(constant)
         return constant
-    
+
     def createApplicationValueConstant(self, name, swValueCont = None, swAxisCont = None, valueCategory = None, valueLabel = None):
         """
         (AUTOSAR4)
@@ -733,8 +733,8 @@ class Package(object):
         constant.value = innerValue
         self.append(constant)
         return constant
-            
-        
+
+
 
 
     def createInternalDataConstraint(self, name, lowerLimit, upperLimit, lowerLimitType="CLOSED", upperLimitType="CLOSED", adminData = None):
@@ -1213,7 +1213,7 @@ class Package(object):
             computation.createValueTable(valueTable, autoLabel)
         elif offset is not None and scaling is not None:
             category = 'LINEAR'
-            (numerator, denominator) = self._calcNumeratorDenominator(scaling, forceFloatScaling)            
+            (numerator, denominator) = self._calcNumeratorDenominator(scaling, forceFloatScaling)
             computation.createRationalScaling(offset, numerator, denominator, lowerLimit, upperLimit)
         if category is None:
             return None #Creating a compu method does not seem necessary
@@ -1292,14 +1292,14 @@ class Package(object):
     def _createCompuMethodAndUnitV3(self, ws, name, lowerLimit, upperLimit, valueTable, bitmask, offset, scaling, unit, forceFloatScaling):
         """
         AUTOSAR3:
-    
+
         If both compuMethod and unit: Returns (compuMethodRef, unitRef)
         Else if compuMethod only: Returns (compuMethodRef, None)
-        Else: Returns (None, None)    
+        Else: Returns (None, None)
         """
         semanticsPackage = None
-        unitPackage = None        
-        compuMethodElem = None        
+        unitPackage = None
+        compuMethodElem = None
         unitElem = None
         assert(ws is not None)
         if ws.roles['CompuMethod'] is not None:
@@ -1310,10 +1310,10 @@ class Package(object):
             unitPackage=ws.find(ws.roles['Unit'])
             if unitPackage is None:
                 raise RuntimeError("no package found with role='Unit'")
-    
+
         if (lowerLimit is None) and (upperLimit is None) and (valueTable is None) and (bitmask is None) and (offset is None) and (scaling is None) and (unit is None):
             return None
-        
+
         if unit is not None:
             unitElem = self._checkAndCreateUnit(ws, unit, unitPackage = unitPackage)
             compuMethodElem.unitRef = unitElem.ref

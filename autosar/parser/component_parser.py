@@ -229,10 +229,9 @@ class ComponentTypeParser(ElementParser):
         assert (xmlRoot.tag=='COMPOSITION-TYPE') or (xmlRoot.tag=='COMPOSITION-SW-COMPONENT-TYPE')
         dataTypeMappingRefs = None
         swc=autosar.component.CompositionComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
+        self.push()
         for xmlElem in xmlRoot.findall('./*'):
-            if xmlElem.tag == 'DESC':
-                self.parseDesc(xmlElem, swc)
-            elif xmlElem.tag=='SHORT-NAME':
+            if xmlElem.tag=='SHORT-NAME':
                 continue
             elif xmlElem.tag=='PORTS':
                 self.parseComponentPorts(swc,xmlRoot)
@@ -251,9 +250,10 @@ class ComponentTypeParser(ElementParser):
                         assert(tmp is not None)
                         dataTypeMappingRefs.append(tmp)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                self.defaultHandler(xmlElem)
         if dataTypeMappingRefs is not None:
             swc.dataTypeMappingRefs = dataTypeMappingRefs
+        self.pop(swc)
         return swc
 
     def parseComponents(self,xmlRoot,parent):

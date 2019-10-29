@@ -78,7 +78,7 @@ class ARXML4BehaviorTest(ARXMLTestClass):
         file_name = 'ar4_behavior_empty_from_swc.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'behavior', file_name)
-        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'], force_copy=True)
+        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
         
         
 
