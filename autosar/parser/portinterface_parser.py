@@ -122,18 +122,19 @@ class PortInterfacePackageParser(ElementParser):
 
     def _parseDataElementPrototype(self, xmlRoot):
         assert(xmlRoot.tag == 'DATA-ELEMENT-PROTOTYPE')
-        (name, typeRef, isQueued) = (None, None, False)
+        (typeRef, isQueued) = (None, False)
+        self.push()
         for xmlElem in xmlRoot.findall('./*'):
-            if xmlElem.tag == 'SHORT-NAME':
-                name = self.parseTextNode(xmlElem)
-            elif xmlElem.tag == 'TYPE-TREF':
+            if xmlElem.tag == 'TYPE-TREF':
                 typeRef = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'IS-QUEUED':
                 isQueued = True if self.parseTextNode(xmlElem) == 'true' else False
             else:
-                raise NotImplementedError(xmlElem.tag)
-        if (name is not None) and (typeRef is not None):
-            return autosar.element.DataElement(name, typeRef, isQueued)
+                self.defaultHandler(xmlElem)
+        if (self.name is not None) and (typeRef is not None):
+            elem = autosar.element.DataElement(self.name, typeRef, isQueued)
+            self.pop(elem)
+            return elem
         else:
             raise RuntimeError('SHORT-NAME and TYPE-TREF must not be None')
 
