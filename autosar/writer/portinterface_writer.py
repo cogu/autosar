@@ -245,7 +245,7 @@ class XMLPortInterfaceWriter(ElementWriter):
         return lines
 
     def writeModeGroupXML(self,modeGroup):
-        assert(isinstance(modeGroup,autosar.portinterface.ModeGroup))
+        assert(isinstance(modeGroup,autosar.mode.ModeGroup))
         lines=[]
         ws = modeGroup.rootWS()
         assert(ws is not None)

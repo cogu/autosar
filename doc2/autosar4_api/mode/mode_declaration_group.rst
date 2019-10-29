@@ -39,6 +39,8 @@ Factory Methods
 Attributes
 -----------
 
+For inherited attributes see :ref:`autosar.element.Element <element>`.
+
 ..  table::
     :align: left
 
