@@ -48,7 +48,7 @@ class XMLPortInterfaceWriter(ElementWriter):
         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%portInterface.name,1))
         if portInterface.adminData is not None:
             lines.extend(self.indent(self.writeAdminDataXML(portInterface.adminData),1))
-        lines.append(self.indent('<IS-SERVICE>%s</IS-SERVICE>'%self.toBoolean(portInterface.isService),1))
+        lines.append(self.indent('<IS-SERVICE>%s</IS-SERVICE>'%self.toBooleanStr(portInterface.isService),1))
         if (self.version >= 4.0) and (portInterface.serviceKind is not None):
             lines.append(self.indent('<SERVICE-KIND>%s</SERVICE-KIND>'%portInterface.serviceKind,1))
         if len(portInterface.dataElements)>0:
@@ -76,7 +76,7 @@ class XMLPortInterfaceWriter(ElementWriter):
         lines=[]
         lines.append('<CALPRM-INTERFACE>')
         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%portInterface.name,1))
-        lines.append(self.indent('<IS-SERVICE>%s</IS-SERVICE>'%self.toBoolean(portInterface.isService),1))
+        lines.append(self.indent('<IS-SERVICE>%s</IS-SERVICE>'%self.toBooleanStr(portInterface.isService),1))
         if len(portInterface.elements)>0:
             lines.append(self.indent('<CALPRM-ELEMENTS>',1))
             for elem in portInterface.elements:
@@ -159,7 +159,7 @@ class XMLPortInterfaceWriter(ElementWriter):
         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%portInterface.name,1))
         if portInterface.adminData is not None:
             lines.extend(self.indent(self.writeAdminDataXML(portInterface.adminData),1))
-        lines.append(self.indent('<IS-SERVICE>%s</IS-SERVICE>'%self.toBoolean(portInterface.isService),1))
+        lines.append(self.indent('<IS-SERVICE>%s</IS-SERVICE>'%self.toBooleanStr(portInterface.isService),1))
         if (portInterface.serviceKind is not None) and (self.version >= 4.0):
             lines.append(self.indent('<SERVICE-KIND>%s</SERVICE-KIND>'%portInterface.serviceKind,1))
         if len(portInterface.operations)>0:
@@ -274,7 +274,7 @@ class XMLPortInterfaceWriter(ElementWriter):
         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%portInterface.name,1))
         if portInterface.adminData is not None:
             lines.extend(self.indent(self.writeAdminDataXML(portInterface.adminData),1))
-        lines.append(self.indent('<IS-SERVICE>%s</IS-SERVICE>'%self.toBoolean(portInterface.isService),1))
+        lines.append(self.indent('<IS-SERVICE>%s</IS-SERVICE>'%self.toBooleanStr(portInterface.isService),1))
         lines.extend(self.indent(self.writeModeGroupXML(portInterface.modeGroup),1))
         lines.append('</%s>'%portInterface.tag(self.version))
         return lines

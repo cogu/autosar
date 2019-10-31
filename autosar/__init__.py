@@ -8,6 +8,7 @@ import autosar.signal
 import autosar.package
 import autosar.rte
 import autosar.builder
+import autosar.port
 from abc import (ABC,abstractmethod)
 from autosar.base import splitRef
 import autosar.bsw.com

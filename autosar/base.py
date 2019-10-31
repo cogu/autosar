@@ -324,3 +324,6 @@ class DataConstraintError(ValueError):
 
 class InvalidMappingRef(ValueError):
     pass
+
+class InvalidModeGroupRef(ValueError):
+    pass
