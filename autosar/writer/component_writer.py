@@ -121,7 +121,12 @@ class XMLComponentTypeWriter(ElementWriter):
             for comspec in port.comspec:
                 if self.version>=4.0:
                     if isinstance(portInterface, autosar.portinterface.ModeSwitchInterface):
-                        lines.extend(self.indent(self._writeModeSwitchReceiverComSpecXML(ws, portInterface, comspec),2))
+                        modeGroup = None
+                        if comspec.name is not None:
+                            modeGroup = portInterface.find(comspec.name)
+                            if modeGroup is None:
+                                raise autosar.base.InvalidModeGroupRef(comspec.modeGroupRef)
+                        lines.extend(self.indent(self._writeModeSwitchReceiverComSpecXML(ws, portInterface, comspec, modeGroup),2))
                     elif isinstance(portInterface, autosar.portinterface.ParameterInterface):
                         lines.extend(self.indent(self._writeParameterRequireComSpecXML(port, portInterface, comspec),2))
                     elif isinstance(portInterface, autosar.portinterface.SenderReceiverInterface):
@@ -204,11 +209,19 @@ class XMLComponentTypeWriter(ElementWriter):
                 lines.append('</NONQUEUED-RECEIVER-COM-SPEC>')
         return lines
 
-    def _writeModeSwitchReceiverComSpecXML(self, ws, portInterface, comspec):
+    def _writeModeSwitchReceiverComSpecXML(self, ws, portInterface, comspec, modeGroup):
         lines = []
         lines.append('<MODE-SWITCH-RECEIVER-COM-SPEC>')
-        lines.append(self.indent('<ENHANCED-MODE-API>%s</ENHANCED-MODE-API>'%('true' if comspec.enhancedMode else 'false'),1))
-        lines.append(self.indent('<SUPPORTS-ASYNCHRONOUS-MODE-SWITCH>%s</SUPPORTS-ASYNCHRONOUS-MODE-SWITCH>'%('true' if comspec.supportAsync else 'false'),1))
+        if comspec.enhancedMode is not None:
+            lines.append(self.indent('<ENHANCED-MODE-API>{}</ENHANCED-MODE-API>'.format(self.toBooleanStr(comspec.enhancedMode)),1))
+        if modeGroup is not None:
+            destTag = modeGroup.tag(self.version)
+            if (self.version <= 4.2) and destTag == 'MODE-GROUP':
+                #There is a bug in the XML Schema that needs a custom DEST value
+                destTag = 'MODE-DECLARATION-GROUP-PROTOTYPE'
+            lines.append(self.indent('<MODE-GROUP-REF DEST="{}">{}</MODE-GROUP-REF>'.format(destTag, modeGroup.ref), 1))
+        if comspec.supportAsync is not None:
+            lines.append(self.indent('<SUPPORTS-ASYNCHRONOUS-MODE-SWITCH>{}</SUPPORTS-ASYNCHRONOUS-MODE-SWITCH>'.format(self.toBooleanStr(comspec.supportAsync)),1))
         lines.append('</MODE-SWITCH-RECEIVER-COM-SPEC>')
         return lines
 
@@ -243,34 +256,116 @@ class XMLComponentTypeWriter(ElementWriter):
             if portInterface is None:
                 raise ValueError("%s: invalid reference detected: '%s'"%(port.ref,port.portInterfaceRef))
             for comspec in port.comspec:
-                elem=portInterface.find(comspec.name)
-                if elem is None:
-                    raise ValueError("%s: invalid comspec name '%s'"%(port.ref,comspec.name))
-                if isinstance(elem,autosar.portinterface.DataElement):
+                if isinstance(comspec, autosar.component.DataElementComSpec):
+                    elem=portInterface.find(comspec.name)
+                    if elem is None:
+                        raise ValueError("%s: Unknown data element name '%s'"%(port.ref,comspec.name))
                     if elem.isQueued:
-                        if self.version<4.0:
-                            lines.append(self.indent('<QUEUED-SENDER-COM-SPEC>',2))
-                            lines.append(self.indent('<DATA-ELEMENT-REF DEST="%s">%s</DATA-ELEMENT-REF>'%(elem.tag(self.version),elem.ref),3))
-                            lines.append(self.indent('</QUEUED-SENDER-COM-SPEC>',2))
-                        else:
-                            lines.append(self.indent('<QUEUED-SENDER-COM-SPEC>',2))
-                            lines.append(self.indent('<DATA-ELEMENT-REF DEST="%s">%s</DATA-ELEMENT-REF>'%(elem.tag(self.version),elem.ref),3))
-                            lines.append(self.indent('<USES-END-TO-END-PROTECTION>false</USES-END-TO-END-PROTECTION>',3))
-                            lines.append(self.indent('</QUEUED-SENDER-COM-SPEC>',2))
+                        lines.extend(self.indent(self,_writeQueuedSenderComSpecXML(ws, port, comspec, elem), 2))
                     else:
-                        lines.extend(self.indent(self._writeUnqueuedSenderComSpecXML(ws, comspec, elem),2))
-                elif isinstance(elem,autosar.portinterface.Operation):
-                    lines.append(self.indent('<SERVER-COM-SPEC>',2))
-                    lines.append(self.indent('<OPERATION-REF DEST="%s">%s</OPERATION-REF>'%(elem.tag(self.version),elem.ref),3))
-                    lines.append(self.indent('<QUEUE-LENGTH>%d</QUEUE-LENGTH>'%(int(comspec.queueLength)),3))
-                    lines.append(self.indent('</SERVER-COM-SPEC>',2))
-                elif isinstance(elem,autosar.portinterface.Parameter):
-                    lines.extend(self.indent(self._writeParameterProvideComSpecXML(ws, comspec, elem),2))
+                        lines.extend(self.indent(self._writeUnqueuedSenderComSpecXML(ws, port, comspec, elem),2))
+                elif isinstance(comspec, autosar.component.OperationComSpec):
+                    operation=portInterface.find(comspec.name)
+                    if operation is None:
+                        raise ValueError("%s: Unknown operation name '%s'"%(port.ref, comspec.name))
+                    lines.extend(self.indent(self,_writeServerComSpecXML(ws, port, comspec, operation), 2))
+                elif isinstance(comspec, autosar.component.ParameterComSpec):
+                    param=portInterface.find(comspec.name)
+                    if param is None:
+                        raise ValueError("%s: Unknown parameter name '%s'"%(port.ref, comspec.name))
+                    lines.extend(self.indent(self._writeParameterProvideComSpecXML(ws, comspec, param),2))
+                elif isinstance(comspec, autosar.component.ModeSwitchComSpec):
+                    modeGroup = None
+                    if comspec.name is not None:
+                        modeGroup = portInterface.find(comspec.name)
+                        if modeGroup is None:
+                            raise ValueError("%s: Unknown mode group name '%s'"%(port.ref, comspec.name))
+                    lines.extend(self.indent(self._writeModeSwitchSenderComSpecXML(ws, comspec, modeGroup),2))
                 else:
-                    raise NotImplementedError(str(type(elem)))
+                    raise NotImplementedError(str(type(comspec)))
             lines.append(self.indent('</PROVIDED-COM-SPECS>',1))
         lines.append(self.indent('<PROVIDED-INTERFACE-TREF DEST="%s">%s</PROVIDED-INTERFACE-TREF>'%(portInterface.tag(self.version),portInterface.ref),1))
         lines.append('</%s>'%port.tag(self.version))
+        return lines
+
+    def _writeQueuedSenderComSpecXML(self, ws, comspec, elem):
+        assert(isinstance(comspec, autosar.component.DataElementComSpec))
+        lines=[]
+        lines.append('<QUEUED-SENDER-COM-SPEC>')
+        lines.append(self.indent('<DATA-ELEMENT-REF DEST="%s">%s</DATA-ELEMENT-REF>'%(elem.tag(self.version),elem.ref),1))
+        if (self.version>=4.0 and comspec.useEndToEndProtection is not None):
+            lines.append(self.indent('<USES-END-TO-END-PROTECTION>{}</USES-END-TO-END-PROTECTION>'.format(self.toBooleanStr(comspec.useEndToEndProtection)), 1))
+        lines.append('</QUEUED-SENDER-COM-SPEC>')
+        return lines
+
+    def _writeUnqueuedSenderComSpecXML(self, ws, comspec, elem):
+        lines=[]
+        if self.version<4.0:
+            lines.append('<UNQUEUED-SENDER-COM-SPEC>')
+            lines.append(self.indent('<DATA-ELEMENT-REF DEST="%s">%s</DATA-ELEMENT-REF>'%(elem.tag(self.version),elem.ref),1))
+            if isinstance(comspec.canInvalidate,bool):
+                lines.append(self.indent('<CAN-INVALIDATE>%s</CAN-INVALIDATE>'%('true' if comspec.canInvalidate else 'false'),1))
+            if comspec.initValueRef is not None:
+                tag = ws.find(comspec.initValueRef).tag(self.version)
+                lines.append(self.indent('<INIT-VALUE-REF DEST="%s">%s</INIT-VALUE-REF>'%(tag,comspec.initValueRef),1))
+            lines.append('</UNQUEUED-SENDER-COM-SPEC>')
+        else:
+            lines.append('<NONQUEUED-SENDER-COM-SPEC>')
+            lines.append(self.indent('<DATA-ELEMENT-REF DEST="%s">%s</DATA-ELEMENT-REF>'%(elem.tag(self.version),elem.ref),1))
+            lines.append(self.indent('<USES-END-TO-END-PROTECTION>false</USES-END-TO-END-PROTECTION>',1))
+            if comspec.initValueRef is not None:
+                lines.extend(self.indent(self._writeInitValueRefXML(ws, comspec.initValueRef),1))
+            if comspec.initValue is not None:
+                lines.append(self.indent('<INIT-VALUE>',1))
+                lines.extend(self.indent(self.writeValueSpecificationXML(comspec.initValue),2))
+                lines.append(self.indent('</INIT-VALUE>',1))
+            lines.append('</NONQUEUED-SENDER-COM-SPEC>')
+        return lines
+
+    def _writeServerComSpecXML(self, comspec, operation):
+        assert(isinstance(elem,autosar.component.OperationComSpec))
+        lines=[]
+        lines.append('<SERVER-COM-SPEC>')
+        lines.append(self.indent('<OPERATION-REF DEST="%s">%s</OPERATION-REF>'%(operation.tag(self.version),operation.ref),1))
+        lines.append(self.indent('<QUEUE-LENGTH>%d</QUEUE-LENGTH>'%(int(comspec.queueLength)),1))
+        lines.append('</SERVER-COM-SPEC>')
+        return lines
+
+    def _writeParameterProvideComSpecXML(self, ws, comspec, param):
+        assert(isinstance(elem,autosar.component.ParameterComSpec))
+        lines = []
+        if self.version<4.0:
+            raise NotImplementedError('_writeParameterProvideComSpecXML')
+        else:
+            lines.append('<PARAMETER-PROVIDE-COM-SPEC>')
+            if comspec.initValue is not None:
+                lines.append(self.indent('<INIT-VALUE>',1))
+                lines.extend(self.indent(self.writeValueSpecificationXML(comspec.initValue),2))
+                lines.append(self.indent('</INIT-VALUE>',1))
+            lines.append(self.indent('<PARAMETER-REF DEST="%s">%s</PARAMETER-REF>'%(param.tag(self.version),elem.ref),1))
+            lines.append('</PARAMETER-PROVIDE-COM-SPEC>')
+        return lines
+
+    def _writeModeSwitchSenderComSpecXML(self, ws, comspec, modeGroup):
+        assert(isinstance(comspec, autosar.component.ModeSwitchComSpec))
+        lines=[]
+        lines.append('<MODE-SWITCH-SENDER-COM-SPEC>')
+        if comspec.enhancedMode is not None:
+            lines.append(self.indent('<ENHANCED-MODE-API>{}</ENHANCED-MODE-API>'.format(self.toBooleanStr(comspec.enhancedMode)),1))
+        if modeGroup is not None:
+            destTag = modeGroup.tag(self.version)
+            if (self.version <= 4.2) and destTag == 'MODE-GROUP':
+                #There is a bug in the XML Schema that needs a custom DEST value
+                destTag = 'MODE-DECLARATION-GROUP-PROTOTYPE'
+            lines.append(self.indent('<MODE-GROUP-REF DEST="{}">{}</MODE-GROUP-REF>'.format(destTag, modeGroup.ref), 1))
+        if comspec.modeSwitchAckTimeout is not None:
+            timeoutStr = self.format_float(float(comspec.modeSwitchAckTimeout)/1000.0)
+            lines.append(self.indent('<MODE-SWITCHED-ACK>',1))
+            lines.append(self.indent('<TIMEOUT>{}</TIMEOUT>'.format(timeoutStr),2))
+            lines.append(self.indent('</MODE-SWITCHED-ACK>',1))
+        if comspec.queueLength is not None:
+            lines.append(self.indent('<QUEUE-LENGTH>{:d}</QUEUE-LENGTH>'.format(int(comspec.queueLength)),1))
+        lines.append('</MODE-SWITCH-SENDER-COM-SPEC>')
         return lines
 
     def writeSwcImplementationXML(self,elem):
@@ -395,44 +490,6 @@ class XMLComponentTypeWriter(ElementWriter):
         lines.append(self.indent('<CONTEXT-COMPONENT-REF DEST="%s">%s</CONTEXT-COMPONENT-REF>'%(innerComponent.tag(self.version), innerComponent.ref), 1))
         lines.append(self.indent('<%s DEST="%s">%s</%s>'%(innerTag, innerPort.tag(self.version), innerPort.ref, innerTag), 1))
         lines.append('</%s>'%outerTag)
-        return lines
-
-    def _writeUnqueuedSenderComSpecXML(self, ws, comspec, elem):
-        lines=[]
-        if self.version<4.0:
-            lines.append('<UNQUEUED-SENDER-COM-SPEC>')
-            lines.append(self.indent('<DATA-ELEMENT-REF DEST="%s">%s</DATA-ELEMENT-REF>'%(elem.tag(self.version),elem.ref),1))
-            if isinstance(comspec.canInvalidate,bool):
-                lines.append(self.indent('<CAN-INVALIDATE>%s</CAN-INVALIDATE>'%('true' if comspec.canInvalidate else 'false'),1))
-            if comspec.initValueRef is not None:
-                tag = ws.find(comspec.initValueRef).tag(self.version)
-                lines.append(self.indent('<INIT-VALUE-REF DEST="%s">%s</INIT-VALUE-REF>'%(tag,comspec.initValueRef),1))
-            lines.append('</UNQUEUED-SENDER-COM-SPEC>')
-        else:
-            lines.append('<NONQUEUED-SENDER-COM-SPEC>')
-            lines.append(self.indent('<DATA-ELEMENT-REF DEST="%s">%s</DATA-ELEMENT-REF>'%(elem.tag(self.version),elem.ref),1))
-            lines.append(self.indent('<USES-END-TO-END-PROTECTION>false</USES-END-TO-END-PROTECTION>',1))
-            if comspec.initValueRef is not None:
-                lines.extend(self.indent(self._writeInitValueRefXML(ws, comspec.initValueRef),1))
-            if comspec.initValue is not None:
-                lines.append(self.indent('<INIT-VALUE>',1))
-                lines.extend(self.indent(self.writeValueSpecificationXML(comspec.initValue),2))
-                lines.append(self.indent('</INIT-VALUE>',1))
-            lines.append('</NONQUEUED-SENDER-COM-SPEC>')
-        return lines
-
-    def _writeParameterProvideComSpecXML(self, ws, comspec, elem):
-        lines = []
-        if self.version<4.0:
-            raise NotImplementedError('_writeParameterProvideComSpecXML')
-        else:
-            lines.append('<PARAMETER-PROVIDE-COM-SPEC>')
-            if comspec.initValue is not None:
-                lines.append(self.indent('<INIT-VALUE>',1))
-                lines.extend(self.indent(self.writeValueSpecificationXML(comspec.initValue),2))
-                lines.append(self.indent('</INIT-VALUE>',1))
-            lines.append(self.indent('<PARAMETER-REF DEST="%s">%s</PARAMETER-REF>'%(elem.tag(self.version),elem.ref),1))
-            lines.append('</PARAMETER-PROVIDE-COM-SPEC>')
         return lines
 
     def _writeInitValueRefXML(self, ws, initValueRef):

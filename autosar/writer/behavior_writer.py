@@ -2,11 +2,6 @@ from autosar.writer.writer_base import ElementWriter
 import autosar.behavior
 import autosar.base
 import autosar.portinterface
-from decimal import Decimal
-
-def format_float(f):
-    d = Decimal(str(f));
-    return d.quantize(Decimal(1)) if d == d.to_integral() else d.normalize()
 
 class XMLBehaviorWriter(ElementWriter):
     def __init__(self,version, patch):
@@ -237,7 +232,7 @@ class XMLBehaviorWriter(ElementWriter):
                 if self.version < 4.0:
                     lines.append(self.indent('<TIMEOUT>%.9f</TIMEOUT>'%float(callPoint.timeout),1))
                 else:
-                    timeout = format_float(float(callPoint.timeout))
+                    timeout = self.format_float(float(callPoint.timeout))
                     lines.append(self.indent('<TIMEOUT>%s</TIMEOUT>'%timeout,1))
             lines.append('</SYNCHRONOUS-SERVER-CALL-POINT>')
         else:
@@ -332,7 +327,7 @@ class XMLBehaviorWriter(ElementWriter):
                     period = float(event.period)/1000.0
                     lines.append(self.indent('<PERIOD>%.9f</PERIOD>'%(period),1))
                 else:
-                    period = format_float(float(event.period)/1000.0)
+                    period = self.format_float(float(event.period)/1000.0)
                     lines.append(self.indent('<PERIOD>%s</PERIOD>'%(period),1))
         elif isinstance(event, autosar.behavior.OperationInvokedEvent):
             assert(event.operationInstanceRef is not None)

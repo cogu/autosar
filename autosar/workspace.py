@@ -30,13 +30,16 @@ _validWSRoles = ['DataType', 'Constant', 'PortInterface', 'ComponentType', 'Mode
 
 class WorkspaceProfile:
     """
-    A Workspace profile allows custom settings for the behavior of the Workspace
+    A Workspace profile allows users to customize default settings and behaviors
     """
     def __init__(self):
         self.compuMethodSuffix = ''
         self.dataConstraintSuffix = '_DataConstr'
         self.errorHandlingOpt = False
         self.swCalibrationAccessDefault = 'NOT-ACCESSIBLE'
+        self.modeSwitchEnhancedModeDefault = False
+        self.modeSwitchSupportAsyncDefault = False
+        self.modeSwitchAutoSetModeGroupRef = False
 
 class Workspace:
     """

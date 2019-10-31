@@ -43,7 +43,7 @@ class BaseWriter:
         lines.append('</AR-PACKAGE>')
         return lines
 
-    def toBoolean(self,value):
+    def toBooleanStr(self,value):
         if value: return 'true'
         return 'false'
 
@@ -337,7 +337,7 @@ class BaseWriter:
             if variant.hasAnyProp():
                 variantList.append(variant)
             if len(variantList) > 0:
-                lines.append(self.indent('<SW-DATA-DEF-PROPS>',1))            
+                lines.append(self.indent('<SW-DATA-DEF-PROPS>',1))
                 variant.dataConstraintRef = elem.dataConstraintRef
                 lines.extend(self.indent(self.writeSwDataDefPropsVariantsXML(ws, variantList),2))
                 lines.append(self.indent('</SW-DATA-DEF-PROPS>',1))
@@ -348,7 +348,7 @@ class BaseWriter:
         else:
             lines.append(self.indent('<TYPE-TREF DEST="%s">%s</TYPE-TREF>'%(typeElem.tag(self.version),typeElem.ref),1))
         if self.version < 4.0:
-            lines.append(self.indent('<IS-QUEUED>%s</IS-QUEUED>'%self.toBoolean(elem.isQueued),1))
+            lines.append(self.indent('<IS-QUEUED>%s</IS-QUEUED>'%self.toBooleanStr(elem.isQueued),1))
         lines.append('</%s>'%elem.tag(self.version))
         return lines
 
@@ -371,6 +371,17 @@ class BaseWriter:
             return '-INFINITE' if self.version < 4.0 else '-INF'
         else:
             return str(x)
+
+
+    def format_float(self, f):
+        """
+        Transforms a float into a printable number string.
+        If the float only has integer part it will print an integer (no fractional part)
+        Otherwise it till print a normalized floating point number (remove unnecessary zeros from the right in fractional part)
+        """
+        d = Decimal(str(f));
+        return d.quantize(Decimal(1)) if d == d.to_integral() else d.normalize()
+
 
 class ElementWriter(BaseWriter, metaclass=abc.ABCMeta):
 
