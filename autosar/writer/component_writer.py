@@ -125,6 +125,10 @@ class XMLComponentTypeWriter(ElementWriter):
                         if comspec.name is not None:
                             modeGroup = portInterface.find(comspec.name)
                             if modeGroup is None:
+                                raise ValueError("%s: Invalid comspec name '%s'"%(port.ref, comspec.name))
+                        elif comspec.modeGroupRef is not None:
+                            modeGroup = ws.find(comspec.modeGroupRef)
+                            if modeGroup is None:
                                 raise autosar.base.InvalidModeGroupRef(comspec.modeGroupRef)
                         lines.extend(self.indent(self._writeModeSwitchReceiverComSpecXML(ws, portInterface, comspec, modeGroup),2))
                     elif isinstance(portInterface, autosar.portinterface.ParameterInterface):
@@ -132,12 +136,12 @@ class XMLComponentTypeWriter(ElementWriter):
                     elif isinstance(portInterface, autosar.portinterface.SenderReceiverInterface):
                         dataElem=portInterface.find(comspec.name)
                         if dataElem is None:
-                            raise ValueError("%s: invalid comspec name '%s'"%(port.ref, comspec.name))
+                            raise ValueError("%s: Invalid comspec name '%s'"%(port.ref, comspec.name))
                         lines.extend(self.indent(self._writeDataReceiverComSpecXML(ws, dataElem, comspec),2))
                     elif isinstance(portInterface, autosar.portinterface.ClientServerInterface):
                         operation=portInterface.find(comspec.name)
                         if operation is None:
-                            raise ValueError("%s: invalid comspec name '%s'"%(port.ref,comspec.name))
+                            raise ValueError("%s: Invalid comspec name '%s'"%(port.ref,comspec.name))
                         lines.extend(self.indent(self._writeOperationComSpec(operation),2))
                     else:
                         raise NotImplementedError(str(type(portInterface)))
@@ -217,7 +221,7 @@ class XMLComponentTypeWriter(ElementWriter):
         if modeGroup is not None:
             destTag = modeGroup.tag(self.version)
             if (self.version <= 4.2) and destTag == 'MODE-GROUP':
-                #There is a bug in the XML Schema that needs a custom DEST value
+                #There is a bug in the XML Schema that needs a manual correction of its DEST value
                 destTag = 'MODE-DECLARATION-GROUP-PROTOTYPE'
             lines.append(self.indent('<MODE-GROUP-REF DEST="{}">{}</MODE-GROUP-REF>'.format(destTag, modeGroup.ref), 1))
         if comspec.supportAsync is not None:
@@ -259,7 +263,7 @@ class XMLComponentTypeWriter(ElementWriter):
                 if isinstance(comspec, autosar.component.DataElementComSpec):
                     elem=portInterface.find(comspec.name)
                     if elem is None:
-                        raise ValueError("%s: Unknown data element name '%s'"%(port.ref,comspec.name))
+                        raise ValueError("%s: Invalid data element name '%s'"%(port.ref,comspec.name))
                     if elem.isQueued:
                         lines.extend(self.indent(self,_writeQueuedSenderComSpecXML(ws, port, comspec, elem), 2))
                     else:
@@ -267,19 +271,23 @@ class XMLComponentTypeWriter(ElementWriter):
                 elif isinstance(comspec, autosar.component.OperationComSpec):
                     operation=portInterface.find(comspec.name)
                     if operation is None:
-                        raise ValueError("%s: Unknown operation name '%s'"%(port.ref, comspec.name))
+                        raise ValueError("%s: Invalid operation name '%s'"%(port.ref, comspec.name))
                     lines.extend(self.indent(self,_writeServerComSpecXML(ws, port, comspec, operation), 2))
                 elif isinstance(comspec, autosar.component.ParameterComSpec):
                     param=portInterface.find(comspec.name)
                     if param is None:
-                        raise ValueError("%s: Unknown parameter name '%s'"%(port.ref, comspec.name))
+                        raise ValueError("%s: Invalid parameter name '%s'"%(port.ref, comspec.name))
                     lines.extend(self.indent(self._writeParameterProvideComSpecXML(ws, comspec, param),2))
                 elif isinstance(comspec, autosar.component.ModeSwitchComSpec):
                     modeGroup = None
                     if comspec.name is not None:
                         modeGroup = portInterface.find(comspec.name)
                         if modeGroup is None:
-                            raise ValueError("%s: Unknown mode group name '%s'"%(port.ref, comspec.name))
+                            raise ValueError("%s: Invalid mode group name '%s'"%(port.ref, comspec.name))
+                    elif comspec.modeGroupRef is not None:
+                        modeGroup = ws.find(comspec.modeGroupRef)
+                        if modeGroup is None:
+                            raise autosar.base.InvalidModeGroupRef(comspec.modeGroupRef)
                     lines.extend(self.indent(self._writeModeSwitchSenderComSpecXML(ws, comspec, modeGroup),2))
                 else:
                     raise NotImplementedError(str(type(comspec)))

@@ -745,19 +745,21 @@ class ModeSwitchComSpec:
     Implementation of <MODE-SWITCH-SENDER-COM-SPEC> and <MODE-SWITCH-RECEIVER-COM-SPEC>
 
     Attributes:
-    name: Name of the ModeGroup in the associated portInterface.
+    name: Name of the ModeGroup in the associated portInterface (str). This has higher precedence than modeGroupRef.
     enhancedMode: Enables/Disables enhanced mode API (None or bool)
-    supportAsync: TBD (None or bool)
+    supportAsync: Enables/Disables support for asynchronous call  (None or bool)
     modeGroupRef: Reference to ModeDeclarationGroup (of the same port interface) (None or str)
     queueLength: Length of call queue on the mode user side (None or int)
     modeSwitchAckTimeout: Timeout (in milliseconds) for acknowledgement of the successful processing of the mode switch request (None or int).
+    modeGroupRef: Full mode group reference (None or str). This has lower precendence to name (only used when name is None)
     """
-    def __init__(self, name=None, enhancedMode=None, supportAsync=None, queueLength = None, modeSwitchAckTimeout = None):
+    def __init__(self, name=None, enhancedMode=None, supportAsync=None, queueLength = None, modeSwitchAckTimeout = None, modeGroupRef = None):
         self.name = str(name) if name is not None else None
         self.enhancedMode = bool(enhancedMode) if enhancedMode is not None else None
         self.supportAsync = bool(supportAsync) if supportAsync is not None else None
         self._queueLength = int(queueLength) if queueLength is not None else None
         self._modeSwitchAckTimeout = int(modeSwitchAckTimeout) if modeSwitchAckTimeout is not None else None
+        self.modeGroupRef = str(modeGroupRef) if modeGroupRef is not None else None
 
     def tag(self, version, parentPort):
         if isinstance(parentPort, ProvidePort):

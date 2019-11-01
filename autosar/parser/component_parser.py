@@ -155,7 +155,7 @@ class ComponentTypeParser(ElementParser):
                                 comspec.queueLength = self.parseTextNode(xmlItem.find('./QUEUE-LENGTH'))
                             port.comspec.append(comspec)
                         elif xmlItem.tag == 'MODE-SWITCH-RECEIVER-COM-SPEC':
-                            comspec = self._parseModeSwitchComSpec(xmlItem)
+                            comspec = self._parseModeSwitchReceiverComSpec(xmlItem)
                             port.comspec.append(comspec)
                         elif xmlItem.tag == 'PARAMETER-REQUIRE-COM-SPEC':
                             comspec = self._parseParameterComSpec(xmlItem, portInterfaceRef)
@@ -199,12 +199,16 @@ class ComponentTypeParser(ElementParser):
                         elif xmlItem.tag == 'QUEUED-SENDER-COM-SPEC':
                             dataElemName = _getDataElemNameFromComSpec(xmlItem,portInterfaceRef)
                             comspec = autosar.component.DataElementComSpec(dataElemName)
+                            assert(comspec is not None)
                             port.comspec.append(comspec)
                         elif xmlItem.tag == 'PARAMETER-PROVIDE-COM-SPEC':
                             comspec = self._parseParameterComSpec(xmlItem, portInterfaceRef)
+                            assert(comspec is not None)
                             port.comspec.append(comspec)
                         elif xmlItem.tag == 'MODE-SWITCH-SENDER-COM-SPEC':
-                            pass #implement later
+                            comspec = self._parseModeSwitchSenderComSpec(xmlItem)
+                            assert(comspec is not None)
+                            port.comspec.append(comspec)
                         else:
                             raise NotImplementedError(xmlItem.tag)
                 componentType.providePorts.append(port)
@@ -337,8 +341,8 @@ class ComponentTypeParser(ElementParser):
             else:
                 raise NotImplementedError(xmlElem.tag)
 
-    def _parseModeSwitchComSpec(self, xmlRoot):
-        (enhancedMode, supportAsync, modeGroupRef) = (False, False, None)
+    def _parseModeSwitchReceiverComSpec(self, xmlRoot):
+        (enhancedMode, supportAsync, modeGroupRef) = (None, None, None)
         assert(xmlRoot.tag == 'MODE-SWITCH-RECEIVER-COM-SPEC')
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'ENHANCED-MODE-API':
@@ -349,7 +353,27 @@ class ComponentTypeParser(ElementParser):
                 modeGroupRef = self.parseTextNode(xmlElem)
             else:
                 raise NotImplementedError(xmlElem.tag)
-        return autosar.component.ModeSwitchComSpec(enhancedMode, supportAsync, modeGroupRef)
+        return autosar.component.ModeSwitchComSpec(None, enhancedMode, supportAsync, modeGroupRef = modeGroupRef)
+
+    def _parseModeSwitchSenderComSpec(self, xmlRoot):
+        (enhancedMode, queueLength, modeSwitchAckTimeout, modeGroupRef) = (None, None, None, None)
+        assert(xmlRoot.tag == 'MODE-SWITCH-SENDER-COM-SPEC')
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == 'ENHANCED-MODE-API':
+                enhancedMode = self.parseBooleanNode(xmlElem)
+            elif xmlElem.tag == 'MODE-GROUP-REF':
+                modeGroupRef = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'MODE-SWITCHED-ACK':
+                for xmlChild in xmlElem.findall('./*'):
+                    if xmlChild.tag == 'TIMEOUT':
+                        tmp = self.parseFloatNode(xmlChild)
+                        if tmp is not None:
+                            modeSwitchAckTimeout = int(tmp*1000) #We use milliseconds in our internal model
+            elif xmlElem.tag == 'QUEUE-LENGTH':
+                queueLength = self.parseIntNode(xmlElem)
+            else:
+                raise NotImplementedError(xmlElem.tag)
+        return autosar.component.ModeSwitchComSpec(None, enhancedMode, None, queueLength, modeSwitchAckTimeout, modeGroupRef)
 
     def _parseParameterComSpec(self, xmlRoot, portInterfaceRef):
         (initValue, name) = (None, None)
