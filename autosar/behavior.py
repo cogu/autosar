@@ -124,15 +124,33 @@ class DisabledModeInstanceRef(object):
         return 'DISABLED-MODE-IREF'
 
 class ModeGroupInstanceRef:
-    def __init__(self, requirePortRef, modeGroupRef):
-        self.requirePortRef = requirePortRef
+    """
+    Base class for RequireModeGroupInstanceRef and ProvideModeGroupInstanceRef
+    """
+    def __init__(self, modeGroupRef):
         self.modeGroupRef = modeGroupRef
+
+class RequireModeGroupInstanceRef(ModeGroupInstanceRef):
+    def __init__(self, requirePortRef, modeGroupRef):
+        super().__init__(modeGroupRef)
+        self.requirePortRef = requirePortRef
 
     def tag(self, version):
         if version >= 4.0:
             return 'R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF'
         else:
-            raise RuntimeError('not supported in v%.1f'%version)
+            raise RuntimeError('Not supported in v%.1f'%version)
+
+class ProvideModeGroupInstanceRef(ModeGroupInstanceRef):
+    def __init__(self, providePortRef, modeGroupRef):
+        super().__init__(modeGroupRef)
+        self.providePortRef = providePortRef
+
+    def tag(self, version):
+        if version >= 4.0:
+            return 'P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF'
+        else:
+            raise RuntimeError('Not supported in v%.1f'%version)
 
 class PortAPIOption():
     def __init__(self,portRef,takeAddress=False,indirectAPI=False):
@@ -431,7 +449,7 @@ class NvmBlockConfig:
                  storeCyclic = None,
                  cyclicWritePeriod = None,
                  check_input = True):
-        
+
         self.numberOfDataSets = numberOfDataSets
         self.numberOfRomBlocks = numberOfRomBlocks
         self.ramBlockStatusControl = ramBlockStatusControl
@@ -452,7 +470,7 @@ class NvmBlockConfig:
         self.storeImmediate = storeImmediate
         self.storeCyclic = storeCyclic
         self.cyclicWritePeriod = cyclicWritePeriod
-        
+
         if check_input:
             self.check()
 
@@ -655,6 +673,9 @@ class InternalBehaviorCommon(Element):
                             self._createSendReceivePoint(port,dataElem,runnable)
                         else:
                             raise NotImplementedError('port interfaces with multiple data elements not supported')
+                    elif isinstance(portInterface, autosar.portinterface.ModeSwitchInterface):
+                        modeGroup = portInterface.modeGroup
+                        self._createModeAccessPoint(port, modeGroup, runnable)
                     else:
                         raise NotImplementedError(type(portInterface))
                 else:
@@ -719,7 +740,8 @@ class InternalBehaviorCommon(Element):
             runnable.serverCallPoints.append(callPoint)
         else:
             raise ValueError('unexpected type: '+str(type(port)))
-    def calcModeInstanceComponents(self, portName, modeValue):
+
+    def _calcModeInstanceComponentsForRequirePort(self, portName, modeValue):
         self._initSWC()
         ws = self.rootWS()
         port = self.swc.find(portName)
@@ -744,7 +766,7 @@ class InternalBehaviorCommon(Element):
         dataType = ws.find(modeGroup.typeRef)
         if (dataType is None):
             raise ValueError('%s has invalid typeRef: %s'%(modeGroup.name, modeGroup.typeRef))
-        assert(isinstance(dataType,autosar.portinterface.ModeDeclarationGroup))
+        assert(isinstance(dataType,autosar.mode.ModeDeclarationGroup))
         modeDeclarationRef = None
         modeDeclarationGroupRef = modeGroup.ref
         for modeDeclaration in dataType.modeDeclarations:
@@ -753,6 +775,9 @@ class InternalBehaviorCommon(Element):
                 return (modeDeclarationRef,modeDeclarationGroupRef,port.ref)
         raise ValueError('"%s" did not match any of the mode declarations in %s'%(modeValue,dataType.ref))
 
+    def _createModeAccessPoint(self, port, modeGroup, runnable):
+        modeGroupInstanceRef = ProvideModeGroupInstanceRef(port.ref, modeGroup.ref)
+        runnable.modeAccessPoints.append(modeGroupInstanceRef)
 
     def createModeSwitchEvent(self, runnableName, modeRef, activationType='ENTRY', name=None):
         self._initSWC()
@@ -761,30 +786,19 @@ class InternalBehaviorCommon(Element):
         if runnable is None:
             raise ValueError('invalid runnable name: '+runnableName)
         assert(isinstance(runnable, autosar.behavior.RunnableEntity))
-        nameBase = "MST_"+runnable.name
-        index = 0
-        #try to find a suitable name for the event
-        eventName = name
+
+        eventName=name
         if eventName is None:
-            while(True):
-                eventName= "%s_%d"%(nameBase,index)
-                found = False
-                for event in self.events:
-                    if event.name == eventName:
-                        found = True
-                        break
-                if found:
-                    index+=1
-                else:
-                    break
+            baseName = "MST_"+runnable.name
+            eventName = self._findEventName(baseName)
 
         result = modeRef.partition('/')
         if result[1]!='/':
             raise ValueError('invalid modeRef, expected "portName/modeValue", got "%s"'%modeRef)
-        portName=result[0]
-        modeValue=result[2]
-        event = autosar.behavior.ModeSwitchEvent(eventName,runnable.ref,activationType, version=ws.version)
-        (modeDeclarationRef,modeDeclarationGroupRef,portRef) = self.calcModeInstanceComponents(portName,modeValue)
+        portName = result[0]
+        modeValue = result[2]
+        event = autosar.behavior.ModeSwitchEvent(eventName,runnable.ref, activationType, version=ws.version)
+        (modeDeclarationRef,modeDeclarationGroupRef,portRef) = self._calcModeInstanceComponentsForRequirePort(portName,modeValue)
         event.modeInstRef = ModeInstanceRef(modeDeclarationRef, modeDeclarationGroupRef, portRef)
         assert(isinstance(event.modeInstRef, autosar.behavior.ModeInstanceRef))
         self.events.append(event)
@@ -946,7 +960,7 @@ class InternalBehaviorCommon(Element):
             if result[1]=='/':
                 portName=result[0]
                 modeValue=result[2]
-                (modeDeclarationRef,modeDeclarationGroupPrototypeRef,portRef) = self.calcModeInstanceComponents(portName,modeValue)
+                (modeDeclarationRef,modeDeclarationGroupPrototypeRef,portRef) = self._calcModeInstanceComponentsForRequirePort(portName,modeValue)
             else:
                 raise ValueError('invalid modeRef, expected "portName/modeValue", got "%s"'%dependency)
             if version >= 4.0:
@@ -1223,6 +1237,28 @@ class SwcInternalBehavior(InternalBehaviorCommon):
 
         self.serviceDependencies.append(serviceDependency)
         return serviceDependency
+
+    def createInitEvent(self, runnableName, modeDependency=None, name=None ):
+        self._initSWC()
+        ws = self.rootWS()
+
+        runnable=self.find(runnableName)
+        if runnable is None:
+            raise ValueError('invalid runnable name: '+runnableName)
+        assert(isinstance(runnable, autosar.behavior.RunnableEntity))
+
+        eventName=name
+        if eventName is None:
+            baseName = "IT_"+runnable.name
+            eventName = self._findEventName(baseName)
+
+        event = autosar.behavior.InitEvent(eventName, runnable.ref)
+
+        if modeDependency is not None:
+            self._processModeDependency(event, modeDependency, ws.version)
+        self.events.append(event)
+        return event
+
 
 class VariableAccess(Element):
     def __init__(self, name, portPrototypeRef, targetDataPrototypeRef, parent=None):

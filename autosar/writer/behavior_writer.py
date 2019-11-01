@@ -192,12 +192,15 @@ class XMLBehaviorWriter(ElementWriter):
     def _writeModeAccessPointXML(self, ws, modeGroupInstanceRef):
         lines = ['<MODE-ACCESS-POINT>']
         lines.append(self.indent('<MODE-GROUP-IREF>', 1))
-        lines.extend(self.indent(self._writeModeGroupInstanceRefXML(ws, modeGroupInstanceRef),2))
+        if isinstance(modeGroupInstanceRef, autosar.behavior.RequireModeGroupInstanceRef):
+            lines.extend(self.indent(self._writeRequireModeGroupInstanceRefXML(ws, modeGroupInstanceRef),2))
+        elif isinstance(modeGroupInstanceRef, autosar.behavior.ProvideModeGroupInstanceRef):
+            lines.extend(self.indent(self._writeProvideModeGroupInstanceRefXML(ws, modeGroupInstanceRef),2))
         lines.append(self.indent('</MODE-GROUP-IREF>', 1))
         lines.append('</MODE-ACCESS-POINT>')
         return lines
 
-    def _writeModeGroupInstanceRefXML(self, ws, modeGroupInstanceRef):
+    def _writeRequireModeGroupInstanceRefXML(self, ws, modeGroupInstanceRef):
         lines=[]
         port = ws.find(modeGroupInstanceRef.requirePortRef)
         if port is None:
@@ -208,6 +211,22 @@ class XMLBehaviorWriter(ElementWriter):
 
         lines.append('<%s>'%modeGroupInstanceRef.tag(self.version))
         lines.append(self.indent('<CONTEXT-R-PORT-REF DEST="%s">%s</CONTEXT-R-PORT-REF>'%(port.tag(self.version), port.ref),1))
+        #There is a mistake in the official 4.2.1 XSD file that forces DEST="MODE-DECLARATION-GROUP-PROTOTYPE" below
+        lines.append(self.indent('<TARGET-MODE-GROUP-REF DEST="MODE-DECLARATION-GROUP-PROTOTYPE">%s</TARGET-MODE-GROUP-REF>'%(modeGroup.ref),1))
+        lines.append('</%s>'%modeGroupInstanceRef.tag(self.version))
+        return lines
+
+    def _writeProvideModeGroupInstanceRefXML(self, ws, modeGroupInstanceRef):
+        lines=[]
+        port = ws.find(modeGroupInstanceRef.providePortRef)
+        if port is None:
+            raise ValueError('invalid port reference'%(modeGroupInstanceRef.providePortRef))
+        modeGroup = ws.find(modeGroupInstanceRef.modeGroupRef)
+        if modeGroup is None:
+            raise ValueError('invalid port reference'%(modeGroupInstanceRef.modeGroupRef))
+
+        lines.append('<%s>'%modeGroupInstanceRef.tag(self.version))
+        lines.append(self.indent('<CONTEXT-P-PORT-REF DEST="%s">%s</CONTEXT-P-PORT-REF>'%(port.tag(self.version), port.ref),1))
         #There is a mistake in the official 4.2.1 XSD file that forces DEST="MODE-DECLARATION-GROUP-PROTOTYPE" below
         lines.append(self.indent('<TARGET-MODE-GROUP-REF DEST="MODE-DECLARATION-GROUP-PROTOTYPE">%s</TARGET-MODE-GROUP-REF>'%(modeGroup.ref),1))
         lines.append('</%s>'%modeGroupInstanceRef.tag(self.version))

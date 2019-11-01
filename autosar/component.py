@@ -735,6 +735,7 @@ class DataElementComSpec(object):
         if val is None:
             self._queueLength = None
         else:
+            val = int(val)
             if (val > 0):
                 self._queueLength = int(val)
             else:
