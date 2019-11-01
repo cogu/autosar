@@ -50,7 +50,6 @@ def _create_test_elements(ws):
     portInterface["IsTimerElapsed"].createOutArgument("result", '/DataTypes/boolean')
     package.createModeSwitchInterface('VehicleMode_I', autosar.mode.ModeGroup('mode', '/ModeDclrGroups/VehicleMode'))
 
-
 def _init_ws(ws):
     _create_packages(ws)
     _create_base_types(ws)
@@ -111,8 +110,10 @@ class ARXML4PortCreateTest(ARXMLTestClass):
         _init_ws(ws)
         package = ws.find('/ComponentTypes')
         swc1 = package.createApplicationSoftwareComponent('MyApplication')
-        port = swc1.createRequirePort('VehicleMode', 'VehicleMode_I')
-        self.assertEqual(port.portInterfaceRef, '/PortInterfaces/VehicleMode_I')
+        port1 = swc1.createRequirePort('VehicleMode', 'VehicleMode_I')
+        self.assertEqual(port1.portInterfaceRef, '/PortInterfaces/VehicleMode_I')
+        comspec1 = port1.comspec[0]
+        comspec1.modeGroupRef = '/PortInterfaces/VehicleMode_I/mode'
         file_name = 'ar4_mode_require_port.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'port', file_name)
@@ -127,8 +128,8 @@ class ARXML4PortCreateTest(ARXMLTestClass):
         _init_ws(ws)
         package = ws.find('/ComponentTypes')
         swc1 = package.createApplicationSoftwareComponent('MyApplication')
-        port = swc1.createProvidePort('VehicleMode', 'VehicleMode_I', modeGroup="mode", queueLength=1, modeSwitchAckTimeout=10)
-        self.assertEqual(port.portInterfaceRef, '/PortInterfaces/VehicleMode_I')
+        port1 = swc1.createProvidePort('VehicleMode', 'VehicleMode_I', modeGroup="mode", queueLength=1, modeSwitchAckTimeout=10)
+        self.assertEqual(port1.portInterfaceRef, '/PortInterfaces/VehicleMode_I')
         file_name = 'ar4_mode_provide_port.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'port', file_name)
@@ -137,6 +138,12 @@ class ARXML4PortCreateTest(ARXMLTestClass):
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
         swc2 = ws2.find(swc1.ref)
         self.assertIsInstance(swc2, autosar.component.ApplicationSoftwareComponent)
+        port2 = ws2.find(port1.ref)
+        self.assertIsInstance(port2, autosar.component.ProvidePort)
+        comspec2 = port2.comspec[0]
+        self.assertIsInstance(comspec2, autosar.component.ModeSwitchComSpec)
+        self.assertEqual(comspec2.queueLength, 1)
+        self.assertEqual(comspec2.modeSwitchAckTimeout, 10)
 
 if __name__ == '__main__':
     unittest.main()
