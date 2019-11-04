@@ -16,7 +16,6 @@ def _create_packages(ws):
     ws.createPackage('PortInterfaces', role="PortInterface")
     ws.createPackage('ModeDclrGroups', role="ModeDclrGroup")
 
-
 def _create_base_types(ws):
     basetypes = ws.find('/DataTypes/BaseTypes')
     basetypes.createSwBaseType('boolean', 1, 'BOOLEAN')
@@ -144,6 +143,21 @@ class ARXML4PortCreateTest(ARXMLTestClass):
         self.assertIsInstance(comspec2, autosar.component.ModeSwitchComSpec)
         self.assertEqual(comspec2.queueLength, 1)
         self.assertEqual(comspec2.modeSwitchAckTimeout, 10)
+
+    def test_create_non_queued_sender_port_single_data_element(self):
+        ws = autosar.workspace(version="4.2.2")
+        _init_ws(ws)
+        package = ws.find('/ComponentTypes')
+        swc1 = package.createApplicationSoftwareComponent('MyApplication')
+        swc1.createProvidePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV')
+        file_name = 'ar4_non_queued_sender_port_single_data_element.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'port', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
+        ws2 = autosar.workspace(ws.version_str)
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        swc2 = ws2.find(swc1.ref)
+        self.assertIsInstance(swc2, autosar.component.ApplicationSoftwareComponent)
 
 if __name__ == '__main__':
     unittest.main()
