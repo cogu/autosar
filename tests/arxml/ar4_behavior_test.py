@@ -110,7 +110,6 @@ class ARXML4BehaviorTest(ARXMLTestClass):
         self.assertIsInstance(swc2, autosar.component.ApplicationSoftwareComponent)
 
     def test_create_runnable_with_require_type_mode_switch_trigger(self):
-
         ws = _init_ws()
         swc1 = ws['ComponentTypes'].createApplicationSoftwareComponent('MyApplication')
         swc1.createRequirePort('VehicleMode', '/PortInterfaces/VehicleMode_I')
@@ -127,8 +126,30 @@ class ARXML4BehaviorTest(ARXMLTestClass):
         swc2 = ws2.find(swc1.ref)
         self.assertIsInstance(swc2, autosar.component.ApplicationSoftwareComponent)
 
-    def test_create_runnable_with_provide_type_mode_access(self):
+    def test_create_runnable_require_type_mode_access(self):
+        ws = _init_ws()
+        swc1 = ws['ComponentTypes'].createApplicationSoftwareComponent('MyApplication')
+        port1 = swc1.createRequirePort('VehicleMode', '/PortInterfaces/VehicleMode_I')
+        runnable1 = swc1.behavior.createRunnable('MyApplication_Run', portAccess='VehicleMode')
 
+        file_name = 'ar4_runnable_runnable_require_type_mode_access.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'behavior', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
+
+        ws2 = autosar.workspace(ws.version_str)
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        swc2 = ws2.find(swc1.ref)
+        self.assertIsInstance(swc2, autosar.component.ApplicationSoftwareComponent)
+        port2 = ws2.find(port1.ref)
+        self.assertIsInstance(port2, autosar.component.RequirePort)
+        runnable2 = swc2.behavior.find(runnable1.name)
+        self.assertIsInstance(runnable2, autosar.behavior.RunnableEntity)
+        modeAccessPoint = runnable2.modeAccessPoints[0]
+        self.assertEqual(modeAccessPoint.modeGroupInstanceRef.modeGroupRef, '/PortInterfaces/VehicleMode_I/mode')
+        self.assertEqual(modeAccessPoint.modeGroupInstanceRef.requirePortRef, '/ComponentTypes/MyApplication/VehicleMode')
+
+    def test_create_runnable_with_provide_type_mode_access(self):
         ws = _init_ws()
         swc1 = ws['ComponentTypes'].createApplicationSoftwareComponent('MyApplication')
         port1 = swc1.createProvidePort('VehicleMode', '/PortInterfaces/VehicleMode_I', queueLength=1, modeSwitchAckTimeout=10)
@@ -148,8 +169,33 @@ class ARXML4BehaviorTest(ARXMLTestClass):
         runnable2 = swc2.behavior.find(runnable1.name)
         self.assertIsInstance(runnable2, autosar.behavior.RunnableEntity)
         modeAccessPoint = runnable2.modeAccessPoints[0]
-        self.assertEqual(modeAccessPoint.modeGroupRef, '/PortInterfaces/VehicleMode_I/mode')
-        self.assertEqual(modeAccessPoint.providePortRef, '/ComponentTypes/MyApplication/VehicleMode')
+        self.assertEqual(modeAccessPoint.modeGroupInstanceRef.modeGroupRef, '/PortInterfaces/VehicleMode_I/mode')
+        self.assertEqual(modeAccessPoint.modeGroupInstanceRef.providePortRef, '/ComponentTypes/MyApplication/VehicleMode')
+
+    def test_create_runnable_with_provide_type_mode_switch_point(self):
+        ws = _init_ws()
+        swc1 = ws['ComponentTypes'].createApplicationSoftwareComponent('MyApplication')
+        port1 = swc1.createProvidePort('VehicleMode', '/PortInterfaces/VehicleMode_I', queueLength=1, modeSwitchAckTimeout=10)
+        runnable1 = swc1.behavior.createRunnable('MyApplication_SetVehicleMode', portAccess=['VehicleMode'], modeSwitch=['VehicleMode'])
+        self.assertEqual(len(runnable1.modeSwitchPoints), 1)
+
+        file_name = 'ar4_runnable_with_provide_type_mode_switch_point.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'behavior', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
+
+        ws2 = autosar.workspace(ws.version_str)
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        swc2 = ws2.find(swc1.ref)
+        self.assertIsInstance(swc2, autosar.component.ApplicationSoftwareComponent)
+        port2 = ws2.find(port1.ref)
+        self.assertIsInstance(port2, autosar.component.ProvidePort)
+        runnable2 = swc2.behavior.find(runnable1.name)
+        self.assertIsInstance(runnable2, autosar.behavior.RunnableEntity)
+        self.assertEqual(len(runnable2.modeSwitchPoints), 1)
+        modeSwitchPoint = runnable2.modeSwitchPoints[0]
+        self.assertEqual(modeSwitchPoint.modeGroupInstanceRef.modeGroupRef, '/PortInterfaces/VehicleMode_I/mode')
+        self.assertEqual(modeSwitchPoint.modeGroupInstanceRef.providePortRef, '/ComponentTypes/MyApplication/VehicleMode')
 
 
 if __name__ == '__main__':

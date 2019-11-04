@@ -5,6 +5,7 @@ import autosar.base
 from autosar.element import Element, DataElement
 import collections
 
+
 ###################################### Events ###########################################
 class Event(Element):
     def __init__(self,name,startOnEventRef=None, parent=None):
@@ -81,7 +82,10 @@ class ModeDependency(object):
         else:
             raise ValueError('invalid type: '+str(type(item)))
 
-class ModeInstanceRef(object):
+class ModeInstanceRef:
+    """
+    Implementation of MODE-IREF (AUTOSAR3)
+    """
     def __init__(self,modeDeclarationRef,modeDeclarationGroupPrototypeRef=None,requirePortPrototypeRef=None):
         self.modeDeclarationRef=modeDeclarationRef #MODE-DECLARATION-REF
         self.modeDeclarationGroupPrototypeRef=modeDeclarationGroupPrototypeRef #MODE-DECLARATION-GROUP-PROTOTYPE-REF
@@ -127,8 +131,13 @@ class ModeGroupInstanceRef:
     """
     Base class for RequireModeGroupInstanceRef and ProvideModeGroupInstanceRef
     """
-    def __init__(self, modeGroupRef):
+    def __init__(self, modeGroupRef, parent = None):
+        """
+        This is a very sneaky XML element. Depending on where it is used in the XML schema (XSD)
+        it needs to use different XML tags. We solve this by looking at the parent object.
+        """
         self.modeGroupRef = modeGroupRef
+        self.parent = parent
 
 class RequireModeGroupInstanceRef(ModeGroupInstanceRef):
     def __init__(self, requirePortRef, modeGroupRef):
@@ -136,8 +145,13 @@ class RequireModeGroupInstanceRef(ModeGroupInstanceRef):
         self.requirePortRef = requirePortRef
 
     def tag(self, version):
+        if self.parent is None:
+            raise RuntimeError("self.parent cannot be None")
         if version >= 4.0:
-            return 'R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF'
+            if isinstance(self.parent, ModeAccessPoint):
+                return 'R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF'
+            else:
+                return 'MODE-GROUP-IREF'
         else:
             raise RuntimeError('Not supported in v%.1f'%version)
 
@@ -147,8 +161,13 @@ class ProvideModeGroupInstanceRef(ModeGroupInstanceRef):
         self.providePortRef = providePortRef
 
     def tag(self, version):
+        if self.parent is None:
+            raise RuntimeError("self.parent cannot be None")
         if version >= 4.0:
-            return 'P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF'
+            if isinstance(self.parent, ModeAccessPoint):
+                return 'P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF'
+            else:
+                return 'MODE-GROUP-IREF'
         else:
             raise RuntimeError('Not supported in v%.1f'%version)
 
@@ -195,6 +214,7 @@ class RunnableEntity(Element):
         self.serverCallPoints=[]
         self.exclusiveAreaRefs=[]
         self.modeAccessPoints=[] #AUTOSAR4 only
+        self.modeSwitchPoints=[] #AUTOSAR4 only
         self.parameterAccessPoints = [] #AUTOSAR4 only
 
     def tag(self,version=None):
@@ -646,12 +666,25 @@ class InternalBehaviorCommon(Element):
             if elem.name == name: return elem
         return None
 
-    def createRunnable(self, name, portAccess=None, symbol=None, concurrent=False, exclusiveAreas=None, adminData=None):
+    def createRunnable(self, name, portAccess=None, symbol=None, concurrent=False, exclusiveAreas=None, modeSwitch = None, adminData=None):
+        """
+        Creates a new runnable and appends it to this InternalBehavior instance
+        Parameters:
+        * name: <SHORT-NAME> (str)
+        * portAccess: List of strings containing port names or "port-name/element" where element can be data-element or an operation (list(str))
+        * symbol: Optional symbol name (str). Default is to use self.name string
+        * concurrent: Enable/Disable if this runnable can run concurrently (bool). Default=True
+        * exclusiveAreas: List of strings containing which exclusive areas this runnable will access
+        * modeSwitch: List of strings containing port names that this runnable will explicitly use for setting modes.
+        * adminData: Optional adminData
+        """
         runnable = RunnableEntity(name, concurrent, symbol, self, adminData)
         self.runnables.append(runnable)
+        self._initSWC()
+        ws = self.rootWS()
         if portAccess is not None:
-            self._initSWC()
-            ws = self.rootWS()
+            if isinstance(portAccess, str):
+                portAccess = [portAccess]
             assert (ws is not None)
             for elem in portAccess:
                 ref = elem.partition('/')
@@ -713,6 +746,22 @@ class InternalBehaviorCommon(Element):
                         raise ValueError('invalid exclusive area name: '+exclusiveAreaName)
             else:
                 raise ValueError('exclusiveAreas must be either string or list')
+        if modeSwitch is not None:
+            if isinstance(modeSwitch, str):
+                modeSwitch = [modeSwitch]
+            assert (ws is not None)
+            for portName in modeSwitch:
+                port = self.swc.find(portName)
+                if port is None:
+                    raise ValueError('invalid port reference: '+str(portName))
+                portInterface = ws.find(port.portInterfaceRef, role='PortInterface')
+                if portInterface is None:
+                    raise ValueError('invalid portinterface reference: '+str(port.portInterfaceRef))
+                if isinstance(portInterface, autosar.portinterface.ModeSwitchInterface):
+                    modeGroup = portInterface.modeGroup
+                    self._createModeSwitchPoint(port, modeGroup, runnable)
+                else:
+                    raise NotImplementedError(str(type(portInterface)))
         return runnable
 
     def _createSendReceivePoint(self,port,dataElement,runnable):
@@ -776,8 +825,25 @@ class InternalBehaviorCommon(Element):
         raise ValueError('"%s" did not match any of the mode declarations in %s'%(modeValue,dataType.ref))
 
     def _createModeAccessPoint(self, port, modeGroup, runnable):
-        modeGroupInstanceRef = ProvideModeGroupInstanceRef(port.ref, modeGroup.ref)
-        runnable.modeAccessPoints.append(modeGroupInstanceRef)
+        if isinstance(port, autosar.component.ProvidePort):
+            modeGroupInstanceRef = ProvideModeGroupInstanceRef(port.ref, modeGroup.ref)
+        else:
+            assert isinstance(port, autosar.component.RequirePort)
+            modeGroupInstanceRef = RequireModeGroupInstanceRef(port.ref, modeGroup.ref)
+        name = None #TODO: support user-controlled name?
+        modeAccessPoint = ModeAccessPoint(name, modeGroupInstanceRef)
+        runnable.modeAccessPoints.append(modeAccessPoint)
+
+    def _createModeSwitchPoint(self, port, modeGroup, runnable):
+        if isinstance(port, autosar.component.ProvidePort):
+            modeGroupInstanceRef = ProvideModeGroupInstanceRef(port.ref, modeGroup.ref)
+        else:
+            assert isinstance(port, autosar.component.RequirePort)
+            modeGroupInstanceRef = RequireModeGroupInstanceRef(port.ref, modeGroup.ref)
+        baseName='SWITCH_{0.name}_{1.name}'.format(port, modeGroup)
+        name = autosar.base.findUniqueNameInList(runnable.modeSwitchPoints, baseName)
+        modeSwitchPoint = ModeSwitchPoint(name, modeGroupInstanceRef)
+        runnable.modeSwitchPoints.append(modeSwitchPoint)
 
     def createModeSwitchEvent(self, runnableName, modeRef, activationType='ENTRY', name=None):
         self._initSWC()
@@ -930,29 +996,10 @@ class InternalBehaviorCommon(Element):
         return event
 
     def _findEventName(self, baseName):
-        found = False
-        for event in self.events:
-            if event.name == self.events:
-                found = True
-                break
-        if found:
-            event.name=event.name+'_0'
-            index = 1
-            eventName = None
-            while(True):
-                eventName= "%s_%d"%(baseName,index)
-                found = False
-                for event in self.events:
-                    if event.name == eventName:
-                        found = True
-                        break
-                if found:
-                    index+=1
-                else:
-                    break
-        else:
-            eventName = baseName
-        return eventName
+        return autosar.base.findUniqueNameInList(self.events, baseName)
+
+
+
 
     def _processModeDependency(self, event, modeDependencyList, version):
         for dependency in list(modeDependencyList):
@@ -1378,3 +1425,60 @@ class ParameterAccessPoint(Element):
         self.accessedParameter = accessedParameter #this can be NoneType or LocalParameterRef or ParameterInstanceRef
 
     def tag(self, version): return 'PARAMETER-ACCESS'
+
+class ModeAccessPoint:
+    """
+    Represents <MODE-ACCESS-POINT> (AUTOSAR 4)
+    In the XSD this is not a first-class element.
+    Therefore we do not inherit from Element but instead allow <SHORT-NAME> only as (optional) identifier
+    """
+    def __init__(self, name = None, modeGroupInstanceRef = None):
+        """
+        Arguments:
+        * name: <SHORT-NAME> (None or str)
+        * modeGroupInstanceRef: <MODE-GROUP-IREF> (None or (class derived from) ModeGroupInstanceRef)
+        """
+        self.name = str(name) if name is not None else None
+        self.modeGroupInstanceRef = modeGroupInstanceRef
+
+    def tag(self, version):
+        return 'MODE-ACCESS-POINT'
+
+    @property
+    def modeGroupInstanceRef(self):
+        return self._modeGroupInstanceRef
+
+    @modeGroupInstanceRef.setter
+    def modeGroupInstanceRef(self, value):
+        if value is not None:
+            if not isinstance(value, ModeGroupInstanceRef):
+                raise ValueError("Value must be None or an instance of ModeGroupInstanceRef")
+            self._modeGroupInstanceRef = value
+            value.parent = self
+        else:
+            self._modeGroupInstanceRef = None
+
+class ModeSwitchPoint:
+    """
+    Represents <MODE-SWITCH-POINT> (AUTOSAR 4)
+    """
+    def __init__(self, name, modeGroupInstanceRef = None):
+        self.name = str(name)
+        self.modeGroupInstanceRef = modeGroupInstanceRef
+
+    def tag(self, version):
+        return 'MODE-SWITCH-POINT'
+
+    @property
+    def modeGroupInstanceRef(self):
+        return self._modeGroupInstanceRef
+
+    @modeGroupInstanceRef.setter
+    def modeGroupInstanceRef(self, value):
+        if value is not None:
+            if not isinstance(value, ModeGroupInstanceRef):
+                raise ValueError("Value must be None or an instance of ModeGroupInstanceRef")
+            self._modeGroupInstanceRef = value
+            value.parent = self
+        else:
+            self._modeGroupInstanceRef = None

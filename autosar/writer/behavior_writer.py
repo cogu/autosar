@@ -140,6 +140,11 @@ class XMLBehaviorWriter(ElementWriter):
             for modeAccessPoint in runnable.modeAccessPoints:
                 lines.extend(self.indent(self._writeModeAccessPointXML(ws, modeAccessPoint),2))
             lines.append(self.indent('</MODE-ACCESS-POINTS>',1))
+        if (self.version >= 4.0) and (len(runnable.modeSwitchPoints)>0):
+            lines.append(self.indent('<MODE-SWITCH-POINTS>',1))
+            for modeSwitchPoint in runnable.modeSwitchPoints:
+                lines.extend(self.indent(self._writeModePointXML(ws, modeSwitchPoint),2))
+            lines.append(self.indent('</MODE-SWITCH-POINTS>',1))
         if (self.version >= 4.0) and (len(runnable.parameterAccessPoints)>0):
             lines.append(self.indent('<PARAMETER-ACCESSS>',1))
             for parameterAccessPoint in runnable.parameterAccessPoints:
@@ -189,47 +194,55 @@ class XMLBehaviorWriter(ElementWriter):
             lines.append('</DATA-ELEMENT-IREF>')
         return lines
 
-    def _writeModeAccessPointXML(self, ws, modeGroupInstanceRef):
-        lines = ['<MODE-ACCESS-POINT>']
+    def _writeModeAccessPointXML(self, ws, modeAccessPoint):
+        assert isinstance(modeAccessPoint, autosar.behavior.ModeAccessPoint)
+        lines = ['<{0}>'.format(modeAccessPoint.tag(self.version))]
+        if modeAccessPoint.name is not None:
+            lines.append(self.indent('<SHORT-NAME>{0.name}</SHORT-NAME>'.format(modeAccessPoint),1))
         lines.append(self.indent('<MODE-GROUP-IREF>', 1))
-        if isinstance(modeGroupInstanceRef, autosar.behavior.RequireModeGroupInstanceRef):
-            lines.extend(self.indent(self._writeRequireModeGroupInstanceRefXML(ws, modeGroupInstanceRef),2))
-        elif isinstance(modeGroupInstanceRef, autosar.behavior.ProvideModeGroupInstanceRef):
-            lines.extend(self.indent(self._writeProvideModeGroupInstanceRefXML(ws, modeGroupInstanceRef),2))
+        lines.extend(self.indent(self._writeModeGroupInstanceRefXML(ws, modeAccessPoint.modeGroupInstanceRef),2))
         lines.append(self.indent('</MODE-GROUP-IREF>', 1))
-        lines.append('</MODE-ACCESS-POINT>')
+        lines.append('</{0}>'.format(modeAccessPoint.tag(self.version)))
         return lines
 
-    def _writeRequireModeGroupInstanceRefXML(self, ws, modeGroupInstanceRef):
+    def _writeModePointXML(self, ws, modeSwitchPoint):
+        assert isinstance(modeSwitchPoint, autosar.behavior.ModeSwitchPoint)
+        lines = ['<{0}>'.format(modeSwitchPoint.tag(self.version))]
+        if modeSwitchPoint.name is not None:
+            lines.append(self.indent('<SHORT-NAME>{0.name}</SHORT-NAME>'.format(modeSwitchPoint),1))
+        lines.extend(self.indent(self._writeModeGroupInstanceRefXML(ws, modeSwitchPoint.modeGroupInstanceRef),1))
+        lines.append('</{0}>'.format(modeSwitchPoint.tag(self.version)))
+        return lines
+
+    def _writeModeGroupInstanceRefXML(self, ws, modeGroupInstanceRef):
+        """
+        Depending on the parent of modeGroupInstanceRef this method implements writing:
+        * When parent is ModeAccesPoint and port is ProvidePort: <P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF>
+        * When parent is ModeAccesPoint and port is RequirePort: <R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF>
+        * Otherwise: <MODE-GROUP-IREF>
+        """
         lines=[]
-        port = ws.find(modeGroupInstanceRef.requirePortRef)
+        if isinstance(modeGroupInstanceRef, autosar.behavior.RequireModeGroupInstanceRef):
+            port = ws.find(modeGroupInstanceRef.requirePortRef)
+        else:
+            assert isinstance(modeGroupInstanceRef, autosar.behavior.ProvideModeGroupInstanceRef)
+            port = ws.find(modeGroupInstanceRef.providePortRef)
         if port is None:
             raise ValueError('invalid port reference'%(modeGroupInstanceRef.requirePortRef))
+        if isinstance(port, autosar.component.RequirePort):
+            portReftag = 'CONTEXT-R-PORT-REF'
+        else:
+            assert isinstance(port, autosar.component.ProvidePort)
+            portReftag = 'CONTEXT-P-PORT-REF'
         modeGroup = ws.find(modeGroupInstanceRef.modeGroupRef)
         if modeGroup is None:
             raise ValueError('invalid port reference'%(modeGroupInstanceRef.modeGroupRef))
-
-        lines.append('<%s>'%modeGroupInstanceRef.tag(self.version))
-        lines.append(self.indent('<CONTEXT-R-PORT-REF DEST="%s">%s</CONTEXT-R-PORT-REF>'%(port.tag(self.version), port.ref),1))
-        #There is a mistake in the official 4.2.1 XSD file that forces DEST="MODE-DECLARATION-GROUP-PROTOTYPE" below
+        lines.append('<{0}>'.format(modeGroupInstanceRef.tag(self.version)))
+        lines.append(self.indent('<{0} DEST="{1}">{2}</{0}>'.format(portReftag,port.tag(self.version), port.ref),1))
+        #There is a mistake in the official 4.2.x XSD that forces DEST="MODE-DECLARATION-GROUP-PROTOTYPE" below.
+        #That is something old from AUTOSAR 3, DEST should have been "MODE-DECLARATION-GROUP" in AUTOSAR 4 XSD.
         lines.append(self.indent('<TARGET-MODE-GROUP-REF DEST="MODE-DECLARATION-GROUP-PROTOTYPE">%s</TARGET-MODE-GROUP-REF>'%(modeGroup.ref),1))
-        lines.append('</%s>'%modeGroupInstanceRef.tag(self.version))
-        return lines
-
-    def _writeProvideModeGroupInstanceRefXML(self, ws, modeGroupInstanceRef):
-        lines=[]
-        port = ws.find(modeGroupInstanceRef.providePortRef)
-        if port is None:
-            raise ValueError('invalid port reference'%(modeGroupInstanceRef.providePortRef))
-        modeGroup = ws.find(modeGroupInstanceRef.modeGroupRef)
-        if modeGroup is None:
-            raise ValueError('invalid port reference'%(modeGroupInstanceRef.modeGroupRef))
-
-        lines.append('<%s>'%modeGroupInstanceRef.tag(self.version))
-        lines.append(self.indent('<CONTEXT-P-PORT-REF DEST="%s">%s</CONTEXT-P-PORT-REF>'%(port.tag(self.version), port.ref),1))
-        #There is a mistake in the official 4.2.1 XSD file that forces DEST="MODE-DECLARATION-GROUP-PROTOTYPE" below
-        lines.append(self.indent('<TARGET-MODE-GROUP-REF DEST="MODE-DECLARATION-GROUP-PROTOTYPE">%s</TARGET-MODE-GROUP-REF>'%(modeGroup.ref),1))
-        lines.append('</%s>'%modeGroupInstanceRef.tag(self.version))
+        lines.append('</{0}>'.format(modeGroupInstanceRef.tag(self.version)))
         return lines
 
     def _writeServerCallPointXML(self, ws, runnable, callPoint):
@@ -531,7 +544,7 @@ class XMLBehaviorWriter(ElementWriter):
         lines.append("<%s>"%elem.tag(self.version))
         tmp = self.writeDescXML(elem)
         if tmp is not None: lines.extend(self.indent(tmp,1))
-        if isinstance(elem, autosar.behavior.NvmBlockServiceNeeds):            
+        if isinstance(elem, autosar.behavior.NvmBlockServiceNeeds):
             if elem.nvmBlockNeeds is not None:
                 lines.extend(self.indent(self._writeNvmBlockNeedsXML(ws, elem.nvmBlockNeeds),1))
         else:
