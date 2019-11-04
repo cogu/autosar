@@ -145,13 +145,13 @@ def createAdminData(data):
 def parseAutosarVersionAndSchema(xmlRoot):
     """
     Parses AUTOSAR version from the schemaLocation attribute in the root AUTOSAR tag
-    
+
     For AUTOSAR versions 4.3 and below (e.g. "http://autosar.org/schema/r4.0 AUTOSAR_4-3-0.xsd")
     Returns a tuple with major, minor, patch, None, schemaFile. Types are (int, int, int, NoneType, str)
-    
+
     For AUTOSAR versions 4.4 and above (e.g. "http://autosar.org/schema/r4.0 AUTOSAR_00044.xsd")
     Returns a tuple with major, minor, None, release, schemaFile
-    This will now report (major,minor) as (4,0) since it will now extract from the "r4.0"-part of the attribute.     
+    This will now report (major,minor) as (4,0) since it will now extract from the "r4.0"-part of the attribute.
     """
     schemaLocation = None
     for key in xmlRoot.attrib.keys():
@@ -177,7 +177,7 @@ def parseAutosarVersionAndSchema(xmlRoot):
                     #Is this AUTOSAR 4.4 or above?
                     result = re.search(r'r(\d+)\.(\d+)\s+AUTOSAR_(\d+).xsd', value)
                     if result is not None:
-                        return (int(result.group(1)),int(result.group(2)),None, int(result.group(3)), schemaFile)                        
+                        return (int(result.group(1)),int(result.group(2)),None, int(result.group(3)), schemaFile)
 
     return (None, None, None, None, None)
 
@@ -215,6 +215,35 @@ def parseVersionString(versionString):
     else:
         return (int(result.group(1)),int(result.group(2)),int(result.group(3)))
 
+def findUniqueNameInList(elementList, baseName):
+    """
+    Attempts to find a unique name in the list of objects based on baseName.
+    This function can modify names in gived list.
+    Returns a new name which is guaranteed to be unique
+    """
+
+    foundElem = None
+    highestIndex = 0
+    hasIndex = False
+    p0 = re.compile(baseName+'_(\d+)')
+    for elem in elementList:
+        result = p0.match(elem.name)
+        if result is not None:
+            hasIndex = True
+            index = int(result.group(1))
+            if index > highestIndex:
+                highestIndex = index
+        elif elem.name == baseName:
+            foundElem = elem
+    if foundElem is not None:
+        foundElem.name = '_'.join([foundElem.name, '0'])
+    if hasIndex or foundElem is not None:
+        return '_'.join([baseName, str(highestIndex+1)])
+    else:
+        return baseName
+
+
+
 class SwDataDefPropsConditional:
     def tag(self,version=None): return 'SW-DATA-DEF-PROPS-CONDITIONAL'
     def __init__(self, baseTypeRef = None, implementationTypeRef = None, swAddressMethodRef = None, swCalibrationAccess = None, swImplPolicy = None, swPointerTargetProps = None, compuMethodRef = None, dataConstraintRef = None, unitRef = None, parent = None):
@@ -244,7 +273,7 @@ class SwDataDefPropsConditional:
                 self._swImplPolicy = ucvalue
             else:
                 raise ValueError('invalid swImplPolicy value: ' +  value)
-    
+
     def hasAnyProp(self):
         """
         Returns True if any internal attribute is not None, else False
@@ -289,7 +318,7 @@ class SymbolProps:
     Implements <SYMBOL-PROPS>
     """
     def tag(self, version=None): return 'SYMBOL-PROPS'
-    
+
     def __init__(self, name = None, symbol = None):
         self.name = name
         self.symbol = symbol

@@ -200,6 +200,7 @@ class BehaviorParser(ElementParser):
         xmlModeAccessPoints = None
         xmlParameterAccessPoints = None
         canBeInvokedConcurrently = False
+        xmlModeSwitchPoints = None
         if self.version < 4.0:
             for xmlElem in xmlRoot.findall('*'):
                 if xmlElem.tag=='SHORT-NAME':
@@ -245,7 +246,7 @@ class BehaviorParser(ElementParser):
                 elif xmlElem.tag == 'PARAMETER-ACCESSS':
                     xmlParameterAccessPoints = xmlElem
                 elif xmlElem.tag == 'MODE-SWITCH-POINTS':
-                    pass #implement later
+                    xmlModeSwitchPoints = xmlElem
                 elif xmlElem.tag == 'READ-LOCAL-VARIABLES':
                     pass #implement later
                 elif xmlElem.tag == 'WRITTEN-LOCAL-VARIABLES':
@@ -255,7 +256,7 @@ class BehaviorParser(ElementParser):
                 elif xmlElem.tag == 'DATA-WRITE-ACCESSS':
                     pass #implement later
                 elif xmlElem.tag == 'RUNS-INSIDE-EXCLUSIVE-AREA-REFS':
-                    pass #implement later                
+                    pass #implement later
                 else:
                     raise NotImplementedError(xmlElem.tag)
         runnableEntity = autosar.behavior.RunnableEntity(name, canBeInvokedConcurrently, symbol, parent)
@@ -311,17 +312,25 @@ class BehaviorParser(ElementParser):
                     if tmp is not None:
                         runnableEntity.parameterAccessPoints.append(tmp)
                 else:
-                    raise NotImplementedError('xmlChild.tag')
-
+                    raise NotImplementedError(xmlChild.tag)
+        if xmlModeSwitchPoints is not None:
+            for xmlElem in xmlModeSwitchPoints.findall('./*'):
+                if xmlElem.tag == 'MODE-SWITCH-POINT':
+                    modeSwitchPoint = self._parseModeSwitchPoint(xmlElem)
+                    assert(modeSwitchPoint is not None)
+                    runnableEntity.modeSwitchPoints.append(modeSwitchPoint)
+                else:
+                    raise NotImplementedError(xmlElem.tag)
         if runnableEntity is not None:
             runnableEntity.adminData = adminData
         return runnableEntity
 
     def parseModeAccessPoint(self, xmlRoot):
-        """parses <MODE-ACCESS-POINT>"""
         assert(xmlRoot.tag == 'MODE-ACCESS-POINT')
-        modeGroupInstanceRef = None
+        (name, modeGroupInstanceRef) = (None, None)
         for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == 'SHORT-NAME':
+                name = self.parseTextNode(xmlElem)
             if xmlElem.tag == 'MODE-GROUP-IREF':
                 for childElem in xmlElem.findall('./*'):
                     if childElem.tag == 'R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF':
@@ -338,9 +347,19 @@ class BehaviorParser(ElementParser):
                         raise NotImplementedError(childElem.tag)
             else:
                 raise NotImplementedError(xmlElem.tag)
-        if modeGroupInstanceRef is None:
-            raise RuntimeError('R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF not set')
-        return modeGroupInstanceRef
+        return autosar.behavior.ModeAccessPoint(name, modeGroupInstanceRef)
+
+    def _parseModeSwitchPoint(self, xmlRoot):
+        assert(xmlRoot.tag == 'MODE-SWITCH-POINT')
+        (name, modeGroupInstanceRef) = (None, None)
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == 'SHORT-NAME':
+                name = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'MODE-GROUP-IREF':
+                modeGroupInstanceRef=self._parseProvideModeGroupInstanceRef(xmlElem)
+            else:
+                raise NotImplementedError(xmlElem.tag)
+        return autosar.behavior.ModeSwitchPoint(name, modeGroupInstanceRef)
 
     def parseParameterAccessPoint(self, xmlRoot, parent = None):
         assert(xmlRoot.tag == 'PARAMETER-ACCESS')
@@ -380,7 +399,8 @@ class BehaviorParser(ElementParser):
 
     def _parseProvideModeGroupInstanceRef(self, xmlRoot):
         """parses <P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF>"""
-        assert(xmlRoot.tag == 'P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF')
+        #This XML item exists multiple times (at least 4 different places) in the AUTOSAR 4 XSD using different XML tag.
+        assert(xmlRoot.tag in ['P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF', 'MODE-GROUP-IREF'])
         (providePortRef, modeGroupRef ) = (None, None)
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'CONTEXT-P-PORT-REF':
@@ -756,7 +776,7 @@ class BehaviorParser(ElementParser):
     def parseNvmBlockNeeds(self, xmlRoot, parent = None):
         """parses <NV-BLOCK-NEEDS> (AUTOSAR 4)"""
         config = autosar.behavior.NvmBlockConfig()
-        
+
         self.push()
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'N-DATA-SETS':
@@ -774,11 +794,11 @@ class BehaviorParser(ElementParser):
             elif xmlElem.tag == 'CALC-RAM-BLOCK-CRC':
                 config.calcRamBlockCrc = self.parseBooleanNode(xmlElem)
             elif xmlElem.tag == 'CHECK-STATIC-BLOCK-ID':
-                config.checkStaticBlockId = self.parseBooleanNode(xmlElem)                
+                config.checkStaticBlockId = self.parseBooleanNode(xmlElem)
             elif xmlElem.tag == 'READONLY':
                 config.readOnly = self.parseBooleanNode(xmlElem)
             elif xmlElem.tag == 'RESISTANT-TO-CHANGED-SW':
-                config.resistantToChangedSw = self.parseBooleanNode(xmlElem)                
+                config.resistantToChangedSw = self.parseBooleanNode(xmlElem)
             elif xmlElem.tag == 'RESTORE-AT-START':
                 config.restoreAtStartup = self.parseBooleanNode(xmlElem)
             elif xmlElem.tag == 'STORE-AT-SHUTDOWN':
@@ -801,7 +821,7 @@ class BehaviorParser(ElementParser):
                 config.cyclicWritePeriod = self.parseIntNode(xmlElem)
             else:
                 self.baseHandler(xmlElem)
-        
+
         if self.name is None:
             raise RuntimeError('<SHORT-NAME> is missing or incorrectly formatted')
         config.check()
