@@ -7,9 +7,9 @@ AUTOSAR 4 API
     base/index
     package
     element
-    datatypes/index   
-    portinterfaces/index
-    components/index
-    ports/index
+    datatype/index
+    portinterface/index
+    component/index
+    port/index
     behavior/index
     mode/index
