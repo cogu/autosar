@@ -484,7 +484,7 @@ class ComponentHeaderGenerator():
       code = C.sequence()
       for port in ports:
          for comspec in port.comspec:
-            if isinstance(comspec, autosar.component.DataElementComSpec):
+            if isinstance(comspec, autosar.port.DataElementComSpec):
                if comspec.initValueRef is not None:
                   initValue = ws.find(comspec.initValueRef)
                   if isinstance(initValue, autosar.constant.Constant):

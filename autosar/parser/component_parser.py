@@ -119,18 +119,18 @@ class ComponentTypeParser(ElementParser):
             if(xmlPort.tag == "R-PORT-PROTOTYPE"):
                 portName = xmlPort.find('SHORT-NAME').text
                 portInterfaceRef = self.parseTextNode(xmlPort.find('REQUIRED-INTERFACE-TREF'))
-                port = autosar.component.RequirePort(portName,portInterfaceRef,parent=componentType)
+                port = autosar.port.RequirePort(portName,portInterfaceRef,parent=componentType)
                 if hasAdminData(xmlPort):
                     port.adminData=parseAdminDataNode(xmlPort.find('ADMIN-DATA'))
                 if xmlPort.findall('./REQUIRED-COM-SPECS') is not None:
                     for xmlItem in xmlPort.findall('./REQUIRED-COM-SPECS/*'):
                         if xmlItem.tag == 'CLIENT-COM-SPEC':
                             operationName=_getOperationNameFromComSpec(xmlItem,portInterfaceRef)
-                            comspec=autosar.component.OperationComSpec(operationName)
+                            comspec=autosar.port.OperationComSpec(operationName)
                             port.comspec.append(comspec)
                         elif xmlItem.tag == 'UNQUEUED-RECEIVER-COM-SPEC' or xmlItem.tag == 'NONQUEUED-RECEIVER-COM-SPEC':
                             dataElemName = _getDataElemNameFromComSpec(xmlItem,portInterfaceRef)
-                            comspec = autosar.component.DataElementComSpec(dataElemName)
+                            comspec = autosar.port.DataElementComSpec(dataElemName)
                             if xmlItem.find('./ALIVE-TIMEOUT') is not None:
                                 comspec.aliveTimeout = self.parseTextNode(xmlItem.find('./ALIVE-TIMEOUT'))
                             if self.version >= 4.0:
@@ -150,7 +150,7 @@ class ComponentTypeParser(ElementParser):
                             port.comspec.append(comspec)
                         elif xmlItem.tag == 'QUEUED-RECEIVER-COM-SPEC':
                             dataElemName = _getDataElemNameFromComSpec(xmlItem,portInterfaceRef)
-                            comspec = autosar.component.DataElementComSpec(dataElemName)
+                            comspec = autosar.port.DataElementComSpec(dataElemName)
                             if xmlItem.find('./QUEUE-LENGTH') != None:
                                 comspec.queueLength = self.parseTextNode(xmlItem.find('./QUEUE-LENGTH'))
                             port.comspec.append(comspec)
@@ -166,19 +166,19 @@ class ComponentTypeParser(ElementParser):
             elif(xmlPort.tag == 'P-PORT-PROTOTYPE'):
                 portName = xmlPort.find('SHORT-NAME').text
                 portInterfaceRef = self.parseTextNode(xmlPort.find('PROVIDED-INTERFACE-TREF'))
-                port = autosar.component.ProvidePort(portName,portInterfaceRef,parent=componentType)
+                port = autosar.port.ProvidePort(portName,portInterfaceRef,parent=componentType)
                 if hasAdminData(xmlPort):
                     port.adminData=parseAdminDataNode(xmlPort.find('ADMIN-DATA'))
                 if xmlPort.findall('./PROVIDED-COM-SPECS') is not None:
                     for xmlItem in xmlPort.findall('./PROVIDED-COM-SPECS/*'):
                         if xmlItem.tag == 'SERVER-COM-SPEC':
                             operationName=_getOperationNameFromComSpec(xmlItem,portInterfaceRef)
-                            comspec=autosar.component.OperationComSpec(operationName)
+                            comspec=autosar.port.OperationComSpec(operationName)
                             comspec.queueLength=self.parseIntNode(xmlItem.find('QUEUE-LENGTH'))
                             port.comspec.append(comspec)
                         elif xmlItem.tag == 'UNQUEUED-SENDER-COM-SPEC' or xmlItem.tag == 'NONQUEUED-SENDER-COM-SPEC':
                             dataElemName = _getDataElemNameFromComSpec(xmlItem,portInterfaceRef)
-                            comspec = autosar.component.DataElementComSpec(dataElemName)
+                            comspec = autosar.port.DataElementComSpec(dataElemName)
                             if self.version >= 4.0:
                                 xmlElem = xmlItem.find('./INIT-VALUE')
                                 if xmlElem != None:
@@ -198,7 +198,7 @@ class ComponentTypeParser(ElementParser):
                             port.comspec.append(comspec)
                         elif xmlItem.tag == 'QUEUED-SENDER-COM-SPEC':
                             dataElemName = _getDataElemNameFromComSpec(xmlItem,portInterfaceRef)
-                            comspec = autosar.component.DataElementComSpec(dataElemName)
+                            comspec = autosar.port.DataElementComSpec(dataElemName)
                             assert(comspec is not None)
                             port.comspec.append(comspec)
                         elif xmlItem.tag == 'PARAMETER-PROVIDE-COM-SPEC':
@@ -353,7 +353,7 @@ class ComponentTypeParser(ElementParser):
                 modeGroupRef = self.parseTextNode(xmlElem)
             else:
                 raise NotImplementedError(xmlElem.tag)
-        return autosar.component.ModeSwitchComSpec(None, enhancedMode, supportAsync, modeGroupRef = modeGroupRef)
+        return autosar.port.ModeSwitchComSpec(None, enhancedMode, supportAsync, modeGroupRef = modeGroupRef)
 
     def _parseModeSwitchSenderComSpec(self, xmlRoot):
         (enhancedMode, queueLength, modeSwitchAckTimeout, modeGroupRef) = (None, None, None, None)
@@ -373,7 +373,7 @@ class ComponentTypeParser(ElementParser):
                 queueLength = self.parseIntNode(xmlElem)
             else:
                 raise NotImplementedError(xmlElem.tag)
-        return autosar.component.ModeSwitchComSpec(None, enhancedMode, None, queueLength, modeSwitchAckTimeout, modeGroupRef)
+        return autosar.port.ModeSwitchComSpec(None, enhancedMode, None, queueLength, modeSwitchAckTimeout, modeGroupRef)
 
     def _parseParameterComSpec(self, xmlRoot, portInterfaceRef):
         (initValue, name) = (None, None)
@@ -388,6 +388,6 @@ class ComponentTypeParser(ElementParser):
             else:
                 raise NotImplementedError(xmlElem.tag)
         if (name is not None):
-            return autosar.component.ParameterComSpec(name, initValue)
+            return autosar.port.ParameterComSpec(name, initValue)
         else:
             raise RuntimeError('PARAMETER-REQUIRE-COM-SPEC must have a PARAMETER-REF')

@@ -265,7 +265,7 @@ class RunnableEntity(Element):
         ws=self.rootWS()
         assert(ws is not None)
         assert(dataReceivePoint.portRef is not None)
-        if isinstance(dataReceivePoint.portRef,autosar.component.Port):
+        if isinstance(dataReceivePoint.portRef,autosar.port.Port):
             dataReceivePoint.portRef=dataReceivePoint.portRef.ref
         if isinstance(dataReceivePoint.portRef,str):
             port=ws.find(dataReceivePoint.portRef)
@@ -290,7 +290,7 @@ class RunnableEntity(Element):
         ws=self.rootWS()
         assert(ws is not None)
         assert(dataSendPoint.portRef is not None)
-        if isinstance(dataSendPoint.portRef,autosar.component.Port):
+        if isinstance(dataSendPoint.portRef,autosar.port.Port):
             dataSendPoint.portRef=dataSendPoint.portRef.ref
         if isinstance(dataSendPoint.portRef,str):
             port=ws.find(dataSendPoint.portRef)
@@ -784,10 +784,10 @@ class InternalBehaviorCommon(Element):
         internal function that create a DataReceivePoint of the the port is a require port or
         a DataSendPoint if the port is a provide port
         """
-        if isinstance(port,autosar.component.RequirePort):
+        if isinstance(port,autosar.port.RequirePort):
             receivePoint=DataReceivePoint(port.ref,dataElement.ref,'REC_{0.name}_{1.name}'.format(port,dataElement),runnable)
             runnable.dataReceivePoints.append(receivePoint)
-        elif isinstance(port,autosar.component.ProvidePort):
+        elif isinstance(port,autosar.port.ProvidePort):
             sendPoint=DataSendPoint(port.ref,dataElement.ref,'SEND_{0.name}_{1.name}'.format(port,dataElement),runnable)
             runnable.dataSendPoints.append(sendPoint)
         else:
@@ -798,7 +798,7 @@ class InternalBehaviorCommon(Element):
         internal function that create a SyncServerCallPoint of the the port is a require port or
         a DataSendPoint if the port is a provide port
         """
-        if isinstance(port,autosar.component.RequirePort):
+        if isinstance(port,autosar.port.RequirePort):
             callPoint=SyncServerCallPoint('SC_{0.name}_{1.name}'.format(port,operation))
             callPoint.operationInstanceRefs.append(OperationInstanceRef(port.ref, operation.ref))
             runnable.serverCallPoints.append(callPoint)
@@ -811,7 +811,7 @@ class InternalBehaviorCommon(Element):
         port = self.swc.find(portName)
         if port is None:
             raise ValueError('%s: Invalid port name: %s'%(self.swc.name, portName))
-        if not isinstance(port, autosar.component.RequirePort):
+        if not isinstance(port, autosar.port.RequirePort):
             raise ValueError('%s: port must be a require-port: %s'%(self.swc.name, portName))
         portInterface = ws.find(port.portInterfaceRef, role='PortInterface')
         if (portInterface is None):
@@ -840,20 +840,20 @@ class InternalBehaviorCommon(Element):
         raise ValueError('"%s" did not match any of the mode declarations in %s'%(modeValue,dataType.ref))
 
     def _createModeAccessPoint(self, port, modeGroup, runnable):
-        if isinstance(port, autosar.component.ProvidePort):
+        if isinstance(port, autosar.port.ProvidePort):
             modeGroupInstanceRef = ProvideModeGroupInstanceRef(port.ref, modeGroup.ref)
         else:
-            assert isinstance(port, autosar.component.RequirePort)
+            assert isinstance(port, autosar.port.RequirePort)
             modeGroupInstanceRef = RequireModeGroupInstanceRef(port.ref, modeGroup.ref)
         name = None #TODO: support user-controlled name?
         modeAccessPoint = ModeAccessPoint(name, modeGroupInstanceRef)
         runnable.modeAccessPoints.append(modeAccessPoint)
 
     def _createModeSwitchPoint(self, port, modeGroup, runnable):
-        if isinstance(port, autosar.component.ProvidePort):
+        if isinstance(port, autosar.port.ProvidePort):
             modeGroupInstanceRef = ProvideModeGroupInstanceRef(port.ref, modeGroup.ref)
         else:
-            assert isinstance(port, autosar.component.RequirePort)
+            assert isinstance(port, autosar.port.RequirePort)
             modeGroupInstanceRef = RequireModeGroupInstanceRef(port.ref, modeGroup.ref)
         baseName='SWITCH_{0.name}_{1.name}'.format(port, modeGroup)
         name = autosar.base.findUniqueNameInList(runnable.modeSwitchPoints, baseName)
@@ -935,7 +935,7 @@ class InternalBehaviorCommon(Element):
         portName,operationName=parts[0],parts[1]
         eventName=name
         port = self.swc.find(portName)
-        if (port is None) or not isinstance(port, autosar.component.Port):
+        if (port is None) or not isinstance(port, autosar.port.Port):
             raise ValueError('invalid port name: '+portName)
         portInterface = ws.find(port.portInterfaceRef)
         if portInterface is None:
@@ -981,7 +981,7 @@ class InternalBehaviorCommon(Element):
             portName,dataElementName=parts[0],None
         eventName=name
         port = self.swc.find(portName)
-        if (port is None) or not isinstance(port, autosar.component.Port):
+        if (port is None) or not isinstance(port, autosar.port.Port):
             raise ValueError('invalid port name: '+portName)
         portInterface = ws.find(port.portInterfaceRef)
         if portInterface is None:
@@ -1194,7 +1194,7 @@ class InternalBehavior(InternalBehaviorCommon):
                     raise ValueError('serviceCallPorts must be either string or list of string of the format "portName/operationName"')
                 portName,operationName = parts[0],parts[1]
                 port = self.swc.find(portName)
-                if not isinstance(port, autosar.component.Port):
+                if not isinstance(port, autosar.port.Port):
                     raise ValueError("'%s' is not a valid port name"%portName)
                 elem.serviceCallPorts.append(RoleBasedRPortAssignment(port.ref,operationName))
         else:
