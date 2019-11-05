@@ -125,15 +125,17 @@ class BehaviorParser(ElementParser):
                     for xmlEvent in xmlElem.findall('./*'):
                         event = None
                         if xmlEvent.tag == 'INIT-EVENT':
-                            event = self.parseInitEvent(xmlEvent,internalBehavior)
+                            event = self.parseInitEvent(xmlEvent, internalBehavior)
                         elif xmlEvent.tag == 'SWC-MODE-SWITCH-EVENT':
-                            event = self.parseModeSwitchEvent(xmlEvent,internalBehavior)
+                            event = self.parseModeSwitchEvent(xmlEvent, internalBehavior)
                         elif xmlEvent.tag == 'TIMING-EVENT':
-                            event = self.parseTimingEvent(xmlEvent,internalBehavior)
+                            event = self.parseTimingEvent(xmlEvent, internalBehavior)
                         elif xmlEvent.tag == 'DATA-RECEIVED-EVENT':
-                            event = self.parseDataReceivedEvent(xmlEvent,internalBehavior)
+                            event = self.parseDataReceivedEvent(xmlEvent, internalBehavior)
                         elif xmlEvent.tag == 'OPERATION-INVOKED-EVENT':
-                            event = self.parseOperationInvokedEvent(xmlEvent,internalBehavior)
+                            event = self.parseOperationInvokedEvent(xmlEvent, internalBehavior)
+                        elif xmlEvent.tag == 'MODE-SWITCHED-ACK-EVENT':
+                            event = self.parseModeSwitchedAckEvent(xmlEvent, internalBehavior)
                         elif xmlEvent.tag == 'DATA-RECEIVE-ERROR-EVENT':
                             #TODO: Implement later
                             pass
@@ -517,6 +519,28 @@ class BehaviorParser(ElementParser):
         else:
             raise NotImplementedError('version: '+self.version)
         return modeSwitchEvent
+
+    def parseModeSwitchedAckEvent(self, xmlNode, parent = None):
+        if self.version < 4.0:
+            raise NotImplementedError(xmlNode.tag)
+        else:
+            assert(xmlNode.tag=='MODE-SWITCHED-ACK-EVENT')
+            (name, startOnEventRef, eventSourceRef, xmlDisabledModeRefs) = (None, None, None, None)
+            for xmlElem in xmlNode.findall('./*'):
+                if xmlElem.tag == 'SHORT-NAME':
+                    name = self.parseTextNode(xmlElem)
+                elif xmlElem.tag == 'DISABLED-MODE-IREFS':
+                    xmlDisabledModeRefs = xmlElem
+                elif xmlElem.tag == 'START-ON-EVENT-REF':
+                    startOnEventRef = self.parseTextNode(xmlElem)
+                elif xmlElem.tag == 'EVENT-SOURCE-REF':
+                    eventSourceRef = self.parseTextNode(xmlElem)
+                else:
+                    raise NotImplementedError(xmlElem.tag)
+            modeSwitchEvent = autosar.behavior.ModeSwitchAckEvent(name, startOnEventRef, eventSourceRef, parent)
+            if xmlDisabledModeRefs is not None:
+                modeSwitchEvent.disabledInModes = self._parseDisabledModesInstanceRefs(xmlDisabledModeRefs, parent)
+            return modeSwitchEvent
 
     def parseTimingEvent(self,xmlNode,parent=None):
         (name, startOnEventRef, period, xmlModeDepency, xmlDisabledModeRefs) = (None, None, None, None, None)

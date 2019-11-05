@@ -368,7 +368,10 @@ class XMLBehaviorWriter(ElementWriter):
             assert(event.dataInstanceRef is not None)
             lines.extend(self.indent(self._writeDataInstanceRefXML(ws, event, event.dataInstanceRef),1))
         elif isinstance(event, autosar.behavior.InitEvent):
-            pass
+            pass #No additional values to write for InitEvent
+        elif isinstance(event, autosar.behavior.ModeSwitchAckEvent):
+            assert(event.eventSourceRef is not None)
+            lines.extend(self.indent(self._writeEventSourceRefXML(ws, event, event.eventSourceRef),1))
         else:
             raise NotImplementedError(str(type(event)))
         lines.append('</%s>'%tag)
@@ -442,6 +445,12 @@ class XMLBehaviorWriter(ElementWriter):
         lines.append(self.indent('<%s DEST="%s">%s</%s>'%(dataTagName, dataElement.tag(self.version), dataElement.ref, dataTagName),1))
         lines.append('</%s>'%dataIRef.tag(self.version))
         return lines
+
+    def _writeEventSourceRefXML(self, ws, parent, eventSourceRef):
+        eventSource = ws.find(eventSourceRef)
+        if eventSource is None:
+            raise autosar.base.InvalidEventSourceRef(eventSourceRef)
+        return ['<EVENT-SOURCE-REF DEST="{0}">{1}</EVENT-SOURCE-REF>'.format(eventSource.tag(self.version), eventSource.ref)]
 
     def _writePerInstanceMemoryXML(self, ws, memory):
         lines = []

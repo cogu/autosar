@@ -176,7 +176,7 @@ class ARXML4BehaviorTest(ARXMLTestClass):
         ws = _init_ws()
         swc1 = ws['ComponentTypes'].createApplicationSoftwareComponent('MyApplication')
         port1 = swc1.createProvidePort('VehicleMode', '/PortInterfaces/VehicleMode_I', queueLength=1, modeSwitchAckTimeout=10)
-        runnable1 = swc1.behavior.createRunnable('MyApplication_SetVehicleMode', portAccess=['VehicleMode'], modeSwitch=['VehicleMode'])
+        runnable1 = swc1.behavior.createRunnable('MyApplication_SetVehicleMode', portAccess=['VehicleMode'], modeSwitchPoint=['VehicleMode'])
         self.assertEqual(len(runnable1.modeSwitchPoints), 1)
 
         file_name = 'ar4_runnable_with_provide_type_mode_switch_point.arxml'
@@ -197,6 +197,30 @@ class ARXML4BehaviorTest(ARXMLTestClass):
         self.assertEqual(modeSwitchPoint.modeGroupInstanceRef.modeGroupRef, '/PortInterfaces/VehicleMode_I/mode')
         self.assertEqual(modeSwitchPoint.modeGroupInstanceRef.providePortRef, '/ComponentTypes/MyApplication/VehicleMode')
 
+    def test_create_runnable_with_mode_switch_ack_event_trigger(self):
+        ws = _init_ws()
+        swc1 = ws['ComponentTypes'].createApplicationSoftwareComponent('MyApplication')
+        port1 = swc1.createProvidePort('VehicleMode', '/PortInterfaces/VehicleMode_I', queueLength=1, modeSwitchAckTimeout=10)
+        switchRunnable1 = swc1.behavior.createRunnable('MyApplication_SetVehicleMode', modeSwitchPoint=['VehicleMode'])
+        self.assertEqual(switchRunnable1.modeSwitchPoints[0].ref, '/ComponentTypes/MyApplication/MyApplication_InternalBehavior/MyApplication_SetVehicleMode/SWITCH_VehicleMode_mode')
+        ackRunnable1 = swc1.behavior.createRunnable('MyApplication_VehicleModeSwitchAck', portAccess=['VehicleMode'])
+        swc1.behavior.createModeSwitchAckEvent(ackRunnable1.name, switchRunnable1.name)
+        self.assertEqual(len(swc1.behavior.events), 1)
+
+        file_name = 'ar4_runnable_with_mode_switch_ack_event_trigger.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'behavior', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
+
+        ws2 = autosar.workspace(ws.version_str)
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        swc2 = ws2.find(swc1.ref)
+        self.assertIsInstance(swc2, autosar.component.ApplicationSoftwareComponent)
+        self.assertEqual(len(swc2.behavior.events), 1)
+        event2 = swc2.behavior.events[0]
+        self.assertIsInstance(event2, autosar.behavior.ModeSwitchAckEvent)
+        self.assertEqual(event2.startOnEventRef, ackRunnable1.ref)
+        self.assertEqual(event2.eventSourceRef, switchRunnable1.modeSwitchPoints[0].ref)
 
 if __name__ == '__main__':
 
