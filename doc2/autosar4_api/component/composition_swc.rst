@@ -6,13 +6,13 @@ CompositionComponent
 .. table::
    :align: left
 
-   +--------------------+------------------------------------------------------------+
-   | XML tag            | <COMPOSITION-SW-COMPONENT-TYPE>                            |
-   +--------------------+------------------------------------------------------------+
-   | Module             | autosar.component                                          |
-   +--------------------+------------------------------------------------------------+
-   | Inherits           | :ref:`autosar.component.ComponentType <component_type>`    |
-   +--------------------+------------------------------------------------------------+
+   +--------------------+----------------------------------------------------------------------+
+   | XML tag            | <COMPOSITION-SW-COMPONENT-TYPE>                                      |
+   +--------------------+----------------------------------------------------------------------+
+   | Module             | autosar.component                                                    |
+   +--------------------+----------------------------------------------------------------------+
+   | Inherits           | :ref:`autosar.component.ComponentType <ar4_component_ComponentType>` |
+   +--------------------+----------------------------------------------------------------------+
 
 Factory Methods
 ---------------
@@ -47,4 +47,3 @@ components
 ~~~~~~~~~~
 
 List of instantiated components that are part of this composition. Use the member method createComponentPrototype to add new components.
-

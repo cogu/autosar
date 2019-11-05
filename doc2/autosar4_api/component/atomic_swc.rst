@@ -6,14 +6,14 @@ AtomicSoftwareComponent
 .. table::
    :align: left
 
-   +--------------------+------------------------------------------------------------+
-   | XML tag            | (abstract class)                                           |
-   +--------------------+------------------------------------------------------------+
-   | Module             | autosar.component                                          |
-   +--------------------+------------------------------------------------------------+
-   | Inherits           | :ref:`autosar.component.ComponentType <component_type>`    |
-   +--------------------+------------------------------------------------------------+
-   
+   +--------------------+----------------------------------------------------------------------+
+   | XML tag            | (abstract class)                                                     |
+   +--------------------+----------------------------------------------------------------------+
+   | Module             | autosar.component                                                    |
+   +--------------------+----------------------------------------------------------------------+
+   | Inherits           | :ref:`autosar.component.ComponentType <ar4_component_ComponentType>` |
+   +--------------------+----------------------------------------------------------------------+
+
 Base class for all component type classes except :ref:`component_compositionComponent`.
 
 Attributes
@@ -46,5 +46,4 @@ find
 
 ..  method:: AtomicSoftwareComponent.find(ref : str)
 
-    Similar to :ref:`ComponentType.find <component_type_find>` but also finds objects inside the behavior object.
-
+    Similar to :ref:`ComponentType.find <ar4_component_ComponentType_find>` but also finds objects inside the behavior object.

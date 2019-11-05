@@ -1,4 +1,4 @@
-..  _component_type:
+..  _ar4_component_ComponentType:
 
 ComponentType
 =============
@@ -13,7 +13,7 @@ ComponentType
    +--------------------+------------------------------------+
    | Inherits           | autosar.element.Element            |
    +--------------------+------------------------------------+
-   
+
 The ComponentType class is the base class for :ref:`component_atomic_swc` and :ref:`component_compositionComponent`.
 
 Attributes
@@ -25,23 +25,23 @@ Attributes
     +------------------------+---------------------------------------------+---------------------------------+
     | Name                   | Type                                        | Description                     |
     +========================+=============================================+=================================+
-    | **providePorts**       | list(:ref:`ProvidePort <port_ProvidePort>`) | Provide ports in this component |
+    | **providePorts**       | *list(:ref:`ar4_port_ProvidePort`)*         | Provide ports in this component |
     +------------------------+---------------------------------------------+---------------------------------+
-    | **requirePorts**       | list(:ref:`ProvidePort <port_RequirePort>`) | Require ports in this componen  |
-    +------------------------+---------------------------------------------+---------------------------------+    
+    | **requirePorts**       | *list(:ref:`ar4_port_RequirePort`)*         | Require ports in this componen  |
+    +------------------------+---------------------------------------------+---------------------------------+
 
 Public Methods
 --------------
 
-* :ref:`find <component_type_find>`
-* :ref:`createProvidePort <component_type_createProvidePort>`
-* :ref:`createRequirePort <component_type_createRequirePort>`
+* :ref:`ar4_component_ComponentType_find`
+* :ref:`ar4_component_ComponentType_createProvidePort`
+* :ref:`ar4_component_ComponentType_createRequirePort`
 
 
 Method Description
 --------------------
 
-.. _component_type_find:
+.. _ar4_component_ComponentType_find:
 
 find
 ~~~~~~~
@@ -49,11 +49,11 @@ find
 .. method:: ComponentType.find(ref : str)
 
     Find port based in info in reference string.
-    
+
     :param str ref: Reference string
 
 
-.. _component_type_createProvidePort:
+.. _ar4_component_ComponentType_createProvidePort:
 
 createProvidePort
 ~~~~~~~~~~~~~~~~~~~~
@@ -66,22 +66,22 @@ createProvidePort
     :param str portInterfaceRef: Reference to port interface
     :param str elemName: ShortName of inner dataElement (default uses same name as the port)
     :param str initValueRef: Reference to init value (constant object)
-    :param bool canInvalidate: sets the canInvalidate attribute on the port    
-    :rtype: :ref:`ProvidePort <port_ProvidePort>`
-    
-.. _component_type_createRequirePort:
+    :param bool canInvalidate: sets the canInvalidate attribute on the port
+    :rtype: :ref:`ProvidePort <ar4_port_ProvidePort>`
+
+.. _ar4_component_ComponentType_createRequirePort:
 
 createRequirePort
 ~~~~~~~~~~~~~~~~~
 
 .. method::  ComponentType.createRequirePort(name, portInterfaceRef, \*\*kwargs)
-   
+
     Creates new RequirePort on this component.
 
     :param str name: ShortName for the new port
     :param str portInterfaceRef: Reference to port interface
     :param kwargs: Additional arguments (see below)
-    :rtype: :ref:`RequirePort <port_RequirePort>`
+    :rtype: :ref:`RequirePort <ar4_port_RequirePort>`
 
 Creating ports from SenderReceiverInterface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -120,7 +120,3 @@ Examples
 
 .. include:: examples/creating_multi_elem_require_port.py
     :code: python3
-
-
-
-
