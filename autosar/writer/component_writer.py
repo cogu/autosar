@@ -260,7 +260,7 @@ class XMLComponentTypeWriter(ElementWriter):
             if portInterface is None:
                 raise ValueError("%s: invalid reference detected: '%s'"%(port.ref,port.portInterfaceRef))
             for comspec in port.comspec:
-                if isinstance(comspec, autosar.component.DataElementComSpec):
+                if isinstance(comspec, autosar.port.DataElementComSpec):
                     elem=portInterface.find(comspec.name)
                     if elem is None:
                         raise ValueError("%s: Invalid data element name '%s'"%(port.ref,comspec.name))
@@ -268,17 +268,17 @@ class XMLComponentTypeWriter(ElementWriter):
                         lines.extend(self.indent(self,_writeQueuedSenderComSpecXML(ws, comspec, elem), 2))
                     else:
                         lines.extend(self.indent(self._writeUnqueuedSenderComSpecXML(ws, comspec, elem),2))
-                elif isinstance(comspec, autosar.component.OperationComSpec):
+                elif isinstance(comspec, autosar.port.OperationComSpec):
                     operation=portInterface.find(comspec.name)
                     if operation is None:
                         raise ValueError("%s: Invalid operation name '%s'"%(port.ref, comspec.name))
                     lines.extend(self.indent(self,_writeServerComSpecXML(ws, comspec, operation), 2))
-                elif isinstance(comspec, autosar.component.ParameterComSpec):
+                elif isinstance(comspec, autosar.port.ParameterComSpec):
                     param=portInterface.find(comspec.name)
                     if param is None:
                         raise ValueError("%s: Invalid parameter name '%s'"%(port.ref, comspec.name))
                     lines.extend(self.indent(self._writeParameterProvideComSpecXML(ws, comspec, param),2))
-                elif isinstance(comspec, autosar.component.ModeSwitchComSpec):
+                elif isinstance(comspec, autosar.port.ModeSwitchComSpec):
                     modeGroup = None
                     if comspec.name is not None:
                         modeGroup = portInterface.find(comspec.name)
@@ -297,7 +297,7 @@ class XMLComponentTypeWriter(ElementWriter):
         return lines
 
     def _writeQueuedSenderComSpecXML(self, ws, comspec, elem):
-        assert(isinstance(comspec, autosar.component.DataElementComSpec))
+        assert(isinstance(comspec, autosar.port.DataElementComSpec))
         lines=[]
         lines.append('<QUEUED-SENDER-COM-SPEC>')
         lines.append(self.indent('<DATA-ELEMENT-REF DEST="%s">%s</DATA-ELEMENT-REF>'%(elem.tag(self.version),elem.ref),1))
@@ -331,7 +331,7 @@ class XMLComponentTypeWriter(ElementWriter):
         return lines
 
     def _writeServerComSpecXML(self, comspec, operation):
-        assert(isinstance(elem,autosar.component.OperationComSpec))
+        assert(isinstance(elem,autosar.port.OperationComSpec))
         lines=[]
         lines.append('<SERVER-COM-SPEC>')
         lines.append(self.indent('<OPERATION-REF DEST="%s">%s</OPERATION-REF>'%(operation.tag(self.version),operation.ref),1))
@@ -340,7 +340,7 @@ class XMLComponentTypeWriter(ElementWriter):
         return lines
 
     def _writeParameterProvideComSpecXML(self, ws, comspec, param):
-        assert(isinstance(elem,autosar.component.ParameterComSpec))
+        assert(isinstance(elem,autosar.port.ParameterComSpec))
         lines = []
         if self.version<4.0:
             raise NotImplementedError('_writeParameterProvideComSpecXML')
@@ -355,7 +355,7 @@ class XMLComponentTypeWriter(ElementWriter):
         return lines
 
     def _writeModeSwitchSenderComSpecXML(self, ws, comspec, modeGroup):
-        assert(isinstance(comspec, autosar.component.ModeSwitchComSpec))
+        assert(isinstance(comspec, autosar.port.ModeSwitchComSpec))
         lines=[]
         lines.append('<MODE-SWITCH-SENDER-COM-SPEC>')
         if comspec.enhancedMode is not None:
@@ -488,7 +488,7 @@ class XMLComponentTypeWriter(ElementWriter):
 
     def _writeInnerPortRefV4(self, innerComponent, innerPort):
         lines = []
-        if isinstance(innerPort, autosar.component.RequirePort):
+        if isinstance(innerPort, autosar.port.RequirePort):
             outerTag = 'R-PORT-IN-COMPOSITION-INSTANCE-REF'
             innerTag = 'TARGET-R-PORT-REF'
         else:
@@ -727,7 +727,7 @@ class CodeComponentTypeWriter(ElementWriter):
 
             parts = autosar.base.splitRef(connector.outerPortRef.portRef)
             outerPort = swc.find(parts[-1])
-            if outerPort is None or not isinstance(outerPort, autosar.component.Port):
+            if outerPort is None or not isinstance(outerPort, autosar.port.Port):
                 raise ValueError('no port with name "%s" found in Component %s'%(parts[-1], swc.ref))
             params.append(repr(outerPort.name))
             params.append(repr('%s/%s'%(innerComponentRef,innerPort.name)))

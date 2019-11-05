@@ -142,7 +142,7 @@ class ARXML4BehaviorTest(ARXMLTestClass):
         swc2 = ws2.find(swc1.ref)
         self.assertIsInstance(swc2, autosar.component.ApplicationSoftwareComponent)
         port2 = ws2.find(port1.ref)
-        self.assertIsInstance(port2, autosar.component.RequirePort)
+        self.assertIsInstance(port2, autosar.port.RequirePort)
         runnable2 = swc2.behavior.find(runnable1.name)
         self.assertIsInstance(runnable2, autosar.behavior.RunnableEntity)
         modeAccessPoint = runnable2.modeAccessPoints[0]
@@ -165,7 +165,7 @@ class ARXML4BehaviorTest(ARXMLTestClass):
         swc2 = ws2.find(swc1.ref)
         self.assertIsInstance(swc2, autosar.component.ApplicationSoftwareComponent)
         port2 = ws2.find(port1.ref)
-        self.assertIsInstance(port2, autosar.component.ProvidePort)
+        self.assertIsInstance(port2, autosar.port.ProvidePort)
         runnable2 = swc2.behavior.find(runnable1.name)
         self.assertIsInstance(runnable2, autosar.behavior.RunnableEntity)
         modeAccessPoint = runnable2.modeAccessPoints[0]
@@ -189,7 +189,7 @@ class ARXML4BehaviorTest(ARXMLTestClass):
         swc2 = ws2.find(swc1.ref)
         self.assertIsInstance(swc2, autosar.component.ApplicationSoftwareComponent)
         port2 = ws2.find(port1.ref)
-        self.assertIsInstance(port2, autosar.component.ProvidePort)
+        self.assertIsInstance(port2, autosar.port.ProvidePort)
         runnable2 = swc2.behavior.find(runnable1.name)
         self.assertIsInstance(runnable2, autosar.behavior.RunnableEntity)
         self.assertEqual(len(runnable2.modeSwitchPoints), 1)

@@ -186,7 +186,7 @@ class XMLBehaviorWriter(ElementWriter):
             lines.append('</ACCESSED-VARIABLE>')
         else:
             lines.append('<DATA-ELEMENT-IREF>')
-            if isinstance(port, autosar.component.ProvidePort):
+            if isinstance(port, autosar.port.ProvidePort):
                 lines.append(self.indent('<P-PORT-PROTOTYPE-REF DEST="%s">%s</P-PORT-PROTOTYPE-REF>'%(port.tag(self.version),port.ref),1))
             else:
                 lines.append(self.indent('<R-PORT-PROTOTYPE-REF DEST="%s">%s</R-PORT-PROTOTYPE-REF>'%(port.tag(self.version),port.ref),1))
@@ -229,10 +229,10 @@ class XMLBehaviorWriter(ElementWriter):
             port = ws.find(modeGroupInstanceRef.providePortRef)
         if port is None:
             raise ValueError('invalid port reference'%(modeGroupInstanceRef.requirePortRef))
-        if isinstance(port, autosar.component.RequirePort):
+        if isinstance(port, autosar.port.RequirePort):
             portReftag = 'CONTEXT-R-PORT-REF'
         else:
-            assert isinstance(port, autosar.component.ProvidePort)
+            assert isinstance(port, autosar.port.ProvidePort)
             portReftag = 'CONTEXT-P-PORT-REF'
         modeGroup = ws.find(modeGroupInstanceRef.modeGroupRef)
         if modeGroup is None:
@@ -411,7 +411,7 @@ class XMLBehaviorWriter(ElementWriter):
         operation = ws.find(operationIRef.operationRef)
         if operation is None:
             raise ValueError('invalid reference "%s" found in callPoint.operation of item "%s"'%(operationIRef.operationRef, parent.ref))
-        if isinstance(port, autosar.component.RequirePort):
+        if isinstance(port, autosar.port.RequirePort):
             if self.version >= 4.0:
                 (portRefTag,operationRefTag) = ('CONTEXT-R-PORT-REF','TARGET-REQUIRED-OPERATION-REF')
             else:
@@ -436,7 +436,7 @@ class XMLBehaviorWriter(ElementWriter):
         dataElement = ws.find(dataIRef.dataElemRef)
         if dataElement is None:
             raise ValueError('invalid reference "%s" found in dataIRef.dataElemRef of item "%s"'%(dataIRef.dataElemRef, parent.ref))
-        if isinstance(port, autosar.component.RequirePort):
+        if isinstance(port, autosar.port.RequirePort):
             portTagName = 'CONTEXT-R-PORT-REF' if self.version >= 4.0 else 'R-PORT-PROTOTYPE-REF'
         else:
             portTagName = 'CONTEXT-P-PORT-REF' if self.version >= 4.0 else 'P-PORT-PROTOTYPE-REF'

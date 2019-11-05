@@ -138,9 +138,9 @@ class ARXML4PortCreateTest(ARXMLTestClass):
         swc2 = ws2.find(swc1.ref)
         self.assertIsInstance(swc2, autosar.component.ApplicationSoftwareComponent)
         port2 = ws2.find(port1.ref)
-        self.assertIsInstance(port2, autosar.component.ProvidePort)
+        self.assertIsInstance(port2, autosar.port.ProvidePort)
         comspec2 = port2.comspec[0]
-        self.assertIsInstance(comspec2, autosar.component.ModeSwitchComSpec)
+        self.assertIsInstance(comspec2, autosar.port.ModeSwitchComSpec)
         self.assertEqual(comspec2.queueLength, 1)
         self.assertEqual(comspec2.modeSwitchAckTimeout, 10)
 
