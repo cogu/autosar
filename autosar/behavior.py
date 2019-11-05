@@ -64,6 +64,17 @@ class InitEvent(Event):
     def tag(self, version=None):
         return 'INIT-EVENT'
 
+class ModeSwitchAckEvent(Event):
+    """
+    Represents <MODE-SWITCHED-ACK-EVENT> (AUTOSAR 4)
+    """
+    def __init__(self, name, startOnEventRef=None, eventSourceRef = None, parent=None):
+        super().__init__(name, startOnEventRef, parent)
+        self.eventSourceRef = eventSourceRef
+
+    def tag(self, version=None):
+        return 'MODE-SWITCHED-ACK-EVENT'
+
 
 ####################################################################################################
 
@@ -99,7 +110,7 @@ class ModeInstanceRef:
     def tag(self,version=None):
         return 'MODE-IREF'
 
-class ModeDependencyRef(object):
+class ModeDependencyRef:
     def __init__(self,modeDeclarationRef,modeDeclarationGroupPrototypeRef=None,requirePortPrototypeRef=None):
         self.modeDeclarationRef=modeDeclarationRef #MODE-DECLARATION-REF
         self.modeDeclarationGroupPrototypeRef=modeDeclarationGroupPrototypeRef #MODE-DECLARATION-GROUP-PROTOTYPE-REF
@@ -220,24 +231,23 @@ class RunnableEntity(Element):
     def tag(self,version=None):
         return 'RUNNABLE-ENTITY'
 
-    def asdict(self):
-        data={'type': self.__class__.__name__,
-              'name':self.name,
-              'invokeConcurrently':self.invokeConcurrently,
-              'symbol':self.symbol,
-              'dataReceivePoints':[],
-              'dataSendPoints':[]}
-        for dataReceivePoint in self.dataReceivePoints:
-            data['dataReceivePoints'].append(dataReceivePoint.asdict())
-        for dataSendPoint in self.dataSendPoints:
-            data['dataSendPoints'].append(dataSendPoint.asdict())
-        if len(self.syncServerCallPoints)>0:
-            data['syncServerCallPoints']=[x.asdict for x in self.syncServerCallPoints]
-        if len(self.exclusiveAreaRefs)>0:
-            data['exclusiveAreaRefs']=[x for x in self.exclusiveAreaRefs]
-        if len(data['dataReceivePoints'])==0: del data['dataReceivePoints']
-        if len(data['dataSendPoints'])==0: del data['dataSendPoints']
-        return data
+    def find(self, ref):
+        if ref is None: return None
+        if ref[0]=='/': ref=ref[1:] #removes initial '/' if it exists
+        ref=ref.partition('/')
+        name=ref[0]
+        foundElem = None
+        for elem in self.modeAccessPoints + self.modeSwitchPoints + self.parameterAccessPoints:
+            if elem.name == name:
+                foundElem = elem
+                break
+        if foundElem is not None:
+            if len(ref[2])>0:
+                return foundElem.find(ref[2])
+            else:
+                return foundElem
+        return None
+
 
     def append(self,elem):
         if isinstance(elem, autosar.behavior.DataReceivePoint):
@@ -658,24 +668,29 @@ class InternalBehaviorCommon(Element):
         if ref[0]=='/': ref=ref[1:] #removes initial '/' if it exists
         ref=ref.partition('/')
         name=ref[0]
-        for elem in self.runnables:
-            if elem.name == name: return elem
-        for elem in self.perInstanceMemories:
-            if elem.name == name: return elem
-        for elem in self.exclusiveAreas:
-            if elem.name == name: return elem
+        foundElem = None
+        for elem in self.runnables + self.perInstanceMemories + self.exclusiveAreas:
+            if elem.name == name:
+                foundElem = elem
+                break
+        if foundElem is not None:
+            if len(ref[2])>0:
+                return foundElem.find(ref[2])
+            else:
+                return foundElem
         return None
 
-    def createRunnable(self, name, portAccess=None, symbol=None, concurrent=False, exclusiveAreas=None, modeSwitch = None, adminData=None):
+    def createRunnable(self, name, portAccess=None, symbol=None, concurrent=False, exclusiveAreas=None, modeSwitchPoint = None, adminData=None):
         """
         Creates a new runnable and appends it to this InternalBehavior instance
         Parameters:
         * name: <SHORT-NAME> (str)
         * portAccess: List of strings containing port names or "port-name/element" where element can be data-element or an operation (list(str))
         * symbol: Optional symbol name (str). Default is to use self.name string
-        * concurrent: Enable/Disable if this runnable can run concurrently (bool). Default=True
-        * exclusiveAreas: List of strings containing which exclusive areas this runnable will access
-        * modeSwitch: List of strings containing port names that this runnable will explicitly use for setting modes.
+        * concurrent: Enable/Disable if this runnable can run concurrently (bool).
+        * exclusiveAreas: List of strings containing which exclusive areas this runnable will access.
+          Note: For mode ports you will at best get read access. If you want to set new modes use modeSwitchPoints.
+        * modeSwitchPoint: List of strings containing port names that this runnable will explicitly use for setting modes.
         * adminData: Optional adminData
         """
         runnable = RunnableEntity(name, concurrent, symbol, self, adminData)
@@ -746,11 +761,11 @@ class InternalBehaviorCommon(Element):
                         raise ValueError('invalid exclusive area name: '+exclusiveAreaName)
             else:
                 raise ValueError('exclusiveAreas must be either string or list')
-        if modeSwitch is not None:
-            if isinstance(modeSwitch, str):
-                modeSwitch = [modeSwitch]
+        if modeSwitchPoint is not None:
+            if isinstance(modeSwitchPoint, str):
+                modeSwitchPoint = [modeSwitchPoint]
             assert (ws is not None)
-            for portName in modeSwitch:
+            for portName in modeSwitchPoint:
                 port = self.swc.find(portName)
                 if port is None:
                     raise ValueError('invalid port reference: '+str(portName))
@@ -842,7 +857,7 @@ class InternalBehaviorCommon(Element):
             modeGroupInstanceRef = RequireModeGroupInstanceRef(port.ref, modeGroup.ref)
         baseName='SWITCH_{0.name}_{1.name}'.format(port, modeGroup)
         name = autosar.base.findUniqueNameInList(runnable.modeSwitchPoints, baseName)
-        modeSwitchPoint = ModeSwitchPoint(name, modeGroupInstanceRef)
+        modeSwitchPoint = ModeSwitchPoint(name, modeGroupInstanceRef, runnable)
         runnable.modeSwitchPoints.append(modeSwitchPoint)
 
     def createModeSwitchEvent(self, runnableName, modeRef, activationType='ENTRY', name=None):
@@ -1209,11 +1224,18 @@ class SwcInternalBehavior(InternalBehaviorCommon):
             if ref[0]=='/': ref=ref[1:] #removes initial '/' if it exists
             ref=ref.partition('/')
             name=ref[0]
+            foundElem = None
             for elem in self.parameterDataPrototype:
-                if elem.name == name: return elem
+                if elem.name == name:
+                    foundElem = elem
+                    break
+            if foundElem is not None:
+                if len(ref[2])>0:
+                    return foundElem.find(ref[2])
+                else:
+                    return foundElem
         else:
             return result
-        return None
 
     def createPerInstanceMemory(self, name, implementationTypeRef, swAddressMethodRef = None, swCalibrationAccess = None):
         """
@@ -1306,6 +1328,63 @@ class SwcInternalBehavior(InternalBehaviorCommon):
         self.events.append(event)
         return event
 
+    def createModeSwitchAckEvent(self, runnableName, modeSwitchSource, modeDependency=None, name=None ):
+        """
+        Creates a new ModeSwitchAckEvent or <MODE-SWITCHED-ACK-EVENT> (AUTOSAR 4)
+        Parameters:
+        * runnableName: Name of the runnable to trigger on this event (str)
+        * modeSwitchSource: Name of the runnable that has the mode switch point. (str)
+                            If the source runnable has multiple mode switch points, use the pattern "RunnableName/ModePortName"
+                            To select the correct source point.
+        * modeDependency: Modes this runnable shall be disabled in (list(str))
+        * name: Event name override (str). Default is to create a name automatically.
+        """
+        self._initSWC()
+        ws = self.rootWS()
+
+        triggerRunnable = self.find(runnableName)
+        if triggerRunnable is None:
+            raise ValueError('Invalid runnable name: '+triggerRunnable)
+        if not isinstance(triggerRunnable, autosar.behavior.RunnableEntity):
+            raise ValueError('Element with name {} is not a runnable'.format(runnableName))
+
+        baseName = 'MSAT_'+triggerRunnable.name
+        eventName = autosar.base.findUniqueNameInList(self.events, baseName)
+        ref = modeSwitchSource.partition('/')
+        sourceRunnableName = ref[0]
+        sourceModeSwitchPoint = None
+        sourceRunnable = self.find(sourceRunnableName)
+        if sourceRunnable is None:
+            raise ValueError('Invalid runnable name: '+triggerRunnable)
+        if not isinstance(sourceRunnable, autosar.behavior.RunnableEntity):
+            raise ValueError('Element with name {} is not a runnable'.format(sourceRunnableName))
+        if len(sourceRunnable.modeSwitchPoints) == 0:
+            raise RuntimeError('Runnable {0.name} must have at least one mode switch point'.format(sourceRunnable))
+        if len(ref[1])==0:
+            #No '/' delimiter was used. This is OK only when the source runnable has only one modeSwitchPoint (no ambiguity)
+                if len(sourceRunnable.modeSwitchPoints) > 1:
+                    raise ValueError('Ambiguous use of modeSwitchSource "{}". Please use pattern "RunnableName/PortName" in modeSwitchSource argument')
+                sourceModeSwitchPoint = sourceRunnable.modeSwitchPoints[0]
+        else:
+            #Search through all modeSwitchPoints to find port name that matches second half of the partition split
+            modePortName = ref[2]
+            for elem in sourceRunnable.modeSwitchPoints[0]:
+                port = ws.find(elem.modeGroupInstanceRef.providePortRef)
+                if port is None:
+                    raise autosar.base.InvalidPortRef(elem.modeGroupInstanceRef.providePortRef)
+                if port.name == modePortName:
+                    sourceModeSwitchPoint = elem
+                    break
+            else:
+                raise ValueError('Invalid modeSwitchSource argument "{0}": Unable to find a ModeSwitchPoint containing the port name in that runnable'.format(modeSwitchSource))
+        assert(sourceModeSwitchPoint is not None)
+        #Now that we have collected all the pieces we need we can finally create the event
+        assert (triggerRunnable.ref is not None) and (sourceModeSwitchPoint.ref is not None)
+        event = ModeSwitchAckEvent(eventName, triggerRunnable.ref, sourceModeSwitchPoint.ref)
+        if modeDependency is not None:
+            self._processModeDependency(event, modeDependency, ws.version)
+        self.events.append(event)
+        return event
 
 class VariableAccess(Element):
     def __init__(self, name, portPrototypeRef, targetDataPrototypeRef, parent=None):
@@ -1458,12 +1537,12 @@ class ModeAccessPoint:
         else:
             self._modeGroupInstanceRef = None
 
-class ModeSwitchPoint:
+class ModeSwitchPoint(Element):
     """
     Represents <MODE-SWITCH-POINT> (AUTOSAR 4)
     """
-    def __init__(self, name, modeGroupInstanceRef = None):
-        self.name = str(name)
+    def __init__(self, name, modeGroupInstanceRef = None, parent=None, adminData=None):
+        super().__init__(name, parent, adminData)
         self.modeGroupInstanceRef = modeGroupInstanceRef
 
     def tag(self, version):
@@ -1482,3 +1561,4 @@ class ModeSwitchPoint:
             value.parent = self
         else:
             self._modeGroupInstanceRef = None
+

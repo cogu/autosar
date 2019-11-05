@@ -21,24 +21,6 @@ class Element:
         else:
             return None
 
-    def asdict(self):
-        data={'type': self.__class__.__name__}
-        for key, value in self.__dict__.items():
-            if value is not None:
-                if key=='adminData':
-                    if self.adminData is not None:
-                        data['adminData']=self.adminData.asdict()
-                elif key=='parent':
-                    continue
-                else:
-                    if hasattr(value,'asdict'):
-                        #print('complex'+str(type(value)))
-                        data[key]=value.asdict()
-                    else:
-                        #print('simple'+str(type(value)))
-                        data[key]=value
-        return data
-
     def rootWS(self):
         if self.parent is None:
             return None
