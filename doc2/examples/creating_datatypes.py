@@ -41,10 +41,10 @@ datatypes.createImplementationDataTypeRef('VehicleSpeed_T',
 #Example of using reference strings to find our data types
 dt1 = ws.find('/DataTypes/OffOn_T')
 dt2 = ws.find('/DataTypes/VehicleSpeed_T')
-print(dt1.name)
-print(dt1.ref)
-print(dt2.name)
-print(dt2.ref)
+print("dt1.name: " + dt1.name)
+print("dt1.ref: " + dt1.ref)
+print("dt2.name: " + dt2.name)
+print("dt2.ref: " + dt2.ref)
 
 #Export as XML
 ws.saveXML('DataTypes.arxml')

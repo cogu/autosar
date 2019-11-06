@@ -1,4 +1,4 @@
-.. _package:
+.. _ar4_package_Package:
 
 Package
 =======
@@ -44,6 +44,8 @@ Attributes
     | **role**        | str                | Package role                |
     +-----------------+--------------------+-----------------------------+
 
+.. _ar4_package_roles:
+
 Package Roles
 -------------
 
@@ -51,21 +53,21 @@ Package Roles
     :align: left
 
     +------------------+--------------------------------------------+
-    | *Constant*       |  Main container for Constants              |
+    | *Constant*       | Main container for Constants               |
     +------------------+--------------------------------------------+
     | *ComponentType*  | Main container for Components              |
     +------------------+--------------------------------------------+
-    | *CompuMethod*    | Main Container for Computational Methods   |
+    | *CompuMethod*    | Main container for Computational Methods   |
     +------------------+--------------------------------------------+
     | *DataConstraint* | Main container for Data Constraints        |
     +------------------+--------------------------------------------+
     | *DataType*       | Main container for Data Types              |
     +------------------+--------------------------------------------+
-    | *ModeDclrGroup*  | Main Container for Mode Declaration Groups |
+    | *ModeDclrGroup*  | Main container for Mode Declaration Groups |
     +------------------+--------------------------------------------+
-    | *PortInterface*  | Main Container for Port Interfaces         |
+    | *PortInterface*  | Main container for Port Interfaces         |
     +------------------+--------------------------------------------+
-    | *Unit*           | Main Container for Units                   |
+    | *Unit*           | Main container for Units                   |
     +------------------+--------------------------------------------+
 
 
@@ -256,4 +258,3 @@ createModeDeclarationGroup
     :param str category: Optional category
     :param adminData: Optional adminData
     :rtype: :ref:`mode_modeDeclarationGroup`
-

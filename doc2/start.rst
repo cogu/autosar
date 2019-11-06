@@ -1,11 +1,11 @@
 Getting Started
 ===============
-   
+
 Installation
 ------------
 
 After you have downloaded and unzipped the module, install it as you would install any other python-module::
-   
+
    Linux (shell):
    $python3 setup.py install
 
@@ -17,11 +17,10 @@ Supported AUTOSAR Versions
 
 These are the AUTOSAR versions that this module is known to work with:
 
-* AUTOSAR 3.0.x
-* AUTOSAR 4.2.x
+* AUTOSAR 3.0.1
+* AUTOSAR 4.2.2
 
 Other versions might work for you but they have not been tested by the author of this module.
-
 
 The workspace object
 --------------------
@@ -32,7 +31,7 @@ You create a new workspace by calling the workspace function:
 .. code-block:: python
 
    import autosar
-   
+
    ws = autosar.workspace(<version-string>)
 
 Normally you want to create a single workspace object after module import and use that object until the script ends.
@@ -43,14 +42,13 @@ The version string
 
 When you create your workspace you should specify which AUTOSAR version you intend to use.
 This is important when you intend to export your workspace object as ARXML later on. it's not required when you just want to load an existing XML file.
-In that case the AUTOSAR version will be parsed from the XML data.
 
 Example:
 
 .. code-block:: python
 
    import autosar
-   
+
    ws = autosar.workspace("4.2.2")
 
 
@@ -58,7 +56,7 @@ The basics of AUTOSAR XML (ARXML)
 ---------------------------------
 
 An AUTOSAR XML file is just a normal XML file with the file extension ".arxml". The root XML element is called <AUTOSAR>.
-Inside the AUTOSAR element you will typically a collection of AUTOSAR packages.
+Inside the AUTOSAR (XML) element you will typically a collection of AUTOSAR packages.
 
 Below is an example of a simplifed AUTOSAR XML with 4 empty packages. The packages in this file are simply named "Package1", "Package2, "Package3" and "Package4".
 
@@ -93,26 +91,30 @@ Navigating the XML using references
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Any object in the XML that has a name property can be found using a reference string.
-A reference is a string describing the objects absolute position within the XML hiearchy.
-If you are familar with `XPath <https://en.wikipedia.org/wiki/XPath>`_ you feel right at home.
+A reference is a string describing the objects absolute position within the XML hierarchy.
+This is similar in concept to `XPath <https://en.wikipedia.org/wiki/XPath>`_.
 
 The root reference is '/'. This corressponds to the outermost XML node called <AR-PACKAGES>. This is also the root of the workspace object.
 Any direct child node that have an inner tag called <SHORT-NAME> can be accessed by adding that name to the root reference.
 Deeper nodes can be accessed by adding the '/' character followed by the next child node which in turn contains an inner <SHORT-NAME> tag.
+Most Python objects that you will create will have two properties:
 
-.. include:: examples/print_references.py
+* ref (str): Full reference to this object in the ARXML hierarchy.
+* name (str): The name of this object. This is the last section of the reference string and will become the <SHORT-NAME> property once exported as ARXML.
+
+.. include:: examples/print_elem_refs.py
     :code: python3
-    
+
 Output:
 
 .. code-block:: text
 
-   Package1
-
-   Package1
-   Package2
-   Package3
-   Package4
+   u8Type.name: uint8
+   u8Type.ref: /DataTypes/BaseTypes/uint8
+   u16Type.name: uint16
+   u16Type.ref: /DataTypes/BaseTypes/uint16
+   u32Type.name: uint32
+   u32Type.ref: /DataTypes/BaseTypes/uint32
 
 AUTOSAR Elements
 ~~~~~~~~~~~~~~~~
@@ -125,27 +127,38 @@ Besides a name, every AUTOSAR package contain:
 AUTOSAR Elements can be almost anything (except packages). The most commonly used element types are:
 
 * Data Types
-   - Data Constraints
-   - Compu Scales
-   - Units
 * Port Interfaces
 * Constants
 * Components
-   - Ports
-   - Behavior
-      - Runnables
-      - Events
 
-In Python, element objects are created by calling methods found in the parent package object.
-You can say that the package object is acting sort of like a factory class for creating elements (in that package).
-We will see an example of this shortly.
+In Python, element objects are created by calling methods found in the closest parent object.
+Within this documentation these methods are commonly known as *factory methods*.
 
 Package Roles
 ~~~~~~~~~~~~~
 
 When you are using this Python module to programmatically create AUTOSAR elements it should be as easy to use as possible.
-For this purpose we use something called package roles as hint a to Python in order to tell which package contain what type of elements.
+For this purpose we use something called package roles as a hint to Python, telling it which package contain what type of elements.
 Package roles are usually set when you create the package but can also be assigned later.
+
+.. table::
+   :align: left
+
+   +-------------------+---------------------------+
+   | Package Role Name |  Element Types            |
+   +===================+===========================+
+   | DataType          | Data Types                |
+   +-------------------+---------------------------+
+   | Constant          | Constants                 |
+   +-------------------+---------------------------+
+   | ComponentType     | Components (prototypes)   |
+   +-------------------+---------------------------+
+   | ModeDclrGroup     | Mode Declaration Groups   |
+   +-------------------+---------------------------+
+   | CompuMethod       | Computational Methods     |
+   +-------------------+---------------------------+
+   | DataConstraint    | Data Constraints          |
+   +-------------------+---------------------------+
 
 .. note:: Package roles are only used within this Python module which means it's not stored anywhere in the XML itself.
 
@@ -155,7 +168,7 @@ Full Example - Creating DataTypes
 In this example we will create two ImplementationDataTypes.
 
 
-.. table:: 
+.. table::
    :align: left
 
    +----------------+----------------+
@@ -172,7 +185,7 @@ In this example we will create two ImplementationDataTypes.
 
 |
 
-.. table:: 
+.. table::
    :align: left
 
    +----------------+-----------------------+
@@ -202,15 +215,15 @@ You can also turn off implicit creation of these extra elements (such as data co
 
 .. include:: examples/creating_datatypes.py
     :code: python3
-    
+
 Output:
 
 .. code-block:: text
 
-   OffOn_T
-   /DataTypes/OffOn_T
-   VehicleSpeed_T
-   /DataTypes/VehicleSpeed_T
+   dt1.name: OffOn_T
+   dt1.ref: /DataTypes/OffOn_T
+   dt2.name: VehicleSpeed_T
+   dt2.ref: /DataTypes/VehicleSpeed_T
 
 DataTypes.arxml:
 
