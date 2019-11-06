@@ -58,16 +58,11 @@ find
 createProvidePort
 ~~~~~~~~~~~~~~~~~~~~
 
-.. method::  ComponentType.createProvidePort(name, portInterfaceRef, [elemName=None], [initValueRef=None], [canInvalidate=False])
+.. method::  ComponentType.createProvidePort(name, portInterfaceRef, \*\*kwargs)
 
     Creates new ProvidePort on this component.
 
-    :param str name: ShortName for the new port
-    :param str portInterfaceRef: Reference to port interface
-    :param str elemName: ShortName of inner dataElement (default uses same name as the port)
-    :param str initValueRef: Reference to init value (constant object)
-    :param bool canInvalidate: sets the canInvalidate attribute on the port
-    :rtype: :ref:`ProvidePort <ar4_port_ProvidePort>`
+    The parameters are the same as for the method :ref:`ComponentType.CreateRequirePort <ar4_component_ComponentType_createRequirePort>`
 
 .. _ar4_component_ComponentType_createRequirePort:
 
@@ -80,13 +75,13 @@ createRequirePort
 
     :param str name: ShortName for the new port
     :param str portInterfaceRef: Reference to port interface
-    :param kwargs: Additional arguments (see below)
+    :param kwargs: Additional arguments depending on port interface type (see below)
     :rtype: :ref:`RequirePort <ar4_port_RequirePort>`
 
 Creating ports from SenderReceiverInterface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**Optional kwarg parameters in createRequirePort method**
+**Optional parameters in method**
 
 .. table::
    :align: left
@@ -94,7 +89,7 @@ Creating ports from SenderReceiverInterface
    +------------------+---------------------+--------------------------------------------------------------+
    | Parameter name   | Type                | Description                                                  |
    +==================+=====================+==============================================================+
-   | comspec          | list                | Use to take direct control of comspec creation               |
+   | comspec          | dict, list(dict)    | Use to take direct control of comspec creation               |
    +------------------+---------------------+--------------------------------------------------------------+
    | initValue        | int, float, str     | Used to set an init value literal.                           |
    |                  |                     | Mutually exclusive to initValueRef.                          |

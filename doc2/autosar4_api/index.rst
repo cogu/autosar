@@ -5,6 +5,7 @@ AUTOSAR 4 API
     :maxdepth: 2
 
     base/index
+    workspace
     package
     element
     datatype/index

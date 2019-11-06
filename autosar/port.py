@@ -172,12 +172,12 @@ class ProvidePort(Port):
         return RequirePort(self)
 
 
-class OperationComSpec(object):
+class OperationComSpec:
     def __init__(self,name=None,queueLength=1):
         self.name = name
         self.queueLength=queueLength
 
-class DataElementComSpec(object):
+class DataElementComSpec:
     def __init__(self, name=None, initValue=None, initValueRef=None, aliveTimeout=None, queueLength=None, canInvalidate=None, useEndToEndProtection = None):
         self.name = name
         if initValue is not None:

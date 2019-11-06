@@ -46,9 +46,6 @@ class Workspace:
     An autosar worspace
     """
     def __init__(self, version, patch, schema, release = None, attributes = None, useDefaultWriters=True):
-        """
-        For AUTOSAR 
-        """
         self.packages = []
         if isinstance(version, str):
             (major, minor, patch) = parseVersionString(version)
@@ -166,7 +163,6 @@ class Workspace:
                     if self._loadPackageInternal(result, xmlPackage, packagename, role):
                         found = True
 
-
         elif self.version>=4.0:
             if self.xmlroot.find('AR-PACKAGES'):
                 for xmlPackage in self.xmlroot.findall('.AR-PACKAGES/AR-PACKAGE'):
@@ -194,23 +190,6 @@ class Workspace:
             if (packagename==name) and (role is not None):
                 self.setRole(package.ref, role)
         return found
-
-#BEGIN DEPRECATED
-    # def loadJSON(self, filename):
-    #    with open(filename) as fp:
-    #       basedir = ntpath.dirname(filename)
-    #       data = json.load(fp)
-    #       if data is not None:
-    #          for item in data:
-    #             if item['type']=='fileRef':
-    #                adjustedPath = self._adjustFileRef(item, basedir)
-    #                if adjustedPath.endswith('.arxml'):
-    #                   self.loadXML(adjustedPath)
-    #                else:
-    #                   raise NotImplementedError(adjustedPath)
-    #             else:
-    #                raise ValueError('Unknown type: %s'%item['type'])
-#END DEPRECATED
 
     def find(self, ref, role=None):
         global _validWSRoles
@@ -249,16 +228,9 @@ class Workspace:
                         result.append(pkg)
         return result
 
-    def asdict(self,packages=None):
-        retval = {'type': self.__class__.__name__, 'packages':[]}
-        for package in self.packages:
-            if (isinstance(packages,list) and package.name in packages) or (packages is None):
-                retval['packages'].append(package.asdict())
-        return retval
-
     def findRolePackage(self,roleName):
         """
-        finds a package with role set to roleName
+        Returns package with role set to roleName or None
         """
         if roleName is None: return None
         for pkg in self.packages:
@@ -362,15 +334,6 @@ class Workspace:
         else:
             raise ValueError(type(elem))
 
-    # def toJSON(self,packages=None,indent=3):
-    #    data=ws.asdict(packages)
-    #    return json.dumps(data,indent=indent)
-    #
-    # def saveJSON(self,filename,packages=None,indent=3):
-    #    data=self.asdict(packages)
-    #    with open(filename,'w') as fp:
-    #       json.dump(data,fp,indent=indent)
-
     def toCode(self, filters=None, packages=None, header=None, version=None, patch=None):
         if version is None:
             version = self.version
@@ -458,15 +421,6 @@ class Workspace:
     def createAdminData(self, data):
         return autosar.base.createAdminData(data)
 
-    # def fromDict(self, data):
-    #    for item in data:
-    #       if item['type'] == 'FileRef':
-    #          if os.path.isfile(item['path']):
-    #             roles = item.get('roles',None)
-    #             self.loadXML(item['path'],roles=roles)
-    #          else:
-    #             raise ValueError('invalid file path "%s"'%item['path'])
-
     def apply(self, template, **kwargs):
         """
         Applies template to this workspace
@@ -476,73 +430,6 @@ class Workspace:
         else:
             template.apply(self, **kwargs)
         template.usageCount+=1
-
-    #---DEPRECATED CODE, TO BE REMOVED ---#
-    @classmethod
-    def _createDefaultDataTypes(cls, package):
-        package.createBooleanDataType('Boolean')
-        package.createIntegerDataType('SInt8', -128, 127)
-        package.createIntegerDataType('SInt16', -32768, 32767)
-        package.createIntegerDataType('SInt32', -2147483648, 2147483647)
-        package.createIntegerDataType('UInt8', 0, 255)
-        package.createIntegerDataType('UInt16', 0, 65535)
-        package.createIntegerDataType('UInt32', 0, 4294967295)
-        package.createRealDataType('Float', None, None, minValType='INFINITE', maxValType='INFINITE')
-        package.createRealDataType('Double', None, None, minValType='INFINITE', maxValType='INFINITE', hasNaN=True, encoding='DOUBLE')
-
-    def getDataTypePackage(self):
-        """
-        Returns the current data type package from the workspace. If the workspace doesn't yet have such package a default package will be created and returned.
-        """
-        package = self.find(self.defaultPackages["DataType"])
-        if package is None:
-            package=self.createPackage(self.defaultPackages["DataType"], role="DataType")
-            package.createSubPackage(self.defaultPackages["CompuMethod"], role="CompuMethod")
-            package.createSubPackage(self.defaultPackages["Unit"], role="Unit")
-            Workspace._createDefaultDataTypes(package)
-        return package
-
-    def getPortInterfacePackage(self):
-        """
-        Returns the current port interface package from the workspace. If the workspace doesn't yet have such package a default package will be created and returned.
-        """
-        package = self.find(self.defaultPackages["PortInterface"])
-        if package is None:
-            package=self.createPackage(self.defaultPackages["PortInterface"], role="PortInterface")
-        return package
-
-    def getConstantPackage(self):
-        """
-        Returns the current constant package from the workspace. If the workspace doesn't yet have such package, a default package will be created and returned.
-        """
-        package = self.find(self.defaultPackages["Constant"])
-        if package is None:
-            package=self.createPackage(self.defaultPackages["Constant"], role="Constant")
-        return package
-
-    def getModeDclrGroupPackage(self):
-        """
-        Returns the current mode declaration group package from the workspace. If the workspace doesn't yet have such package, a default package will be created and returned.
-        """
-        package = self.find(self.defaultPackages["ModeDclrGroup"])
-        if package is None:
-            package=self.createPackage(self.defaultPackages["ModeDclrGroup"], role="ModeDclrGroup")
-        return package
-
-    def getComponentTypePackage(self):
-        """
-        Returns the current component type package from the workspace. If the workspace doesn't yet have such package, a default package will be created and returned.
-        """
-        if self.roles["ComponentType"] is not None:
-            packageName = self.roles["ComponentType"]
-        else:
-            packageName = self.defaultPackages["ComponentType"]
-        package = self.find(packageName)
-        if package is None:
-            package=self.createPackage(packageName, role="ComponentType")
-        return package
-
-    #--- END DEPCRECATED CODE ---#
 
     def registerElementParser(self, elementParser):
         """
