@@ -17,7 +17,7 @@ CompositionComponent
 Factory Methods
 ---------------
 
-* :ref:`Package.createCompositionComponent <package_createCompositionComponent>`
+* :ref:`Package.createCompositionComponent <ar4_package_Package_createCompositionComponent>`
 
 Attributes
 ----------

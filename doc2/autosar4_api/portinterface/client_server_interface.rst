@@ -1,4 +1,4 @@
-.. _portinterface_ClientServerInterface:
+.. _ar4_portinterface_ClientServerInterface:
 
 ClientServerInterface
 =====================
@@ -6,13 +6,13 @@ ClientServerInterface
 .. table::
    :align: left
 
-   +--------------------+-------------------------------------------------------------------------+
-   | XML tag            | <CLIENT-SERVER-INTERFACE>                                               |
-   +--------------------+-------------------------------------------------------------------------+
-   | Module             | autosar.portinterface                                                   |
-   +--------------------+-------------------------------------------------------------------------+
-   | Inherits           | :ref:`autosar.portinterface.PortInteface <portinterface_portinterface>` |
-   +--------------------+-------------------------------------------------------------------------+
+   +--------------------+-----------------------------------------------------------------------------+
+   | XML tag            | <CLIENT-SERVER-INTERFACE>                                                   |
+   +--------------------+-----------------------------------------------------------------------------+
+   | Module             | autosar.portinterface                                                       |
+   +--------------------+-----------------------------------------------------------------------------+
+   | Inherits           | :ref:`autosar.portinterface.PortInteface <ar4_portinterface_portinterface>` |
+   +--------------------+-----------------------------------------------------------------------------+
 
 Client Server interfaces contains a set of callable operations.
 Operations are called by one or more client SWCs and are (usually) served by a single server SWC.
@@ -23,9 +23,9 @@ Usage
 .. code-block:: python
 
    import autosar
-   
+
    ... #Create packages and port interfaces
-   
+
     NvM_RequestResultType_ref = "/Predefined_DEV/ImplementationDataTypes/NvM_RequestResultType"
     boolean_ref = "/AUTOSAR_Platform/ImplementationDataTypes/boolean"
     dtRef_const_VOID_ref = "/AUTOSAR_Platform/ImplementationDataTypes/dtRef_const_VOID"
@@ -40,7 +40,7 @@ Usage
         "SetRamBlockStatus",
         "WriteBlock"],
         errors = autosar.ApplicationError("E_NOT_OK", 1), isService=True)
-        
+
         portInterface["EraseBlock"].possibleErrors = "E_NOT_OK"
         portInterface["GetErrorStatus"].createOutArgument("ErrorStatus", NvM_RequestResultType_ref, "NOT-ACCESSIBLE", "USE-ARGUMENT-TYPE")
         portInterface["GetErrorStatus"].possibleErrors = "E_NOT_OK"
@@ -55,7 +55,7 @@ Usage
 Factory Methods
 ---------------
 
-* :ref:`Package.createClientServerInterface <package_createClientServerInterface>`
+* :ref:`Package.createClientServerInterface <ar4_package_Package_createClientServerInterface>`
 
 
 Attributes
@@ -90,11 +90,6 @@ append
 ..  py:method:: ClientServerInterface.append(elem)
 
     Adds element to the self.operations or self.applicationErrors lists depending on type.
-    
+
     :param elem: Element
-    :type elem: :ref:`portinterface_Operation` or ApplicationError
-
-
-
-
-
+    :type elem: :ref:`ar4_portinterface_Operation` or ApplicationError

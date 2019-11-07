@@ -1,4 +1,4 @@
-.. _portinterface_portinterface:
+.. _ar4_portinterface_portinterface:
 
 PortInterface
 =============
@@ -6,20 +6,21 @@ PortInterface
 .. table::
    :align: left
 
-   +--------------------+-------------------------------------------+
-   | XML tag            | (Abstract class)                          |
-   +--------------------+-------------------------------------------+
-   | Module             | autosar.portinterface                     |
-   +--------------------+-------------------------------------------+
-   | Inherits           | :ref:`autosar.element.Element <element>`  |
-   +--------------------+-------------------------------------------+
+   +--------------------+----------------------------------------------+
+   | XML tag            | (Abstract class)                             |
+   +--------------------+----------------------------------------------+
+   | Module             | autosar.portinterface                        |
+   +--------------------+----------------------------------------------+
+   | Inherits           | :ref:`autosar.element.Element <ar4_element>` |
+   +--------------------+----------------------------------------------+
 
 Base class for AUTOSAR port interfaces.
 
 **Derived Classes**:
 
-* :ref:`portinterface_SenderReceiverInterface`
-* :ref:`portinterface_ClientServerInterface`
+* :ref:`ar4_portinterface_SenderReceiverInterface`
+* :ref:`ar4_portinterface_ClientServerInterface`
+* :ref:`ar4_portinterface_ModeSwitchInterface`
 
 
 Attributes
@@ -30,7 +31,7 @@ Attributes
 
     +--------------------------+--------------------------+-------------------------------+
     | Name                     | Type                     | Description                   |
-    +==========================+==========================+===============================+        
+    +==========================+==========================+===============================+
     | **isService**            | Boolean                  | Is this a service interface?  |
     +--------------------------+--------------------------+-------------------------------+
     | **serviceKind**          | str                      | Optional service kind string  |

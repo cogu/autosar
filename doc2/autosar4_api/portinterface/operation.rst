@@ -1,4 +1,4 @@
-.. _portinterface_Operation:
+.. _ar4_portinterface_Operation:
 
 Operation
 =========
@@ -6,20 +6,20 @@ Operation
 .. table::
    :align: left
 
-   +--------------------+-------------------------------------------+
-   | XML tag            | <CLIENT-SERVER-OPERATION>                 |
-   +--------------------+-------------------------------------------+
-   | Module             | autosar.portinterface                     |
-   +--------------------+-------------------------------------------+
-   | Inherits           | :ref:`autosar.element.Element <element>`  |
-   +--------------------+-------------------------------------------+
+   +--------------------+----------------------------------------------+
+   | XML tag            | <CLIENT-SERVER-OPERATION>                    |
+   +--------------------+----------------------------------------------+
+   | Module             | autosar.portinterface                        |
+   +--------------------+----------------------------------------------+
+   | Inherits           | :ref:`autosar.element.Element <ar4_element>` |
+   +--------------------+----------------------------------------------+
 
 An operation of a client-server port interface.
 
 Factory Methods
 ---------------
 
-* :ref:`Package.createClientServerInterface <package_createClientServerInterface>`
+* :ref:`Package.createClientServerInterface <ar4_package_Package_createClientServerInterface>`
 
 
 Attributes
@@ -119,9 +119,7 @@ append
 
 ..  py:method:: Operation.append(elem)
 
-    Adds element to either the self.arguments or self.errorRefs depending on its type.    
-    
+    Adds element to either the self.arguments or self.errorRefs depending on its type.
+
     :param elem: Element
     :type elem: Argument or str
-    
-

@@ -6,13 +6,13 @@ ComponentType
 .. table::
    :align: left
 
-   +--------------------+------------------------------------+
-   | XML tag            | (abstract class)                   |
-   +--------------------+------------------------------------+
-   | Module             | autosar.component                  |
-   +--------------------+------------------------------------+
-   | Inherits           | autosar.element.Element            |
-   +--------------------+------------------------------------+
+   +--------------------+----------------------------------------------+
+   | XML tag            | (abstract class)                             |
+   +--------------------+----------------------------------------------+
+   | Module             | autosar.component                            |
+   +--------------------+----------------------------------------------+
+   | Inherits           | :ref:`autosar.element.Element <ar4_element>` |
+   +--------------------+----------------------------------------------+
 
 The ComponentType class is the base class for :ref:`component_atomic_swc` and :ref:`component_compositionComponent`.
 

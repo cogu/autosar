@@ -258,7 +258,7 @@ createPackage
 .. py:method:: Workspace.createPackage(name, [role=None])
 
     :param str name: ShortName of the new package
-    :param str role: Optional :ref:`package role <ar4_package_roles>`
+    :param str role: Optional :ref:`package role <ar4_package_Package_roles>`
     :rtype: :ref:`ar4_package_Package`
 
     creates a new package and appends it to the internal list of packages
@@ -349,7 +349,3 @@ Example
     #Loop over all SWCs in package "ComponentTypes"
     for swc in ws.findall("/ComponentTypes/*"):
         print(swc.name)
-
-
-
-

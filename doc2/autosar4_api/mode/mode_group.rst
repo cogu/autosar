@@ -11,10 +11,10 @@ ModeGroup
    +--------------+-------------------------------------------------------------------------+
    | Module       | autosar.submodule                                                       |
    +--------------+-------------------------------------------------------------------------+
-   | Inherits     | :ref:`autosar.element.Element <element>`                                |
+   | Inherits     | :ref:`autosar.element.Element <ar4_element>`                            |
    +--------------+-------------------------------------------------------------------------+
-   
-A ModeGroup is used as the internal storage container of the modeGroup attribute of the :ref:`portinterface_ModeSwitchInterface` class.
+
+A ModeGroup is used as the internal storage container of the modeGroup attribute of the :ref:`ar4_portinterface_ModeSwitchInterface` class.
 
 Usage
 -----
@@ -24,12 +24,12 @@ Usage
     import autosar
 
     modeGroup = autosar.mode.ModeGroup('mode', '/ModeDeclrs/VehicleMode')
-    
+
 Constructor
 -----------
 
 .. py:method:: mode.ModeGroup(name, typeRef, [parent=None], [adminData=None])
-    
+
     :param str name: ShortName of the object
     :param str typeRef: Full reference to a :ref:`mode_modeDeclarationGroup` element or a shortName of a :ref:`mode_modeDeclarationGroup` element (if package roles are used).
     :param parent: parent package (for internal use only)
@@ -39,7 +39,7 @@ Constructor
 Attributes
 -----------
 
-For inherited attributes see :ref:`autosar.element.Element <element>`.
+For inherited attributes see :ref:`autosar.element.Element <ar4_element>`.
 
 ..  table::
     :align: left

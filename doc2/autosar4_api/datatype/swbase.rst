@@ -1,22 +1,24 @@
+.. _ar4_datatype_SwBaseType:
+
 SwBaseType
 ==========
 
 .. table::
    :align: left
 
-   +--------------------+------------------------------------+
-   | XML tag            | <SW-BASE-TYPE>                     |
-   +--------------------+------------------------------------+
-   | Module             | autosar.datatype                   |
-   +--------------------+------------------------------------+
-   | Inherits           | autosar.element.Element            |
-   +--------------------+------------------------------------+
+   +--------------------+----------------------------------------------+
+   | XML tag            | <SW-BASE-TYPE>                               |
+   +--------------------+----------------------------------------------+
+   | Module             | autosar.datatype                             |
+   +--------------------+----------------------------------------------+
+   | Inherits           | :ref:`autosar.element.Element <ar4_element>` |
+   +--------------------+----------------------------------------------+
 
 Factory Methods
 ---------------
 
-* :ref:`Package.createSwBaseType <package_createSwBaseType>`
-* :ref:`Package.createBaseType (alias) <package_createSwBaseType>`
+* :ref:`Package.createSwBaseType <ar4_package_Package_createSwBaseType>`
+* :ref:`Package.createBaseType (alias) <ar4_package_Package_createSwBaseType>`
 
 
 Attributes
@@ -30,7 +32,7 @@ Attributes
    +==============+=======================+==================+
    | str          | **category**          |  "FIXED_LENGTH"  |
    +--------------+-----------------------+------------------+
-   | int          | **size**              |      \-          |  
+   | int          | **size**              |      \-          |
    +--------------+-----------------------+------------------+
    | str          | **typeEncoding**      |  None            |
    +--------------+-----------------------+------------------+

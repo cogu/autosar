@@ -7,7 +7,7 @@ AUTOSAR 4 API
     base/index
     workspace
     package
-    element
+    element/index
     datatype/index
     portinterface/index
     component/index

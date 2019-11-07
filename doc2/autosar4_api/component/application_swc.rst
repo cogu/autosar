@@ -13,7 +13,7 @@ ApplicationSoftwareComponent
    +--------------+-------------------------------------------------------------------------+
    | Inherits     | :ref:`autosar.component.AtomicSoftwareComponent <component_atomic_swc>` |
    +--------------+-------------------------------------------------------------------------+
-   
+
 Application software component.
 
 Usage
@@ -26,7 +26,7 @@ Usage
 Factory Methods
 ---------------
 
-* :ref:`Package.createApplicationSoftwareComponent <package_createApplicationSoftwareComponent>`
+* :ref:`Package.createApplicationSoftwareComponent <ar4_package_Package_createApplicationSoftwareComponent>`
 
 
 Attributes
@@ -37,4 +37,3 @@ Public Methods
 
 Method Description
 ------------------
-
