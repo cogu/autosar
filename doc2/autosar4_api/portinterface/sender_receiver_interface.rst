@@ -1,4 +1,4 @@
-.. _portinterface_SenderReceiverInterface:
+.. _ar4_portinterface_SenderReceiverInterface:
 
 SenderReceiverInterface
 =======================
@@ -6,13 +6,13 @@ SenderReceiverInterface
 .. table::
    :align: left
 
-   +--------------------+-------------------------------------------------------------------------+
-   | XML tag            | <SENDER-RECEIVER-INTERFACE>                                             |
-   +--------------------+-------------------------------------------------------------------------+
-   | Module             | autosar.portinterface                                                   |
-   +--------------------+-------------------------------------------------------------------------+
-   | Inherits           | :ref:`autosar.portinterface.PortInteface <portinterface_portinterface>` |
-   +--------------------+-------------------------------------------------------------------------+
+   +--------------------+-----------------------------------------------------------------------------+
+   | XML tag            | <SENDER-RECEIVER-INTERFACE>                                                 |
+   +--------------------+-----------------------------------------------------------------------------+
+   | Module             | autosar.portinterface                                                       |
+   +--------------------+-----------------------------------------------------------------------------+
+   | Inherits           | :ref:`autosar.portinterface.PortInteface <ar4_portinterface_portinterface>` |
+   +--------------------+-----------------------------------------------------------------------------+
 
 A sender receiver interface is the most common type of port interface.
 It contains a set of data elements that can be used to send and receive data
@@ -20,7 +20,7 @@ It contains a set of data elements that can be used to send and receive data
 Factory Methods
 ---------------
 
-* :ref:`Package.createSenderReceiverInterface <package_createSenderReceiverInterface>`
+* :ref:`Package.createSenderReceiverInterface <ar4_package_Package_createSenderReceiverInterface>`
 
 
 Attributes
@@ -67,10 +67,3 @@ Example
 
 .. include:: examples/creating_sender_receiver_interface.py
     :code: python3
-
-
-
-
-
-
-

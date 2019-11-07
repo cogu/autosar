@@ -1,4 +1,4 @@
-.. _portinterface_ModeSwitchInterface:
+.. _ar4_portinterface_ModeSwitchInterface:
 
 ModeSwitchInterface
 =====================
@@ -6,13 +6,13 @@ ModeSwitchInterface
 .. table::
    :align: left
 
-   +--------------------+-------------------------------------------------------------------------+
-   | XML tag            | <MODE-SWITCH-INTERFACE>                                                 |
-   +--------------------+-------------------------------------------------------------------------+
-   | Module             | autosar.portinterface                                                   |
-   +--------------------+-------------------------------------------------------------------------+
-   | Inherits           | :ref:`autosar.portinterface.PortInteface <portinterface_portinterface>` |
-   +--------------------+-------------------------------------------------------------------------+
+   +--------------------+-----------------------------------------------------------------------------+
+   | XML tag            | <MODE-SWITCH-INTERFACE>                                                     |
+   +--------------------+-----------------------------------------------------------------------------+
+   | Module             | autosar.portinterface                                                       |
+   +--------------------+-----------------------------------------------------------------------------+
+   | Inherits           | :ref:`autosar.portinterface.PortInteface <ar4_portinterface_portinterface>` |
+   +--------------------+-----------------------------------------------------------------------------+
 
 
 Usage
@@ -24,12 +24,12 @@ Usage
 Factory Methods
 ---------------
 
-* :ref:`package_createModeSwitchInterface`
+* :ref:`ar4_package_Package_createModeSwitchInterface`
 
 Attributes
 ----------
 
-For inherited attributes see :ref:`autosar.element.Element <element>`.
+For inherited attributes see :ref:`autosar.element.Element <ar4_element>`.
 
 ..  table::
     :align: left
