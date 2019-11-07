@@ -70,7 +70,7 @@ class Workspace:
                       'Unit': None,
                       'BaseType': None,        #AUTOSAR 4 only
                       'DataConstraint': None }  #AUTOSAR 4 only
-        self.map = {'packages': {}}        
+        self.map = {'packages': {}}
         self.profile = WorkspaceProfile()
 
     @property
@@ -85,7 +85,7 @@ class Workspace:
             self.patch=patch
         elif isinstance(version, float):
             self._version=version
-    
+
     @property
     def version_str(self):
         if self.patch is None:
@@ -272,35 +272,20 @@ class Workspace:
     def rootWS(self):
         return self
 
-    def saveXML(self, filename, filters=None, packages=None, ignore=None, version=None, patch=None, schema=None):
-        if version is None:
-            version = self.version
-        if patch is None:
-            patch = self.patch
-        if schema is None:
-            schema = self.schema
+    def saveXML(self, filename, filters=None, ignore=None):
         if self.packageWriter is None:
-            self.packageWriter = autosar.writer.package_writer.PackageWriter(version, patch)
+            self.packageWriter = autosar.writer.package_writer.PackageWriter(self.version, self.patch)
             if self.useDefaultWriters:
                 self._registerDefaultElementWriters(self.packageWriter)
-        writer=autosar.writer.WorkspaceWriter(version, patch, schema, self.packageWriter)
+        workspaceWriter=autosar.writer.WorkspaceWriter(self.version, self.patch, self.schema, self.packageWriter)
         with open(filename, 'w', encoding="utf-8") as fp:
             if isinstance(filters,str): filters=[filters]
-            if isinstance(packages,str): packages=[packages]
             if isinstance(ignore,str): filters=[ignore]
-            if packages is not None:
-                if filters is None:
-                    filters = []
-                for package in packages:
-                    if package[-1]=='/':
-                        filters.append(package+'*')
-                    else:
-                        filters.append(package+'/*')
             if filters is not None:
                 filters = [prepareFilter(x) for x in filters]
-            writer.saveXML(self, fp, filters, ignore)
+            workspaceWriter.saveXML(self, fp, filters, ignore)
 
-    def toXML(self, filters=None, packages=None, ignore=None, version=None, patch=None, schema=None):
+    def toXML(self, filters=None, ignore=None):
         if version is None:
             version = self.version
         if patch is None:
@@ -308,24 +293,15 @@ class Workspace:
         if schema is None:
             schema = self.schema
         if self.packageWriter is None:
-            self.packageWriter = autosar.writer.package_writer.PackageWriter(version, patch)
+            self.packageWriter = autosar.writer.package_writer.PackageWriter(self.version, self.patch)
             if self.useDefaultWriters:
                 self._registerDefaultElementWriters(self.packageWriter)
-        writer=autosar.writer.WorkspaceWriter(version, patch, schema, self.packageWriter)
+        workspaceWriter=autosar.writer.WorkspaceWriter(self.version, self.patch, self.schema, self.packageWriter)
         if isinstance(filters,str): filters=[filters]
-        if isinstance(packages,str): packages=[packages]
         if isinstance(ignore,str): filters=[ignore]
-        if packages is not None:
-            if filters is None:
-                filters = []
-            for package in packages:
-                if package[-1]=='/':
-                    filters.append(package+'*')
-                else:
-                    filters.append(package+'/*')
         if filters is not None:
             filters = [prepareFilter(x) for x in filters]
-        return writer.toXML(self, filters, ignore)
+        return workspaceWriter.toXML(self, filters, ignore)
 
     def append(self,elem):
         if isinstance(elem,autosar.package.Package):
@@ -334,6 +310,7 @@ class Workspace:
         else:
             raise ValueError(type(elem))
 
+### BEGIN DEPRECATED SECTION (2019-11-07)
     def toCode(self, filters=None, packages=None, header=None, version=None, patch=None):
         if version is None:
             version = self.version
@@ -383,6 +360,7 @@ class Workspace:
 
         with open(filename,'w', encoding="utf-8") as fp:
             writer.saveCode(self, fp, filters, ignore, head, tail, module, template)
+#### END DEPRECATED SECTION
 
     @property
     def ref(self):
