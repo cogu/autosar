@@ -1,31 +1,28 @@
-.. _reference_name:
+.. _ar4_behavior_ModeSwitchEvent:
 
-Name
-============================
+ModeSwitchEvent
+===============
 
 .. table::
     :align: left
 
     +--------------+-------------------------------------------------------------------------+
-    | XML tag      | <TAG>                                                                   |
+    | XML tag      | <SWC-MODE-SWITCH-EVENT>                                                 |
     +--------------+-------------------------------------------------------------------------+
-    | Module       | autosar.submodule                                                       |
+    | Module       | autosar.behavior                                                        |
     +--------------+-------------------------------------------------------------------------+
-    | Inherits     | :ref:`autosar.element.Element <ar4_element>`                            |
+    | Inherits     | :ref:`autosar.behavior.Event <ar4_behavior_Event>`                      |
     +--------------+-------------------------------------------------------------------------+
-   
-Description
-
-Usage
------
 
 Factory Methods
 ---------------
 
+* :ref:`SwcInternalBehavior.createModeSwitchEvent <ar4_behavior_Behavior_createModeSwitchEvent>`
+
 Attributes
 -----------
 
-For inherited attributes see :ref:`autosar.element.Element <ar4_element>`.
+For inherited attributes see :ref:`ar4_behavior_Event`.
 
 ..  table::
     :align: left
@@ -33,12 +30,14 @@ For inherited attributes see :ref:`autosar.element.Element <ar4_element>`.
     +--------------------------+---------------------------+--------------------------------------+
     | Name                     | Type                      | Description                          |
     +==========================+===========================+======================================+
-    | **Name**                 | *str*                     |                                      |
+    | **modeInstRef**          | *str*                     | Reference to mode                    |
     +--------------------------+---------------------------+--------------------------------------+
+    | **activationType**       | *str*                     | Activation type                      |
+    +--------------------------+---------------------------+--------------------------------------+
+    
+**activationType**
 
-Public Methods
---------------
-
-Method Description
-------------------
+* ON-ENTRY
+* ON-EXIT
+    
 
