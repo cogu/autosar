@@ -5,12 +5,13 @@ AUTOSAR 4 API
     :maxdepth: 2
 
     base/index
+    behavior/index
+    component/index
+    datatype/index
+    element/index
+    mode/index
     workspace
     package
-    element/index
-    datatype/index
-    portinterface/index
-    component/index
     port/index
-    behavior/index
-    mode/index
+    portinterface/index
+

@@ -1054,34 +1054,6 @@ class InternalBehavior(InternalBehaviorCommon):
         self.sharedCalParams=[]
 
 
-    # def asdict(self):
-    #    data={'type': self.__class__.__name__,'name':self.name, 'multipleInstance':self.multipleInstance,
-    #          'componentRef':self.componentRef, 'events':[],'portAPIOptions':[],'runnables':[],'perInstanceMemories':[],
-    #          'swcNvBlockNeeds':[],'sharedCalPrms':[],'exclusiveAreas':[]}
-    #    for event in self.events:
-    #       data['events'].append(event.asdict())
-    #    for portAPIOption in self.portAPIOptions:
-    #       data['portAPIOptions'].append(portAPIOption.asdict())
-    #    for runnable in self.runnables:
-    #       data['runnables'].append(runnable.asdict())
-    #    for perInstanceMemory in self.perInstanceMemories:
-    #       data['perInstanceMemories'].append(perInstanceMemory.asdict())
-    #    for swcNvBlockNeed in self.swcNvBlockNeeds:
-    #       data['swcNvBlockNeeds'].append(swcNvBlockNeed.asdict())
-    #    for sharedCalPrm in self.sharedCalPrms:
-    #       data['sharedCalPrms'].append(sharedCalPrm.asdict())
-    #    for exclusiveArea in self.exclusiveAreas:
-    #       data['exclusiveAreas'].append(exclusiveArea.asdict())
-    #    if len(data['events'])==0: del data['events']
-    #    if len(data['portAPIOptions'])==0: del data['portAPIOptions']
-    #    if len(data['runnables'])==0: del data['runnables']
-    #    if len(data['perInstanceMemories'])==0: del data['perInstanceMemories']
-    #    if len(data['swcNvBlockNeeds'])==0: del data['swcNvBlockNeeds']
-    #    if len(data['sharedCalPrms'])==0: del data['sharedCalPrms']
-    #    if len(data['exclusiveAreas'])==0: del data['exclusiveAreas']
-    #    return data
-
-
     def tag(self, version): return 'INTERNAL-BEHAVIOR'
 
     def append(self,elem):
@@ -1108,10 +1080,6 @@ class InternalBehavior(InternalBehaviorCommon):
 
     def __getitem__(self,key):
         return self.find(key)
-
-
-
-
 
 
     def createPerInstanceMemory(self, name, typeRef):
@@ -1213,7 +1181,6 @@ class SwcInternalBehavior(InternalBehaviorCommon):
         self.serviceDependencies = [] #list of SwcServiceDependency objects
         self.parameterDataPrototype = [] #list of ParameterDataPrototye objects
         self.dataTypeMappingRefs = [] #list of strings
-
 
     def tag(self, version): return "SWC-INTERNAL-BEHAVIOR"
 
