@@ -63,8 +63,8 @@ class ValueBuilder:
             raise NotImplementedError(type(dataType))
         return value
 
-    def _createRecordValueInternal(self, ws, name, dataType, initValue, parent=None):
-        value = autosar.constant.RecordValue(name, dataType.ref, parent)
+    def _createRecordValueInternal(self, ws, label, dataType, initValue, parent=None):
+        value = autosar.constant.RecordValueAR4(label, dataType.ref, parent)
         if isinstance(initValue, collections.abc.Mapping):
             a = set() #datatype elements
             b = set() #initvalue elements
@@ -75,9 +75,9 @@ class ValueBuilder:
             extra_keys = b-a
             if len(extra_keys) > 0:
                 name_str = "" if name is None else "{}: ".format(name)
-                raise ValueError('{}Unknown name(s) in initializer: {}'.format(name_str, ', '.join(extra_keys)))            
-                
-                
+                raise ValueError('{}Unknown name(s) in initializer: {}'.format(name_str, ', '.join(extra_keys)))
+
+
             for elem in dataType.subElements:
                 if elem.name in initValue:
                     v = initValue[elem.name]
@@ -99,8 +99,8 @@ class ValueBuilder:
             raise ValueError('initValue must be a dict')
         return value
 
-    def _createArrayValueInternal(self, ws, name, dataType, initValue, parent=None):
-        value = autosar.constant.ArrayValue(name, dataType.ref, None, parent)
+    def _createArrayValueInternal(self, ws, label, dataType, initValue, parent=None):
+        value = autosar.constant.ArrayValueAR4(label, dataType.ref, None, parent)
         typeArrayLength = dataType.getArrayLength()
         if not isinstance(typeArrayLength, int):
             raise ValueError('dataType has no valid array length')

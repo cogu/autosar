@@ -7,6 +7,7 @@ AUTOSAR 4 API
     base/index
     behavior/index
     component/index
+    constant/index
     datatype/index
     element/index
     mode/index
@@ -14,4 +15,3 @@ AUTOSAR 4 API
     package
     port/index
     portinterface/index
-

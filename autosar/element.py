@@ -30,6 +30,34 @@ class Element:
     def __deepcopy__(self,memo):
         raise NotImplementedError(type(self))
 
+class LabelElement:
+    """Same as Element but uses label as main identifier instead of name"""
+    def __init__(self, label, parent = None, adminData = None, category = None):
+        if isinstance(adminData, dict):
+            adminDataObj=autosar.base.createAdminData(adminData)
+        else:
+            adminDataObj = adminData
+        if (adminDataObj is not None) and not isinstance(adminDataObj, autosar.base.AdminData):
+            raise ValueError("adminData must be of type dict or autosar.base.AdminData")
+        self.label=label
+        self.adminData=adminDataObj
+        self.parent=parent
+        self.category=category
+
+    @property
+    def ref(self):
+        if self.parent is not None:
+            return self.parent.ref+'/%s'%self.name
+        else:
+            return None
+
+    def rootWS(self):
+        if self.parent is None:
+            return None
+        else:
+            return self.parent.rootWS()
+
+
 class DataElement(Element):
     def tag(self,version): return "VARIABLE-DATA-PROTOTYPE" if version >= 4.0 else "DATA-ELEMENT-PROTOTYPE"
     def __init__(self, name, typeRef, isQueued=False, swAddressMethodRef=None, swCalibrationAccess=None, swImplPolicy = None, category = None, parent=None, adminData=None):

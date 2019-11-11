@@ -1,4 +1,4 @@
-from autosar.element import Element
+from autosar.element import Element, LabelElement
 
 def initializer_string(constant):
     if constant is None:
@@ -19,33 +19,12 @@ def initializer_string(constant):
 class Value(Element):
     def __init__(self, name, parent=None, adminData = None, category = None):
         super().__init__(name, parent, adminData, category)
-    
-    def asdict(self):
-        data={'type': self.__class__.__name__}
-        data.update(self.__dict__)
-        return data
 
-class ValueAR4:
+class ValueAR4(LabelElement):
+    """Same as Value but uses label as main identifier instead of name"""
     def __init__(self, label, parent=None, adminData = None, category = None):
-        if isinstance(adminData, dict):
-            adminDataObj=autosar.base.createAdminData(adminData)
-        else:
-            adminDataObj = adminData
-        if (adminDataObj is not None) and not isinstance(adminDataObj, autosar.base.AdminData):
-            raise ValueError("adminData must be of type dict or autosar.base.AdminData")
-        self.label = label
-        self.adminData=adminDataObj
-        self.parent=parent
-        self.category=category
+        super().__init__(label, parent, adminData, category)
 
-    def rootWS(self):
-        if self.parent is None:
-            return None
-        else:
-            return self.parent.rootWS()
-
-    
-    
 #AUTOSAR 3 constant values
 class IntegerValue(Value):
 
@@ -55,7 +34,6 @@ class IntegerValue(Value):
         super().__init__(name, parent)
         self.typeRef=typeRef
         self.value=value
-
 
     @property
     def value(self):
@@ -67,6 +45,7 @@ class IntegerValue(Value):
             self._value=int(val)
         else:
             self._value=None
+
 
 class StringValue(Value):
 
@@ -92,6 +71,7 @@ class StringValue(Value):
         else:
             self._value=None
 
+
 class BooleanValue(Value):
 
     def tag(self,version=None): return "BOOLEAN-LITERAL"
@@ -115,6 +95,7 @@ class BooleanValue(Value):
         else:
             self._value=None
 
+
 class RecordValue(Value):
     """
     typeRef is only necessary for AUTOSAR 3 constants
@@ -128,12 +109,6 @@ class RecordValue(Value):
             self.elements=[]
         else:
             self.elements = list(elements)
-    
-    def asdict(self):
-        data={'type': self.__class__.__name__,'name':self.name,'typeRef':self.typeRef,'elements':[]}
-        for element in self.elements:
-            data['elements'].append(element.asdict())
-        return data
 
 
 class ArrayValue(Value):
@@ -149,21 +124,14 @@ class ArrayValue(Value):
             self.elements=[]
         else:
             self.elements = list(elements)
-#DEPRECATED BEGIN
-    def asdict(self):
-        data={'type': self.__class__.__name__,'name':self.name,'typeRef':self.typeRef,'elements':[]}
-        for element in self.elements:
-            data['elements'].append(element.asdict())
-        return data
-#DEPRECATED END
+
 
 #AUTOSAR 4 constant values
+class TextValue(ValueAR4):
+    def tag(self, version=None): return "TEXT-VALUE-SPECIFICATION"
 
-class TextValue(Value):
-    def tag(self,version=None): return "TEXT-VALUE-SPECIFICATION"
-
-    def __init__(self, name, value=None, parent=None):
-        super().__init__(name, parent)
+    def __init__(self, label, value=None, category = None, parent = None, adminData = None):
+        super().__init__(label, parent, adminData, category)
         if value is None:
             value=''
         self.value=value
@@ -179,12 +147,13 @@ class TextValue(Value):
         else:
             self._value=None
 
-class NumericalValue(Value):
-    
+
+class NumericalValue(ValueAR4):
+
     def tag(self, version=None): return "NUMERICAL-VALUE-SPECIFICATION"
 
-    def __init__(self, name = None, value = None, parent = None):
-        super().__init__(name, parent)
+    def __init__(self, label = None, value = None, category = None, parent = None, adminData = None):
+        super().__init__(label, parent, adminData, category)
         if value is None:
             value = 0
         self.value = value
@@ -200,13 +169,14 @@ class NumericalValue(Value):
         else:
             self._value = None
 
+
 class ApplicationValue(ValueAR4):
     """
     (AUTOSAR4)
     Implements <APPLICATION-VALUE-SPECIFICATION>
     """
     def tag(self, version=None): return "APPLICATION-VALUE-SPECIFICATION"
-    
+
     def __init__(self, label = None, swValueCont = None, swAxisCont = None, category = None, parent = None, adminData = None):
         super().__init__(label, parent, adminData, category)
         if (swAxisCont is not None) and (not isinstance(swAxisCont, SwAxisCont)):
@@ -216,18 +186,42 @@ class ApplicationValue(ValueAR4):
         self.swAxisCont = swAxisCont
         self.swValueCont = swValueCont
 
-class ConstantReference(Value):
+
+class ConstantReference(ValueAR4):
     """
     Container class for <CONSTANT-REFERENCE> (AUTOSAR 4)
     """
-    
+
     def tag(self, version): return 'CONSTANT-REFERENCE'
-    
-    def __init__(self, name=None, value=None, parent=None, adminData=None):
-        super().__init__(name, parent, adminData)
+
+    def __init__(self, label=None, value=None, category = None, parent = None, adminData = None):
+        super().__init__(label, parent, adminData, category)
         self.value = value
 
-#Common class
+class RecordValueAR4(ValueAR4):
+    def tag(self,version=None): return "RECORD-VALUE-SPECIFICATION"
+
+    def __init__(self, label, typeRef=None, elements=None, category = None, parent = None, adminData = None):
+        super().__init__(label, parent, adminData, category)
+        self.typeRef=typeRef
+        if elements is None:
+            self.elements=[]
+        else:
+            self.elements = list(elements)
+
+
+class ArrayValueAR4(ValueAR4):
+    def tag(self,version=None): return "ARRAY-VALUE-SPECIFICATION"
+
+    def __init__(self, label=None, typeRef=None, elements=None, category = None, parent = None, adminData = None):
+        super().__init__(label, parent, adminData, category)
+        self.typeRef=typeRef
+        if elements is None:
+            self.elements=[]
+        else:
+            self.elements = list(elements)
+
+#Common classes
 class Constant(Element):
 
     def tag(self, version): return 'CONSTANT-SPECIFICATION'
@@ -238,11 +232,6 @@ class Constant(Element):
         if value is not None:
             value.parent=self
 
-    def asdict(self):
-        data={'type': self.__class__.__name__,'name':self.name}
-        data['value']=self.value.asdict()
-        return data
-
     def find(self,ref):
         if self.value.name==ref:
             return self.value
@@ -252,10 +241,10 @@ class SwValueCont:
     """
     (AUTOSAR4)
     Implements <SW-VALUE-CONT>
-    """    
-    
+    """
+
     def tag(self, version = None): return 'SW-VALUE-CONT'
-    
+
     def __init__(self, values = None, unitRef = None, unitDisplayName = None, swArraySize = None):
         if values is None:
             self.values = None
@@ -267,17 +256,17 @@ class SwValueCont:
         self.unitRef = unitRef
         self.unitDisplayName = unitDisplayName
         self.swArraySize = swArraySize
-        
+
 
 class SwAxisCont:
     """
     (AUTOSAR4)
     Implements <SW-AXIS-CONT>
-    """    
-    
+    """
+
     def tag(self, version = None): return 'SW-AXIS-CONT'
-    
-    def __init__(self, values = None, unitRef = None, unitDisplayName = None, swAxisIndex = None, swArraySize = None, category = None):        
+
+    def __init__(self, values = None, unitRef = None, unitDisplayName = None, swAxisIndex = None, swArraySize = None, category = None):
         self.unitRef = unitRef
         self.unitDisplayName = unitDisplayName
         self.swAxisIndex = swAxisIndex
@@ -290,6 +279,3 @@ class SwAxisCont:
                 self.values = list(values)
             else:
                 self.values = values
-
-    
-        

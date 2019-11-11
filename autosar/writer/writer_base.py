@@ -233,9 +233,9 @@ class BaseWriter:
             lines.extend(self.indent(self._writeSimpleValueSpecificationXML(value), 1))
         elif isinstance(value, autosar.constant.NumericalValue):
             lines.extend(self.indent(self._writeSimpleValueSpecificationXML(value), 1))
-        elif isinstance(value, autosar.constant.RecordValue):
+        elif isinstance(value, autosar.constant.RecordValueAR4):
             lines.extend(self.indent(self._writeRecordValueSpecificationXML(value), 1))
-        elif isinstance(value, autosar.constant.ArrayValue):
+        elif isinstance(value, autosar.constant.ArrayValueAR4):
             lines.extend(self.indent(self._writeArrayValueSpecificationXML(value), 1))
         elif isinstance(value, autosar.constant.ApplicationValue):
             lines.extend(self.indent(self._writeApplicationValueSpecificationXML(value), 1))
@@ -246,15 +246,15 @@ class BaseWriter:
 
     def _writeSimpleValueSpecificationXML(self, value):
         lines=[]
-        if value.name is not None:
-            lines.append('<SHORT-LABEL>%s</SHORT-LABEL>'%(value.name))
+        if value.label is not None:
+            lines.append('<SHORT-LABEL>%s</SHORT-LABEL>'%(value.label))
         lines.append('<VALUE>%s</VALUE>'%(value.value))
         return lines
 
     def _writeRecordValueSpecificationXML(self, value):
         lines=[]
-        if value.name is not None:
-            lines.append('<SHORT-LABEL>%s</SHORT-LABEL>'%(value.name))
+        if value.label is not None:
+            lines.append('<SHORT-LABEL>%s</SHORT-LABEL>'%(value.label))
         lines.append('<FIELDS>')
         for elem in value.elements:
             lines.extend(self.indent(self.writeValueSpecificationXML(elem),1))
@@ -263,8 +263,8 @@ class BaseWriter:
 
     def _writeArrayValueSpecificationXML(self, value):
         lines=[]
-        if value.name is not None:
-            lines.append('<SHORT-LABEL>%s</SHORT-LABEL>'%(value.name))
+        if value.label is not None:
+            lines.append('<SHORT-LABEL>%s</SHORT-LABEL>'%(value.label))
         lines.append('<ELEMENTS>')
         for elem in value.elements:
             lines.extend(self.indent(self.writeValueSpecificationXML(elem),1))
