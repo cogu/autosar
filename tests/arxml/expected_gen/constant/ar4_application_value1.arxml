@@ -9,7 +9,7 @@
           <VALUE-SPEC>
             <APPLICATION-VALUE-SPECIFICATION>
               <SW-VALUE-CONT>
-                <UNIT-REF TARGET="UNIT">/DataTypes/Units/rad</UNIT-REF>
+                <UNIT-REF DEST="UNIT">/DataTypes/Units/rad</UNIT-REF>
                 <SW-VALUES-PHYS>
                   <V>1.745329252</V>
                 </SW-VALUES-PHYS>

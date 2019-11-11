@@ -16,3 +16,8 @@ __pycache__/
 /doc/_build/
 /doc2/_build/
 /doc2/**/*.arxml
+
+#XSD validation files
+/tests/arxml/expected_gen/*.xsd
+/tests/arxml/expected_gen/*.sh
+/tests/arxml/expected_gen/*.txt

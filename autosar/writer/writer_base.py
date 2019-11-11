@@ -291,7 +291,7 @@ class BaseWriter:
             unitObj = ws.find(elem.unitRef)
             if unitObj is None:
                 raise autosar.base.InvalidUnitRef(elem.unitRef)
-            lines.append(self.indent('<UNIT-REF TARGET="{0}">{1}</UNIT-REF>'.format(unitObj.tag(self.version), unitObj.ref), 2))
+            lines.append(self.indent('<UNIT-REF DEST="{0}">{1}</UNIT-REF>'.format(unitObj.tag(self.version), unitObj.ref), 2))
         if elem.values is not None:
             lines.append(self.indent('<SW-VALUES-PHYS>', 2))
             if not isinstance(elem.values, list):
@@ -312,7 +312,7 @@ class BaseWriter:
             unitObj = ws.find(elem.unitRef)
             if unitObj is None:
                 raise autosar.base.InvalidUnitRef(elem.unitRef)
-            lines.append(self.indent('<UNIT-REF TARGET="{0}">{1}</UNIT-REF>'.format(unitObj.tag(self.version), unitObj.ref), 1))
+            lines.append(self.indent('<UNIT-REF DEST="{0}">{1}</UNIT-REF>'.format(unitObj.tag(self.version), unitObj.ref), 1))
         if elem.values is not None:
             lines.append(self.indent('<SW-VALUES-PHYS>', 1))
             if not isinstance(elem.values, list):
