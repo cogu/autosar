@@ -11,7 +11,7 @@ ClientServerInterface
    +--------------------+-----------------------------------------------------------------------------+
    | Module             | autosar.portinterface                                                       |
    +--------------------+-----------------------------------------------------------------------------+
-   | Inherits           | :ref:`autosar.portinterface.PortInteface <ar4_portinterface_portinterface>` |
+   | Inherits           | :ref:`autosar.portinterface.PortInteface <ar4_portinterface_Portinterface>` |
    +--------------------+-----------------------------------------------------------------------------+
 
 Client Server interfaces contains a set of callable operations.

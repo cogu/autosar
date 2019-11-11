@@ -66,11 +66,11 @@ class DataElement(Element):
             else:
                 raise ValueError('invalid swImplPolicy value: ' +  value)
 
-    def setProps(self, variant):
-        if isinstance(variant, autosar.base.SwDataDefPropsConditional):
-            self.swCalibrationAccess=variant.swCalibrationAccess
-            self.swAddressMethodRef = variant.swAddressMethodRef
-            self.swImplPolicy = variant.swImplPolicy
-            self.dataConstraintRef = variant.dataConstraintRef
+    def setProps(self, props):
+        if isinstance(props, autosar.base.SwDataDefPropsConditional):
+            self.swCalibrationAccess=props.swCalibrationAccess
+            self.swAddressMethodRef = props.swAddressMethodRef
+            self.swImplPolicy = props.swImplPolicy
+            self.dataConstraintRef = props.dataConstraintRef
         else:
-            raise NotImplementedError(type(variant))
+            raise NotImplementedError(type(props))
