@@ -83,13 +83,20 @@ Public Methods
 * :ref:`ar4_package_Package_createImplementationDataType`
 * :ref:`ar4_package_Package_createImplementationDataTypeRef`
 * :ref:`ar4_package_Package_createImplementationDataTypePtr`
+* :ref:`ar4_package_Package_createImplementationArrayDataType`
+* :ref:`ar4_package_Package_createImplementationRecordDataType`
+
+**Constant**
+
+* :ref:`ar4_package_Package_createConstant`
+* :ref:`ar4_package_Package_createNumericalValueConstant`
+* :ref:`ar4_package_Package_createApplicationValueConstant`
 
 **PortInterface**
 
 * :ref:`ar4_package_Package_createSenderReceiverInterface`
 * :ref:`ar4_package_Package_createClientServerInterface`
 * :ref:`ar4_package_Package_createModeSwitchInterface`
-
 
 **ComponentType**
 
@@ -212,12 +219,102 @@ Example
 .. include:: examples/creating_implementation_type_ptr.py
     :code: python
 
+.. _ar4_package_Package_createImplementationArrayDataType:
+
+createImplementationArrayDataType
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:method:: Package.createImplementationArrayDataType(name, implementationTypeRef, arraySize, [elementName = None], [swCalibrationAccess = ''], [typeEmitter = None], [category = 'ARRAY'], [targetCategory = 'TYPE_REFERENCE'], [adminData = None])
+
+    :param str name: ShortName of the new data type
+    :param str implementationTypeRef: Reference to (existing) :ref:`ar4_datatype_ImplementationDataType`
+    :param int arraySize: Number of elements in array
+    :param str elementName: Optional (inner) element name.
+    :param str swCalibrationAccess: Optional calbration access
+    :param str typeEmitter: Optional type emitter
+    :param str category: Category for the (outer) array data type
+    :param str targetCategory: Category for the (inner) array element
+    :param adminData: Optional AdminData
+    :rtype: :ref:`ar4_datatype_ImplementationDataType`
+
+**swCalibrationAccess**
+
+* None: No calibration access set
+* \\"\\" (Empty string): Create default calibration access value as set by Workspace.profile.swCalibrationAccessDefault
+* \\"NOT-ACCESSIBLE\\": The element will not be accessible by external tools
+* \\"READ-ONLY\\": Read only access
+* \\"READ-WRITE\\": Read-write access
+
+.. _ar4_package_Package_createImplementationRecordDataType:
+
+createImplementationRecordDataType
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:method:: Package.createImplementationRecordDataType(name, elements, [swCalibrationAccess = ''], [category = 'STRUCTURE'], [adminData = None])
+
+    :param str name: ShortName of the new data type
+    :param list elements: List of tuples where first element is the record name and second element is a type reference
+    :param str swCalibrationAccess: Optional calbration access
+    :param str category: Category for the (outer) array data type
+    :param str targetCategory: Category for the (inner) array element
+    :param adminData: Optional AdminData
+    :rtype: :ref:`ar4_datatype_ImplementationDataType`
+
+**swCalibrationAccess**
+
+* None: No calibration access set
+* \\"\\" (Empty string): Create default calibration access value as set by Workspace.profile.swCalibrationAccessDefault
+* \\"NOT-ACCESSIBLE\\": The element will not be accessible by external tools
+* \\"READ-ONLY\\": Read only access
+* \\"READ-WRITE\\": Read-write access
+
+
+.. _ar4_package_Package_createConstant:
+
+createConstant
+~~~~~~~~~~~~~~
+
+.. py:method:: Package.createConstant(name, typeRef, initValue, adminData=None)
+
+    :param str name: ShortName of the new constant
+    :param str typeRef: Reference to (existing) data type
+    :param initValue: Init value (type depends on typeRef)
+    :param adminData: Optional AdminData
+    :rtype: :ref:`ar4_constant_Constant`
+
+.. _ar4_package_Package_createNumericalValueConstant:
+
+createNumericalValueConstant
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:method:: Package.createNumericalValueConstant(name, value)
+
+    :param str name: ShortName of the new constant
+    :param value: Value
+    :type value: int, float
+    :rtype: :ref:`ar4_constant_Constant`
+
+
+.. _ar4_package_Package_createApplicationValueConstant:
+
+createApplicationValueConstant
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:method:: Package.createApplicationValueConstant(name, [swValueCont = None], [swAxisCont = None], [valueCategory = None], [valueLabel = None])
+
+    :param str name: ShortName of the new constant
+    :param SwValueCont swValueCont: Value container
+    :param SwValueCont swAxisCont: Axis container
+    :param str valueCategory: Optional category for (inner) value
+    :param str valueLabel: Optional label for (inner) value
+    :rtype: :ref:`ar4_constant_Constant`
+
 .. _ar4_package_Package_createSenderReceiverInterface:
 
 createSenderReceiverInterface
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-..  method:: Package.createSenderReceiverInterface(name, [dataElements=None], [isService=False], [serviceKind = None], [adminData=None])
+..  py:method:: Package.createSenderReceiverInterface(name, [dataElements=None], [isService=False], [serviceKind = None], [adminData=None])
 
     Creates a new SenderReceiver port interface and adds it to the package.
 

@@ -30,8 +30,6 @@ def _init_ws(ws):
     _create_packages(ws)
     _create_base_types(ws)
 
-
-
 class ARXML4ConstantTest(ARXMLTestClass):
 
     def test_create_num_value_constant(self):
