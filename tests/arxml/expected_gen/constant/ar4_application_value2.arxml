@@ -10,7 +10,7 @@
             <APPLICATION-VALUE-SPECIFICATION>
               <SW-AXIS-CONTS>
                 <SW-AXIS-CONT>
-                  <UNIT-REF TARGET="UNIT">/DataTypes/Units/kg</UNIT-REF>
+                  <UNIT-REF DEST="UNIT">/DataTypes/Units/kg</UNIT-REF>
                 </SW-AXIS-CONT>
               </SW-AXIS-CONTS>
               <SW-VALUE-CONT>

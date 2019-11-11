@@ -164,7 +164,7 @@ class ARXML4ConstantTest(ARXMLTestClass):
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'constant', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/Constants'])
-    
+
         ws2 = autosar.workspace(ws.version_str)
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
         c2 = ws2.find(c1.ref)
@@ -185,7 +185,7 @@ class ARXML4ConstantTest(ARXMLTestClass):
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'constant', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/Constants'])
-        
+
         ws2 = autosar.workspace(ws.version_str)
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
         c2 = ws2.find(c1.ref)
@@ -194,6 +194,6 @@ class ARXML4ConstantTest(ARXMLTestClass):
         self.assertIsInstance(value, autosar.constant.ApplicationValue)
         self.assertIsInstance(value.swAxisCont, autosar.constant.SwAxisCont)
         self.assertEqual(value.swAxisCont.unitRef, '/DataTypes/Units/kg')
-        
+
 if __name__ == '__main__':
     unittest.main()
