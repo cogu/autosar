@@ -1,4 +1,4 @@
-.. _ar4_portinterface_portinterface:
+.. _ar4_portinterface_Portinterface:
 
 PortInterface
 =============

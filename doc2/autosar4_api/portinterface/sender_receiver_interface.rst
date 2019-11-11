@@ -11,7 +11,7 @@ SenderReceiverInterface
    +--------------------+-----------------------------------------------------------------------------+
    | Module             | autosar.portinterface                                                       |
    +--------------------+-----------------------------------------------------------------------------+
-   | Inherits           | :ref:`autosar.portinterface.PortInteface <ar4_portinterface_portinterface>` |
+   | Inherits           | :ref:`autosar.portinterface.PortInteface <ar4_portinterface_Portinterface>` |
    +--------------------+-----------------------------------------------------------------------------+
 
 A sender receiver interface is the most common type of port interface.
