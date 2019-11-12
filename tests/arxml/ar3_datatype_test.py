@@ -18,14 +18,14 @@ def _create_base_types(ws):
 
 class ARXML3DataTypeTest(ARXMLTestClass):
 
-    def test_create_integer_types(self):
+    def test_create_platform_integer_types(self):
         ws = autosar.workspace(version="3.0.2")
         _create_packages(ws)
         package = ws.find('/DataType')
         dt11 = package.createIntegerDataType('UInt8', min=0, max=255)
         dt12 = package.createIntegerDataType('UInt16', min=0, max=65535)
         dt13 = package.createIntegerDataType('UInt32', min=0, max=4294967295)
-        file_name = 'ar3_integer_types.arxml'
+        file_name = 'ar3_platform_integer_types.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataType'])
@@ -38,6 +38,41 @@ class ARXML3DataTypeTest(ARXMLTestClass):
         self.assertIsInstance(dt21, autosar.datatype.IntegerDataType)
         self.assertIsInstance(dt22, autosar.datatype.IntegerDataType)
         self.assertIsInstance(dt23, autosar.datatype.IntegerDataType)
+
+    def test_create_integer_types_with_unit(self):
+        ws = autosar.workspace(version="3.0.2")
+        _create_packages(ws)
+        package = ws.find('/DataType')
+        dt11 = package.createIntegerDataType('Percent_T', min=0, max=255, offset=0, scaling=0.4, unit='Percent')
+        dt12 = package.createIntegerDataType('VehicleSpeed_T', min=0, max=65535, offset=0, scaling=1/64, unit='KmPerHour')
+
+        file_name = 'ar3_integer_types_with_unit.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/DataType'])
+
+        ws2 = autosar.workspace(ws.version_str)
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        dt21 = ws2.find('/DataType/Percent_T')
+        dt22 = ws2.find('/DataType/VehicleSpeed_T')
+        self.assertIsInstance(dt21, autosar.datatype.IntegerDataType)
+        self.assertIsInstance(dt22, autosar.datatype.IntegerDataType)
+        self.assertEqual(dt21.minVal, 0)
+        self.assertEqual(dt21.maxVal, 255)
+        self.assertEqual(dt22.minVal, 0)
+        self.assertEqual(dt22.maxVal, 65535)
+        compu21 = ws2.find(dt21.compuMethodRef)
+        compu22 = ws2.find(dt22.compuMethodRef)
+        self.assertEqual(compu21.intToPhys.elements[0].offset, 0)
+        self.assertEqual(compu21.intToPhys.elements[0].numerator, 0.4)
+        self.assertEqual(compu21.unitRef, '/DataType/Units/Percent')
+        self.assertEqual(compu22.intToPhys.elements[0].offset, 0)
+        self.assertEqual(compu22.intToPhys.elements[0].numerator, 1)
+        self.assertEqual(compu22.intToPhys.elements[0].denominator, 64)
+        self.assertEqual(compu22.unitRef, '/DataType/Units/KmPerHour')
+
+
+
 
 
 

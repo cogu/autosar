@@ -1325,8 +1325,9 @@ class Package(object):
 
         if unit is not None:
             unitElem = self._checkAndCreateUnit(ws, unit, unitPackage = unitPackage)
-            compuMethodElem.unitRef = unitElem.ref
         compuMethodElem = self._checkAndCreateCompuMethod(ws, self._createCompuMethodName(ws, name), unitElem, lowerLimit, upperLimit, offset, scaling, None, valueTable, forceFloatScaling, useCategory = False, autoLabel = False)
+        if (compuMethodElem is not None) and (unitElem is not None):
+            compuMethodElem.unitRef = unitElem.ref
         return None if compuMethodElem is None else compuMethodElem.ref
 
     def _checkAndCreateUnit(self, ws, shortName, displayName = None, factor = None, offset = None, unitPackage = None):
