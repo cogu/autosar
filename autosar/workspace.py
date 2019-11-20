@@ -286,12 +286,6 @@ class Workspace:
             workspaceWriter.saveXML(self, fp, filters, ignore)
 
     def toXML(self, filters=None, ignore=None):
-        if version is None:
-            version = self.version
-        if patch is None:
-            patch = self.patch
-        if schema is None:
-            schema = self.schema
         if self.packageWriter is None:
             self.packageWriter = autosar.writer.package_writer.PackageWriter(self.version, self.patch)
             if self.useDefaultWriters:

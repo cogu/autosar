@@ -14,36 +14,52 @@ CompositionComponent
    | Inherits           | :ref:`autosar.component.ComponentType <ar4_component_ComponentType>` |
    +--------------------+----------------------------------------------------------------------+
 
+The CompositionComponent class is used to instantiate inner components inside a new component boundary as a means of abstraction.
+
 Factory Methods
 ---------------
 
 * :ref:`Package.createCompositionComponent <ar4_package_Package_createCompositionComponent>`
 
 Attributes
-----------
+-----------
 
-.. table::
-   :align: left
+For inherited attributes see :ref:`autosar.element.Element <ar4_element>`.
 
-   +--------------+-----------------------------+------------------+
-   | Type         |  Name                       |  Default Value   |
-   +==============+=============================+==================+
-   | list         | :ref:`components`           |  \[ \]           |
-   +--------------+-----------------------------+------------------+
+..  table::
+    :align: left
 
-Detailed Description
---------------------
+    +--------------------------+---------------------------------------------+----------------------------------------------------------------------+
+    | Name                     | Type                                        | Description                                                          |
+    +==========================+=============================================+======================================================================+
+    | **components**           | *list(:ref:`ar4_component_ComponentType`)*  | List of internal components                                          |
+    +--------------------------+---------------------------------------------+----------------------------------------------------------------------+
+    | **assemblyConnectors**   | *list(AssemblyConnector)*                   | List of connectors between internal components                       |
+    +--------------------------+---------------------------------------------+----------------------------------------------------------------------+
+    | **delegationConnectors** | *list(DelegationConnector)*                 | List of connectors between inner components and composition boundary |
+    +--------------------------+---------------------------------------------+----------------------------------------------------------------------+
 
-The CompositionSoftwareComponent class is used to aggregate SWCs inside a boundary as a means of abstraction.
-It also contains connectors that connect the inner SWCs together (assembly connectors) as well as
-connectors that connect the inner SWCs to the composition boundary (delegation connectors).
 
-Attribute Documentation
------------------------
+Public Methods
+--------------
 
-.. _components:
+* :ref:`ar4_component_CompositionComponent_createComponentPrototype`
 
-components
-~~~~~~~~~~
+Method Description
+------------------
 
-List of instantiated components that are part of this composition. Use the member method createComponentPrototype to add new components.
+.. _ar4_component_CompositionComponent_createComponentPrototype:
+
+createComponentPrototype
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. method:: CompositionComponent.createComponentPrototype(componentRef)
+
+    :param str componentRef: Reference to an object derived from ref:`ar4_component_ComponentType`
+    :rtype ComponentPrototype:
+
+    Creates an inner component prototype and appends it to the components list.
+
+
+
+

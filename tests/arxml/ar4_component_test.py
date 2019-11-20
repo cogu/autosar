@@ -5,7 +5,6 @@ from tests.arxml.common import ARXMLTestClass
 import unittest
 
 def _create_packages(ws):
-
     package=ws.createPackage('DataTypes', role='DataType')
     package.createSubPackage('CompuMethods', role='CompuMethod')
     package.createSubPackage('DataConstrs', role='DataConstraint')
@@ -14,7 +13,6 @@ def _create_packages(ws):
     package = ws.createPackage('Constants', role='Constant')
     package = ws.createPackage('ComponentTypes', role='ComponentType')
     package = ws.createPackage('PortInterfaces', role="PortInterface")
-
 
 def _create_base_types(ws):
     basetypes = ws.find('/DataTypes/BaseTypes')
@@ -41,9 +39,6 @@ def _create_test_elements(ws):
     portInterface["IsTimerElapsed"].createInArgument("startTime", '/DataTypes/uint32')
     portInterface["IsTimerElapsed"].createInArgument("duration", '/DataTypes/uint32')
     portInterface["IsTimerElapsed"].createOutArgument("result", '/DataTypes/boolean')
-
-
-
 
 def _init_ws(ws):
     _create_packages(ws)
@@ -99,10 +94,26 @@ class ARXML4ComponentTest(ARXMLTestClass):
         expected_file = os.path.join( 'expected_gen', 'component', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
         ws2 = autosar.workspace(ws.version_str)
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
 
+    def test_create_composition_component_with_one_inner_swc(self):
+        ws = autosar.workspace(version="4.2.2")
+        _init_ws(ws)
+        package = ws.find('/ComponentTypes')
+        inner_swc = package.createApplicationSoftwareComponent('MyApplication')
+        inner_port = inner_swc.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV')
+        inner_swc.createRequirePort('FreeRunningTimer', 'FreeRunningTimer5ms_I')
+        outer_swc = package.createCompositionComponent('MyComposition')
+        outer_swc.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV')
+        outer_swc.createComponentPrototype(inner_swc.ref)
 
-
-
+        outer_swc.createConnector('VehicleSpeed', 'MyApplication/VehicleSpeed')
+        file_name = 'ar4_composition_with_one_inner_swc.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'component', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
+        ws2 = autosar.workspace(ws.version_str)
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
 
 if __name__ == '__main__':
     unittest.main()

@@ -9,6 +9,7 @@ from autosar.element import Element
 import autosar.portinterface
 import autosar.constant
 import autosar.builder
+import copy
 import collections
 
 class Port(Element):

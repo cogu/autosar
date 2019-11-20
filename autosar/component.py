@@ -302,7 +302,7 @@ class CompositionComponent(ComponentType):
 
     def tag(self,version): return 'COMPOSITION-SW-COMPONENT-TYPE' if version >= 4.0 else 'COMPOSITION-TYPE'
 
-    def find(self,ref):
+    def find(self, ref):
         parts=ref.partition('/')
         for elem in self.components:
             if elem.name == parts[0]:
@@ -320,7 +320,7 @@ class CompositionComponent(ComponentType):
         """
         Alias for createComponentPrototype
         """
-        return self.createComponentPrototype(self, componentRef)
+        return self.createComponentPrototype(componentRef)
 
     def createComponentPrototype(self, componentRef):
         """
@@ -333,9 +333,6 @@ class CompositionComponent(ComponentType):
         elem = ComponentPrototype(component.name, component.ref, self)
         self.components.append(elem)
         return elem
-
-
-
 
     def createConnector(self, portRef1, portRef2):
         """
@@ -397,7 +394,7 @@ class CompositionComponent(ComponentType):
         parts=autosar.base.splitRef(portRef)
         if len(parts)>1:
             if len(parts)==2:
-                #assume format 'componentName/portName' with ComponentType role set
+                #assume format 'componentName/portName' where componentName is an inner component
                 port=None
                 for innerComponent in self.components:
                     component = ws.find(innerComponent.typeRef)
@@ -407,17 +404,30 @@ class CompositionComponent(ComponentType):
                         port = component.find(parts[1])
                         component = innerComponent
                         if port is None:
-                            raise ValueError('component %s does not have port with name %s'%(component.name,parts[1]))
+                            raise ValueError('Component "{0}" does not seem to have port with name "{1}"'.format(component.name, parts[1]))
                         break
             else:
-                #assume portRef1 is a full reference
+                #assume portRef is a full reference
                 port = ws.find(portRef)
+                if port is None:
+                    raise autosar.base.InvalidPortRef(portRef)
+                if not isinstance(port, autosar.port.Port):
+                    raise ValueError('Reference "{0}" is not a port or duplicate references exists in the workspace'.format(parts[0]))
+                parentRef = port.parent.ref
+                for innerComponent in self.components:
+                    if innerComponent.typeRef == parentRef:
+                        component = innerComponent
+                        break
+                else:
+                    raise ValueError('Reference "{0}" does not seem to be a port where the (parent) component is part of this composition'.format(portRef))
         else:
             port = self.find(parts[0])
             component=self
-        if port is None or not isinstance(port, Port):
-            raise ValueError('%s: invalid port name: %s'%(self.name,parts[-1]))
-        return port,component
+        if port is None:
+            raise ValueError('Component "{0}" does not seem to have port with name "{1}"'.format(component.name, parts[0]))
+        if not isinstance(port, autosar.port.Port):
+            raise ValueError('Port name "{0}" is ambiguous. This might be due to duplicate references exists in the workspace '.format(parts[0]))
+        return port, component
 
     def autoConnect(self):
         """
