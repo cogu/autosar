@@ -757,7 +757,7 @@ class Package(object):
         return self._checkAndCreateDataConstraint(ws, name, 'physicalConstraint', lowerLimit, upperLimit, lowerLimitType, upperLimitType, adminData)
 
 
-    def createSwBaseType(self, name, size=None, encoding=None, nativeDeclaration=None, adminData=None):
+    def createSwBaseType(self, name, size=None, encoding=None, nativeDeclaration=None, category='FIXED_LENGTH', adminData=None):
         """
         Creates a SwBaseType object
         """
@@ -770,7 +770,7 @@ class Package(object):
             adminDataObj = adminData
         if (adminDataObj is not None) and not isinstance(adminDataObj, autosar.base.AdminData):
             raise ValueError("adminData must be of type dict or AdminData")
-        baseType = autosar.datatype.SwBaseType(name, size, encoding, nativeDeclaration, 'FIXED_LENGTH', self, adminData)
+        baseType = autosar.datatype.SwBaseType(name, size, encoding, nativeDeclaration, category, self, adminData)
         self.append(baseType)
         return baseType
 

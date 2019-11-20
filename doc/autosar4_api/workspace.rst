@@ -70,7 +70,8 @@ Public Methods
 * :ref:`ar4_workspace_Workspace_createPackage`
 * :ref:`ar4_workspace_Workspace_find`
 * :ref:`ar4_workspace_Workspace_findall`
-
+* :ref:`ar4_workspace_Workspace_setRole`
+* :ref:`ar4_workspace_Workspace_findRolePackage`
 
 
 Method Description
@@ -335,7 +336,7 @@ findall
     :rtype: List of object
 
     Experimental find-method that has rudimentary support for wild cards (a.k.a) globs.
-    This method returns a list of items it finds
+    This method returns a list of items it finds.
 
 Example
 ^^^^^^^
@@ -349,3 +350,27 @@ Example
     #Loop over all SWCs in package "ComponentTypes"
     for swc in ws.findall("/ComponentTypes/*"):
         print(swc.name)
+
+.. _ar4_workspace_Workspace_setRole:
+
+setRole
+~~~~~~~
+
+.. py:method:: Workspace.setRole(ref, role):
+
+    :param str ref: Package reference
+    :param str role: Valid :ref:`package role <ar4_package_Package_roles>` name
+
+    Assigns package role to the package referenced by ref.
+
+.. _ar4_workspace_Workspace_findRolePackage:
+
+findRolePackage
+~~~~~~~~~~~~~~~
+
+.. py:method:: Workspace.findRolePackage(ref, role):
+
+    :param str role: Valid :ref:`package role <ar4_package_Package_roles>` name
+    :rtype: :ref:`autosar.package.Package <ar4_package_Package>`
+
+    Returns package instance currently associated with given role name.
