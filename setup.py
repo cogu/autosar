@@ -6,7 +6,7 @@ def readme():
         return f.read()
 
 setup(name='autosar',
-      version='0.3.6',
+      version='0.3.7a',
       description='autosar python module',
       long_description=readme(),
       classifiers=[
