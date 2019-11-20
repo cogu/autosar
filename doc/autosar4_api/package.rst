@@ -142,13 +142,14 @@ Example
 createSwBaseType
 ~~~~~~~~~~~~~~~~~
 
-..  py:method:: Package.createSwBaseType(name , [size=None], [encoding=None], [nativeDeclaration=None], [adminData=None])
+..  py:method:: Package.createSwBaseType(name , [size=None], [encoding=None], [nativeDeclaration=None], [category='FIXED_LENGTH'], [adminData=None])
 
     Creates a new SwBaseType object add appends it to this package.
 
     :param int size: Size of type in bits
     :param str encoding: Encoding string
     :param str nativeDeclaration: Used to map this base type to one of the native types known to the RTE
+    :param str category: Category string
     :param adminData: Optional AdminData
 
 Example

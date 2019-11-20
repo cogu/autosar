@@ -467,7 +467,7 @@ class DataConstraint(Element):
     def lowerLimit(self):
         if len(self.rules) == 1:
             return self.rules[0].lowerLimit
-        else:            
+        else:
             raise NotImplementedError('Only a single constraint rule supported')
 
     @property
@@ -502,7 +502,7 @@ class DataConstraint(Element):
 class ImplementationDataType(Element):
     def tag(self, version=None): return 'IMPLEMENTATION-DATA-TYPE'
     def __init__(self, name, variantProps = None, dynamicArraySizeProfile = None, typeEmitter = None, category='VALUE', adminData=None, parent=None):
-        super().__init__(name, parent, adminData, category)        
+        super().__init__(name, parent, adminData, category)
         self.dynamicArraySizeProfile = dynamicArraySizeProfile
         self.typeEmitter = typeEmitter
         self.variantProps = []
@@ -564,11 +564,11 @@ class ImplementationDataType(Element):
             return self.variantProps[0].compuMethodRef
         else:
             raise RunTimeError('Element has no variantProps set')
-    
+
     def setSymbolProps(self, name, symbol):
         """
         Sets SymbolProps for this data type
-        
+
         Arguments:
         name: <SHORT-NAME> (str)
         symbol: <SYMBOL> (str)
@@ -577,20 +577,14 @@ class ImplementationDataType(Element):
 
 class SwBaseType(Element):
     def tag(self, version=None): return 'SW-BASE-TYPE'
-    def __init__(self, name, size=None, typeEncoding=None, nativeDeclaration=None, category=None, parent=None, adminData=None):
-        super().__init__(name, parent, adminData)
+    def __init__(self, name, size=None, typeEncoding=None, nativeDeclaration=None, category='FIXED_LENGTH', parent=None, adminData=None):
+        super().__init__(name, parent, adminData, category)
         self.size = None if size is None else int(size)
         self.typeEncoding=typeEncoding
         self.nativeDeclaration=nativeDeclaration
-        if category is None: category='FIXED_LENGTH'
-        self.category = category
 
 class ImplementationDataTypeElement(Element):
     def tag(self, version=None): return 'IMPLEMENTATION-DATA-TYPE-ELEMENT'
-
-    @classmethod
-    def createTypeRef(cls, name, arraySize=None, arraySizeSemantics=None, variantProps=None, parent=None, adminData=None):
-        return ImplementationDataTypeElement(name, 'TYPE_REFERENCE', arraySize, arraySizeSemantics, variantProps, parent, adminData)
 
     def __init__(self, name, category=None, arraySize=None, arraySizeSemantics=None, variantProps=None, parent=None, adminData=None):
         super().__init__(name, parent, adminData)
@@ -771,7 +765,7 @@ class DataTypeMappingSet(Element):
         if applicationDataTypeRef in self.map:
             return DataTypeMap(applicationDataTypeRef,  self.map[applicationDataTypeRef])
         return None
-    
+
     def findMappedDataTypeRef(self, applicationDataTypeRef):
         """
         Returns a reference (str) to the mapped implementation data type or None if not found.
@@ -779,7 +773,7 @@ class DataTypeMappingSet(Element):
         if applicationDataTypeRef in self.map:
             return self.map[applicationDataTypeRef]
         return None
-    
+
     def findMappedDataType(self, applicationDataTypeRef):
         """
         Returns the instance of the mapped implementation data type.

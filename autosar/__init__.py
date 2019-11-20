@@ -13,6 +13,7 @@ from abc import (ABC,abstractmethod)
 from autosar.base import splitRef
 import autosar.bsw.com
 import autosar.bsw.os
+import autosar.util
 
 import ntpath
 import os
