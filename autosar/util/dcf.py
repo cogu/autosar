@@ -4,6 +4,13 @@ import sys
 import xml.etree.ElementTree as ElementTree
 import autosar
 
+dvg_xml = """<?xml version="1.0" encoding="utf-8"?>
+<DVG>
+	<Version>1.0</Version>
+	<Contents>
+	</Contents>
+</DVG>"""
+
 class XMLWriterSimple:
 
     def __init__(self):
@@ -198,34 +205,67 @@ class Dcf(XMLWriterSimple):
                     print("No such file: "+child_path, file=sys.stderr)
         return ws
 
-    def save(self, dest_dir, dcf_name, file_map = None, comp_dir = None, force = True, single_xml = None):
+    def save(self, dest_dir, dcf_name, file_map = None, comp_dir = None, force = False, single_file = None):
+        """
+        Saves the DaVinci Configuration to file system.
+        parameters:
+            dest_dir (str): Destination directory (will be automatically created if not exists)
+            dcf_name: Name of the generated DCF file
+            file_map: A dictionary where key is the ARXML file and value is another dictionary with two keys ('root' and 'filters')
+            comp_dir: Composition directory (reserved for future use)
+            force: If true, Overwrites file(s) if it already exists.
+            single_file: Name of single ARXML file. Disabled usage of file_map (Not yet implemented)
+
+        Examples of file_map:
+            file_map = {'AUTOSAR_Platform': {'root': 'DATATYPE', 'filters': ['/AUTOSAR_Platform']}}
+
+        Valid root-names in DCF (you can use the same root-name multiple times in the same DCF):
+
+        * 'COMPONENTTYPE'
+        * 'CONSTANT'
+        * 'DATATYPE'
+        * 'METHOD'
+        * 'PACKAGE'
+        * 'PORTINTERFACE'
+
+        """
         self.make_dirs(dest_dir)
-        if single_xml:
-            file_map = self._create_single_file_map(single_xml)
+        if single_file:
+            file_map = self._create_single_file_map(single_file)
         else:
             if file_map is None:
                 file_map = self._create_file_map_default()
         self.save_xml_from_file_map(dest_dir, file_map, force)
+        self.profile.save(dest_dir, force)
         self.save_dcf(dest_dir, dcf_name, file_map, force = force)
 
     def save_xml_single(self, dest_dir, file_name, force):
-        pass
+        raise NotImplementedError("single XML")
 
     def save_xml_from_file_map(self, dest_dir, xml_file_map, force):
-        for file_name in xml_file_map.keys():
+        for key in xml_file_map.keys():
+            file_name = key
+            if not file_name.lower().endswith('.arxml'):
+                file_name+='.arxml'
             dest_file = os.path.join(dest_dir, file_name)
             if force or not os.path.isfile(dest_file):
-                elem = xml_file_map[file_name]
+                elem = xml_file_map[key]
                 self.ws.saveXML(dest_file, filters=elem['filters'])
 
     def _create_file_map_default(self):
-        pass
+        # componentPackage = self.ws.findRolePackage('ComponentType')
+        # if componentPackage is not None:
+        #     for swc in componentPackage.elements:
+        #         if isinstance(swc, autosar.component.ComponentType):
+        #             lines.extend(self.indent(self._component_file_ref(swc.name),1))
+
+        raise NotImplementedError("default file map")
 
     def save_dcf(self, dest_dir, dcf_name, xml_file_map, schema = None, force = True):
         """Generates a new DCF file. Will not overwrite existing file unless force is true"""
-        dest_file = os.path.join(dest_dir, dcf_name+'.dcf')
+        file_ext = '' if dcf_name.lower().endswith('.dcf') else '.dcf'
+        dest_file = os.path.join(dest_dir, dcf_name+file_ext)
         if force or not os.path.isfile(dest_file):
-
             lines=['<?xml version="1.0" encoding="utf-8"?>']
             if schema is None:
                 #TODO: Below line needs to be improved
@@ -236,16 +276,10 @@ class Dcf(XMLWriterSimple):
             lines.append(self.indent('<Version>1.0</Version>',1))
             lines.append(self.indent('<NAME>{}</NAME>'.format(dcf_name),1))
             lines.append(self.indent('<PROFILESETTINGS>ProfileSettings.xml</PROFILESETTINGS>',1))
-            componentPackage = self.ws.findRolePackage('ComponentType')
-            if componentPackage is not None:
-                for swc in componentPackage.elements:
-                    if isinstance(swc, autosar.component.ComponentType):
-                        lines.extend(self.indent(self._component_file_ref(swc.name),1))
             for file_name in xml_file_map.keys():
                 elem = xml_file_map[file_name]
                 lines.extend(self.indent(self._single_file_ref(file_name, elem['root']),1))
             lines.append('</DCF>')
-            print(dest_file)
             with open(dest_file, 'w') as fp:
                 fp.write('\n'.join(lines))
                 fp.write('\n')
@@ -266,8 +300,6 @@ class Dcf(XMLWriterSimple):
         lines.append(self.indent('<ARXML ROOTITEM="{}" TYPE="">{}</ARXML>'.format(root_item.upper(), file_path),1))
         lines.append('</FILEREF>')
         return lines
-
-
 
 class DcfParser:
     """
