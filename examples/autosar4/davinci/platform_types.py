@@ -32,7 +32,5 @@ def create_autosar_platform(ws):
 if __name__ == '__main__':
     ws = autosar.workspace("4.2.2")
     create_autosar_platform(ws)
-    dcf = autosar.util.dcf.Dcf(ws)
-    dcf.save(dest_dir = 'autosar4', dcf_name = 'PlatformExample', file_map = {'AUTOSAR_Platform.arxml': {'root': 'DATATYPE', 'filters': ['/AUTOSAR_Platform']}})
-
+    autosar.util.createDcf(ws).save(dest_dir = 'autosar4', dcf_name = 'PlatformExample', file_map = {'AUTOSAR_Platform': {'root': 'DATATYPE', 'filters': ['/AUTOSAR_Platform']}})
     print("Done")
