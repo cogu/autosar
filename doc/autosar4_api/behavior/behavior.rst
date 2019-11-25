@@ -44,6 +44,13 @@ Public Methods
 --------------
 
 * :ref:`ar4_behavior_Behavior_createRunnable`
+* :ref:`ar4_behavior_Behavior_createModeSwitchEvent`
+* :ref:`ar4_behavior_Behavior_createTimerEvent`
+* :ref:`ar4_behavior_Behavior_createOperationInvokedEvent`
+* :ref:`ar4_behavior_Behavior_createDataReceivedEvent`
+* :ref:`ar4_behavior_Behavior_createExclusiveArea`
+* :ref:`ar4_behavior_Behavior_createInitEvent`
+* :ref:`ar4_behavior_Behavior_createRunnable`
 
 
 Method Description
@@ -77,9 +84,9 @@ createModeSwitchEvent
     :param str activationType: Activation type
     :param str name: Override of the shortName of this event. If left as None a (unique) default name will be generated.
     :rtype: :ref:`ar4_behavior_ModeSwitchEvent`
-    
+
     Creates a new :ref:`ar4_behavior_ModeSwitchEvent` object and appends it to this object.
-    
+
 **activationType**
 
 * ENTRY (Will be automatically converted to "ON-ENTRY")
@@ -92,14 +99,14 @@ createModeSwitchEvent
 createTimerEvent
 ~~~~~~~~~~~~~~~~
 
-..  py:method:: SwcInternalBehavior.createOperationInvokedEvent(runnableName, period, [modeDependency = None], [name = None])
+..  py:method:: SwcInternalBehavior.createTimerEvent(runnableName, period, [modeDependency = None], [name = None])
 
     :param str runnableName: Name of (aldready existing) runnable to trigger when event occurs
     :param str period: Cycle time in milliseconds
     :param list modeDependency: Optional mode disabling settings for this event
     :param str name: Override of the shortName of this event. If left as None a (unique) default name will be generated.
     :rtype: :ref:`ar4_behavior_TimingEvent`
-    
+
     Creates a new :ref:`ar4_behavior_TimingEvent` object and appends it to this object.
 
 .. _ar4_behavior_Behavior_createOperationInvokedEvent:
@@ -114,9 +121,9 @@ createOperationInvokedEvent
     :param list modeDependency: Optional mode disabling settings for this event
     :param str name: Override of the shortName of this event. If left as None a (unique) default name will be generated.
     :rtype: :ref:`ar4_behavior_OperationInvokedEvent`
-    
+
     Creates a new :ref:`ar4_behavior_OperationInvokedEvent` object and appends it to this object.
-    
+
 
 
 .. _ar4_behavior_Behavior_createDataReceivedEvent:
@@ -131,7 +138,7 @@ createDataReceivedEvent
     :param list modeDependency: Optional mode disabling settings for this event
     :param str name: Override of the shortName of this event. If left as None a (unique) default name will be generated.
     :rtype: :ref:`ar4_behavior_DataReceivedEvent`
-    
+
     Creates a new :ref:`ar4_behavior_DataReceivedEvent` object and appends it to this object.
 
 .. _ar4_behavior_Behavior_createExclusiveArea:
@@ -143,7 +150,7 @@ createExclusiveArea
 
     :param str name: ShortName of exclusive area
     :rtype: :ref:`ar4_behavior_ExclusiveArea`
-    
+
     Creates a new :ref:`ar4_behavior_ExclusiveArea` object and appends it to this object.
 
 
@@ -163,13 +170,12 @@ createInitEvent
 
 ..  py:method:: SwcInternalBehavior.createInitEvent(runnableName, [modeDependency=None], [name=None] )
 
-    :param str runnableName: Name of (aldready existing) runnable to trigger when event occurs    
+    :param str runnableName: Name of (aldready existing) runnable to trigger when event occurs
     :param list modeDependency: Optional mode disabling settings for this event
     :param str name: Override of the shortName of this event. If left as None a (unique) default name will be generated.
     :rtype: :ref:`ar4_behavior_InitEvent`
-    
+
     Creates a new :ref:`ar4_behavior_InitEvent` and appends it to this object.
 
 createModeSwitchAckEvent
 ~~~~~~~~~~~~~~~~~~~~~~~~
-

@@ -26,6 +26,7 @@ def _create_base_types(ws):
     package.createImplementationDataType('uint8', lowerLimit=0, upperLimit=255, baseTypeRef='/DataTypes/BaseTypes/uint8', typeEmitter='Platform_Type')
     package.createImplementationDataType('uint16', lowerLimit=0, upperLimit=65535, baseTypeRef='/DataTypes/BaseTypes/uint16', typeEmitter='Platform_Type')
     package.createImplementationDataType('uint32', lowerLimit=0, upperLimit=4294967295, baseTypeRef='/DataTypes/BaseTypes/uint32', typeEmitter='Platform_Type')
+    package.createImplementationDataTypeRef('PushButtonStatus_T', '/DataTypes/uint8', valueTable=['PushButtonStatus_Neutral', 'PushButtonStatus_Pushed', 'PushButtonStatus_Error', 'PushButtonStatus_NotAvailable'])
 
 def _create_test_elements(ws):
     package = ws.find('/Constants')
@@ -34,6 +35,7 @@ def _create_test_elements(ws):
     package = ws.find('/PortInterfaces')
     package.createSenderReceiverInterface('VehicleSpeed_I', autosar.DataElement('VehicleSpeed', 'uint16'))
     package.createSenderReceiverInterface('EngineSpeed_I', autosar.DataElement('EngineSpeed', 'uint16'))
+    package.createSenderReceiverInterface('PushButtonStatus_I', autosar.DataElement('PushButtonStatus', 'PushButtonStatus_T', isQueued=True))
     portInterface=package.createClientServerInterface('FreeRunningTimer5ms_I', ['GetTime', 'IsTimerElapsed'])
     portInterface['GetTime'].createOutArgument('value', '/DataTypes/uint32')
     portInterface["IsTimerElapsed"].createInArgument("startTime", '/DataTypes/uint32')
@@ -114,6 +116,60 @@ class ARXML4ComponentTest(ARXMLTestClass):
         self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
         ws2 = autosar.workspace(ws.version_str)
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+
+
+    def test_create_server_component(self):
+        ws = autosar.workspace(version="4.2.2")
+        _init_ws(ws)
+        package = ws.find('/ComponentTypes')
+        swc = package.createApplicationSoftwareComponent('FrtServer')
+        swc.createProvidePort('FreeRunningTimer5ms', 'FreeRunningTimer5ms_I')
+        swc.behavior.createRunnable('FrtServer_FreeRunningTimer5ms_GetTime')
+        swc.behavior.createRunnable('FrtServer_FreeRunningTimer5ms_IsTimerElapsed')
+        swc.behavior.createOperationInvokedEvent('FrtServer_FreeRunningTimer5ms_GetTime', 'FreeRunningTimer5ms/GetTime')
+        swc.behavior.createOperationInvokedEvent('FrtServer_FreeRunningTimer5ms_IsTimerElapsed', 'FreeRunningTimer5ms/IsTimerElapsed')
+
+        file_name = 'ar4_server_component.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'component', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
+        ws2 = autosar.workspace(ws.version_str)
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+
+    def test_create_swc_with_queued_sender_com_spec(self):
+
+        ws = autosar.workspace(version="4.2.2")
+        _init_ws(ws)
+        package = ws.find('/ComponentTypes')
+        swc = package.createApplicationSoftwareComponent('ButtonPressHandler')
+        swc.createProvidePort('ButtonPressUp', 'PushButtonStatus_I')
+        swc.createProvidePort('ButtonPressDown', 'PushButtonStatus_I')
+
+        file_name = 'ar4_swc_with_queued_sender_com_spec.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'component', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
+        ws2 = autosar.workspace(ws.version_str)
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+
+    def test_create_swc_with_queued_receiver_com_spec(self):
+
+        ws = autosar.workspace(version="4.2.2")
+        _init_ws(ws)
+        package = ws.find('/ComponentTypes')
+        swc = package.createApplicationSoftwareComponent('ButtonPressListener')
+        swc.createRequirePort('ButtonPressUp', 'PushButtonStatus_I', queueLength=10)
+        swc.createRequirePort('ButtonPressDown', 'PushButtonStatus_I', queueLength=10)
+
+        file_name = 'ar4_swc_with_queued_receiver_com_spec.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'component', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
+        ws2 = autosar.workspace(ws.version_str)
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

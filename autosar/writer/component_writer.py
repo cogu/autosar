@@ -265,14 +265,14 @@ class XMLComponentTypeWriter(ElementWriter):
                     if elem is None:
                         raise ValueError("%s: Invalid data element name '%s'"%(port.ref,comspec.name))
                     if elem.isQueued:
-                        lines.extend(self.indent(self,_writeQueuedSenderComSpecXML(ws, comspec, elem), 2))
+                        lines.extend(self.indent(self._writeQueuedSenderComSpecXML(ws, comspec, elem), 2))
                     else:
                         lines.extend(self.indent(self._writeUnqueuedSenderComSpecXML(ws, comspec, elem),2))
                 elif isinstance(comspec, autosar.port.OperationComSpec):
                     operation=portInterface.find(comspec.name)
                     if operation is None:
                         raise ValueError("%s: Invalid operation name '%s'"%(port.ref, comspec.name))
-                    lines.extend(self.indent(self,_writeServerComSpecXML(ws, comspec, operation), 2))
+                    lines.extend(self.indent(self._writeServerComSpecXML(comspec, operation), 2))
                 elif isinstance(comspec, autosar.port.ParameterComSpec):
                     param=portInterface.find(comspec.name)
                     if param is None:
@@ -331,7 +331,7 @@ class XMLComponentTypeWriter(ElementWriter):
         return lines
 
     def _writeServerComSpecXML(self, comspec, operation):
-        assert(isinstance(elem,autosar.port.OperationComSpec))
+        assert(isinstance(comspec, autosar.port.OperationComSpec))
         lines=[]
         lines.append('<SERVER-COM-SPEC>')
         lines.append(self.indent('<OPERATION-REF DEST="%s">%s</OPERATION-REF>'%(operation.tag(self.version),operation.ref),1))
