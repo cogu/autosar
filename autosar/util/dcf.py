@@ -276,8 +276,10 @@ class Dcf(XMLWriterSimple):
             lines.append(self.indent('<Version>1.0</Version>',1))
             lines.append(self.indent('<NAME>{}</NAME>'.format(dcf_name),1))
             lines.append(self.indent('<PROFILESETTINGS>ProfileSettings.xml</PROFILESETTINGS>',1))
-            for file_name in xml_file_map.keys():
-                elem = xml_file_map[file_name]
+            for key in xml_file_map.keys():
+                elem = xml_file_map[key]
+                extension = '' if key.lower().endswith('.arxml') else '.arxml'
+                file_name = key + extension
                 lines.extend(self.indent(self._single_file_ref(file_name, elem['root']),1))
             lines.append('</DCF>')
             with open(dest_file, 'w') as fp:
