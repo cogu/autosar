@@ -28,6 +28,19 @@ from autosar.writer.mode_writer import XMLModeWriter
 _validWSRoles = ['DataType', 'Constant', 'PortInterface', 'ComponentType', 'ModeDclrGroup', 'CompuMethod', 'Unit',
                  'BaseType', 'DataConstraint']
 
+class PackageRoles(collections.UserDict):
+    def __init__(self, data = None):
+        if data is None:
+            data = {'DataType': None,
+             'Constant': None,
+             'PortInterface': None,
+             'ModeDclrGroup': None,
+             'ComponentType': None,
+             'CompuMethod': None,
+             'Unit': None,
+             'DataConstraint': None }
+        super().__init__(data)
+
 class WorkspaceProfile:
     """
     A Workspace profile allows users to customize default settings and behaviors
@@ -61,15 +74,8 @@ class Workspace:
         self.xmlroot = None
         self.attributes = attributes
         self.useDefaultWriters = bool(useDefaultWriters)
-        self.roles = {'DataType': None,
-                      'Constant': None,
-                      'PortInterface': None,
-                      'ModeDclrGroup': None,
-                      'ComponentType': None,
-                      'CompuMethod': None,
-                      'Unit': None,
-                      'BaseType': None,        #AUTOSAR 4 only
-                      'DataConstraint': None }  #AUTOSAR 4 only
+        self.roles = PackageRoles()
+        self.roleStack = collections.deque() #stack of PackageRoles
         self.map = {'packages': {}}
         self.profile = WorkspaceProfile()
 
@@ -112,17 +118,37 @@ class Workspace:
 
     def setRole(self, ref, role):
         if (role is not None) and (role not in _validWSRoles):
-            raise ValueError('invalid role name: '+role)
+            raise ValueError('Invalid role name: '+role)
         if ref is None:
             self.roles[role]=None
         else:
             package = self.find(ref)
             if package is None:
-                raise ValueError('invalid reference: '+ref)
+                raise ValueError('Invalid reference: '+ref)
             if not isinstance(package, autosar.package.Package):
-                raise ValueError('invalid type "%s"for reference "%s", expected Package type'%(str(type(package)),ref))
+                raise ValueError('Invalid type "%s"for reference "%s", expected Package type'%(str(type(package)),ref))
             package.role=role
             self.roles[role]=package.ref
+
+    def setRoles(self, *items):
+        """
+        Same as setRole but caller gives a list of tuples where the first item is the reference, and second item is the role name
+        """
+        for item in items:
+            self.setRole(item[0], item[1])
+
+    def pushRoles(self):
+        """
+        Saves current package role settings in internal role stack
+        """
+        self.roleStack.append(PackageRoles(self.roles))
+
+    def popRoles(self):
+        """
+        Restores last saved package role settings
+        """
+        roles = self.roleStack.pop()
+        self.roles.update(roles)
 
     def openXML(self,filename):
         xmlroot = parseXMLFile(filename)
@@ -404,6 +430,8 @@ class Workspace:
         else:
             template.apply(self, **kwargs)
         template.usageCount+=1
+
+
 
     def registerElementParser(self, elementParser):
         """
