@@ -346,6 +346,13 @@ createClientServerInterface
     :param adminData: Optional adminData
     :rtype: :ref:`ar4_portinterface_clientServerInterface`
 
+Example
+^^^^^^^
+
+.. include:: examples/creating_client_server_interface.py
+    :code: python
+
+
 .. _ar4_package_Package_createModeSwitchInterface:
 
 createModeSwitchInterface
