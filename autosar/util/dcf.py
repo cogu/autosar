@@ -234,7 +234,7 @@ class Dcf(XMLWriterSimple):
             file_map = self._create_single_file_map(single_file)
         else:
             if file_map is None:
-                file_map = self._create_file_map_default()
+                file_map = self.create_default_file_map()
         self.save_xml_from_file_map(dest_dir, file_map, force)
         self.profile.save(dest_dir, force)
         self.save_dcf(dest_dir, dcf_name, file_map, force = force)
@@ -252,14 +252,27 @@ class Dcf(XMLWriterSimple):
                 elem = xml_file_map[key]
                 self.ws.saveXML(dest_file, filters=elem['filters'])
 
-    def _create_file_map_default(self):
-        # componentPackage = self.ws.findRolePackage('ComponentType')
-        # if componentPackage is not None:
-        #     for swc in componentPackage.elements:
-        #         if isinstance(swc, autosar.component.ComponentType):
-        #             lines.extend(self.indent(self._component_file_ref(swc.name),1))
-
-        raise NotImplementedError("default file map")
+    def create_default_file_map(self):
+        dataTypesPackage = self.ws.findRolePackage('DataType')
+        constantsPackage = self.ws.findRolePackage('Constant')
+        portInterfacePackage = self.ws.findRolePackage('PortInterface')
+        modeDeclarationPackage = self.ws.findRolePackage('ModeDclrGroup')
+        componentTypePackage = self.ws.findRolePackage('ComponentType')
+        file_map = {}
+        if dataTypesPackage is not None:
+            file_map['DataTypes'] = {'root': 'DATATYPE', 'filters': [dataTypesPackage.ref]}
+        if constantsPackage is not None:
+            file_map['Constants'] = {'root': 'CONSTANT', 'filters': [constantsPackage.ref]}
+        if (portInterfacePackage is not None) or (modeDeclarationPackage is not None):
+            filters = []
+            if portInterfacePackage is not None:
+                filters.append(portInterfacePackage.ref)
+            if modeDeclarationPackage is not None:
+                filters.append(modeDeclarationPackage.ref)
+            file_map['PortInterfaces'] = {'root': 'PORTINTERFACE', 'filters': filters}
+        if componentTypePackage is not None:
+            file_map['ComponentTypes'] = {'root': 'COMPONENTTYPE', 'filters': [componentTypePackage.ref]}
+        return file_map
 
     def save_dcf(self, dest_dir, dcf_name, xml_file_map, schema = None, force = True):
         """Generates a new DCF file. Will not overwrite existing file unless force is true"""
