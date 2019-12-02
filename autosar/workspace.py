@@ -139,7 +139,7 @@ class Workspace:
         self.schema = schema
         self.xmlroot = xmlroot
         if self.version < 3.0:
-            raise NotImplementedError("Version below 3.0 is not implemented")
+            raise NotImplementedError("Version below 3.0 is not supported")
         if self.packageParser is None:
             self.packageParser = autosar.parser.package_parser.PackageParser(self.version)
         self._registerDefaultElementParsers(self.packageParser)
