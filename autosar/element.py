@@ -102,3 +102,20 @@ class DataElement(Element):
             self.dataConstraintRef = props.dataConstraintRef
         else:
             raise NotImplementedError(type(props))
+
+class ParameterDataPrototype(Element):
+    """
+    Represents <PARAMETER-DATA-PROTOTYPE> (AUTOSAR 4)
+    Or
+    Represents <CALPRM-ELEMENT-PROTOTYPE> (AUTOSAR 3)
+    """
+
+    def __init__(self, name, typeRef, swAddressMethodRef=None, swCalibrationAccess=None, initValue = None, parent=None, adminData=None):
+        super().__init__(name, parent, adminData)
+        self.typeRef = typeRef
+        self.swAddressMethodRef = swAddressMethodRef
+        self.swCalibrationAccess = swCalibrationAccess
+        self.initValue = initValue
+
+    def tag(self, version):
+        return "PARAMETER-DATA-PROTOTYPE" if version >=4.0 else "CALPRM-ELEMENT-PROTOTYPE"

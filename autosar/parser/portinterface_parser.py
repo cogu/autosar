@@ -7,7 +7,7 @@ from autosar.parser.parser_base import ElementParser
 
 class PortInterfacePackageParser(ElementParser):
     def __init__(self, version=3.0):
-        super().__init__(version)        
+        super().__init__(version)
 
         if self.version >= 3.0 and self.version < 4.0:
             self.switcher = {'SENDER-RECEIVER-INTERFACE': self.parseSenderReceiverInterface,
@@ -91,7 +91,7 @@ class PortInterfacePackageParser(ElementParser):
     def _parseModeGroups(self, xmlRoot):
         assert(xmlRoot.tag == 'MODE-GROUPS')
         modeGroups = []
-        
+
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'MODE-DECLARATION-GROUP-PROTOTYPE':
                 self.push()
@@ -101,13 +101,13 @@ class PortInterfacePackageParser(ElementParser):
                         typeRef = self.parseTextNode(xmlChild)
                     else:
                         self.defaultHandler(xmlChild)
-                if self.name is not None and typeRef is not None:                        
+                if self.name is not None and typeRef is not None:
                     modeGroups.append(autosar.portinterface.ModeGroup(self.name, typeRef))
-                self.pop()                
+                self.pop()
             else:
                 raise NotImplementedError(xmlElem.tag)
         return modeGroups
-    
+
     def _parseInvalidationPolicys(self, xmlRoot):
         assert(xmlRoot.tag == 'INVALIDATION-POLICYS')
         policyList = []
@@ -163,7 +163,7 @@ class PortInterfacePackageParser(ElementParser):
                 xmlElemName = xmlElem.find("./SHORT-NAME")
                 if xmlElemName is not None:
                     typeRef=xmlElem.find("./TYPE-TREF").text
-                    parameter = autosar.portinterface.Parameter(xmlElemName.text,typeRef,parent=portInterface)
+                    parameter = autosar.element.ParameterDataPrototype(xmlElemName.text,typeRef,parent=portInterface)
                     if hasAdminData(xmlElem):
                         parameter.adminData=parseAdminDataNode(xmlElem.find('ADMIN-DATA'))
                     if xmlElem.find('SW-DATA-DEF-PROPS'):
@@ -360,7 +360,7 @@ class PortInterfacePackageParser(ElementParser):
                 raise NotImplementedError(xmlElem.tag)
 
         if (name is not None) and (typeRef is not None):
-            parameter = autosar.portinterface.Parameter(name, typeRef, parent=parent, adminData=adminData)
+            parameter = autosar.element.ParameterDataPrototype(name, typeRef, parent=parent, adminData=adminData)
             if props_variants is not None:
                 parameter.swCalibrationAccess = props_variants[0].swCalibrationAccess
                 parameter.swAddressMethodRef = props_variants[0].swAddressMethodRef
@@ -384,4 +384,3 @@ class SoftwareAddressMethodParser(ElementParser):
         assert(xmlRoot.tag == 'SW-ADDR-METHOD')
         name = xmlRoot.find("./SHORT-NAME").text
         return autosar.portinterface.SoftwareAddressMethod(name)
-

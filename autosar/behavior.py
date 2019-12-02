@@ -1230,7 +1230,7 @@ class SwcInternalBehavior(InternalBehaviorCommon):
         dataType = ws.find(implementationTypeRef, role='DataType')
         if dataType is None:
             raise ValueError('invalid reference: '+implementationTypeRef)
-        parameter = ParameterDataPrototype(name, dataType.ref, swAddressMethodRef = swAddressMethodRef, swCalibrationAccess=swCalibrationAccess, initValue=initValue, parent=self)
+        parameter = autosar.element.ParameterDataPrototype(name, dataType.ref, swAddressMethodRef = swAddressMethodRef, swCalibrationAccess=swCalibrationAccess, initValue=initValue, parent=self)
         self.parameterDataPrototype.append(parameter)
         return parameter
 
@@ -1428,19 +1428,6 @@ class RoleBasedPortAssignment:
 
     def tag(self, version): return 'ROLE-BASED-PORT-ASSIGNMENT'
 
-class ParameterDataPrototype(Element):
-    """
-    Represents <PARAMETER-DATA-PROTOTYPE> (AUTOSAR 4)
-    """
-
-    def __init__(self, name, typeRef, swAddressMethodRef=None, swCalibrationAccess=None, initValue = None, parent=None, adminData=None):
-        super().__init__(name, parent, adminData)
-        self.typeRef = typeRef
-        self.swAddressMethodRef = swAddressMethodRef
-        self.swCalibrationAccess = swCalibrationAccess
-        self.initValue = initValue
-
-    def tag(self, version): return 'PARAMETER-DATA-PROTOTYPE'
 
 class ParameterInstanceRef:
     """
@@ -1528,4 +1515,3 @@ class ModeSwitchPoint(Element):
             value.parent = self
         else:
             self._modeGroupInstanceRef = None
-

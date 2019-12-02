@@ -92,25 +92,12 @@ class ParameterInterface(PortInterface):
 
     def append(self,elem):
         """
-        adds elem to the self.dataElements list and sets elem.parent to self (the port interface)
+        adds elem to the self.parameters list and sets elem.parent to self (the port interface)
         """
-        if not isinstance(elem, Parameter):
-            raise ValueError("expected elem variable to be of type Parameter")
+        if not isinstance(elem, autosar.element.ParameterDataPrototype):
+            raise ValueError("Expected elem variable to be of type ParameterDataPrototype")
         self.parameters.append(elem)
         elem.parent=self
-
-class Parameter(Element):
-    """
-    Represents a <PARAMETER> element in AUTOSAR 4 or <CALPRM-ELEMENT-PROTOTYPE> in AUTOSAR 3
-    """
-    def tag(self, version):
-        return "PARAMETER-DATA-PROTOTYPE" if version >=4.0 else "CALPRM-ELEMENT-PROTOTYPE"
-
-    def __init__(self, name, typeRef = None, swAddressMethodRef=None, swCalibrationAccess=None, parent=None, adminData=None):
-        super().__init__(name, parent, adminData)
-        self.typeRef = typeRef
-        self.swAddressMethodRef = swAddressMethodRef
-        self.swCalibrationAccess = swCalibrationAccess
 
 class ClientServerInterface(PortInterface):
     def __init__(self, name, isService=False, serviceKind = None, parent=None, adminData=None):

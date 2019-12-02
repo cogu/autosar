@@ -7,7 +7,7 @@ class XMLPortInterfaceWriter(ElementWriter):
 
         if self.version >= 3.0 and self.version < 4.0:
             self.switcher = {
-                             'SoftwareAddressMethod': self.writeSoftwareAddressMethodXML,                             
+                             'SoftwareAddressMethod': self.writeSoftwareAddressMethodXML,
                              'SenderReceiverInterface': self.writeSenderReceiverInterfaceXML,
                              'ParameterInterface': self.writeCalPrmInterfaceXML,
                              'ClientServerInterface': self.writeClientServerInterfaceXML,
@@ -88,7 +88,7 @@ class XMLPortInterfaceWriter(ElementWriter):
         return lines
 
     def writeCalParamElementXML(self,elem):
-        assert(isinstance(elem,autosar.portinterface.Parameter))
+        assert(isinstance(elem,autosar.element.ParameterDataPrototype))
         lines=[]
         lines.append('<CALPRM-ELEMENT-PROTOTYPE>')
         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
@@ -132,6 +132,7 @@ class XMLPortInterfaceWriter(ElementWriter):
         return lines
 
     def _writeParameterElement(self, parameter, ws):
+        assert(isinstance(parameter, autosar.element.ParameterDataPrototype))
         lines=[]
         lines.append('<%s>'%parameter.tag(self.version))
         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%parameter.name,1))
