@@ -84,7 +84,7 @@ class TestParameterInterfaceCreate(unittest.TestCase):
         package = ws.createPackage('DataTypes')
         uint8_type = package.createImplementationDataType('uint8', uint8_base.ref, 0, 255)
         package = ws.createPackage('PortInterfaces')
-        parameter = autosar.Parameter('v', uint8_type.ref)
+        parameter = autosar.ParameterDataPrototype('v', uint8_type.ref)
         portinterface = package.createParameterInterface('ButtonDebounceTime_I', parameter)
         self.assertIsInstance(portinterface, autosar.portinterface.ParameterInterface)
 

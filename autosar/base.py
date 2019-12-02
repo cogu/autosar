@@ -323,6 +323,7 @@ class SymbolProps:
         self.name = name
         self.symbol = symbol
 
+
 #Exceptions
 class InvalidUnitRef(ValueError):
     pass

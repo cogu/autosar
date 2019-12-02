@@ -42,8 +42,8 @@ def ModeGroup(name, typeRef, parent=None, adminData=None):
 def CompuMethodConst(name, elements, parent=None, adminData=None):
    return autosar.datatype.CompuMethodConst(name, elements, parent, adminData)
 
-def Parameter(name, typeRef, swAddressMethodRef=None, swCalibrationAccess=None, parent=None, adminData=None):
-   return autosar.portinterface.Parameter(name, typeRef, swAddressMethodRef, swCalibrationAccess, parent, adminData)
+def ParameterDataPrototype(name, typeRef, swAddressMethodRef=None, swCalibrationAccess=None, initValue = None, parent=None, adminData=None):
+   return autosar.element.ParameterDataPrototype(name, typeRef, swAddressMethodRef, swCalibrationAccess, initValue, parent, adminData)
 
 
 #template support

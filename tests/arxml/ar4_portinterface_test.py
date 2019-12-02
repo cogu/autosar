@@ -149,6 +149,25 @@ class ARXML4PortInterfaceTest(ARXMLTestClass):
         self.assertEqual(pif1.modeGroup.name, pif2.modeGroup.name)
         self.assertEqual(pif1.modeGroup.typeRef, pif2.modeGroup.typeRef)
 
+    def test_create_parameter_interface(self):
+        ws = autosar.workspace(version="4.2.2")
+        _init_ws(ws)
+        package = ws.find('/PortInterfaces')
+        pif1 = package.createParameterInterface('CruiseControlEnable_I', autosar.element.ParameterDataPrototype('v', 'boolean'))
+
+        file_name = 'ar4_create_parameter_interface.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'portinterface', file_name)
+        self.save_and_check(ws, expected_file, generated_file, filters=['/PortInterfaces'])
+
+        ws2 = autosar.workspace(ws.version_str)
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        pif2 = portInterface = ws2.find(pif1.ref)
+        self.assertIsInstance(pif2, autosar.portinterface.ParameterInterface)
+        self.assertEqual(len(pif2.parameters), 1)
+        param = pif2.parameters[0]
+        self.assertEqual(param.name, 'v')
+        self.assertEqual(param.typeRef, '/DataTypes/boolean')
 
 
 if __name__ == '__main__':
