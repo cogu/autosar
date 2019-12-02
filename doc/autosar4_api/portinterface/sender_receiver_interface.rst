@@ -17,6 +17,12 @@ SenderReceiverInterface
 A sender receiver interface is the most common type of port interface.
 It contains a set of data elements that can be used to send and receive data
 
+Usage
+-----
+
+.. include:: examples/usage_sender_receiver_interface.py
+    :code: python3
+
 Factory Methods
 ---------------
 
@@ -25,6 +31,8 @@ Factory Methods
 
 Attributes
 ----------
+
+For inherited attributes see :ref:`autosar.portinterface.PortInteface <ar4_portinterface_Portinterface>`.
 
 ..  table::
     :align: left
@@ -61,9 +69,3 @@ append
 
     :param elem: child element to be appended
     :type elem: DataElement or InvalidationPolicy
-
-Example
-^^^^^^^
-
-.. include:: examples/creating_sender_receiver_interface.py
-    :code: python3

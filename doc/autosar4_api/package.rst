@@ -95,6 +95,7 @@ Public Methods
 **PortInterface**
 
 * :ref:`ar4_package_Package_createSenderReceiverInterface`
+* :ref:`ar4_package_Package_createParameterInterface`
 * :ref:`ar4_package_Package_createClientServerInterface`
 * :ref:`ar4_package_Package_createModeSwitchInterface`
 
@@ -326,6 +327,23 @@ createSenderReceiverInterface
     :param str serviceKind: Optional serviceKind string
     :param adminData: Optional adminData
     :rtype: :ref:`ar4_portinterface_SenderReceiverInterface`
+
+.. _ar4_package_Package_createParameterInterface:
+
+createParameterInterface
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+..  py:method:: Package.createParameterInterface(name, parameters=None, isService=False, adminData=None)
+
+    Creates a new :ref:`ar4_portinterface_ParameterInterface` and adds it to the package.
+
+    :param str name: ShortName of the port interface
+    :param parameters: Parameter or parameters
+    :type parameters: :ref:`ar4_element_ParameterDataPrototype` or list(:ref:`ar4_element_ParameterDataPrototype`)
+    :param bool isService: Enables the isService attribute
+    :param adminData: Optional adminData
+    :rtype: :ref:`ar4_portinterface_ParameterInterface`
+
 
 .. _ar4_package_Package_createClientServerInterface:
 

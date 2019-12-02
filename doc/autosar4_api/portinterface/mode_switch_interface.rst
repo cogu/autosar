@@ -14,11 +14,12 @@ ModeSwitchInterface
    | Inherits           | :ref:`autosar.portinterface.PortInteface <ar4_portinterface_Portinterface>` |
    +--------------------+-----------------------------------------------------------------------------+
 
+Representa a ModeSwitch interface.
 
 Usage
 -----
 
-.. include:: examples/creating_mode_switch_interface.py
+.. include:: examples/usage_mode_switch_interface.py
     :code: python3
 
 Factory Methods
@@ -29,7 +30,7 @@ Factory Methods
 Attributes
 ----------
 
-For inherited attributes see :ref:`autosar.element.Element <ar4_element>`.
+For inherited attributes see :ref:`autosar.portinterface.PortInteface <ar4_portinterface_Portinterface>`.
 
 ..  table::
     :align: left
