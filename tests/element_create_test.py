@@ -88,5 +88,11 @@ class TestParameterInterfaceCreate(unittest.TestCase):
         portinterface = package.createParameterInterface('ButtonDebounceTime_I', parameter)
         self.assertIsInstance(portinterface, autosar.portinterface.ParameterInterface)
 
+    def test_createEmptyParameterInterface_AR4(self):
+        ws = autosar.workspace(version="4.2.2")
+        package = ws.createPackage('PortInterfaces')
+        portinterface = package.createParameterInterface('ButtonDebounceTime_I')
+        self.assertIsInstance(portinterface, autosar.portinterface.ParameterInterface)
+
 if __name__ == '__main__':
     unittest.main()

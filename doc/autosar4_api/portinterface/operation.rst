@@ -50,7 +50,7 @@ The object will convert the names of the errors in to actual references by updat
 Example
 ^^^^^^^
 
-.. include:: examples/setting_possible_errors.py
+.. include:: examples/operation_setting_possible_errors.py
     :code: python
 
 

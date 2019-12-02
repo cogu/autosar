@@ -145,8 +145,6 @@ class ClientServerInterface(PortInterface):
             raise ValueError("invalid type: %s"%(str(type(elem))))
         elem.parent=self
 
-
-
 class Operation(Element):
     def tag(self,version=None):
         return 'CLIENT-SERVER-OPERATION' if version >=4.0 else 'OPERATION-PROTOTYPE'

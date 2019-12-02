@@ -163,37 +163,38 @@ class Package(object):
         if (adminDataObj is not None) and not isinstance(adminDataObj, autosar.base.AdminData):
             raise ValueError("adminData must be of type dict or AdminData")
         portInterface = autosar.portinterface.ParameterInterface(str(name), adminData=adminDataObj)
-        if isinstance(parameters,collections.Iterable):
-            for elem in parameters:
-                dataType=ws.find(elem.typeRef, role='DataType')
+        if parameters is not None:
+            if isinstance(parameters,collections.Iterable):
+                for elem in parameters:
+                    dataType=ws.find(elem.typeRef, role='DataType')
+                    #normalize reference to data element
+                    if dataType is None:
+                        raise ValueError('invalid type reference: '+elem.typeRef)
+                    elem.typeRef=dataType.ref
+                    if isinstance(autosar.portinterface.DataElement):
+                        #convert into Parameter
+                        parameter = autosar.element.ParameterDataPrototype(elem.name, elem.typeRef, elem.swAddressMethodRef, adminData=elem.adminData)
+                    else:
+                        parameter = elem
+                    portInterface.append(parameter)
+            elif isinstance(parameters, autosar.portinterface.DataElement):
+                dataType=ws.find(parameters.typeRef, role='DataType')
                 #normalize reference to data element
                 if dataType is None:
-                    raise ValueError('invalid type reference: '+elem.typeRef)
-                elem.typeRef=dataType.ref
-                if isinstance(autosar.portinterface.DataElement):
-                    #convert into Parameter
-                    parameter = autosar.element.ParameterDataPrototype(elem.name, elem.typeRef, elem.swAddressMethodRef, adminData=elem.adminData)
-                else:
-                    parameter = elem
+                    raise ValueError('invalid type reference: '+parameters.typeRef)
+                parameters.typeRef=dataType.ref
+                parameter = autosar.element.ParameterDataPrototype(parameters.name, parameters.typeRef,
+                                                            parameters.swAddressMethodRef, adminData=parameters.adminData)
                 portInterface.append(parameter)
-        elif isinstance(parameters, autosar.portinterface.DataElement):
-            dataType=ws.find(parameters.typeRef, role='DataType')
-            #normalize reference to data element
-            if dataType is None:
-                raise ValueError('invalid type reference: '+parameters.typeRef)
-            parameters.typeRef=dataType.ref
-            parameter = autosar.element.ParameterDataPrototype(parameters.name, parameters.typeRef,
-                                                        parameters.swAddressMethodRef, adminData=parameters.adminData)
-            portInterface.append(parameter)
-        elif isinstance(parameters, autosar.element.ParameterDataPrototype):
-            dataType=ws.find(parameters.typeRef, role='DataType')
-            #normalize reference to data element
-            if dataType is None:
-                raise ValueError('invalid type reference: '+parameters.typeRef)
-            parameters.typeRef=dataType.ref
-            portInterface.append(parameters)
-        else:
-            raise ValueError("parameters: Expected instance of autosar.element.ParameterDataPrototype or list")
+            elif isinstance(parameters, autosar.element.ParameterDataPrototype):
+                dataType=ws.find(parameters.typeRef, role='DataType')
+                #normalize reference to data element
+                if dataType is None:
+                    raise ValueError('invalid type reference: '+parameters.typeRef)
+                parameters.typeRef=dataType.ref
+                portInterface.append(parameters)
+            else:
+                raise ValueError("parameters: Expected instance of autosar.element.ParameterDataPrototype or list")
         self.append(portInterface)
         return portInterface
 
