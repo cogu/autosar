@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as ElementTree
 import re
 
-pVersion = re.compile("(\d+)\.(\d+)\.(\d+)")
+pVersion = re.compile(r"(\d+)\.(\d+)\.(\d+)")
 
 class AdminData:
     def __init__(self):
@@ -57,7 +57,7 @@ def removeNamespace(doc, namespace):
     """Removes XML namespace in place."""
     ns = u'{%s}' % namespace
     nsl = len(ns)
-    for elem in doc.getiterator():
+    for elem in doc.iter():
         if elem.tag.startswith(ns):
             elem.tag = elem.tag[nsl:]
 
@@ -160,7 +160,7 @@ def parseAutosarVersionAndSchema(xmlRoot):
             #Retreive the schema file
             result = re.search(r'(^[ ]+\.xsd)', value)
             tmp = value.partition(' ')
-            if len(tmp[2])>0 is not None:
+            if len(tmp[2])>0:
                 schemaFile = tmp[2]
             else:
                 schemaFile = None

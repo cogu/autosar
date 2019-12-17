@@ -510,7 +510,7 @@ class ImplementationDataType(Element):
         self.symbolProps = None
         if isinstance(variantProps, (autosar.base.SwDataDefPropsConditional, autosar.base.SwPointerTargetProps)):
             self.variantProps.append(variantProps)
-        elif isinstance(variantProps, collections.Iterable):
+        elif isinstance(variantProps, collections.abc.Iterable):
             for elem in variantProps:
                 if isinstance(elem, (autosar.base.SwDataDefPropsConditional, autosar.base.SwPointerTargetProps)):
                     self.variantProps.append(elem)
@@ -601,7 +601,7 @@ class ImplementationDataTypeElement(Element):
         if variantProps is not None:
             if isinstance(variantProps, (autosar.base.SwDataDefPropsConditional, autosar.base.SwPointerTargetProps)):
                 self.variantProps.append(variantProps)
-            elif isinstance(variantProps, collections.Iterable):
+            elif isinstance(variantProps, collections.abc.Iterable):
                 for elem in variantProps:
                     if isinstance(elem, (autosar.base.SwDataDefPropsConditional, autosar.base.SwPointerTargetProps)):
                         self.variantProps.append(elem)

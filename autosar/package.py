@@ -120,7 +120,7 @@ class Package(object):
 
         portInterface = autosar.portinterface.SenderReceiverInterface(str(name), isService, adminData=adminData)
         if dataElements is not None:
-            if isinstance(dataElements,collections.Iterable):
+            if isinstance(dataElements,collections.abc.Iterable):
                 for elem in dataElements:
                     dataType=ws.find(elem.typeRef, role='DataType')
                     if dataType is None:
@@ -136,7 +136,7 @@ class Package(object):
             else:
                 raise ValueError("dataElements: expected autosar.portinterface.DataElement instance or list")
         if modeGroups is not None:
-            if isinstance(modeGroups,collections.Iterable):
+            if isinstance(modeGroups,collections.abc.Iterable):
                 for elem in modeGroups:
                     portInterface.append(elem)
             elif isinstance(modeGroups,autosar.portinterface.ModeGroup):
@@ -164,7 +164,7 @@ class Package(object):
             raise ValueError("adminData must be of type dict or AdminData")
         portInterface = autosar.portinterface.ParameterInterface(str(name), adminData=adminDataObj)
         if parameters is not None:
-            if isinstance(parameters,collections.Iterable):
+            if isinstance(parameters,collections.abc.Iterable):
                 for elem in parameters:
                     dataType=ws.find(elem.typeRef, role='DataType')
                     #normalize reference to data element
@@ -391,7 +391,7 @@ class Package(object):
         for name in operations:
             portInterface.append(autosar.portinterface.Operation(name))
         if errors is not None:
-            if isinstance(errors, collections.Iterable):
+            if isinstance(errors, collections.abc.Iterable):
                 for error in errors:
                     portInterface.append(error)
             else:
@@ -506,7 +506,7 @@ class Package(object):
                 elif isinstance(elem, tuple):
                     elemName = elem[0]
                     elemUnitRef = elem[1]
-                elif isinstance(elem, collections.Mapping):
+                elif isinstance(elem, collections.abc.Mapping):
                     elemName = elem['name']
                     elemUnitRef = elem['typeRef']
                 else:
@@ -562,13 +562,13 @@ class Package(object):
                 raise ValueError('initValue: expected type int, got '+str(type(initValue)))
             value=autosar.constant.IntegerValue(name, dataType.ref, initValue)
         elif isinstance(dataType, autosar.datatype.RecordDataType):
-            if isinstance(initValue, collections.Mapping) or isinstance(initValue, collections.Iterable):
+            if isinstance(initValue, collections.abc.Mapping) or isinstance(initValue, collections.abc.Iterable):
                 pass
             else:
                 raise ValueError('initValue: expected type Mapping or Iterable, got '+str(type(initValue)))
             value=self._createRecordValueV3(ws, name, dataType, initValue)
         elif isinstance(dataType, autosar.datatype.ArrayDataType):
-            if isinstance(initValue, collections.Iterable):
+            if isinstance(initValue, collections.abc.Iterable):
                 pass
             else:
                 raise ValueError('initValue: expected type Iterable, got '+str(type(initValue)))
@@ -602,7 +602,7 @@ class Package(object):
 
     def _createRecordValueV3(self, ws, name, dataType, initValue, parent=None):
         value = autosar.constant.RecordValue(name, dataType.ref, parent)
-        if isinstance(initValue, collections.Mapping):
+        if isinstance(initValue, collections.abc.Mapping):
             for elem in dataType.elements:
                 if elem.name in initValue:
                     v = initValue[elem.name]
@@ -614,13 +614,13 @@ class Package(object):
                             raise ValueError('v: expected type int, got '+str(type(v)))
                         value.elements.append(autosar.constant.IntegerValue(elem.name, childType.ref, v, value))
                     elif isinstance(childType, autosar.datatype.RecordDataType):
-                        if isinstance(v, collections.Mapping) or isinstance(v, collections.Iterable):
+                        if isinstance(v, collections.abc.Mapping) or isinstance(v, collections.abc.Iterable):
                             pass
                         else:
                             raise ValueError('v: expected type Mapping or Iterable, got '+str(type(v)))
                         value.elements.append(self._createRecordValueV3(ws, elem.name, childType, v, value))
                     elif isinstance(childType, autosar.datatype.ArrayDataType):
-                        if isinstance(v, collections.Iterable):
+                        if isinstance(v, collections.abc.Iterable):
                             pass
                         else:
                             raise ValueError('v: expected type Iterable, got '+str(type(v)))
@@ -659,7 +659,7 @@ class Package(object):
         childType = ws.find(dataType.typeRef, role='DataType')
         if childType is None:
             raise ValueError('invalid reference: '+str(elem.typeRef))
-        if isinstance(initValue, collections.Iterable):
+        if isinstance(initValue, collections.abc.Iterable):
             for i in range(dataType.length):
                 try:
                     v=initValue[i]
@@ -671,13 +671,13 @@ class Package(object):
                         raise ValueError('v: expected type int, got '+str(type(v)))
                     value.elements.append(autosar.constant.IntegerValue(elemName, childType.ref, v, value))
                 elif isinstance(childType, autosar.datatype.RecordDataType):
-                    if isinstance(v, collections.Mapping) or isinstance(v, collections.Iterable):
+                    if isinstance(v, collections.abc.Mapping) or isinstance(v, collections.abc.Iterable):
                         pass
                     else:
                         raise ValueError('v: expected type Mapping or Iterable, got '+str(type(v)))
                         value.elements.append(self._createRecordValueV3(ws, elemName, childType, v, value))
                 elif isinstance(childType, autosar.datatype.ArrayDataType):
-                    if isinstance(v, collections.Iterable):
+                    if isinstance(v, collections.abc.Iterable):
                         pass
                     else:
                         raise ValueError('v: expected type Iterable, got '+str(type(v)))

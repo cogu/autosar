@@ -26,12 +26,12 @@ class Port(Element):
             portInterface=ws.find(portInterfaceRef, role='PortInterface')
             if portInterface is None:
                 raise ValueError("invalid reference: "+portInterfaceRef)
-            if isinstance(comspec, collections.Mapping):
+            if isinstance(comspec, collections.abc.Mapping):
                 comspecObj = self._createComSpecFromDict(ws, portInterface, comspec)
                 if comspecObj is None:
                     raise ValueError('Failed to create comspec from comspec data: '+repr(comspec))
                 self.comspec.append(comspecObj)
-            elif isinstance(comspec, collections.Iterable):
+            elif isinstance(comspec, collections.abc.Iterable):
                 for data in comspec:
                     comspecObj = self._createComSpecFromDict(ws, portInterface, data)
                     if comspecObj is None:
