@@ -144,7 +144,7 @@ class ARXML4PortInterfaceTest(ARXMLTestClass):
 
         ws2 = autosar.workspace(version="4.2.2")
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
-        pif2 = portInterface = ws2.find(pif1.ref)
+        pif2 = ws2.find(pif1.ref)
         self.assertIsInstance(pif2, autosar.portinterface.ModeSwitchInterface)
         self.assertEqual(pif1.modeGroup.name, pif2.modeGroup.name)
         self.assertEqual(pif1.modeGroup.typeRef, pif2.modeGroup.typeRef)
@@ -162,7 +162,7 @@ class ARXML4PortInterfaceTest(ARXMLTestClass):
 
         ws2 = autosar.workspace(ws.version_str)
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
-        pif2 = portInterface = ws2.find(pif1.ref)
+        pif2 = ws2.find(pif1.ref)
         self.assertIsInstance(pif2, autosar.portinterface.ParameterInterface)
         self.assertEqual(len(pif2.parameters), 1)
         param = pif2.parameters[0]

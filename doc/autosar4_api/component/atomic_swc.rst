@@ -14,7 +14,7 @@ AtomicSoftwareComponent
    | Inherits           | :ref:`autosar.component.ComponentType <ar4_component_ComponentType>` |
    +--------------------+----------------------------------------------------------------------+
 
-Base class for all component type classes except :ref:`component_compositionComponent`.
+Base class for all component type classes except :ref:`ar4_component_CompositionComponent`.
 
 Attributes
 -----------

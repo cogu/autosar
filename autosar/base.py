@@ -64,7 +64,7 @@ def removeNamespace(doc, namespace):
 def parseXMLFile(filename,namespace=None):
     arxml_tree = ElementTree.ElementTree()
     arxml_tree.parse(filename)
-    arxml_root = arxml_tree.getroot();
+    arxml_root = arxml_tree.getroot()
     if namespace is not None:
         removeNamespace(arxml_root,namespace)
     return arxml_root
@@ -225,7 +225,7 @@ def findUniqueNameInList(elementList, baseName):
     foundElem = None
     highestIndex = 0
     hasIndex = False
-    p0 = re.compile(baseName+'_(\d+)')
+    p0 = re.compile(baseName+r'_(\d+)')
     for elem in elementList:
         result = p0.match(elem.name)
         if result is not None:
@@ -329,6 +329,9 @@ class InvalidUnitRef(ValueError):
     pass
 
 class InvalidPortInterfaceRef(ValueError):
+    pass
+
+class InvalidComponentTypeRef(ValueError):
     pass
 
 class InvalidDataTypeRef(ValueError):

@@ -1,3 +1,5 @@
+import autosar
+
 def init_ws():
     ws = autosar.workspace(version="4.2.2")
     #Create Packages
@@ -15,8 +17,8 @@ def init_ws():
     constants.createConstant('VehicleSpeed_IV', 'uint16', 65535)
     constants.createConstant('EngineSpeed_IV', 'uint16', 65535)
     #Create PortInterfaces
-    portinterfaces.createSenderReceiverInterface('VehicleSpeed_I', autosar.DataElement('VehicleSpeed', 'uint16'))
-    portinterfaces.createSenderReceiverInterface('EngineSpeed_I', autosar.DataElement('EngineSpeed', 'uint16'))
+    portinterfaces.createSenderReceiverInterface('VehicleSpeed_I', autosar.element.DataElement('VehicleSpeed', 'uint16'))
+    portinterfaces.createSenderReceiverInterface('EngineSpeed_I', autosar.element.DataElement('EngineSpeed', 'uint16'))
     return ws
 
 

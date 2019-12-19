@@ -14,7 +14,7 @@ ComponentType
    | Inherits           | :ref:`autosar.element.Element <ar4_element>` |
    +--------------------+----------------------------------------------+
 
-The ComponentType class is the base class for :ref:`component_atomic_swc` and :ref:`component_compositionComponent`.
+The ComponentType class is the base class for :ref:`component_atomic_swc` and :ref:`ar4_component_CompositionComponent`.
 
 Attributes
 ----------
