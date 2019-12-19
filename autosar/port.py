@@ -69,7 +69,7 @@ class Port(Element):
             if initValueRef is not None:
                 initValueTmp = ws.find(initValueRef, role='Constant')
                 if initValueTmp is None:
-                    raise InvalidInitValueRef(str(initValueRef))
+                    raise autosar.base.InvalidInitValueRef(str(initValueRef))
                 if isinstance(initValueTmp,autosar.constant.Constant):
                     if ws.version < 4.0:
                         #this is a convenience implementation for the user. For AUTOSAR3, initValueRef needs to point to the value inside the Constant
@@ -86,6 +86,7 @@ class Port(Element):
             if isinstance(self, RequirePort) and dataElement.isQueued and ( (queueLength is None) or queueLength==0):
                 queueLength=1
             if rawInitValue is not None:
+                valueBuilder = autosar.builder.ValueBuilder()
                 if isinstance(rawInitValue, autosar.constant.Value):
                     initValue = rawInitValue
                 elif isinstance(rawInitValue, (int, float, str)):

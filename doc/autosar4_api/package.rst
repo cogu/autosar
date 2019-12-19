@@ -14,7 +14,8 @@ Package
    | Inherits           |                                           |
    +--------------------+-------------------------------------------+
 
-An AUTOSAR package is a container for elements. Elements can be basically anything that are not packages.
+An AUTOSAR package is a container for elements.
+Elements can be basically anything that are not packages.
 
 Usage
 -----
@@ -75,6 +76,7 @@ Public Methods
 --------------
 
 **Sub-package**
+
 * :ref:`ar4_package_Package_createSubPackage`
 
 **DataType**
@@ -102,6 +104,8 @@ Public Methods
 **ComponentType**
 
 * :ref:`ar4_package_Package_createApplicationSoftwareComponent`
+* :ref:`ar4_package_Package_createCompositionComponent`
+* :ref:`ar4_package_Package_createServiceComponent`
 
 **Mode**
 
@@ -126,16 +130,8 @@ createSubPackage
 Example
 ^^^^^^^
 
-.. code-block:: python
-
-    import autosar
-
-    ws = autosar.workspace("4.2.2")
-    package=ws.createPackage('DataTypes', role='DataType')
-    package.createSubPackage('CompuMethods', role='CompuMethod')
-    package.createSubPackage('DataConstrs', role='DataConstraint')
-    package.createSubPackage('Units', role='Unit')
-    package.createSubPackage('BaseTypes')
+.. include:: examples/create_sub_packages.py
+    :code: python
 
 
 .. _ar4_package_Package_createSwBaseType:
@@ -328,6 +324,15 @@ createSenderReceiverInterface
     :param adminData: Optional adminData
     :rtype: :ref:`ar4_portinterface_SenderReceiverInterface`
 
+Examples
+^^^^^^^^
+
+**Port interface with single data element**
+
+.. include:: portinterface/examples/usage_sender_receiver_interface.py
+    :code: python3
+
+
 .. _ar4_package_Package_createParameterInterface:
 
 createParameterInterface
@@ -401,6 +406,13 @@ createApplicationSoftwareComponent
     :param str implementationName: ShortName of the associated Implementation object. If not set an automatic name is selected.
     :rtype: :ref:`component_applicationSoftwareComponent`
 
+Example
+^^^^^^^
+
+.. include:: examples/create_application_component.py
+    :code: python
+
+
 .. _ar4_package_Package_createCompositionComponent:
 
 createCompositionComponent
@@ -408,11 +420,40 @@ createCompositionComponent
 
 .. py:method:: Package.createCompositionComponent(componentName, [adminData = None])
 
-    Creates a new :ref:`component_compositionComponent` and adds it to the package.
+    Creates a new :ref:`ar4_component_CompositionComponent` and adds it to the package.
 
     :param str componentName: ShortName of the component type
     :param adminData: Optional adminData
-    :rtype: :ref:`component_compositionComponent`
+    :rtype: :ref:`ar4_component_CompositionComponent`
+
+Example
+^^^^^^^
+
+.. include:: examples/create_composition_component.py
+    :code: python
+
+
+
+.. _ar4_package_Package_createServiceComponent:
+
+createServiceComponent
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:method:: Package.createServiceComponent(swcName, [behaviorName = None], [implementationName = None], [multipleInstance = False])
+
+    Creates a new :ref:`ar4_component_ServiceComponent` and adds it to the package.
+
+    :param str swcName: ShortName of the component type
+    :param str behaviorName: ShortName of the associated Behavior object. If not set an automatic name is selected.
+    :param str implementationName: ShortName of the associated Implementation object. If not set an automatic name is selected.
+    :rtype: :ref:`ar4_component_ServiceComponent`
+
+Example
+^^^^^^^
+
+.. include:: examples/create_service_component.py
+    :code: python
+
 
 .. _ar4_package_Package_createModeDeclarationGroup:
 

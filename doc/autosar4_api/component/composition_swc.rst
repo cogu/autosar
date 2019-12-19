@@ -1,4 +1,4 @@
-.. _component_compositionComponent:
+.. _ar4_component_CompositionComponent:
 
 CompositionComponent
 ====================
@@ -24,7 +24,7 @@ Factory Methods
 Attributes
 -----------
 
-For inherited attributes see :ref:`autosar.element.Element <ar4_element>`.
+For inherited attributes see :ref:`Element <ar4_element>`.
 
 ..  table::
     :align: left
@@ -32,11 +32,11 @@ For inherited attributes see :ref:`autosar.element.Element <ar4_element>`.
     +--------------------------+---------------------------------------------+----------------------------------------------------------------------+
     | Name                     | Type                                        | Description                                                          |
     +==========================+=============================================+======================================================================+
-    | **components**           | *list(:ref:`ar4_component_ComponentType`)*  | List of internal components                                          |
+    | **components**           | list(:ref:`ar4_component_ComponentType`)    | List of internal components                                          |
     +--------------------------+---------------------------------------------+----------------------------------------------------------------------+
-    | **assemblyConnectors**   | *list(AssemblyConnector)*                   | List of connectors between internal components                       |
+    | **assemblyConnectors**   | list(AssemblyConnector)                     | List of connectors between internal components                       |
     +--------------------------+---------------------------------------------+----------------------------------------------------------------------+
-    | **delegationConnectors** | *list(DelegationConnector)*                 | List of connectors between inner components and composition boundary |
+    | **delegationConnectors** | list(DelegationConnector)                   | List of connectors between inner components and composition boundary |
     +--------------------------+---------------------------------------------+----------------------------------------------------------------------+
 
 
@@ -44,6 +44,7 @@ Public Methods
 --------------
 
 * :ref:`ar4_component_CompositionComponent_createComponentPrototype`
+* :ref:`ar4_component_CompositionComponent_createConnector`
 
 Method Description
 ------------------
@@ -53,13 +54,49 @@ Method Description
 createComponentPrototype
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. method:: CompositionComponent.createComponentPrototype(componentRef)
+.. py:method:: CompositionComponent.createComponentPrototype(componentRef, [name = None])
 
-    :param str componentRef: Reference to an object derived from ref:`ar4_component_ComponentType`
-    :rtype ComponentPrototype:
+    :param str componentRef: Reference to an object derived from :ref:`ar4_component_ComponentType`
+    :param str name: Optional name of the inner component. If left unset it will copy the name from the referenced component.
+    :rtype: :ref:`ar4_component_ComponentPrototype`
 
     Creates an inner component prototype and appends it to the components list.
 
+Example
+^^^^^^^
 
+.. include:: examples/composition_create_component_prototype.py
+    :code: python
+
+
+.. _ar4_component_CompositionComponent_createConnector:
+
+createConnector
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:method:: CompositionComponent.createConnector(portRef1, portRef2)
+
+    :param str portRef1: Reference to first port
+    :param str portRef2: Reference to second port
+
+    Creates a connector between two ports.
+
+**Valid Port reference formats**:
+
++----------------------------+------------------------------------------+--------------------------------------+
+| Format                     | Example                                  | Description                          |
++============================+==========================================+======================================+
+| **portName**               | \\"VehicleSpeed\\"                       | Name of port on the composition      |
++----------------------------+------------------------------------------+--------------------------------------+
+| **componentName/portName** | \\"Swc1/VehicleSpeed\\"                  | Name of port on an inner component   |
++----------------------------+------------------------------------------+--------------------------------------+
+| **portRef**                | \\"/ComponentTypes/Swc1/VehicleSpeed\\"  | Full port reference                  |
++----------------------------+------------------------------------------+--------------------------------------+
+
+Example
+^^^^^^^
+
+.. include:: examples/composition_create_connector.py
+    :code: python
 
 
