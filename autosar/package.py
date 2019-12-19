@@ -146,7 +146,7 @@ class Package(object):
         self.append(portInterface)
         return portInterface
 
-    def createParameterInterface(self,name,parameters=None,modeDeclarationGroups=None, isService=False, adminData=None):
+    def createParameterInterface(self, name, parameters=None, modeDeclarationGroups=None, isService=False, adminData=None):
         """
         Creates a new parameter port interface. parameter can either be a single instance of Parameter or a list of Parameters.
         The same applies to modeDeclarationGroups. isService must be boolean.
@@ -280,7 +280,7 @@ class Package(object):
         return autosar.base.indexByName(lst,name)
 
 
-    def createApplicationSoftwareComponent(self,swcName,behaviorName=None,implementationName=None,multipleInstance=False):
+    def createApplicationSoftwareComponent(self, swcName, behaviorName=None, implementationName=None, multipleInstance=False):
         """
         Creates a new ApplicationSoftwareComponent object and adds it to the package.
         It also creates an InternalBehavior object as well as an SwcImplementation object.
@@ -451,8 +451,6 @@ class Package(object):
             assert(newType is not None)
             self.append(newType)
             return newType
-
-
 
     def createRealDataType(self, name, minVal, maxVal, minValType='CLOSED', maxValType='CLOSED', hasNaN=False, encoding='SINGLE', baseTypeRef=None, typeEmitter=None, adminData=None):
         """
@@ -985,6 +983,7 @@ class Package(object):
         """
         ws=self.rootWS()
         assert(ws is not None)
+
         lowerLimit = self._convertNumber(lowerLimit)
         upperLimit = self._convertNumber(upperLimit)
 
@@ -993,7 +992,15 @@ class Package(object):
 
         adminDataObj = self._checkAdminData(adminData)
         unitObj = self._checkAndCreateUnit(ws, unit)
-        compuMethodObj = self._checkAndCreateCompuMethod(ws, self._createCompuMethodName(ws, name), unitObj, lowerLimit, upperLimit, offset, factor, bitmask, valueTable, forceFloat)
+
+        if implementationTypeRef is not None:
+            referencedType = ws.find(implementationTypeRef)
+            if referencedType is None:
+                raise autosar.base.InvalidDataTypeRef(implementationTypeRef)
+        else:
+            referencedType = None
+
+        compuMethodObj = self._checkAndCreateCompuMethod(ws, self._createCompuMethodName(ws, name), unitObj, lowerLimit, upperLimit, offset, factor, bitmask, valueTable, referencedType, forceFloat)
         if dataConstraint is None:
             dataConstraintObj = None
         else:
@@ -1205,7 +1212,7 @@ class Package(object):
                 (numerator, denominator) = (f.numerator, f.denominator)
         return (numerator, denominator)
 
-    def _checkAndCreateCompuMethod(self, ws, name, unitObj, lowerLimit, upperLimit, offset, scaling, bitmaskTable, valueTable, forceFloatScaling, useCategory = True, autoLabel = True):
+    def _checkAndCreateCompuMethod(self, ws, name, unitObj, lowerLimit, upperLimit, offset, scaling, bitmaskTable, valueTable, referencedType, forceFloatScaling, useCategory = True, autoLabel = True):
         """
         Returns CompuMethod object from the package with role 'CompuMethod'.
         If no CompuMethod exists with that name it will be created and then returned.
@@ -1224,6 +1231,16 @@ class Package(object):
         elif offset is not None and scaling is not None:
             category = 'LINEAR'
             (numerator, denominator) = self._calcNumeratorDenominator(scaling, forceFloatScaling)
+            if (lowerLimit is None) and (referencedType is not None) and (referencedType.dataConstraintRef is not None):
+                constraint = ws.find(referencedType.dataConstraintRef)
+                if constraint is None:
+                    raise autosar.base.InvalidDataConstraintRef
+                lowerLimit = constraint.lowerLimit
+            if (upperLimit is None) and (referencedType is not None) and (referencedType.dataConstraintRef is not None):
+                constraint = ws.find(referencedType.dataConstraintRef)
+                if constraint is None:
+                    raise autosar.base.InvalidDataConstraintRef
+                upperLimit = constraint.upperLimit
             computation.createRationalScaling(offset, numerator, denominator, lowerLimit, upperLimit)
         if category is None:
             return None #Creating a compu method does not seem necessary
@@ -1255,8 +1272,10 @@ class Package(object):
         else:
             lowerLimit = compuMethodObj.intToPhys.lowerLimit
             upperLimit = compuMethodObj.intToPhys.upperLimit
-
-        return self._checkAndCreateDataConstraint(ws, name, constraintType, lowerLimit, upperLimit)
+        if (lowerLimit is not None) and upperLimit is not None:
+            return self._checkAndCreateDataConstraint(ws, name, constraintType, lowerLimit, upperLimit)
+        else:
+            return None
 
     def _checkAndCreateDataConstraint(self, ws, name, constraintType, lowerLimit, upperLimit, lowerLimitType = 'CLOSED', upperLimitType = 'CLOSED', adminData = None):
         if name is None:
@@ -1326,7 +1345,7 @@ class Package(object):
 
         if unit is not None:
             unitElem = self._checkAndCreateUnit(ws, unit, unitPackage = unitPackage)
-        compuMethodElem = self._checkAndCreateCompuMethod(ws, self._createCompuMethodName(ws, name), unitElem, lowerLimit, upperLimit, offset, scaling, None, valueTable, forceFloatScaling, useCategory = False, autoLabel = False)
+        compuMethodElem = self._checkAndCreateCompuMethod(ws, self._createCompuMethodName(ws, name), unitElem, lowerLimit, upperLimit, offset, scaling, None, valueTable, None, forceFloatScaling, useCategory = False, autoLabel = False)
         if (compuMethodElem is not None) and (unitElem is not None):
             compuMethodElem.unitRef = unitElem.ref
         return None if compuMethodElem is None else compuMethodElem.ref

@@ -304,10 +304,38 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         dt1 = package.createImplementationDataTypeRef('U32Type_T', '/DataTypes/uint32')
         self.assertIsInstance(dt1, autosar.datatype.ImplementationDataType)
         self.assertEqual(dt1.ref, '/DataTypes/U32Type_T')
-        file_name = 'ar4_implementation_type_ref.arxml'
+        file_name = 'ar4_implementation_type_ref1.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
+
+        ws2 = autosar.workspace(ws.version_str)
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        dt2 = ws2.find(dt1.ref)
+        self.assertIsInstance(dt2, autosar.datatype.ImplementationDataType)
+
+    def test_create_implementation_ref_type_implicit_constraint(self):
+        ws = autosar.workspace(version="4.2.2")
+        _create_packages(ws)
+        _create_base_types(ws)
+
+        package = ws['DataTypes']
+        dt1 = package.createImplementationDataTypeRef('VehicleSpeed_T',
+                                                '/DataTypes/uint16',
+                                                offset = 0,
+                                                scaling = 1/256,
+                                                unit="KmPerHour",
+                                                forceFloat=True)
+        self.assertIsInstance(dt1, autosar.datatype.ImplementationDataType)
+        self.assertEqual(dt1.ref, '/DataTypes/VehicleSpeed_T')
+        constraint1 = ws.find(dt1.dataConstraintRef)
+        self.assertEqual(constraint1.name, 'VehicleSpeed_T_DataConstr')
+        self.assertEqual(constraint1.lowerLimit, 0)
+        self.assertEqual(constraint1.upperLimit, 65535)
+        file_name = 'ar4_implementation_type_ref2.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'], force = True)
 
         ws2 = autosar.workspace(ws.version_str)
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
