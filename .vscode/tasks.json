@@ -1,0 +1,45 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "clean",
+            "type": "shell",
+            "command": "call make.bat clean",
+            "windows": {
+                "options": {
+                    "shell": {
+                        "executable": "cmd.exe",
+                        "args": [
+                            "/c"
+                        ]
+                    },
+                    "cwd": "${workspaceFolder}\\doc"
+                },
+                "problemMatcher": []
+            }
+        },
+        {
+            "label": "html",
+            "type": "shell",
+            "command": "call make.bat html",
+            "windows": {
+                "options": {
+                    "shell": {
+                        "executable": "cmd.exe",
+                        "args": [
+                            "/c"
+                        ]
+                    },
+                    "cwd": "${workspaceFolder}\\doc"
+                },                
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        }
+    ]
+}
