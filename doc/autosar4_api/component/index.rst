@@ -4,13 +4,9 @@ Component
 .. toctree::
    :maxdepth: 1
 
-
-   component_type
-   atomic_swc
    application_swc
+   atomic_swc
    composition_swc
-
-..   cdd
-..   service
-..   data-element-comspec
-..   operation-comspec
+   component_prototype
+   component_type
+   service_swc
