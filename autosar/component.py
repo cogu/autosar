@@ -322,7 +322,7 @@ class CompositionComponent(ComponentType):
         """
         return self.createComponentPrototype(componentRef)
 
-    def createComponentPrototype(self, componentRef):
+    def createComponentPrototype(self, componentRef, name = None):
         """
         creates a new ComponentPrototype object and appends it to the CompositionComponent
         """
@@ -330,7 +330,9 @@ class CompositionComponent(ComponentType):
         component = ws.find(componentRef, role='ComponentType')
         if component is None:
             raise ValueError('invalid reference: '+componentRef)
-        elem = ComponentPrototype(component.name, component.ref, self)
+        if name is None:
+            name = component.name
+        elem = ComponentPrototype(name, component.ref, self)
         self.components.append(elem)
         return elem
 
