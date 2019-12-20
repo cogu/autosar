@@ -749,7 +749,7 @@ class InternalBehaviorCommon(Element):
         if exclusiveAreas is not None:
             if isinstance(exclusiveAreas, str):
                 exclusiveAreas =[exclusiveAreas]
-            if isinstance(exclusiveAreas, collections.Iterable):
+            if isinstance(exclusiveAreas, collections.abc.Iterable):
                 for exclusiveAreaName in exclusiveAreas:
                     found = False
                     for exclusiveArea in self.exclusiveAreas:
@@ -1155,7 +1155,7 @@ class InternalBehavior(InternalBehaviorCommon):
             serviceCallPorts=[blockParams['serviceCallPorts']]
         else:
             serviceCallPorts = blockParams['serviceCallPorts']
-        if isinstance(serviceCallPorts, collections.Iterable):
+        if isinstance(serviceCallPorts, collections.abc.Iterable):
             for data in serviceCallPorts:
                 parts = autosar.base.splitRef(data)
                 if len(parts)!=2:

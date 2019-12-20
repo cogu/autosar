@@ -68,9 +68,9 @@ class ComponentType(Element):
 
         comspec = kwargs.get('comspec', None)
         if comspec is not None:
-            if isinstance(comspec, collections.Mapping):
+            if isinstance(comspec, collections.abc.Mapping):
                 comspecList = [comspec]
-            elif isinstance(comspec, collections.Iterable):
+            elif isinstance(comspec, collections.abc.Iterable):
                 comspecList = list(comspec)
             else:
                 raise ValueError('comspec argument must be of type dict or list')

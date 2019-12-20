@@ -238,7 +238,7 @@ class Operation(Element):
         if isinstance(values, str):
             values=[values]
 
-        if isinstance(values, collections.Iterable):
+        if isinstance(values, collections.abc.Iterable):
             del self.errorRefs[:]
             for name in values:
                 found=False
