@@ -36,6 +36,16 @@ def _getParameterNameFromComSpec(xmlElem,portInterfaceRef):
             return name
     return None
 
+def _getVariableNameFromComSpec(xmlElem,portInterfaceRef):
+    if xmlElem.tag == 'VARIABLE-REF':
+        variableRef = splitRef(xmlElem.text)
+        assert(variableRef is not None)
+        name = variableRef.pop()
+        tmp = '/'+'/'.join(variableRef)
+        if portInterfaceRef == tmp:
+            return name
+    return None
+
 class ComponentTypeParser(ElementParser):
     """
     ComponentType parser
@@ -64,7 +74,8 @@ class ComponentTypeParser(ElementParser):
                'COMPOSITION-SW-COMPONENT-TYPE': self.parseCompositionType,
                'SENSOR-ACTUATOR-SW-COMPONENT-TYPE': self.parseSoftwareComponent,
                'SERVICE-SW-COMPONENT-TYPE': self.parseSoftwareComponent,
-               'SWC-IMPLEMENTATION': self.parseSwcImplementation
+               'SWC-IMPLEMENTATION': self.parseSwcImplementation,
+               'NV-BLOCK-SW-COMPONENT-TYPE': self.parseSoftwareComponent
             }
 
     def getSupportedTags(self):
@@ -94,6 +105,8 @@ class ComponentTypeParser(ElementParser):
             componentType = autosar.component.ParameterComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
         elif xmlRoot.tag == 'SENSOR-ACTUATOR-SW-COMPONENT-TYPE': #for AUTOSAR 4.x
             componentType = autosar.component.SensorActuatorComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
+        elif xmlRoot.tag == 'NV-BLOCK-SW-COMPONENT-TYPE': #for AUTOSAR 4.x
+            componentType = autosar.component.NvBlockComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
         else:
             raise NotImplementedError(xmlRoot.tag)
         for xmlElem in xmlRoot.findall('./*'):
@@ -108,6 +121,10 @@ class ComponentTypeParser(ElementParser):
                         raise ValueError('%s: an SWC cannot have multiple internal behaviors'%(componentType))
                     elif len(behaviors) == 1:
                         componentType.behavior = self.behavior_parser.parseSWCInternalBehavior(behaviors[0], componentType)
+                elif xmlElem.tag == 'NV-BLOCK-DESCRIPTORS' and isinstance(componentType, autosar.component.NvBlockComponent):
+                    for descriptorXml in xmlElem.findall('./NV-BLOCK-DESCRIPTOR'):
+                        descriptor = self.behavior_parser.parseNvBlockSWCnvBlockDescriptor(descriptorXml, componentType)
+                        componentType.nvBlockDescriptors.append(descriptor)
                 else:
                     print('Unhandled tag: '+xmlElem.tag, file=sys.stderr)
         return componentType
@@ -136,14 +153,7 @@ class ComponentTypeParser(ElementParser):
                             if self.version >= 4.0:
                                 xmlElem = xmlItem.find('./INIT-VALUE')
                                 if xmlElem != None:
-                                    for xmlChild in xmlElem.findall('./*'):
-                                        if xmlChild.tag == 'CONSTANT-REFERENCE':
-                                            comspec.initValueRef = self.parseTextNode(xmlChild.find('./CONSTANT-REF'))
-                                        else:
-                                            values = self.constant_parser.parseValueV4(xmlElem, None)
-                                            if len(values) != 1:
-                                                raise ValueError('INIT-VALUE cannot cannot contain multiple elements')
-                                            comspec.initValue = values[0]
+                                    comspec.initValue, comspec.initValueRef = self._parseAr4InitValue(xmlElem)
                             else:
                                 if xmlItem.find('./INIT-VALUE-REF') != None:
                                     comspec.initValueRef = self.parseTextNode(xmlItem.find('./INIT-VALUE-REF'))
@@ -159,6 +169,10 @@ class ComponentTypeParser(ElementParser):
                             port.comspec.append(comspec)
                         elif xmlItem.tag == 'PARAMETER-REQUIRE-COM-SPEC':
                             comspec = self._parseParameterComSpec(xmlItem, portInterfaceRef)
+                            port.comspec.append(comspec)
+                        elif xmlItem.tag == 'NV-REQUIRE-COM-SPEC':
+                            comspec = self._parseNvRequireComSpec(xmlItem, portInterfaceRef)
+                            assert(comspec is not None)
                             port.comspec.append(comspec)
                         else:
                             raise NotImplementedError(xmlItem.tag)
@@ -182,14 +196,7 @@ class ComponentTypeParser(ElementParser):
                             if self.version >= 4.0:
                                 xmlElem = xmlItem.find('./INIT-VALUE')
                                 if xmlElem != None:
-                                    for xmlChild in xmlElem.findall('./*'):
-                                        if xmlChild.tag == 'CONSTANT-REFERENCE':
-                                            comspec.initValueRef = self.parseTextNode(xmlChild.find('./CONSTANT-REF'))
-                                        else:
-                                            values = self.constant_parser.parseValueV4(xmlElem, None)
-                                            if len(values) != 1:
-                                                raise ValueError('INIT-VALUE cannot cannot contain multiple elements')
-                                            comspec.initValue = values[0]
+                                    comspec.initValue, comspec.initValueRef = self._parseAr4InitValue(xmlElem)
                             else:
                                 if xmlItem.find('./INIT-VALUE-REF') is not None:
                                     comspec.initValueRef = self.parseTextNode(xmlItem.find('./INIT-VALUE-REF'))
@@ -207,6 +214,10 @@ class ComponentTypeParser(ElementParser):
                             port.comspec.append(comspec)
                         elif xmlItem.tag == 'MODE-SWITCH-SENDER-COM-SPEC':
                             comspec = self._parseModeSwitchSenderComSpec(xmlItem)
+                            assert(comspec is not None)
+                            port.comspec.append(comspec)
+                        elif xmlItem.tag == 'NV-PROVIDE-COM-SPEC':
+                            comspec = self._parseNvProvideComSpec(xmlItem, portInterfaceRef)
                             assert(comspec is not None)
                             port.comspec.append(comspec)
                         else:
@@ -379,10 +390,9 @@ class ComponentTypeParser(ElementParser):
         (initValue, name) = (None, None)
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'INIT-VALUE':
-                values = self.constant_parser.parseValueV4(xmlElem, None)
-                if len(values) != 1:
-                    raise ValueError('INIT-VALUE cannot cannot contain multiple elements')
-                initValue = values[0]
+                initValue, initValueRef = self._parseAr4InitValue(xmlElem)
+                if initValueRef is not None:
+                    raise NotImplementedError('CONSTANT-REFERENCE')
             elif xmlElem.tag == 'PARAMETER-REF':
                 name = _getParameterNameFromComSpec(xmlElem, portInterfaceRef)
             else:
@@ -391,3 +401,49 @@ class ComponentTypeParser(ElementParser):
             return autosar.port.ParameterComSpec(name, initValue)
         else:
             raise RuntimeError('PARAMETER-REQUIRE-COM-SPEC must have a PARAMETER-REF')
+
+    def _parseNvProvideComSpec(self, xmlRoot, portInterfaceRef):
+        (romBlockInitValue, romBlockInitValueRef, ramBlockInitValue, ramBlockInitValueRef, name) = (None, None, None, None, None)
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == 'RAM-BLOCK-INIT-VALUE':
+                ramBlockInitValue, ramBlockInitValueRef = self._parseAr4InitValue(xmlElem)
+            elif xmlElem.tag == 'ROM-BLOCK-INIT-VALUE':
+                romBlockInitValue, romBlockInitValueRef = self._parseAr4InitValue(xmlElem)
+            elif xmlElem.tag == 'VARIABLE-REF':
+                name = _getVariableNameFromComSpec(xmlElem, portInterfaceRef)
+            else:
+                raise NotImplementedError(xmlElem.tag)
+        if (name is not None):
+            return autosar.port.NvProvideComSpec(name, ramBlockInitValue=ramBlockInitValue,
+                                                    ramBlockInitValueRef=ramBlockInitValueRef,
+                                                    romBlockInitValue=romBlockInitValue,
+                                                    romBlockInitValueRef=romBlockInitValueRef)
+        else:
+            raise RuntimeError('NV-PROVIDE-COM-SPEC must have a VARIABLE-REF')
+
+    def _parseNvRequireComSpec(self, xmlRoot, portInterfaceRef):
+        (initValue, initValueRef, name) = (None, None, None)
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == 'INIT-VALUE':
+                initValue, initValueRef = self._parseAr4InitValue(xmlElem)
+            elif xmlElem.tag == 'VARIABLE-REF':
+                name = _getVariableNameFromComSpec(xmlElem, portInterfaceRef)
+            else:
+                raise NotImplementedError(xmlElem.tag)
+        if (name is not None):
+            return autosar.port.NvRequireComSpec(name, initValue=initValue,
+                                                    initValueRef=initValueRef)
+        else:
+            raise RuntimeError('NV-PROVIDE-COM-SPEC must have a VARIABLE-REF')
+
+    def _parseAr4InitValue(self, xmlElem):
+        (initValue, initValueRef) = (None, None)
+        for xmlChild in xmlElem.findall('./*'):
+            if xmlChild.tag == 'CONSTANT-REFERENCE':
+                initValueRef = self.parseTextNode(xmlChild.find('./CONSTANT-REF'))
+            else:
+                values = self.constant_parser.parseValueV4(xmlElem, None)
+                if len(values) != 1:
+                    raise ValueError('{0} cannot cannot contain multiple elements'.format(xmlElem.tag))
+                initValue = values[0]
+        return (initValue, initValueRef)

@@ -88,6 +88,22 @@ class BaseWriter:
             return lines
         return None
 
+    def writeLongNameXML(self,elem):
+        if hasattr(elem,'longName'):
+            if hasattr(elem,'longNameAttr'):
+                longNameAttr=elem.longNameAttr
+            else:
+                longNameAttr='FOR-ALL'
+            lines = []
+            lines.append('<LONG-NAME>')
+            if elem.longName is None or len(elem.longName)==0:
+                lines.append(self.indent('<L-2 L="%s" />'%(longNameAttr),1))
+            else:
+                lines.append(self.indent('<L-2 L="%s">%s</L-2>'%(longNameAttr,xml.sax.saxutils.escape(elem.longName)),1))
+            lines.append('</LONG-NAME>')
+            return lines
+        return None
+
     def writeDescCode(self, elem):
         if hasattr(elem,'desc'):
             if hasattr(elem,'descAttr') and (elem.descAttr != "FOR-ALL"):

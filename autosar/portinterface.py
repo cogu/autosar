@@ -356,3 +356,30 @@ class InvalidationPolicy:
         if value not in InvalidationPolicy.valid_values:
             raise ValueError('invalid value: %s'%value)
         self._handleInvalid = value
+
+class NvDataInterface(PortInterface):
+    def tag(self,version=None):
+        if version>=4.0:
+            return 'NV-DATA-INTERFACE'
+        else:
+            raise ValueError("Autosar 3 is not supported")
+
+    def __init__(self, name, isService=False, serviceKind = None, parent=None, adminData=None):
+        super().__init__(name, isService, serviceKind, parent, adminData)
+        self.nvDatas=[]
+
+    def find(self,ref):
+        ref = ref.partition('/')
+        name = ref[0]
+        for elem in self.nvDatas:
+            if elem.name==name:
+                return elem
+
+    def append(self,elem):
+        """
+        adds elem to the self.nvDatas list and sets elem.parent to self (the port interface)
+        """
+        if not isinstance(elem, DataElement):
+            raise ValueError("expected elem variable to be of type DataElement")
+        self.nvDatas.append(elem)
+        elem.parent=self

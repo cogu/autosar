@@ -64,6 +64,12 @@ class ComponentType(Element):
         - enhancedMode (bool): Sets the enhancedMode (API) property
         - modeSwitchAckTimeout (None or int): Sets the modeSwitchAckTimeout property (milliseconds)
         - queueLength (None or int): Length of call queue on the mode user side.
+
+        For NvDataInterface port interfaces which contains one data element there is another way of creating ComSpecs.
+        - ramBlockInitValue (int, float, str): Used to set an init value literal.
+        - ramBlockInitValueRef (str): Used when you want an existing constant specification as your initValue.
+        - romBlockInitValue (int, float, str): Used to set an init value literal.
+        - romBlockInitValueRef (str): Used when you want an existing constant specification as your initValue.
         """
 
         comspec = kwargs.get('comspec', None)
@@ -112,6 +118,9 @@ class ComponentType(Element):
         - enhancedMode: sets the enhancedMode property  (bool)
         - supportAsync: sets the supportAsync property  (bool)
 
+        For NvDataInterface port interfaces which contains one data element there is another way of creating ComSpecs.
+        - initValue (int, float, str): Used to set an init value literal.
+        - initValueRef (str): Used when you want an existing constant specification as your initValue.
         """
         comspec = kwargs.get('comspec', None)
         if comspec is not None:
@@ -215,6 +224,48 @@ class ComponentType(Element):
             if modeGroup is not None:
                 comspec['modeGroup']=modeGroup
             comspecList.append(comspec)
+        elif isinstance(portInterface,autosar.portinterface.NvDataInterface):
+            if len(portInterface.nvDatas)==1:
+                comspec={'nvData': portInterface.nvDatas[0].name}
+                initValue = kwargs.get('initValue', None)
+                initValueRef = kwargs.get('initValueRef', None)
+                ramBlockInitValue = kwargs.get('ramBlockInitValue', None)
+                ramBlockInitValueRef = kwargs.get('ramBlockInitValueRef', None)
+                romBlockInitValue = kwargs.get('romBlockInitValue', None)
+                romBlockInitValueRef = kwargs.get('romBlockInitValueRef', None)
+                queueLength = kwargs.get('queueLength', None)
+
+                if initValue is not None:
+                    if initValueRef is not None:
+                        raise ValueError('A port cannot have both initValue and initValueRef set at the same time')
+                    comspec['initValue'] = initValue
+                if initValueRef is not None:
+                    if initValue is not None:
+                        raise ValueError('A port cannot have both initValue and initValueRef set at the same time')
+                    comspec['initValueRef'] = initValueRef
+
+                if ramBlockInitValue is not None:
+                    if ramBlockInitValueRef is not None:
+                        raise ValueError('A port cannot have both ramBlockInitValue and ramBlockInitValueRef set at the same time')
+                    comspec['ramBlockInitValue'] = ramBlockInitValue
+
+                if ramBlockInitValueRef is not None:
+                    if ramBlockInitValue is not None:
+                        raise ValueError('A port cannot have both ramBlockInitValue and ramBlockInitValueRef set at the same time')
+                    comspec['ramBlockInitValueRef'] = ramBlockInitValueRef
+
+                if romBlockInitValue is not None:
+                    if romBlockInitValueRef is not None:
+                        raise ValueError('A port cannot have both romBlockInitValue and romBlockInitValueRef set at the same time')
+                    comspec['romBlockInitValue'] = romBlockInitValue
+
+                if romBlockInitValueRef is not None:
+                    if romBlockInitValue is not None:
+                        raise ValueError('A port cannot have both romBlockInitValue and romBlockInitValueRef set at the same time')
+                    comspec['romBlockInitValueRef'] = romBlockInitValueRef
+                comspecList.append(comspec)
+            else:
+                raise RuntimeError("This feature only works when there is exactly one data element in the port interface")
         else:
             raise NotImplementedError(type(portInterface))
 
@@ -288,6 +339,24 @@ class SensorActuatorComponent(AtomicSoftwareComponent):
 
     def __init__(self, name, parent=None):
         super().__init__(name, parent)
+
+class NvBlockComponent(AtomicSoftwareComponent):
+    def tag(self,version=None):
+        return "NV-BLOCK-SW-COMPONENT-TYPE"
+
+    def __init__(self, name, parent=None):
+        super().__init__(name, parent)
+        self.nvBlockDescriptors = []
+
+    def find(self, ref):
+        parts=ref.partition('/')
+        for elem in self.nvBlockDescriptors:
+            if elem.name == parts[0]:
+                if len(parts[2]) > 0:
+                    return elem.find(parts[2])
+                else:
+                    return elem
+        return super().find(ref)
 
 class CompositionComponent(ComponentType):
     """

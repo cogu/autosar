@@ -167,6 +167,32 @@ class XMLBehaviorWriter(ElementWriter):
         lines.append('</%s>'%dataReceivePoint.tag(self.version))
         return lines
 
+    def _writeAutosarVariableRefXML(self, ws, autosarVariableRef):
+        lines = []
+        lines.append('<%s>'%autosarVariableRef.tag(self.version))
+
+        if autosarVariableRef.localVariableRef is not None:
+            variable = ws.find(autosarVariableRef.localVariableRef)
+            if variable is None:
+                raise ValueError('Invalid variable reference: '+autosarVariableRef.localVariableRef)
+            lines.append(self.indent('<LOCAL-VARIABLE-REF DEST="%s">%s</LOCAL-VARIABLE-REF>'%("VARIABLE-DATA-PROTOTYPE", variable.ref),1))
+        else:
+            assert( autosarVariableRef.autosarVariablePortRef is not None) and ( autosarVariableRef.autosarVariableElementRef is not None)
+            port = ws.find(autosarVariableRef.autosarVariablePortRef)
+            if port is None:
+                raise ValueError('Invalid port reference: '+autosarVariableRef.autosarVariablePortRef)
+
+            dataElement = ws.find(autosarVariableRef.autosarVariableElementRef)
+            if dataElement is None:
+                raise ValueError('Invalid port reference: '+autosarVariableRef.autosarVariableElementRef)
+
+            lines.append(self.indent('<AUTOSAR-VARIABLE-IREF>',1))
+            lines.append(self.indent('<PORT-PROTOTYPE-REF DEST="%s">%s</PORT-PROTOTYPE-REF>'%(port.tag(self.version),port.ref),2))
+            lines.append(self.indent('<TARGET-DATA-PROTOTYPE-REF DEST="%s">%s</TARGET-DATA-PROTOTYPE-REF>'%(dataElement.tag(self.version),dataElement.ref),2))
+            lines.append(self.indent('</AUTOSAR-VARIABLE-IREF>',1))
+
+        lines.append('</%s>'%autosarVariableRef.tag(self.version))
+        return lines
 
     def _writeDataElementInstanceRefXML(self, ws, portRef, dataElemRef):
         lines = []
@@ -572,9 +598,9 @@ class XMLBehaviorWriter(ElementWriter):
         tmp = self.writeDescXML(elem)
         if tmp is not None: lines.extend(self.indent(tmp,1))
         if elem.cfg.calcRamBlockCrc is not None:
-            lines.append(self.indent('<CALC-RAM-BLOCK-CRC>%s</CALC-RAM-BLOCK-CRC>'%(self.toBoolean(elem.cfg.calcRamBlockCrc)),1))
+            lines.append(self.indent('<CALC-RAM-BLOCK-CRC>%s</CALC-RAM-BLOCK-CRC>'%(self.toBooleanStr(elem.cfg.calcRamBlockCrc)),1))
         if elem.cfg.checkStaticBlockId is not None:
-            lines.append(self.indent('<CHECK-STATIC-BLOCK-ID>%s</CHECK-STATIC-BLOCK-ID>'%(self.toBoolean(elem.cfg.checkStaticBlockId)),1))
+            lines.append(self.indent('<CHECK-STATIC-BLOCK-ID>%s</CHECK-STATIC-BLOCK-ID>'%(self.toBooleanStr(elem.cfg.checkStaticBlockId)),1))
         if elem.cfg.cyclicWritePeriod is not None:
             lines.append(self.indent('<CYCLIC-WRITING-PERIOD>%d</CYCLIC-WRITING-PERIOD>'%(int(elem.cfg.cyclicWritePeriod)),1))
         if elem.cfg.numberOfDataSets is not None:
@@ -584,29 +610,29 @@ class XMLBehaviorWriter(ElementWriter):
         if elem.cfg.ramBlockStatusControl is not None:
             lines.append(self.indent('<RAM-BLOCK-STATUS-CONTROL>%s</RAM-BLOCK-STATUS-CONTROL>'%(str(elem.cfg.ramBlockStatusControl)),1))
         if elem.cfg.readOnly is not None:
-            lines.append(self.indent('<READONLY>%s</READONLY>'%(self.toBoolean(elem.cfg.readOnly)),1))
+            lines.append(self.indent('<READONLY>%s</READONLY>'%(self.toBooleanStr(elem.cfg.readOnly)),1))
         if elem.cfg.reliability is not None:
             lines.append(self.indent('<RELIABILITY>%s</RELIABILITY>'%(str(elem.cfg.reliability)),1))
         if elem.cfg.resistantToChangedSw is not None:
-            lines.append(self.indent('<RESISTANT-TO-CHANGED-SW>%s</RESISTANT-TO-CHANGED-SW>'%(self.toBoolean(elem.cfg.resistantToChangedSw)),1))
+            lines.append(self.indent('<RESISTANT-TO-CHANGED-SW>%s</RESISTANT-TO-CHANGED-SW>'%(self.toBooleanStr(elem.cfg.resistantToChangedSw)),1))
         if elem.cfg.restoreAtStartup is not None:
-            lines.append(self.indent('<RESTORE-AT-START>%s</RESTORE-AT-START>'%(self.toBoolean(elem.cfg.restoreAtStartup)),1))
+            lines.append(self.indent('<RESTORE-AT-START>%s</RESTORE-AT-START>'%(self.toBooleanStr(elem.cfg.restoreAtStartup)),1))
         if elem.cfg.storeAtShutdown is not None:
-            lines.append(self.indent('<STORE-AT-SHUTDOWN>%s</STORE-AT-SHUTDOWN>'%(self.toBoolean(elem.cfg.storeAtShutdown)),1))
+            lines.append(self.indent('<STORE-AT-SHUTDOWN>%s</STORE-AT-SHUTDOWN>'%(self.toBooleanStr(elem.cfg.storeAtShutdown)),1))
         if elem.cfg.storeCyclic is not None:
-            lines.append(self.indent('<STORE-CYCLIC>%s</STORE-CYCLIC>'%(self.toBoolean(elem.cfg.storeCyclic)),1))
+            lines.append(self.indent('<STORE-CYCLIC>%s</STORE-CYCLIC>'%(self.toBooleanStr(elem.cfg.storeCyclic)),1))
         if elem.cfg.storeEmergency is not None:
-            lines.append(self.indent('<STORE-EMERGENCY>%s</STORE-EMERGENCY>'%(self.toBoolean(elem.cfg.storeEmergency)),1))
+            lines.append(self.indent('<STORE-EMERGENCY>%s</STORE-EMERGENCY>'%(self.toBooleanStr(elem.cfg.storeEmergency)),1))
         if elem.cfg.storeImmediate is not None:
-            lines.append(self.indent('<STORE-IMMEDIATE>%s</STORE-IMMEDIATE>'%(self.toBoolean(elem.cfg.storeImmediate)),1))
+            lines.append(self.indent('<STORE-IMMEDIATE>%s</STORE-IMMEDIATE>'%(self.toBooleanStr(elem.cfg.storeImmediate)),1))
         if elem.cfg.autoValidationAtShutdown is not None:
-            lines.append(self.indent('<USE-AUTO-VALIDATION-AT-SHUT-DOWN>%s</USE-AUTO-VALIDATION-AT-SHUT-DOWN>'%(self.toBoolean(elem.cfg.autoValidationAtShutdown)),1))
+            lines.append(self.indent('<USE-AUTO-VALIDATION-AT-SHUT-DOWN>%s</USE-AUTO-VALIDATION-AT-SHUT-DOWN>'%(self.toBooleanStr(elem.cfg.autoValidationAtShutdown)),1))
         if elem.cfg.useCrcCompMechanism is not None:
-            lines.append(self.indent('<USE-CRC-COMP-MECHANISM>%s</USE-CRC-COMP-MECHANISM>'%(self.toBoolean(elem.cfg.useCrcCompMechanism)),1))
+            lines.append(self.indent('<USE-CRC-COMP-MECHANISM>%s</USE-CRC-COMP-MECHANISM>'%(self.toBooleanStr(elem.cfg.useCrcCompMechanism)),1))
         if elem.cfg.writeOnlyOnce is not None:
-            lines.append(self.indent('<WRITE-ONLY-ONCE>%s</WRITE-ONLY-ONCE>'%(self.toBoolean(elem.cfg.writeOnlyOnce)),1))
+            lines.append(self.indent('<WRITE-ONLY-ONCE>%s</WRITE-ONLY-ONCE>'%(self.toBooleanStr(elem.cfg.writeOnlyOnce)),1))
         if elem.cfg.writeVerification is not None:
-            lines.append(self.indent('<WRITE-VERIFICATION>%s</WRITE-VERIFICATION>'%(self.toBoolean(elem.cfg.writeVerification)),1))
+            lines.append(self.indent('<WRITE-VERIFICATION>%s</WRITE-VERIFICATION>'%(self.toBooleanStr(elem.cfg.writeVerification)),1))
         if elem.cfg.writingFrequency is not None:
             lines.append(self.indent('<WRITING-FREQUENCY>%d</WRITING-FREQUENCY>'%(int(elem.cfg.writingFrequency)),1))
         if elem.cfg.writingPriority is not None:
@@ -663,17 +689,85 @@ class XMLBehaviorWriter(ElementWriter):
             raise ValueError('invalid type reference: '+elem.typeRef)
         lines.append('<%s>'%elem.tag(self.version))
         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
+
+        tmp = self.writeDescXML(elem)
+        if tmp is not None: lines.extend(self.indent(tmp,1))
+
+        tmp = self.writeLongNameXML(elem)
+        if tmp is not None: lines.extend(self.indent(tmp,1))
+
         if elem.swAddressMethodRef is not None or elem.swCalibrationAccess is not None:
             variants = [autosar.base.SwDataDefPropsConditional(swAddressMethodRef = elem.swAddressMethodRef, swCalibrationAccess = elem.swCalibrationAccess)]
             lines.append(self.indent('<SW-DATA-DEF-PROPS>',1))
             lines.extend(self.indent(self.writeSwDataDefPropsVariantsXML(ws, variants),2))
             lines.append(self.indent('</SW-DATA-DEF-PROPS>',1))
             lines.append(self.indent('<TYPE-TREF DEST="%s">%s</TYPE-TREF>'%(datatype.tag(self.version), datatype.ref),1))
+            if elem.initValueRef is not None:
+                constant = ws.find(elem.initValueRef)
+                if constant is None:
+                    raise ValueError('Invalid constant reference: %s'%elem.initValueRef)
+                lines.append(self.indent('<INIT-VALUE>',1))
+                lines.append(self.indent('<CONSTANT-REFERENCE>',2))
+                lines.append(self.indent('<CONSTANT-REF DEST="%s">%s</CONSTANT-REF>'%(constant.tag(self.version),constant.ref),3))
+                lines.append(self.indent('</CONSTANT-REFERENCE>',2))
+                lines.append(self.indent('</INIT-VALUE>',1))
             if elem.initValue is not None:
                 lines.append(self.indent('<INIT-VALUE>',1))
                 lines.extend(self.indent(self.writeValueSpecificationXML(elem.initValue),2))
                 lines.append(self.indent('</INIT-VALUE>',1))
         lines.append('</%s>'%elem.tag(self.version))
+        return lines
+
+    def writeNvBlockDescriptorXML(self, nvBlockDescriptor):
+        assert(isinstance(nvBlockDescriptor, autosar.behavior.NvBlockDescriptor))
+        lines=[]
+        ws = nvBlockDescriptor.rootWS()
+        assert(ws is not None)
+        lines.append('<%s>'%nvBlockDescriptor.tag(self.version))
+        lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%nvBlockDescriptor.name,1))
+
+        if len(nvBlockDescriptor.dataTypeMappingRefs) > 0:
+            lines.append(self.indent('<DATA-TYPE-MAPPING-REFS>',1))
+            for ref in nvBlockDescriptor.dataTypeMappingRefs:
+                dataTypeMapping = ws.find(ref)
+                if dataTypeMapping is None:
+                    raise ValueError('Invalid DataTypeMapping reference: ' + ref)
+                lines.append(self.indent('<DATA-TYPE-MAPPING-REF DEST="%s">%s</DATA-TYPE-MAPPING-REF>'%(dataTypeMapping.tag(self.version), dataTypeMapping.ref),2))
+            lines.append(self.indent('</DATA-TYPE-MAPPING-REFS>',1))
+
+        if len(nvBlockDescriptor.nvBlockDataMappings) > 0:
+            lines.append(self.indent('<NV-BLOCK-DATA-MAPPINGS>',1))
+            for dataMapping in nvBlockDescriptor.nvBlockDataMappings:
+                lines.append(self.indent('<NV-BLOCK-DATA-MAPPING>',2))
+                if dataMapping.nvRamBlockElement is not None:
+                    lines.extend(self.indent(self._writeAutosarVariableRefXML(ws, dataMapping.nvRamBlockElement),3))
+                if dataMapping.readNvData is not None:
+                    lines.extend(self.indent(self._writeAutosarVariableRefXML(ws, dataMapping.readNvData),3))
+                if dataMapping.writtenNvData is not None:
+                    lines.extend(self.indent(self._writeAutosarVariableRefXML(ws, dataMapping.writtenNvData),3))
+                if dataMapping.writtenReadNvData is not None:
+                    lines.extend(self.indent(self._writeAutosarVariableRefXML(ws, dataMapping.writtenReadNvData),3))
+                lines.append(self.indent('</NV-BLOCK-DATA-MAPPING>',2))
+            lines.append(self.indent('</NV-BLOCK-DATA-MAPPINGS>',1))
+
+        if isinstance(nvBlockDescriptor.nvBlockNeeds, autosar.behavior.NvmBlockNeeds):
+            lines.extend(self.indent(self._writeNvmBlockNeedsXML(ws, nvBlockDescriptor.nvBlockNeeds),1))
+
+        if isinstance(nvBlockDescriptor.ramBlock, autosar.behavior.NvBlockRamBlock):
+            lines.extend(self.indent(self.writeDataElementXML(nvBlockDescriptor.ramBlock),1))
+
+        if isinstance(nvBlockDescriptor.romBlock, autosar.behavior.ParameterDataPrototype):
+            lines.extend(self.indent(self._writeParameterDataPrototype(ws, nvBlockDescriptor.romBlock),1))
+
+        lines.append(self.indent('<SUPPORT-DIRTY-FLAG>%s</SUPPORT-DIRTY-FLAG>'%(self.toBooleanStr(nvBlockDescriptor.supportDirtyFlag)),1))
+
+        if isinstance(nvBlockDescriptor.timingEventRef, str):
+            timingEvent = nvBlockDescriptor.parent.behavior.find(nvBlockDescriptor.timingEventRef)
+            if timingEvent is None:
+                raise ValueError('invalid data element reference: '+str(nvBlockDescriptor.timingEventRef))
+            lines.append(self.indent('<TIMING-EVENT-REF DEST="%s">%s</TIMING-EVENT-REF>'%(timingEvent.tag(self.version), timingEvent.ref),1))
+
+        lines.append('</%s>'%nvBlockDescriptor.tag(self.version))
         return lines
 
 class CodeBehaviorWriter(ElementWriter):
@@ -839,10 +933,10 @@ class CodeBehaviorWriter(ElementWriter):
         assert(ws is not None)
         port=ws.find(sendReceiveCallPoint.portRef)
         if port is None:
-            raise ValueError('Invalid portRef "%s" in runnable "%s"'(self.portRef,runnable.ref))
+            raise ValueError('Invalid portRef "{}" in runnable "{}"'.format(self.portRef,runnable.ref))
         portInterface = ws.find(port.portInterfaceRef)
         if portInterface is None:
-            raise ValueError('Invalid portInterfaceRef "%s" in port "%s"'(port.portInterfaceRef,port.ref))
+            raise ValueError('Invalid portInterfaceRef "{}" in port "{}"'.format(port.portInterfaceRef,port.ref))
         if isinstance(portInterface, autosar.portinterface.SenderReceiverInterface) or isinstance(portInterface, autosar.portinterface.ParameterInterface):
             if len(portInterface.dataElements)==1:
                 #there is only one data element in this interface, only the port name is required since there is ambiguity

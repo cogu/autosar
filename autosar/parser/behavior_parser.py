@@ -165,7 +165,7 @@ class BehaviorParser(ElementParser):
                             swcServiceDependency = self.parseSwcServiceDependency(xmlChildElem, internalBehavior)
                             internalBehavior.serviceDependencies.append(swcServiceDependency)
                         else:
-                            raise NotImplementedError(childElem.tag)
+                            raise NotImplementedError(xmlChildElem.tag)
                 elif xmlElem.tag == 'SHARED-PARAMETERS':
                     for xmlChildElem in xmlElem.findall('./*'):
                         if xmlChildElem.tag == 'PARAMETER-DATA-PROTOTYPE':
@@ -173,7 +173,7 @@ class BehaviorParser(ElementParser):
                             if tmp is not None:
                                 internalBehavior.parameterDataPrototype.append(tmp)
                         else:
-                            raise NotImplementedError(childElem.tag)
+                            raise NotImplementedError(xmlChildElem.tag)
                 elif xmlElem.tag == 'EXCLUSIVE-AREAS':
                     for xmlChild in xmlElem.findall('./*'):
                         if xmlChild.tag=='EXCLUSIVE-AREA':
@@ -766,7 +766,7 @@ class BehaviorParser(ElementParser):
     def parseParameterDataPrototype(self, xmlRoot, parent = None):
         """parses <PARAMETER-DATA-PROTOTYPE> (AUTOSAR 4)"""
         assert(xmlRoot.tag == 'PARAMETER-DATA-PROTOTYPE')
-        (variants, typeRef, swAddressMethodRef, swCalibrationAccess, initValue) = (None, None, None, None, None)
+        (variants, typeRef, swAddressMethodRef, swCalibrationAccess, initValue, initValueRef) = (None, None, None, None, None, None)
         self.push()
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'SW-DATA-DEF-PROPS':
@@ -775,13 +775,23 @@ class BehaviorParser(ElementParser):
                     swAddressMethodRef = variants[0].swAddressMethodRef
                     swCalibrationAccess = variants[0].swCalibrationAccess
             elif xmlElem.tag == 'INIT-VALUE':
-                initValue = self.constantParser.parseValueV4(xmlElem, None)
+                for xmlChild in xmlElem.findall('./*'):
+                    if xmlChild.tag == 'CONSTANT-REFERENCE':
+                        initValueRef = self.parseTextNode(xmlChild.find('./CONSTANT-REF'))
+                    else:
+                        values = self.constantParser.parseValueV4(xmlElem, None)
+                        if len(values) != 1:
+                            raise ValueError('{0} cannot cannot contain multiple elements'.format(xmlElem.tag))
+                        initValue = values[0]
             elif xmlElem.tag == 'TYPE-TREF':
                 typeRef = self.parseTextNode(xmlElem)
             else:
                 self.baseHandler(xmlElem)
-        obj = autosar.element.ParameterDataPrototype(self.name, typeRef, swAddressMethodRef, swCalibrationAccess, initValue, parent, self.adminData)
+        obj = autosar.behavior.ParameterDataPrototype(self.name, typeRef=typeRef,
+                    swAddressMethodRef=swAddressMethodRef, swCalibrationAccess=swCalibrationAccess,
+                    initValue=initValue, initValueRef=initValueRef, parent=parent, adminData=self.adminData)
         self.pop(obj)
+        return obj
 
     def parseServiceNeeds(self, xmlRoot, parent = None):
         """parses <SERVICE-NEEDS> (AUTOSAR 4)"""
@@ -893,3 +903,96 @@ class BehaviorParser(ElementParser):
         if portRef is not None:
             return autosar.behavior.RoleBasedPortAssignment(portRef, role)
         return None
+
+    def parseAutosarVariableRefXML(self, xmlRoot):
+        (localVariableRef, portPrototypeRef, targetDataPrototypeRef) = (None, None, None)
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == 'LOCAL-VARIABLE-REF':
+                localVariableRef = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'AUTOSAR-VARIABLE-IREF' or xmlElem.tag == 'AUTOSAR-VARIABLE-IN-IMPL-DATATYPE':
+                xmlPortPrototypeRef = xmlElem.find('./PORT-PROTOTYPE-REF')
+                xmlTargetDataPrototypeRef = xmlElem.find('./TARGET-DATA-PROTOTYPE-REF')
+                assert (xmlPortPrototypeRef is not None)
+                assert (xmlTargetDataPrototypeRef is not None)
+                portPrototypeRef = self.parseTextNode(xmlPortPrototypeRef)
+                targetDataPrototypeRef = self.parseTextNode(xmlTargetDataPrototypeRef)
+        return localVariableRef, portPrototypeRef, targetDataPrototypeRef
+
+    def parseNvBlockSWCnvBlockDescriptor(self, xmlRoot, parent):
+        """AUTOSAR 4 NV-BLOCK-DESCRIPTOR"""
+        assert(xmlRoot.tag == 'NV-BLOCK-DESCRIPTOR')
+        name = self.parseTextNode(xmlRoot.find('SHORT-NAME'))
+        ws = parent.rootWS()
+        assert(ws is not None)
+        if (name is not None):
+            handledXML = ['SHORT-NAME']
+            descriptor = autosar.behavior.NvBlockDescriptor(name, parent)
+            for xmlElem in xmlRoot.findall('./*'):
+                if xmlElem.tag in handledXML:
+                    pass
+                elif xmlElem.tag == 'DATA-TYPE-MAPPING-REFS':
+                    for xmlChild in xmlElem.findall('./*'):
+                        if xmlChild.tag == 'DATA-TYPE-MAPPING-REF':
+                            tmp = self.parseTextNode(xmlChild)
+                            assert(tmp is not None)
+                            descriptor.dataTypeMappingRefs.append(tmp)
+                elif xmlElem.tag == 'NV-BLOCK-DATA-MAPPINGS':
+                    for xmlMapping in xmlElem.findall('./NV-BLOCK-DATA-MAPPING'):
+                        dataMapping = autosar.behavior.NvBlockDataMapping(descriptor)
+                        descriptor.nvBlockDataMappings.append(dataMapping)
+                        for xmlData in xmlMapping.findall('./*'):
+                            localVariableRef, portPrototypeRef, targetDataPrototypeRef = self.parseAutosarVariableRefXML(xmlData)
+                            if xmlData.tag == 'NV-RAM-BLOCK-ELEMENT':
+                                if localVariableRef is None:
+                                    raise ValueError('Cannot find needed LOCAL-VARIABLE-REF for NV-RAM-BLOCK-ELEMENT in {0}'.format(descriptor.name))
+                                dataMapping.nvRamBlockElement = autosar.behavior.NvRamBlockElement(dataMapping, localVariableRef=localVariableRef)
+                            elif xmlData.tag == 'READ-NV-DATA':
+                                if portPrototypeRef is None and targetDataPrototypeRef is None:
+                                    raise ValueError('Cannot find needed AUTOSAR-VARIABLE-IREF or AUTOSAR-VARIABLE-IN-IMPL-DATATYPE for READ-NV-DATA in {0}'.format(descriptor.name))
+                                dataMapping.readNvData = autosar.behavior.ReadNvData(dataMapping, autosarVariablePortRef=portPrototypeRef, autosarVariableElementRef=targetDataPrototypeRef)
+                            elif xmlData.tag == 'WRITTEN-NV-DATA':
+                                if portPrototypeRef is None and targetDataPrototypeRef is None:
+                                    raise ValueError('Cannot find needed AUTOSAR-VARIABLE-IREF or AUTOSAR-VARIABLE-IN-IMPL-DATATYPE for WRITTEN-NV-DATA in {0}'.format(descriptor.name))
+                                dataMapping.writtenNvData = autosar.behavior.WrittenNvData(dataMapping, autosarVariablePortRef=portPrototypeRef, autosarVariableElementRef=targetDataPrototypeRef)
+                            elif xmlData.tag == 'WRITTEN-READ-NV-DATA':
+                                if portPrototypeRef is None and targetDataPrototypeRef is None:
+                                    raise ValueError('Cannot find needed AUTOSAR-VARIABLE-IREF or AUTOSAR-VARIABLE-IN-IMPL-DATATYPE for WRITTEN-READ-NV-DATA in {0}'.format(descriptor.name))
+                                dataMapping.writtenReadNvData = autosar.behavior.WrittenReadNvData(dataMapping, autosarVariablePortRef=portPrototypeRef, autosarVariableElementRef=targetDataPrototypeRef)
+                            else:
+                                raise NotImplementedError(xmlData.tag)
+                elif xmlElem.tag == 'NV-BLOCK-NEEDS':
+                    descriptor.nvBlockNeeds = self.parseNvmBlockNeeds(xmlElem, descriptor)
+                elif xmlElem.tag == 'RAM-BLOCK':
+                    # Change tag so it is correct for the parser.
+                    xmlElem.tag = 'VARIABLE-DATA-PROTOTYPE'
+                    dataElement = self.parseVariableDataPrototype(xmlElem, descriptor)
+                    # Cast the object to correct class.
+                    descriptor.ramBlock = autosar.behavior.NvBlockRamBlock.cast(dataElement)
+                elif xmlElem.tag == 'ROM-BLOCK':
+                    # Change tag so it is correct for the parser.
+                    xmlElem.tag = 'PARAMETER-DATA-PROTOTYPE'
+                    dataElement = self.parseParameterDataPrototype(xmlElem, descriptor)
+                    # Cast the object to correct class.
+                    descriptor.romBlock = autosar.behavior.NvBlockRomBlock.cast(dataElement)
+                elif xmlElem.tag == 'SUPPORT-DIRTY-FLAG':
+                    dirtyFlag = self.parseBooleanNode(xmlElem)
+                    if dirtyFlag is not None:
+                        descriptor.supportDirtyFlag = dirtyFlag
+                elif xmlElem.tag == 'TIMING-EVENT-REF':
+                    timingRef = self.parseTextNode(xmlElem)
+                    parts = timingRef.partition('/')
+                    while True:
+                        if parts[0] == parent.name:
+                            timingEvent = parent.find(parts[2])
+                            if timingEvent is not None:
+                                break
+                        elif len(parts[2]) == 0:
+                            break
+                        parts = parts[2].partition('/')
+
+                    if timingEvent is None:
+                        raise ValueError('Cannot find timing event {0}'.format(timingRef))
+                    descriptor.timingEventRef = timingEvent.name
+                else:
+                    raise NotImplementedError(xmlElem.tag)
+            return descriptor

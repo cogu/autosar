@@ -510,7 +510,7 @@ class NvmBlockConfig:
         if not (self.numberOfRomBlocks is None or isinstance(self.numberOfRomBlocks, int) ):
             raise ValueError('numberOfRomBlocks is incorrectly formatted (None or int expected)')
         if not (self.ramBlockStatusControl is None or isinstance(self.ramBlockStatusControl, str) ):
-            raise ValueError('numberOfRomBlocks is incorrectly formatted (None or str expected)')
+            raise ValueError('ramBlockStatusControl is incorrectly formatted (None or str expected)')
         if not (self.reliability is None or isinstance(self.reliability, str) ):
             raise ValueError('reliability is incorrectly formatted (None or str expected)')
         if not (self.writingPriority is None or isinstance(self.writingPriority, str) ):
@@ -669,7 +669,7 @@ class InternalBehaviorCommon(Element):
         ref=ref.partition('/')
         name=ref[0]
         foundElem = None
-        for elem in self.runnables + self.perInstanceMemories + self.exclusiveAreas:
+        for elem in self.runnables + self.perInstanceMemories + self.exclusiveAreas + self.events:
             if elem.name == name:
                 foundElem = elem
                 break
@@ -713,7 +713,7 @@ class InternalBehaviorCommon(Element):
                     portInterface = ws.find(port.portInterfaceRef, role='PortInterface')
                     if portInterface is None:
                         raise ValueError('invalid portinterface reference: '+str(port.portInterfaceRef))
-                    if isinstance(portInterface, autosar.portinterface.SenderReceiverInterface):
+                    if isinstance(portInterface, (autosar.portinterface.SenderReceiverInterface, autosar.portinterface.NvDataInterface)):
                         if len(portInterface.dataElements)==0:
                             continue
                         elif len(portInterface.dataElements)==1:
@@ -734,7 +734,7 @@ class InternalBehaviorCommon(Element):
                     portInterface = ws.find(port.portInterfaceRef)
                     if portInterface is None:
                         raise ValueError('invalid portinterface reference: '+str(port.portInterfaceRef))
-                    if isinstance(portInterface, autosar.portinterface.SenderReceiverInterface):
+                    if isinstance(portInterface, (autosar.portinterface.SenderReceiverInterface, autosar.portinterface.NvDataInterface)):
                         dataElem=portInterface.find(ref[2])
                         if dataElem is None:
                             raise ValueError('invalid data element reference: '+str(elem))
@@ -899,7 +899,7 @@ class InternalBehaviorCommon(Element):
             baseName = "TMT_"+runnable.name
             eventName = self._findEventName(baseName)
 
-        event = autosar.behavior.TimingEvent(eventName,runnable.ref,period)
+        event = autosar.behavior.TimingEvent(eventName,runnable.ref,period,self)
 
         if modeDependency is not None:
             self._processModeDependency(event, modeDependency, ws.version)
@@ -910,7 +910,7 @@ class InternalBehaviorCommon(Element):
         """
         alias for createTimerEvent
         """
-        self.createTimerEvent(runnableName, period, modeDependency, name)
+        return self.createTimerEvent(runnableName, period, modeDependency, name)
 
     def createOperationInvokedEvent(self, runnableName, operationRef, modeDependency=None, name=None ):
         """
@@ -986,19 +986,32 @@ class InternalBehaviorCommon(Element):
         portInterface = ws.find(port.portInterfaceRef)
         if portInterface is None:
             raise ValueError('invalid reference: '+port.portInterface)
-        if not isinstance(portInterface, autosar.portinterface.SenderReceiverInterface):
-            raise ValueError('The referenced port "%s" does not have a SenderReceiverInterface'%(port.name))
-        if dataElementName is None:
-            if len(portInterface.dataElements)==1:
-                dataElement=portInterface.dataElements[0]
-            elif len(portInterface.dataElements)>1:
-                raise ValueError("expected dataElementRef to be string of the format 'portName/dataElementName' ")
+        if isinstance(portInterface, autosar.portinterface.SenderReceiverInterface):
+            if dataElementName is None:
+                if len(portInterface.dataElements)==1:
+                    dataElement=portInterface.dataElements[0]
+                elif len(portInterface.dataElements)>1:
+                    raise ValueError("expected dataElementRef to be string of the format 'portName/dataElementName' ")
+                else:
+                    raise ValueError('portInterface "%s" has no data elements'%portInterface.name)
             else:
-                raise ValueError('portInterface "%s" has no data elements'%portInterface.name)
+                dataElement = portInterface.find(dataElementName)
+                if (dataElement is None) or not isinstance(dataElement, autosar.portinterface.Operation):
+                    raise ValueError('invalid data element name: ' + dataElementName )
+        elif isinstance(portInterface, autosar.portinterface.NvDataInterface):
+            if dataElementName is None:
+                if len(portInterface.nvDatas)==1:
+                    dataElement=portInterface.nvDatas[0]
+                elif len(portInterface.nvDatas)>1:
+                    raise ValueError("expected dataElementRef to be string of the format 'portName/dataElementName' ")
+                else:
+                    raise ValueError('portInterface "%s" has no data elements'%portInterface.name)
+            else:
+                dataElement = portInterface.find(dataElementName)
+                if (dataElement is None) or not isinstance(dataElement, autosar.portinterface.Operation):
+                    raise ValueError('invalid data element name: ' + dataElementName )
         else:
-            dataElement = portInterface.find(dataElementName)
-            if (dataElement is None) or not isinstance(dataElement, autosar.portinterface.Operation):
-                raise ValueError('invalid data element name: ' + dataElementName )
+            raise ValueError('The referenced port "%s" does not have a SenderReceiverInterface or NvDataInterface'%(port.name))
         if eventName is None:
             eventName=self._findEventName('DRT_%s_%s_%s'%(runnable.name, port.name, dataElement.name))
         event = DataReceivedEvent(eventName, runnable.ref, self)
@@ -1428,6 +1441,19 @@ class RoleBasedPortAssignment:
 
     def tag(self, version): return 'ROLE-BASED-PORT-ASSIGNMENT'
 
+class ParameterDataPrototype(Element):
+    """
+    Represents <PARAMETER-DATA-PROTOTYPE> (AUTOSAR 4)
+    """
+    def __init__(self, name, typeRef, swAddressMethodRef=None, swCalibrationAccess=None, initValue = None, initValueRef = None, parent=None, adminData=None):
+        super().__init__(name, parent, adminData)
+        self.typeRef = typeRef
+        self.swAddressMethodRef = swAddressMethodRef
+        self.swCalibrationAccess = swCalibrationAccess
+        self.initValue = initValue
+        self.initValueRef = initValueRef
+
+    def tag(self, version): return 'PARAMETER-DATA-PROTOTYPE'
 
 class ParameterInstanceRef:
     """
@@ -1515,3 +1541,281 @@ class ModeSwitchPoint(Element):
             value.parent = self
         else:
             self._modeGroupInstanceRef = None
+
+# Behavior parts of NvBlockComponent.
+
+def createNvBlockDescriptor(parent, portAccess, **kwargs):
+    """
+    Creates a new NvBlockDescriptor object.
+    * parent: NvBlockComponent to create descriptor in.
+    * portAccess: String containing port names or "port-name/element" where element is Nvdata (str)
+    * baseName: overide of the default baseName of the object (str).
+    """
+    descriptor = None
+    nvData = None
+    ws = parent.rootWS()
+    assert (ws is not None)
+    assert (isinstance(portAccess, str))
+
+    adminData = kwargs.get('adminData', None)
+    baseName = kwargs.get('baseName', None)
+    if baseName is None:
+        baseName = 'NvBlckDescr'
+
+    ref = portAccess.partition('/')
+    port = parent.find(ref[0])
+    if port is None:
+        raise ValueError('invalid port reference: '+str(portAccess))
+    portInterface = ws.find(port.portInterfaceRef)
+    if portInterface is None:
+        raise ValueError('invalid portinterface reference: '+str(port.portInterfaceRef))
+
+    if isinstance(portInterface, autosar.portinterface.NvDataInterface):
+        if len(ref[1]) == 0:
+            #this section is for portAccess where only the port name is mentioned.
+            #This method only works if the port interface has only 1 data element,
+            # i.e. no ambiguity as to what data element is meant
+            if len(portInterface.nvDatas)==1:
+                nvData=portInterface.nvDatas[0]
+                descriptor = NvBlockDescriptor('{0}_{1.name}_{2.name}'.format(baseName, port, nvData), parent, adminData)
+            else:
+                raise NotImplementedError('port interfaces with multiple data elements not supported')
+        else:
+            #this section is for portAccess where both port name and dataelement is represented as "portName/dataElementName"
+            if isinstance(portInterface, autosar.portinterface.NvDataInterface):
+                nvData=portInterface.find(ref[2])
+                if nvData is None:
+                    raise ValueError('invalid data element reference: '+str(portAccess))
+                descriptor = NvBlockDescriptor('{0}_{1.name}_{2.name}'.format(baseName, port, nvData), parent, adminData)
+    else:
+        raise autosar.base.InvalidPortInterfaceRef(type(portInterface))
+
+    if descriptor is not None:
+        dataTypeMappingRefs = kwargs.get('dataTypeMappingRefs', None)
+        nvmBlockConfig = kwargs.get('NvmBlockConfig', None)
+        timingEventRef = kwargs.get('timingEventRef', None)
+        swCalibrationAccess = kwargs.get('swCalibrationAccess', None)
+        supportDirtyFlag = kwargs.get('supportDirtyFlag', False)
+        ramBlockAdminData = kwargs.get('ramBlockAdminData', None)
+        romBlockAdminData = kwargs.get('romBlockAdminData', None)
+        romBlockDesc = kwargs.get('romBlockDesc', None)
+        romBlockLongName = kwargs.get('romBlockLongName', None)
+        romBlockInitValueRef = kwargs.get('romBlockInitValueRef', None)
+        rawRomBlockInitValue = kwargs.get('romBlockInitValue', None)
+        romBlockInitValue = None
+
+        if nvmBlockConfig is None or not isinstance(nvmBlockConfig, autosar.behavior.NvmBlockConfig):
+            raise autosar.base.InvalidDataTypeRef('NvmBlockConfig is missing or is not an autosar.behavior.NvmBlockConfig')
+
+        descriptor.nvBlockNeeds = autosar.behavior.NvmBlockNeeds('NvmBlockNeed', nvmBlockConfig, parent)
+
+        if dataTypeMappingRefs is not None:
+            if isinstance(dataTypeMappingRefs, str):
+                dataTypeMappingRefs = [dataTypeMappingRefs]
+            descriptor.nvBlockDataMappings.extend(dataTypeMappingRefs)
+
+        if not isinstance(supportDirtyFlag, bool):
+            raise ValueError('supportDirtyFlag must be of bool type: '+str(type(supportDirtyFlag)))
+
+        descriptor.supportDirtyFlag = supportDirtyFlag
+
+        if isinstance(timingEventRef, str):
+            timingEvent = parent.behavior.find(timingEventRef)
+            if timingEvent is None:
+                raise ValueError('invalid data element reference: '+str(timingEventRef))
+            descriptor.timingEventRef = timingEvent.name
+
+        #verify compatibility of romBlockInitValueRef
+        if romBlockInitValueRef is not None:
+            initValueTmp = ws.find(romBlockInitValueRef, role='Constant')
+            if initValueTmp is None:
+                raise autosar.base.InvalidInitValueRef(str(romBlockInitValueRef))
+            if isinstance(initValueTmp,autosar.constant.Constant):
+                romBlockInitValueRef=initValueTmp.ref
+            elif isinstance(initValueTmp,autosar.constant.Value):
+                romBlockInitValueRef=initValueTmp.ref
+            else:
+                raise ValueError("reference is not a Constant or Value object: '%s'"%romBlockInitValueRef)
+
+        if rawRomBlockInitValue is not None:
+            if isinstance(rawRomBlockInitValue, autosar.constant.ValueAR4):
+                romBlockInitValue = rawRomBlockInitValue
+            elif isinstance(rawRomBlockInitValue, (int, float, str)):
+                dataType = ws.find(nvData.typeRef, role='DataType')
+                if dataType is None:
+                    raise autosar.base.InvalidDataTypeRef(nvData.typeRef)
+                valueBuilder = autosar.builder.ValueBuilder()
+                romBlockInitValue = valueBuilder.buildFromDataType(dataType, rawRomBlockInitValue)
+            else:
+                raise ValueError('romBlockInitValue must be an instance of (autosar.constant.ValueAR4, int, float, str)')
+
+        dataType = ws.find(nvData.typeRef, role='DataType')
+        if dataType is None:
+            raise ValueError('invalid reference: '+nvData.typeRef)
+        descriptor.romBlock = NvBlockRomBlock('ParameterDataPt', dataType.ref,
+                        swCalibrationAccess=swCalibrationAccess,
+                        initValue=romBlockInitValue,
+                        initValueRef=romBlockInitValueRef,
+                        parent=descriptor,
+                        adminData=romBlockAdminData)
+
+        if romBlockDesc is not None:
+            descriptor.romBlock.desc = romBlockDesc
+
+        if romBlockLongName is not None:
+            descriptor.romBlock.longName = romBlockLongName
+
+        descriptor.ramBlock = NvBlockRamBlock('VariableDataPt', dataType.ref, parent = descriptor, adminData = ramBlockAdminData)
+
+        nvBlockDataMapping = NvBlockDataMapping(descriptor)
+        nvBlockDataMapping.nvRamBlockElement = NvRamBlockElement(parent=nvBlockDataMapping, localVariableRef=descriptor.ramBlock)
+
+        if isinstance(port, autosar.port.RequirePort):
+            nvBlockDataMapping.writtenNvData = WrittenNvData(parent=nvBlockDataMapping, autosarVariablePortRef=port, autosarVariableElementRef=nvData)
+
+        if isinstance(port, autosar.port.ProvidePort):
+            nvBlockDataMapping.readNvData = ReadNvData(parent=nvBlockDataMapping, autosarVariablePortRef=port, autosarVariableElementRef=nvData)
+
+        descriptor.nvBlockDataMappings.append(nvBlockDataMapping)
+        parent.nvBlockDescriptors.append(descriptor)
+    return descriptor
+
+class NvBlockRamBlock(autosar.element.DataElement):
+    """
+    <RAM-BLOCK>
+    """
+    def __init__(self, name, typeRef, isQueued=False, swAddressMethodRef=None, swCalibrationAccess=None, swImplPolicy = None, category = None, parent=None, adminData=None):
+        super().__init__(name, typeRef, isQueued, swAddressMethodRef, swCalibrationAccess, swImplPolicy, category, parent, adminData)
+
+    @classmethod
+    def cast(cls, ramBlock: autosar.element.DataElement):
+        """Cast an autosar.element.DataElement into a NvBlockRamBlock."""
+        assert isinstance(ramBlock, autosar.element.DataElement)
+        ramBlock.__class__ = cls
+        assert isinstance(ramBlock, NvBlockRamBlock)
+        return ramBlock
+
+    def tag(self, version):
+        return 'RAM-BLOCK'
+
+class NvBlockRomBlock(ParameterDataPrototype):
+    """
+    Represents <ROM-BLOCK>
+    """
+
+    def __init__(self, name, typeRef, swAddressMethodRef=None, swCalibrationAccess=None, initValue = None, initValueRef = None, parent=None, adminData=None):
+        super().__init__(name=name, parent=parent, typeRef=typeRef, swAddressMethodRef=swAddressMethodRef, swCalibrationAccess=swCalibrationAccess, initValue=initValue, initValueRef=initValueRef, adminData=adminData)
+
+    @classmethod
+    def cast(cls, romBlock: ParameterDataPrototype):
+        """Cast an ParameterDataPrototype into a NvBlockRomBlock."""
+        assert isinstance(romBlock, ParameterDataPrototype)
+        romBlock.__class__ = cls
+        assert isinstance(romBlock, NvBlockRomBlock)
+        return romBlock
+
+    def tag(self, version): return 'ROM-BLOCK'
+
+
+class NvBlockDescriptor(Element):
+    """
+    <NV-BLOCK-DESCRIPTOR>
+    """
+    def __init__(self, name, parent=None, adminData = None):
+        super().__init__(name, parent, adminData)
+        self.dataTypeMappingRefs = []
+        self.nvBlockDataMappings = []
+        self.nvBlockNeeds = None
+        self.ramBlock = None
+        self.romBlock = None
+        self.supportDirtyFlag = False
+        self.timingEventRef = None
+
+    def find(self, ref):
+        parts=ref.partition('/')
+        for elem in self.ramBlock, self.romBlock:
+            if elem.name == parts[0]:
+                return elem
+        return None
+
+    def tag(self, version):
+        return 'NV-BLOCK-DESCRIPTOR'
+
+class NvBlockDataMapping(object):
+    """
+    <NV-BLOCK-DATA-MAPPING>
+    """
+    def __init__(self, parent=None):
+        self.parent = parent
+        self.nvRamBlockElement = None
+        self.readNvData = None
+        self.writtenNvData = None
+        self.writtenReadNvData = None
+
+    def tag(self, version):
+        return 'NV-BLOCK-DATA-MAPPING'
+
+class AutosarVariableRef(object):
+    """
+    Base class for type AUTOSAR-VARIABLE-REF
+    * localVariableRef: This reference is used if the variable is local to the current component.
+    * autosarVariablePortRef: Port part of the autosarVariableRef. 
+    * autosarVariableElementRef: Element part of the autosarVariableRef.
+    """
+    def tag(self,version):
+        return "AUTOSAR-VARIABLE-REF"
+
+    def __init__(self, parent=None, localVariableRef=None, autosarVariablePortRef=None, autosarVariableElementRef=None):
+        self.parent = parent
+
+        if isinstance(localVariableRef,str):
+            self.localVariableRef=localVariableRef
+        elif hasattr(localVariableRef,'ref'):
+            assert(isinstance(localVariableRef.ref,str))
+            self.localVariableRef=localVariableRef.ref
+        else:
+            self.localVariableRef=None
+
+        if isinstance(autosarVariablePortRef,str):
+            self.autosarVariablePortRef=autosarVariablePortRef
+        elif hasattr(autosarVariablePortRef,'ref'):
+            assert(isinstance(autosarVariablePortRef.ref,str))
+            self.autosarVariablePortRef=autosarVariablePortRef.ref
+        else:
+            self.autosarVariablePortRef=None
+
+        if isinstance(autosarVariableElementRef,str):
+            self.autosarVariableElementRef=autosarVariableElementRef
+        elif hasattr(autosarVariableElementRef,'ref'):
+            assert(isinstance(autosarVariableElementRef.ref,str))
+            self.autosarVariableElementRef=autosarVariableElementRef.ref
+        else:
+            self.autosarVariableElementRef=None
+
+class NvRamBlockElement(AutosarVariableRef):
+    def __init__(self, parent=None, localVariableRef=None):
+        super().__init__(parent=parent, localVariableRef=localVariableRef)
+
+    def tag(self,version):
+        return "NV-RAM-BLOCK-ELEMENT"
+
+class ReadNvData(AutosarVariableRef):
+    def __init__(self, parent=None, autosarVariablePortRef=None, autosarVariableElementRef=None):
+        super().__init__(parent=parent, autosarVariablePortRef=autosarVariablePortRef, autosarVariableElementRef=autosarVariableElementRef)
+
+    def tag(self,version):
+        return "READ-NV-DATA"
+
+class WrittenNvData(AutosarVariableRef):
+    def __init__(self, parent=None, autosarVariablePortRef=None, autosarVariableElementRef=None):
+        super().__init__(parent=parent, autosarVariablePortRef=autosarVariablePortRef, autosarVariableElementRef=autosarVariableElementRef)
+
+    def tag(self,version):
+        return "WRITTEN-NV-DATA"
+
+class WrittenReadNvData(AutosarVariableRef):
+    def __init__(self, parent=None, autosarVariablePortRef=None, autosarVariableElementRef=None):
+        super().__init__(parent=parent, autosarVariablePortRef=autosarVariablePortRef, autosarVariableElementRef=autosarVariableElementRef)
+
+    def tag(self,version):
+        return "WRITTEN-READ-NV-DATA"
