@@ -93,6 +93,7 @@ class Port(Element):
                     dataType = ws.find(dataElement.typeRef, role='DataType')
                     if dataType is None:
                         raise autosar.base.InvalidDataTypeRef(dataElement.typeRef)
+                    valueBuilder = autosar.builder.ValueBuilder()
                     initValue = valueBuilder.buildFromDataType(dataType, rawInitValue)
                 else:
                     raise ValueError('initValue must be an instance of (autosar.constant.Value, int, float, str)')
@@ -116,6 +117,108 @@ class Port(Element):
             name=portInterface.elements[0].name
             initValue=comspec.get('initValue', None)
             return ParameterComSpec(name, initValue)
+        elif isinstance(portInterface, autosar.portinterface.NvDataInterface):
+            nvDataName = None
+            if 'nvData' in comspec: nvDataName=str(comspec['nvData'])
+            if (nvDataName is None) and (len(portInterface.nvDatas)==1):
+                nvDataName=portInterface.nvDatas[0].name
+            #verify nvDataName
+            nvData=portInterface.find(nvDataName)
+            if nvData is None:
+                raise ValueError("Unknown element '%s' of portInterface '%s'"%(nvDataName, portInterface.name))
+
+            if isinstance(self, RequirePort):
+                rawInitValue = None
+                initValue = None
+                initValueRef = None #initValue and initValueRef are mutually exclusive, you cannot have both defined at the same time
+
+                if 'initValue' in comspec: rawInitValue=comspec['initValue']
+                if 'initValueRef' in comspec: initValueRef=str(comspec['initValueRef'])
+                #verify compatibility of initValueRef
+                if initValueRef is not None:
+                    initValueTmp = ws.find(initValueRef, role='Constant')
+                    if initValueTmp is None:
+                        raise autosar.base.InvalidInitValueRef(str(initValueRef))
+                    if isinstance(initValueTmp,autosar.constant.Constant):
+                        initValueRef=initValueTmp.ref
+                    elif isinstance(initValueTmp,autosar.constant.Value):
+                        initValueRef=initValueTmp.ref
+                    else:
+                        raise ValueError("reference is not a Constant or Value object: '%s'"%initValueRef)
+
+                if rawInitValue is not None:
+                    if isinstance(rawInitValue, autosar.constant.ValueAR4):
+                        initValue = rawInitValue
+                    elif isinstance(rawInitValue, (int, float, str)):
+                        dataType = ws.find(nvData.typeRef, role='DataType')
+                        if dataType is None:
+                            raise autosar.base.InvalidDataTypeRef(nvData.typeRef)
+                        valueBuilder = autosar.builder.ValueBuilder()
+                        initValue = valueBuilder.buildFromDataType(dataType, rawInitValue)
+                    else:
+                        raise ValueError('initValue must be an instance of (autosar.constant.ValueAR4, int, float, str)')
+                return NvRequireComSpec(nvData.name, initValue, initValueRef)
+            else:
+                # Provide com spec.
+                rawRamBlockInitValue = None
+                ramBlockInitValue = None
+                ramBlockInitValueRef = None #ramBlockInitValue and ramBlockInitValueRef are mutually exclusive, you cannot have both defined at the same time
+                rawRomBlockInitValue = None
+                romBlockInitValue = None
+                romBlockInitValueRef = None #romBlockInitValue and romBlockInitValueRef are mutually exclusive, you cannot have both defined at the same time
+                if 'ramBlockInitValue' in comspec: rawRamBlockInitValue=comspec['ramBlockInitValue']
+                if 'ramBlockInitValueRef' in comspec: ramBlockInitValueRef=str(comspec['ramBlockInitValueRef'])
+                if 'romBlockInitValue' in comspec: rawRomBlockInitValue=comspec['romBlockInitValue']
+                if 'romBlockInitValueRef' in comspec: romBlockInitValueRef=str(comspec['romBlockInitValueRef'])
+
+                #verify compatibility of ramBlockInitValueRef
+                if ramBlockInitValueRef is not None:
+                    initValueTmp = ws.find(ramBlockInitValueRef, role='Constant')
+                    if initValueTmp is None:
+                        raise autosar.base.InvalidInitValueRef(str(ramBlockInitValueRef))
+                    if isinstance(initValueTmp,autosar.constant.Constant):
+                        ramBlockInitValueRef=initValueTmp.ref
+                    elif isinstance(initValueTmp,autosar.constant.Value):
+                        ramBlockInitValueRef=initValueTmp.ref
+                    else:
+                        raise ValueError("reference is not a Constant or Value object: '%s'"%ramBlockInitValueRef)
+
+                #verify compatibility of romBlockInitValueRef
+                if romBlockInitValueRef is not None:
+                    initValueTmp = ws.find(romBlockInitValueRef, role='Constant')
+                    if initValueTmp is None:
+                        raise autosar.base.InvalidInitValueRef(str(romBlockInitValueRef))
+                    if isinstance(initValueTmp,autosar.constant.Constant):
+                        romBlockInitValueRef=initValueTmp.ref
+                    elif isinstance(initValueTmp,autosar.constant.Value):
+                        romBlockInitValueRef=initValueTmp.ref
+                    else:
+                        raise ValueError("reference is not a Constant or Value object: '%s'"%romBlockInitValueRef)
+
+                if rawRamBlockInitValue is not None:
+                    if isinstance(rawRamBlockInitValue, autosar.constant.ValueAR4):
+                        ramBlockInitValue = rawRamBlockInitValue
+                    elif isinstance(rawRamBlockInitValue, (int, float, str)):
+                        dataType = ws.find(nvData.typeRef, role='DataType')
+                        if dataType is None:
+                            raise autosar.base.InvalidDataTypeRef(nvData.typeRef)
+                        valueBuilder = autosar.builder.ValueBuilder()
+                        ramBlockInitValue = valueBuilder.buildFromDataType(dataType, rawRamBlockInitValue)
+                    else:
+                        raise ValueError('ramBlockInitValue must be an instance of (autosar.constant.ValueAR4, int, float, str)')
+
+                if rawRomBlockInitValue is not None:
+                    if isinstance(rawRomBlockInitValue, autosar.constant.ValueAR4):
+                        romBlockInitValue = rawRomBlockInitValue
+                    elif isinstance(rawRomBlockInitValue, (int, float, str)):
+                        dataType = ws.find(nvData.typeRef, role='DataType')
+                        if dataType is None:
+                            raise autosar.base.InvalidDataTypeRef(nvData.typeRef)
+                        valueBuilder = autosar.builder.ValueBuilder()
+                        romBlockInitValue = valueBuilder.buildFromDataType(dataType, rawRomBlockInitValue)
+                    else:
+                        raise ValueError('romBlockInitValue must be an instance of (autosar.constant.ValueAR4, int, float, str)')
+                return NvProvideComSpec(nvData.name, ramBlockInitValue, ramBlockInitValueRef, romBlockInitValue, romBlockInitValueRef)
         else:
             raise NotImplementedError(type(portInterface))
         return None
@@ -273,3 +376,45 @@ class ParameterComSpec:
     def __init__(self, name, initValue=None):
         self.name = name
         self.initValue = initValue
+
+class NvProvideComSpec:
+    """
+    Implementation of <NV-PROVIDE-COM-SPEC>
+
+    Attributes:
+    name: Name of the NvData in the associated portInterface (str). This has higher precedence than modeGroupRef.
+    ramBlockInitValue: Ram block init value.
+    ramBlockInitValueRef: Ram block init value reference.
+    romBlockInitValue: Rom block init value.
+    romBlockInitValueRef: Rom block init value reference.
+    variableRef: Full NvData reference (None or str). This has lower precendence to name (only used when name is None)
+    """
+    def __init__(self, name=None, ramBlockInitValue=None, ramBlockInitValueRef=None, romBlockInitValue=None, romBlockInitValueRef=None, variableRef=None):
+        self.name = name
+        self.ramBlockInitValue = ramBlockInitValue
+        self.ramBlockInitValueRef = str(ramBlockInitValueRef) if ramBlockInitValueRef is not None else None
+        self.romBlockInitValue = romBlockInitValue
+        self.romBlockInitValueRef = str(romBlockInitValueRef) if romBlockInitValueRef is not None else None
+        self.variableRef = str(variableRef) if variableRef is not None else None
+
+    def tag(self, version, parentPort):
+            return "NV-PROVIDE-COM-SPEC"
+
+class NvRequireComSpec:
+    """
+    Implementation of <NV-REQUIRE-COM-SPEC>
+
+    Attributes:
+    name: Name of the NvData in the associated portInterface (str). This has higher precedence than modeGroupRef.
+    initValue: Init value.
+    initValueRef: Ram block init value reference.
+    variableRef: Full NvData reference (None or str). This has lower precendence to name (only used when name is None)
+    """
+    def __init__(self, name=None, initValue=None, initValueRef=None, variableRef=None):
+        self.name = name
+        self.initValue = initValue
+        self.initValueRef = str(initValueRef) if initValueRef is not None else None
+        self.variableRef = str(variableRef) if variableRef is not None else None
+
+    def tag(self, version, parentPort):
+            return "NV-REQUIRE-COM-SPEC"

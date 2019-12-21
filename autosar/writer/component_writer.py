@@ -26,7 +26,8 @@ class XMLComponentTypeWriter(ElementWriter):
                               'ServiceComponent': self.writeServiceComponentXML,
                               'SwcImplementation': self.writeSwcImplementationXML,
                               'CompositionComponent': self.writeCompositionComponentXML,
-                              'ParameterComponent': self.writeParameterComponentXML
+                              'ParameterComponent': self.writeParameterComponentXML,
+                              'NvBlockComponent': self.writeNvBlockComponentXML
             }
         else:
             switch.keys = {}
@@ -67,6 +68,9 @@ class XMLComponentTypeWriter(ElementWriter):
         assert(isinstance(swc,autosar.component.ParameterComponent))
         return self._writeComponentXML(swc)
 
+    def writeNvBlockComponentXML(self, swc):
+        assert(isinstance(swc,autosar.component.NvBlockComponent))
+        return self._writeComponentXML(swc)
 
     def _writeComponentXML(self, swc):
         lines=[]
@@ -96,6 +100,12 @@ class XMLComponentTypeWriter(ElementWriter):
                 if len(swc.delegationConnectors)>0:
                     lines.extend(self.indent(self._writeDelegationConnectorsXML(ws, swc.delegationConnectors),2))
                 lines.append(self.indent('</CONNECTORS>',1))
+        if isinstance(swc, autosar.component.NvBlockComponent):
+            if (len(swc.nvBlockDescriptors) > 0):
+                lines.append(self.indent('<NV-BLOCK-DESCRIPTORS>',1))
+                for desc in swc.nvBlockDescriptors:
+                    lines.extend(self.indent(self.behavior_writer.writeNvBlockDescriptorXML(desc),2))
+                lines.append(self.indent('</NV-BLOCK-DESCRIPTORS>',1))
         lines.append('</%s>'%swc.tag(self.version))
         return lines
 
@@ -143,6 +153,8 @@ class XMLComponentTypeWriter(ElementWriter):
                         if operation is None:
                             raise ValueError("%s: Invalid comspec name '%s'"%(port.ref,comspec.name))
                         lines.extend(self.indent(self._writeOperationComSpec(operation),2))
+                    elif isinstance(portInterface, autosar.portinterface.NvDataInterface):
+                        lines.extend(self.indent(self._writeNvDataRequireComSpecXML(port, ws, portInterface, comspec),2))
                     else:
                         raise NotImplementedError(str(type(portInterface)))
                 else:
@@ -243,6 +255,25 @@ class XMLComponentTypeWriter(ElementWriter):
         lines.append('</PARAMETER-REQUIRE-COM-SPEC>')
         return lines
 
+    def _writeNvDataRequireComSpecXML(self, port, ws, portInterface, comspec):
+        lines = []
+        if self.version<4.0:
+            raise NotImplementedError('_writeNvDataRequireComSpecXML')
+        else:
+            nvData = portInterface.find(comspec.name)
+            if nvData is None:
+                raise ValueError('%s: invalid nvData reference name: %s'%(port.ref, comspec.name))
+            lines.append('<NV-REQUIRE-COM-SPEC>')
+            if comspec.initValueRef is not None:
+                lines.extend(self.indent(self._writeInitValueRefXML(ws, comspec.initValueRef),1))
+            if comspec.initValue is not None:
+                lines.append(self.indent('<INIT-VALUE>',1))
+                lines.extend(self.indent(self.writeValueSpecificationXML(comspec.initValue),2))
+                lines.append(self.indent('</INIT-VALUE>',1))
+            lines.append(self.indent('<VARIABLE-REF DEST="%s">%s</VARIABLE-REF>'%(nvData.tag(self.version), nvData.ref),1))
+            lines.append('</NV-REQUIRE-COM-SPEC>')
+        return lines
+
     def _writeProvidePortXML(self, port):
         lines=[]
         assert(port.ref is not None)
@@ -289,6 +320,11 @@ class XMLComponentTypeWriter(ElementWriter):
                         if modeGroup is None:
                             raise autosar.base.InvalidModeGroupRef(comspec.modeGroupRef)
                     lines.extend(self.indent(self._writeModeSwitchSenderComSpecXML(ws, comspec, modeGroup),2))
+                elif isinstance(comspec, autosar.port.NvProvideComSpec):
+                    nvProvideComSpec=portInterface.find(comspec.name)
+                    if nvProvideComSpec is None:
+                        raise ValueError("%s: Invalid parameter name '%s'"%(port.ref, comspec.name))
+                    lines.extend(self.indent(self._writeNvDataProvideComSpecXML(port, ws, portInterface, comspec),2))
                 else:
                     raise NotImplementedError(str(type(comspec)))
             lines.append(self.indent('</PROVIDED-COM-SPECS>',1))
@@ -352,6 +388,45 @@ class XMLComponentTypeWriter(ElementWriter):
                 lines.append(self.indent('</INIT-VALUE>',1))
             lines.append(self.indent('<PARAMETER-REF DEST="%s">%s</PARAMETER-REF>'%(param.tag(self.version),elem.ref),1))
             lines.append('</PARAMETER-PROVIDE-COM-SPEC>')
+        return lines
+
+    def _writeNvDataProvideComSpecXML(self, port, ws, portInterface, comspec):
+        lines = []
+        if self.version<4.0:
+            raise NotImplementedError('_writeNvDataProvideComSpecXML')
+        else:
+            nvData = portInterface.find(comspec.name)
+            if nvData is None:
+                raise ValueError('%s: invalid nvData reference name: %s'%(port.ref, comspec.name))
+            lines.append('<NV-PROVIDE-COM-SPEC>')
+            if comspec.ramBlockInitValueRef is not None:
+                constant = ws.find(comspec.ramBlockInitValueRef)
+                if constant is None:
+                    raise ValueError('Invalid constant reference: %s'%comspec.ramBlockInitValueRef)
+                lines.append(self.indent('<RAM-BLOCK-INIT-VALUE>',1))
+                lines.append(self.indent('<CONSTANT-REFERENCE>',2))
+                lines.append(self.indent('<CONSTANT-REF DEST="%s">%s</CONSTANT-REF>'%(constant.tag(self.version),constant.ref),3))
+                lines.append(self.indent('</CONSTANT-REFERENCE>',2))
+                lines.append(self.indent('</RAM-BLOCK-INIT-VALUE>',1))
+            if comspec.ramBlockInitValue is not None:
+                lines.append(self.indent('<RAM-BLOCK-INIT-VALUE>',1))
+                lines.extend(self.indent(self.writeValueSpecificationXML(comspec.ramBlockInitValue),2))
+                lines.append(self.indent('</RAM-BLOCK-INIT-VALUE>',1))
+            if comspec.romBlockInitValueRef is not None:
+                constant = ws.find(comspec.romBlockInitValueRef)
+                if constant is None:
+                    raise ValueError('Invalid constant reference: %s'%comspec.romBlockInitValueRef)
+                lines.append(self.indent('<ROM-BLOCK-INIT-VALUE>',1))
+                lines.append(self.indent('<CONSTANT-REFERENCE>',2))
+                lines.append(self.indent('<CONSTANT-REF DEST="%s">%s</CONSTANT-REF>'%(constant.tag(self.version),constant.ref),3))
+                lines.append(self.indent('</CONSTANT-REFERENCE>',2))
+                lines.append(self.indent('</ROM-BLOCK-INIT-VALUE>',1))
+            if comspec.romBlockInitValue is not None:
+                lines.append(self.indent('<ROM-BLOCK-INIT-VALUE>',1))
+                lines.extend(self.indent(self.writeValueSpecificationXML(comspec.romBlockInitValue),2))
+                lines.append(self.indent('</ROM-BLOCK-INIT-VALUE>',1))
+            lines.append(self.indent('<VARIABLE-REF DEST="%s">%s</VARIABLE-REF>'%(nvData.tag(self.version), nvData.ref),1))
+            lines.append('</NV-PROVIDE-COM-SPEC>')
         return lines
 
     def _writeModeSwitchSenderComSpecXML(self, ws, comspec, modeGroup):

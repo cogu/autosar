@@ -19,6 +19,8 @@ class CommonTagsResult:
         self.adminData = None
         self.desc = None
         self.descAttr = None
+        self.longName = None
+        self.longNameAttr = None
         self.name = None
         self.category = None
 
@@ -34,6 +36,7 @@ class BaseParser:
     def pop(self, obj = None):
         if obj is not None:
             self.applyDesc(obj)
+            self.applyLongName(obj)
         self.common.pop()
 
     
@@ -57,6 +60,8 @@ class BaseParser:
             self.common[-1].category = self.parseTextNode(xmlElem)
         elif xmlElem.tag == 'DESC':
             self.common[-1].desc, self.common[-1].desc_attr = self.parseDescDirect(xmlElem)
+        elif xmlElem.tag == 'LONG-NAME':
+            self.common[-1].longName, self.common[-1].longName_attr = self.parseLongNameDirect(xmlElem)
         else:
             raise NotImplementedError(xmlElem.tag)
     
@@ -64,6 +69,11 @@ class BaseParser:
         if self.common[-1].desc is not None:            
             obj.desc=self.common[-1].desc
             obj.descAttr=self.common[-1].desc_attr
+
+    def applyLongName(self, obj):
+        if self.common[-1].longName is not None:            
+            obj.longName=self.common[-1].longName
+            obj.longNameAttr=self.common[-1].longName_attr
     
     @property
     def name(self):
@@ -80,6 +90,25 @@ class BaseParser:
     @property
     def desc(self):
         return self.common[-1].desc, self.common[-1].descAttr
+
+    def parseLongName(self, xmlRoot, elem):
+        xmlDesc = xmlRoot.find('LONG-NAME')
+        if xmlDesc is not None:
+            L2Xml = xmlDesc.find('L-2')
+            if L2Xml is not None:
+                L2Text=self.parseTextNode(L2Xml)
+                L2Attr=L2Xml.attrib['L']
+                elem.desc=L2Text
+                elem.descAttr=L2Attr
+
+    def parseLongNameDirect(self, xmlLongName):
+        assert(xmlLongName.tag == 'LONG-NAME')
+        L2Xml = xmlLongName.find('L-2')
+        if L2Xml is not None:
+            L2Text=self.parseTextNode(L2Xml)
+            L2Attr=L2Xml.attrib['L']
+            return (L2Text, L2Attr)
+        return (None, None)
 
     def parseDesc(self, xmlRoot, elem):
         xmlDesc = xmlRoot.find('DESC')
@@ -216,8 +245,6 @@ class BaseParser:
                 typeRef = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'SW-DATA-DEF-PROPS':
                 props_variants = self.parseSwDataDefProps(xmlElem)
-            elif xmlElem.tag == 'ADMIN-DATA':
-                adminData = self.parseAdminDataNode(xmlElem)
             else:
                 self.defaultHandler(xmlElem)
         if (self.name is not None) and (typeRef is not None):

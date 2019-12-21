@@ -20,6 +20,7 @@ class XMLPortInterfaceWriter(ElementWriter):
                               'SenderReceiverInterface': self.writeSenderReceiverInterfaceXML,
                               'ParameterInterface': self.writeParameterInterfaceXML,
                               'SoftwareAddressMethod': self.writeSoftwareAddressMethodXML,
+                              'NvDataInterface': self.writeNvDataInterfaceXML,
             }
         else:
             switch.keys = {}
@@ -293,6 +294,26 @@ class XMLPortInterfaceWriter(ElementWriter):
         lines.append('</%s>'%invalidationPolicy.tag(self.version))
         return lines
 
+    def writeNvDataInterfaceXML(self, portInterface):
+        assert(isinstance(portInterface,autosar.portinterface.NvDataInterface))
+        ws = portInterface.rootWS()
+        lines=[]
+        lines.append('<NV-DATA-INTERFACE>')
+        lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%portInterface.name,1))
+        if portInterface.adminData is not None:
+            lines.extend(self.indent(self.writeAdminDataXML(portInterface.adminData),1))
+        lines.append(self.indent('<IS-SERVICE>%s</IS-SERVICE>'%self.toBooleanStr(portInterface.isService),1))
+        if (self.version >= 4.0) and (portInterface.serviceKind is not None):
+            lines.append(self.indent('<SERVICE-KIND>%s</SERVICE-KIND>'%portInterface.serviceKind,1))
+        if len(portInterface.nvDatas)>0:
+            lines.append(self.indent('<NV-DATAS>',1))
+            for elem in portInterface.nvDatas:
+                lines.extend(self.indent(self.writeDataElementXML(elem),2))
+            lines.append(self.indent('</NV-DATAS>',1))
+        else:
+            lines.append(self.indent('<NV-DATAS/>',1))
+        lines.append('</NV-DATA-INTERFACE>')
+        return lines
 
 class CodePortInterfaceWriter(ElementWriter):
     def __init__(self,version, patch):

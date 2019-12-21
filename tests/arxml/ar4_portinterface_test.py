@@ -169,6 +169,42 @@ class ARXML4PortInterfaceTest(ARXMLTestClass):
         self.assertEqual(param.name, 'v')
         self.assertEqual(param.typeRef, '/DataTypes/boolean')
 
+    def test_create_nv_data_interface_single_element(self):
+        ws = autosar.workspace(version="4.2.2")
+        _init_ws(ws)
+        package = ws.find('/PortInterfaces')
+        pif1 =  package.createNvDataInterface('HeaterPwrStat_NvI', autosar.element.DataElement('HeaterPwrStat', 'OffOn_T'))
+        self.assertEqual(pif1.nvDatas[0].typeRef, '/DataTypes/OffOn_T')
+        file_name = 'ar4_nv_data_interface_single_element.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'portinterface', file_name)
+        self.save_and_check(ws, expected_file, generated_file)
+        ws2 = autosar.workspace(version="4.2.2")
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        pif2 = portInterface = ws2.find(pif1.ref)
+        self.assertIsInstance(pif2, autosar.portinterface.NvDataInterface)
+        self.assertEqual(len(pif2.nvDatas), 1)
+
+    def test_create_nv_data_interface_multiple_elements(self):
+        ws = autosar.workspace(version="4.2.2")
+        _init_ws(ws)
+        package = ws.find('/PortInterfaces')
+        pif1 = package.createNvDataInterface('SystemTime_I', [
+            autosar.element.DataElement('Seconds', '/DataTypes/Seconds_T'),
+            autosar.element.DataElement('Minutes', '/DataTypes/Minutes_T'),
+            autosar.element.DataElement('Hours', '/DataTypes/Hours_T')
+            ],
+            True,
+            "NON-VOLATILE-RAM-MANAGER")
+        file_name = 'ar4_nv_data_interface_multiple_elements_explicit.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'portinterface', file_name)
+        self.save_and_check(ws, expected_file, generated_file)
+        ws2 = autosar.workspace(version="4.2.2")
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        pif2 = portInterface = ws2.find(pif1.ref)
+        self.assertIsInstance(pif2, autosar.portinterface.NvDataInterface)
+        self.assertEqual(len(pif2.nvDatas), 3)
 
 if __name__ == '__main__':
     unittest.main()
