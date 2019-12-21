@@ -214,6 +214,35 @@ class Package(object):
         self.append(portInterface)
         return portInterface
 
+    def createNvDataInterface(self, name, nvDatas=None, isService=False, serviceKind = None, adminData=None):
+        """
+        creates a new nv-data port interface. nvDatas can either be a single instance of DataElement or a list of DataElements.
+        isService must be boolean
+        """
+
+        ws = self.rootWS()
+        assert(ws is not None)
+
+        portInterface = autosar.portinterface.NvDataInterface(str(name), isService=isService, serviceKind=serviceKind, adminData=adminData)
+        if nvDatas is not None:
+            if isinstance(nvDatas,collections.abc.Iterable):
+                for elem in nvDatas:
+                    dataType=ws.find(elem.typeRef, role='DataType')
+                    if dataType is None:
+                        raise ValueError('invalid type reference: '+elem.typeRef)
+                    elem.typeRef=dataType.ref #normalize reference to data element
+                    portInterface.append(elem)
+            elif isinstance(nvDatas,autosar.portinterface.DataElement):
+                dataType=ws.find(nvDatas.typeRef, role='DataType')
+                if dataType is None:
+                    raise ValueError('invalid type reference: '+nvDatas.typeRef)
+                nvDatas.typeRef=dataType.ref #normalize reference to data element
+                portInterface.append(nvDatas)
+            else:
+                raise ValueError("dataElements: expected autosar.portinterface.DataElement instance or list")
+        self.append(portInterface)
+        return portInterface
+
     def createSubPackage(self, name, role=None):
         pkg = Package(name)
         self.append(pkg)

@@ -19,7 +19,8 @@ class PortInterfacePackageParser(ElementParser):
                'SENDER-RECEIVER-INTERFACE': self.parseSenderReceiverInterface,
                'PARAMETER-INTERFACE': self.parseParameterInterface,
                'CLIENT-SERVER-INTERFACE': self.parseClientServerInterface,
-               'MODE-SWITCH-INTERFACE': self.parseModeSwitchInterface
+               'MODE-SWITCH-INTERFACE': self.parseModeSwitchInterface,
+               'NV-DATA-INTERFACE': self.parseNvDataInterface
             }
 
     def getSupportedTags(self):
@@ -365,6 +366,31 @@ class PortInterfacePackageParser(ElementParser):
                 parameter.swCalibrationAccess = props_variants[0].swCalibrationAccess
                 parameter.swAddressMethodRef = props_variants[0].swAddressMethodRef
             return parameter
+
+    def parseNvDataInterface(self, xmlRoot, parent=None):
+        assert (xmlRoot.tag == 'NV-DATA-INTERFACE')
+        (isService, serviceKind, nvDatas) = (False, None, None)
+        self.push()
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == 'IS-SERVICE':
+                isService = self.parseBooleanNode(xmlElem)
+            elif xmlElem.tag == 'SERVICE-KIND' and self.version >= 4.0:
+                serviceKind = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'NV-DATAS':
+                nvDatas = self._parseDataElements(xmlElem)
+            else:
+                self.defaultHandler(xmlElem)
+        if self.name is not None:
+            nvDataInterface = autosar.portinterface.NvDataInterface(self.name, isService, serviceKind, parent = parent, adminData = self.adminData)
+            if nvDatas is not None:
+                for nvData in nvDatas:
+                    nvData.parent = nvDataInterface
+                    nvDataInterface.nvDatas.append(nvData)
+            self.pop(nvDataInterface)
+            return nvDataInterface
+        else:
+            self.pop()
+            return None
 
 
 class SoftwareAddressMethodParser(ElementParser):
