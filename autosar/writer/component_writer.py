@@ -116,6 +116,8 @@ class XMLComponentTypeWriter(ElementWriter):
         ws=port.rootWS()
         assert(ws is not None)
         portInterface=ws.find(port.portInterfaceRef)
+        if portInterface is None:
+            raise ValueError("%s: invalid reference detected: '%s'"%(port.ref,port.portInterfaceRef))
         lines.append('<R-PORT-PROTOTYPE>')
         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%port.name,1))
         if port.adminData is not None:
@@ -126,8 +128,6 @@ class XMLComponentTypeWriter(ElementWriter):
 
         else:
             lines.append(self.indent('<REQUIRED-COM-SPECS>',1))
-            if portInterface is None:
-                raise ValueError("%s: invalid reference detected: '%s'"%(port.ref,port.portInterfaceRef))
             for comspec in port.comspec:
                 if self.version>=4.0:
                     if isinstance(portInterface, autosar.portinterface.ModeSwitchInterface):
@@ -280,6 +280,8 @@ class XMLComponentTypeWriter(ElementWriter):
         ws=port.rootWS()
         assert(ws is not None)
         portInterface=ws.find(port.portInterfaceRef)
+        if portInterface is None:
+            raise ValueError("%s: invalid reference detected: '%s'"%(port.ref,port.portInterfaceRef))
         lines.append('<%s>'%port.tag(self.version))
         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%port.name,1))
         if port.adminData is not None:
@@ -288,8 +290,6 @@ class XMLComponentTypeWriter(ElementWriter):
             lines.append(self.indent('<PROVIDED-COM-SPECS></PROVIDED-COM-SPECS>',1))
         else:
             lines.append(self.indent('<PROVIDED-COM-SPECS>',1))
-            if portInterface is None:
-                raise ValueError("%s: invalid reference detected: '%s'"%(port.ref,port.portInterfaceRef))
             for comspec in port.comspec:
                 if isinstance(comspec, autosar.port.DataElementComSpec):
                     elem=portInterface.find(comspec.name)
