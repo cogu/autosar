@@ -265,27 +265,29 @@ class XMLDataTypeWriter(ElementWriter):
             lines.extend(self.indent(self.writeAdminDataXML(elem.adminData),1))
         lines.append(self.indent('<DATA-CONSTR-RULES>', 1))
         for rule in elem.rules:
-            lines.extend(self.indent(self.writeDataConstraintRuleXML(rule), 2))
+            lines.extend(self.indent(self.writeDataConstraintRuleXML(rule, elem.constraintLevel), 2))
         lines.append(self.indent('</DATA-CONSTR-RULES>', 1))
         lines.append("</%s>"%elem.tag(self.version))
         return lines
 
-    def writeDataConstraintRuleXML(self, rule):
+    def writeDataConstraintRuleXML(self, rule, constraintLevel):
         lines = []
         lines.append("<DATA-CONSTR-RULE>")
+        if isinstance(constraintLevel, int):
+            lines.append(self.indent('<{0}>{1}</{0}>'.format('CONSTR-LEVEL', str(constraintLevel)), 1))
         if isinstance(rule, autosar.datatype.InternalConstraint):
             tag_name = 'INTERNAL-CONSTRS'
         elif isinstance(rule, autosar.datatype.PhysicalConstraint):
             tag_name = 'PHYS-CONSTRS'
         else:
-            raise NotImplementedError(str(type(rule)))            
+            raise NotImplementedError(str(type(rule)))
         lines.append(self.indent('<{}>'.format(tag_name), 1))
         lowerLimit = self._numberToString(rule.lowerLimit)
         upperLimit = self._numberToString(rule.upperLimit)
-        
+
         lines.append(self.indent('<LOWER-LIMIT INTERVAL-TYPE="{0}">{1}</LOWER-LIMIT>'.format(rule.lowerLimitType, lowerLimit), 2))
         lines.append(self.indent('<UPPER-LIMIT INTERVAL-TYPE="{0}">{1}</UPPER-LIMIT>'.format(rule.lowerLimitType, upperLimit), 2))
-        lines.append(self.indent('</{}>'.format(tag_name), 1))        
+        lines.append(self.indent('</{}>'.format(tag_name), 1))
         lines.append("</DATA-CONSTR-RULE>")
         return lines
 
