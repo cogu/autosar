@@ -216,6 +216,30 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         self.assertEqual(constr2.lowerLimit, constr.lowerLimit)
         self.assertEqual(constr2.upperLimit, constr.upperLimit)
 
+    def test_create_physical_constraint_with_level(self):
+        ws = autosar.workspace(version="4.2.2")
+        _create_packages(ws)
+        package = ws.find('/DataTypes')
+        constr = package.createPhysicalDataConstraint('VehicleSpeedPhys_DataConstr', 0, 65535)
+        constr.level = int(0)
+        self.assertIsInstance(constr, autosar.datatype.DataConstraint)
+        self.assertIsInstance(constr.rules[0], autosar.datatype.PhysicalConstraint)
+        self.assertEqual(constr.ref, '/DataTypes/DataConstrs/VehicleSpeedPhys_DataConstr')
+        self.assertEqual(constr.lowerLimit, 0)
+        self.assertEqual(constr.upperLimit, 65535)
+        file_name = 'ar4_phys_constraint_with_level.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'datatype', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/DataTypes'])
+        ws2 = autosar.workspace(ws.version_str)
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        constr2 = ws2.find(constr.ref)
+        self.assertIsInstance(constr2, autosar.datatype.DataConstraint)
+        self.assertIsInstance(constr2.rules[0], autosar.datatype.PhysicalConstraint)
+        self.assertEqual(constr2.lowerLimit, constr.lowerLimit)
+        self.assertEqual(constr2.upperLimit, constr.upperLimit)
+        self.assertEqual(constr2.constraintLevel, constr.constraintLevel)
+
     def test_create_boolean_implementation_datatype(self):
         ws = autosar.workspace(version="4.2.2")
         _create_packages(ws)

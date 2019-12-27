@@ -446,8 +446,9 @@ class PhysicalConstraint(ConstraintBase):
 class DataConstraint(Element):
     def tag(self,version=None): return 'DATA-CONSTR'
 
-    def __init__(self, name, rules, parent=None, adminData=None):
+    def __init__(self, name, rules, parent=None, adminData=None, constraintLevel=None):
         super().__init__(name, parent, adminData)
+        self.level = constraintLevel
         self.rules = []
         for rule in rules:
             if rule['type'] == 'internalConstraint':
@@ -462,6 +463,13 @@ class DataConstraint(Element):
             self.rules[0].check_value(v)
         else:
             raise NotImplementedError('Only a single rule constraint supported')
+
+    @property
+    def constraintLevel(self):
+        if isinstance(self.level, (type(None), int)):
+            return self.level
+        else:
+            raise ValueError('Unknown constraintLevel: '+str(self.level))
 
     @property
     def lowerLimit(self):

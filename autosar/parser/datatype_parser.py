@@ -111,6 +111,7 @@ class DataTypeParser(ElementParser):
     def parseDataConstraint(self, xmlRoot, parent=None):
         assert (xmlRoot.tag == 'DATA-CONSTR')
         rules=[]
+        constraintLevel = None
         self.push()
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'DATA-CONSTR-RULES':
@@ -119,11 +120,13 @@ class DataTypeParser(ElementParser):
                         rules.append(self._parseDataConstraintRule(xmlChildElem, 'internalConstraint'))
                     elif xmlChildElem.tag == 'PHYS-CONSTRS':
                         rules.append(self._parseDataConstraintRule(xmlChildElem, 'physicalConstraint'))
+                    elif xmlChildElem.tag == 'CONSTR-LEVEL':
+                        constraintLevel = self.parseIntNode(xmlChildElem)
                     else:
                         raise NotImplementedError(xmlChildElem.tag)
             else:
                 self.defaultHandler(xmlElem)
-        elem = autosar.datatype.DataConstraint(self.name, rules, parent, self.adminData)
+        elem = autosar.datatype.DataConstraint(self.name, rules, parent, self.adminData, constraintLevel)
         self.pop(elem)
         return elem
 
