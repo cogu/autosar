@@ -317,13 +317,10 @@ class PortInterfacePackageParser(ElementParser):
             raise RuntimeError('SHORT-NAME, TYPE-TREF and DIRECTION must have valid values')
 
     def _parseOperationArgumentV4(self, xmlArgument, parent):
-        (name, typeRef, direction, props_variants, serverArgumentImplPolicy) = (None, None, None, None, None)
+        (argument, typeRef, direction, props_variants, serverArgumentImplPolicy) = (None, None, None, None, None)
+        self.push()
         for xmlElem in xmlArgument.findall('./*'):
-            if xmlElem.tag == 'ADMIN-DATA':
-                pass #implement later
-            elif xmlElem.tag == 'SHORT-NAME':
-                name = self.parseTextNode(xmlElem)
-            elif xmlElem.tag == 'TYPE-TREF':
+            if xmlElem.tag == 'TYPE-TREF':
                 typeRef = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'DIRECTION':
                 direction = self.parseTextNode(xmlElem)
@@ -332,14 +329,15 @@ class PortInterfacePackageParser(ElementParser):
             elif xmlElem.tag == 'SERVER-ARGUMENT-IMPL-POLICY':
                 serverArgumentImplPolicy=self.parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
-        if (name is not None) and (typeRef is not None) and (direction is not None):
-            argument = autosar.portinterface.Argument(name, typeRef, direction, serverArgumentImplPolicy = serverArgumentImplPolicy)
+                self.baseHandler(xmlElem)
+        if (self.name is not None) and (typeRef is not None) and (direction is not None):
+            argument = autosar.portinterface.Argument(self.name, typeRef, direction, serverArgumentImplPolicy = serverArgumentImplPolicy)
             if props_variants is not None:
                 argument.swCalibrationAccess = props_variants[0].swCalibrationAccess
-            return argument
         else:
             raise RuntimeError('SHORT-NAME, TYPE-TREF and DIRECTION must have valid values')
+        self.pop(argument)
+        return argument
 
     def _parseApplicationError(self, xmlElem, parent):
         name=self.parseTextNode(xmlElem.find("./SHORT-NAME"))

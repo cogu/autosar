@@ -213,6 +213,9 @@ class XMLPortInterfaceWriter(ElementWriter):
         lines.append('<%s>'%argument.tag(self.version))
         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%argument.name,1))
         if self.version >= 4.0:
+            descLines = self.writeDescXML(argument)
+            if descLines is not None:
+                lines.extend(self.indent(descLines,1))
             lines.append(self.indent('<SW-DATA-DEF-PROPS>',1))
             if argument.swCalibrationAccess is None:
                 tmp = 'NOT-ACCESSIBLE'

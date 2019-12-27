@@ -206,5 +206,31 @@ class ARXML4PortInterfaceTest(ARXMLTestClass):
         self.assertIsInstance(pif2, autosar.portinterface.NvDataInterface)
         self.assertEqual(len(pif2.nvDatas), 3)
 
+    def test_create_client_server_interface_single_operation_no_return_with_desc(self):
+        ws = autosar.workspace(version="4.2.2")
+        _init_ws(ws)
+        package = ws.find('/PortInterfaces')
+        pif1=package.createClientServerInterface('FreeRunningTimer_I', ['GetTimeStamp'], isService=False )
+        arg1 = pif1['GetTimeStamp'].createOutArgument('value', '/DataTypes/uint32', 'NOT-ACCESSIBLE', 'USE-ARGUMENT-TYPE')
+        arg1.desc = "The value of the timer"
+        arg2 = pif1['GetTimeStamp'].createInArgument('reset', '/DataTypes/boolean', 'NOT-ACCESSIBLE', 'USE-ARGUMENT-TYPE')
+        arg2.desc = "If true reset the timer"
+        file_name = 'ar4_client_server_interface_single_operation_no_return_with_desc.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'portinterface', file_name)
+        self.save_and_check(ws, expected_file, generated_file)
+
+        ws2 = autosar.workspace(version="4.2.2")
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        pif2 = portInterface = ws2.find(pif1.ref)
+        self.assertIsInstance(pif2, autosar.portinterface.ClientServerInterface)
+        self.assertEqual(pif2.isService, False)
+        self.assertEqual(len(pif2.operations), 1)
+        operation = pif2['GetTimeStamp']
+        self.assertIsInstance(operation, autosar.portinterface.Operation)
+        self.assertEqual(len(pif2.operations[0].arguments), 2)
+        self.assertEqual(pif2.operations[0].arguments[0].desc, arg1.desc)
+        self.assertEqual(pif2.operations[0].arguments[1].desc, arg2.desc)
+
 if __name__ == '__main__':
     unittest.main()
