@@ -263,6 +263,35 @@ class ARXML4ComponentTest(ARXMLTestClass):
         ws.loadXML(expected_path)
         self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
 
+    def test_create_application_software_component_with_invalid_ports(self):
+        ws = autosar.workspace(version="4.2.2")
+        _init_ws(ws)
+        package = ws.find('/ComponentTypes')
+        swc = package.createApplicationSoftwareComponent('InvalidInterfacesTest')
+        VehicleSpeed = swc.createRequirePort('VehicleSpeed', 'VehicleSpeed_I')
+        EngineSpeed = swc.createProvidePort('EngineSpeed', 'EngineSpeed_I')
+
+        # Save and change the require ref
+        VehicleSpeedPortInterfaceRef = VehicleSpeed.portInterfaceRef
+        VehicleSpeed.portInterfaceRef = 'Invalid_ref_1'
+
+        file_name = 'ar4_swc_with_invalid_ports.arxml'
+        generated_file = os.path.join(os.path.dirname(__file__), self.output_dir, file_name)
+        with self.assertRaises(ValueError) as cm:
+            ws.saveXML(generated_file, filters=['/ComponentTypes'])
+        msg, = cm.exception.args
+        self.assertEqual(msg, "/ComponentTypes/InvalidInterfacesTest/VehicleSpeed: invalid reference detected: 'Invalid_ref_1'")
+
+        # Restore and change the provide ref
+        VehicleSpeed.portInterfaceRef = VehicleSpeedPortInterfaceRef
+        EngineSpeed.portInterfaceRef = 'Invalid_ref_2'
+
+        with self.assertRaises(ValueError) as cm:
+            ws.saveXML(generated_file, filters=['/ComponentTypes'])
+        msg, = cm.exception.args
+        self.assertEqual(msg, "/ComponentTypes/InvalidInterfacesTest/EngineSpeed: invalid reference detected: 'Invalid_ref_2'")
+        os.remove(generated_file)
+
 
 if __name__ == '__main__':
     unittest.main()
