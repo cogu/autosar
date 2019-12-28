@@ -179,6 +179,23 @@ class ARXML4ConstantTest(ARXMLTestClass):
                                                     autosar.constant.SwAxisCont(unitRef = '/DataTypes/Units/kg'))
         self.assertIsInstance(c1, autosar.constant.Constant)
 
+        cNaN = package.createApplicationValueConstant('Phys_Calibration_NAN_IV',
+                                                    autosar.constant.SwValueCont(float('NaN')),
+                                                    autosar.constant.SwAxisCont(unitRef = '/DataTypes/Units/kg'))
+        self.assertIsInstance(cNaN, autosar.constant.Constant)
+
+        cnINF = package.createApplicationValueConstant('Phys_Calibration_nINF_IV',
+                                                    autosar.constant.SwValueCont(float('-INF')))
+        self.assertIsInstance(cnINF, autosar.constant.Constant)
+
+        cINF = package.createApplicationValueConstant('Phys_Calibration_INF_IV',
+                                                    autosar.constant.SwValueCont(float('INF')))
+        self.assertIsInstance(cINF, autosar.constant.Constant)
+
+        cText = package.createApplicationValueConstant('Phys_Calibration_Text_IV',
+                                                    autosar.constant.SwValueCont('TextValue'))
+        self.assertIsInstance(cText, autosar.constant.Constant)
+
         file_name = 'ar4_application_value2.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'constant', file_name)
@@ -192,6 +209,30 @@ class ARXML4ConstantTest(ARXMLTestClass):
         self.assertIsInstance(value, autosar.constant.ApplicationValue)
         self.assertIsInstance(value.swAxisCont, autosar.constant.SwAxisCont)
         self.assertEqual(value.swAxisCont.unitRef, '/DataTypes/Units/kg')
+
+        c2 = ws2.find(cNaN.ref)
+        value = c2.value
+        self.assertIsInstance(value.swValueCont, autosar.constant.SwValueCont)
+        self.assertEqual(len(value.swValueCont.values), 1)
+        self.assertEqual(str(value.swValueCont.values[0]), 'nan')
+
+        c2 = ws2.find(cnINF.ref)
+        value = c2.value
+        self.assertIsInstance(value.swValueCont, autosar.constant.SwValueCont)
+        self.assertEqual(len(value.swValueCont.values), 1)
+        self.assertEqual(str(value.swValueCont.values[0]), '-inf')
+
+        c2 = ws2.find(cINF.ref)
+        value = c2.value
+        self.assertIsInstance(value.swValueCont, autosar.constant.SwValueCont)
+        self.assertEqual(len(value.swValueCont.values), 1)
+        self.assertEqual(str(value.swValueCont.values[0]), 'inf')
+
+        c2 = ws2.find(cText.ref)
+        value = c2.value
+        self.assertIsInstance(value.swValueCont, autosar.constant.SwValueCont)
+        self.assertEqual(len(value.swValueCont.values), 1)
+        self.assertEqual(value.swValueCont.values[0], 'TextValue')
 
 if __name__ == '__main__':
     unittest.main()

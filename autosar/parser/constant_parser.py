@@ -209,6 +209,8 @@ class ConstantParser(ElementParser):
                         valueList.append(self.parseNumberNode(xmlChild))
                     elif xmlChild.tag == 'VT':
                         valueList.append(self.parseTextNode(xmlChild))
+                    elif xmlChild.tag == 'VF':
+                        valueList.append(self.parseNumberNode(xmlChild))
                     else:
                         raise NotImplementedError(xmlChild.tag)
             else:

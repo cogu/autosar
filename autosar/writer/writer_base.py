@@ -336,7 +336,10 @@ class BaseWriter:
             else:
                 valueList = elem.values
             for v in valueList:
-                lines.append(self.indent('<V>{}</V>'.format(str(v)), 2))
+                if isinstance(v, (float, int)):
+                    lines.append(self.indent('<V>{}</V>'.format(self._numberToString(v)), 2))
+                else:
+                    lines.append(self.indent('<VT>{}</VT>'.format(str(v)), 2))
             lines.append(self.indent('</SW-VALUES-PHYS>', 1))
         lines.append('</%s>'%elem.tag(self.version))
         return lines
@@ -385,6 +388,8 @@ class BaseWriter:
             return 'INFINITE' if self.version < 4.0 else 'INF'
         elif math.isinf(x) and x < 0:
             return '-INFINITE' if self.version < 4.0 else '-INF'
+        elif math.isnan(x):
+            return 'NaN'
         else:
             return str(x)
 
