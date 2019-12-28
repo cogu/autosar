@@ -117,12 +117,12 @@
               </RAM-BLOCK>
               <ROM-BLOCK>
                 <SHORT-NAME>ParameterDataPt</SHORT-NAME>
+                <LONG-NAME>
+                  <L-4 L="FOR-ALL">Rom block long name</L-4>
+                </LONG-NAME>
                 <DESC>
                   <L-2 L="FOR-ALL">Rom block description</L-2>
                 </DESC>
-                <LONG-NAME>
-                  <L-2 L="FOR-ALL">Rom block long name</L-2>
-                </LONG-NAME>
                 <SW-DATA-DEF-PROPS>
                   <SW-DATA-DEF-PROPS-VARIANTS>
                     <SW-DATA-DEF-PROPS-CONDITIONAL>
