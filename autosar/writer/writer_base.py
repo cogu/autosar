@@ -97,9 +97,9 @@ class BaseWriter:
             lines = []
             lines.append('<LONG-NAME>')
             if elem.longName is None or len(elem.longName)==0:
-                lines.append(self.indent('<L-2 L="%s" />'%(longNameAttr),1))
+                lines.append(self.indent('<L-4 L="%s" />'%(longNameAttr),1))
             else:
-                lines.append(self.indent('<L-2 L="%s">%s</L-2>'%(longNameAttr,xml.sax.saxutils.escape(elem.longName)),1))
+                lines.append(self.indent('<L-4 L="%s">%s</L-4>'%(longNameAttr,xml.sax.saxutils.escape(elem.longName)),1))
             lines.append('</LONG-NAME>')
             return lines
         return None

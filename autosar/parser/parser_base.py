@@ -94,7 +94,7 @@ class BaseParser:
     def parseLongName(self, xmlRoot, elem):
         xmlDesc = xmlRoot.find('LONG-NAME')
         if xmlDesc is not None:
-            L2Xml = xmlDesc.find('L-2')
+            L2Xml = xmlDesc.find('L-4')
             if L2Xml is not None:
                 L2Text=self.parseTextNode(L2Xml)
                 L2Attr=L2Xml.attrib['L']
@@ -103,7 +103,7 @@ class BaseParser:
 
     def parseLongNameDirect(self, xmlLongName):
         assert(xmlLongName.tag == 'LONG-NAME')
-        L2Xml = xmlLongName.find('L-2')
+        L2Xml = xmlLongName.find('L-4')
         if L2Xml is not None:
             L2Text=self.parseTextNode(L2Xml)
             L2Attr=L2Xml.attrib['L']

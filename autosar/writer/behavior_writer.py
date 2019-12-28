@@ -690,10 +690,10 @@ class XMLBehaviorWriter(ElementWriter):
         lines.append('<%s>'%elem.tag(self.version))
         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
 
-        tmp = self.writeDescXML(elem)
+        tmp = self.writeLongNameXML(elem)
         if tmp is not None: lines.extend(self.indent(tmp,1))
 
-        tmp = self.writeLongNameXML(elem)
+        tmp = self.writeDescXML(elem)
         if tmp is not None: lines.extend(self.indent(tmp,1))
 
         if elem.swAddressMethodRef is not None or elem.swCalibrationAccess is not None:
