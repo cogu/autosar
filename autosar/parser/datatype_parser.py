@@ -413,7 +413,18 @@ class DataTypeSemanticsParser(ElementParser):
                     compuScale = self._parseCompuScaleXML(compuScaleXml)
                     computation.elements.append(compuScale)
             elif xmlElem.tag == 'COMPU-DEFAULT-VALUE':
-                computation.defaultValue = self.parseNumberNode(xmlElem.find('V'))
+                for xmlChild in xmlElem.findall('./*'):
+                    if xmlChild.tag == 'V':
+                        computation.defaultValue = self.parseNumberNode(xmlChild)
+                        break
+                    elif xmlChild.tag == 'VT':
+                        computation.defaultValue = self.parseTextNode(xmlChild)
+                        break
+                    elif xmlChild.tag == 'VF':
+                        computation.defaultValue = self.parseNumberNode(xmlChild)
+                        break
+                    else:
+                        raise NotImplementedError(xmlChild.tag)
             else:
                 raise NotImplementedError(xmlElem.tag)
         return computation

@@ -93,9 +93,9 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         package = ws.find('/DataTypes')
         basetypes=package.createSubPackage('BaseTypes')
         basetypes.createSwBaseType('boolean', 1, 'BOOLEAN')
-        compuMethod = package.createCompuMethodConst('boolean', ['FALSE', 'TRUE'])
+        compuMethod = package.createCompuMethodConst('boolean', ['FALSE', 'TRUE'], defaultValue = 'FALSE')
         self.assertEqual(compuMethod.ref, '/DataTypes/CompuMethods/boolean')
-        self.assertIsNone(compuMethod.intToPhys.defaultValue)
+        self.assertEqual(compuMethod.intToPhys.defaultValue, 'FALSE')
         compuScales = compuMethod.intToPhys.elements
         self.assertEqual(compuScales[0].lowerLimit, 0)
         self.assertEqual(compuScales[0].upperLimit, 0)
@@ -114,13 +114,14 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
         compu2 = ws2.find(compuMethod.ref)
         self.assertIsInstance(compu2, autosar.datatype.CompuMethod)
-        compuScales2 = compuMethod.intToPhys.elements
+        compuScales2 = compu2.intToPhys.elements
         self.assertEqual(compuScales2[0].lowerLimit, compuScales[0].lowerLimit)
         self.assertEqual(compuScales2[0].upperLimit, compuScales[0].upperLimit)
         self.assertEqual(compuScales2[0].textValue, compuScales[0].textValue)
         self.assertEqual(compuScales2[1].lowerLimit, compuScales[1].lowerLimit)
         self.assertEqual(compuScales2[1].upperLimit, compuScales[1].upperLimit)
         self.assertEqual(compuScales2[1].textValue, compuScales[1].textValue)
+        self.assertEqual(compu2.intToPhys.defaultValue, compuMethod.intToPhys.defaultValue)
 
     def test_create_unit(self):
         ws = autosar.workspace(version="4.2.2")

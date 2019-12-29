@@ -29,6 +29,9 @@
                     </COMPU-CONST>
                   </COMPU-SCALE>
                 </COMPU-SCALES>
+                <COMPU-DEFAULT-VALUE>
+                  <VT>FALSE</VT>
+                </COMPU-DEFAULT-VALUE>
               </COMPU-INTERNAL-TO-PHYS>
             </COMPU-METHOD>
           </ELEMENTS>
