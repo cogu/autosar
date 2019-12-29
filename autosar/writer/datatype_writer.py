@@ -122,7 +122,10 @@ class XMLDataTypeWriter(ElementWriter):
         lines.append(self.indent('</COMPU-SCALES>',1))
         if computation.defaultValue is not None:
             lines.append(self.indent('<COMPU-DEFAULT-VALUE>', 1))
-            lines.append(self.indent('<V>{}</V>'.format(str(computation.defaultValue)), 2))
+            if isinstance(computation.defaultValue, (float, int)):
+                lines.append(self.indent('<V>{}</V>'.format(self._numberToString(computation.defaultValue)), 2))
+            else:
+                lines.append(self.indent('<VT>{}</VT>'.format(str(computation.defaultValue)), 2))
             lines.append(self.indent('</COMPU-DEFAULT-VALUE>', 1))
         lines.append('</{}>'.format(tag))
         return lines
