@@ -219,6 +219,16 @@ class BaseParser:
                 unitRef = self.parseTextNode(xmlItem)
             elif xmlItem.tag == 'ADDITIONAL-NATIVE-TYPE-QUALIFIER':
                 pass #implement later
+            elif xmlItem.tag == 'SW-CALPRM-AXIS-SET':
+                print("[BaseParser] unhandled: %s"%xmlItem.tag)
+                pass #implement later
+                print("[BaseParser] unhandled: %s"%xmlItem.tag)
+            elif xmlItem.tag == 'SW-RECORD-LAYOUT-REF':
+                print("[BaseParser] unhandled: %s"%xmlItem.tag)
+                pass #implement later
+            elif xmlItem.tag == 'INVALID-VALUE':
+                print("[BaseParser] unhandled: %s"%xmlItem.tag)
+                pass #implement later
             else:
                 raise NotImplementedError(xmlItem.tag)
         variant = SwDataDefPropsConditional(baseTypeRef, implementationTypeRef, swAddressMethodRef, swCalibrationAccess, swImplPolicy, None, compuMethodRef, dataConstraintRef, unitRef)
