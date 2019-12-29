@@ -264,6 +264,8 @@ class ComponentTypeParser(ElementParser):
                         tmp = self.parseTextNode(xmlChild)
                         assert(tmp is not None)
                         dataTypeMappingRefs.append(tmp)
+            elif xmlElem.tag=='PORT-GROUPS':
+                print("[ComponentParser] unhandled: %s"%xmlElem.tag)
             else:
                 self.defaultHandler(xmlElem)
         if dataTypeMappingRefs is not None:
