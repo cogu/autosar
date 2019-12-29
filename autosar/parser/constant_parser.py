@@ -154,7 +154,7 @@ class ConstantParser(ElementParser):
                 raise NotImplementedError(xmlElem.tag)
 
         if (xmlElements is not None):
-            array = autosar.constant.ArrayValue(label, parent=parent)
+            array = autosar.constant.ArrayValueAR4(label, parent=parent)
             array.elements = self.parseValueV4(xmlElements, array)
             return array
 
