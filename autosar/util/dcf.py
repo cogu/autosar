@@ -282,7 +282,7 @@ class Dcf(XMLWriterSimple):
             lines=['<?xml version="1.0" encoding="utf-8"?>']
             if schema is None:
                 #TODO: Below line needs to be improved
-                schema_string = "{0}{1}{2}_DEV".format(*str(self.ws.version).split('.'), self.ws.patch)
+                schema_string = "{0}{1}{patch}_DEV".format(*str(self.ws.version).split('.'), patch=self.ws.patch)
             else:
                 schema_string = schema
             lines.append('<DCF ARSCHEMA="{}">'.format(schema_string))
