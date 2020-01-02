@@ -105,7 +105,6 @@ class TestBase(unittest.TestCase):
       self.assertEqual(schema, 'AUTOSAR_4-2-2.xsd')
    
    def test_parseAutosarVersionAndSchemaWithReleaseVersion(self):
-      xsi:schemaLocation="http://autosar.org/schema/r4.0 AUTOSAR_00044.xsd"
       xmlData = """<?xml version="1.0" encoding="utf-8"?>
       <AUTOSAR xsi:schemaLocation="http://autosar.org/schema/r4.0 AUTOSAR_00044.xsd" xmlns="http://autosar.org/schema/r4.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
       </AUTOSAR>
