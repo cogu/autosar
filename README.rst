@@ -17,23 +17,27 @@ Prerequisites
 Documentation
 -------------
 
-Documentation is found `here <http://autosar.readthedocs.io/en/latest/>`_.
+Documentation is published `here <https://autosar.readthedocs.io/en/latest/>`_.
 
-Recent Release
---------------
+Current Roadmap
+---------------
 
-autosar 0.3.6
-~~~~~~~~~~~~~~
+v0.3.9
+~~~~~~
 
-* AUTOSAR 4 Python API
-* New documentation structure
-* Comprehensive regression test suite
+* Fixes
+* Improved (AUTOSAR4) documentation
+* More comprehensive suite of unit tests
 
-Upcoming Release
-----------------
 
-autosar 0.3.7
-~~~~~~~~~~~~~
+v0.4.0
+~~~~~~
 
-* Improved documentation
-* Optional DaVinci project generation
+* Maintenance track (stable version of v0.3.x)
+* v0.4.x will be the last release to support RTE generator for AUTOSAR3
+
+v0.5.0
+~~~~~~
+
+* Complete rewrite of RTE generator (upgrade to AUTOSAR4)
+* At the same time upgrade the `autosar-demo project <https://github.com/cogu/autosar-demo>`_ to AUTOSAR4
