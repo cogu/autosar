@@ -78,15 +78,19 @@ class ARXML4ComponentTest(ARXMLTestClass):
         self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
 
     def test_create_cdd_software_component(self):
-        ws = autosar.workspace(version="4.2.2")
-        _init_ws(ws)
-        package = ws.find('/ComponentTypes')
-        swc = package.createComplexDeviceDriverComponent('MyService')
-        swc.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV')
+        ws1 = autosar.workspace(version="4.2.2")
+        _init_ws(ws1)
+        package = ws1.find('/ComponentTypes')
+        swc1 = package.createComplexDeviceDriverComponent('MyService')
+        swc1.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV')
         file_name = 'ar4_cdd_swc.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'component', file_name)
-        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
+        self.save_and_check(ws1, expected_file, generated_file, ['/ComponentTypes'])
+        ws2 = autosar.workspace(ws1.version_str)
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        swc2 = ws2.find(swc1.ref)
+        self.assertIsInstance(swc2, autosar.component.ComplexDeviceDriverComponent)
 
     def test_create_composition_component(self):
         ws = autosar.workspace(version="4.2.2")

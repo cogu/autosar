@@ -68,7 +68,7 @@ class ComponentTypeParser(ElementParser):
         elif self.version >= 4.0:
             self.switcher = {
                'APPLICATION-SW-COMPONENT-TYPE': self.parseSoftwareComponent,
-               'COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE': self.parseSoftwareComponent,
+               'COMPLEX-DEVICE-DRIVER-SW-COMPONENT-TYPE': self.parseSoftwareComponent,
                'SERVICE-COMPONENT-TYPE': self.parseSoftwareComponent,
                'PARAMETER-SW-COMPONENT-TYPE': self.parseSoftwareComponent,
                'COMPOSITION-SW-COMPONENT-TYPE': self.parseCompositionType,
@@ -93,7 +93,7 @@ class ComponentTypeParser(ElementParser):
         handledTags = ['SHORT-NAME']
         if xmlRoot.tag=='APPLICATION-SOFTWARE-COMPONENT-TYPE': #for AUTOSAR 3.x
             componentType = autosar.component.ApplicationSoftwareComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
-        elif xmlRoot.tag=='COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE': #for AUTOSAR 3.x
+        elif (xmlRoot.tag=='COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE') or (xmlRoot.tag=='COMPLEX-DEVICE-DRIVER-SW-COMPONENT-TYPE'):
             componentType = autosar.component.ComplexDeviceDriverComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
         elif xmlRoot.tag == 'APPLICATION-SW-COMPONENT-TYPE': #for AUTOSAR 4.x
             componentType = autosar.component.ApplicationSoftwareComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
