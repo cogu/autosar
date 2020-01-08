@@ -339,12 +339,12 @@ class BehaviorParser(ElementParser):
                         if modeGroupInstanceRef is None:
                             modeGroupInstanceRef=self._parseRequireModeGroupInstanceRef(childElem)
                         else:
-                            NotImplementedError('Multiple instances of R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF not implemented')
+                            raise NotImplementedError('Multiple instances of R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF not implemented')
                     elif childElem.tag == 'P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF':
                         if modeGroupInstanceRef is None:
                             modeGroupInstanceRef=self._parseProvideModeGroupInstanceRef(childElem)
                         else:
-                            NotImplementedError('Multiple instances of P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF not implemented')
+                            raise NotImplementedError('Multiple instances of P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF not implemented')
                     else:
                         raise NotImplementedError(childElem.tag)
             else:
