@@ -350,6 +350,9 @@ class BaseWriter:
         ws = elem.rootWS()
         lines.append('<%s>'%elem.tag(self.version))
         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
+        descLines = self.writeDescXML(elem)
+        if descLines is not None:
+            lines.extend(self.indent(descLines,1))
         if self.version >= 4.0:
             variantList = []
             variant = autosar.base.SwDataDefPropsConditional(swAddressMethodRef = elem.swAddressMethodRef, swCalibrationAccess = elem.swCalibrationAccess, swImplPolicy = elem.swImplPolicy)
