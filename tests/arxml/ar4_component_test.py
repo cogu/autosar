@@ -277,19 +277,19 @@ class ARXML4ComponentTest(ARXMLTestClass):
 
         file_name = 'ar4_swc_with_invalid_ports.arxml'
         generated_file = os.path.join(os.path.dirname(__file__), self.output_dir, file_name)
-        with self.assertRaises(ValueError) as cm:
+        with self.assertRaises(autosar.base.InvalidPortInterfaceRef) as cm:
             ws.saveXML(generated_file, filters=['/ComponentTypes'])
         msg, = cm.exception.args
-        self.assertEqual(msg, "/ComponentTypes/InvalidInterfacesTest/VehicleSpeed: invalid reference detected: 'Invalid_ref_1'")
+        self.assertEqual(msg, "/ComponentTypes/InvalidInterfacesTest/VehicleSpeed: Invalid_ref_1")
 
         # Restore and change the provide ref
         VehicleSpeed.portInterfaceRef = VehicleSpeedPortInterfaceRef
         EngineSpeed.portInterfaceRef = 'Invalid_ref_2'
 
-        with self.assertRaises(ValueError) as cm:
+        with self.assertRaises(autosar.base.InvalidPortInterfaceRef) as cm:
             ws.saveXML(generated_file, filters=['/ComponentTypes'])
         msg, = cm.exception.args
-        self.assertEqual(msg, "/ComponentTypes/InvalidInterfacesTest/EngineSpeed: invalid reference detected: 'Invalid_ref_2'")
+        self.assertEqual(msg, "/ComponentTypes/InvalidInterfacesTest/EngineSpeed: Invalid_ref_2")
         os.remove(generated_file)
 
 

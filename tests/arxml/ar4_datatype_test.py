@@ -222,7 +222,7 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         _create_packages(ws)
         package = ws.find('/DataTypes')
         constr = package.createPhysicalDataConstraint('VehicleSpeedPhys_DataConstr', 0, 65535)
-        constr.level = int(0)
+        constr.level = 0
         self.assertIsInstance(constr, autosar.datatype.DataConstraint)
         self.assertIsInstance(constr.rules[0], autosar.datatype.PhysicalConstraint)
         self.assertEqual(constr.ref, '/DataTypes/DataConstrs/VehicleSpeedPhys_DataConstr')

@@ -446,7 +446,7 @@ class PhysicalConstraint(ConstraintBase):
 class DataConstraint(Element):
     def tag(self,version=None): return 'DATA-CONSTR'
 
-    def __init__(self, name, rules, parent=None, adminData=None, constraintLevel=None):
+    def __init__(self, name, rules, constraintLevel=None, parent=None, adminData=None):
         super().__init__(name, parent, adminData)
         self.level = constraintLevel
         self.rules = []
@@ -466,7 +466,7 @@ class DataConstraint(Element):
 
     @property
     def constraintLevel(self):
-        if isinstance(self.level, (type(None), int)):
+        if self.level is None or isinstance(self.level, int):
             return self.level
         else:
             raise ValueError('Unknown constraintLevel: '+str(self.level))

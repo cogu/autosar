@@ -117,7 +117,7 @@ class XMLComponentTypeWriter(ElementWriter):
         assert(ws is not None)
         portInterface=ws.find(port.portInterfaceRef)
         if portInterface is None:
-            raise ValueError("%s: invalid reference detected: '%s'"%(port.ref,port.portInterfaceRef))
+            raise autosar.base.InvalidPortInterfaceRef("{0.ref}: {0.portInterfaceRef}".format(port))
         lines.append('<R-PORT-PROTOTYPE>')
         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%port.name,1))
         if port.adminData is not None:
@@ -281,7 +281,7 @@ class XMLComponentTypeWriter(ElementWriter):
         assert(ws is not None)
         portInterface=ws.find(port.portInterfaceRef)
         if portInterface is None:
-            raise ValueError("%s: invalid reference detected: '%s'"%(port.ref,port.portInterfaceRef))
+            raise autosar.base.InvalidPortInterfaceRef("{0.ref}: {0.portInterfaceRef}".format(port))
         lines.append('<%s>'%port.tag(self.version))
         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%port.name,1))
         if port.adminData is not None:
