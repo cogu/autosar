@@ -218,11 +218,11 @@ class ARXML4PortInterfaceTest(ARXMLTestClass):
         file_name = 'ar4_client_server_interface_single_operation_no_return_with_desc.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'portinterface', file_name)
-        self.save_and_check(ws, expected_file, generated_file)
+        self.save_and_check(ws, expected_file, generated_file, filters=['/PortInterfaces'])
 
         ws2 = autosar.workspace(version="4.2.2")
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
-        pif2 = portInterface = ws2.find(pif1.ref)
+        pif2 = ws2.find(pif1.ref)
         self.assertIsInstance(pif2, autosar.portinterface.ClientServerInterface)
         self.assertEqual(pif2.isService, False)
         self.assertEqual(len(pif2.operations), 1)
