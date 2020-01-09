@@ -1348,7 +1348,7 @@ class Package(object):
         rules=[]
 
         rules.append({'type': constraintType, 'lowerLimit':lowerLimit, 'upperLimit':upperLimit, 'lowerLimitType':lowerLimitType, 'upperLimitType':upperLimitType})
-        constraint = autosar.datatype.DataConstraint(name, rules, self)
+        constraint = autosar.datatype.DataConstraint(name, rules, parent=self)
         dataConstraintPackage.append(constraint)
         return constraint
 

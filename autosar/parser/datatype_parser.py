@@ -126,7 +126,7 @@ class DataTypeParser(ElementParser):
                         raise NotImplementedError(xmlChildElem.tag)
             else:
                 self.defaultHandler(xmlElem)
-        elem = autosar.datatype.DataConstraint(self.name, rules, parent, self.adminData, constraintLevel)
+        elem = autosar.datatype.DataConstraint(self.name, rules, constraintLevel, parent, self.adminData)
         self.pop(elem)
         return elem
 

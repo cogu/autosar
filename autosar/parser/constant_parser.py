@@ -205,12 +205,10 @@ class ConstantParser(ElementParser):
                 unitRef = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'SW-VALUES-PHYS':
                 for xmlChild in xmlElem.findall('./*'):
-                    if xmlChild.tag == 'V':
+                    if (xmlChild.tag == 'V') or (xmlChild.tag == 'VF'):
                         valueList.append(self.parseNumberNode(xmlChild))
                     elif xmlChild.tag == 'VT':
                         valueList.append(self.parseTextNode(xmlChild))
-                    elif xmlChild.tag == 'VF':
-                        valueList.append(self.parseNumberNode(xmlChild))
                     else:
                         raise NotImplementedError(xmlChild.tag)
             else:
