@@ -6,13 +6,13 @@ PortInterface
 .. table::
    :align: left
 
-   +--------------------+----------------------------------------------+
-   | XML tag            | (Abstract class)                             |
-   +--------------------+----------------------------------------------+
-   | Module             | autosar.portinterface                        |
-   +--------------------+----------------------------------------------+
-   | Inherits           | :ref:`autosar.element.Element <ar4_element>` |
-   +--------------------+----------------------------------------------+
+   +--------------------+------------------------------------------------------+
+   | XML tag            | (Abstract class)                                     |
+   +--------------------+------------------------------------------------------+
+   | Module             | autosar.portinterface                                |
+   +--------------------+------------------------------------------------------+
+   | Inherits           | :ref:`autosar.element.Element <ar4_element_Element>` |
+   +--------------------+------------------------------------------------------+
 
 Base class for AUTOSAR port interfaces.
 
@@ -25,6 +25,9 @@ Base class for AUTOSAR port interfaces.
 
 Attributes
 ----------
+
+
+For inherited attributes see :ref:`autosar.element.Element <ar4_element_Element>`.
 
 ..  table::
     :align: left

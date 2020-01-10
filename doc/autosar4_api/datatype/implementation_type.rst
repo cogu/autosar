@@ -6,13 +6,13 @@ ImplementationDataType
 .. table::
    :align: left
 
-   +--------------------+----------------------------------------------+
-   | XML tag            | <IMPLEMENTATION-DATA-TYPE>                   |
-   +--------------------+----------------------------------------------+
-   | Module             | autosar.datatype                             |
-   +--------------------+----------------------------------------------+
-   | Inherits           | :ref:`autosar.element.Element <ar4_element>` |
-   +--------------------+----------------------------------------------+
+   +--------------------+------------------------------------------------------+
+   | XML tag            | <IMPLEMENTATION-DATA-TYPE>                           |
+   +--------------------+------------------------------------------------------+
+   | Module             | autosar.datatype                                     |
+   +--------------------+------------------------------------------------------+
+   | Inherits           | :ref:`autosar.element.Element <ar4_element_Element>` |
+   +--------------------+------------------------------------------------------+
 
 Implementation Data Types is a very generic container and can define almost any data type.
 For ease of use this Python module offers several different factory methods to create the most
@@ -27,6 +27,8 @@ Factory Methods
 
 Attributes
 ----------
+
+For inherited attributes see :ref:`autosar.element.Element <ar4_element_Element>`.
 
 ..  table::
     :align: left

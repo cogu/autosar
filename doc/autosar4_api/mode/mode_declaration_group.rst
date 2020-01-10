@@ -11,7 +11,7 @@ ModeDeclarationGroup
    +--------------+-------------------------------------------------------------------------+
    | Module       | autosar.mode                                                            |
    +--------------+-------------------------------------------------------------------------+
-   | Inherits     | :ref:`autosar.element.Element <ar4_element>`                            |
+   | Inherits     | :ref:`autosar.element.Element <ar4_element_Element>`                    |
    +--------------+-------------------------------------------------------------------------+
 
 A collection of :ref:`Mode Declarations <mode_declaration>`.
@@ -39,7 +39,7 @@ Factory Methods
 Attributes
 -----------
 
-For inherited attributes see :ref:`autosar.element.Element <ar4_element>`.
+For inherited attributes see :ref:`autosar.element.Element <ar4_element_Element>`.
 
 ..  table::
     :align: left

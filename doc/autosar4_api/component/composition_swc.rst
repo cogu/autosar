@@ -24,7 +24,7 @@ Factory Methods
 Attributes
 -----------
 
-For inherited attributes see :ref:`Element <ar4_element>`.
+For inherited attributes see :ref:`autosar.component.ComponentType <ar4_component_ComponentType>`.
 
 ..  table::
     :align: left

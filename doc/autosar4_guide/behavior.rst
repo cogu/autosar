@@ -1,7 +1,7 @@
 SWC Behavior
 ============
 
-The behavior object is a container for runnables and events. All SWCs has its own behavior object, except for compositions.
+The behavior object is a container for runnables, events and other objects. All SWCs has its own behavior object, except for compositions.
 
 In AUTOSAR4, the behavior object is an instance of the SwcInternalBehavior class and it is created automatically when you create SWCs using these helper methods:
 
@@ -17,15 +17,15 @@ Runnables are execution points. They are implemented as C functions and are trig
 Examples:
 
 .. code-block:: python
-    
+
     ws = autosar.workspace(version="4.2.2")
     #... Datatypes, port interfaces and constants are loaded or created here
-    
+
     package = ws.createPackage('ComponentTypes', role='ComponentType')
     swc = package.createApplicationSoftwareComponent('MyApplication')
     swc.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV')
     swc.createRequirePort('EngineSpeed', 'EngineSpeed_I', initValueRef = 'EngineSpeed_IV')
-    
+
     swc.behavior.createRunnable('runnableName', portAccess=['VehicleSpeed', 'EngineSpeed'])
 
 
@@ -42,10 +42,10 @@ If you want to declare a specific data-element or operation use a front-slash as
 Examples:
 
 .. code-block:: python
-    
+
     ws = autosar.workspace(version="4.2.2")
     #... Datatypes, port interfaces and constants are loaded or created here
-    
+
     package = ws.createPackage('ComponentTypes', role='ComponentType')
     swc = package.createApplicationSoftwareComponent('MyApplication')
     swc.createRequirePort('FreeRunningTimer', 'FreeRunningTimer_I') #port interface has operations GetTime and IsTimerElapsed

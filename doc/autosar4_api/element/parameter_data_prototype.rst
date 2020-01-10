@@ -11,7 +11,7 @@ ParameterDataPrototype
     +--------------+-------------------------------------------------------------------------+
     | Module       | autosar.element                                                         |
     +--------------+-------------------------------------------------------------------------+
-    | Inherits     | :ref:`autosar.element.Element <ar4_element>`                            |
+    | Inherits     | :ref:`autosar.element.Element <ar4_element_Element>`                    |
     +--------------+-------------------------------------------------------------------------+
 
 Represents a parameter data protoype.
@@ -64,7 +64,7 @@ Constructor
 Attributes
 -----------
 
-For inherited attributes see :ref:`autosar.element.Element <ar4_element>`.
+For inherited attributes see :ref:`autosar.element.Element <ar4_element_Element>`.
 
 ..  table::
     :align: left

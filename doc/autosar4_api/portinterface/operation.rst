@@ -6,13 +6,13 @@ Operation
 .. table::
    :align: left
 
-   +--------------------+----------------------------------------------+
-   | XML tag            | <CLIENT-SERVER-OPERATION>                    |
-   +--------------------+----------------------------------------------+
-   | Module             | autosar.portinterface                        |
-   +--------------------+----------------------------------------------+
-   | Inherits           | :ref:`autosar.element.Element <ar4_element>` |
-   +--------------------+----------------------------------------------+
+   +--------------------+------------------------------------------------------+
+   | XML tag            | <CLIENT-SERVER-OPERATION>                            |
+   +--------------------+------------------------------------------------------+
+   | Module             | autosar.portinterface                                |
+   +--------------------+------------------------------------------------------+
+   | Inherits           | :ref:`autosar.element.Element <ar4_element_Element>` |
+   +--------------------+------------------------------------------------------+
 
 An operation of a client-server port interface.
 
@@ -24,6 +24,8 @@ Factory Methods
 
 Attributes
 ----------
+
+For inherited attributes see :ref:`autosar.element.Element <ar4_element_Element>`.
 
 ..  table::
     :align: left
