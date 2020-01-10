@@ -11,7 +11,7 @@ ModeDeclaration
    +--------------+-------------------------------------------------------------------------+
    | Module       | autosar.mode                                                            |
    +--------------+-------------------------------------------------------------------------+
-   | Inherits     | :ref:`autosar.element.Element <ar4_element>`                            |
+   | Inherits     | :ref:`autosar.element.Element <ar4_element_Element>`                    |
    +--------------+-------------------------------------------------------------------------+
 
 Mode declarations are used as the internal container class of :ref:`mode_modeDeclarationGroup` objects.
@@ -20,4 +20,4 @@ Mode declarations are used as the internal container class of :ref:`mode_modeDec
 Attributes
 -----------
 
-For inherited attributes see :ref:`autosar.element.Element <ar4_element>`.
+For inherited attributes see :ref:`autosar.element.Element <ar4_element_Element>`.

@@ -6,13 +6,13 @@ DataElement
 .. table::
    :align: left
 
-   +--------------+------------------------------------------------+
-   | XML tag      | <DATA-ELEMENT>                                 |
-   +--------------+------------------------------------------------+
-   | Module       | autosar.element                                |
-   +--------------+------------------------------------------------+
-   | Inherits     | :ref:`autosar.element.Element <ar4_element>`   |
-   +--------------+------------------------------------------------+
+   +--------------+------------------------------------------------------+
+   | XML tag      | <DATA-ELEMENT>                                       |
+   +--------------+------------------------------------------------------+
+   | Module       | autosar.element                                      |
+   +--------------+------------------------------------------------------+
+   | Inherits     | :ref:`autosar.element.Element <ar4_element_Element>` |
+   +--------------+------------------------------------------------------+
 
 DataElements are commonly used in :ref:`ar4_portinterface_SenderReceiverInterface` but they sometimes are used for other purposes.
 
@@ -46,7 +46,7 @@ TBD
 Attributes
 -----------
 
-For inherited attributes see :ref:`autosar.element.Element <ar4_element>`.
+For inherited attributes see :ref:`autosar.element.Element <ar4_element_Element>`.
 
 ..  table::
     :align: left

@@ -11,7 +11,7 @@ RunnableEntity
     +--------------+-------------------------------------------------------------------------+
     | Module       | autosar.behavior                                                        |
     +--------------+-------------------------------------------------------------------------+
-    | Inherits     | :ref:`autosar.element.Element <ar4_element>`                            |
+    | Inherits     | :ref:`autosar.element.Element <ar4_element_Element>`                    |
     +--------------+-------------------------------------------------------------------------+
    
 AUTOSAR Runnable
@@ -24,7 +24,7 @@ Factory Methods
 Attributes
 -----------
 
-For inherited attributes see :ref:`autosar.element.Element <ar4_element>`.
+For inherited attributes see :ref:`autosar.element.Element <ar4_element_Element>`.
 
 ..  table::
     :align: left

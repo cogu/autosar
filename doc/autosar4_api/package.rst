@@ -80,6 +80,16 @@ Public Methods
 * :ref:`ar4_package_Package_createSubPackage`
 
 **DataType**
+.. createInternalDataConstraint
+.. createPhysicalDataConstraint
+.. createApplicationPrimitiveDataType
+.. createApplicationArrayDataType
+.. createApplicationRecordDataType
+.. createUnit
+.. createCompuMethodLinear
+.. createCompuMethodRationalPhys
+.. createCompuMethodRational
+.. createCompuMethodConst
 
 * :ref:`ar4_package_Package_createSwBaseType`
 * :ref:`ar4_package_Package_createImplementationDataType`
@@ -89,7 +99,6 @@ Public Methods
 * :ref:`ar4_package_Package_createImplementationRecordDataType`
 
 **Constant**
-
 * :ref:`ar4_package_Package_createConstant`
 * :ref:`ar4_package_Package_createNumericalValueConstant`
 * :ref:`ar4_package_Package_createApplicationValueConstant`
@@ -100,10 +109,13 @@ Public Methods
 * :ref:`ar4_package_Package_createParameterInterface`
 * :ref:`ar4_package_Package_createClientServerInterface`
 * :ref:`ar4_package_Package_createModeSwitchInterface`
+* :ref:`ar4_package_Package_createSoftwareAddressMethod`
+
 
 **ComponentType**
 
 * :ref:`ar4_package_Package_createApplicationSoftwareComponent`
+* :ref:`ar4_package_Package_createComplexDeviceDriverComponent`
 * :ref:`ar4_package_Package_createCompositionComponent`
 * :ref:`ar4_package_Package_createServiceComponent`
 
@@ -392,6 +404,18 @@ createModeSwitchInterface
     :param adminData: Optional adminData
     :rtype: :ref:`ar4_portinterface_ModeSwitchInterface`
 
+.. _ar4_package_package_createSoftwareAddressMethod:
+
+createSoftwareAddressMethod
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:method:: Package.createSoftwareAddressMethod(name)
+
+    Creates a new SoftwareAddressMethod and adds it to the package.
+
+    :param str name: ShortName of the address method
+    :rtype: SoftwareAddressMethod
+
 .. _ar4_package_Package_createApplicationSoftwareComponent:
 
 createApplicationSoftwareComponent
@@ -399,12 +423,13 @@ createApplicationSoftwareComponent
 
 .. py:method:: Package.createApplicationSoftwareComponent(swcName, [behaviorName = None], [implementationName = None], [multipleInstance = False])
 
-    Creates a new :ref:`component_applicationSoftwareComponent` and adds it to the package.
+    Creates a new :ref:`ar4_component_ApplicationSoftwareComponent` and adds it to the package.
 
     :param str swcName: ShortName of the component type
     :param str behaviorName: ShortName of the associated Behavior object. If not set an automatic name is selected.
     :param str implementationName: ShortName of the associated Implementation object. If not set an automatic name is selected.
-    :rtype: :ref:`component_applicationSoftwareComponent`
+    :param bool multipleInstance: Set to True if this component prototype needs to support multiple instances
+    :rtype: :ref:`ar4_component_ApplicationSoftwareComponent`
 
 Example
 ^^^^^^^
@@ -412,6 +437,20 @@ Example
 .. include:: examples/create_application_component.py
     :code: python
 
+.. _ar4_package_Package_createComplexDeviceDriverComponent:
+
+createComplexDeviceDriverComponent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:method:: Package.createApplicationSoftwareComponent(swcName, [behaviorName = None], [implementationName = None], [multipleInstance = False])
+
+    Creates a new :ref:`ar4_component_ComplexDeviceDriverComponent` and adds it to the package.
+
+    :param str swcName: ShortName of the component type
+    :param str behaviorName: ShortName of the associated Behavior object. If not set an automatic name is selected.
+    :param str implementationName: ShortName of the associated Implementation object. If not set an automatic name is selected.
+    :param bool multipleInstance: Set to True if this component prototype needs to support multiple instances
+    :rtype: :ref:`ar4_component_ComplexDeviceDriverComponent`
 
 .. _ar4_package_Package_createCompositionComponent:
 
@@ -446,6 +485,7 @@ createServiceComponent
     :param str swcName: ShortName of the component type
     :param str behaviorName: ShortName of the associated Behavior object. If not set an automatic name is selected.
     :param str implementationName: ShortName of the associated Implementation object. If not set an automatic name is selected.
+    :param bool multipleInstance: Set to True if this component prototype needs to support multiple instances
     :rtype: :ref:`ar4_component_ServiceComponent`
 
 Example

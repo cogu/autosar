@@ -11,7 +11,7 @@ Constant
     +--------------+-------------------------------------------------------------------------+
     | Module       | autosar.constant                                                        |
     +--------------+-------------------------------------------------------------------------+
-    | Inherits     | :ref:`autosar.element.Element <ar4_element>`                            |
+    | Inherits     | :ref:`autosar.element.Element <ar4_element_Element>`                    |
     +--------------+-------------------------------------------------------------------------+
 
 AUTOSAR constant specification.
@@ -22,7 +22,7 @@ Factory Methods
 Attributes
 -----------
 
-For inherited attributes see :ref:`autosar.element.Element <ar4_element>`.
+For inherited attributes see :ref:`autosar.element.Element <ar4_element_Element>`.
 
 ..  table::
     :align: left
@@ -32,4 +32,4 @@ For inherited attributes see :ref:`autosar.element.Element <ar4_element>`.
     +==========================+===========================+======================================+
     | **value**                | *ValueAR4*                | Value                                |
     +--------------------------+---------------------------+--------------------------------------+
-    
+

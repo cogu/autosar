@@ -11,7 +11,7 @@ ModeGroup
    +--------------+-------------------------------------------------------------------------+
    | Module       | autosar.submodule                                                       |
    +--------------+-------------------------------------------------------------------------+
-   | Inherits     | :ref:`autosar.element.Element <ar4_element>`                            |
+   | Inherits     | :ref:`autosar.element.Element <ar4_element_Element>`                    |
    +--------------+-------------------------------------------------------------------------+
 
 A ModeGroup is used as the internal storage container of the modeGroup attribute of the :ref:`ar4_portinterface_ModeSwitchInterface` class.
@@ -39,7 +39,7 @@ Constructor
 Attributes
 -----------
 
-For inherited attributes see :ref:`autosar.element.Element <ar4_element>`.
+For inherited attributes see :ref:`autosar.element.Element <ar4_element_Element>`.
 
 ..  table::
     :align: left

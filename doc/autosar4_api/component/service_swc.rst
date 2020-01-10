@@ -6,13 +6,13 @@ ServiceComponent
 .. table::
    :align: left
 
-   +--------------+-------------------------------------------------------------------------+
-   | XML tag      | <SERVICE-SW-COMPONENT-TYPE>                                             |
-   +--------------+-------------------------------------------------------------------------+
-   | Module       | autosar.component                                                       |
-   +--------------+-------------------------------------------------------------------------+
-   | Inherits     | :ref:`autosar.component.AtomicSoftwareComponent <component_atomic_swc>` |
-   +--------------+-------------------------------------------------------------------------+
+   +--------------+------------------------------------------------------------------------------------------+
+   | XML tag      | <SERVICE-SW-COMPONENT-TYPE>                                                              |
+   +--------------+------------------------------------------------------------------------------------------+
+   | Module       | autosar.component                                                                        |
+   +--------------+------------------------------------------------------------------------------------------+
+   | Inherits     | :ref:`autosar.component.AtomicSoftwareComponent <ar4_component_AtomicSoftwareComponent>` |
+   +--------------+------------------------------------------------------------------------------------------+
 
 Application software component.
 
@@ -32,4 +32,4 @@ Factory Methods
 Attributes
 -----------
 
-For inherited attributes see :ref:`autosar.component.AtomicSoftwareComponent <component_atomic_swc>`.
+For inherited attributes see :ref:`autosar.component.AtomicSoftwareComponent <ar4_component_AtomicSoftwareComponent>`.

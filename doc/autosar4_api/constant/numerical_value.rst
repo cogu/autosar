@@ -11,7 +11,7 @@ NumericalValue
     +--------------+-------------------------------------------------------------------------+
     | Module       | autosar.constant                                                        |
     +--------------+-------------------------------------------------------------------------+
-    | Inherits     | :ref:`autosar.element.Element <ar4_element>`                            |
+    | Inherits     | :ref:`autosar.element.Element <ar4_element_Element>`                    |
     +--------------+-------------------------------------------------------------------------+
 
 Factory Methods

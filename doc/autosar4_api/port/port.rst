@@ -6,13 +6,13 @@ Port
 .. table::
    :align: left
 
-   +--------------------+----------------------------------------------+
-   | XML tag            | (abstract class)                             |
-   +--------------------+----------------------------------------------+
-   | Module             | autosar.port                                 |
-   +--------------------+----------------------------------------------+
-   | Inherits           | :ref:`autosar.element.Element <ar4_element>` |
-   +--------------------+----------------------------------------------+
+   +--------------------+------------------------------------------------------+
+   | XML tag            | (abstract class)                                     |
+   +--------------------+------------------------------------------------------+
+   | Module             | autosar.port                                         |
+   +--------------------+------------------------------------------------------+
+   | Inherits           | :ref:`autosar.element.Element <ar4_element_Element>` |
+   +--------------------+------------------------------------------------------+
 
 This is the base class for component ports.
 
@@ -21,6 +21,8 @@ This is the base class for component ports.
 
 Attributes
 ----------
+
+For inherited attributes see :ref:`autosar.element.Element <ar4_element_Element>`.
 
 ..  table::
     :align: left

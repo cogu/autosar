@@ -6,6 +6,7 @@ Component
 
    application_swc
    atomic_swc
+   cdd_swc
    composition_swc
    component_prototype
    component_type

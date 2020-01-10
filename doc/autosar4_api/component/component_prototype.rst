@@ -11,7 +11,7 @@ ComponentPrototype
     +--------------+-------------------------------------------------------------------------+
     | Module       | autosar.submodule                                                       |
     +--------------+-------------------------------------------------------------------------+
-    | Inherits     | :ref:`autosar.element.Element <ar4_element>`                            |
+    | Inherits     | :ref:`autosar.element.Element <ar4_element_Element>`                    |
     +--------------+-------------------------------------------------------------------------+
 
 Component prototypes are used as child objects to :ref:`ar4_component_CompositionComponent` objects.
@@ -24,7 +24,7 @@ Factory Methods
 Attributes
 -----------
 
-For inherited attributes see :ref:`autosar.element.Element <ar4_element>`.
+For inherited attributes see :ref:`autosar.element.Element <ar4_element_Element>`.
 
 ..  table::
     :align: left

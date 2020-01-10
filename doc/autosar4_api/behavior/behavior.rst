@@ -6,18 +6,20 @@ SwcInternalBehavior
 .. table::
    :align: left
 
-   +--------------------+----------------------------------------------+
-   | XML tag            | <SWC-INTERNAL-BEHAVIOR>                      |
-   +--------------------+----------------------------------------------+
-   | Module             | autosar.behavior                             |
-   +--------------------+----------------------------------------------+
-   | Inherits           | :ref:`autosar.element.Element <ar4_element>` |
-   +--------------------+----------------------------------------------+
+   +--------------------+------------------------------------------------------+
+   | XML tag            | <SWC-INTERNAL-BEHAVIOR>                              |
+   +--------------------+------------------------------------------------------+
+   | Module             | autosar.behavior                                     |
+   +--------------------+------------------------------------------------------+
+   | Inherits           | :ref:`autosar.element.Element <ar4_element_Element>` |
+   +--------------------+------------------------------------------------------+
 
 This is the internal behavior class for AUTOSAR4 SWCs.
 
 Attributes
 ----------
+
+For inherited attributes see :ref:`autosar.element.Element <ar4_element_Element>`.
 
 ..  table::
     :align: left

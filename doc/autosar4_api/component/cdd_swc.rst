@@ -1,33 +1,26 @@
-.. _ar4_component_ApplicationSoftwareComponent:
+.. _ar4_component_ComplexDeviceDriverComponent:
 
-ApplicationSoftwareComponent
+ComplexDeviceDriverComponent
 ============================
 
 .. table::
    :align: left
 
    +--------------+------------------------------------------------------------------------------------------+
-   | XML tag      | <APPLICATION-SW-COMPONENT-TYPE>                                                          |
+   | XML tag      | <COMPLEX-DEVICE-DRIVER-SW-COMPONENT-TYPE>                                                |
    +--------------+------------------------------------------------------------------------------------------+
    | Module       | autosar.component                                                                        |
    +--------------+------------------------------------------------------------------------------------------+
    | Inherits     | :ref:`autosar.component.AtomicSoftwareComponent <ar4_component_AtomicSoftwareComponent>` |
    +--------------+------------------------------------------------------------------------------------------+
 
-
-Application software component prototype.
-
-Usage
------
-
-..  include:: examples/usage_application_swc.py
-    :code: python3
+This class represents Complex Device Driver (CDD) software component prototypes.
 
 
 Factory Methods
 ---------------
 
-* :ref:`Package.createApplicationSoftwareComponent <ar4_package_Package_createApplicationSoftwareComponent>`
+* :ref:`Package.createComplexDeviceDriverComponent <ar4_package_Package_createComplexDeviceDriverComponent>`
 
 
 Attributes

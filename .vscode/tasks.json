@@ -18,7 +18,8 @@
                     "cwd": "${workspaceFolder}\\doc"
                 },
                 "problemMatcher": []
-            }
+            },
+            "problemMatcher": []
         },
         {
             "label": "html",
@@ -33,7 +34,7 @@
                         ]
                     },
                     "cwd": "${workspaceFolder}\\doc"
-                },                
+                }
             },
             "group": {
                 "kind": "build",

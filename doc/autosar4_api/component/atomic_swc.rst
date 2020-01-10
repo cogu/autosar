@@ -1,4 +1,4 @@
-.. _component_atomic_swc:
+.. _ar4_component_AtomicSoftwareComponent:
 
 AtomicSoftwareComponent
 =======================
