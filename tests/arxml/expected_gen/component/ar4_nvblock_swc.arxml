@@ -25,6 +25,18 @@
               </REQUIRED-COM-SPECS>
               <REQUIRED-INTERFACE-TREF DEST="NV-DATA-INTERFACE">/PortInterfaces/RebootCount_NvI</REQUIRED-INTERFACE-TREF>
             </R-PORT-PROTOTYPE>
+            <R-PORT-PROTOTYPE>
+              <SHORT-NAME>UserSetting_NvR</SHORT-NAME>
+              <REQUIRED-COM-SPECS>
+                <NV-REQUIRE-COM-SPEC>
+                  <VARIABLE-REF DEST="VARIABLE-DATA-PROTOTYPE">/PortInterfaces/UserSetting_NvI/SettinNo1</VARIABLE-REF>
+                </NV-REQUIRE-COM-SPEC>
+                <NV-REQUIRE-COM-SPEC>
+                  <VARIABLE-REF DEST="VARIABLE-DATA-PROTOTYPE">/PortInterfaces/UserSetting_NvI/SettinNo2</VARIABLE-REF>
+                </NV-REQUIRE-COM-SPEC>
+              </REQUIRED-COM-SPECS>
+              <REQUIRED-INTERFACE-TREF DEST="NV-DATA-INTERFACE">/PortInterfaces/UserSetting_NvI</REQUIRED-INTERFACE-TREF>
+            </R-PORT-PROTOTYPE>
           </PORTS>
           <INTERNAL-BEHAVIORS>
             <SWC-INTERNAL-BEHAVIOR>
@@ -43,6 +55,22 @@
                     <TARGET-DATA-ELEMENT-REF DEST="VARIABLE-DATA-PROTOTYPE">/PortInterfaces/RebootCount_NvI/RebootCount</TARGET-DATA-ELEMENT-REF>
                   </DATA-IREF>
                 </DATA-RECEIVED-EVENT>
+                <DATA-RECEIVED-EVENT>
+                  <SHORT-NAME>DRT_NvBlockHandler_DataWrittenCallback_UserSetting_NvR_SettinNo1</SHORT-NAME>
+                  <START-ON-EVENT-REF DEST="RUNNABLE-ENTITY">/ComponentTypes/NvBlockHandler/NvBlockHandler_InternalBehavior/NvBlockHandler_DataWrittenCallback</START-ON-EVENT-REF>
+                  <DATA-IREF>
+                    <CONTEXT-R-PORT-REF DEST="R-PORT-PROTOTYPE">/ComponentTypes/NvBlockHandler/UserSetting_NvR</CONTEXT-R-PORT-REF>
+                    <TARGET-DATA-ELEMENT-REF DEST="VARIABLE-DATA-PROTOTYPE">/PortInterfaces/UserSetting_NvI/SettinNo1</TARGET-DATA-ELEMENT-REF>
+                  </DATA-IREF>
+                </DATA-RECEIVED-EVENT>
+                <DATA-RECEIVED-EVENT>
+                  <SHORT-NAME>DRT_NvBlockHandler_DataWrittenCallback_UserSetting_NvR_SettinNo2</SHORT-NAME>
+                  <START-ON-EVENT-REF DEST="RUNNABLE-ENTITY">/ComponentTypes/NvBlockHandler/NvBlockHandler_InternalBehavior/NvBlockHandler_DataWrittenCallback</START-ON-EVENT-REF>
+                  <DATA-IREF>
+                    <CONTEXT-R-PORT-REF DEST="R-PORT-PROTOTYPE">/ComponentTypes/NvBlockHandler/UserSetting_NvR</CONTEXT-R-PORT-REF>
+                    <TARGET-DATA-ELEMENT-REF DEST="VARIABLE-DATA-PROTOTYPE">/PortInterfaces/UserSetting_NvI/SettinNo2</TARGET-DATA-ELEMENT-REF>
+                  </DATA-IREF>
+                </DATA-RECEIVED-EVENT>
               </EVENTS>
               <PORT-API-OPTIONS>
                 <PORT-API-OPTION>
@@ -54,6 +82,11 @@
                   <ENABLE-TAKE-ADDRESS>false</ENABLE-TAKE-ADDRESS>
                   <INDIRECT-API>false</INDIRECT-API>
                   <PORT-REF DEST="R-PORT-PROTOTYPE">/ComponentTypes/NvBlockHandler/RebootCount_NvR</PORT-REF>
+                </PORT-API-OPTION>
+                <PORT-API-OPTION>
+                  <ENABLE-TAKE-ADDRESS>false</ENABLE-TAKE-ADDRESS>
+                  <INDIRECT-API>false</INDIRECT-API>
+                  <PORT-REF DEST="R-PORT-PROTOTYPE">/ComponentTypes/NvBlockHandler/UserSetting_NvR</PORT-REF>
                 </PORT-API-OPTION>
               </PORT-API-OPTIONS>
               <RUNNABLES>
@@ -134,6 +167,138 @@
                 <INIT-VALUE>
                   <CONSTANT-REFERENCE>
                     <CONSTANT-REF DEST="CONSTANT-SPECIFICATION">/Constants/LastCyclePushButtonStatus_IV</CONSTANT-REF>
+                  </CONSTANT-REFERENCE>
+                </INIT-VALUE>
+              </ROM-BLOCK>
+              <SUPPORT-DIRTY-FLAG>true</SUPPORT-DIRTY-FLAG>
+              <TIMING-EVENT-REF DEST="TIMING-EVENT">/ComponentTypes/NvBlockHandler/NvBlockHandler_InternalBehavior/TMT_run</TIMING-EVENT-REF>
+            </NV-BLOCK-DESCRIPTOR>
+            <NV-BLOCK-DESCRIPTOR>
+              <SHORT-NAME>NvBlckDescr_UserSetting_NvR_SettinNo1</SHORT-NAME>
+              <NV-BLOCK-DATA-MAPPINGS>
+                <NV-BLOCK-DATA-MAPPING>
+                  <NV-RAM-BLOCK-ELEMENT>
+                    <LOCAL-VARIABLE-REF DEST="VARIABLE-DATA-PROTOTYPE">/ComponentTypes/NvBlockHandler/NvBlckDescr_UserSetting_NvR_SettinNo1/VariableDataPt</LOCAL-VARIABLE-REF>
+                  </NV-RAM-BLOCK-ELEMENT>
+                  <WRITTEN-NV-DATA>
+                    <AUTOSAR-VARIABLE-IREF>
+                      <PORT-PROTOTYPE-REF DEST="R-PORT-PROTOTYPE">/ComponentTypes/NvBlockHandler/UserSetting_NvR</PORT-PROTOTYPE-REF>
+                      <TARGET-DATA-PROTOTYPE-REF DEST="VARIABLE-DATA-PROTOTYPE">/PortInterfaces/UserSetting_NvI/SettinNo1</TARGET-DATA-PROTOTYPE-REF>
+                    </AUTOSAR-VARIABLE-IREF>
+                  </WRITTEN-NV-DATA>
+                </NV-BLOCK-DATA-MAPPING>
+              </NV-BLOCK-DATA-MAPPINGS>
+              <NV-BLOCK-NEEDS>
+                <SHORT-NAME>NvmBlockNeed</SHORT-NAME>
+                <CHECK-STATIC-BLOCK-ID>false</CHECK-STATIC-BLOCK-ID>
+                <CYCLIC-WRITING-PERIOD>0</CYCLIC-WRITING-PERIOD>
+                <N-DATA-SETS>2</N-DATA-SETS>
+                <N-ROM-BLOCKS>1</N-ROM-BLOCKS>
+                <RAM-BLOCK-STATUS-CONTROL>NV-RAM-MANAGER</RAM-BLOCK-STATUS-CONTROL>
+                <READONLY>false</READONLY>
+                <RELIABILITY>ERROR-DETECTION</RELIABILITY>
+                <RESISTANT-TO-CHANGED-SW>true</RESISTANT-TO-CHANGED-SW>
+                <RESTORE-AT-START>true</RESTORE-AT-START>
+                <STORE-AT-SHUTDOWN>true</STORE-AT-SHUTDOWN>
+                <STORE-CYCLIC>false</STORE-CYCLIC>
+                <STORE-EMERGENCY>false</STORE-EMERGENCY>
+                <STORE-IMMEDIATE>true</STORE-IMMEDIATE>
+                <USE-AUTO-VALIDATION-AT-SHUT-DOWN>false</USE-AUTO-VALIDATION-AT-SHUT-DOWN>
+                <USE-CRC-COMP-MECHANISM>true</USE-CRC-COMP-MECHANISM>
+                <WRITE-ONLY-ONCE>false</WRITE-ONLY-ONCE>
+                <WRITE-VERIFICATION>true</WRITE-VERIFICATION>
+                <WRITING-FREQUENCY>10000</WRITING-FREQUENCY>
+                <WRITING-PRIORITY>LOW</WRITING-PRIORITY>
+              </NV-BLOCK-NEEDS>
+              <RAM-BLOCK>
+                <SHORT-NAME>VariableDataPt</SHORT-NAME>
+                <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/uint32</TYPE-TREF>
+              </RAM-BLOCK>
+              <ROM-BLOCK>
+                <SHORT-NAME>ParameterDataPt</SHORT-NAME>
+                <LONG-NAME>
+                  <L-4 L="FOR-ALL">Rom block long name</L-4>
+                </LONG-NAME>
+                <DESC>
+                  <L-2 L="FOR-ALL">Rom block description</L-2>
+                </DESC>
+                <SW-DATA-DEF-PROPS>
+                  <SW-DATA-DEF-PROPS-VARIANTS>
+                    <SW-DATA-DEF-PROPS-CONDITIONAL>
+                      <SW-CALIBRATION-ACCESS>READ-WRITE</SW-CALIBRATION-ACCESS>
+                    </SW-DATA-DEF-PROPS-CONDITIONAL>
+                  </SW-DATA-DEF-PROPS-VARIANTS>
+                </SW-DATA-DEF-PROPS>
+                <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/uint32</TYPE-TREF>
+                <INIT-VALUE>
+                  <CONSTANT-REFERENCE>
+                    <CONSTANT-REF DEST="CONSTANT-SPECIFICATION">/Constants/UserSetting_IV</CONSTANT-REF>
+                  </CONSTANT-REFERENCE>
+                </INIT-VALUE>
+              </ROM-BLOCK>
+              <SUPPORT-DIRTY-FLAG>true</SUPPORT-DIRTY-FLAG>
+              <TIMING-EVENT-REF DEST="TIMING-EVENT">/ComponentTypes/NvBlockHandler/NvBlockHandler_InternalBehavior/TMT_run</TIMING-EVENT-REF>
+            </NV-BLOCK-DESCRIPTOR>
+            <NV-BLOCK-DESCRIPTOR>
+              <SHORT-NAME>NvBlckDescr_UserSetting_NvR_SettinNo2</SHORT-NAME>
+              <NV-BLOCK-DATA-MAPPINGS>
+                <NV-BLOCK-DATA-MAPPING>
+                  <NV-RAM-BLOCK-ELEMENT>
+                    <LOCAL-VARIABLE-REF DEST="VARIABLE-DATA-PROTOTYPE">/ComponentTypes/NvBlockHandler/NvBlckDescr_UserSetting_NvR_SettinNo2/VariableDataPt</LOCAL-VARIABLE-REF>
+                  </NV-RAM-BLOCK-ELEMENT>
+                  <WRITTEN-NV-DATA>
+                    <AUTOSAR-VARIABLE-IREF>
+                      <PORT-PROTOTYPE-REF DEST="R-PORT-PROTOTYPE">/ComponentTypes/NvBlockHandler/UserSetting_NvR</PORT-PROTOTYPE-REF>
+                      <TARGET-DATA-PROTOTYPE-REF DEST="VARIABLE-DATA-PROTOTYPE">/PortInterfaces/UserSetting_NvI/SettinNo2</TARGET-DATA-PROTOTYPE-REF>
+                    </AUTOSAR-VARIABLE-IREF>
+                  </WRITTEN-NV-DATA>
+                </NV-BLOCK-DATA-MAPPING>
+              </NV-BLOCK-DATA-MAPPINGS>
+              <NV-BLOCK-NEEDS>
+                <SHORT-NAME>NvmBlockNeed</SHORT-NAME>
+                <CHECK-STATIC-BLOCK-ID>false</CHECK-STATIC-BLOCK-ID>
+                <CYCLIC-WRITING-PERIOD>0</CYCLIC-WRITING-PERIOD>
+                <N-DATA-SETS>2</N-DATA-SETS>
+                <N-ROM-BLOCKS>1</N-ROM-BLOCKS>
+                <RAM-BLOCK-STATUS-CONTROL>NV-RAM-MANAGER</RAM-BLOCK-STATUS-CONTROL>
+                <READONLY>false</READONLY>
+                <RELIABILITY>ERROR-DETECTION</RELIABILITY>
+                <RESISTANT-TO-CHANGED-SW>true</RESISTANT-TO-CHANGED-SW>
+                <RESTORE-AT-START>true</RESTORE-AT-START>
+                <STORE-AT-SHUTDOWN>true</STORE-AT-SHUTDOWN>
+                <STORE-CYCLIC>false</STORE-CYCLIC>
+                <STORE-EMERGENCY>false</STORE-EMERGENCY>
+                <STORE-IMMEDIATE>true</STORE-IMMEDIATE>
+                <USE-AUTO-VALIDATION-AT-SHUT-DOWN>false</USE-AUTO-VALIDATION-AT-SHUT-DOWN>
+                <USE-CRC-COMP-MECHANISM>true</USE-CRC-COMP-MECHANISM>
+                <WRITE-ONLY-ONCE>false</WRITE-ONLY-ONCE>
+                <WRITE-VERIFICATION>true</WRITE-VERIFICATION>
+                <WRITING-FREQUENCY>10000</WRITING-FREQUENCY>
+                <WRITING-PRIORITY>LOW</WRITING-PRIORITY>
+              </NV-BLOCK-NEEDS>
+              <RAM-BLOCK>
+                <SHORT-NAME>VariableDataPt</SHORT-NAME>
+                <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/uint32</TYPE-TREF>
+              </RAM-BLOCK>
+              <ROM-BLOCK>
+                <SHORT-NAME>ParameterDataPt</SHORT-NAME>
+                <LONG-NAME>
+                  <L-4 L="FOR-ALL">Rom block long name</L-4>
+                </LONG-NAME>
+                <DESC>
+                  <L-2 L="FOR-ALL">Rom block description</L-2>
+                </DESC>
+                <SW-DATA-DEF-PROPS>
+                  <SW-DATA-DEF-PROPS-VARIANTS>
+                    <SW-DATA-DEF-PROPS-CONDITIONAL>
+                      <SW-CALIBRATION-ACCESS>READ-WRITE</SW-CALIBRATION-ACCESS>
+                    </SW-DATA-DEF-PROPS-CONDITIONAL>
+                  </SW-DATA-DEF-PROPS-VARIANTS>
+                </SW-DATA-DEF-PROPS>
+                <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/uint32</TYPE-TREF>
+                <INIT-VALUE>
+                  <CONSTANT-REFERENCE>
+                    <CONSTANT-REF DEST="CONSTANT-SPECIFICATION">/Constants/UserSetting_IV</CONSTANT-REF>
                   </CONSTANT-REFERENCE>
                 </INIT-VALUE>
               </ROM-BLOCK>

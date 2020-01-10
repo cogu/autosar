@@ -363,3 +363,6 @@ class InvalidModeGroupRef(ValueError):
 
 class InvalidEventSourceRef(ValueError):
     pass
+
+class InvalidRunnableRef(ValueError):
+    pass
