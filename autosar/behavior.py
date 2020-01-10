@@ -968,54 +968,61 @@ class InternalBehaviorCommon(Element):
 
         runnable=self.find(runnableName)
         if runnable is None:
-            raise ValueError('invalid runnable name: '+runnableName)
+            raise autosar.base.InvalidRunnableRef(runnableName)
         assert(isinstance(runnable, autosar.behavior.RunnableEntity))
 
         if not isinstance(dataElementRef, str):
-            raise ValueError("expected dataElementRef to be string of the format 'portName/dataElementName' ")
+            raise autosar.base.InvalidDataElementRef("expected dataElementRef to be string of the format 'portName' or 'portName/dataElementName' ")
+
         parts = autosar.base.splitRef(dataElementRef)
         if len(parts)==2:
-            raise ValueError("expected dataElementRef to be string of the format 'portName/dataElementName' ")
-            portName,dataElementName=parts[0],parts[1]
+            portName, dataElementName = parts[0], parts[1]
         elif len(parts)==1:
-            portName,dataElementName=parts[0],None
+            portName, dataElementName = parts[0], None
+        else:
+            raise autosar.base.InvalidDataElementRef("expected dataElementRef to be string of the format 'portName' or 'portName/dataElementName' ")
+
         eventName=name
         port = self.swc.find(portName)
         if (port is None) or not isinstance(port, autosar.port.Port):
-            raise ValueError('invalid port name: '+portName)
+            raise autosar.base.InvalidPortRef(portName)
         portInterface = ws.find(port.portInterfaceRef)
         if portInterface is None:
-            raise ValueError('invalid reference: '+port.portInterface)
+            raise autosar.base.InvalidPortInterfaceRef('invalid reference: {}'.format(port.portInterface))
         if isinstance(portInterface, autosar.portinterface.SenderReceiverInterface):
             if dataElementName is None:
-                if len(portInterface.dataElements)==1:
-                    dataElement=portInterface.dataElements[0]
-                elif len(portInterface.dataElements)>1:
-                    raise ValueError("expected dataElementRef to be string of the format 'portName/dataElementName' ")
+                if len(portInterface.dataElements) == 1:
+                    dataElement = portInterface.dataElements[0]
+                elif len(portInterface.dataElements) > 1:
+                    raise autosar.base.InvalidDataElementRef("expected dataElementRef to be string of the format 'portName/dataElementName' ")
                 else:
-                    raise ValueError('portInterface "%s" has no data elements'%portInterface.name)
+                    raise autosar.base.InvalidDataElementRef('portInterface "{}" has no data elements'.format(portInterface.name))
             else:
                 dataElement = portInterface.find(dataElementName)
-                if (dataElement is None) or not isinstance(dataElement, autosar.portinterface.Operation):
-                    raise ValueError('invalid data element name: ' + dataElementName )
+                if not isinstance(dataElement, autosar.element.DataElement):
+                    raise autosar.base.InvalidDataElementRef(dataElementName)
+                elif dataElement is None:
+                    raise autosar.base.InvalidDataElementRef('portInterface "{}" has no operation {}'.format(portInterface.name, dataElementName))
         elif isinstance(portInterface, autosar.portinterface.NvDataInterface):
             if dataElementName is None:
-                if len(portInterface.nvDatas)==1:
-                    dataElement=portInterface.nvDatas[0]
-                elif len(portInterface.nvDatas)>1:
-                    raise ValueError("expected dataElementRef to be string of the format 'portName/dataElementName' ")
+                if len(portInterface.nvDatas) == 1:
+                    dataElement = portInterface.nvDatas[0]
+                elif len(portInterface.nvDatas) > 1:
+                    raise autosar.base.InvalidDataElementRef("expected dataElementRef to be string of the format 'portName/dataElementName' ")
                 else:
-                    raise ValueError('portInterface "%s" has no data elements'%portInterface.name)
+                    raise autosar.base.InvalidDataElementRef('portInterface "{}" has no nvdata elements'.format(portInterface.name))
             else:
                 dataElement = portInterface.find(dataElementName)
-                if (dataElement is None) or not isinstance(dataElement, autosar.portinterface.Operation):
-                    raise ValueError('invalid data element name: ' + dataElementName )
+                if not isinstance(dataElement, autosar.element.DataElement):
+                    raise autosar.base.InvalidDataElementRef(dataElementName)
+                elif dataElement is None:
+                    raise autosar.base.InvalidDataElementRef('portInterface "{}" has no nvdata {}'.format(portInterface.name, dataElementName))
         else:
-            raise ValueError('The referenced port "%s" does not have a SenderReceiverInterface or NvDataInterface'%(port.name))
+            raise autosar.base.InvalidPortRef('The referenced port "{}" does not have a SenderReceiverInterface or NvDataInterface'.format(port.name))
         if eventName is None:
-            eventName=self._findEventName('DRT_%s_%s_%s'%(runnable.name, port.name, dataElement.name))
+            eventName=self._findEventName('DRT_{}_{}_{}'.format(runnable.name, port.name, dataElement.name))
         event = DataReceivedEvent(eventName, runnable.ref, self)
-        event.dataInstanceRef=DataInstanceRef(port.ref, dataElement.ref)
+        event.dataInstanceRef = DataInstanceRef(port.ref, dataElement.ref)
 
         if modeDependency is not None:
             self._processModeDependency(event, modeDependency, ws.version)

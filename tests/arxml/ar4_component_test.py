@@ -27,18 +27,26 @@ def _create_base_types(ws):
     package.createImplementationDataType('uint16', lowerLimit=0, upperLimit=65535, baseTypeRef='/DataTypes/BaseTypes/uint16', typeEmitter='Platform_Type')
     package.createImplementationDataType('uint32', lowerLimit=0, upperLimit=4294967295, baseTypeRef='/DataTypes/BaseTypes/uint32', typeEmitter='Platform_Type')
     package.createImplementationDataTypeRef('PushButtonStatus_T', '/DataTypes/uint8', valueTable=['PushButtonStatus_Neutral', 'PushButtonStatus_Pushed', 'PushButtonStatus_Error', 'PushButtonStatus_NotAvailable'])
+    package.createApplicationPrimitiveDataType('AmbientT')
 
 def _create_test_elements(ws):
     package = ws.find('/Constants')
+    package.createNumericalValueConstant('AmbientT_IV', -40)
     package.createConstant('VehicleSpeed_IV', 'uint16', 65535)
     package.createConstant('EngineSpeed_IV', 'uint16', 65535)
     package.createConstant('LastCyclePushButtonStatus_IV', 'uint8', 0)
+    package.createConstant('UserSetting_IV', 'uint32', 0)
+    package.createConstant('EcuU_IV', 'uint32', 0)
+    package.createConstant('RebootCount_IV', 'uint32', 0)
     package = ws.find('/PortInterfaces')
+    package.createSenderReceiverInterface('AmbientT_I', autosar.DataElement('AmbientT', 'AmbientT'))
     package.createSenderReceiverInterface('VehicleSpeed_I', autosar.DataElement('VehicleSpeed', 'uint16'))
     package.createSenderReceiverInterface('EngineSpeed_I', autosar.DataElement('EngineSpeed', 'uint16'))
     package.createSenderReceiverInterface('PushButtonStatus_I', autosar.DataElement('PushButtonStatus', 'PushButtonStatus_T', isQueued=True))
+    package.createSenderReceiverInterface('EcuStatus_I', (autosar.DataElement('EcuU', 'uint32'), autosar.DataElement('RebootCount', 'uint32')))
     package.createNvDataInterface('LastCyclePushButtonStatus_NvI', autosar.DataElement('LastCyclePushButtonStatus', 'PushButtonStatus_T'))
     package.createNvDataInterface('RebootCount_NvI', autosar.DataElement('RebootCount', 'uint32'))
+    package.createNvDataInterface('UserSetting_NvI', (autosar.DataElement('SettinNo1', 'uint32'), autosar.DataElement('SettinNo2', 'uint32')))
     portInterface=package.createClientServerInterface('FreeRunningTimer5ms_I', ['GetTime', 'IsTimerElapsed'])
     portInterface['GetTime'].createOutArgument('value', '/DataTypes/uint32')
     portInterface["IsTimerElapsed"].createInArgument("startTime", '/DataTypes/uint32')
@@ -224,10 +232,17 @@ class ARXML4ComponentTest(ARXMLTestClass):
         swc = package.createNvBlockComponent('NvBlockHandler')
         swc.createRequirePort('LastCyclePushButtonStatus_NvR', 'LastCyclePushButtonStatus_NvI')
         swc.createRequirePort('RebootCount_NvR', 'RebootCount_NvI')
+
+        comspecList = []
+        comspecList.append({'nvData': 'SettinNo1'})
+        comspecList.append({'nvData': 'SettinNo2'})
+        swc.createRequirePort('UserSetting_NvR', 'UserSetting_NvI', comspec=comspecList)
         swc.behavior.createRunnable('run')
         Run_Event = swc.behavior.createTimingEvent('run', 20) #execute the run function every 20ms in all modes
         swc.behavior.createRunnable('NvBlockHandler_DataWrittenCallback')
         swc.behavior.createDataReceivedEvent('NvBlockHandler_DataWrittenCallback', 'RebootCount_NvR')
+        swc.behavior.createDataReceivedEvent('NvBlockHandler_DataWrittenCallback', 'UserSetting_NvR/SettinNo1')
+        swc.behavior.createDataReceivedEvent('NvBlockHandler_DataWrittenCallback', 'UserSetting_NvR/SettinNo2')
 
         nvmBlockConfig = autosar.behavior.NvmBlockConfig(numberOfDataSets=2,
                                         numberOfRomBlocks=1,
@@ -252,6 +267,14 @@ class ARXML4ComponentTest(ARXMLTestClass):
         autosar.behavior.createNvBlockDescriptor(swc, 'LastCyclePushButtonStatus_NvR',
                 NvmBlockConfig=nvmBlockConfig, timingEventRef=Run_Event.name, swCalibrationAccess='READ-WRITE', supportDirtyFlag=True,
                 romBlockInitValueRef = 'LastCyclePushButtonStatus_IV', romBlockDesc="Rom block description", romBlockLongName="Rom block long name")
+
+        autosar.behavior.createNvBlockDescriptor(swc, 'UserSetting_NvR/SettinNo1',
+                NvmBlockConfig=nvmBlockConfig, timingEventRef=Run_Event.name, swCalibrationAccess='READ-WRITE', supportDirtyFlag=True,
+                romBlockInitValueRef = 'UserSetting_IV', romBlockDesc="Rom block description", romBlockLongName="Rom block long name")
+
+        autosar.behavior.createNvBlockDescriptor(swc, 'UserSetting_NvR/SettinNo2',
+                NvmBlockConfig=nvmBlockConfig, timingEventRef=Run_Event.name, swCalibrationAccess='READ-WRITE', supportDirtyFlag=True,
+                romBlockInitValueRef = 'UserSetting_IV', romBlockDesc="Rom block description", romBlockLongName="Rom block long name")
 
         file_name = 'ar4_nvblock_swc.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
@@ -292,6 +315,48 @@ class ARXML4ComponentTest(ARXMLTestClass):
         self.assertEqual(msg, "/ComponentTypes/InvalidInterfacesTest/EngineSpeed: Invalid_ref_2")
         os.remove(generated_file)
 
+    def test_create_data_received_event(self):
+        ws = autosar.workspace(version="4.2.2")
+        _init_ws(ws)
+        package = ws.find('/ComponentTypes')
+        swc = package.createApplicationSoftwareComponent('MyApplication')
+        comspecList = []
+        comspecList.append({'dataElement': 'EcuU', 'initValueRef': 'EcuU_IV'})
+        comspecList.append({'dataElement': 'RebootCount', 'initValueRef': 'RebootCount_IV'})
+        swc.createRequirePort('EcuStatus', 'EcuStatus_I', comspec=comspecList)
+        swc.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV')
+        swc.createRequirePort('AmbientT', 'AmbientT_I', initValueRef = 'AmbientT_IV')
+
+        swc.behavior.createRunnable('Run', portAccess=['VehicleSpeed', 'AmbientT', 'EcuStatus/EcuU', 'EcuStatus/RebootCount'])
+        swc.behavior.createTimerEvent('Run', 20) #execute the Run function every 20ms in all modes
+
+
+        swc.behavior.createRunnable('AmbientT_Received', portAccess=['AmbientT'])
+        swc.behavior.createDataReceivedEvent('AmbientT_Received', 'AmbientT')
+
+        swc.behavior.createRunnable('VehicleSpeed_Received', portAccess=['VehicleSpeed'])
+        swc.behavior.createDataReceivedEvent('VehicleSpeed_Received', 'VehicleSpeed')
+
+        swc.behavior.createRunnable('EcuU_Received', portAccess=['EcuStatus/EcuU'])
+        swc.behavior.createDataReceivedEvent('EcuU_Received', 'EcuStatus/EcuU')
+
+        swc.behavior.createRunnable('RebootCount_Received', portAccess=['EcuStatus/RebootCount'])
+        swc.behavior.createDataReceivedEvent('RebootCount_Received', 'EcuStatus/RebootCount')
+
+        file_name = 'ar4_application_swc_data_received_event.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'component', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
+
+        with self.assertRaises(autosar.base.InvalidRunnableRef) as cm:
+            swc.behavior.createDataReceivedEvent('InvalidRunnableName', 'EcuStatus/RebootCount')
+        msg, = cm.exception.args
+        self.assertEqual(msg, 'InvalidRunnableName')
+
+        with self.assertRaises(autosar.base.InvalidPortRef) as cm:
+            swc.behavior.createDataReceivedEvent('RebootCount_Received', 'InvalidPortRef/RebootCount')
+        msg, = cm.exception.args
+        self.assertEqual(msg, 'InvalidPortRef')
 
 if __name__ == '__main__':
     unittest.main()
