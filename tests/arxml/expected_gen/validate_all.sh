@@ -1,0 +1,1 @@
+find . -name ar4_*.arxml | xargs xmllint --noout --schema AUTOSAR_4-2-2.xsd
