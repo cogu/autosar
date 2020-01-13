@@ -80,10 +80,11 @@ Public Methods
 * :ref:`ar4_package_Package_createSubPackage`
 
 **DataType**
+
 .. createInternalDataConstraint
 .. createPhysicalDataConstraint
-.. createApplicationPrimitiveDataType
 .. createApplicationArrayDataType
+.. createApplicationPrimitiveDataType
 .. createApplicationRecordDataType
 .. createUnit
 .. createCompuMethodLinear
@@ -91,6 +92,9 @@ Public Methods
 .. createCompuMethodRational
 .. createCompuMethodConst
 
+* :ref:`ar4_package_Package_createApplicationArrayDataType`
+* :ref:`ar4_package_Package_createApplicationPrimitiveDataType`
+* :ref:`ar4_package_Package_createApplicationRecordDataType`
 * :ref:`ar4_package_Package_createSwBaseType`
 * :ref:`ar4_package_Package_createImplementationDataType`
 * :ref:`ar4_package_Package_createImplementationDataTypeRef`
@@ -145,6 +149,57 @@ Example
 .. include:: examples/create_sub_packages.py
     :code: python
 
+.. _ar4_package_Package_createApplicationArrayDataType:
+
+createApplicationArrayDataType
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:method:: Package.ApplicationArrayDataType(name, element, [swCalibrationAccess = None], [category = None], [adminData = None])
+
+    :param str name: ShortName of the new datatype
+    :param ApplicationArrayElement element: An ApplicationArrayElement object
+    :param str swCalibrationAccess: Optional :ref:`calibration access <ar4_sw_calibration_access>`
+    :param str category: Optional category string
+    :param adminData: Optional adminData
+    :rtype: ApplicationArrayDataType
+
+    Creates a new ApplicationArrayDataType and appends it to this package.
+
+
+.. _ar4_package_Package_createApplicationPrimitiveDataType:
+
+createApplicationPrimitiveDataType
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:method:: Package.createApplicationPrimitiveDataType(name, [dataConstraint = ""], [compuMethod = None], [unit = None], [swCalibrationAccess = None], [category = None], [adminData = None])
+
+    :param str name: ShortName of the new datatype
+    :param str dataConstraint: Optional name or reference to a DataConstraint object. Empty string means that an automatic data constraint will be created. Set to None to disable.
+    :param str compuMethod: Optional name or reference to a CompuMethod object
+    :param str unit: Optional name or reference to a Unit object
+    :param str swCalibrationAccess: Optional :ref:`calibration access <ar4_sw_calibration_access>`
+    :param str category: Optional category string
+    :param adminData: Optional adminData
+    :rtype: ApplicationPrimitiveDataType
+
+    Creates a new ApplicationPrimitiveDataType and appends it to this package.
+
+.. _ar4_package_Package_createApplicationRecordDataType:
+
+createApplicationRecordDataType
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:method:: Package.createApplicationRecordDataType(name, elements, [swCalibrationAccess = ""], [category = "STRUCTURE"], [adminData=None])
+
+    :param str name: ShortName of the new datatype
+    :param str elements: List containing tuples. First tuple element is the record name (string), second tuple element is a type reference (string).
+    :param str swCalibrationAccess: Optional :ref:`calibration access <ar4_sw_calibration_access>`
+    :param str category: Category string
+    :param adminData: Optional adminData
+    :rtype: ApplicationRecordDataType
+
+    Creates a new ApplicationRecordDataType and appends it to this package.
+
 
 .. _ar4_package_Package_createSwBaseType:
 
@@ -153,13 +208,14 @@ createSwBaseType
 
 ..  py:method:: Package.createSwBaseType(name , [size=None], [encoding=None], [nativeDeclaration=None], [category='FIXED_LENGTH'], [adminData=None])
 
-    Creates a new SwBaseType object add appends it to this package.
-
+    :param str name: ShortName of the new datatype
     :param int size: Size of type in bits
     :param str encoding: Encoding string
     :param str nativeDeclaration: Used to map this base type to one of the native types known to the RTE
     :param str category: Category string
     :param adminData: Optional AdminData
+
+    Creates a new SwBaseType object add appends it to this package.
 
 Example
 ^^^^^^^
@@ -240,20 +296,12 @@ createImplementationArrayDataType
     :param str implementationTypeRef: Reference to (existing) :ref:`ar4_datatype_ImplementationDataType`
     :param int arraySize: Number of elements in array
     :param str elementName: Optional (inner) element name.
-    :param str swCalibrationAccess: Optional calbration access
+    :param str swCalibrationAccess: Optional :ref:`calibration access <ar4_sw_calibration_access>`
     :param str typeEmitter: Optional type emitter
     :param str category: Category for the (outer) array data type
     :param str targetCategory: Category for the (inner) array element
     :param adminData: Optional AdminData
     :rtype: :ref:`ar4_datatype_ImplementationDataType`
-
-**swCalibrationAccess**
-
-* None: No calibration access set
-* \\"\\" (Empty string): Create default calibration access value as set by Workspace.profile.swCalibrationAccessDefault
-* \\"NOT-ACCESSIBLE\\": The element will not be accessible by external tools
-* \\"READ-ONLY\\": Read only access
-* \\"READ-WRITE\\": Read-write access
 
 .. _ar4_package_Package_createImplementationRecordDataType:
 
@@ -263,20 +311,12 @@ createImplementationRecordDataType
 .. py:method:: Package.createImplementationRecordDataType(name, elements, [swCalibrationAccess = ''], [category = 'STRUCTURE'], [adminData = None])
 
     :param str name: ShortName of the new data type
-    :param list elements: List of tuples where first element is the record name and second element is a type reference
-    :param str swCalibrationAccess: Optional calbration access
+    :param str elements: List containing tuples. First tuple element is the record name (string), second tuple element is a type reference (string).
+    :param str swCalibrationAccess: Optional :ref:`calibration access <ar4_sw_calibration_access>`
     :param str category: Category for the (outer) array data type
     :param str targetCategory: Category for the (inner) array element
     :param adminData: Optional AdminData
     :rtype: :ref:`ar4_datatype_ImplementationDataType`
-
-**swCalibrationAccess**
-
-* None: No calibration access set
-* \\"\\" (Empty string): Create default calibration access value as set by Workspace.profile.swCalibrationAccessDefault
-* \\"NOT-ACCESSIBLE\\": The element will not be accessible by external tools
-* \\"READ-ONLY\\": Read only access
-* \\"READ-WRITE\\": Read-write access
 
 
 .. _ar4_package_Package_createConstant:
@@ -511,3 +551,26 @@ createModeDeclarationGroup
     :param str category: Optional category
     :param adminData: Optional adminData
     :rtype: :ref:`mode_modeDeclarationGroup`
+
+Parameter Details
+-----------------
+
+.. _ar4_sw_calibration_access:
+
+swCalibrationAccess
+~~~~~~~~~~~~~~~~~~~
+
++-----------------------+------------------------------------------------------------------------------------------------+
+| Value                 | Description                                                                                    |
++=======================+================================================================================================+
+| None                  | No calibration access set                                                                      |
++-----------------------+------------------------------------------------------------------------------------------------+
+| \\"\\" (Empty string) | Create default calibration access value                                                        |
+|                       | as set by Workspace.profile.swCalibrationAccessDefault                                         |
++-----------------------+------------------------------------------------------------------------------------------------+
+| \\"NOT-ACCESSIBLE\\"  | The element will not be accessible by external tools                                           |
++-----------------------+------------------------------------------------------------------------------------------------+
+| \\"READ-ONLY\\"       | Read only access                                                                               |
++-----------------------+------------------------------------------------------------------------------------------------+
+| \\"READ-WRITE\\"      | Read-write access                                                                              |
++-----------------------+------------------------------------------------------------------------------------------------+
