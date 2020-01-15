@@ -1123,14 +1123,14 @@ class Package(object):
         return dataType
 
 
-    def createUnit(self, shortName, displayName = None, factor = None, offset = None):
+    def createUnit(self, shortName, displayName = None, offset = None, scaling = None,):
         ws = self.rootWS()
         assert(ws is not None)
         if ws.roles['Unit'] is None:
             unitPackage = self
         else:
             unitPackage = ws.find(ws.roles['Unit'])
-        unitElem = self._checkAndCreateUnit(ws, shortName, displayName, factor, offset, unitPackage)
+        unitElem = self._checkAndCreateUnit(ws, shortName, displayName, scaling, offset, unitPackage)
         return unitElem
 
     def createCompuMethodLinear(self, name, offset, scaling, lowerLimit = None, upperLimit = None, lowerLimitType = 'CLOSED', upperLimitType = 'CLOSED', unit = None, defaultValue = None, label = 'SCALING', forceFloat = True, category = 'LINEAR', adminData = None):
@@ -1216,7 +1216,7 @@ class Package(object):
         compuMethodPackage.append(compuMethod)
         return compuMethod
 
-    def createCompuMethodConst(self, name, valueTable, unit = None, defaultValue = None, label = 'SCALING', category = 'TEXTTABLE', adminData = None, elementAdminData = None):
+    def createCompuMethodConst(self, name, valueTable, unit = None, defaultValue = None, category = 'TEXTTABLE', adminData = None):
         useIntToPhys, usePhysToInt = True, False
 
         ws = self.rootWS()
