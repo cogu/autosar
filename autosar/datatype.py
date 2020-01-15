@@ -246,7 +246,7 @@ class Computation:
 
         When elements is a list of tuples:
             If 2-tuple: First element is both lowerLimit and upperLimit, second element is textValue.
-            If 3-tuple: First element is lowerLimit, second element is upperLimit, third element is exitValue.
+            If 3-tuple: First element is lowerLimit, second element is upperLimit, third element is textValue.
 
         autoLabel: automatically creates a <SHORT-LABEL> based on the element.textValue (bool). Default=True
         """
@@ -310,105 +310,6 @@ class CompuMethod(Element):
             self.intToPhys = Computation()
         if usePhysToInt:
             self.physToInt = Computation()
-
-# Deprecated code, to be removed
-# class CompuMethodRational(CompuMethod):
-#     """
-#     Implementation of <COMPU-METHOD> with <COMPU-INTERNAL-TO-PHYS> (Linear Computation Method)
-#     contained within it.
-#
-#     """
-#
-#     def __init__(self, name, elements, unitRef = None, category = 'LINEAR', parent = None, adminData = None):
-#         super().__init__(name, unitRef, category, parent, adminData)
-#
-#         for elem in elements:
-#             if isinstance(elem, dict):
-#                 self.elements.append(CompuRationalElement(**elem))
-#             elif isinstance(elem, CompuRationalElement):
-#                 self.elements.append(elem)
-#             else:
-#                 raise ValueError('elements must contain dict or CompuRationalElement items')
-#
-#     def __eq__(self, other):
-#         if self is other: return True
-#         if self.name == other.name:
-#             lhs = None if self.unitRef is None else self.find(self.unitRef)
-#             rhs = None if other.unitRef is None else other.find(other.unitRef)
-#             if lhs == rhs:
-#                 if len(self.elements)!=len(other.elements): return False
-#                 for i in range(len(self.elements)):
-#                     if self.elements[i] != other.elements[i]: return False
-#                 return True
-#         return False
-#
-#
-# class CompuMethodConst(Element):
-#     def tag(self, version=3.0): return 'COMPU-METHOD'
-#     def __init__(self, name, elements, category=None, parent=None, adminData=None):
-#         super().__init__(name, parent, adminData)
-#         self.elements = []
-#         self.category=category
-#
-#
-#     def getValueTable(self):
-#         retval = []
-#         i = 0
-#         for elem in self.elements:
-#             if (elem.lowerLimit == elem.upperLimit) and elem.lowerLimit==i:
-#                 retval.append(elem.textValue)
-#             else:
-#                 return None
-#             i+=1
-#         return retval if len(retval)>0 else None
-#
-#     def textValue(self, numericValue):
-#         for elem in self.elements:
-#             if (elem.lowerLimit <= numericValue) and (numericValue <= elem.upperLimit):
-#                 return (elem.textValue)
-#         return None
-#
-#     def __eq__(self,other):
-#         if self is other: return True
-#         if self.name == other.name:
-#             if len(self.elements)!=len(other.elements): return False
-#             for i in range(len(self.elements)):
-#                 if self.elements[i] != other.elements[i]: return False
-#             return True
-#         return False
-#
-# class CompuMethodMask(Element):
-#     def __init__(self, name, elements, parent=None, category=None, adminData=None):
-#         super().__init__(name, parent, adminData)
-#         self.elements = []
-#         self.category=category
-#         self.minVal = 0
-#         self.maxVal = 0
-#         for elem in elements:
-#             if isinstance(elem,str):
-#                 mask= (1 << len(self.elements))
-#                 self.elements.append(CompuMaskElement(lowerLimit=mask, upperLimit=mask, mask=mask, label=elem, symbol=elem))
-#             elif isinstance(elem,dict):
-#                 self.elements.append(CompuMaskElement(**elem))
-#             else:
-#                 raise ValueError('type not supported:%s'%str(type(elem)))
-#         self._calc_maxVal()
-#
-#     def __eq__(self,other):
-#         if self is other: return True
-#         if self.name == other.name:
-#             if len(self.elements)!=len(other.elements): return False
-#             for i in range(len(self.elements)):
-#                 if self.elements[i] != other.elements[i]: return False
-#             return True
-#         return False
-#
-#     def _calc_maxVal(self):
-#         tmp = 0
-#         for elem in self.elements:
-#             if elem.upperLimit > tmp:
-#                 tmp = elem.upperLimit
-#         self.maxVal = 2**int.bit_length(tmp)-1
 
 class ConstraintBase:
     def __init__(self, lowerLimit, upperLimit, lowerLimitType, upperLimitType):
