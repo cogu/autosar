@@ -47,6 +47,9 @@ class XMLPortInterfaceWriter(ElementWriter):
         lines=[]
         lines.append('<SENDER-RECEIVER-INTERFACE>')
         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%portInterface.name,1))
+        descLines = self.writeDescXML(portInterface)
+        if descLines is not None:
+            lines.extend(self.indent(descLines,1))
         if portInterface.adminData is not None:
             lines.extend(self.indent(self.writeAdminDataXML(portInterface.adminData),1))
         lines.append(self.indent('<IS-SERVICE>%s</IS-SERVICE>'%self.toBooleanStr(portInterface.isService),1))
@@ -159,6 +162,9 @@ class XMLPortInterfaceWriter(ElementWriter):
         lines=[]
         lines.append('<CLIENT-SERVER-INTERFACE>')
         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%portInterface.name,1))
+        descLines = self.writeDescXML(portInterface)
+        if descLines is not None:
+            lines.extend(self.indent(descLines,1))
         if portInterface.adminData is not None:
             lines.extend(self.indent(self.writeAdminDataXML(portInterface.adminData),1))
         lines.append(self.indent('<IS-SERVICE>%s</IS-SERVICE>'%self.toBooleanStr(portInterface.isService),1))

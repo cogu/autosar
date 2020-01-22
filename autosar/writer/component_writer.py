@@ -81,6 +81,9 @@ class XMLComponentTypeWriter(ElementWriter):
         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%swc.name,1))
         if isinstance(swc, autosar.component.ServiceComponent):
             lines.append(self.indent('<CATEGORY>ServiceComponent</CATEGORY>',1))
+        descLines = self.writeDescXML(swc)
+        if descLines is not None:
+            lines.extend(self.indent(descLines,1))
         lines.append(self.indent('<PORTS>',1))
         for port in swc.providePorts:
             lines.extend(self.indent(self._writeProvidePortXML(port),2))
