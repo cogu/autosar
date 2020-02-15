@@ -41,6 +41,9 @@
           <INTERNAL-BEHAVIORS>
             <SWC-INTERNAL-BEHAVIOR>
               <SHORT-NAME>NvBlockHandler_InternalBehavior</SHORT-NAME>
+              <DATA-TYPE-MAPPING-REFS>
+                <DATA-TYPE-MAPPING-REF DEST="DATA-TYPE-MAPPING-SET">/DataTypes/MappingSets/MappingSet</DATA-TYPE-MAPPING-REF>
+              </DATA-TYPE-MAPPING-REFS>
               <EVENTS>
                 <TIMING-EVENT>
                   <SHORT-NAME>TMT_run</SHORT-NAME>
@@ -108,6 +111,9 @@
           <NV-BLOCK-DESCRIPTORS>
             <NV-BLOCK-DESCRIPTOR>
               <SHORT-NAME>NvBlckDescr_LastCyclePushButtonStatus_NvR_LastCyclePushButtonStatus</SHORT-NAME>
+              <DATA-TYPE-MAPPING-REFS>
+                <DATA-TYPE-MAPPING-REF DEST="DATA-TYPE-MAPPING-SET">/DataTypes/MappingSets/MappingSet</DATA-TYPE-MAPPING-REF>
+              </DATA-TYPE-MAPPING-REFS>
               <NV-BLOCK-DATA-MAPPINGS>
                 <NV-BLOCK-DATA-MAPPING>
                   <NV-RAM-BLOCK-ELEMENT>
@@ -174,6 +180,9 @@
             </NV-BLOCK-DESCRIPTOR>
             <NV-BLOCK-DESCRIPTOR>
               <SHORT-NAME>NvBlckDescr_UserSetting_NvR_SettinNo1</SHORT-NAME>
+              <DATA-TYPE-MAPPING-REFS>
+                <DATA-TYPE-MAPPING-REF DEST="DATA-TYPE-MAPPING-SET">/DataTypes/MappingSets/MappingSet</DATA-TYPE-MAPPING-REF>
+              </DATA-TYPE-MAPPING-REFS>
               <NV-BLOCK-DATA-MAPPINGS>
                 <NV-BLOCK-DATA-MAPPING>
                   <NV-RAM-BLOCK-ELEMENT>
@@ -211,7 +220,7 @@
               </NV-BLOCK-NEEDS>
               <RAM-BLOCK>
                 <SHORT-NAME>VariableDataPt</SHORT-NAME>
-                <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/uint32</TYPE-TREF>
+                <TYPE-TREF DEST="APPLICATION-PRIMITIVE-DATA-TYPE">/DataTypes/UserSettingApp</TYPE-TREF>
               </RAM-BLOCK>
               <ROM-BLOCK>
                 <SHORT-NAME>ParameterDataPt</SHORT-NAME>
@@ -228,7 +237,7 @@
                     </SW-DATA-DEF-PROPS-CONDITIONAL>
                   </SW-DATA-DEF-PROPS-VARIANTS>
                 </SW-DATA-DEF-PROPS>
-                <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/uint32</TYPE-TREF>
+                <TYPE-TREF DEST="APPLICATION-PRIMITIVE-DATA-TYPE">/DataTypes/UserSettingApp</TYPE-TREF>
                 <INIT-VALUE>
                   <CONSTANT-REFERENCE>
                     <CONSTANT-REF DEST="CONSTANT-SPECIFICATION">/Constants/UserSetting_IV</CONSTANT-REF>
@@ -240,6 +249,9 @@
             </NV-BLOCK-DESCRIPTOR>
             <NV-BLOCK-DESCRIPTOR>
               <SHORT-NAME>NvBlckDescr_UserSetting_NvR_SettinNo2</SHORT-NAME>
+              <DATA-TYPE-MAPPING-REFS>
+                <DATA-TYPE-MAPPING-REF DEST="DATA-TYPE-MAPPING-SET">/DataTypes/MappingSets/MappingSet</DATA-TYPE-MAPPING-REF>
+              </DATA-TYPE-MAPPING-REFS>
               <NV-BLOCK-DATA-MAPPINGS>
                 <NV-BLOCK-DATA-MAPPING>
                   <NV-RAM-BLOCK-ELEMENT>
@@ -277,7 +289,7 @@
               </NV-BLOCK-NEEDS>
               <RAM-BLOCK>
                 <SHORT-NAME>VariableDataPt</SHORT-NAME>
-                <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/uint32</TYPE-TREF>
+                <TYPE-TREF DEST="APPLICATION-PRIMITIVE-DATA-TYPE">/DataTypes/UserSettingApp</TYPE-TREF>
               </RAM-BLOCK>
               <ROM-BLOCK>
                 <SHORT-NAME>ParameterDataPt</SHORT-NAME>
@@ -294,7 +306,7 @@
                     </SW-DATA-DEF-PROPS-CONDITIONAL>
                   </SW-DATA-DEF-PROPS-VARIANTS>
                 </SW-DATA-DEF-PROPS>
-                <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/uint32</TYPE-TREF>
+                <TYPE-TREF DEST="APPLICATION-PRIMITIVE-DATA-TYPE">/DataTypes/UserSettingApp</TYPE-TREF>
                 <INIT-VALUE>
                   <CONSTANT-REFERENCE>
                     <CONSTANT-REF DEST="CONSTANT-SPECIFICATION">/Constants/UserSetting_IV</CONSTANT-REF>
