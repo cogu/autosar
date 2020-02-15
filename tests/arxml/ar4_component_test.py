@@ -237,7 +237,7 @@ class ARXML4ComponentTest(ARXMLTestClass):
         comspecList.append({'nvData': 'SettinNo1'})
         comspecList.append({'nvData': 'SettinNo2'})
         swc.createRequirePort('UserSetting_NvR', 'UserSetting_NvI', comspec=comspecList)
-        swc.behavior.createRunnable('run')
+        swc.behavior.createRunnable('run', minStartInterval=None)
         Run_Event = swc.behavior.createTimingEvent('run', 20) #execute the run function every 20ms in all modes
         swc.behavior.createRunnable('NvBlockHandler_DataWrittenCallback')
         swc.behavior.createDataReceivedEvent('NvBlockHandler_DataWrittenCallback', 'RebootCount_NvR')

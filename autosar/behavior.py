@@ -215,7 +215,7 @@ class RunnableEntity(Element):
     def __init__(self, name, invokeConcurrently=False, symbol=None, parent=None, adminData=None):
         super().__init__(name,parent,adminData)
         self.invokeConcurrently = invokeConcurrently
-        self.minStartInterval = 0
+        self.minStartInterval = None
         if symbol is None:
             self.symbol=name
         else:
@@ -680,7 +680,7 @@ class InternalBehaviorCommon(Element):
                 return foundElem
         return None
 
-    def createRunnable(self, name, portAccess=None, symbol=None, concurrent=False, exclusiveAreas=None, modeSwitchPoint = None, adminData=None):
+    def createRunnable(self, name, portAccess=None, symbol=None, concurrent=False, exclusiveAreas=None, modeSwitchPoint = None, minStartInterval = 0, adminData=None):
         """
         Creates a new runnable and appends it to this InternalBehavior instance
         Parameters:
@@ -691,9 +691,11 @@ class InternalBehaviorCommon(Element):
         * exclusiveAreas: List of strings containing which exclusive areas this runnable will access.
           Note: For mode ports you will at best get read access. If you want to set new modes use modeSwitchPoints.
         * modeSwitchPoint: List of strings containing port names that this runnable will explicitly use for setting modes.
+        * minStartInterval: Specifies the time in seconds by which two consecutive starts of an ExecutableEntity are guaranteed to be separated.
         * adminData: Optional adminData
         """
         runnable = RunnableEntity(name, concurrent, symbol, self, adminData)
+        runnable.minStartInterval = minStartInterval
         self.runnables.append(runnable)
         self._initSWC()
         ws = self.rootWS()

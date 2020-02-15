@@ -92,7 +92,6 @@
               <RUNNABLES>
                 <RUNNABLE-ENTITY>
                   <SHORT-NAME>run</SHORT-NAME>
-                  <MINIMUM-START-INTERVAL>0</MINIMUM-START-INTERVAL>
                   <CAN-BE-INVOKED-CONCURRENTLY>false</CAN-BE-INVOKED-CONCURRENTLY>
                   <SYMBOL>run</SYMBOL>
                 </RUNNABLE-ENTITY>
