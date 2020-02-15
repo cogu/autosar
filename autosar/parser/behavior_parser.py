@@ -203,6 +203,7 @@ class BehaviorParser(ElementParser):
         xmlParameterAccessPoints = None
         canBeInvokedConcurrently = False
         xmlModeSwitchPoints = None
+        minStartInterval = None
         if self.version < 4.0:
             for xmlElem in xmlRoot.findall('*'):
                 if xmlElem.tag=='SHORT-NAME':
@@ -242,7 +243,7 @@ class BehaviorParser(ElementParser):
                 elif xmlElem.tag=='CAN-ENTER-EXCLUSIVE-AREA-REFS':
                     xmlCanEnterExclusiveAreas=xmlElem
                 elif xmlElem.tag == 'MINIMUM-START-INTERVAL':
-                    pass #not implemented
+                    minStartInterval = self.parseNumberNode(xmlElem)
                 elif xmlElem.tag =='ADMIN-DATA':
                     adminData=self.parseAdminDataNode(xmlElem)
                 elif xmlElem.tag == 'PARAMETER-ACCESSS':
@@ -262,6 +263,7 @@ class BehaviorParser(ElementParser):
                 else:
                     raise NotImplementedError(xmlElem.tag)
         runnableEntity = autosar.behavior.RunnableEntity(name, canBeInvokedConcurrently, symbol, parent)
+        runnableEntity.minStartInterval = minStartInterval
         if xmlDataReceivePoints is not None:
             if self.version < 4.0:
                 for xmlDataPoint in xmlDataReceivePoints.findall('./DATA-RECEIVE-POINT'):

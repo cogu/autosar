@@ -114,7 +114,8 @@ class XMLBehaviorWriter(ElementWriter):
                 lines.append(self.indent('<CAN-ENTER-EXCLUSIVE-AREA-REF DEST="%s">%s</CAN-ENTER-EXCLUSIVE-AREA-REF>'%(exclusiveArea.tag(self.version),exclusiveArea.ref),2))
             lines.append(self.indent('</CAN-ENTER-EXCLUSIVE-AREA-REFS>',1))
         if self.version >= 4.0:
-            lines.append(self.indent('<MINIMUM-START-INTERVAL>%d</MINIMUM-START-INTERVAL>'%(int(runnable.minStartInterval)),1))
+            if runnable.minStartInterval is not None:
+                lines.append(self.indent('<MINIMUM-START-INTERVAL>{}</MINIMUM-START-INTERVAL>'.format(self.format_float(runnable.minStartInterval)),1))
         lines.append(self.indent('<CAN-BE-INVOKED-CONCURRENTLY>%s</CAN-BE-INVOKED-CONCURRENTLY>'%('true' if runnable.invokeConcurrently else 'false'),1))
         if len(runnable.dataReceivePoints)>0:
             if self.version >= 4.0:
