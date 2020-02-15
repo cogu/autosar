@@ -10,6 +10,7 @@ def _create_packages(ws):
     package.createSubPackage('DataConstrs', role='DataConstraint')
     package.createSubPackage('Units', role='Unit')
     package.createSubPackage('BaseTypes')
+    package.createSubPackage('MappingSets')
     package = ws.createPackage('Constants', role='Constant')
     package = ws.createPackage('ComponentTypes', role='ComponentType')
     package = ws.createPackage('PortInterfaces', role="PortInterface")
@@ -29,6 +30,13 @@ def _create_base_types(ws):
     package.createImplementationDataTypeRef('PushButtonStatus_T', '/DataTypes/uint8', valueTable=['PushButtonStatus_Neutral', 'PushButtonStatus_Pushed', 'PushButtonStatus_Error', 'PushButtonStatus_NotAvailable'])
     package.createApplicationPrimitiveDataType('AmbientT')
 
+    UserSettingImp = package.createImplementationDataType('UserSettingImp', lowerLimit=0, upperLimit=4294967295, baseTypeRef='/DataTypes/BaseTypes/uint32')
+    UserSettingApp = package.createApplicationPrimitiveDataType('UserSettingApp')
+    package = ws.find('/DataTypes/MappingSets')
+    mappingSet = autosar.datatype.DataTypeMappingSet("MappingSet")
+    mappingSet.addDirect(UserSettingApp.ref, UserSettingImp.ref)
+    package.append(mappingSet)
+
 def _create_test_elements(ws):
     package = ws.find('/Constants')
     package.createNumericalValueConstant('AmbientT_IV', -40)
@@ -46,7 +54,7 @@ def _create_test_elements(ws):
     package.createSenderReceiverInterface('EcuStatus_I', (autosar.DataElement('EcuU', 'uint32'), autosar.DataElement('RebootCount', 'uint32')))
     package.createNvDataInterface('LastCyclePushButtonStatus_NvI', autosar.DataElement('LastCyclePushButtonStatus', 'PushButtonStatus_T'))
     package.createNvDataInterface('RebootCount_NvI', autosar.DataElement('RebootCount', 'uint32'))
-    package.createNvDataInterface('UserSetting_NvI', (autosar.DataElement('SettinNo1', 'uint32'), autosar.DataElement('SettinNo2', 'uint32')))
+    package.createNvDataInterface('UserSetting_NvI', (autosar.DataElement('SettinNo1', 'UserSettingApp'), autosar.DataElement('SettinNo2', 'UserSettingApp')))
     portInterface=package.createClientServerInterface('FreeRunningTimer5ms_I', ['GetTime', 'IsTimerElapsed'])
     portInterface['GetTime'].createOutArgument('value', '/DataTypes/uint32')
     portInterface["IsTimerElapsed"].createInArgument("startTime", '/DataTypes/uint32')
@@ -232,6 +240,9 @@ class ARXML4ComponentTest(ARXMLTestClass):
         swc = package.createNvBlockComponent('NvBlockHandler')
         swc.createRequirePort('LastCyclePushButtonStatus_NvR', 'LastCyclePushButtonStatus_NvI')
         swc.createRequirePort('RebootCount_NvR', 'RebootCount_NvI')
+        mappingSet = ws.find('/DataTypes/MappingSets/MappingSet')
+
+        swc.behavior.dataTypeMappingRefs.append(mappingSet.ref)
 
         comspecList = []
         comspecList.append({'nvData': 'SettinNo1'})
@@ -266,15 +277,18 @@ class ARXML4ComponentTest(ARXMLTestClass):
 
         autosar.behavior.createNvBlockDescriptor(swc, 'LastCyclePushButtonStatus_NvR',
                 NvmBlockConfig=nvmBlockConfig, timingEventRef=Run_Event.name, swCalibrationAccess='READ-WRITE', supportDirtyFlag=True,
-                romBlockInitValueRef = 'LastCyclePushButtonStatus_IV', romBlockDesc="Rom block description", romBlockLongName="Rom block long name")
+                romBlockInitValueRef = 'LastCyclePushButtonStatus_IV', romBlockDesc="Rom block description", romBlockLongName="Rom block long name",
+                dataTypeMappingRefs=mappingSet.ref)
 
         autosar.behavior.createNvBlockDescriptor(swc, 'UserSetting_NvR/SettinNo1',
                 NvmBlockConfig=nvmBlockConfig, timingEventRef=Run_Event.name, swCalibrationAccess='READ-WRITE', supportDirtyFlag=True,
-                romBlockInitValueRef = 'UserSetting_IV', romBlockDesc="Rom block description", romBlockLongName="Rom block long name")
+                romBlockInitValueRef = 'UserSetting_IV', romBlockDesc="Rom block description", romBlockLongName="Rom block long name",
+                dataTypeMappingRefs=mappingSet.ref)
 
         autosar.behavior.createNvBlockDescriptor(swc, 'UserSetting_NvR/SettinNo2',
                 NvmBlockConfig=nvmBlockConfig, timingEventRef=Run_Event.name, swCalibrationAccess='READ-WRITE', supportDirtyFlag=True,
-                romBlockInitValueRef = 'UserSetting_IV', romBlockDesc="Rom block description", romBlockLongName="Rom block long name")
+                romBlockInitValueRef = 'UserSetting_IV', romBlockDesc="Rom block description", romBlockLongName="Rom block long name",
+                dataTypeMappingRefs=mappingSet.ref)
 
         file_name = 'ar4_nvblock_swc.arxml'
         generated_file = os.path.join(self.output_dir, file_name)

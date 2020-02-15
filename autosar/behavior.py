@@ -1621,7 +1621,7 @@ def createNvBlockDescriptor(parent, portAccess, **kwargs):
         if dataTypeMappingRefs is not None:
             if isinstance(dataTypeMappingRefs, str):
                 dataTypeMappingRefs = [dataTypeMappingRefs]
-            descriptor.nvBlockDataMappings.extend(dataTypeMappingRefs)
+            descriptor.dataTypeMappingRefs.extend(dataTypeMappingRefs)
 
         if not isinstance(supportDirtyFlag, bool):
             raise ValueError('supportDirtyFlag must be of bool type: '+str(type(supportDirtyFlag)))
