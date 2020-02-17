@@ -243,7 +243,7 @@
                 </RUNNABLE-ENTITY>
                 <RUNNABLE-ENTITY>
                   <SHORT-NAME>RebootCount_Received</SHORT-NAME>
-                  <MINIMUM-START-INTERVAL>0</MINIMUM-START-INTERVAL>
+                  <MINIMUM-START-INTERVAL>0.005</MINIMUM-START-INTERVAL>
                   <CAN-BE-INVOKED-CONCURRENTLY>false</CAN-BE-INVOKED-CONCURRENTLY>
                   <DATA-RECEIVE-POINT-BY-ARGUMENTS>
                     <VARIABLE-ACCESS>
