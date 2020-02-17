@@ -263,7 +263,8 @@ class BehaviorParser(ElementParser):
                 else:
                     raise NotImplementedError(xmlElem.tag)
         runnableEntity = autosar.behavior.RunnableEntity(name, canBeInvokedConcurrently, symbol, parent)
-        runnableEntity.minStartInterval = minStartInterval
+        if minStartInterval is not None:
+            runnableEntity.minStartInterval = float(1000 * minStartInterval)
         if xmlDataReceivePoints is not None:
             if self.version < 4.0:
                 for xmlDataPoint in xmlDataReceivePoints.findall('./DATA-RECEIVE-POINT'):

@@ -354,7 +354,7 @@ class ARXML4ComponentTest(ARXMLTestClass):
         swc.behavior.createRunnable('EcuU_Received', portAccess=['EcuStatus/EcuU'])
         swc.behavior.createDataReceivedEvent('EcuU_Received', 'EcuStatus/EcuU')
 
-        swc.behavior.createRunnable('RebootCount_Received', portAccess=['EcuStatus/RebootCount'])
+        swc.behavior.createRunnable('RebootCount_Received', portAccess=['EcuStatus/RebootCount'], minStartInterval=5)
         swc.behavior.createDataReceivedEvent('RebootCount_Received', 'EcuStatus/RebootCount')
 
         file_name = 'ar4_application_swc_data_received_event.arxml'

@@ -691,7 +691,7 @@ class InternalBehaviorCommon(Element):
         * exclusiveAreas: List of strings containing which exclusive areas this runnable will access.
           Note: For mode ports you will at best get read access. If you want to set new modes use modeSwitchPoints.
         * modeSwitchPoint: List of strings containing port names that this runnable will explicitly use for setting modes.
-        * minStartInterval: Specifies the time in seconds by which two consecutive starts of an ExecutableEntity are guaranteed to be separated.
+        * minStartInterval: Specifies the time in milliseconds by which two consecutive starts of an ExecutableEntity are guaranteed to be separated.
         * adminData: Optional adminData
         """
         runnable = RunnableEntity(name, concurrent, symbol, self, adminData)
