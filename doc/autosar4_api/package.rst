@@ -155,6 +155,7 @@ createApplicationSoftwareComponent
     :param str behaviorName: ShortName of the associated Behavior object. If not set an automatic name is selected.
     :param str implementationName: ShortName of the associated Implementation object. If not set an automatic name is selected.
     :param bool multipleInstance: Set to True if this component prototype needs to support multiple instances
+    :param bool autoCreatePortAPIOptions: Set to True to automatically create port API options.
     :rtype: :ref:`ar4_component_ApplicationSoftwareComponent`
 
 Example
@@ -176,6 +177,7 @@ createComplexDeviceDriverComponent
     :param str behaviorName: ShortName of the associated Behavior object. If not set an automatic name is selected.
     :param str implementationName: ShortName of the associated Implementation object. If not set an automatic name is selected.
     :param bool multipleInstance: Set to True if this component prototype needs to support multiple instances
+    :param bool autoCreatePortAPIOptions: Set to True to automatically create port API options.
     :rtype: :ref:`ar4_component_ComplexDeviceDriverComponent`
 
 .. _ar4_package_Package_createCompositionComponent:
@@ -210,6 +212,7 @@ createNvBlockComponent
     :param str behaviorName: ShortName of the associated Behavior object. If not set an automatic name is selected.
     :param str implementationName: ShortName of the associated Implementation object. If not set an automatic name is selected.
     :param bool multipleInstance: Set to True if this component prototype needs to support multiple instances
+    :param bool autoCreatePortAPIOptions: Set to True to automatically create port API options.
     :rtype: NvBlockComponent
 
 .. _ar4_package_Package_createServiceComponent:
@@ -225,6 +228,7 @@ createServiceComponent
     :param str behaviorName: ShortName of the associated Behavior object. If not set an automatic name is selected.
     :param str implementationName: ShortName of the associated Implementation object. If not set an automatic name is selected.
     :param bool multipleInstance: Set to True if this component prototype needs to support multiple instances.
+    :param bool autoCreatePortAPIOptions: Set to True to automatically create port API options.
     :rtype: :ref:`ar4_component_ServiceComponent`
 
 Example

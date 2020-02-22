@@ -309,7 +309,7 @@ class Package(object):
         return autosar.base.indexByName(lst,name)
 
 
-    def createApplicationSoftwareComponent(self, swcName, behaviorName=None, implementationName=None, multipleInstance=False):
+    def createApplicationSoftwareComponent(self, swcName, behaviorName=None, implementationName=None, multipleInstance=False, autoCreatePortAPIOptions=True):
         """
         Creates a new ApplicationSoftwareComponent object and adds it to the package.
         It also creates an InternalBehavior object as well as an SwcImplementation object.
@@ -319,11 +319,11 @@ class Package(object):
         assert(ws is not None)
         swc = autosar.component.ApplicationSoftwareComponent(swcName,self)
         self.append(swc)
-        self._createInternalBehavior(ws, swc, behaviorName, multipleInstance)
+        self._createInternalBehavior(ws, swc, behaviorName, multipleInstance, autoCreatePortAPIOptions)
         self._createImplementation(swc, implementationName)
         return swc
 
-    def createServiceComponent(self, swcName, behaviorName=None, implementationName=None, multipleInstance=False):
+    def createServiceComponent(self, swcName, behaviorName=None, implementationName=None, multipleInstance=False, autoCreatePortAPIOptions=True):
         """
         Creates a new ApplicationSoftwareComponent object and adds it to the package.
         It also creates an InternalBehavior object as well as an SwcImplementation object.
@@ -333,20 +333,20 @@ class Package(object):
 
         swc = autosar.component.ServiceComponent(swcName,self)
         self.append(swc)
-        self._createInternalBehavior(ws, swc, behaviorName, multipleInstance)
+        self._createInternalBehavior(ws, swc, behaviorName, multipleInstance, autoCreatePortAPIOptions)
         self._createImplementation(swc, implementationName)
         return swc
 
-    def createComplexDeviceDriverComponent(self,swcName,behaviorName=None,implementationName=None,multipleInstance=False):
+    def createComplexDeviceDriverComponent(self,swcName,behaviorName=None,implementationName=None,multipleInstance=False, autoCreatePortAPIOptions=True):
         ws = self.rootWS()
         assert(ws is not None)
         swc=autosar.component.ComplexDeviceDriverComponent(swcName, parent=self)
         self.append(swc)
-        self._createInternalBehavior(ws, swc, behaviorName, multipleInstance)
+        self._createInternalBehavior(ws, swc, behaviorName, multipleInstance, autoCreatePortAPIOptions)
         self._createImplementation(swc, implementationName)
         return swc
 
-    def createNvBlockComponent(self,swcName,behaviorName=None,implementationName=None,multipleInstance=False):
+    def createNvBlockComponent(self,swcName,behaviorName=None,implementationName=None,multipleInstance=False, autoCreatePortAPIOptions=False):
         """
         Creates a new NvBlockComponent object and adds it to the package.
         It also creates an InternalBehavior object as well as an SwcImplementation object.
@@ -356,7 +356,7 @@ class Package(object):
         assert(ws is not None)
         swc = autosar.component.NvBlockComponent(swcName,self)
         self.append(swc)
-        self._createInternalBehavior(ws, swc, behaviorName, multipleInstance)
+        self._createInternalBehavior(ws, swc, behaviorName, multipleInstance, autoCreatePortAPIOptions)
         self._createImplementation(swc, implementationName)
         return swc
 
@@ -365,7 +365,7 @@ class Package(object):
         self.append(component)
         return component
 
-    def _createInternalBehavior(self, ws, swc, behaviorName, multipleInstance):
+    def _createInternalBehavior(self, ws, swc, behaviorName, multipleInstance, autoCreatePortAPIOptions):
         """
         Initializes swc.behavior object
         For AUTOSAR3, an instance of InternalBehavior is created
@@ -379,6 +379,7 @@ class Package(object):
         else:
             # In AUTOSAR 4.x the internal behavior is a sub-element of the swc.
             internalBehavior = autosar.behavior.SwcInternalBehavior(behaviorName,swc.ref,multipleInstance, swc)
+        internalBehavior.autoCreatePortAPIOptions=autoCreatePortAPIOptions
         swc.behavior=internalBehavior
         if ws.version < 4.0:
             # In AUTOSAR 3.x the internal behavior is a sub-element of the package.
