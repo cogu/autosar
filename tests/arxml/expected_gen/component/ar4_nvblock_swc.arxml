@@ -75,23 +75,6 @@
                   </DATA-IREF>
                 </DATA-RECEIVED-EVENT>
               </EVENTS>
-              <PORT-API-OPTIONS>
-                <PORT-API-OPTION>
-                  <ENABLE-TAKE-ADDRESS>false</ENABLE-TAKE-ADDRESS>
-                  <INDIRECT-API>false</INDIRECT-API>
-                  <PORT-REF DEST="R-PORT-PROTOTYPE">/ComponentTypes/NvBlockHandler/LastCyclePushButtonStatus_NvR</PORT-REF>
-                </PORT-API-OPTION>
-                <PORT-API-OPTION>
-                  <ENABLE-TAKE-ADDRESS>false</ENABLE-TAKE-ADDRESS>
-                  <INDIRECT-API>false</INDIRECT-API>
-                  <PORT-REF DEST="R-PORT-PROTOTYPE">/ComponentTypes/NvBlockHandler/RebootCount_NvR</PORT-REF>
-                </PORT-API-OPTION>
-                <PORT-API-OPTION>
-                  <ENABLE-TAKE-ADDRESS>false</ENABLE-TAKE-ADDRESS>
-                  <INDIRECT-API>false</INDIRECT-API>
-                  <PORT-REF DEST="R-PORT-PROTOTYPE">/ComponentTypes/NvBlockHandler/UserSetting_NvR</PORT-REF>
-                </PORT-API-OPTION>
-              </PORT-API-OPTIONS>
               <RUNNABLES>
                 <RUNNABLE-ENTITY>
                   <SHORT-NAME>run</SHORT-NAME>

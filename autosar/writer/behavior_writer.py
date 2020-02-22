@@ -59,8 +59,6 @@ class XMLBehaviorWriter(ElementWriter):
             for event in internalBehavior.events:
                 lines.extend(self.indent(self._writeEventXML(ws,event),2))
             lines.append(self.indent('</EVENTS>',1))
-        if len(internalBehavior.portAPIOptions)==0:
-            internalBehavior.createPortAPIOptionDefaults() #try to automatically create PortAPIOption objects on behavior object
         if isinstance(internalBehavior, autosar.behavior.InternalBehavior) and len(internalBehavior.perInstanceMemories)>0:
             lines.append(self.indent('<PER-INSTANCE-MEMORYS>',1))
             for memory in internalBehavior.perInstanceMemories:

@@ -75,6 +75,7 @@ class ARXML4ComponentTest(ARXMLTestClass):
         swc = package.createApplicationSoftwareComponent('MyApplication')
         swc.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV')
         swc.createRequirePort('FreeRunningTimer', 'FreeRunningTimer5ms_I')
+        swc.behavior.createPortAPIOptionDefaults()
         swc.behavior.createRunnable('Run', portAccess=['VehicleSpeed', 'FreeRunningTimer/GetTime', 'FreeRunningTimer/IsTimerElapsed'])
         swc.behavior.createTimerEvent('Run', 20) #execute the Run function every 20ms in all modes
         file_name = 'ar4_application_swc.arxml'
@@ -88,6 +89,7 @@ class ARXML4ComponentTest(ARXMLTestClass):
         package = ws.find('/ComponentTypes')
         swc = package.createServiceComponent('MyService')
         swc.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV')
+        swc.behavior.createPortAPIOptionDefaults()
         file_name = 'ar4_service_swc.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'component', file_name)
@@ -99,6 +101,7 @@ class ARXML4ComponentTest(ARXMLTestClass):
         package = ws1.find('/ComponentTypes')
         swc1 = package.createComplexDeviceDriverComponent('MyService')
         swc1.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV')
+        swc1.behavior.createPortAPIOptionDefaults()
         file_name = 'ar4_cdd_swc.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'component', file_name)
@@ -128,6 +131,7 @@ class ARXML4ComponentTest(ARXMLTestClass):
         inner_swc = package.createApplicationSoftwareComponent('MyApplication')
         inner_port = inner_swc.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV')
         inner_swc.createRequirePort('FreeRunningTimer', 'FreeRunningTimer5ms_I')
+        inner_swc.behavior.createPortAPIOptionDefaults()
         outer_swc = package.createCompositionComponent('MyComposition')
         outer_swc.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV')
         outer_swc.createComponentPrototype(inner_swc.ref)
@@ -151,6 +155,7 @@ class ARXML4ComponentTest(ARXMLTestClass):
         swc.behavior.createRunnable('FrtServer_FreeRunningTimer5ms_IsTimerElapsed')
         swc.behavior.createOperationInvokedEvent('FrtServer_FreeRunningTimer5ms_GetTime', 'FreeRunningTimer5ms/GetTime')
         swc.behavior.createOperationInvokedEvent('FrtServer_FreeRunningTimer5ms_IsTimerElapsed', 'FreeRunningTimer5ms/IsTimerElapsed')
+        swc.behavior.createPortAPIOptionDefaults()
 
         file_name = 'ar4_server_component.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
@@ -167,6 +172,7 @@ class ARXML4ComponentTest(ARXMLTestClass):
         swc = package.createApplicationSoftwareComponent('ButtonPressHandler')
         swc.createProvidePort('ButtonPressUp', 'PushButtonStatus_I')
         swc.createProvidePort('ButtonPressDown', 'PushButtonStatus_I')
+        swc.behavior.createPortAPIOptionDefaults()
 
         file_name = 'ar4_swc_with_queued_sender_com_spec.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
@@ -183,6 +189,7 @@ class ARXML4ComponentTest(ARXMLTestClass):
         swc = package.createApplicationSoftwareComponent('ButtonPressListener')
         swc.createRequirePort('ButtonPressUp', 'PushButtonStatus_I', queueLength=10)
         swc.createRequirePort('ButtonPressDown', 'PushButtonStatus_I', queueLength=10)
+        swc.behavior.createPortAPIOptionDefaults()
 
         file_name = 'ar4_swc_with_queued_receiver_com_spec.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
@@ -215,6 +222,7 @@ class ARXML4ComponentTest(ARXMLTestClass):
         swc.createRequirePort('LastCyclePushButtonStatus_2_NvR', 'LastCyclePushButtonStatus_NvI', initValue = initValue.value)
         swc.createRequirePort('RebootCount_NvR', 'RebootCount_NvI', initValue = int(1))
         swc.createProvidePort('RebootCount_NvW', 'RebootCount_NvI', ramBlockInitValue = int(2), romBlockInitValue = int(3))
+        swc.behavior.createPortAPIOptionDefaults()
         swc.behavior.createRunnable('run', portAccess=['LastCyclePushButtonStatus_1_NvR/LastCyclePushButtonStatus', 'LastCyclePushButtonStatus_1_NvW/LastCyclePushButtonStatus'])
         swc.behavior.createTimingEvent('run', 20) #execute the run function every 20ms in all modes
         file_name_generated = 'ar4_swc_with_nvdata_ports_generated.arxml'
@@ -356,6 +364,8 @@ class ARXML4ComponentTest(ARXMLTestClass):
 
         swc.behavior.createRunnable('RebootCount_Received', portAccess=['EcuStatus/RebootCount'], minStartInterval=5)
         swc.behavior.createDataReceivedEvent('RebootCount_Received', 'EcuStatus/RebootCount')
+
+        swc.behavior.createPortAPIOptionDefaults()
 
         file_name = 'ar4_application_swc_data_received_event.arxml'
         generated_file = os.path.join(self.output_dir, file_name)

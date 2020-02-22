@@ -98,6 +98,7 @@ class ARXML4BehaviorTest(ARXMLTestClass):
         swc1 = ws['ComponentTypes'].createApplicationSoftwareComponent('MyApplication')
         swc1.behavior.createRunnable('MyApplication_Init')
         swc1.behavior.createInitEvent('MyApplication_Init')
+        swc1.behavior.createPortAPIOptionDefaults()
 
         file_name = 'ar4_runnable_with_init_event.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
@@ -115,6 +116,7 @@ class ARXML4BehaviorTest(ARXMLTestClass):
         swc1.createRequirePort('VehicleMode', '/PortInterfaces/VehicleMode_I')
         swc1.behavior.createRunnable('MyApplication_Init')
         swc1.behavior.createModeSwitchEvent('MyApplication_Init', 'VehicleMode/ACCESSORY', activationType='ENTRY')
+        swc1.behavior.createPortAPIOptionDefaults()
 
         file_name = 'ar4_runnable_with_require_type_mode_switch_trigger.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
@@ -131,6 +133,7 @@ class ARXML4BehaviorTest(ARXMLTestClass):
         swc1 = ws['ComponentTypes'].createApplicationSoftwareComponent('MyApplication')
         port1 = swc1.createRequirePort('VehicleMode', '/PortInterfaces/VehicleMode_I')
         runnable1 = swc1.behavior.createRunnable('MyApplication_Run', portAccess='VehicleMode')
+        swc1.behavior.createPortAPIOptionDefaults()
 
         file_name = 'ar4_runnable_runnable_require_type_mode_access.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
@@ -154,6 +157,7 @@ class ARXML4BehaviorTest(ARXMLTestClass):
         swc1 = ws['ComponentTypes'].createApplicationSoftwareComponent('MyApplication')
         port1 = swc1.createProvidePort('VehicleMode', '/PortInterfaces/VehicleMode_I', queueLength=1, modeSwitchAckTimeout=10)
         runnable1 = swc1.behavior.createRunnable('MyApplication_Init', portAccess=['VehicleMode'])
+        swc1.behavior.createPortAPIOptionDefaults()
 
         file_name = 'ar4_runnable_with_provide_type_mode_access.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
@@ -178,6 +182,7 @@ class ARXML4BehaviorTest(ARXMLTestClass):
         port1 = swc1.createProvidePort('VehicleMode', '/PortInterfaces/VehicleMode_I', queueLength=1, modeSwitchAckTimeout=10)
         runnable1 = swc1.behavior.createRunnable('MyApplication_SetVehicleMode', portAccess=['VehicleMode'], modeSwitchPoint=['VehicleMode'])
         self.assertEqual(len(runnable1.modeSwitchPoints), 1)
+        swc1.behavior.createPortAPIOptionDefaults()
 
         file_name = 'ar4_runnable_with_provide_type_mode_switch_point.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
@@ -206,6 +211,7 @@ class ARXML4BehaviorTest(ARXMLTestClass):
         ackRunnable1 = swc1.behavior.createRunnable('MyApplication_VehicleModeSwitchAck', portAccess=['VehicleMode'])
         swc1.behavior.createModeSwitchAckEvent(ackRunnable1.name, switchRunnable1.name)
         self.assertEqual(len(swc1.behavior.events), 1)
+        swc1.behavior.createPortAPIOptionDefaults()
 
         file_name = 'ar4_runnable_with_mode_switch_ack_event_trigger.arxml'
         generated_file = os.path.join(self.output_dir, file_name)

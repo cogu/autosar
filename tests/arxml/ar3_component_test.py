@@ -36,6 +36,7 @@ class ARXML3ComponentTest(ARXMLTestClass):
         package = ws.find('/ComponentTypes')
         swc = package.createApplicationSoftwareComponent('MyApplication')
         swc.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV')
+        swc.behavior.createPortAPIOptionDefaults()
         file_name = 'ar3_application_component.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'component', file_name)
@@ -47,6 +48,7 @@ class ARXML3ComponentTest(ARXMLTestClass):
         package = ws.find('/ComponentTypes')
         swc = package.createServiceComponent('MyService')
         swc.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV')
+        swc.behavior.createPortAPIOptionDefaults()
         file_name = 'ar3_service_swc.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'component', file_name)
@@ -58,6 +60,7 @@ class ARXML3ComponentTest(ARXMLTestClass):
         package = ws.find('/ComponentTypes')
         swc = package.createComplexDeviceDriverComponent('MyComplexDeviceDriver')
         swc.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV')
+        swc.behavior.createPortAPIOptionDefaults()
         file_name = 'ar3_cdd_swc.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'component', file_name)

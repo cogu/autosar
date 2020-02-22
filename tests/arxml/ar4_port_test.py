@@ -62,6 +62,7 @@ class ARXML4PortCreateTest(ARXMLTestClass):
         package = ws.find('/ComponentTypes')
         swc1 = package.createApplicationSoftwareComponent('MyApplication')
         swc1.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', comspec = {'dataElement': 'VehicleSpeed', 'initValueRef': 'VehicleSpeed_IV'})
+        swc1.behavior.createPortAPIOptionDefaults()
         file_name = 'ar4_non_queued_receiver_port_single_data_element_direct_comspec1.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'port', file_name)
@@ -80,6 +81,7 @@ class ARXML4PortCreateTest(ARXMLTestClass):
         package = ws.find('/ComponentTypes')
         swc1 = package.createApplicationSoftwareComponent('MyApplication')
         swc1.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', comspec = {'initValueRef': 'VehicleSpeed_IV'})
+        swc1.behavior.createPortAPIOptionDefaults()
         file_name = 'ar4_non_queued_receiver_port_single_data_element_direct_comspec2.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'port', file_name)
@@ -95,6 +97,7 @@ class ARXML4PortCreateTest(ARXMLTestClass):
         package = ws.find('/ComponentTypes')
         swc1 = package.createApplicationSoftwareComponent('MyApplication')
         swc1.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV')
+        swc1.behavior.createPortAPIOptionDefaults()
         file_name = 'ar4_non_queued_receiver_port_single_data_element.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'port', file_name)
@@ -110,6 +113,7 @@ class ARXML4PortCreateTest(ARXMLTestClass):
         package = ws.find('/ComponentTypes')
         swc1 = package.createApplicationSoftwareComponent('MyApplication')
         port1 = swc1.createRequirePort('VehicleMode', 'VehicleMode_I')
+        swc1.behavior.createPortAPIOptionDefaults()
         self.assertEqual(port1.portInterfaceRef, '/PortInterfaces/VehicleMode_I')
         comspec1 = port1.comspec[0]
         comspec1.modeGroupRef = '/PortInterfaces/VehicleMode_I/mode'
@@ -128,6 +132,7 @@ class ARXML4PortCreateTest(ARXMLTestClass):
         package = ws.find('/ComponentTypes')
         swc1 = package.createApplicationSoftwareComponent('MyApplication')
         port1 = swc1.createProvidePort('VehicleMode', 'VehicleMode_I', modeGroup="mode", queueLength=1, modeSwitchAckTimeout=10)
+        swc1.behavior.createPortAPIOptionDefaults()
         self.assertEqual(port1.portInterfaceRef, '/PortInterfaces/VehicleMode_I')
         file_name = 'ar4_mode_provide_port.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
@@ -150,6 +155,7 @@ class ARXML4PortCreateTest(ARXMLTestClass):
         package = ws.find('/ComponentTypes')
         swc1 = package.createApplicationSoftwareComponent('MyApplication')
         swc1.createProvidePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV')
+        swc1.behavior.createPortAPIOptionDefaults()
         file_name = 'ar4_non_queued_sender_port_single_data_element.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'port', file_name)
