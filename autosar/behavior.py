@@ -639,6 +639,7 @@ class InternalBehaviorCommon(Element):
         self.multipleInstance = bool(multipleInstance)
         self.events = []
         self.portAPIOptions = []
+        self.autoCreatePortAPIOptions = False
         self.runnables = []
         self.exclusiveAreas=[]
         self.perInstanceMemories = []
