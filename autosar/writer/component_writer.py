@@ -454,37 +454,119 @@ class XMLComponentTypeWriter(ElementWriter):
         lines.append('</MODE-SWITCH-SENDER-COM-SPEC>')
         return lines
 
-    def writeSwcImplementationXML(self,elem):
+    def writeSwcImplementationXML(self, elem):
         assert(isinstance(elem,autosar.component.SwcImplementation))
         lines=[]
         ws = elem.rootWS()
         assert(ws is not None)
+
+        lines=['<SWC-IMPLEMENTATION>']
+        lines.append(self.indent('<{tag}>{text}</{tag}>'.format(tag='SHORT-NAME', text=elem.name), 1))
+        if elem.codeDescriptors is not None:
+
+            lines.append(self.indent('<CODE-DESCRIPTORS>',1))
+            for decriptor in elem.codeDescriptors:
+
+                lines.append(self.indent('<CODE>',2))
+                lines.append(self.indent('<{tag}>{text}</{tag}>'.format(tag='SHORT-NAME', text=decriptor.name), 3))
+
+                if self.version >= 4.0:
+                    if decriptor.artifactDescriptors is not None:
+                        lines.append(self.indent('<ARTIFACT-DESCRIPTORS>',3))
+                        for artifact in decriptor.artifactDescriptors:
+
+                            lines.append(self.indent('<AUTOSAR-ENGINEERING-OBJECT>',4))
+                            if artifact.shortLabel is not None:
+                                lines.append(self.indent('<{tag}>{text}</{tag}>'.format(tag='SHORT-LABEL', text=artifact.shortLabel), 5))
+
+                            if artifact.category is not None:
+                                lines.append(self.indent('<{tag}>{text}</{tag}>'.format(tag='CATEGORY', text=artifact.category), 5))
+
+                            if artifact.revisionLabels is not None:
+                                lines.append(self.indent('<REVISION-LABELS>',5))
+                                for revisionLabel in artifact.revisionLabels:
+                                    lines.append(self.indent('<{tag}>{text}</{tag}>'.format(tag='REVISION-LABEL', text=revisionLabel), 6))
+                                lines.append(self.indent('</REVISION-LABELS>',5))
+
+                            if artifact.domain is not None:
+                                lines.append(self.indent('<{tag}>{text}</{tag}>'.format(tag='DOMAIN', text=artifact.domain), 5))
+
+                            lines.append(self.indent('</AUTOSAR-ENGINEERING-OBJECT>',4))
+
+                        lines.append(self.indent('</ARTIFACT-DESCRIPTORS>',3))
+                else:
+                    if decriptor.type is not None:
+                        lines.append(self.indent('<{tag}>{text}</{tag}>'.format(tag='TYPE', text=decriptor.type), 3))
+                lines.append(self.indent('</CODE>',2))
+            lines.append(self.indent('</CODE-DESCRIPTORS>',1))
+
+        if self.version > 4.0:
+            if elem.programmingLanguage is not None:
+                lines.append(self.indent('<{tag}>{text}</{tag}>'.format(tag='PROGRAMMING-LANGUAGE', text=elem.programmingLanguage), 1))
+
+            if elem.resourceConsumption is not None:
+                lines.append(self.indent('<RESOURCE-CONSUMPTION>', 1))
+                lines.append(self.indent('<{tag}>{text}</{tag}>'.format(tag='SHORT-NAME', text=elem.resourceConsumption.name), 2))
+                lines.extend(self.indent(self._writeMemorySectionXML(ws, elem.resourceConsumption.memorySections), 2))
+                lines.append(self.indent('</RESOURCE-CONSUMPTION>', 1))
+
+            if elem.swVersion is not None:
+                lines.append(self.indent('<{tag}>{text}</{tag}>'.format(tag='SW-VERSION', text=elem.swVersion), 1))
+
+            if elem.useCodeGenerator is not None:
+                lines.append(self.indent('<{tag}>{text}</{tag}>'.format(tag='USED-CODE-GENERATOR', text=elem.useCodeGenerator), 1))
+
+            if elem.vendorId is not None:
+                lines.append(self.indent('<{tag}>{text}</{tag}>'.format(tag='VENDOR-ID', text=elem.vendorId), 1))
+
+        # Find the behavior to reference.
         behavior = ws.find(elem.behaviorRef)
         if behavior is None:
-            raise ValueError('invalid reference: '+str(elem.behaviorRef))
-        lines=['<SWC-IMPLEMENTATION>',
-               self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1)
-              ]
-        lines.append(self.indent('<CODE-DESCRIPTORS>',1))
-        lines.append(self.indent('<CODE>',2))
-        name = 'Default' if self.version >= 4.0 else 'Code'
-        lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%name,3))
-        if self.version >= 4.0:
-            lines.append(self.indent('<ARTIFACT-DESCRIPTORS>',3))
-            lines.append(self.indent('<AUTOSAR-ENGINEERING-OBJECT>',4))
-            lines.append(self.indent('<SHORT-LABEL>Default</SHORT-LABEL>',5))
-            lines.append(self.indent('<CATEGORY>SWSRC</CATEGORY>',5))
-            lines.append(self.indent('</AUTOSAR-ENGINEERING-OBJECT>',4))
-            lines.append(self.indent('</ARTIFACT-DESCRIPTORS>',3))
-        else:
-            lines.append(self.indent('<TYPE>SRC</TYPE>',3))
-        lines.append(self.indent('</CODE>',2))
-        lines.append(self.indent('</CODE-DESCRIPTORS>',1))
+            raise autosar.base.InvalidBehaviorRef(elem.behaviorRef)
+
         if self.version < 4.0:
-            lines.append(self.indent('<BEHAVIOR-REF DEST="%s">%s</BEHAVIOR-REF>'%(behavior.tag(self.version),elem.behaviorRef),1))
+            ref = elem.behaviorRef
         else:
-            lines.append(self.indent('<BEHAVIOR-REF DEST="%s">%s</BEHAVIOR-REF>'%(behavior.tag(self.version),behavior.ref),1))
+            ref = behavior.ref
+        lines.append(self.indent('<{tag} DEST="{DEST}">{text}</{tag}>'.format(tag='BEHAVIOR-REF', DEST=behavior.tag(self.version), text=ref), 1))
+
         lines.append('</SWC-IMPLEMENTATION>')
+        return lines
+
+    def _writeMemorySectionXML(self, ws, memorySections):
+        lines=[]
+        if memorySections is not None:
+            lines.append('<MEMORY-SECTIONS>')
+            for memorySection in memorySections:
+                lines.append(self.indent('<MEMORY-SECTION>', 1))
+                lines.append(self.indent('<{tag}>{text}</{tag}>'.format(tag='SHORT-NAME', text=memorySection.name), 2))
+
+                if memorySection.aligment is not None:
+                    lines.append(self.indent('<{tag}>{text}</{tag}>'.format(tag='ALIGNMENT', text=memorySection.aligment), 2))
+
+                if memorySection.memClassSymbol is not None:
+                    lines.append(self.indent('<{tag}>{text}</{tag}>'.format(tag='MEM-CLASS-SYMBOL', text=memorySection.memClassSymbol), 2))
+
+                if memorySection.options is not None:
+                    lines.append(self.indent('<OPTIONS>', 2))
+                    for option in memorySection.options:
+                        lines.append(self.indent('<{tag}>{text}</{tag}>'.format(tag='OPTION', text=option), 3))
+                    lines.append(self.indent('</OPTIONS>', 2))
+
+                if memorySection.size is not None:
+                    lines.append(self.indent('<{tag}>{text}</{tag}>'.format(tag='SIZE', text=memorySection.size), 2))
+
+                if memorySection.swAddrmethodRef is not None:
+                    swc = ws.find(memorySection.swAddrmethodRef)
+                    if swc is None:
+                        raise autosar.base.InvalidSwAddrmethodRef(memorySection.swAddrmethodRef)
+                    lines.append(self.indent('<{tag} DEST="{dest}">{text}</{tag}>'.format(tag='SW-ADDRMETHOD-REF', dest=swc.tag(self.version), text=swc.ref), 2))
+
+                if memorySection.symbol is not None:
+                    lines.append(self.indent('<{tag}>{text}</{tag}>'.format(tag='SYMBOL', text=memorySection.symbol), 2))
+
+                lines.append(self.indent('</MEMORY-SECTION>', 1))
+            lines.append('</MEMORY-SECTIONS>')
         return lines
 
     def _writeComponentsXML(self, ws, components):

@@ -60,7 +60,6 @@ class ComponentTypeParser(ElementParser):
         if self.version >= 3.0 and self.version < 4.0:
             self.switcher = { 'APPLICATION-SOFTWARE-COMPONENT-TYPE': self.parseSoftwareComponent,
                               'COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE': self.parseSoftwareComponent,
-                              'SWC-IMPLEMENTATION': self.parseSwcImplementation,
                               'COMPOSITION-TYPE': self.parseCompositionType,
                               'CALPRM-COMPONENT-TYPE': self.parseSoftwareComponent,
                               'SERVICE-COMPONENT-TYPE': self.parseSoftwareComponent
@@ -74,7 +73,6 @@ class ComponentTypeParser(ElementParser):
                'COMPOSITION-SW-COMPONENT-TYPE': self.parseCompositionType,
                'SENSOR-ACTUATOR-SW-COMPONENT-TYPE': self.parseSoftwareComponent,
                'SERVICE-SW-COMPONENT-TYPE': self.parseSoftwareComponent,
-               'SWC-IMPLEMENTATION': self.parseSwcImplementation,
                'NV-BLOCK-SW-COMPONENT-TYPE': self.parseSoftwareComponent
             }
 
@@ -223,19 +221,6 @@ class ComponentTypeParser(ElementParser):
                         else:
                             raise NotImplementedError(xmlItem.tag)
                 componentType.providePorts.append(port)
-
-    def parseSwcImplementation(self,xmlRoot,parent=None):
-        ws = parent.rootWS()
-        assert(ws is not None)
-        name = self.parseTextNode(xmlRoot.find('SHORT-NAME'))
-        behaviorRef = self.parseTextNode(xmlRoot.find('BEHAVIOR-REF'))
-        implementation = autosar.component.SwcImplementation(name,behaviorRef,parent=parent)
-        behavior = ws.find(behaviorRef)
-        if behavior is not None:
-            swc = ws.find(behavior.componentRef)
-            if swc is not None:
-                swc.implementation=implementation
-        return implementation
 
     def parseCompositionType(self, xmlRoot, parent=None):
         """
