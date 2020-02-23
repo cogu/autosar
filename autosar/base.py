@@ -366,3 +366,9 @@ class InvalidEventSourceRef(ValueError):
 
 class InvalidRunnableRef(ValueError):
     pass
+
+class InvalidBehaviorRef(ValueError):
+    pass
+
+class InvalidSwAddrmethodRef(ValueError):
+    pass

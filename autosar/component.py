@@ -6,6 +6,7 @@ import autosar.port
 import copy
 import collections
 import sys
+from autosar._swc_implementation import SwcImplementation, SwcImplementationCodeDescriptor, EngineeringObject, ResourceConsumption, MemorySection
 
 class ComponentType(Element):
     """
@@ -617,13 +618,6 @@ class CompositionComponent(ComponentType):
                 if typeRef is not None:
                     return typeRef
         return None
-
-
-
-class SwcImplementation(Element):
-    def __init__(self,name,behaviorRef,parent=None):
-        super().__init__(name,parent)
-        self.behaviorRef=behaviorRef
 
 class ComponentPrototype(Element):
     def __init__(self,name,typeRef,parent=None):
