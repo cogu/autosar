@@ -24,6 +24,8 @@ class Package(object):
         self.parent=parent
         self.role=role
         self.map={'elements':{}, 'packages':{}}
+        self.UnhandledParser = [] #[PackageParser] unhandled
+        self.UnhandledWriter = [] #[PackageWriter] Unhandled
 
     def __getitem__(self,key):
         if isinstance(key,str):
