@@ -78,7 +78,9 @@ class Workspace:
         self.roleStack = collections.deque() #stack of PackageRoles
         self.map = {'packages': {}}
         self.profile = WorkspaceProfile()
-
+        self.UnhandledParser = [] # [PackageParser] unhandled:
+        self.UnhandledWriter = [] #[PackageWriter] Unhandled
+        
     @property
     def version(self):
         return self._version
@@ -201,6 +203,9 @@ class Workspace:
             raise NotImplementedError('Version %s of ARXML not supported'%version)
         if found==False and packagename != '*':
             raise KeyError('package not found: '+packagename)
+            
+        if (self.UnhandledParser):
+            print("[PackageParser] unhandled: %s" % (", ".join(set(self.UnhandledParser))))
         return result
 
     def _loadPackageInternal(self, result, xmlPackage, packagename, role):
@@ -215,6 +220,7 @@ class Workspace:
                 result.append(package)
                 self.map['packages'][name] = package
             self.packageParser.loadXML(package,xmlPackage)
+            self.UnhandledParser = self.UnhandledParser + package.UnhandledParser
             if (packagename==name) and (role is not None):
                 self.setRole(package.ref, role)
         return found
@@ -312,6 +318,9 @@ class Workspace:
             if filters is not None:
                 filters = [prepareFilter(x) for x in filters]
             workspaceWriter.saveXML(self, fp, filters, ignore)
+
+        if (self.UnhandledWriter):
+            print( "[PackageWriter] unhandled: %s" % (", ".join( set( self.UnhandledWriter ) )) )
 
     def toXML(self, filters=None, ignore=None):
         if self.packageWriter is None:

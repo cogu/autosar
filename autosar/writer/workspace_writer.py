@@ -49,6 +49,7 @@ class WorkspaceWriter(BaseWriter):
                 if len(lines)>0:
                     lines=self.indent(lines,2)
                     result+='\n'.join(lines)+'\n'
+            ws.UnhandledWriter = ws.UnhandledWriter + package.UnhandledWriter
         lines=self.endFile()
         return result+'\n'.join(lines)+'\n'
 
