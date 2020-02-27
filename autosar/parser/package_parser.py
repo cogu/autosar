@@ -46,7 +46,7 @@ class PackageParser:
                         #raise ValueError("parse error: %s"%type(element))
                         raise ValueError("parse error: %s"%xmlElement.tag)
                 else:
-                    package.UnhandledParser.append(xmlElement.tag)
+                    package.unhandledParser.add(xmlElement.tag)
 
         if self.version >= 3.0 and self.version < 4.0:
             if xmlRoot.find('SUB-PACKAGES'):

@@ -60,7 +60,7 @@ class PackageWriter(BaseWriter):
                         else:
                             lines.extend(self.indent(result,2))
                     else:
-                        package.UnhandledWriter.append(elementName)
+                        package.unhandledWriter.add(elementName)
             lines.append(self.indent("</ELEMENTS>",1))
         else:
             if self.version<4.0:
@@ -123,7 +123,7 @@ class PackageWriter(BaseWriter):
                     else:
                         lines.extend(result)
                 else:
-                    print("[PackageWriter] Unhandled: %s"%elementName)
+                    package.unhandledWriter.add(elementName)
             else:
                 pass
         return lines
