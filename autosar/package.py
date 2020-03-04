@@ -389,26 +389,9 @@ class Package(object):
 
     def _createImplementation(self, swc, implementationName):
 
-        ws = self.rootWS()
-        assert(ws is not None)
         if implementationName is None:
             implementationName = swc.name+'_Implementation'
         swc.implementation = autosar.component.SwcImplementation(implementationName, swc.behavior.ref, parent=self)
-
-        name = 'Default' if ws.version >= 4.0 else 'Code'
-        codeDescriptor = autosar.component.SwcImplementationCodeDescriptor(name, swc.implementation)
-
-        if ws.version >= 4.0:
-            engineeringObject = autosar.component.EngineeringObject(codeDescriptor)
-            engineeringObject.shortLabel = 'Default'
-            engineeringObject.category   = 'SWSRC'
-            codeDescriptor.artifactDescriptors = []
-            codeDescriptor.artifactDescriptors.append(engineeringObject)
-        else:
-            codeDescriptor.type = 'SRC'
-
-        swc.implementation.codeDescriptors = []
-        swc.implementation.codeDescriptors.append(codeDescriptor)
 
         self.append(swc.implementation)
 

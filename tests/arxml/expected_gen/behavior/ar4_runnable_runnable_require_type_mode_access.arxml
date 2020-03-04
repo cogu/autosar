@@ -52,17 +52,6 @@
         </APPLICATION-SW-COMPONENT-TYPE>
         <SWC-IMPLEMENTATION>
           <SHORT-NAME>MyApplication_Implementation</SHORT-NAME>
-          <CODE-DESCRIPTORS>
-            <CODE>
-              <SHORT-NAME>Default</SHORT-NAME>
-              <ARTIFACT-DESCRIPTORS>
-                <AUTOSAR-ENGINEERING-OBJECT>
-                  <SHORT-LABEL>Default</SHORT-LABEL>
-                  <CATEGORY>SWSRC</CATEGORY>
-                </AUTOSAR-ENGINEERING-OBJECT>
-              </ARTIFACT-DESCRIPTORS>
-            </CODE>
-          </CODE-DESCRIPTORS>
           <BEHAVIOR-REF DEST="SWC-INTERNAL-BEHAVIOR">/ComponentTypes/MyApplication/MyApplication_InternalBehavior</BEHAVIOR-REF>
         </SWC-IMPLEMENTATION>
       </ELEMENTS>
