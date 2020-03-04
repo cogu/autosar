@@ -35,12 +35,6 @@
 				</INTERNAL-BEHAVIOR>
 				<SWC-IMPLEMENTATION>
 					<SHORT-NAME>MyService_Implementation</SHORT-NAME>
-					<CODE-DESCRIPTORS>
-						<CODE>
-							<SHORT-NAME>Code</SHORT-NAME>
-							<TYPE>SRC</TYPE>
-						</CODE>
-					</CODE-DESCRIPTORS>
 					<BEHAVIOR-REF DEST="INTERNAL-BEHAVIOR">/ComponentTypes/MyService_InternalBehavior</BEHAVIOR-REF>
 				</SWC-IMPLEMENTATION>
 			</ELEMENTS>

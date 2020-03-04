@@ -71,13 +71,21 @@
           <SHORT-NAME>MyApplication_Implementation</SHORT-NAME>
           <CODE-DESCRIPTORS>
             <CODE>
-              <SHORT-NAME>Default</SHORT-NAME>
+              <SHORT-NAME>Code</SHORT-NAME>
               <ARTIFACT-DESCRIPTORS>
                 <AUTOSAR-ENGINEERING-OBJECT>
-                  <SHORT-LABEL>Default</SHORT-LABEL>
+                  <SHORT-LABEL>MyApplication.c</SHORT-LABEL>
                   <CATEGORY>SWSRC</CATEGORY>
                   <REVISION-LABELS>
                     <REVISION-LABEL>1.0.1</REVISION-LABEL>
+                  </REVISION-LABELS>
+                  <DOMAIN>testDomain</DOMAIN>
+                </AUTOSAR-ENGINEERING-OBJECT>
+                <AUTOSAR-ENGINEERING-OBJECT>
+                  <SHORT-LABEL>MyApplication.h</SHORT-LABEL>
+                  <CATEGORY>SWSRC</CATEGORY>
+                  <REVISION-LABELS>
+                    <REVISION-LABEL>1.0.2</REVISION-LABEL>
                   </REVISION-LABELS>
                   <DOMAIN>testDomain</DOMAIN>
                 </AUTOSAR-ENGINEERING-OBJECT>

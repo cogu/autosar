@@ -57,8 +57,22 @@ class ARXML4ComponentTest(ARXMLTestClass):
         swc.createRequirePort('FreeRunningTimer', 'FreeRunningTimer5ms_I')
         swc.behavior.createRunnable('Run', portAccess=['FreeRunningTimer/GetTime', 'FreeRunningTimer/IsTimerElapsed'])
         swc.behavior.createTimerEvent('Run', 20) #execute the Run function every 20ms in all modes
-        swc.implementation.codeDescriptors[0].artifactDescriptors[0].revisionLabels = ['1.0.1']
-        swc.implementation.codeDescriptors[0].artifactDescriptors[0].domain = 'testDomain'
+        codeDescriptor = autosar.component.SwcImplementationCodeDescriptor('Code', swc.implementation)
+        codeDescriptor.artifactDescriptors = []
+        engineeringObject = autosar.component.EngineeringObject(codeDescriptor)
+        engineeringObject.shortLabel = 'MyApplication.c'
+        engineeringObject.category   = 'SWSRC'
+        engineeringObject.revisionLabels = ['1.0.1']
+        engineeringObject.domain = 'testDomain'
+        codeDescriptor.artifactDescriptors.append(engineeringObject)
+        engineeringObject = autosar.component.EngineeringObject(codeDescriptor)
+        engineeringObject.shortLabel = 'MyApplication.h'
+        engineeringObject.category   = 'SWSRC'
+        engineeringObject.revisionLabels = ['1.0.2']
+        engineeringObject.domain = 'testDomain'
+        codeDescriptor.artifactDescriptors.append(engineeringObject)
+        swc.implementation.codeDescriptors = []
+        swc.implementation.codeDescriptors.append(codeDescriptor)
         swc.implementation.programmingLanguage = 'C'
         swc.implementation.swVersion = '1.0.0'
         swc.implementation.useCodeGenerator = 'codeGen'

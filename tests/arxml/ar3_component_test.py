@@ -50,7 +50,7 @@ class ARXML3ComponentTest(ARXMLTestClass):
         file_name = 'ar3_service_swc.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'component', file_name)
-        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])        
+        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
 
     def test_create_cdd_software_component(self):
         ws = autosar.workspace(version="3.0.2")
@@ -61,7 +61,7 @@ class ARXML3ComponentTest(ARXMLTestClass):
         file_name = 'ar3_cdd_swc.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'component', file_name)
-        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])          
+        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
         generated_file = os.path.join(_output_dir, 'ar3_cdd_swc.arxml')
 
 if __name__ == '__main__':
