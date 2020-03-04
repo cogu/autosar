@@ -474,8 +474,14 @@ class DataTypeSemanticsParser(ElementParser):
         assert(numXml is not None)
         assert(len(numXml) == 2)
         assert(denXml is not None)
-        offset = self.parseNumberNode(numXml[0])
-        numerator = self.parseNumberNode(numXml[1])
+        if self.parseTextNode(numXml[0]):
+            offset = self.parseNumberNode(numXml[0])
+        else:
+            offset = 0
+        if self.parseTextNode(numXml[1]):
+            numerator = self.parseNumberNode(numXml[1])
+        else:
+            numerator = 1
         denominator = self.parseNumberNode(denXml[0])
         return offset, numerator, denominator
 
