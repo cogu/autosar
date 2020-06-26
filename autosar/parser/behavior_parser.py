@@ -855,7 +855,7 @@ class BehaviorParser(ElementParser):
             elif xmlElem.tag == 'STORE-CYCLIC':
                 config.storeCyclic = self.parseBooleanNode(xmlElem)
             elif xmlElem.tag == 'CYCLIC-WRITING-PERIOD':
-                config.cyclicWritePeriod = self.parseIntNode(xmlElem)
+                config.cyclicWritePeriod = self.parseFloatNode(xmlElem)
             else:
                 self.baseHandler(xmlElem)
 

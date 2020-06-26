@@ -397,13 +397,21 @@ class BaseWriter:
             return str(x)
 
 
-    def format_float(self, f):
+    def format_float(self, f, allow_inf_nan=False):
         """
         Transforms a float into a printable number string.
         If the float only has integer part it will print an integer (no fractional part)
         Otherwise it till print a normalized floating point number (remove unnecessary zeros from the right in fractional part)
         """
-        d = Decimal(str(f));
+        if allow_inf_nan:
+            if math.isinf(f) and f > 0:
+                return 'INFINITE' if self.version < 4.0 else 'INF'
+            elif math.isinf(f) and f < 0:
+                return '-INFINITE' if self.version < 4.0 else '-INF'
+            elif math.isnan(f):
+                return 'NaN'
+
+        d = Decimal(str(f))
         return d.quantize(Decimal(1)) if d == d.to_integral() else d.normalize()
 
 
