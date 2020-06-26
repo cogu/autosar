@@ -273,20 +273,61 @@ class ARXML4ComponentTest(ARXMLTestClass):
                                         writingPriority='LOW',
                                         checkStaticBlockId=False,
                                         autoValidationAtShutdown=False,
-                                        cyclicWritePeriod=0)
+                                        cyclicWritePeriod=0.0)
 
         autosar.behavior.createNvBlockDescriptor(swc, 'LastCyclePushButtonStatus_NvR',
                 NvmBlockConfig=nvmBlockConfig, timingEventRef=Run_Event.name, swCalibrationAccess='READ-WRITE', supportDirtyFlag=True,
                 romBlockInitValueRef = 'LastCyclePushButtonStatus_IV', romBlockDesc="Rom block description", romBlockLongName="Rom block long name",
                 dataTypeMappingRefs=mappingSet.ref)
 
+
+        nvmBlockConfig2 = autosar.behavior.NvmBlockConfig(numberOfDataSets=2,
+                                        numberOfRomBlocks=1,
+                                        ramBlockStatusControl='NV-RAM-MANAGER',
+                                        readOnly=False,
+                                        reliability='ERROR-DETECTION',
+                                        resistantToChangedSw=True,
+                                        restoreAtStartup=True,
+                                        storeAtShutdown=True,
+                                        storeImmediate=True,
+                                        storeCyclic=False,
+                                        storeEmergency=False,
+                                        useCrcCompMechanism=True,
+                                        writeOnlyOnce=False,
+                                        writeVerification=True,
+                                        writingFrequency=10000,
+                                        writingPriority='LOW',
+                                        checkStaticBlockId=False,
+                                        autoValidationAtShutdown=False,
+                                        cyclicWritePeriod=float('nan'))
+
         autosar.behavior.createNvBlockDescriptor(swc, 'UserSetting_NvR/SettinNo1',
-                NvmBlockConfig=nvmBlockConfig, timingEventRef=Run_Event.name, swCalibrationAccess='READ-WRITE', supportDirtyFlag=True,
+                NvmBlockConfig=nvmBlockConfig2, timingEventRef=Run_Event.name, swCalibrationAccess='READ-WRITE', supportDirtyFlag=True,
                 romBlockInitValueRef = 'UserSetting_IV', romBlockDesc="Rom block description", romBlockLongName="Rom block long name",
                 dataTypeMappingRefs=mappingSet.ref)
 
+        nvmBlockConfig3 = autosar.behavior.NvmBlockConfig(numberOfDataSets=2,
+                                        numberOfRomBlocks=1,
+                                        ramBlockStatusControl='NV-RAM-MANAGER',
+                                        readOnly=False,
+                                        reliability='ERROR-DETECTION',
+                                        resistantToChangedSw=True,
+                                        restoreAtStartup=True,
+                                        storeAtShutdown=True,
+                                        storeImmediate=True,
+                                        storeCyclic=False,
+                                        storeEmergency=False,
+                                        useCrcCompMechanism=True,
+                                        writeOnlyOnce=False,
+                                        writeVerification=True,
+                                        writingFrequency=10000,
+                                        writingPriority='LOW',
+                                        checkStaticBlockId=False,
+                                        autoValidationAtShutdown=False,
+                                        cyclicWritePeriod=float('-inf'))
+
         autosar.behavior.createNvBlockDescriptor(swc, 'UserSetting_NvR/SettinNo2',
-                NvmBlockConfig=nvmBlockConfig, timingEventRef=Run_Event.name, swCalibrationAccess='READ-WRITE', supportDirtyFlag=True,
+                NvmBlockConfig=nvmBlockConfig3, timingEventRef=Run_Event.name, swCalibrationAccess='READ-WRITE', supportDirtyFlag=True,
                 romBlockInitValueRef = 'UserSetting_IV', romBlockDesc="Rom block description", romBlockLongName="Rom block long name",
                 dataTypeMappingRefs=mappingSet.ref)
 

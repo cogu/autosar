@@ -454,7 +454,7 @@ class NvmBlockConfig:
     - storeEmergency: None or bool
     - storeImmediate: None or bool
     - storeCyclic: None or bool
-    - cyclicWritePeriod: None or int
+    - cyclicWritePeriod: None or float
 
     """
 
@@ -543,8 +543,8 @@ class NvmBlockConfig:
             raise ValueError('storeImmediate is incorrectly formatted (None or bool expected)')
         if not (self.storeCyclic is None or isinstance(self.storeCyclic, bool) ):
             raise ValueError('storeCyclic is incorrectly formatted (None or bool expected)')
-        if not (self.cyclicWritePeriod is None or isinstance(self.cyclicWritePeriod, int) ):
-            raise ValueError('cyclicWritePeriod is incorrectly formatted (None or bool expected)')
+        if not (self.cyclicWritePeriod is None or isinstance(self.cyclicWritePeriod, float) ):
+            raise ValueError('cyclicWritePeriod is incorrectly formatted (None or float expected)')
 
 
 class NvmBlockNeeds(Element):

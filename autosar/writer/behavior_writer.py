@@ -604,7 +604,7 @@ class XMLBehaviorWriter(ElementWriter):
         if elem.cfg.checkStaticBlockId is not None:
             lines.append(self.indent('<CHECK-STATIC-BLOCK-ID>%s</CHECK-STATIC-BLOCK-ID>'%(self.toBooleanStr(elem.cfg.checkStaticBlockId)),1))
         if elem.cfg.cyclicWritePeriod is not None:
-            lines.append(self.indent('<CYCLIC-WRITING-PERIOD>%d</CYCLIC-WRITING-PERIOD>'%(int(elem.cfg.cyclicWritePeriod)),1))
+            lines.append(self.indent('<CYCLIC-WRITING-PERIOD>{}</CYCLIC-WRITING-PERIOD>'.format(self.format_float(elem.cfg.cyclicWritePeriod, True)),1))
         if elem.cfg.numberOfDataSets is not None:
             lines.append(self.indent('<N-DATA-SETS>%d</N-DATA-SETS>'%(int(elem.cfg.numberOfDataSets)),1))
         if elem.cfg.numberOfRomBlocks is not None:
