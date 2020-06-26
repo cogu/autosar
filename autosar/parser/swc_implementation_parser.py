@@ -60,7 +60,7 @@ class SwcImplementationParser(ElementParser):
             elif xmlElem.tag == 'MC-SUPPORT':
                 #TODO: Implement later
                 continue
-            elif xmlElem.tag == 'PROGRAMMING-LANGUAG':
+            elif xmlElem.tag == 'PROGRAMMING-LANGUAGE':
                 implementation.programmingLanguage = self.parseTextNode(xmlElem)
                 continue
             elif xmlElem.tag == 'REQUIRED-ARTIFACTS':

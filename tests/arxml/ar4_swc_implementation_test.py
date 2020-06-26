@@ -73,6 +73,7 @@ class ARXML4ComponentTest(ARXMLTestClass):
         codeDescriptor.artifactDescriptors.append(engineeringObject)
         swc.implementation.codeDescriptors = []
         swc.implementation.codeDescriptors.append(codeDescriptor)
+
         swc.implementation.programmingLanguage = 'C'
         swc.implementation.swVersion = '1.0.0'
         swc.implementation.useCodeGenerator = 'codeGen'
@@ -81,6 +82,14 @@ class ARXML4ComponentTest(ARXMLTestClass):
         file_name = 'ar4_swc_implementation.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'component', file_name)
+        expected_path = os.path.join(os.path.dirname(__file__), expected_file)
+        ws2 = autosar.workspace(version="4.2.2")
+        _init_ws(ws2)
+        ws2.loadXML(expected_path)
+        package = ws2.find('/ComponentTypes')
+        swc2 = package.find('MyApplication')
+        self.assertEqual(swc.name, swc2.name)
+        self.assertEqual(swc.implementation.programmingLanguage, swc2.implementation.programmingLanguage)
         self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
 
     def test_create_swc_implementation_memsections(self):
