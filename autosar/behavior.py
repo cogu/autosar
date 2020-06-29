@@ -501,6 +501,9 @@ class NvmBlockConfig:
         self.storeCyclic = storeCyclic
         self.cyclicWritePeriod = cyclicWritePeriod
 
+        if isinstance(self.cyclicWritePeriod, int):
+            self.cyclicWritePeriod = float(self.cyclicWritePeriod)
+
         if check_input:
             self.check()
 
