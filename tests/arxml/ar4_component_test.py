@@ -273,7 +273,7 @@ class ARXML4ComponentTest(ARXMLTestClass):
                                         writingPriority='LOW',
                                         checkStaticBlockId=False,
                                         autoValidationAtShutdown=False,
-                                        cyclicWritePeriod=0.0)
+                                        cyclicWritePeriod=0)
 
         autosar.behavior.createNvBlockDescriptor(swc, 'LastCyclePushButtonStatus_NvR',
                 NvmBlockConfig=nvmBlockConfig, timingEventRef=Run_Event.name, swCalibrationAccess='READ-WRITE', supportDirtyFlag=True,
