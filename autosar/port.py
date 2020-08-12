@@ -286,7 +286,7 @@ class DataElementComSpec:
     def __init__(self, name=None, initValue=None, initValueRef=None, aliveTimeout=None, queueLength=None, canInvalidate=None, useEndToEndProtection = None):
         self.name = name
         if initValue is not None:
-            assert(isinstance(initValue, autosar.constant.Value))
+            assert(isinstance(initValue, (autosar.constant.Value, autosar.constant.ValueAR4)))
         self.initValue = initValue
         self.initValueRef = str(initValueRef) if initValueRef is not None else None
         self._aliveTimeout = int(aliveTimeout) if aliveTimeout is not None else None

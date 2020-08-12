@@ -28,7 +28,12 @@ def _create_base_types(ws):
     package.createImplementationDataType('uint8', lowerLimit=0, upperLimit=255, baseTypeRef='/DataTypes/BaseTypes/uint8', typeEmitter='Platform_Type')
     package.createImplementationDataType('uint16', lowerLimit=0, upperLimit=65535, baseTypeRef='/DataTypes/BaseTypes/uint16', typeEmitter='Platform_Type')
     package.createImplementationDataType('uint32', lowerLimit=0, upperLimit=4294967295, baseTypeRef='/DataTypes/BaseTypes/uint32', typeEmitter='Platform_Type')
-
+    package.createImplementationDataTypeRef('OffOn_T', implementationTypeRef = '/DataTypes/uint8',
+                                                valueTable = ['OffOn_Off',
+                                                'OffOn_On',
+                                                'OffOn_Error',
+                                                'OffOn_NotAvailable'
+                                                ])
 def _create_test_elements(ws):
     package = ws.find('/Constants')
     package.createConstant('VehicleSpeed_IV', 'uint16', 65535)
@@ -42,6 +47,7 @@ def _create_test_elements(ws):
     package = ws.find('/PortInterfaces')
     package.createSenderReceiverInterface('VehicleSpeed_I', autosar.DataElement('VehicleSpeed', 'uint16'))
     package.createSenderReceiverInterface('EngineSpeed_I', autosar.DataElement('EngineSpeed', 'uint16'))
+    package.createSenderReceiverInterface('HeaterPwrStat_I', autosar.DataElement('HeaterPwrStat', 'OffOn_T'))
     portInterface=package.createClientServerInterface('FreeRunningTimer5ms_I', ['GetTime', 'IsTimerElapsed'])
     portInterface['GetTime'].createOutArgument('value', '/DataTypes/uint32')
     portInterface["IsTimerElapsed"].createInArgument("startTime", '/DataTypes/uint32')
@@ -158,6 +164,21 @@ class ARXML4PortCreateTest(ARXMLTestClass):
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
         swc2 = ws2.find(swc1.ref)
         self.assertIsInstance(swc2, autosar.component.ApplicationSoftwareComponent)
+
+    def test_create_non_queued_sender_port_single_data_element_with_raw_init_value(self):
+        ws = autosar.workspace(version="4.2.2")
+        _init_ws(ws)
+        package = ws.find('/ComponentTypes')
+        swc1 = package.createApplicationSoftwareComponent('MyApplication')
+        swc1.createProvidePort('HeaterPwrStat', 'HeaterPwrStat_I', initValue = 'OffOn_NotAvailable')
+        file_name = 'ar4_non_queued_sender_port_single_data_element_raw_init_value.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'port', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'], force = True)
+#        ws2 = autosar.workspace(ws.version_str)
+#        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+#        swc2 = ws2.find(swc1.ref)
+#        self.assertIsInstance(swc2, autosar.component.ApplicationSoftwareComponent)
 
 if __name__ == '__main__':
     unittest.main()
