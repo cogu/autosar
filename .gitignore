@@ -14,8 +14,7 @@ __pycache__/
 
 #sphinx-doc files
 /doc/_build/
-/doc2/_build/
-/doc2/**/*.arxml
+/doc/**/examples/*.arxml
 
 #XSD validation files
 /tests/arxml/expected_gen/*.xsd
