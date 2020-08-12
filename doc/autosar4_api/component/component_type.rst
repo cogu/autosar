@@ -58,7 +58,7 @@ find
 createProvidePort
 ~~~~~~~~~~~~~~~~~~~~
 
-.. method::  ComponentType.createProvidePort(name, portInterfaceRef, \*\*kwargs)
+.. method::  ComponentType.createProvidePort(name, portInterfaceRef, **kwargs)
 
     Creates new ProvidePort on this component.
 
@@ -69,7 +69,7 @@ createProvidePort
 createRequirePort
 ~~~~~~~~~~~~~~~~~
 
-.. method::  ComponentType.createRequirePort(name, portInterfaceRef, \*\*kwargs)
+.. method::  ComponentType.createRequirePort(name, portInterfaceRef, **kwargs)
 
     Creates new RequirePort on this component.
 
