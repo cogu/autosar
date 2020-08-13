@@ -27,7 +27,7 @@ Ports are created from *port interfaces*. They come in different types.
 SenderReceiverPortInterface
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The SenderReceiverPortInterface is the traditional interface used for sending and receiving automotive *signals*. 
+The SenderReceiverPortInterface is the traditional interface used for sending and receiving automotive *signals*.
 It integrates well with automotive buses such as CAN and LIN (which are primarily signal-based buses).
 
 The RTE function prefixes are:
@@ -52,7 +52,7 @@ For server ports (or P-Ports), the user can select any function name as long as 
 ParameterPortInterface
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Parameter ports are used for parameter data, sometimes known as calibration data. They are usually read-only data values which 
+Parameter ports are used for parameter data, sometimes known as calibration data. They are usually read-only data values which
 controls the behavior of SoftwareComponents.
 
 The RTE function prefixes are:
@@ -83,29 +83,32 @@ This can include information such as init-values or queue-lengths.
 Port Creation Examples
 ----------------------
 
-Example 1: SenderReceiverPorts with single data element
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Example 1: SenderReceiver ports with single data element
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Create components with a single port which contains one data element.
-Use keyword **initValueRef** instead of **initValue** if you intend to 
+Use keyword **initValueRef** instead of **initValue** if you intend to
 use constants as port initialier.
 
 .. include:: examples/create_sender_receiver_port_single_elem.py
     :code: python3
 
-Example 2: SenderReceiverPorts with multiple data elements
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Example 2: SenderReceiver ports with multiple data elements
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Create components with a single port which contains two data elements.
-Use keyword **initValueRef** instead of **initValue** if you intend to 
+Use keyword **initValueRef** instead of **initValue** if you intend to
 use constants as port initialier.
 
 .. include:: examples/create_sender_receiver_port_multi_elem.py
     :code: python3
 
 
+Example 3: ClientServer port
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Create an NVM-related client-server interface and use it as both client
+and server ports.
 
-
-
-
+.. include:: examples/create_client_server_port.py
+    :code: python3

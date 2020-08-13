@@ -12,6 +12,4 @@
     "python.testing.pytestEnabled": false,
     "python.testing.nosetestsEnabled": false,
     "python.testing.unittestEnabled": true,
-    "python.pythonPath": "/usr/bin/python3",
-    "restructuredtext.confPath": "${workspaceFolder}/doc"
 }
