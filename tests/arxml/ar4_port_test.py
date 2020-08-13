@@ -174,7 +174,7 @@ class ARXML4PortCreateTest(ARXMLTestClass):
         file_name = 'ar4_non_queued_sender_port_single_data_element_raw_init_value.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'port', file_name)
-        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'], force = True)
+        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
 #        ws2 = autosar.workspace(ws.version_str)
 #        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
 #        swc2 = ws2.find(swc1.ref)
