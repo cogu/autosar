@@ -293,7 +293,7 @@ class Dcf(XMLWriterSimple):
                 elem = xml_file_map[key]
                 extension = '' if key.lower().endswith('.arxml') else '.arxml'
                 file_name = key + extension
-                lines.extend(self.indent(self._single_file_ref(file_name, elem['root']),1))
+                lines.extend(self.indent(self._single_file_ref(file_name),1))
             lines.append('</DCF>')
             with open(dest_file, 'w') as fp:
                 fp.write('\n'.join(lines))
@@ -306,13 +306,13 @@ class Dcf(XMLWriterSimple):
         lines.append('</FILEREF>')
         return lines
 
-    def _single_file_ref(self, file_name, root_item, directory=None):
+    def _single_file_ref(self, file_name, directory=None):
         if directory is not None:
             file_path = os.path.join(directory, file_name)
         else:
             file_path = file_name
         lines = ['<FILEREF>']
-        lines.append(self.indent('<ARXML ROOTITEM="{}" TYPE="">{}</ARXML>'.format(root_item.upper(), file_path),1))
+        lines.append(self.indent('<ARXML>{}</ARXML>'.format(file_path),1))
         lines.append('</FILEREF>')
         return lines
 

@@ -208,7 +208,7 @@ class Package(object):
                 assert (ws is not None)
                 modeDeclarationGroup = ws.find(modeGroup.typeRef, role='ModeDclrGroup')
                 if modeDeclarationGroup is None:
-                    raise ValueError('invalid type reference: '+dataElements.typeRef)
+                    raise ValueError('invalid type reference: '+modeGroup.typeRef)
                 modeGroup.typeRef=modeDeclarationGroup.ref #normalize reference string
                 portInterface.modeGroup = modeGroup
                 modeGroup.parent = portInterface

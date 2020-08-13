@@ -339,6 +339,7 @@ class Workspace:
         if isinstance(elem,autosar.package.Package):
             self.packages.append(elem)
             elem.parent=self
+            self.map['packages'][elem.name] = elem
         else:
             raise ValueError(type(elem))
 

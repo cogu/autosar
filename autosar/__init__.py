@@ -10,7 +10,7 @@ import autosar.rte
 import autosar.builder
 import autosar.port
 from abc import (ABC,abstractmethod)
-from autosar.base import splitRef
+import autosar.base
 import autosar.bsw.com
 import autosar.bsw.os
 import autosar.util
@@ -25,7 +25,7 @@ def workspace(version=3.0, patch = 2, schema=None, attributes=None, useDefaultWr
    return autosar.Workspace(version, patch, schema, attributes, useDefaultWriters)
 
 
-   
+
 
 def splitRef(ref):
    return autosar.base.splitRef(ref)
@@ -37,10 +37,7 @@ def ApplicationError(name, errorCode, parent=None, adminData=None):
    return autosar.portinterface.ApplicationError(name, errorCode, parent, adminData)
 
 def ModeGroup(name, typeRef, parent=None, adminData=None):
-   return autosar.portinterface.ModeGroup(name, typeRef, parent, adminData)
-
-def CompuMethodConst(name, elements, parent=None, adminData=None):
-   return autosar.datatype.CompuMethodConst(name, elements, parent, adminData)
+   return autosar.mode.ModeGroup(name, typeRef, parent, adminData)
 
 def ParameterDataPrototype(name, typeRef, swAddressMethodRef=None, swCalibrationAccess=None, initValue = None, parent=None, adminData=None):
    return autosar.element.ParameterDataPrototype(name, typeRef, swAddressMethodRef, swCalibrationAccess, initValue, parent, adminData)
@@ -48,16 +45,21 @@ def ParameterDataPrototype(name, typeRef, swAddressMethodRef=None, swCalibration
 
 #template support
 class Template(ABC):
-   
+
    usageCount = 0 #number of times this template have been applied
-   
+   static_ref = ''
+
+   @classmethod
+   def ref(cls, ws):
+      return cls.static_ref
+
    @classmethod
    def get(cls, ws):
       ref = cls.ref(ws)
       if ws.find(ref) is None:
          ws.apply(cls)
       return ws.find(ref)
-   
+
    @classmethod
    @abstractmethod
    def apply(cls, ws, **kwargs):
