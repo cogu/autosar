@@ -149,6 +149,28 @@ class ARXML4ConstantTest(ARXMLTestClass):
         c2 = ws2.find(c1.ref)
         self.assertIsInstance(c2, autosar.constant.Constant)
 
+    def test_create_array_of_record_constant(self):
+        ws = autosar.workspace(version="4.2.2")
+        _init_ws(ws)
+        package = ws['DataTypes']
+        package.createImplementationRecordDataType('ServiceResult_T', [
+            ('ServiceId', '/DataTypes/uint8'),
+            ('RequestResult', '/DataTypes/uint8'),
+        ])
+        package.createImplementationArrayDataType('ServiceResultList_T', '/DataTypes/ServiceResult_T', 2)
+        package = ws['Constants']
+        c1 = package.createConstant('CDiagNv_NvMServiceRequestType','/DataTypes/ServiceResultList_T',
+        [
+            {'ServiceId': 0, 'RequestResult': 0},
+            {'ServiceId': 1, 'RequestResult': 0}
+        ])
+        self.assertIsInstance(c1, autosar.constant.Constant)
+
+        file_name = 'ar4_array_of_records.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'constant', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/Constants'])
+
     def test_create_application_value1(self):
         ws = autosar.workspace(version="4.2.2")
         _init_ws(ws)

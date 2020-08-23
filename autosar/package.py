@@ -585,20 +585,25 @@ class Package(object):
         self.append(dataType)
         return dataType
 
-    def createConstant(self, name, typeRef, initValue, adminData=None):
+    def createConstant(self, name, typeRef, initValue, label = '', adminData=None):
         """
         create a new instance of autosar.constant.Constant and appends it to the current package
         """
         ws=self.rootWS()
         assert(ws is not None)
-        dataType = ws.find(typeRef, role='DataType')
-        value=None
-        if dataType is None:
-            raise autosar.base.InvalidDataTypeRef(str(typeRef))
+        if typeRef is not None:
+            dataType = ws.find(typeRef, role='DataType')
+            if dataType is None:
+                raise autosar.base.InvalidDataTypeRef(str(typeRef))
+        else:
+            if ws.version < 4.0:
+                raise ValueError('typeRef argument cannot be None')
+            else:
+                dataType = None
         if ws.version < 4.0:
             return self._createConstantV3(ws, name, dataType, initValue, adminData)
         else:
-            return self._createConstantV4(ws, name, dataType, initValue, adminData)
+            return self._createConstantV4(ws, name, dataType, initValue, label, adminData)
 
     def _createConstantV3(self, ws, name, dataType, initValue, adminData=None):
         """Creates an AUTOSAR 3 Constant"""
@@ -753,9 +758,18 @@ class Package(object):
             raise NotImplementedError(type(initValue))
         return value
 
-    def _createConstantV4(self, ws, name, dataType, initValue, adminData=None):
+    def _createConstantV4(self, ws, name, dataType, initValue, label, adminData=None):
+        """
+        If label argument is an empty string, the label of the created value is the same as
+        the name of the constant.
+        """
+        if isinstance(label, str) and len(label) == 0:
+            label = name
         builder = autosar.builder.ValueBuilder()
-        value = builder.buildFromDataType(dataType, initValue, name, ws)
+        if dataType is None:
+            value = builder.build(label, initValue)
+        else:
+            value = builder.buildFromDataType(dataType, initValue, label, ws)
         assert(value is not None)
         constant = autosar.constant.Constant(name, value, parent=self, adminData=adminData)
         self.append(constant)
@@ -789,6 +803,18 @@ class Package(object):
         self.append(constant)
         return constant
 
+    def createConstantFromValue(self, name, value):
+        """
+        (AUTOSAR4)
+        Wraps an already created value in a constant object
+        """
+        if not isinstance(value, autosar.constant.ValueAR4):
+            raise ValueError("value argument must inherit from class ValueAR4 (got {})".format(type(value)))
+        ws=self.rootWS()
+        assert(ws is not None)
+        constant = autosar.constant.Constant(name, value, self)
+        self.append(constant)
+        return constant
 
 
 
