@@ -34,6 +34,10 @@ class SystemParser(ElementParser):
                     self.parseSystemMapping(xmlElem,system)
                 elif xmlElem.tag=='SOFTWARE-COMPOSITION':
                     self.parseSoftwareComposition(xmlElem,system)
+                elif xmlElem.tag=='TOPOLOGY':
+                    pass
+                elif xmlElem.tag=='COMMUNICATION':
+                    pass
                 else:
                     raise NotImplementedError(xmlElem.tag)
             return system
@@ -83,6 +87,9 @@ class SystemParser(ElementParser):
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag=='SWC-TO-IMPL-MAPPING':
                 pass
+            elif xmlElem.tag == 'SW-COMP-TO-IMPL-MAPPING':
+                pass
+
             else:
                 raise NotImplementedError(xmlElem.tag)
 
@@ -91,6 +98,8 @@ class SystemParser(ElementParser):
         assert(xmlRoot.tag=='SW-MAPPINGS')
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag=='SWC-TO-ECU-MAPPING':
+                pass
+            elif xmlElem.tag=='SW-COMP-TO-ECU-MAPPING':
                 pass
             else:
                 raise NotImplementedError(xmlElem.tag)
@@ -178,6 +187,8 @@ class SystemParser(ElementParser):
                 recordElementRef=parseTextNode(xmlElem)
             elif xmlElem.tag=='SIGNAL-REF': #minOccurs="0" maxOccurs="1"
                 signalRef=parseTextNode(xmlElem)
+            elif xmlElem.tag=='RECORD-ELEMENT-IREF': #minOccurs="0" maxOccurs="1"
+                recordElementRef=parseTextNode(xmlElem)
             else:
                 raise NotImplementedError(xmlElem.tag)
         return SenderRecRecordElementMapping(recordElementRef,signalRef)

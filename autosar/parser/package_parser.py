@@ -48,7 +48,7 @@ class PackageParser:
                 else:
                     package.unhandledParser.add(xmlElement.tag)
 
-        if self.version >= 3.0 and self.version < 4.0:
+        if self.version >= 2.0 and self.version < 4.0:
             if xmlRoot.find('SUB-PACKAGES'):
                 for xmlPackage in xmlRoot.findall('./SUB-PACKAGES/AR-PACKAGE'):
                     name = xmlPackage.find("./SHORT-NAME").text

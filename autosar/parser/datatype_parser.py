@@ -6,7 +6,7 @@ class DataTypeParser(ElementParser):
     def __init__(self,version=3.0):
         super().__init__(version)
 
-        if self.version >= 3.0 and self.version < 4.0:
+        if self.version >= 2.0 and self.version < 4.0:
             self.switcher = {'ARRAY-TYPE': self.parseArrayType,
                              'BOOLEAN-TYPE': self.parseBooleanType,
                              'INTEGER-TYPE': self.parseIntegerType,
@@ -36,11 +36,12 @@ class DataTypeParser(ElementParser):
 
 
     def parseIntegerType(self,root,parent=None):
-        if self.version>=3.0:
+        if self.version>=2.0:
             name=root.find("./SHORT-NAME").text
             minval = int(root.find("./LOWER-LIMIT").text)
             maxval = int(root.find("./UPPER-LIMIT").text)
             dataDefXML = root.find('./SW-DATA-DEF-PROPS')
+            CommentXML = root.find('./DESC')
             dataType = autosar.datatype.IntegerDataType(name,minval,maxval)
             self.parseDesc(root,dataType)
             if dataDefXML is not None:
@@ -52,7 +53,7 @@ class DataTypeParser(ElementParser):
             return dataType
 
     def parseRecordType(self,root,parent=None):
-        if self.version>=3.0:
+        if self.version>=2.0:
             elements = []
             name=root.find("./SHORT-NAME").text
             for elem in root.findall('./ELEMENTS/RECORD-ELEMENT'):
@@ -64,7 +65,7 @@ class DataTypeParser(ElementParser):
             return dataType
 
     def parseArrayType(self,root,parent=None):
-        if self.version>=3.0:
+        if self.version>=2.0:
             name=root.find("./SHORT-NAME").text
             length=int(root.find('ELEMENT/MAX-NUMBER-OF-ELEMENTS').text)
             typeRef=root.find('ELEMENT/TYPE-TREF').text
@@ -73,14 +74,14 @@ class DataTypeParser(ElementParser):
             return dataType;
 
     def parseBooleanType(self,root,parent=None):
-        if self.version>=3:
+        if self.version>=2:
             name=root.find("./SHORT-NAME").text
             dataType=autosar.datatype.BooleanDataType(name)
             self.parseDesc(root,dataType)
             return dataType
 
     def parseStringType(self,root,parent=None):
-        if self.version>=3.0:
+        if self.version>=2.0:
             name=root.find("./SHORT-NAME").text
 
             length=int(root.find('MAX-NUMBER-OF-CHARS').text)
@@ -90,7 +91,7 @@ class DataTypeParser(ElementParser):
             return dataType
 
     def parseRealType(self,root,parent=None):
-        if self.version>=3.0:
+        if self.version>=2.0:
             name=root.find("./SHORT-NAME").text
 
             elem = root.find("./LOWER-LIMIT")

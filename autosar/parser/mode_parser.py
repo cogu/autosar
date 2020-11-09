@@ -6,7 +6,7 @@ class ModeDeclarationParser(ElementParser):
     def __init__(self,version=3):
         self.version=version
 
-        if self.version >= 3.0 and self.version < 4.0:
+        if self.version >= 2.0 and self.version < 4.0:
             self.switcher = {'MODE-DECLARATION-GROUP': self.parseModeDeclarationGroup,
                              'MODE-DECLARATIONS': self.parseModeDeclarations
             }

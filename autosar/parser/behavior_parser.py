@@ -8,7 +8,7 @@ class BehaviorParser(ElementParser):
         self.constantParser = ConstantParser(version)
 
     def getSupportedTags(self):
-        if (self.version >=3.0) and (self.version < 4.0):
+        if (self.version >=2.0) and (self.version < 4.0):
             return ['INTERNAL-BEHAVIOR']
         elif self.version >= 4.0:
             return ['SWC-INTERNAL-BEHAVIOR']
@@ -16,7 +16,7 @@ class BehaviorParser(ElementParser):
             return []
 
     def parseElement(self, xmlElement, parent = None):
-        if (self.version >=3.0) and (self.version < 4.0) and xmlElement.tag == 'INTERNAL-BEHAVIOR':
+        if (self.version >=2.0) and (self.version < 4.0) and xmlElement.tag == 'INTERNAL-BEHAVIOR':
             return self.parseInternalBehavior(xmlElement, parent)
         elif (self.version >= 4.0) and (xmlElement.tag == 'SWC-INTERNAL-BEHAVIOR'):
             return self.parseSWCInternalBehavior(xmlElement, parent)
@@ -61,7 +61,10 @@ class BehaviorParser(ElementParser):
                             raise ValueError('event')
                 elif xmlNode.tag == 'PORT-API-OPTIONS':
                     for xmlOption in xmlNode.findall('./PORT-API-OPTION'):
-                        portAPIOption = autosar.behavior.PortAPIOption(self.parseTextNode(xmlOption.find('PORT-REF')),self.parseBooleanNode(xmlOption.find('ENABLE-TAKE-ADDRESS')),self.parseBooleanNode(xmlOption.find('INDIRECT-API')))
+                        if (self.version >=3.0) and (self.version < 4.0):
+                            portAPIOption = autosar.behavior.PortAPIOption(self.parseTextNode(xmlOption.find('PORT-REF')),self.parseBooleanNode(xmlOption.find('ENABLE-TAKE-ADDRESS')),self.parseBooleanNode(xmlOption.find('INDIRECT-API')))
+                        else:
+                            portAPIOption = autosar.behavior.PortAPIOption(self.parseTextNode(xmlOption.find('PORT-REF')),self.parseBooleanNode(xmlOption.find('INDIRECT-API')))
                         if portAPIOption is not None: internalBehavior.portAPIOptions.append(portAPIOption)
                 elif xmlNode.tag == 'RUNNABLES':
                     for xmRunnable in xmlNode.findall('./RUNNABLE-ENTITY'):

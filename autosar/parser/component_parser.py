@@ -60,6 +60,15 @@ class ComponentTypeParser(ElementParser):
         if self.version >= 3.0 and self.version < 4.0:
             self.switcher = { 'APPLICATION-SOFTWARE-COMPONENT-TYPE': self.parseSoftwareComponent,
                               'COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE': self.parseSoftwareComponent,
+                              'SWC-IMPLEMENTATION': self.parseSwcImplementation,
+                              'COMPOSITION-TYPE': self.parseCompositionType,
+                              'CALPRM-COMPONENT-TYPE': self.parseSoftwareComponent,
+                              'SERVICE-COMPONENT-TYPE': self.parseSoftwareComponent
+                             }
+        elif self.version >= 2.0 and self.version < 3.0:
+            self.switcher = { 'ATOMIC-SOFTWARE-COMPONENT-TYPE': self.parseSoftwareComponent,
+                              'COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE': self.parseSoftwareComponent,
+                              'IMPLEMENTATION': self.parseSwcImplementation,
                               'COMPOSITION-TYPE': self.parseCompositionType,
                               'CALPRM-COMPONENT-TYPE': self.parseSoftwareComponent,
                               'SERVICE-COMPONENT-TYPE': self.parseSoftwareComponent
@@ -73,6 +82,7 @@ class ComponentTypeParser(ElementParser):
                'COMPOSITION-SW-COMPONENT-TYPE': self.parseCompositionType,
                'SENSOR-ACTUATOR-SW-COMPONENT-TYPE': self.parseSoftwareComponent,
                'SERVICE-SW-COMPONENT-TYPE': self.parseSoftwareComponent,
+               'SWC-IMPLEMENTATION': self.parseSwcImplementation,
                'NV-BLOCK-SW-COMPONENT-TYPE': self.parseSoftwareComponent
             }
 
@@ -91,6 +101,8 @@ class ComponentTypeParser(ElementParser):
         handledTags = ['SHORT-NAME']
         if xmlRoot.tag=='APPLICATION-SOFTWARE-COMPONENT-TYPE': #for AUTOSAR 3.x
             componentType = autosar.component.ApplicationSoftwareComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
+        elif xmlRoot.tag=='ATOMIC-SOFTWARE-COMPONENT-TYPE': #for AUTOSAR 2.x
+            componentType = autosar.component.AtomicSoftwareComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
         elif (xmlRoot.tag=='COMPLEX-DEVICE-DRIVER-COMPONENT-TYPE') or (xmlRoot.tag=='COMPLEX-DEVICE-DRIVER-SW-COMPONENT-TYPE'):
             componentType = autosar.component.ComplexDeviceDriverComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
         elif xmlRoot.tag == 'APPLICATION-SW-COMPONENT-TYPE': #for AUTOSAR 4.x
@@ -221,6 +233,19 @@ class ComponentTypeParser(ElementParser):
                         else:
                             raise NotImplementedError(xmlItem.tag)
                 componentType.providePorts.append(port)
+
+    def parseSwcImplementation(self,xmlRoot,parent=None):
+        ws = parent.rootWS()
+        assert(ws is not None)
+        name = self.parseTextNode(xmlRoot.find('SHORT-NAME'))
+        behaviorRef = self.parseTextNode(xmlRoot.find('BEHAVIOR-REF'))
+        implementation = autosar.component.SwcImplementation(name,behaviorRef,parent=parent)
+        behavior = ws.find(behaviorRef)
+        if behavior is not None:
+            swc = ws.find(behavior.componentRef)
+            if swc is not None:
+                swc.implementation=implementation
+        return implementation
 
     def parseCompositionType(self, xmlRoot, parent=None):
         """

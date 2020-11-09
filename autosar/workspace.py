@@ -167,8 +167,6 @@ class Workspace:
         self.release = release
         self.schema = schema
         self.xmlroot = xmlroot
-        if self.version < 3.0:
-            raise NotImplementedError("Version below 3.0 is not supported")
         if self.packageParser is None:
             self.packageParser = autosar.parser.package_parser.PackageParser(self.version)
         self._registerDefaultElementParsers(self.packageParser)
@@ -188,7 +186,7 @@ class Workspace:
         result=[]
         if self.xmlroot is None:
             raise ValueError("xmlroot is None, did you call loadXML() or openXML()?")
-        if self.version >= 3.0 and self.version < 4.0:
+        if self.version >= 2.0 and self.version < 4.0:
             if self.xmlroot.find('TOP-LEVEL-PACKAGES'):
                 for xmlPackage in self.xmlroot.findall('./TOP-LEVEL-PACKAGES/AR-PACKAGE'):
                     if self._loadPackageInternal(result, xmlPackage, packagename, role):
@@ -403,7 +401,7 @@ class Workspace:
         packageList=[]
         if self.xmlroot is None:
             raise ValueError("xmlroot is None, did you call loadXML() or openXML()?")
-        if self.version >= 3.0 and self.version < 4.0:
+        if self.version >= 2.0 and self.version < 4.0:
             if self.xmlroot.find('TOP-LEVEL-PACKAGES'):
                 for xmlPackage in self.xmlroot.findall('./TOP-LEVEL-PACKAGES/AR-PACKAGE'):
                     packageList.append(xmlPackage.find("./SHORT-NAME").text)

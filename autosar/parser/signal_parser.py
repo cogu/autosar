@@ -6,7 +6,7 @@ class SignalParser(ElementParser):
     def __init__(self,version=3):
         self.version=version
 
-        if self.version >= 3.0 and self.version < 4.0:
+        if self.version >= 2.0 and self.version < 4.0:
             self.switcher = {'SYSTEM-SIGNAL': self.parseSystemSignal,
                              'SYSTEM-SIGNAL-GROUP': self.parseSystemSignalGroup
             }
@@ -39,6 +39,8 @@ class SignalParser(ElementParser):
                 initValueRef=parseTextNode(elem)
             elif elem.tag=='LENGTH':
                 length=parseIntNode(elem)
+            elif elem.tag=='SIGNAL-LENGTH':
+                length=parseIntNode(elem)
             elif elem.tag=='DESC':
                 descXml = xmlRoot.find('DESC')
                 if descXml is not None:
@@ -62,6 +64,13 @@ class SignalParser(ElementParser):
                 systemSignalRefs=[]
                 for childElem in elem.findall('./*'):
                     if childElem.tag=='SYSTEM-SIGNAL-REF':
+                        systemSignalRefs.append(parseTextNode(childElem))
+                    else:
+                        raise NotImplementedError(childElem.tag)
+            elif elem.tag=='CONTAINED-SIGNALS-REFS':
+                systemSignalRefs=[]
+                for childElem in elem.findall('./*'):
+                    if childElem.tag=='CONTAINED-SIGNALS-REF':
                         systemSignalRefs.append(parseTextNode(childElem))
                     else:
                         raise NotImplementedError(childElem.tag)

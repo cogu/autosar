@@ -9,7 +9,7 @@ class PortInterfacePackageParser(ElementParser):
     def __init__(self, version=3.0):
         super().__init__(version)
 
-        if self.version >= 3.0 and self.version < 4.0:
+        if self.version >= 2.0 and self.version < 4.0:
             self.switcher = {'SENDER-RECEIVER-INTERFACE': self.parseSenderReceiverInterface,
                              'CALPRM-INTERFACE': self.parseCalPrmInterface,
                              'CLIENT-SERVER-INTERFACE': self.parseClientServerInterface
