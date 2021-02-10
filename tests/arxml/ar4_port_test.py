@@ -175,10 +175,21 @@ class ARXML4PortCreateTest(ARXMLTestClass):
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'port', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
-#        ws2 = autosar.workspace(ws.version_str)
-#        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
-#        swc2 = ws2.find(swc1.ref)
-#        self.assertIsInstance(swc2, autosar.component.ApplicationSoftwareComponent)
+        ws2 = autosar.workspace(ws.version_str)
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        swc2 = ws2.find(swc1.ref)
+        self.assertIsInstance(swc2, autosar.component.ApplicationSoftwareComponent)
+
+    def test_create_non_queued_receiver_port_containing_single_data_element_with_alive_timeout(self):
+        ws = autosar.workspace(version="4.2.2")
+        _init_ws(ws)
+        package = ws.find('/ComponentTypes')
+        swc1 = package.createApplicationSoftwareComponent('MyApplication')
+        swc1.createRequirePort('HeaterPwrStat', 'HeaterPwrStat_I', aliveTimeout = 30)
+        file_name = 'ar4_non_non_queued_receiver_port_containing_single_data_element_with_alive_timeout.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'port', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
 
 if __name__ == '__main__':
     unittest.main()

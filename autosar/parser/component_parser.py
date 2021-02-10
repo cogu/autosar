@@ -123,6 +123,8 @@ class ComponentTypeParser(ElementParser):
                     for descriptorXml in xmlElem.findall('./NV-BLOCK-DESCRIPTOR'):
                         descriptor = self.behavior_parser.parseNvBlockSWCnvBlockDescriptor(descriptorXml, componentType)
                         componentType.nvBlockDescriptors.append(descriptor)
+                elif xmlElem.tag == 'CATEGORY':
+                    componentType.category = self.parseTextNode(xmlElem)
                 else:
                     print('Unhandled tag: '+xmlElem.tag, file=sys.stderr)
         return componentType
@@ -134,7 +136,7 @@ class ComponentTypeParser(ElementParser):
             if(xmlPort.tag == "R-PORT-PROTOTYPE"):
                 portName = xmlPort.find('SHORT-NAME').text
                 portInterfaceRef = self.parseTextNode(xmlPort.find('REQUIRED-INTERFACE-TREF'))
-                port = autosar.port.RequirePort(portName,portInterfaceRef,parent=componentType)
+                port = autosar.port.RequirePort(portName, portInterfaceRef, autoCreateComSpec = False, parent=componentType)
                 if hasAdminData(xmlPort):
                     port.adminData=parseAdminDataNode(xmlPort.find('ADMIN-DATA'))
                 if xmlPort.findall('./REQUIRED-COM-SPECS') is not None:
@@ -178,7 +180,7 @@ class ComponentTypeParser(ElementParser):
             elif(xmlPort.tag == 'P-PORT-PROTOTYPE'):
                 portName = xmlPort.find('SHORT-NAME').text
                 portInterfaceRef = self.parseTextNode(xmlPort.find('PROVIDED-INTERFACE-TREF'))
-                port = autosar.port.ProvidePort(portName,portInterfaceRef,parent=componentType)
+                port = autosar.port.ProvidePort(portName, portInterfaceRef, autoCreateComSpec = False, parent = componentType)
                 if hasAdminData(xmlPort):
                     port.adminData=parseAdminDataNode(xmlPort.find('ADMIN-DATA'))
                 if xmlPort.findall('./PROVIDED-COM-SPECS') is not None:
