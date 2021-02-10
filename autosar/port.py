@@ -1,8 +1,8 @@
 """
-Python autosar Ports and ComSpec classes
+Python autosar Ports and ComSpec classes.
 
-Copyright (c) 2019 Conny Gustafsson
-
+Copyright (c) 2019-2021 Conny Gustafsson.
+See LICENSE file for additional information.
 """
 
 from autosar.element import Element
@@ -12,26 +12,41 @@ import autosar.builder
 import copy
 import collections
 
+sender_receiver_com_spec_arguments_ar4 = {'dataElement', 'initValue', 'initValueRef', 'aliveTimeout', 'queueLength'}
+sender_receiver_com_spec_arguments_ar3 = {'dataElement', 'canInvalidate', 'initValueRef', 'aliveTimeout', 'queueLength'}
+client_server_com_spec_arguments = {'operation', 'queueLength'}
+mode_switch_com_spec_arguments = {'enhancedMode', 'supportAsync', 'queueLength', 'modeSwitchAckTimeout', 'modeGroup'}
+parameter_com_spec_arguments = {'initValue'}
+nv_data_com_spec_arguments = {'nvData', 'initValue', 'initValueRef', 'ramBlockInitValue', 'ramBlockInitValueRef', 'romBlockInitValue', 'romBlockInitValueRef'}
+valid_com_spec_arguments_ar4 = set().union(sender_receiver_com_spec_arguments_ar4, client_server_com_spec_arguments,
+    mode_switch_com_spec_arguments, parameter_com_spec_arguments, nv_data_com_spec_arguments)
+valid_com_spec_arguments_ar3 = set().union(sender_receiver_com_spec_arguments_ar3, client_server_com_spec_arguments, parameter_com_spec_arguments)
+
 class Port(Element):
-    def __init__(self,name, portInterfaceRef, comspec=None, parent=None, adminData=None):
+    def __init__(self, name, portInterfaceRef, comspec=None, autoCreateComspec = True, parent=None, adminData=None):
         super().__init__(name, parent, adminData)
+        self.comspec=[]
         if portInterfaceRef is not None and not isinstance(portInterfaceRef,str):
             raise ValueError('portInterfaceRef needs to be of type None or str')
         self.portInterfaceRef = portInterfaceRef
-        self.comspec=[]
+        ws = self.rootWS()
+        assert(ws is not None)
+        portInterface=ws.find(portInterfaceRef, role='PortInterface')
+
+        if comspec is None and autoCreateComspec:
+            comspec = self._createDefaultComSpecList(portInterface)
 
         if comspec is not None:
-            ws = self.rootWS()
-            assert(ws is not None)
-            portInterface=ws.find(portInterfaceRef, role='PortInterface')
-            if portInterface is None:
-                raise ValueError("invalid reference: "+portInterfaceRef)
-            if isinstance(comspec, collections.abc.Mapping):
+            if isinstance(comspec, ComSpec):
+                self.comspec.append(comspec)
+            elif isinstance(comspec, collections.abc.Mapping):
+                #Typical usage: port interfaces containing a single data element
                 comspecObj = self._createComSpecFromDict(ws, portInterface, comspec)
                 if comspecObj is None:
                     raise ValueError('Failed to create comspec from comspec data: '+repr(comspec))
                 self.comspec.append(comspecObj)
             elif isinstance(comspec, collections.abc.Iterable):
+                #Typical usage: port interfaces containing a multiple data elements
                 for data in comspec:
                     comspecObj = self._createComSpecFromDict(ws, portInterface, data)
                     if comspecObj is None:
@@ -44,6 +59,8 @@ class Port(Element):
         """
         Creates ComSpec object based on generic key-value settings from a dictionary.
         """
+        self._validate_com_spec_keys_against_port_interface(comspec, portInterface)
+
         if isinstance(portInterface,autosar.portinterface.SenderReceiverInterface):
             dataElementName = None
             rawInitValue = None
@@ -223,16 +240,71 @@ class Port(Element):
             raise NotImplementedError(type(portInterface))
         return None
 
+    def _validate_com_spec_keys_against_port_interface(self, comspec, portInterface):
+        if portInterface is None:
+            return
+        ws = self.rootWS()
+        assert(ws is not None)
+        if ws.version <= 4.0:
+            valid_arguments = valid_com_spec_arguments_ar3
+        else:
+            valid_arguments = valid_com_spec_arguments_ar4
+        for key in comspec.keys():
+            if key not in valid_arguments:
+                raise ValueError("Unsupported comspec argument '{}'".format(key))
+
+        if isinstance(portInterface,autosar.portinterface.SenderReceiverInterface):
+            if ws.version <= 4.0:
+                valid_arguments = sender_receiver_com_spec_arguments_ar3
+            else:
+                valid_arguments = sender_receiver_com_spec_arguments_ar4
+        elif isinstance(portInterface,autosar.portinterface.ClientServerInterface):
+            valid_arguments = client_server_com_spec_arguments
+        elif isinstance(portInterface, autosar.portinterface.ModeSwitchInterface):
+            valid_arguments = mode_switch_com_spec_arguments
+        elif isinstance(portInterface, autosar.portinterface.ParameterInterface):
+            valid_arguments = parameter_com_spec_arguments
+        elif isinstance(portInterface, autosar.portinterface.NvDataInterface):
+            valid_arguments = nv_data_com_spec_arguments
+        else:
+            raise RuntimeError("Unsupported port interface:" + str(type(portInterface)))
+        for key in comspec.keys():
+            if key not in valid_arguments:
+                raise ValueError("Comspec argument '{}' doesn't match interface type {}".format(key, type(portInterface)))
+
+    def _createDefaultComSpecList(self, portInterface):
+        if portInterface is None:
+            return None
+        comspecList = []
+        if isinstance(portInterface, autosar.portinterface.SenderReceiverInterface):
+            for dataElement in portInterface.dataElements:
+                comspecList.append({'dataElement': dataElement.name})
+        elif isinstance(portInterface,autosar.portinterface.ClientServerInterface):
+            for operation in portInterface.operations:
+                comspecList.append({'operation': operation.name})
+        elif isinstance(portInterface,autosar.portinterface.ParameterInterface):
+            for parameter in portInterface.parameters:
+                comspecList.append({'parameter': parameter.name})
+        elif isinstance(portInterface,autosar.portinterface.NvDataInterface):
+            for nvData in portInterface.nvDatas:
+                comspecList.append({'nvData': nvData.name})
+        elif isinstance(portInterface,autosar.portinterface.ModeSwitchInterface):
+            #TODO: Why are we treating ModeSwitchInterface in a different way from the others?
+            modeGroupName = portInterface.modeGroup.name
+            comspecList.append({'modeGroup': modeGroupName, 'enhancedMode':False, 'supportAsync': False})
+        return None if len(comspecList)==0 else comspecList
+
+
 class RequirePort(Port):
     def tag(self,version=None): return "R-PORT-PROTOTYPE"
-    def __init__(self,name , portInterfaceRef=None, comspec=None, parent=None):
+    def __init__(self,name , portInterfaceRef=None, comspec=None, autoCreateComSpec = True, parent=None):
         if isinstance(name, str):
             #normal constructor
-            super().__init__(name, portInterfaceRef, comspec, parent)
+            super().__init__(name, portInterfaceRef, comspec, autoCreateComSpec, parent)
         elif isinstance(name, (RequirePort, ProvidePort)):
             other=name #alias
             #copy constructor
-            super().__init__(other.name, other.portInterfaceRef, parent)
+            super().__init__(other.name, other.portInterfaceRef, None, False, parent)
             self.comspec=copy.deepcopy(other.comspec)
         else:
             raise NotImplementedError(type(name))
@@ -252,14 +324,14 @@ class RequirePort(Port):
 
 class ProvidePort(Port):
     def tag(self,version=None): return "P-PORT-PROTOTYPE"
-    def __init__(self,name,portInterfaceRef=None,comspec=None,parent=None):
-        if isinstance(name,str):
+    def __init__(self, name, portInterfaceRef = None, comspec = None, autoCreateComSpec = True, parent = None):
+        if isinstance(name, str):
         #normal constructor
-            super().__init__(name, portInterfaceRef, comspec, parent)
+            super().__init__(name, portInterfaceRef, comspec, autoCreateComSpec, parent)
         elif isinstance(name, (RequirePort, ProvidePort)):
             other=name #alias
             #copy constructor
-            super().__init__(other.name, other.portInterfaceRef, parent)
+            super().__init__(other.name, other.portInterfaceRef, None, False, parent)
             self.comspec=copy.deepcopy(other.comspec)
         else:
             raise NotImplementedError(type(name))
@@ -276,15 +348,18 @@ class ProvidePort(Port):
         """
         return RequirePort(self)
 
-
-class OperationComSpec:
-    def __init__(self,name=None,queueLength=1):
+class ComSpec:
+    def __init__(self, name=None):
         self.name = name
+
+class OperationComSpec(ComSpec):
+    def __init__(self, name=None, queueLength=1):
+        super().__init__(name)
         self.queueLength=queueLength
 
-class DataElementComSpec:
+class DataElementComSpec(ComSpec):
     def __init__(self, name=None, initValue=None, initValueRef=None, aliveTimeout=None, queueLength=None, canInvalidate=None, useEndToEndProtection = None):
-        self.name = name
+        super().__init__(name)
         if initValue is not None:
             assert(isinstance(initValue, (autosar.constant.Value, autosar.constant.ValueAR4)))
         self.initValue = initValue
@@ -320,7 +395,7 @@ class DataElementComSpec:
             else:
                 raise ValueError('queueLength must be None or an int greater than zero')
 
-class ModeSwitchComSpec:
+class ModeSwitchComSpec(ComSpec):
     """
     Implementation of <MODE-SWITCH-SENDER-COM-SPEC> and <MODE-SWITCH-RECEIVER-COM-SPEC>
 
@@ -334,7 +409,7 @@ class ModeSwitchComSpec:
     modeGroupRef: Full mode group reference (None or str). This has lower precendence to name (only used when name is None)
     """
     def __init__(self, name=None, enhancedMode=None, supportAsync=None, queueLength = None, modeSwitchAckTimeout = None, modeGroupRef = None):
-        self.name = str(name) if name is not None else None
+        super().__init__(name)
         self.enhancedMode = bool(enhancedMode) if enhancedMode is not None else None
         self.supportAsync = bool(supportAsync) if supportAsync is not None else None
         self._queueLength = int(queueLength) if queueLength is not None else None
@@ -372,12 +447,12 @@ class ModeSwitchComSpec:
         else:
             self._modeSwitchAckTimeout = int(val)
 
-class ParameterComSpec:
+class ParameterComSpec(ComSpec):
     def __init__(self, name, initValue=None):
-        self.name = name
+        super().__init__(name)
         self.initValue = initValue
 
-class NvProvideComSpec:
+class NvProvideComSpec(ComSpec):
     """
     Implementation of <NV-PROVIDE-COM-SPEC>
 
@@ -390,7 +465,7 @@ class NvProvideComSpec:
     variableRef: Full NvData reference (None or str). This has lower precendence to name (only used when name is None)
     """
     def __init__(self, name=None, ramBlockInitValue=None, ramBlockInitValueRef=None, romBlockInitValue=None, romBlockInitValueRef=None, variableRef=None):
-        self.name = name
+        super().__init__(name)
         self.ramBlockInitValue = ramBlockInitValue
         self.ramBlockInitValueRef = str(ramBlockInitValueRef) if ramBlockInitValueRef is not None else None
         self.romBlockInitValue = romBlockInitValue
@@ -400,7 +475,7 @@ class NvProvideComSpec:
     def tag(self, version, parentPort):
             return "NV-PROVIDE-COM-SPEC"
 
-class NvRequireComSpec:
+class NvRequireComSpec(ComSpec):
     """
     Implementation of <NV-REQUIRE-COM-SPEC>
 
@@ -411,7 +486,7 @@ class NvRequireComSpec:
     variableRef: Full NvData reference (None or str). This has lower precendence to name (only used when name is None)
     """
     def __init__(self, name=None, initValue=None, initValueRef=None, variableRef=None):
-        self.name = name
+        super().__init__(name)
         self.initValue = initValue
         self.initValueRef = str(initValueRef) if initValueRef is not None else None
         self.variableRef = str(variableRef) if variableRef is not None else None

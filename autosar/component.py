@@ -90,8 +90,11 @@ class ComponentType(Element):
         if portInterface is None:
             raise autosar.base.InvalidPortInterfaceRef(portInterfaceRef)
         if comspecList is None:
-            comspecList = self._autoCreateComSpecListFromArgs(ws, portInterface, kwargs)
-        port = autosar.port.ProvidePort(name, portInterface.ref, comspecList, parent=self)
+            comspecDict = kwargs if len(kwargs) > 0 else None
+            port = autosar.port.ProvidePort(name, portInterface.ref, comspecDict, parent=self)
+        else:
+            port = autosar.port.ProvidePort(name, portInterface.ref, comspecList, parent=self)
+        assert(isinstance(port, autosar.port.Port))
         self.providePorts.append(port)
         return port
 
@@ -135,8 +138,11 @@ class ComponentType(Element):
         if portInterface is None:
             raise autosar.base.InvalidPortInterfaceRef(portInterfaceRef)
         if comspecList is None:
-            comspecList = self._autoCreateComSpecListFromArgs(ws, portInterface, kwargs)
-        port = autosar.port.RequirePort(name,portInterface.ref, comspecList, parent=self)
+            comspecDict = kwargs if len(kwargs) > 0 else None
+            port = autosar.port.RequirePort(name, portInterface.ref, comspecDict, parent=self)
+        else:
+            port = autosar.port.RequirePort(name, portInterface.ref, comspecList, parent=self)
+        assert(isinstance(port, autosar.port.Port))
         self.requirePorts.append(port)
         return port
 
@@ -162,116 +168,6 @@ class ComponentType(Element):
         Adds a mirrored copy of a port (from another component)
         """
         self.append(otherPort.mirror())
-
-    def _autoCreateComSpecListFromArgs(self, ws, portInterface, kwargs):
-        """
-        Attempts to prepare comspec arguments before calling the Port.createComSpecFromDict method
-        """
-        comspecList = []
-        if isinstance(portInterface, autosar.portinterface.SenderReceiverInterface):
-            if len(portInterface.dataElements)==1:
-                comspec={'dataElement': portInterface.dataElements[0].name}
-                initValue = kwargs.get('initValue', None)
-                initValueRef = kwargs.get('initValueRef', None)
-                queueLength = kwargs.get('queueLength', None)
-
-                if initValue is not None:
-                    if initValueRef is not None:
-                        raise ValueError('A port cannot have both initValue and initValueRef set at the same time')
-                    comspec['initValue'] = initValue
-                if initValueRef is not None:
-                    if initValue is not None:
-                        raise ValueError('A port cannot have both initValue and initValueRef set at the same time')
-                    comspec['initValueRef'] = initValueRef
-                if queueLength is not None:
-                    comspec['queueLength'] = queueLength
-                if ws.version >= 4.0:
-                    usesEndToEndProtection = kwargs.get('usesEndToEndProtection', None)
-                    if usesEndToEndProtection is not None:
-                        comspec['usesEndToEndProtection'] = bool(usesEndToEndProtection)
-                comspecList.append(comspec)
-            else:
-                raise RuntimeError("This feature only works when there is exactly one data element in the port interface")
-
-        elif isinstance(portInterface,autosar.portinterface.ClientServerInterface):
-            for operation in portInterface.operations:
-                comspecList.append({'operation': operation.name})
-
-        elif isinstance(portInterface,autosar.portinterface.ParameterInterface):
-            if len(portInterface.parameters)==1:
-                initValue = kwargs.get('initValue', None)
-                comspec={'parameter': portInterface.parameters[0].name}
-                if initValue is not None:
-                    comspec['initValue'] = initValue
-                comspecList.append(comspec)
-            else:
-                raise RuntimeError("This feature only works when there is exactly one data element in the port interface")
-
-        elif isinstance(portInterface,autosar.portinterface.ModeSwitchInterface):
-            comspec = {}
-            enhancedMode = kwargs.get('enhancedMode', None)
-            supportAsync = kwargs.get('supportAsync', None)
-            queueLength = kwargs.get('queueLength', None)
-            modeSwitchAckTimeout = kwargs.get('modeSwitchAckTimeout', None)
-            modeGroup = kwargs.get('modeGroup', None)
-            if enhancedMode is not None:
-                comspec['enhancedMode']=enhancedMode
-            if supportAsync is not None:
-                comspec['supportAsync']=supportAsync
-            if queueLength is not None:
-                comspec['queueLength']=queueLength
-            if modeSwitchAckTimeout is not None:
-                comspec['modeSwitchAckTimeout']=modeSwitchAckTimeout
-            if modeGroup is not None:
-                comspec['modeGroup']=modeGroup
-            comspecList.append(comspec)
-        elif isinstance(portInterface,autosar.portinterface.NvDataInterface):
-            if len(portInterface.nvDatas)==1:
-                comspec={'nvData': portInterface.nvDatas[0].name}
-                initValue = kwargs.get('initValue', None)
-                initValueRef = kwargs.get('initValueRef', None)
-                ramBlockInitValue = kwargs.get('ramBlockInitValue', None)
-                ramBlockInitValueRef = kwargs.get('ramBlockInitValueRef', None)
-                romBlockInitValue = kwargs.get('romBlockInitValue', None)
-                romBlockInitValueRef = kwargs.get('romBlockInitValueRef', None)
-                queueLength = kwargs.get('queueLength', None)
-
-                if initValue is not None:
-                    if initValueRef is not None:
-                        raise ValueError('A port cannot have both initValue and initValueRef set at the same time')
-                    comspec['initValue'] = initValue
-                if initValueRef is not None:
-                    if initValue is not None:
-                        raise ValueError('A port cannot have both initValue and initValueRef set at the same time')
-                    comspec['initValueRef'] = initValueRef
-
-                if ramBlockInitValue is not None:
-                    if ramBlockInitValueRef is not None:
-                        raise ValueError('A port cannot have both ramBlockInitValue and ramBlockInitValueRef set at the same time')
-                    comspec['ramBlockInitValue'] = ramBlockInitValue
-
-                if ramBlockInitValueRef is not None:
-                    if ramBlockInitValue is not None:
-                        raise ValueError('A port cannot have both ramBlockInitValue and ramBlockInitValueRef set at the same time')
-                    comspec['ramBlockInitValueRef'] = ramBlockInitValueRef
-
-                if romBlockInitValue is not None:
-                    if romBlockInitValueRef is not None:
-                        raise ValueError('A port cannot have both romBlockInitValue and romBlockInitValueRef set at the same time')
-                    comspec['romBlockInitValue'] = romBlockInitValue
-
-                if romBlockInitValueRef is not None:
-                    if romBlockInitValue is not None:
-                        raise ValueError('A port cannot have both romBlockInitValue and romBlockInitValueRef set at the same time')
-                    comspec['romBlockInitValueRef'] = romBlockInitValueRef
-                comspecList.append(comspec)
-            else:
-                raise RuntimeError("This feature only works when there is exactly one data element in the port interface")
-        else:
-            raise NotImplementedError(type(portInterface))
-
-        return comspecList if len(comspecList) > 0 else None
-
 
 class AtomicSoftwareComponent(ComponentType):
     """
