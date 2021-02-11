@@ -16,7 +16,7 @@ sender_receiver_com_spec_arguments_ar4 = {'dataElement', 'initValue', 'initValue
 sender_receiver_com_spec_arguments_ar3 = {'dataElement', 'canInvalidate', 'initValueRef', 'aliveTimeout', 'queueLength'}
 client_server_com_spec_arguments = {'operation', 'queueLength'}
 mode_switch_com_spec_arguments = {'enhancedMode', 'supportAsync', 'queueLength', 'modeSwitchAckTimeout', 'modeGroup'}
-parameter_com_spec_arguments = {'initValue'}
+parameter_com_spec_arguments = {'parameter', 'initValue'}
 nv_data_com_spec_arguments = {'nvData', 'initValue', 'initValueRef', 'ramBlockInitValue', 'ramBlockInitValueRef', 'romBlockInitValue', 'romBlockInitValueRef'}
 valid_com_spec_arguments_ar4 = set().union(sender_receiver_com_spec_arguments_ar4, client_server_com_spec_arguments,
     mode_switch_com_spec_arguments, parameter_com_spec_arguments, nv_data_com_spec_arguments)
@@ -126,14 +126,18 @@ class Port(Element):
             queueLength = comspec.get('queueLength', None)
             modeSwitchAckTimeout = comspec.get('modeSwitchAckTimeout', None)
             modeGroupName = comspec.get('modeGroup', None)
+            if modeGroupName is None:
+                modeGroupName = portInterface.modeGroup.name
             if isinstance(self, RequirePort):
                 return ModeSwitchComSpec(modeGroupName, enhancedMode, supportAsync, None, None)
             else:
                 return ModeSwitchComSpec(modeGroupName, enhancedMode, None, queueLength, modeSwitchAckTimeout)
         elif isinstance(portInterface, autosar.portinterface.ParameterInterface):
-            name=portInterface.elements[0].name
-            initValue=comspec.get('initValue', None)
-            return ParameterComSpec(name, initValue)
+            parameterName = comspec.get('parameter', None)
+            if (parameterName is None) and (len(portInterface.parameters)==1):
+                parameterName = portInterface.parameters[0].name
+            initValue = comspec.get('initValue', None)
+            return ParameterComSpec(parameterName, initValue)
         elif isinstance(portInterface, autosar.portinterface.NvDataInterface):
             nvDataName = None
             if 'nvData' in comspec: nvDataName=str(comspec['nvData'])
