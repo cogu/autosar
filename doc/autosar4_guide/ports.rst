@@ -78,7 +78,9 @@ ComSpec
 -------
 
 The Communication Specification (ComSpec) is used to describe specific communication needs of a port.
-This can include information such as init-values or queue-lengths.
+This can include information such as init-values or queue-length.
+
+For more details about which ComSpecs are supported from Python see the :ref:`ComponentType API <ar4_component_ComponentType>`.
 
 Port Creation Examples
 ----------------------
@@ -87,6 +89,7 @@ Example 1: SenderReceiver ports with single data element
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Create components with a single port which contains one data element.
+Here you can give the ComSpec arguments directly to the port creation function call.
 Use keyword **initValueRef** instead of **initValue** if you intend to
 use constants as port initialier.
 
@@ -97,8 +100,7 @@ Example 2: SenderReceiver ports with multiple data elements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Create components with a single port which contains two data elements.
-Use keyword **initValueRef** instead of **initValue** if you intend to
-use constants as port initialier.
+Here you have to explicitly give a **comspec** argument containing a list of dictionaries.
 
 .. include:: examples/create_sender_receiver_port_multi_elem.py
     :code: python3

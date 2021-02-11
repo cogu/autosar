@@ -1,6 +1,6 @@
 
-The AUTOSAR Python module
-=========================
+The Python AUTOSAR package
+==========================
 
 .. toctree::
    :maxdepth: 2

@@ -14,10 +14,10 @@ It is recommended that you create a unique AUTOSAR package to hold your mode dec
 .. code-block:: python
 
     import autosar
-    
+
     ws = autosar.workspace(version="4.2.2")
     package = ws.createPackage('ModeDclrGroups', role="ModeDclrGroup")
-    
+
 Creating Mode Declaration Groups
 --------------------------------
 

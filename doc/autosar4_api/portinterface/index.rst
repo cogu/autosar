@@ -10,3 +10,4 @@ PortInterface
    parameter_interface
    portinterface
    sender_receiver_interface
+   nvdata_interface

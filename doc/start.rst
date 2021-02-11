@@ -32,7 +32,8 @@ You create a new workspace by calling the workspace function:
 
    import autosar
 
-   ws = autosar.workspace(<version-string>)
+   ws = autosar.workspace() #Creates a default AUTOSAR 3.0.2 workspace
+   ws = autosar.workspace("4.2.2") # Creates an AUTOSAR 4.2.2 workspace
 
 Normally you want to create a single workspace object after module import and use that object until the script ends.
 In some situations you will create multiple workspaces in the same script. The autosar module has full support for using multiple workspaces.
