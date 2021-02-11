@@ -3,6 +3,25 @@ import collections
 import autosar.base
 import autosar.mode
 
+class InvalidationPolicy:
+    valid_values = ['DONT-INVALIDATE', 'EXTERNAL-REPLACEMENT', 'KEEP', 'REPLACE']
+
+    def tag(self, version): return 'INVALIDATION-POLICY'
+
+    def __init__(self, dataElementRef, handleInvalid):
+        self.dataElementRef = dataElementRef
+        self.handleInvalid = handleInvalid
+
+    @property
+    def handleInvalid(self):
+        return self._handleInvalid
+
+    @handleInvalid.setter
+    def handleInvalid(self, value):
+        if value not in InvalidationPolicy.valid_values:
+            raise ValueError('invalid value: %s'%value)
+        self._handleInvalid = value
+
 class PortInterface(Element):
     def __init__(self, name, isService=False, serviceKind = None, parent=None, adminData=None):
         super().__init__(name, parent, adminData)
@@ -64,10 +83,10 @@ class SenderReceiverInterface(PortInterface):
         """
         if isinstance(elem, DataElement):
             self.dataElements.append(elem)
-        elif isinstance(elem, ModeGroup):
+        elif isinstance(elem, autosar.mode.ModeGroup):
             self.modeGroups.append(elem)
         elif isinstance(elem, InvalidationPolicy):
-            self.invalidationPolicies.append(invalidationPolicy)
+            self.invalidationPolicies.append(elem)
         else:
             raise ValueError("expected elem variable to be of type DataElement")
         elem.parent=self
@@ -337,25 +356,6 @@ class SoftwareAddressMethod(Element):
 
     def tag(self,version=None):
         return 'SW-ADDR-METHOD'
-
-class InvalidationPolicy:
-    valid_values = ['DONT-INVALIDATE', 'EXTERNAL-REPLACEMENT', 'KEEP', 'REPLACE']
-
-    def tag(self, version): return 'INVALIDATION-POLICY'
-
-    def __init__(self, dataElementRef, handleInvalid):
-        self.dataElementRef = dataElementRef
-        self.handleInvalid = handleInvalid
-
-    @property
-    def handleInvalid(self):
-        return self._handleInvalid
-
-    @handleInvalid.setter
-    def handleInvalid(self, value):
-        if value not in InvalidationPolicy.valid_values:
-            raise ValueError('invalid value: %s'%value)
-        self._handleInvalid = value
 
 class NvDataInterface(PortInterface):
     def tag(self,version=None):

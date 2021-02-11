@@ -12,6 +12,7 @@
               <PROVIDED-COM-SPECS>
                 <MODE-SWITCH-SENDER-COM-SPEC>
                   <ENHANCED-MODE-API>false</ENHANCED-MODE-API>
+                  <MODE-GROUP-REF DEST="MODE-DECLARATION-GROUP-PROTOTYPE">/PortInterfaces/VehicleMode_I/mode</MODE-GROUP-REF>
                   <MODE-SWITCHED-ACK>
                     <TIMEOUT>0.01</TIMEOUT>
                   </MODE-SWITCHED-ACK>
