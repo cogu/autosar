@@ -1,7 +1,4 @@
 {
-    "restructuredtext.linter.extraArgs": [
-        "--ignore-messages \"INFO/1\""
-    ],
     "python.testing.unittestArgs": [
         "-v",
         "-s",
@@ -12,4 +9,8 @@
     "python.testing.pytestEnabled": false,
     "python.testing.nosetestsEnabled": false,
     "python.testing.unittestEnabled": true,
+    "restructuredtext.linter.extraArgs": [
+        "--ignore-messages \"INFO/1\""
+    ],
+    "restructuredtext.confPath": "${workspaceFolder}\\doc"
 }
