@@ -34,7 +34,7 @@ def create_platform_types(ws):
 
 def create_port_interfaces(ws):
     package = ws.createPackage('PortInterfaces', role='PortInterface')
-    portInterface=package.createClientServerInterface("NvM_RequestResultType",
+    portInterface=package.createClientServerInterface("NvM_RequestResult",
         errors = autosar.ApplicationError("E_NOT_OK", 1),
         isService=True, operations = [
             "EraseBlock",
@@ -63,10 +63,10 @@ def create_port_interfaces(ws):
 def create_components(ws):
     package = ws.createPackage('ComponentTypes', role='ComponentType')
     comp1 = package.createServiceComponent('ServerComponent')
-    comp1.createProvidePort('Nvm_PersonalSettings', 'NvM_RequestResultType')
+    comp1.createProvidePort('Nvm_PersonalSettings', 'NvM_RequestResult')
 
     comp2 = package.createApplicationSoftwareComponent('ClientComponent')
-    comp2.createRequirePort('Nvm_PersonalSettings', 'NvM_RequestResultType')
+    comp2.createRequirePort('Nvm_PersonalSettings', 'NvM_RequestResult')
 
 ws = autosar.workspace(version="4.2.2")
 create_platform_types(ws)
@@ -74,3 +74,5 @@ create_port_interfaces(ws)
 create_components(ws)
 ws.saveXML('ServerComponent.arxml', filters=['/ComponentTypes/ServerComponent'])
 ws.saveXML('ClientComponent.arxml', filters=['/ComponentTypes/ClientComponent'])
+ws.saveXML('Platform.arxml', filters=['/AUTOSAR_Platform', '/Predefined_DEV'])
+ws.saveXML('PortInterfaces.arxml', filters = ["/PortInterfaces"])

@@ -15,6 +15,7 @@ def create_workspace_and_packages():
 def create_data_types(ws):
     baseTypes = ws.find('/DataTypes/BaseTypes')
     baseTypes.createSwBaseType('uint8', 8, nativeDeclaration='uint8')
+    baseTypes.createSwBaseType('uint16', 16, nativeDeclaration='uint16')
     implTypes = ws.find('/DataTypes/ImplementationTypes')
     implTypes.createImplementationDataType('uint16', lowerLimit=0, upperLimit=65535,
                                 baseTypeRef='/DataTypes/BaseTypes/uint16', typeEmitter='Platform_Type')
@@ -58,3 +59,5 @@ create_port_interfaces(ws)
 create_components(ws)
 ws.saveXML('Component1.arxml', filters=['/ComponentTypes/Component1'])
 ws.saveXML('Component2.arxml', filters=['/ComponentTypes/Component2'])
+ws.saveXML('DataTypes.arxml', filters=['/DataTypes'])
+ws.saveXML('PortInterfaces.arxml', filters = ["/PortInterfaces"])
