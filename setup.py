@@ -23,6 +23,6 @@ setup(name='autosar',
           'cfile>=0.1.4',
       ],
       packages=['autosar','autosar.parser','autosar.writer','autosar.rte', 'autosar.bsw', 'autosar.util'],
-	  dependency_links=['https://github.com/cogu/cfile/archive/v0.1.4.tar.gz#egg=cfile-0.1.4'],
+	  dependency_links=['https://github.com/cogu/cfile/archive/v0.1.5.tar.gz#egg=cfile-0.1.5'],
 	  zip_safe=False,
 	  test_suite='tests.my_test_suite')
