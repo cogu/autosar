@@ -14,7 +14,7 @@ AUTOSAR version support
 * AUTOSAR 3.0
 * AUTOSAR 4.2
 
-The intent is to add support for AUTOSAR 4.3 and 4.4 in the future. Timeplan is unclear since I do most of the work in my spare time.
+The intent is to add support for AUTOSAR 4.3 and 4.4 in the future. (Timeplan is unknown since I do most of the work in my spare time.)
 
 Prerequisites
 -------------
@@ -30,7 +30,7 @@ Documentation is published `here <https://autosar.readthedocs.io/en/latest/>`_.
 Latest Release
 ---------------
 
-Latest release is v0.3.9.
+Latest release is `v0.3.9 <https://github.com/cogu/autosar/releases/tag/v0.3.9>`_.
 
 Current Roadmap
 ---------------
