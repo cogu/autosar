@@ -81,7 +81,7 @@ class Workspace:
         self.profile = WorkspaceProfile()
         self.unhandledParser = set() # [PackageParser] unhandled:
         self.unhandledWriter =set() #[PackageWriter] Unhandled
-        
+
     @property
     def version(self):
         return self._version
@@ -201,10 +201,10 @@ class Workspace:
                         found = True
 
         else:
-            raise NotImplementedError('Version %s of ARXML not supported'%version)
+            raise NotImplementedError('Version %s of ARXML not supported'%self.version)
         if found==False and packagename != '*':
             raise KeyError('package not found: '+packagename)
-            
+
         if (self.unhandledParser):
             print("[PackageParser] unhandled: %s" % (", ".join(self.unhandledParser)))
         return result

@@ -15,7 +15,7 @@ class XMLDataTypeWriter(ElementWriter):
                               'RealDataType': self.writeRealDataTypeXML,
                               'RecordDataType': self.writeRecordDataTypeXML,
                               'StringDataType': self.writeStringTypeXML,
-                              'CompuMethod': self.writeCompuMethodXML,                              
+                              'CompuMethod': self.writeCompuMethodXML,
                               'Unit': self.writeUnitXML,
             }
         elif self.version >= 4.0:
@@ -108,10 +108,10 @@ class XMLDataTypeWriter(ElementWriter):
             lines.extend(self.indent(self._writeComputationXML(ws, elem.intToPhys, tag),1))
         if elem.physToInt is not None:
             tag = 'COMPU-PHYS-TO-INTERNAL'
-            lines.extend(self.indent(self._writeComputationXML(ws, elem.physToInt, tag),1))        
+            lines.extend(self.indent(self._writeComputationXML(ws, elem.physToInt, tag),1))
         lines.append('</{}>'.format(elem.tag(self.version)))
         return lines
-    
+
     def _writeComputationXML(self, ws, computation, tag):
         assert(isinstance(computation, autosar.datatype.Computation))
         lines=[]
@@ -137,9 +137,9 @@ class XMLDataTypeWriter(ElementWriter):
             lines.append(self.indent('<SHORT-LABEL>%s</SHORT-LABEL>'%elem.label, 1))
         if elem.symbol is not None:
             lines.append(self.indent('<SYMBOL>%s</SYMBOL>'%elem.symbol, 1))
-        if elem.mask is not None: 
+        if elem.mask is not None:
             lines.append(self.indent('<MASK>%d</MASK>'%elem.mask, 1))
-            
+
         if elem.lowerLimit is not None or elem.upperLimit is not None:
             if self.version>=4.0:
                 lines.append(self.indent('<LOWER-LIMIT INTERVAL-TYPE="{0}">{1}</LOWER-LIMIT>'.format(elem.lowerLimitType,elem.lowerLimit), 1))
@@ -153,7 +153,7 @@ class XMLDataTypeWriter(ElementWriter):
             lines.extend(self.indent(self._writeCompuConstXML(elem),1))
         lines.append('</{}>'.format(elem.tag(self.version)))
         return lines
-    
+
     def _writeCompuRationalXML(self, elem):
         lines = []
         lines.append('<COMPU-RATIONAL-COEFFS>')
@@ -166,12 +166,12 @@ class XMLDataTypeWriter(ElementWriter):
         lines.append(self.indent('</COMPU-DENOMINATOR>', 1))
         lines.append('</COMPU-RATIONAL-COEFFS>')
         return lines
-    
+
     def _writeCompuConstXML(self, elem):
         lines = []
         lines.append('<COMPU-CONST>')
         lines.append(self.indent('<VT>{0}</VT>'.format(elem.textValue), 1))
-        lines.append('</COMPU-CONST>')            
+        lines.append('</COMPU-CONST>')
         return lines
 
     def writeUnitXML(self, elem):
@@ -389,14 +389,22 @@ class XMLDataTypeWriter(ElementWriter):
         lines = []
         lines.append("<%s>"%elem.tag(self.version))
         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
-        dataTypeMaps = []
-        for key in sorted(elem.map.keys()):
-            dataTypeMaps.append(elem.get(key))
-        if len(dataTypeMaps) > 0:
+        dataTypeMappings = []
+        modeRequestMappings = []
+        for key in sorted(elem.applicationTypeMap.keys()):
+            dataTypeMappings.append(elem.getDataTypeMapping(key))
+        for key in sorted(elem.modeRequestMap.keys()):
+            modeRequestMappings.append(elem.getModeRequestMapping(key))
+        if len(dataTypeMappings) > 0:
             lines.append(self.indent('<DATA-TYPE-MAPS>',1))
-            for dataTypeMap in dataTypeMaps:
-                lines.extend(self.indent(self.writeDataTypeMapXML(ws, dataTypeMap),2))
+            for dataTypeMapping in dataTypeMappings:
+                lines.extend(self.indent(self.writeDataTypeMapXML(ws, dataTypeMapping),2))
             lines.append(self.indent('</DATA-TYPE-MAPS>',1))
+        if len(modeRequestMappings) > 0:
+            lines.append(self.indent('<MODE-REQUEST-TYPE-MAPS>',1))
+            for modeRequestMapping in modeRequestMappings:
+                lines.extend(self.indent(self.writeModeRequestMapXML(ws, modeRequestMapping),2))
+            lines.append(self.indent('</MODE-REQUEST-TYPE-MAPS>',1))
         lines.append("</%s>"%elem.tag(self.version))
         return lines
 
@@ -411,6 +419,20 @@ class XMLDataTypeWriter(ElementWriter):
             raise ValueError('Invalid type refernce:' + elem.implementationDataTypeRef)
         lines.append(self.indent('<APPLICATION-DATA-TYPE-REF DEST="%s">%s</APPLICATION-DATA-TYPE-REF>'%(applicationDataType.tag(self.version), applicationDataType.ref),1))
         lines.append(self.indent('<IMPLEMENTATION-DATA-TYPE-REF DEST="%s">%s</IMPLEMENTATION-DATA-TYPE-REF>'%(implementationDataType.tag(self.version), implementationDataType.ref),1))
+        lines.append("</%s>"%elem.tag(self.version))
+        return lines
+
+    def writeModeRequestMapXML(self, ws, elem):
+        lines = []
+        lines.append("<%s>"%elem.tag(self.version))
+        modeDeclarationGroup = ws.find(elem.modeDeclarationGroupRef)
+        if modeDeclarationGroup is None:
+            raise ValueError('Invalid type refernce:' + elem.implementationDataTypeRef)
+        implementationDataType = ws.find(elem.implementationDataTypeRef)
+        if implementationDataType is None:
+            raise ValueError('Invalid type refernce:' + elem.implementationDataTypeRef)
+        lines.append(self.indent('<IMPLEMENTATION-DATA-TYPE-REF DEST="%s">%s</IMPLEMENTATION-DATA-TYPE-REF>'%(implementationDataType.tag(self.version), implementationDataType.ref),1))
+        lines.append(self.indent('<MODE-GROUP-REF DEST="%s">%s</MODE-GROUP-REF>'%(modeDeclarationGroup.tag(self.version), modeDeclarationGroup.ref),1))
         lines.append("</%s>"%elem.tag(self.version))
         return lines
 
@@ -433,7 +455,7 @@ class XMLDataTypeWriter(ElementWriter):
             lines.append(self.indent("</SW-DATA-DEF-PROPS>", 1))
         lines.append("</%s>"%elem.tag(self.version))
         return lines
-    
+
     def writeApplicationArrayDataTypeXML(self, elem):
         assert(isinstance(elem, autosar.datatype.ApplicationArrayDataType))
         ws=elem.rootWS()
@@ -454,7 +476,7 @@ class XMLDataTypeWriter(ElementWriter):
         lines.extend(self.indent(self.writeApplicationArrayDataElementXml(ws, elem.element), 1))
         lines.append("</%s>"%elem.tag(self.version))
         return lines
-    
+
     def writeApplicationArrayDataElementXml(self, ws, elem):
         assert(isinstance(elem, autosar.datatype.ApplicationArrayElement))
 
@@ -477,7 +499,7 @@ class XMLDataTypeWriter(ElementWriter):
             lines.append(self.indent('<MAX-NUMBER-OF-ELEMENTS>{:d}</MAX-NUMBER-OF-ELEMENTS>'.format(elem.arraySize),1))
         lines.append("</%s>"%elem.tag(self.version))
         return lines
-    
+
     def writeApplicationRecordDataTypeXML(self, elem):
         assert(isinstance(elem, autosar.datatype.ApplicationRecordDataType))
         ws=elem.rootWS()
@@ -488,7 +510,7 @@ class XMLDataTypeWriter(ElementWriter):
         if elem.name is not None:
             lines.append(self.indent('<SHORT-NAME>{}</SHORT-NAME>'.format(elem.name),1))
         if elem.category is not None:
-            lines.append(self.indent('<CATEGORY>{}</CATEGORY>'.format(elem.category),1))        
+            lines.append(self.indent('<CATEGORY>{}</CATEGORY>'.format(elem.category),1))
         lines.append(self.indent('<ELEMENTS>', 1))
         for childElem in elem.elements:
             lines.extend(self.indent(self._ApplicationRecordElementXML(ws, childElem), 2))
@@ -504,15 +526,15 @@ class XMLDataTypeWriter(ElementWriter):
         if elem.name is not None:
             lines.append(self.indent('<SHORT-NAME>{}</SHORT-NAME>'.format(elem.name), 1))
         if elem.category is not None:
-            lines.append(self.indent('<CATEGORY>{}</CATEGORY>'.format(elem.category),1))        
+            lines.append(self.indent('<CATEGORY>{}</CATEGORY>'.format(elem.category),1))
         if elem.typeRef is not None:
             dataType = ws.find(elem.typeRef, role = 'DataType')
             if dataType is None:
                 raise autosar.base.InvalidDataTypeRef(elem.typeRef)
-            lines.append(self.indent('<TYPE-TREF DEST="{0}">{1}</TYPE-TREF>'.format(dataType.tag(self.version), dataType.ref), 1))            
+            lines.append(self.indent('<TYPE-TREF DEST="{0}">{1}</TYPE-TREF>'.format(dataType.tag(self.version), dataType.ref), 1))
         lines.append("</%s>"%elem.tag(self.version))
         return lines
-        
+
 
 class CodeDataTypeWriter(ElementWriter):
     def __init__(self, version, patch):

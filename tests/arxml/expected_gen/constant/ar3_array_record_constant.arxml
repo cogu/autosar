@@ -10,7 +10,71 @@
 						<ARRAY-SPECIFICATION>
 							<SHORT-NAME>MyConstant</SHORT-NAME>
 							<TYPE-TREF DEST="ARRAY-TYPE">/DataType/MyRecordArray_T</TYPE-TREF>
-						<ELEMENTS/>
+							<ELEMENTS>
+								<RECORD-SPECIFICATION>
+									<SHORT-NAME>MyRecord_T_0</SHORT-NAME>
+									<TYPE-TREF DEST="RECORD-TYPE">/DataType/MyRecord_T</TYPE-TREF>
+									<ELEMENTS>
+										<INTEGER-LITERAL>
+											<SHORT-NAME>Setting1</SHORT-NAME>
+											<TYPE-TREF DEST="INTEGER-TYPE">/DataType/UInt8</TYPE-TREF>
+											<VALUE>255</VALUE>
+										</INTEGER-LITERAL>
+										<INTEGER-LITERAL>
+											<SHORT-NAME>Setting2</SHORT-NAME>
+											<TYPE-TREF DEST="INTEGER-TYPE">/DataType/UInt16</TYPE-TREF>
+											<VALUE>65535</VALUE>
+										</INTEGER-LITERAL>
+										<INTEGER-LITERAL>
+											<SHORT-NAME>Setting3</SHORT-NAME>
+											<TYPE-TREF DEST="INTEGER-TYPE">/DataType/UInt32</TYPE-TREF>
+											<VALUE>4294967295</VALUE>
+										</INTEGER-LITERAL>
+									</ELEMENTS>
+								</RECORD-SPECIFICATION>
+								<RECORD-SPECIFICATION>
+									<SHORT-NAME>MyRecord_T_1</SHORT-NAME>
+									<TYPE-TREF DEST="RECORD-TYPE">/DataType/MyRecord_T</TYPE-TREF>
+									<ELEMENTS>
+										<INTEGER-LITERAL>
+											<SHORT-NAME>Setting1</SHORT-NAME>
+											<TYPE-TREF DEST="INTEGER-TYPE">/DataType/UInt8</TYPE-TREF>
+											<VALUE>0</VALUE>
+										</INTEGER-LITERAL>
+										<INTEGER-LITERAL>
+											<SHORT-NAME>Setting2</SHORT-NAME>
+											<TYPE-TREF DEST="INTEGER-TYPE">/DataType/UInt16</TYPE-TREF>
+											<VALUE>0</VALUE>
+										</INTEGER-LITERAL>
+										<INTEGER-LITERAL>
+											<SHORT-NAME>Setting3</SHORT-NAME>
+											<TYPE-TREF DEST="INTEGER-TYPE">/DataType/UInt32</TYPE-TREF>
+											<VALUE>0</VALUE>
+										</INTEGER-LITERAL>
+									</ELEMENTS>
+								</RECORD-SPECIFICATION>
+								<RECORD-SPECIFICATION>
+									<SHORT-NAME>MyRecord_T_2</SHORT-NAME>
+									<TYPE-TREF DEST="RECORD-TYPE">/DataType/MyRecord_T</TYPE-TREF>
+									<ELEMENTS>
+										<INTEGER-LITERAL>
+											<SHORT-NAME>Setting1</SHORT-NAME>
+											<TYPE-TREF DEST="INTEGER-TYPE">/DataType/UInt8</TYPE-TREF>
+											<VALUE>255</VALUE>
+										</INTEGER-LITERAL>
+										<INTEGER-LITERAL>
+											<SHORT-NAME>Setting2</SHORT-NAME>
+											<TYPE-TREF DEST="INTEGER-TYPE">/DataType/UInt16</TYPE-TREF>
+											<VALUE>65535</VALUE>
+										</INTEGER-LITERAL>
+										<INTEGER-LITERAL>
+											<SHORT-NAME>Setting3</SHORT-NAME>
+											<TYPE-TREF DEST="INTEGER-TYPE">/DataType/UInt32</TYPE-TREF>
+											<VALUE>4294967295</VALUE>
+										</INTEGER-LITERAL>
+									</ELEMENTS>
+								</RECORD-SPECIFICATION>
+							</ELEMENTS>
 						</ARRAY-SPECIFICATION>
 					</VALUE>
 				</CONSTANT-SPECIFICATION>

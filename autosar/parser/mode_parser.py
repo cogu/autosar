@@ -45,6 +45,11 @@ class ModeDeclarationParser(ElementParser):
         assert(isinstance(parent, autosar.mode.ModeDeclarationGroup))
         result = []
         for mode in xmlRoot.findall("./MODE-DECLARATION"):
-            parent.modeDeclarations.append(autosar.mode.ModeDeclaration(self.parseTextNode(mode.find("./SHORT-NAME")), parent))
+            declarationName = self.parseTextNode(mode.find("./SHORT-NAME"))
+            declarationValue = None
+            declarationValueXML = mode.find("./VALUE")
+            if declarationValueXML is not None:
+                declarationValue = self.parseTextNode(declarationValueXML)
+            parent.modeDeclarations.append(autosar.mode.ModeDeclaration(declarationName, declarationValue, parent = parent))
         return result
-        
+

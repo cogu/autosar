@@ -34,7 +34,7 @@ def _create_base_types(ws):
     UserSettingApp = package.createApplicationPrimitiveDataType('UserSettingApp')
     package = ws.find('/DataTypes/MappingSets')
     mappingSet = autosar.datatype.DataTypeMappingSet("MappingSet")
-    mappingSet.addDirect(UserSettingApp.ref, UserSettingImp.ref)
+    mappingSet.createDataTypeMapping(UserSettingApp.ref, UserSettingImp.ref)
     package.append(mappingSet)
 
 def _create_test_elements(ws):

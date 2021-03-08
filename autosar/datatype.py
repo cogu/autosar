@@ -16,12 +16,13 @@ class RecordTypeElement(Element):
     def __init__(self, name, typeRef, parent = None, adminData = None):
         super().__init__(name, parent, adminData)
         self.typeRef=typeRef
+
     def __eq__(self,other):
         if self is other: return True
         if type(self) == type(other):
             if self.name == other.name:
-                lhs = None if self.typeRef is None else self.find(self.typeRef)
-                rhs = None if other.typeRef is None else other.find(other.typeRef)
+                lhs = None if self.typeRef is None else self.rootWS().find(self.typeRef)
+                rhs = None if other.typeRef is None else other.rootWS().find(other.typeRef)
                 if lhs != rhs:
                     print(self.name,self.typeRef)
                 return lhs==rhs
@@ -116,7 +117,7 @@ class IntegerDataType(DataType):
         if type(other) is type(self):
             if (self.name==other.name) and (self.minVal == other.minVal) and (self.maxVal==other.maxVal):
                 if (self.compuMethodRef is not None) and (other.compuMethodRef is not None):
-                    return self.findWS().find(self.compuMethodRef) == other.findWS().find(other.compuMethodRef)
+                    return self.rootWS().find(self.compuMethodRef) == other.rootWS().find(other.compuMethodRef)
                 elif (self.compuMethodRef is None) and (other.compuMethodRef is None):
                     return True
 
@@ -444,35 +445,35 @@ class ImplementationDataType(Element):
         if len(self.subElements)>0:
             return self.subElements[0].arraySize
         else:
-            raise RunTimeError('ImplementationDataType has no subElement')
+            return None
 
     @property
     def implementationTypeRef(self):
         if len(self.variantProps)>0:
             return self.variantProps[0].implementationTypeRef
         else:
-            raise RunTimeError('ImplementationDataType has no variantProps')
+            raise RuntimeError('ImplementationDataType has no variantProps')
 
     @property
     def baseTypeRef(self):
         if len(self.variantProps)>0:
             return self.variantProps[0].baseTypeRef
         else:
-            raise RunTimeError('Element has no variantProps set')
+            raise RuntimeError('Element has no variantProps set')
 
     @property
     def dataConstraintRef(self):
         if len(self.variantProps)>0:
             return self.variantProps[0].dataConstraintRef
         else:
-            raise RunTimeError('Element has no variantProps set')
+            raise RuntimeError('Element has no variantProps set')
 
     @property
     def compuMethodRef(self):
         if len(self.variantProps)>0:
             return self.variantProps[0].compuMethodRef
         else:
-            raise RunTimeError('Element has no variantProps set')
+            raise RuntimeError('Element has no variantProps set')
 
     def setSymbolProps(self, name, symbol):
         """
@@ -542,21 +543,21 @@ class ApplicationDataType(Element):
         if len(self.variantProps)>0:
             return self.variantProps[0].compuMethodRef
         else:
-            raise RunTimeError('Element has no variantProps')
+            raise RuntimeError('Element has no variantProps')
 
     @property
     def dataConstraintRef(self):
         if len(self.variantProps)>0:
             return self.variantProps[0].dataConstraintRef
         else:
-            raise RunTimeError('Element has no variantProps')
+            raise RuntimeError('Element has no variantProps')
 
     @property
     def unitRef(self):
         if len(self.variantProps)>0:
             return self.variantProps[0].unitRef
         else:
-            raise RunTimeError('Element has no variantProps')
+            raise RuntimeError('Element has no variantProps')
 
 class ApplicationPrimitiveDataType(ApplicationDataType):
     """
@@ -658,46 +659,99 @@ class DataTypeMappingSet(Element):
 
     def __init__(self, name, parent=None, adminData=None):
         super().__init__(name, parent, adminData)
-        self.map = {} #applicationDataTypeRef to implementationDataTypeRef dictionary
+        self.applicationTypeMap = {} #applicationDataTypeRef to implementationDataTypeRef dictionary
+        self.modeRequestMap = {} #modeDeclarationGroupRef to implementationDataTypeRef dictionary
 
-    def addDirect(self, applicationDataTypeRef, implementationDataTypeRef):
-        self.map[applicationDataTypeRef] = implementationDataTypeRef
+    def createDataTypeMapping(self, applicationDataTypeRef, implementationDataTypeRef):
+        self.applicationTypeMap[applicationDataTypeRef] = implementationDataTypeRef
+        return DataTypeMap(applicationDataTypeRef,  implementationDataTypeRef)
 
-    def add(self, dataTypeMap):
-        assert (isinstance(dataTypeMap, DataTypeMap))
-        self.addDirect(dataTypeMap.applicationDataTypeRef, dataTypeMap.implementationDataTypeRef)
+    def createModeRequestMapping(self, modeDeclarationGroupRef, implementationDataTypeRef):
+        self.modeRequestMap[modeDeclarationGroupRef] = implementationDataTypeRef
+        return ModeRequestTypeMap(modeDeclarationGroupRef,  implementationDataTypeRef)
 
-    def get(self, applicationDataTypeRef):
+    def add(self, item):
+        if isinstance(item, DataTypeMap):
+                self.createDataTypeMapping(item.applicationDataTypeRef, item.implementationDataTypeRef)
+        if isinstance(item, ModeRequestTypeMap):
+                self.createModeRequestMapping(item.modeDeclarationGroupRef, item.implementationDataTypeRef)
+        else:
+            raise ValueError("Item is neither an instance of DataTypeMap or ModeRequestTypeMap")
+
+    def getDataTypeMapping(self, applicationDataTypeRef):
         """
         Returns an instance of DataTypeMap or None if not found.
         """
-        if applicationDataTypeRef in self.map:
-            return DataTypeMap(applicationDataTypeRef,  self.map[applicationDataTypeRef])
+        implementationDataTypeRef = self.applicationTypeMap.get(applicationDataTypeRef, None)
+        if implementationDataTypeRef is not None:
+            return DataTypeMap(applicationDataTypeRef,  implementationDataTypeRef)
+        return None
+
+    def getModeRequestMapping(self, modeDeclarationGroupRef):
+        """
+        Returns an instance of DataTypeMap or None if not found.
+        """
+        implementationDataTypeRef = self.modeRequestMap.get(modeDeclarationGroupRef, None)
+        if implementationDataTypeRef is not None:
+            return ModeRequestTypeMap(modeDeclarationGroupRef,  implementationDataTypeRef)
         return None
 
     def findMappedDataTypeRef(self, applicationDataTypeRef):
         """
         Returns a reference (str) to the mapped implementation data type or None if not found.
         """
-        if applicationDataTypeRef in self.map:
-            return self.map[applicationDataTypeRef]
-        return None
+        return self.applicationTypeMap.get(applicationDataTypeRef, None)
 
     def findMappedDataType(self, applicationDataTypeRef):
         """
         Returns the instance of the mapped implementation data type.
         This requires that both the DataTypeMappingSet and the implementation data type reference are in the same AUTOSAR workspace.
         """
-        ws = self.rootWS()
-        if ws is not None:
-            implementationDataTypeRef = self.getDirect(applicationDataTypeRef)
-            if implementationDataTypeRef is not None:
-                return ws.find(implementationDataTypeRef)
+        implementationDataTypeRef = self.applicationTypeMap.get(applicationDataTypeRef, None)
+        if implementationDataTypeRef is not None:
+            ws = self.rootWS()
+            if ws is None:
+                raise RuntimeError("Root workspace not found")
+            return ws.find(implementationDataTypeRef)
+        return None
+
+    def findMappedModeRequestRef(self, modeDeclarationGroupRef):
+        """
+        Returns a reference (str) to the mapped implementation data type or None if not found.
+        """
+        return self.modeRequestMap.get(modeDeclarationGroupRef, None)
+
+    def findMappedModeRequest(self, modeDeclarationGroupRef):
+        """
+        Returns the instance of the mapped implementation data type.
+        This requires that both the DataTypeMappingSet and the implementation data type reference are in the same AUTOSAR workspace.
+        """
+        implementationDataTypeRef = self.modeRequestMap.get(modeDeclarationGroupRef, None)
+        if implementationDataTypeRef is not None:
+            ws = self.rootWS()
+            if ws is None:
+                raise RuntimeError("Root workspace not found")
+            return ws.find(implementationDataTypeRef)
         return None
 
 class DataTypeMap:
+    """
+    Mapping from ApplicationDataType to ImplementationDataType.
+    """
+
     def __init__(self, applicationDataTypeRef, implementationDataTypeRef):
         self.applicationDataTypeRef = applicationDataTypeRef
         self.implementationDataTypeRef = implementationDataTypeRef
 
     def tag(self, version): return 'DATA-TYPE-MAP'
+
+class ModeRequestTypeMap:
+    """
+    Mapping from ModeGroupDeclaration to ImplementationDataType.
+    """
+    def __init__(self, modeDeclarationGroupRef, implementationDataTypeRef):
+        self.modeDeclarationGroupRef = modeDeclarationGroupRef
+        self.implementationDataTypeRef = implementationDataTypeRef
+
+    def tag(self, version): return 'MODE-REQUEST-TYPE-MAP'
+

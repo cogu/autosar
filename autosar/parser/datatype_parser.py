@@ -239,6 +239,7 @@ class DataTypeParser(ElementParser):
         assert (xmlRoot.tag == 'DATA-TYPE-MAPPING-SET')
         (name, dataTypeMaps, adminData) = (None, None, None)
         dataTypeMaps = []
+        modeRequestTypeMaps = []
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'ADMIN-DATA':
                 adminData=self.parseAdminDataNode(xmlElem)
@@ -247,20 +248,26 @@ class DataTypeParser(ElementParser):
             elif xmlElem.tag == 'DATA-TYPE-MAPS':
                 for xmlChild in xmlElem.findall('./*'):
                     if xmlChild.tag == 'DATA-TYPE-MAP':
-                        dataTypeMap = self.parseDataTypeMap(xmlChild)
+                        dataTypeMap = self._parseDataTypeMapXML(xmlChild)
                         assert(dataTypeMap is not None)
                         dataTypeMaps.append(dataTypeMap)
                     else:
                         raise NotImplementedError(xmlElem.tag)
             elif xmlElem.tag == 'MODE-REQUEST-TYPE-MAPS':
-                pass #Implement later
+                for xmlChild in xmlElem.findall('./*'):
+                    if xmlChild.tag == 'MODE-REQUEST-TYPE-MAP':
+                        modeRequestTypeMap = self._parseModeRequestTypeMapXML(xmlChild)
+                        assert(modeRequestTypeMap is not None)
+                        modeRequestTypeMaps.append(modeRequestTypeMap)
+                    else:
+                        raise NotImplementedError(xmlElem.tag)
             else:
                 raise NotImplementedError(xmlElem.tag)
         if (name is None):
             raise RuntimeError('SHORT-NAME cannot be None')
         elem = autosar.datatype.DataTypeMappingSet(name, parent, adminData)
-        for dataTypeMap in dataTypeMaps:
-            elem.add(dataTypeMap)
+        for mapping in dataTypeMaps + modeRequestTypeMaps:
+            elem.add(mapping)
         return elem
 
     def parseApplicationPrimitiveDataType(self, xmlRoot, parent = None):
@@ -353,7 +360,7 @@ class DataTypeParser(ElementParser):
         return elem
 
 
-    def parseDataTypeMap(self, xmlRoot):
+    def _parseDataTypeMapXML(self, xmlRoot):
         assert (xmlRoot.tag == 'DATA-TYPE-MAP')
         (applicationDataTypeRef, implementationDataTypeRef) = (None, None)
         for xmlElem in xmlRoot.findall('./*'):
@@ -365,7 +372,17 @@ class DataTypeParser(ElementParser):
                 raise NotImplementedError(xmlElem.tag)
         return autosar.datatype.DataTypeMap(applicationDataTypeRef, implementationDataTypeRef)
 
-
+    def _parseModeRequestTypeMapXML(self, xmlRoot):
+        assert (xmlRoot.tag == 'MODE-REQUEST-TYPE-MAP')
+        (modeDeclarationGroupRef, implementationDataTypeRef) = (None, None)
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == 'MODE-GROUP-REF':
+                modeDeclarationGroupRef = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'IMPLEMENTATION-DATA-TYPE-REF':
+                implementationDataTypeRef = self.parseTextNode(xmlElem)
+            else:
+                raise NotImplementedError(xmlElem.tag)
+        return autosar.datatype.ModeRequestTypeMap(modeDeclarationGroupRef, implementationDataTypeRef)
 
 class DataTypeSemanticsParser(ElementParser):
     def __init__(self,version=3.0):

@@ -73,14 +73,23 @@ class ModeDeclarationGroup(Element):
         return not (self == other)
 
 class ModeDeclaration(Element):
+    """
+    Implements <MODE-DECLARATION> (AUTOSAR4)
+    """
     def tag(self,version=None): return "MODE-DECLARATION"
 
-    def __init__(self, name, parent=None, adminData=None):
+    def __init__(self, name, value = None, parent=None, adminData=None):
         super().__init__(name, parent, adminData)
+        self.value = int(value) if value is not None else None
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
-            if self.name == other.name: return True
+            if self.name == other.name:
+                if self.value is None and other.value is None:
+                    return True
+                elif (self.value is not None) and (other.value is not None):
+                    if self.value == other.value:
+                        return True
         return False
 
     def __ne__(self, other): return not (self == other)
