@@ -361,6 +361,12 @@ class InvalidMappingRef(ValueError):
 class InvalidModeGroupRef(ValueError):
     pass
 
+class InvalidModeDeclarationGroupRef(ValueError):
+    pass
+
+class InvalidModeDeclarationRef(ValueError):
+    pass
+
 class InvalidEventSourceRef(ValueError):
     pass
 

@@ -317,7 +317,6 @@ class ApplicationError(Element):
 class ModeSwitchInterface(PortInterface):
     """
     Implementation of <MODE-SWITCH-INTERFACE> (AUTOSAR 4)
-
     """
 
     def tag(self, version): return 'MODE-SWITCH-INTERFACE'

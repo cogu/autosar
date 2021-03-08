@@ -4,7 +4,7 @@ import autosar.behavior
 class XMLModeWriter(ElementWriter):
     def __init__(self, version, patch):
         super().__init__(version, patch)
-        
+
     def getSupportedXML(self):
         return 'ModeDeclarationGroup'
 
@@ -43,6 +43,8 @@ class XMLModeWriter(ElementWriter):
             for elem in modeDeclGroup.modeDeclarations:
                 lines.append(self.indent('<%s>'%elem.tag(self.version),2))
                 lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,3))
+                if elem.value is not None:
+                    lines.append(self.indent('<VALUE>{:d}</VALUE>'.format(elem.value),3))
                 lines.append(self.indent('</%s>'%elem.tag(self.version),2))
             lines.append(self.indent('</MODE-DECLARATIONS>',1))
         lines.append('</%s>'%modeDeclGroup.tag(self.version))
