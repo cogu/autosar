@@ -1,4 +1,4 @@
-.. _mode_modeGroup:
+.. _ar4_mode_ModeGroup:
 
 ModeGroup
 =========
@@ -9,7 +9,7 @@ ModeGroup
    +--------------+-------------------------------------------------------------------------+
    | XML tag      | <MODE_GROUP>                                                            |
    +--------------+-------------------------------------------------------------------------+
-   | Module       | autosar.submodule                                                       |
+   | Module       | autosar.mode                                                            |
    +--------------+-------------------------------------------------------------------------+
    | Inherits     | :ref:`autosar.element.Element <ar4_element_Element>`                    |
    +--------------+-------------------------------------------------------------------------+
@@ -19,11 +19,8 @@ A ModeGroup is used as the internal storage container of the modeGroup attribute
 Usage
 -----
 
-.. code-block:: python
-
-    import autosar
-
-    modeGroup = autosar.mode.ModeGroup('mode', '/ModeDeclrs/VehicleMode')
+..  include:: examples/usage_mode_group.py
+    :code: python3
 
 Constructor
 -----------
@@ -31,7 +28,7 @@ Constructor
 .. py:method:: mode.ModeGroup(name, typeRef, [parent=None], [adminData=None])
 
     :param str name: ShortName of the object
-    :param str typeRef: Full reference to a :ref:`mode_modeDeclarationGroup` element or a shortName of a :ref:`mode_modeDeclarationGroup` element (if package roles are used).
+    :param str typeRef: Full reference to a :ref:`ar4_mode_ModeDeclarationGroup` element or a shortName of a :ref:`ar4_mode_ModeDeclarationGroup` element (if package roles are used).
     :param parent: parent package (for internal use only)
     :param adminData: optional adminData
 
@@ -44,8 +41,8 @@ For inherited attributes see :ref:`autosar.element.Element <ar4_element_Element>
 ..  table::
     :align: left
 
-    +--------------------------+-------------------------+---------------------------------------------------------+
-    | Name                     | Type                    | Description                                             |
-    +==========================+=========================+=========================================================+
-    | **typeRef**              | str                     | Reference to a :ref:`mode_modeDeclarationGroup` element |
-    +--------------------------+-------------------------+---------------------------------------------------------+
+    +--------------------------+-------------------------+-------------------------------------------------------------+
+    | Name                     | Type                    | Description                                                 |
+    +==========================+=========================+=============================================================+
+    | **typeRef**              | str                     | Reference to a :ref:`ar4_mode_ModeDeclarationGroup` element |
+    +--------------------------+-------------------------+-------------------------------------------------------------+
