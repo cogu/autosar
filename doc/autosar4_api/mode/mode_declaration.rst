@@ -1,4 +1,4 @@
-.. _mode_declaration:
+.. _ar4_mode_ModeDeclaration:
 
 ModeDeclaration
 ===============
@@ -14,10 +14,18 @@ ModeDeclaration
    | Inherits     | :ref:`autosar.element.Element <ar4_element_Element>`                    |
    +--------------+-------------------------------------------------------------------------+
 
-Mode declarations are used as the internal container class of :ref:`mode_modeDeclarationGroup` objects.
-
+Mode declarations are used as the internal container class of :ref:`ar4_mode_ModeDeclarationGroup` objects.
 
 Attributes
 -----------
 
 For inherited attributes see :ref:`autosar.element.Element <ar4_element_Element>`.
+
+..  table::
+    :align: left
+
+    +-----------------------------+---------------------+---------------------------------+
+    | Name                        | Type                | Description                     |
+    +=============================+=====================+=================================+
+    | **value**                   | None or int         | Optional mode declaration value |
+    +-----------------------------+---------------------+---------------------------------+

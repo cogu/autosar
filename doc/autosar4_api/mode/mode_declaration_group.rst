@@ -1,4 +1,4 @@
-.. _mode_modeDeclarationGroup:
+.. _ar4_mode_ModeDeclarationGroup:
 
 ModeDeclarationGroup
 ====================
@@ -14,22 +14,13 @@ ModeDeclarationGroup
    | Inherits     | :ref:`autosar.element.Element <ar4_element_Element>`                    |
    +--------------+-------------------------------------------------------------------------+
 
-A collection of :ref:`Mode Declarations <mode_declaration>`.
+A collection of :ref:`Mode Declarations <ar4_mode_ModeDeclaration>`.
 
 Usage
 -----
 
-.. code-block:: python
-
-    import autosar
-
-    ws = autosar.workspace(version="4.2.2")
-    package = ws.createPackage('ModeDclrGroups', role="ModeDclrGroup")
-    package.createModeDeclarationGroup('BswM_Mode', ["POSTRUN",
-                                                    "RUN",
-                                                    "SHUTDOWN",
-                                                    "STARTUP",
-                                                    "WAKEUP"], "STARTUP")
+..  include:: examples/usage_mode_declaration_group.py
+    :code: python3
 
 Factory Methods
 ---------------
@@ -44,10 +35,10 @@ For inherited attributes see :ref:`autosar.element.Element <ar4_element_Element>
 ..  table::
     :align: left
 
-    +--------------------------+-------------------------------+-------------------------------+
-    | Name                     | Type                          | Description                   |
-    +==========================+===============================+===============================+
-    | **modeDeclarations**     | list(:ref:`mode_declaration`) | List of mode declarations     |
-    +--------------------------+-------------------------------+-------------------------------+
-    | **initialModeRef**       | str                           | Initial mode value            |
-    +--------------------------+-------------------------------+-------------------------------+
+    +--------------------------+---------------------------------------+-------------------------------+
+    | Name                     | Type                                  | Description                   |
+    +==========================+=======================================+===============================+
+    | **modeDeclarations**     | list(:ref:`ar4_mode_ModeDeclaration`) | List of mode declarations     |
+    +--------------------------+---------------------------------------+-------------------------------+
+    | **initialModeRef**       | str                                   | Initial mode value            |
+    +--------------------------+---------------------------------------+-------------------------------+

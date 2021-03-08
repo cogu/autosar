@@ -139,6 +139,10 @@ Public Methods
 
 * :ref:`ar4_package_Package_createUnit`
 
+**DataTypeMapping**
+
+* :ref:`ar4_package_Package_createDataTypeMappingSet`
+
 Method Description
 ------------------
 
@@ -618,7 +622,7 @@ createModeDeclarationGroup
 
 .. py:method:: Package.createModeDeclarationGroup(name, [modeDeclarations=None], [initialMode=None], [category=None], [adminData=None])
 
-    Creates a new :ref:`mode_modeDeclarationGroup` and adds it to the package.
+    Creates a new :ref:`ar4_mode_ModeDeclarationGroup` and adds it to the package.
 
     :param str name: ShortName of the object
     :param modeDeclarations: List of mode declaration names
@@ -626,7 +630,7 @@ createModeDeclarationGroup
     :param str initialMode: Initial mode value (must be one of strings from modeDeclarations list)
     :param str category: Optional category
     :param adminData: Optional :ref:`ar4_base_AdminData`
-    :rtype: :ref:`mode_modeDeclarationGroup`
+    :rtype: :ref:`ar4_mode_ModeDeclarationGroup`
 
 .. _ar4_package_Package_createClientServerInterface:
 
@@ -665,7 +669,7 @@ createModeSwitchInterface
 
     :param str name: ShortName of the port interface
     :param modeGroup: mode group object
-    :type modeGroup: :ref:`mode_modeGroup`
+    :type modeGroup: :ref:`ar4_mode_ModeGroup`
     :param bool isService: Set this to True for service interfaces
     :param adminData: Optional :ref:`ar4_base_AdminData`
     :rtype: :ref:`ar4_portinterface_ModeSwitchInterface`
@@ -776,6 +780,21 @@ createUnit
     :param factor: Optional scaling factor
     :type factor: None, int, float
     :rtype: Unit
+
+.. _ar4_package_Package_createDataTypeMappingSet:
+
+createDataTypeMappingSet
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:method:: Package.createDataTypeMappingSet(self, name, [adminData=None])
+
+    Creates a new data type mapping set and adds it to the package.
+
+    :param str name: ShortName of the new unit.
+    :param adminData: Optional :ref:`ar4_base_AdminData`
+    :rtype: :ref:`ar4_datatype_DataTypeMappingSet`
+
+
 
 Parameter Details
 -----------------
