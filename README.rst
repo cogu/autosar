@@ -30,7 +30,7 @@ Documentation is published `here <https://autosar.readthedocs.io/en/latest/>`_.
 Latest Release
 ---------------
 
-Latest release is `v0.3.9 <https://github.com/cogu/autosar/releases/tag/v0.3.9>`_.
+Latest release is `v0.3.0 <https://github.com/cogu/autosar/releases/tag/v0.3.10>`_.
 
 Current Roadmap
 ---------------
@@ -38,7 +38,7 @@ Current Roadmap
 v0.4.0
 ~~~~~~
 
-* Maintenance track (Relabel v0.3.9 if no issues are found)
+* Maintenance track (Relabel v0.3.10 if no issues are found)
 
 v0.5.0
 ~~~~~~
