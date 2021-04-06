@@ -673,7 +673,7 @@ class DataTypeMappingSet(Element):
     def add(self, item):
         if isinstance(item, DataTypeMap):
                 self.createDataTypeMapping(item.applicationDataTypeRef, item.implementationDataTypeRef)
-        if isinstance(item, ModeRequestTypeMap):
+        elif isinstance(item, ModeRequestTypeMap):
                 self.createModeRequestMapping(item.modeDeclarationGroupRef, item.implementationDataTypeRef)
         else:
             raise ValueError("Item is neither an instance of DataTypeMap or ModeRequestTypeMap")
