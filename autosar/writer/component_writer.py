@@ -81,6 +81,8 @@ class XMLComponentTypeWriter(ElementWriter):
         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%swc.name,1))
         if isinstance(swc, autosar.component.ServiceComponent):
             lines.append(self.indent('<CATEGORY>ServiceComponent</CATEGORY>',1))
+        if swc.adminData is not None:
+            lines.extend(self.indent(self.writeAdminDataXML(swc.adminData),1))
         descLines = self.writeDescXML(swc)
         if descLines is not None:
             lines.extend(self.indent(descLines,1))
