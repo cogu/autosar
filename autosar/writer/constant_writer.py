@@ -206,7 +206,7 @@ class CodeConstantWriter(ElementWriter):
                 initValue = self._writeRecordValueConstantCode(elem, localvars)
                 if isinstance(initValue, list): initValue="{%s}"%(', '.join(initValue)) #join any inner record init values
             else:
-                raise ValueError('unknown value type: '+type(constant.value))
+                raise ValueError('unknown value type: '+type(elem.value))
             params.append(initValue)
         if len(params)>0:
             return "[%s]"%(', '.join(params))
@@ -238,7 +238,7 @@ class CodeConstantWriter(ElementWriter):
                 initValue = self._writeRecordValueConstantCode(elem, localvars)
                 if isinstance(initValue, list): initValue="{%s}"%(', '.join(initValue)) #join any inner record init values
             else:
-                raise ValueError('unknown value type: '+type(constant.value))
+                raise ValueError('unknown value type: '+type(elem.value))
             params.append('"%s": %s'%(elem.name, initValue))
         if len(params)>0:
             text = "{%s}"%(', '.join(params))

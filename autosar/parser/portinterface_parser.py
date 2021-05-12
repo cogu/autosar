@@ -96,7 +96,7 @@ class PortInterfacePackageParser(ElementParser):
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'MODE-DECLARATION-GROUP-PROTOTYPE':
                 self.push()
-                for xmlChild in xmlDataElements.findall('./*'):
+                for xmlChild in xmlElem.findall('./*'):
                     typeRef = None
                     if xmlChild.tag == 'TYPE-TREF':
                         typeRef = self.parseTextNode(xmlChild)

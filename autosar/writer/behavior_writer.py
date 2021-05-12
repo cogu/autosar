@@ -986,7 +986,7 @@ class CodeBehaviorWriter(ElementWriter):
         #typeref
         dataType = ws.find(sharedCalParam.typeRef)
         if dataType is None:
-            raise ValueError('invalid reference: '+perInstanceMemory.typeRef)
+            raise ValueError('invalid reference: '+sharedCalParam.typeRef)
         if ws.roles['DataType'] is not None:
             params.append(repr(dataType.name)) #use name only
         else:
