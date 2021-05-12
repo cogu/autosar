@@ -176,7 +176,7 @@ class ConstantParser(ElementParser):
             self.pop(obj)
             return obj
         else:
-            raise RunTimeError('<CONSTANT-REF> must not be None')
+            raise RuntimeError('<CONSTANT-REF> must not be None')
 
     def _parseApplicationValueSpecification(self, xmlRoot, parent):
         label, swValueCont, swAxisCont, category = None, None, None, None

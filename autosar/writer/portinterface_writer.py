@@ -104,7 +104,7 @@ class XMLPortInterfaceWriter(ElementWriter):
             lines.append(self.indent('<SW-DATA-DEF-PROPS>',1))
             swAddrMethod = ws.find(elem.swAddressMethodRef)
             if (swAddrMethod is None):
-                raise ValueError("invalid reference: '%s'"%ref)
+                raise ValueError("invalid reference: '%s'"%elem.swAddressMethodRef)
             else:
                 lines.append(self.indent('<SW-ADDR-METHOD-REF DEST="%s">%s</SW-ADDR-METHOD-REF>'%(swAddrMethod.tag(self.version),swAddrMethod.ref),2))
             lines.append(self.indent('</SW-DATA-DEF-PROPS>',1))

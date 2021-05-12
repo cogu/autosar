@@ -51,7 +51,7 @@ class SignalParser(ElementParser):
         if (name is not None) and length is not None:  #All signals doesn't have IV constant Ref or DatatypeRef
             return SystemSignal(name, dataTypeRef, initValueRef, length, desc, parent)
         else:
-            raise RunTimeError('failed to parse %s'%xmlRoot.tag)
+            raise RuntimeError('failed to parse %s'%xmlRoot.tag)
 
     def parseSystemSignalGroup(self, xmlRoot, parent=None):
         name,systemSignalRefs=None,None
@@ -71,4 +71,4 @@ class SignalParser(ElementParser):
         if (name is not None) and (isinstance(systemSignalRefs,list)):
             return SystemSignalGroup(name,systemSignalRefs)
         else:
-            raise RunTimeError('failed to parse %s'%xmlRoot.tag)
+            raise RuntimeError('failed to parse %s'%xmlRoot.tag)

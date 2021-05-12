@@ -95,7 +95,7 @@ class ValueBuilder:
                     assert(childValue is not None)
                     value.elements.append(childValue)
                 else:
-                    name_str = "" if name is None else "{}: ".format(name)
+                    name_str = "" if elem.name is None else "{}: ".format(elem.name)
                     raise ValueError('{}Missing initValue field: {}'.format(name_str, elem.name))
         else:
             raise ValueError('initValue must be a dict')

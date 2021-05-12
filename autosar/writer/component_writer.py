@@ -379,7 +379,7 @@ class XMLComponentTypeWriter(ElementWriter):
         return lines
 
     def _writeParameterProvideComSpecXML(self, ws, comspec, param):
-        assert(isinstance(elem,autosar.port.ParameterComSpec))
+        assert(isinstance(comspec, autosar.port.ParameterComSpec))
         lines = []
         if self.version<4.0:
             raise NotImplementedError('_writeParameterProvideComSpecXML')
@@ -389,7 +389,7 @@ class XMLComponentTypeWriter(ElementWriter):
                 lines.append(self.indent('<INIT-VALUE>',1))
                 lines.extend(self.indent(self.writeValueSpecificationXML(comspec.initValue),2))
                 lines.append(self.indent('</INIT-VALUE>',1))
-            lines.append(self.indent('<PARAMETER-REF DEST="%s">%s</PARAMETER-REF>'%(param.tag(self.version),elem.ref),1))
+            lines.append(self.indent('<PARAMETER-REF DEST="%s">%s</PARAMETER-REF>'%(param.tag(self.version),param.ref),1))
             lines.append('</PARAMETER-PROVIDE-COM-SPEC>')
         return lines
 
