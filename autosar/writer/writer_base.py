@@ -221,7 +221,7 @@ class BaseWriter:
         if role 'DataType' is setup in the workspace it will only return the name of the reference,
         otherwise it returns the full reference
         """
-        return self._createRef(componentRef, 'DataType', localvars)
+        return self._createRef(typeRef, 'DataType', localvars)
 
     def _createComponentRef(self, componentRef, localvars):
         """
