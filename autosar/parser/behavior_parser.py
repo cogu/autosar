@@ -271,7 +271,7 @@ class BehaviorParser(ElementParser):
                     name=self.parseTextNode(xmlDataPoint.find('SHORT-NAME'))
                     dataElementInstanceRef = self.parseDataElementInstanceRef(xmlDataPoint.find('DATA-ELEMENT-IREF'),'R-PORT-PROTOTYPE-REF')
                     if dataElementInstanceRef is not None:
-                        dataReceivePoint=DataReceivePoint(dataElementInstanceRef.portRef,dataElementInstanceRef.dataElemRef,name)
+                        dataReceivePoint=autosar.behavior.DataReceivePoint(dataElementInstanceRef.portRef,dataElementInstanceRef.dataElemRef,name)
                         runnableEntity.append(dataReceivePoint)
             else:
                 for xmlVariableAcess in xmlDataReceivePoints.findall('VARIABLE-ACCESS'):
@@ -504,7 +504,7 @@ class BehaviorParser(ElementParser):
             modeInstRef = self.parseModeInstanceRef(xmlNode.find('MODE-IREF'))
             startOnEventRef = self.parseTextNode(xmlNode.find('START-ON-EVENT-REF'))
             activation = self.parseTextNode(xmlNode.find('ACTIVATION'))
-            modeSwitchEvent=autoar.behavior.ModeSwitchEvent(name, startOnEventRef, activation, parent, self.version)
+            modeSwitchEvent=autosar.behavior.ModeSwitchEvent(name, startOnEventRef, activation, parent, self.version)
             modeSwitchEvent.modeInstRef=modeInstRef
         elif self.version >= 4.0:
             assert(xmlNode.tag=='SWC-MODE-SWITCH-EVENT')
@@ -594,7 +594,7 @@ class BehaviorParser(ElementParser):
                 portTag = 'CONTEXT-P-PORT-REF' if self.version >= 4.0 else 'P-PORT-PROTOTYPE-REF'
                 operationInstanceRef = self.parseOperationInstanceRef(xmlElem, portTag)
             elif xmlElem.tag == 'MODE-DEPENDENCY':
-                modeDependency = self._parseModeDependency(xmlModeDependency)
+                modeDependency = self._parseModeDependency(xmlElem)
             else:
                 raise NotImplementedError(xmlElem.tag)
         operationInvokedEvent=autosar.behavior.OperationInvokedEvent(name, startOnEventRef, parent)
@@ -661,7 +661,7 @@ class BehaviorParser(ElementParser):
         assert(xmlRoot.tag=='SERVICE-CALL-PORTS')
         serviceCallPorts=[]
         for xmlNode in xmlRoot.findall('ROLE-BASED-R-PORT-ASSIGNMENT'):
-            roleBasedRPortAssignment=RoleBasedRPortAssignment(self.parseTextNode(xmlNode.find('R-PORT-PROTOTYPE-REF')),self.parseTextNode(xmlNode.find('ROLE')))
+            roleBasedRPortAssignment=autosar.behavior.RoleBasedRPortAssignment(self.parseTextNode(xmlNode.find('R-PORT-PROTOTYPE-REF')),self.parseTextNode(xmlNode.find('ROLE')))
             serviceCallPorts.append(roleBasedRPortAssignment)
         return serviceCallPorts
 

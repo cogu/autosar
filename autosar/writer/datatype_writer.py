@@ -413,10 +413,10 @@ class XMLDataTypeWriter(ElementWriter):
         lines.append("<%s>"%elem.tag(self.version))
         applicationDataType = ws.find(elem.applicationDataTypeRef)
         if applicationDataType is None:
-            raise ValueError('Invalid type refernce:' + elem.applicationDataTypeRef)
+            raise ValueError('Invalid type reference:' + elem.applicationDataTypeRef)
         implementationDataType = ws.find(elem.implementationDataTypeRef)
         if implementationDataType is None:
-            raise ValueError('Invalid type refernce:' + elem.implementationDataTypeRef)
+            raise ValueError('Invalid type reference:' + elem.implementationDataTypeRef)
         lines.append(self.indent('<APPLICATION-DATA-TYPE-REF DEST="%s">%s</APPLICATION-DATA-TYPE-REF>'%(applicationDataType.tag(self.version), applicationDataType.ref),1))
         lines.append(self.indent('<IMPLEMENTATION-DATA-TYPE-REF DEST="%s">%s</IMPLEMENTATION-DATA-TYPE-REF>'%(implementationDataType.tag(self.version), implementationDataType.ref),1))
         lines.append("</%s>"%elem.tag(self.version))
@@ -427,10 +427,10 @@ class XMLDataTypeWriter(ElementWriter):
         lines.append("<%s>"%elem.tag(self.version))
         modeDeclarationGroup = ws.find(elem.modeDeclarationGroupRef)
         if modeDeclarationGroup is None:
-            raise ValueError('Invalid type refernce:' + elem.implementationDataTypeRef)
+            raise ValueError('Invalid type reference:' + elem.implementationDataTypeRef)
         implementationDataType = ws.find(elem.implementationDataTypeRef)
         if implementationDataType is None:
-            raise ValueError('Invalid type refernce:' + elem.implementationDataTypeRef)
+            raise ValueError('Invalid type reference:' + elem.implementationDataTypeRef)
         lines.append(self.indent('<IMPLEMENTATION-DATA-TYPE-REF DEST="%s">%s</IMPLEMENTATION-DATA-TYPE-REF>'%(implementationDataType.tag(self.version), implementationDataType.ref),1))
         lines.append(self.indent('<MODE-GROUP-REF DEST="%s">%s</MODE-GROUP-REF>'%(modeDeclarationGroup.tag(self.version), modeDeclarationGroup.ref),1))
         lines.append("</%s>"%elem.tag(self.version))

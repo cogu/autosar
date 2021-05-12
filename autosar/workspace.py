@@ -413,7 +413,7 @@ class Workspace:
                 for xmlPackage in self.xmlroot.findall('.AR-PACKAGES/AR-PACKAGE'):
                     packageList.append(xmlPackage.find("./SHORT-NAME").text)
         else:
-            raise NotImplementedError('Version %s of ARXML not supported'%version)
+            raise NotImplementedError('Version %s of ARXML not supported'%self.version)
         return packageList
 
     def delete(self, ref):
