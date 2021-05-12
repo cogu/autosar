@@ -109,7 +109,9 @@ class ComponentTypeParser(ElementParser):
             raise NotImplementedError(xmlRoot.tag)
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag not in handledTags:
-                if (xmlElem.tag == 'ADMIN-DATA') or (xmlElem.tag == 'DESC'):
+                if xmlElem.tag == 'ADMIN-DATA':
+                    componentType.adminData = self.parseAdminDataNode(xmlElem)
+                elif xmlElem.tag == 'DESC':
                     pass #Implement later
                 elif xmlElem.tag == 'PORTS':
                     self.parseComponentPorts(componentType,xmlRoot)
