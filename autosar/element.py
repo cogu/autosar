@@ -119,3 +119,13 @@ class ParameterDataPrototype(Element):
 
     def tag(self, version):
         return "PARAMETER-DATA-PROTOTYPE" if version >=4.0 else "CALPRM-ELEMENT-PROTOTYPE"
+
+class SoftwareAddressMethod(Element):
+    """
+    Represents <SW-ADDR-METHOD> (AUTOSAR 3) (AUTOSAR 4)
+    """
+    def __init__(self, name, parent=None, adminData=None):
+        super().__init__(name, parent, adminData)
+
+    def tag(self,version=None):
+        return 'SW-ADDR-METHOD'

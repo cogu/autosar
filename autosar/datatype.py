@@ -30,7 +30,7 @@ class RecordTypeElement(Element):
 
 class CompuScaleElement:
     """
-    Base class for <COMPU-SCALE>
+    Implementation of <COMPU-SCALE>
     """
     def tag(self, version=None): return 'COMPU-SCALE'
 
@@ -298,7 +298,7 @@ class Computation:
 
 class CompuMethod(Element):
     """
-    Base class for CompuMethod
+    CompuMethod class
     """
     def tag(self,version=None): return 'COMPU-METHOD'
 

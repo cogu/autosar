@@ -348,14 +348,6 @@ class ModeSwitchInterface(PortInterface):
             return modeGroup
         return None
 
-
-class SoftwareAddressMethod(Element):
-    def __init__(self, name, parent=None, adminData=None):
-        super().__init__(name, parent, adminData)
-
-    def tag(self,version=None):
-        return 'SW-ADDR-METHOD'
-
 class NvDataInterface(PortInterface):
     def tag(self,version=None):
         if version>=4.0:

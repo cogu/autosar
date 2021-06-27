@@ -407,4 +407,4 @@ class SoftwareAddressMethodParser(ElementParser):
     def parseSWAddrMethod(self,xmlRoot,rootProject=None,parent=None):
         assert(xmlRoot.tag == 'SW-ADDR-METHOD')
         name = xmlRoot.find("./SHORT-NAME").text
-        return autosar.portinterface.SoftwareAddressMethod(name)
+        return autosar.element.SoftwareAddressMethod(name)

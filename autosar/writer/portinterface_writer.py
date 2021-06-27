@@ -271,7 +271,7 @@ class XMLPortInterfaceWriter(ElementWriter):
         return lines
 
     def writeSoftwareAddressMethodXML(self, addressMethod):
-        assert(isinstance(addressMethod,autosar.portinterface.SoftwareAddressMethod))
+        assert(isinstance(addressMethod,autosar.element.SoftwareAddressMethod))
         lines=[]
         lines.append('<%s>'%addressMethod.tag(self.version))
         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%addressMethod.name,1))

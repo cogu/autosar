@@ -135,7 +135,7 @@ class Workspace:
 
     def setRoles(self, *items):
         """
-        Same as setRole but caller gives a list of tuples where the first item is the reference, and second item is the role name
+        Same as setRole but caller gives a list of tuples where the first item is the package reference, and second item is the role name
         """
         for item in items:
             self.setRole(item[0], item[1])
@@ -263,7 +263,7 @@ class Workspace:
                         result.append(pkg)
         return result
 
-    def findRolePackage(self,roleName):
+    def findRolePackage(self, roleName):
         """
         Returns package with role set to roleName or None
         """

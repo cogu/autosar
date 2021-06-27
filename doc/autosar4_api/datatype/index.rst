@@ -11,3 +11,8 @@ DataType
    datatype_mapping_set
    data_type_map
    mode_request_type_map
+   compu_method
+   computation
+   compu_scale_element
+   unit
+
