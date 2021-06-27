@@ -70,8 +70,13 @@ Public Methods
 * :ref:`ar4_workspace_Workspace_createPackage`
 * :ref:`ar4_workspace_Workspace_find`
 * :ref:`ar4_workspace_Workspace_findall`
-* :ref:`ar4_workspace_Workspace_setRole`
 * :ref:`ar4_workspace_Workspace_findRolePackage`
+* :ref:`ar4_workspace_Workspace_getRole`
+* :ref:`ar4_workspace_Workspace_setRole`
+* :ref:`ar4_workspace_Workspace_setRoles`
+* :ref:`ar4_workspace_Workspace_pushRoles`
+* :ref:`ar4_workspace_Workspace_popRoles`
+
 
 
 Method Description
@@ -351,6 +356,32 @@ Example
     for swc in ws.findall("/ComponentTypes/*"):
         print(swc.name)
 
+
+
+.. _ar4_workspace_Workspace_findRolePackage:
+
+findRolePackage
+~~~~~~~~~~~~~~~
+
+.. py:method:: Workspace.findRolePackage(role):
+
+    :param str role: :ref:`Role <ar4_package_Package_roles>` name
+    :rtype: :ref:`autosar.package.Package <ar4_package_Package>`
+
+    Finds and returns package instance currently associated with given role name.
+
+.. _ar4_workspace_Workspace_getRole:
+
+getRole
+~~~~~~~
+
+.. py:method:: Workspace.getRole(role):
+
+    :param str role: :ref:`Role <ar4_package_Package_roles>` name
+    :rtype: str
+
+    Returns reference to package currently mapped to the given role. Returns None if role has not been set.
+
 .. _ar4_workspace_Workspace_setRole:
 
 setRole
@@ -359,18 +390,36 @@ setRole
 .. py:method:: Workspace.setRole(ref, role):
 
     :param str ref: Package reference
-    :param str role: Valid :ref:`package role <ar4_package_Package_roles>` name
+    :param str role: :ref:`Role <ar4_package_Package_roles>` name
 
     Assigns package role to the package referenced by ref.
 
-.. _ar4_workspace_Workspace_findRolePackage:
+.. _ar4_workspace_Workspace_setRoles:
 
-findRolePackage
-~~~~~~~~~~~~~~~
+setRoles
+~~~~~~~~
 
-.. py:method:: Workspace.findRolePackage(ref, role):
+.. py:method:: Workspace.setRoles(items):
 
-    :param str role: Valid :ref:`package role <ar4_package_Package_roles>` name
-    :rtype: :ref:`autosar.package.Package <ar4_package_Package>`
+    :param str ref: Package reference
+    :param list items: list of 2-tuples
 
-    Returns package instance currently associated with given role name.
+    Same as setRole but caller gives a list of tuples where the first tuple item is the package reference, and second is the role name.
+
+.. _ar4_workspace_Workspace_pushRoles:
+
+pushRoles
+~~~~~~~~~
+
+.. py:method:: Workspace.pushRoles():
+
+    Saves current package role settings in internal role stack.
+
+.. _ar4_workspace_Workspace_popRoles:
+
+popRoles
+~~~~~~~~
+
+.. py:method:: Workspace.popRoles():
+
+    Restores last saved package role settings from internal role stack.

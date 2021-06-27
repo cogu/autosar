@@ -458,7 +458,7 @@ class Package(object):
         return portInterface
 
     def createSoftwareAddressMethod(self, name):
-        item = autosar.portinterface.SoftwareAddressMethod(name)
+        item = autosar.element.SoftwareAddressMethod(name)
         self.append(item)
         return item
 
