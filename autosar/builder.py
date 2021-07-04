@@ -47,7 +47,7 @@ class ValueBuilder:
                         value = autosar.constant.TextValue(label, rawValue)
                     else:
                         if dataConstraint is not None:
-                            dataConstraint.check_value(rawValue)
+                            dataConstraint.checkValue(rawValue)
                         value = autosar.constant.NumericalValue(label, rawValue)
                 elif dataType.category == 'ARRAY':
                     value = self._createArrayValueFromTypeInternal(ws, label, dataType, rawValue, parent)

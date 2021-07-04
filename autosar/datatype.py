@@ -69,6 +69,9 @@ class Unit(Element):
         return False
 
 class DataType(Element):
+    """
+    Base type for DataType (AUTOSAR3)
+    """
     def __init__(self, name, parent=None, adminData=None):
         super().__init__(name, parent, adminData)
 
@@ -78,7 +81,9 @@ class DataType(Element):
 
 
 class IntegerDataType(DataType):
-
+    """
+    IntegerDataType (AUTOSAR3)
+    """
     def tag(self,version=None): return 'INTEGER-TYPE'
     def __init__(self, name, minVal=0, maxVal=0, compuMethodRef=None, parent=None, adminData=None):
         super().__init__(name, parent, adminData)
@@ -127,6 +132,9 @@ class IntegerDataType(DataType):
         return obj
 
 class RecordDataType(DataType):
+    """
+    RecordDataType (AUTOSAR3)
+    """
     def tag(self,version=None): return 'RECORD-TYPE'
     def __init__(self, name, elements=None,  parent=None, adminData=None):
         super().__init__(name, parent, adminData)
@@ -158,7 +166,7 @@ class RecordDataType(DataType):
 
 class ArrayDataType(DataType):
     """
-    Array data type (AUTOSAR 3)
+    ArrayDataType (AUTOSAR 3)
     """
     def tag(self,version=None): return 'ARRAY-TYPE'
 
@@ -168,7 +176,9 @@ class ArrayDataType(DataType):
         self.length = length
 
 class BooleanDataType(DataType):
-
+    """
+    BooleanDataType (AUTOSAR 3)
+    """
     def tag(self,version=None): return 'BOOLEAN-TYPE'
 
     def __init__(self,name, parent=None, adminData=None):
@@ -176,6 +186,9 @@ class BooleanDataType(DataType):
 
 
 class StringDataType(DataType):
+    """
+    StringDataType (AUTOSAR 3)
+    """
     def tag(self,version=None): return 'STRING-TYPE'
 
     def __init__(self,name,length,encoding, parent=None, adminData=None):
@@ -198,6 +211,9 @@ class StringDataType(DataType):
 
 
 class RealDataType(DataType):
+    """
+    RealDataType (AUTOSAR 3)
+    """
     def tag(self,version=None): return 'REAL-TYPE'
 
     def __init__(self, name, minVal, maxVal, minValType='CLOSED', maxValType='CLOSED', hasNaN=False, encoding='SINGLE', parent=None, adminData=None):
@@ -271,7 +287,7 @@ class Computation:
 
     def createRationalScaling(self, offset, numerator, denominator, lowerLimit, upperLimit, lowerLimitType = 'CLOSED', upperLimitType = 'CLOSED', label = None, symbol = None, adminData = None):
         """
-        Creates COMPU-SCALE based a rational scaling
+        Creates COMPU-SCALE based on rational scaling
         """
         element = CompuScaleElement(lowerLimit, upperLimit, lowerLimitType, upperLimitType, label = label, symbol = symbol, offset = offset, numerator = numerator, denominator = denominator, adminData = adminData)
         self.elements.append(element)
@@ -359,13 +375,6 @@ class DataConstraint(Element):
                 self.rules.append(PhysicalConstraint(lowerLimit=rule['lowerLimit'], upperLimit=rule['upperLimit'], lowerLimitType=rule['lowerLimitType'], upperLimitType=rule['upperLimitType']))
             else:
                 raise NotImplementedError
-
-    def check_value(self, v):
-        if len(self.rules) == 1:
-            self.rules[0].check_value(v)
-        else:
-            raise NotImplementedError('Only a single rule constraint supported')
-
     @property
     def constraintLevel(self):
         if self.level is None or isinstance(self.level, int):
@@ -401,6 +410,12 @@ class DataConstraint(Element):
         else:
             raise NotImplementedError('Only a single constraint rule supported')
 
+    def checkValue(self, v):
+        if len(self.rules) == 1:
+            self.rules[0].check_value(v)
+        else:
+            raise NotImplementedError('Only a single rule constraint supported')
+
     def findByType(self, constraintType = 'internalConstraint'):
         """
         Returns the first constraint of the given constraint type (internalConstraint or physicalConstraint)
@@ -411,7 +426,7 @@ class DataConstraint(Element):
 
 class ImplementationDataType(Element):
     def tag(self, version=None): return 'IMPLEMENTATION-DATA-TYPE'
-    def __init__(self, name, variantProps = None, dynamicArraySizeProfile = None, typeEmitter = None, category='VALUE', adminData=None, parent=None):
+    def __init__(self, name, variantProps = None, dynamicArraySizeProfile = None, typeEmitter = None, category='VALUE', parent = None, adminData = None):
         super().__init__(name, parent, adminData, category)
         self.dynamicArraySizeProfile = dynamicArraySizeProfile
         self.typeEmitter = typeEmitter
@@ -487,18 +502,17 @@ class ImplementationDataType(Element):
 
 class SwBaseType(Element):
     def tag(self, version=None): return 'SW-BASE-TYPE'
-    def __init__(self, name, size=None, typeEncoding=None, nativeDeclaration=None, category='FIXED_LENGTH', parent=None, adminData=None):
+    def __init__(self, name, size = None, typeEncoding = None, nativeDeclaration = None, category='FIXED_LENGTH', parent = None, adminData = None):
         super().__init__(name, parent, adminData, category)
         self.size = None if size is None else int(size)
-        self.typeEncoding=typeEncoding
-        self.nativeDeclaration=nativeDeclaration
+        self.nativeDeclaration = nativeDeclaration
+        self.typeEncoding = typeEncoding
 
 class ImplementationDataTypeElement(Element):
     def tag(self, version=None): return 'IMPLEMENTATION-DATA-TYPE-ELEMENT'
 
-    def __init__(self, name, category=None, arraySize=None, arraySizeSemantics=None, variantProps=None, parent=None, adminData=None):
-        super().__init__(name, parent, adminData)
-        self.category=category
+    def __init__(self, name, category = None, arraySize = None, arraySizeSemantics = None, variantProps = None, parent = None, adminData = None):
+        super().__init__(name, parent, adminData, category)
         self.arraySize = arraySize
         self.variantProps = []
         if arraySize is not None:
@@ -618,7 +632,7 @@ class ApplicationRecordDataType(ApplicationDataType):
     """
     def tag(self, version): return 'APPLICATION-RECORD-DATA-TYPE'
 
-    def __init__(self, name, elements = None, variantProps=None, category=None, parent=None, adminData=None):
+    def __init__(self, name, elements = None, variantProps = None, category = None, parent = None, adminData = None):
         super().__init__(name, variantProps, category, parent, adminData)
         if elements is None:
             self.elements = []
@@ -657,7 +671,7 @@ class ApplicationRecordElement(Element):
 class DataTypeMappingSet(Element):
     def tag(self, version): return 'DATA-TYPE-MAPPING-SET'
 
-    def __init__(self, name, parent=None, adminData=None):
+    def __init__(self, name, parent = None, adminData = None):
         super().__init__(name, parent, adminData)
         self.applicationTypeMap = {} #applicationDataTypeRef to implementationDataTypeRef dictionary
         self.modeRequestMap = {} #modeDeclarationGroupRef to implementationDataTypeRef dictionary

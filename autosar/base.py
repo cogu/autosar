@@ -276,8 +276,8 @@ class SwDataDefPropsConditional:
 
     def hasAnyProp(self):
         """
-        Returns True if any internal attribute is not None, else False
-        Excludes attributes such as name, category and parent
+        Returns True if any internal attribute is not None, else False.
+        The check excludes the parent attribute.
         """
         retval = False
         attr_names = ['baseTypeRef',
