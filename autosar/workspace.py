@@ -54,6 +54,7 @@ class WorkspaceProfile:
         self.modeSwitchEnhancedModeDefault = False
         self.modeSwitchSupportAsyncDefault = False
         self.modeSwitchAutoSetModeGroupRef = False
+        self.swBaseTypeEncodingDefault = 'NONE'
 
 class Workspace:
     """
