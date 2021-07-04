@@ -27,7 +27,7 @@ Constructor
 
 .. py:method:: element.SoftwareAddressMethod(name, [parent = None], [adminData = None])
 
-    :param str name: ShortName.
+    :param str name: Short name.
     :param parent: Parent package.
     :type parent: None, :ref:`ar4_package_Package`
     :param adminData: Optional AdminData.

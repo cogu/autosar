@@ -36,15 +36,17 @@ Attributes
 ..  table::
     :align: left
 
-    +--------------------------+-------------------------+---------------------------------------------------------+
-    | Name                     | Type                    | Description                                             |
-    +==========================+=========================+=========================================================+
-    | **packages**             | *list*                  | List of packages                                        |
-    +--------------------------+-------------------------+---------------------------------------------------------+
-    | **version**              | *float*                 | AUTOSAR version using major.minor format                |
-    +--------------------------+-------------------------+---------------------------------------------------------+
-    | **patch**                | *int*                   | AUTOSAR patch version                                   |
-    +--------------------------+-------------------------+---------------------------------------------------------+
+    +--------------------------+------------------------------+---------------------------------------------------------+
+    | Name                     | Type                         | Description                                             |
+    +==========================+==============================+=========================================================+
+    | **packages**             | *list*                       | List of packages                                        |
+    +--------------------------+------------------------------+---------------------------------------------------------+
+    | **version**              | *float*                      | AUTOSAR version using major.minor format                |
+    +--------------------------+------------------------------+---------------------------------------------------------+
+    | **patch**                | *int*                        | AUTOSAR patch version                                   |
+    +--------------------------+------------------------------+---------------------------------------------------------+
+    | **profile**              | :ref:`ar4_workspace_Profile` | Workspace profile                                       |
+    +--------------------------+------------------------------+---------------------------------------------------------+
 
 Public Properties
 -----------------
@@ -425,3 +427,15 @@ popRoles
 .. py:method:: Workspace.popRoles():
 
     Restores last saved package role settings from internal role stack.
+
+
+.. _ar4_workspace_Profile:
+
+WorkspaceProfile
+----------------
+
+The WorkspaceProfile is an internal class of the Workspace. It's intented to be used as a set of properties that describes the default behavior
+of an AUTOSAR toolchain.
+
+As of now this class is just an embryo and will have to grow signifcantly in order to support more than one toolchain.
+The current default profile is set to match DaVinci Developer.

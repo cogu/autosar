@@ -132,7 +132,7 @@ When you are using this Python module to programmatically create AUTOSAR element
 For this purpose we use something called package roles as a hint to Python, telling it which package contain what type of elements.
 Package roles are usually set when you create the package but can also be assigned later.
 
-For a list of package role names see the :ref:`Package class <ar4_package_Package_roles>`.
+To read more about how to use package roles, see the :ref:`Package Roles <ar4_Roles>` guide page.
 
 For a list of methods related to package roles see the :ref:`Workspace class <ar4_workspace_methods>`.
 

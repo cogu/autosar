@@ -1,7 +1,7 @@
 .. _ar4_Roles:
 
-Roles
-======
+Package Roles
+=============
 
 Package roles are used as a hint to Python, telling it what AUTOSAR package contains what kind of element.
 Using this mechanism allows the AUTOSAR Python package to implictly find or create elements and place them into the right package.
