@@ -913,11 +913,11 @@ class Package(object):
         self.append(dataType)
         return dataType
 
-    def createApplicationArrayDataType(self, name, element, swCalibrationAccess = None, category = None, adminData = None):
+    def createApplicationArrayDataType(self, name, element, swCalibrationAccess = None, category = 'ARRAY', adminData = None):
         """
         AUTOSAR4
 
-        Creates a new ApplicationPrimitiveDataType in current package.
+        Creates a new createApplicationArrayDataType in current package.
 
         name: <SHORT-NAME> (str)
         swCalibrationAccess: Sets the SW-CALIBRATION-ACCESS property (str['NOT-ACCESSIBLE', 'READ-ONLY', 'READ-WRITE']).
@@ -938,7 +938,7 @@ class Package(object):
         self.append(dataType)
         return dataType
 
-    def createApplicationRecordDataType(self, name, elements, swCalibrationAccess = '', category = 'STRUCTURE', adminData=None):
+    def createApplicationRecordDataType(self, name, elements = None, swCalibrationAccess = None, category = 'STRUCTURE', adminData = None):
         """
         (AUTOSAR4)
         Creates a new ImplementationDataType containing sub elements
@@ -955,14 +955,15 @@ class Package(object):
             variantProps = None
 
         dataType = autosar.datatype.ApplicationRecordDataType(name, variantProps = variantProps, category = category, adminData = adminDataObj)
-        for element in elements:
-            if not isinstance(element, tuple):
-                raise ValueError('element must be a tuple')
-            (elemName, elemTypeRef) = element
-            elemType = ws.find(elemTypeRef, role='DataType')
-            if elemType is None:
-                raise autosar.base.InvalidDataTypeRef(elemTypeRef)
-            dataType.createElement(elemName, elemType.ref)
+        if elements is not None:
+            for element in elements:
+                if not isinstance(element, tuple):
+                    raise ValueError('element must be a tuple')
+                (elemName, elemTypeRef) = element
+                elemType = ws.find(elemTypeRef, role='DataType')
+                if elemType is None:
+                    raise autosar.base.InvalidDataTypeRef(elemTypeRef)
+                dataType.createElement(elemName, elemType.ref)
         self.append(dataType)
         return dataType
 
