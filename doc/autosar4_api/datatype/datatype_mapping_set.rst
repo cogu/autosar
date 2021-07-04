@@ -17,11 +17,27 @@ DataTypeMappingSet
 This class contains type mappings between ApplicationDataTypes and ImplementationDataTypes.
 In addition, it can contain type mappings between ModeDeclarationGroups and ImplementationDataTypes.
 
+Usage
+-----
+
+..  include:: examples/usage_data_type_mapping_set.py
+    :code: python3
+
 Factory Methods
 ---------------
 
 * :ref:`Package.createDataTypeMappingSet <ar4_package_Package_createDataTypeMappingSet>`
 
+Constructor
+-----------
+
+.. py:method:: datatype.DataTypeMappingSet(name, [parent = None], [adminData = None])
+
+    :param str name: Short name.
+    :param parent: Parent package.
+    :type parent: None, :ref:`ar4_package_Package`
+    :param adminData: Admin data.
+    :type adminData: None, :ref:`ar4_base_AdminData`
 
 Attributes
 ----------
@@ -66,39 +82,39 @@ Method Description
 createDataTypeMapping
 ~~~~~~~~~~~~~~~~~~~~~
 
-.. method:: DataTypeMappingSet.createDataTypeMapping(applicationDataTypeRef : str, implementationDataTypeRef : str)
+.. py:method:: DataTypeMappingSet.createDataTypeMapping(applicationDataTypeRef, implementationDataTypeRef)
 
     Creates a new type mapping between an application type (reference) and implementation data type (reference).
     The created mapping is added to the internal applicationTypeMap dictionary.
 
-    :param str applicationDataTypeRef: Reference to an ApplicationDataType
-    :param str implementationDataTypeRef: Reference to an :ref:`ar4_datatype_ImplementationDataType`
+    :param str applicationDataTypeRef: Reference to :ref:`ar4_datatype_ApplicationDataType`.
+    :param str implementationDataTypeRef: Reference to :ref:`ar4_datatype_ImplementationDataType`
 
 .. _ar4_datatype_DataTypeMappingSet_createModeRequestMapping:
 
 createModeRequestMapping
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. method:: DataTypeMappingSet.createModeRequestMapping(modeDeclarationGroupRef : str, implementationDataTypeRef : str)
+.. py:method:: DataTypeMappingSet.createModeRequestMapping(modeDeclarationGroupRef, implementationDataTypeRef)
 
     Creates a new type mapping between a mode declaration group (reference) and implementation data type (reference).
     The created mapping is added to the internal modeRequestMap dictionary.
 
-    :param str modeDeclarationGroupRef: Reference to a :ref:`ar4_mode_ModeDeclarationGroup`
-    :param str implementationDataTypeRef: Reference to an :ref:`ar4_datatype_ImplementationDataType`
+    :param str modeDeclarationGroupRef: Reference to :ref:`ar4_mode_ModeDeclarationGroup`
+    :param str implementationDataTypeRef: Reference to :ref:`ar4_datatype_ImplementationDataType`
 
 .. _ar4_datatype_DataTypeMappingSet_add:
 
 add
 ~~~
 
-.. method:: DataTypeMappingSet.add(item)
+.. py:method:: DataTypeMappingSet.add(item)
 
     Adds a user-created mapping to this mapping set.
     If the item is of type :ref:`ar4_datatype_DataTypeMap` it gets inserted into to the applicationTypeMap dictionary.
     Likewise, if the item is of type :ref:`ar4_datatype_ModeRequestTypeMap` it gets inserted into to the modeRequestMap dictionary.
 
-    :param item: Reference to an ApplicationDataType
+    :param item: Reference to :ref:`ar4_datatype_ApplicationDataType`
     :type item: :ref:`ar4_datatype_DataTypeMap` or :ref:`ar4_datatype_ModeRequestTypeMap`
 
 .. _ar4_datatype_DataTypeMappingSet_getDataTypeMapping:
@@ -106,38 +122,38 @@ add
 getDataTypeMapping
 ~~~~~~~~~~~~~~~~~~
 
-.. method:: DataTypeMappingSet.getDataTypeMapping(applicationDataTypeRef : str)
+.. py:method:: DataTypeMappingSet.getDataTypeMapping(applicationDataTypeRef)
 
     Returns the mapping object that is currently associated with the given application data type reference.
     If the reference string is not found in the internal applicationTypeMap dictionary, None is returned.
 
-    :param str applicationDataTypeRef: Reference to an :ref:`ar4_datatype_ApplicationDataType`
-    :rtype: :ref:`ar4_datatype_DataTypeMappingSet` or None
+    :param str applicationDataTypeRef: Reference to :ref:`ar4_datatype_ApplicationDataType`
+    :rtype: :ref:`ar4_datatype_DataTypeMap` or None
 
 .. _ar4_datatype_DataTypeMappingSet_getModeRequestMapping:
 
 getModeRequestMapping
 ~~~~~~~~~~~~~~~~~~~~~
 
-.. method:: DataTypeMappingSet.getModeRequestMapping(modeDeclarationGroupRef : str)
+.. py:method:: DataTypeMappingSet.getModeRequestMapping(modeDeclarationGroupRef)
 
     Returns the mapping object that is currently associated with the given mode declaration group reference.
     If the reference string is not found in the internal modeRequestMap dictionary, None is returned.
 
-    :param str modeDeclarationGroupRef: Reference to a
-    :rtype: :ref:`ar4_mode_ModeDeclarationGroup` or None
+    :param str modeDeclarationGroupRef: Reference to :ref:`ar4_mode_ModeDeclarationGroup`
+    :rtype: :ref:`ar4_datatype_ModeRequestTypeMap` or None
 
 .. _ar4_datatype_DataTypeMappingSet_findMappedDataTypeRef:
 
 findMappedDataTypeRef
 ~~~~~~~~~~~~~~~~~~~~~
 
-.. method:: DataTypeMappingSet.findMappedDataTypeRef(applicationDataTypeRef : str)
+.. py:method:: DataTypeMappingSet.findMappedDataTypeRef(applicationDataTypeRef)
 
     Same as :ref:`ar4_datatype_DataTypeMappingSet_getDataTypeMapping` but instead returns the reference to the mapped implementation data type.
     Returns None in case the application data type reference is not part of the internal applicationTypeMap dictionary.
 
-    :param str applicationDataTypeRef: Reference to an :ref:`ar4_datatype_ApplicationDataType`
+    :param str applicationDataTypeRef: Reference to :ref:`ar4_datatype_ApplicationDataType`
     :rtype: str
 
 .. _ar4_datatype_DataTypeMappingSet_findMappedModeRequestRef:
@@ -145,12 +161,12 @@ findMappedDataTypeRef
 findMappedModeRequestRef
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. method:: DataTypeMappingSet.findMappedModeRequestRef(modeDeclarationGroupRef : str)
+.. py:method:: DataTypeMappingSet.findMappedModeRequestRef(modeDeclarationGroupRef)
 
-   Same as :ref:`ar4_datatype_DataTypeMappingSet_getModeRequestMapping` but instead returns the reference to the mapped implementation data type.
-   Returns None in case the mode declaration group reference is not part of the internal modeRequestMap dictionary.
+    Same as :ref:`ar4_datatype_DataTypeMappingSet_getModeRequestMapping` but instead returns the reference to the mapped implementation data type.
+    Returns None in case the mode declaration group reference is not part of the internal modeRequestMap dictionary.
 
-    :param str applicationDataTypeRef: :ref:`ar4_mode_ModeDeclarationGroup`
+    :param str modeDeclarationGroupRef: Reference to :ref:`ar4_mode_ModeDeclarationGroup`
     :rtype: str
 
 .. _ar4_datatype_DataTypeMappingSet_findMappedDataType:
@@ -158,12 +174,12 @@ findMappedModeRequestRef
 findMappedDataType
 ~~~~~~~~~~~~~~~~~~~~~
 
-.. method:: DataTypeMappingSet.findMappedDataType(applicationDataTypeRef : str)
+.. py:method:: DataTypeMappingSet.findMappedDataType(applicationDataTypeRef)
 
-   Same as :ref:`ar4_datatype_DataTypeMappingSet_findMappedDataTypeRef` but instead returns the
-   referenced to :ref:`ar4_datatype_ImplementationDataType` object.
+    Same as :ref:`ar4_datatype_DataTypeMappingSet_findMappedDataTypeRef` but instead returns the
+    referenced to :ref:`ar4_datatype_ImplementationDataType` object.
 
-    :param str applicationDataTypeRef: Reference to a :ref:`ar4_datatype_ApplicationDataType`
+    :param str applicationDataTypeRef: Reference to :ref:`ar4_datatype_ApplicationDataType`
     :rtype: :ref:`ar4_datatype_ImplementationDataType`
 
 .. _ar4_datatype_DataTypeMappingSet_findMappedModeRequest:
@@ -171,10 +187,10 @@ findMappedDataType
 findMappedModeRequest
 ~~~~~~~~~~~~~~~~~~~~~
 
-.. method:: DataTypeMappingSet.findMappedModeRequest(modeDeclarationGroupRef : str)
+.. py:method:: DataTypeMappingSet.findMappedModeRequest(modeDeclarationGroupRef)
 
-   Same as :ref:`ar4_datatype_DataTypeMappingSet_findMappedModeRequestRef` but instead returns the
-   referenced to :ref:`ar4_datatype_ImplementationDataType` object.
+    Same as :ref:`ar4_datatype_DataTypeMappingSet_findMappedModeRequestRef` but instead returns the
+    referenced to :ref:`ar4_datatype_ImplementationDataType` object.
 
-   :param str modeDeclarationGroupRef: Reference to a :ref:`ar4_mode_ModeDeclarationGroup`
-   :rtype: :ref:`ar4_datatype_ImplementationDataType`
+    :param str modeDeclarationGroupRef: Reference to :ref:`ar4_mode_ModeDeclarationGroup`
+    :rtype: :ref:`ar4_datatype_ImplementationDataType`

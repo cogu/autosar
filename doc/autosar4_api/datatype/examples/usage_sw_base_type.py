@@ -14,4 +14,4 @@ baseTypes.createSwBaseType('sint32', 32, encoding = '2C', nativeDeclaration='sin
 baseTypes.createSwBaseType('uint8', 8, nativeDeclaration='uint8')
 baseTypes.createSwBaseType('uint16', 16, nativeDeclaration='uint16')
 baseTypes.createSwBaseType('uint32', 32, nativeDeclaration='uint32')
-print(ws.toXML())
+ws.saveXML('AUTOSAR_Platform.arxml', filters=['/AUTOSAR_Platform'])

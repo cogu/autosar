@@ -11,7 +11,7 @@ Name
     +--------------+-------------------------------------------------------------------------+
     | Module       | autosar.submodule                                                       |
     +--------------+-------------------------------------------------------------------------+
-    | Inherits     | :ref:`autosar.element.Element <ar4_element>`                            |
+    | Inherits     | :ref:`autosar.element.Element <ar4_element_Element>`                    |
     +--------------+-------------------------------------------------------------------------+
 
 Description
@@ -22,10 +22,13 @@ Usage
 Factory Methods
 ---------------
 
+Constructor
+-----------
+
 Attributes
 -----------
 
-For inherited attributes see :ref:`autosar.element.Element <ar4_element>`.
+For inherited attributes see :ref:`autosar.element.Element <ar4_element_Element>`.
 
 ..  table::
     :align: left
@@ -35,6 +38,9 @@ For inherited attributes see :ref:`autosar.element.Element <ar4_element>`.
     +==========================+===========================+======================================+
     | **name**                 | *str*                     |                                      |
     +--------------------------+---------------------------+--------------------------------------+
+
+Public Properties
+-----------------
 
 Public Methods
 --------------

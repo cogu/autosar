@@ -1,21 +1,24 @@
 .. _ar4_datatype_ApplicationDataType:
 
 ApplicationDataType
-======================
+===================
 
 .. table::
    :align: left
 
    +--------------------+------------------------------------------------------+
-   | XML tag            |    -                                                 |
+   | XML tag            |  -                                                   |
    +--------------------+------------------------------------------------------+
    | Module             | autosar.datatype                                     |
    +--------------------+------------------------------------------------------+
    | Inherits           | :ref:`autosar.element.Element <ar4_element_Element>` |
    +--------------------+------------------------------------------------------+
 
-Base class for AUTOSAR application data types.
+Base class for AUTOSAR application data types. Types that derive from this class are:
 
+* :ref:`ar4_datatype_ApplicationPrimitiveDataType`
+* :ref:`ar4_datatype_ApplicationArrayDataType`
+* :ref:`ar4_datatype_ApplicationRecordDataType`
 
 Attributes
 ----------
@@ -25,14 +28,11 @@ For inherited attributes see :ref:`autosar.element.Element <ar4_element_Element>
 ..  table::
     :align: left
 
-    +-----------------------------+---------------------+-----------------------------+
-    | Name                        | Type                | Description                 |
-    +=============================+=====================+=============================+
-    | **variantProps**            | list                | list of type properties     |
-    +-----------------------------+---------------------+-----------------------------+
-
-Properties
-----------
+    +-----------------------------+---------------------------------------------------+-----------------------+
+    | Name                        | Type                | Description                                         |
+    +=============================+===================================================+=======================+
+    | **variantProps**            | list of :ref:`ar4_base_SwDataDefPropsConditional` | List of properties    |
+    +-----------------------------+---------------------------------------------------+-----------------------+
 
 Properties
 ----------
@@ -40,13 +40,32 @@ Properties
 ..  table::
     :align: left
 
-    +--------------------------+---------------------------+----------+------------------------------------------------------------------------+
-    | Name                     | Type                      | Access   | Description                                                            |
-    +==========================+===========================+==========+========================================================================+
-    | **compuMethodRef**       | *str*                     | Get      | Returns compu-method reference from first item in variantProps list    |
-    +--------------------------+---------------------------+----------+------------------------------------------------------------------------+
-    | **dataConstraintRef**    | *str*                     | Get      | Returns data constraint reference from first item in variantProps list |
-    +--------------------------+---------------------------+----------+------------------------------------------------------------------------+
-    | **unitRef**              | *str*                     | Get      | Returns unit reference from first item in variantProps list            |
-    +--------------------------+---------------------------+----------+------------------------------------------------------------------------+
-    
+    +--------------------------+---------------------------+-------------+
+    | Name                     | Type                      | Access Type |
+    +==========================+===========================+=============+
+    | **compuMethodRef**       | *str*                     | Get         |
+    +--------------------------+---------------------------+-------------+
+    | **dataConstraintRef**    | *str*                     | Get         |
+    +--------------------------+---------------------------+-------------+
+    | **unitRef**              | *str*                     | Get         |
+    +--------------------------+---------------------------+-------------+
+
+compuMethodRef
+~~~~~~~~~~~~~~
+
+Returns the :ref:`ar4_datatype_CompuMethod` reference from the first item of the variantProps list. 
+Raises Runtime error if variantProps list is empty.
+
+dataConstraintRef
+~~~~~~~~~~~~~~~~~
+
+Returns the :ref:`ar4_datatype_DataConstraint` reference from the first item of the variantProps list.
+Raises Runtime error if variantProps list is empty.
+
+
+unitRef
+~~~~~~~
+
+Returns the :ref:`ar4_datatype_Unit` reference from the first item of the variantProps list.
+Raises Runtime error if variantProps list is empty.
+

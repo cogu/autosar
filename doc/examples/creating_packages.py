@@ -6,3 +6,4 @@ ws.createPackage('Package2')
 ws.createPackage('Package3')
 ws.createPackage('Package4')
 ws.saveXML('packages.arxml')
+

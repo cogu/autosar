@@ -16,12 +16,18 @@ DataTypeMap
 
 Mapping from ApplicationDataType to ImplementationDataType.
 
-   
 Factory Methods
 ---------------
 
 * :ref:`DataTypeMappingSet.createDataTypeMapping <ar4_datatype_DataTypeMappingSet_createDataTypeMapping>`
 
+Constructor
+-----------
+
+.. py:method:: datatype.DataTypeMap(applicationDataTypeRef, implementationDataTypeRef)
+
+    :param str applicationDataTypeRef: Reference to :ref:`ar4_datatype_ApplicationDataType`.
+    :param str implementationDataTypeRef: Reference to :ref:`ar4_datatype_ImplementationDataType`.
 
 Attributes
 ----------
@@ -34,7 +40,12 @@ For inherited attributes see :ref:`autosar.element.Element <ar4_element_Element>
     +-------------------------------+-------------------+---------------------------------------------------------+
     | Name                          | Type              | Description                                             |
     +===============================+===================+=========================================================+
-    | **applicationDataTypeRef**    | str               | Reference to :ref:`ar4_datatype_ApplicationDataType`    |
+    | **applicationDataTypeRef**    | str               | <APPLICATION-DATA-TYPE-REF>                             |
     +-------------------------------+-------------------+---------------------------------------------------------+
-    | **implementationDataTypeRef** | str               | Reference to :ref:`ar4_datatype_ImplementationDataType` |
+    | **implementationDataTypeRef** | str               | <IMPLEMENTATION-DATA-TYPE-REF>                          |
     +-------------------------------+-------------------+---------------------------------------------------------+
+
+Public Methods
+--------------
+
+This class does not have any additional methods.
