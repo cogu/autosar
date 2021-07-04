@@ -52,11 +52,13 @@ Public Properties
 ..  table::
     :align: left
 
-    +--------------------------+-------------------------+---------------------------------------------------------+
-    | Name                     | Type                    | Description                                             |
-    +==========================+=========================+=========================================================+
-    | **version_str**          | *str*                   | Full version string using the major.minor.patch format  |
-    +--------------------------+-------------------------+---------------------------------------------------------+
+    +--------------------------+-------------------------+-------------+--------------------------------------------------------+
+    | Name                     | Type                    | Access Type | Description                                            |
+    +==========================+=========================+=============+========================================================+
+    | **version_str**          | str                     | Get         | Full version string using the major.minor.patch format |
+    +--------------------------+-------------------------+-------------+--------------------------------------------------------+
+
+.. _ar4_workspace_methods:
 
 Public Methods
 --------------
@@ -413,7 +415,7 @@ pushRoles
 
 .. py:method:: Workspace.pushRoles():
 
-    Saves current package role settings in internal role stack.
+    Saves current package role settings to internal role stack.
 
 .. _ar4_workspace_Workspace_popRoles:
 

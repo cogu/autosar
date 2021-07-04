@@ -86,7 +86,7 @@ Method Description
 createIntegerDataType
 ~~~~~~~~~~~~~~~~~~~~~
 
-..  py:method:: Package.createIntegerDataType(self, name, [min=None], [max=None], [valueTable=None], [offset=None], [scaling=None], [unit=None], [adminData=None])
+..  py:method:: Package.createIntegerDataType(name, [min=None], [max=None], [valueTable=None], [offset=None], [scaling=None], [unit=None], [adminData=None])
 
     Creates a new IntegerDataType object add appends it to this package.
     
@@ -107,7 +107,7 @@ createIntegerDataType
 createArrayDataType
 ~~~~~~~~~~~~~~~~~~~
 
-..  py:method:: Package.createArrayDataType(self, name, typeRef, arraySize, [elementName=None], [adminData=None])
+..  py:method:: Package.createArrayDataType(name, typeRef, arraySize, [elementName=None], [adminData=None])
 
     Creates a new array data type and appends it to current package
    
@@ -121,7 +121,7 @@ createArrayDataType
 createRecordDataType
 ~~~~~~~~~~~~~~~~~~~~
 
-..  py:method:: Package.createRecordDataType(self, name, elements, [adminData=None])
+..  py:method:: Package.createRecordDataType(name, elements, [adminData=None])
 
     Creates a new array data type and appends it to current package
    

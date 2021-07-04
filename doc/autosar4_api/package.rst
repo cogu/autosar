@@ -72,6 +72,7 @@ Package Roles
     | *Unit*           | Main container for Units                   |
     +------------------+--------------------------------------------+
 
+.. _ar4_package_Package_methods:
 
 Public Methods
 --------------
@@ -194,7 +195,8 @@ createCompositionComponent
     Creates a new :ref:`ar4_component_CompositionComponent` and adds it to the package.
 
     :param str componentName: ShortName of the component type
-    :param adminData: Optional :ref:`ar4_base_AdminData`
+    :param adminData: Optional AdminData.
+    :type adminData: None, :ref:`ar4_base_AdminData`. 
     :rtype: :ref:`ar4_component_CompositionComponent`
 
 Example
@@ -255,7 +257,8 @@ createCompuMethodConst
     :param str unit: Optional unit name (requires :ref:`package role <ar4_package_Package_roles>` 'Unit' to be setup).
     :param str defaultValue: Optional default value.
     :param str category: Category string used for the new CompuMethod.
-    :param adminData: Optional :ref:`ar4_base_AdminData`
+    :param adminData: Optional AdminData.
+    :type adminData: None, :ref:`ar4_base_AdminData`. 
     :rtype: CompuMethod
 
 
@@ -292,7 +295,8 @@ createCompuMethodRational
     :param bool useIntToPhys: When True, creates an internal to physical Computation. Cannot be True when usePhysToInt is also True.
     :param bool usePhysToInt: When True, creates a physical to internal Computation. Cannot be True when useIntToPhys is also True.
     :param str category: Category string used for the new CompuMethod.
-    :param adminData: Optional :ref:`ar4_base_AdminData`
+    :param adminData: Optional AdminData.
+    :type adminData: None, :ref:`ar4_base_AdminData`. 
     :rtype: CompuMethod
 
     This method by default creates an internal to physical computation, use the method :ref:`ar4_package_Package_createCompuMethodRationalPhys` to create a physical to internal computation.
@@ -334,7 +338,8 @@ createConstant
     :param str name: ShortName of the new constant
     :param str typeRef: Reference to (existing) data type
     :param initValue: Init value (type depends on typeRef)
-    :param adminData: Optional :ref:`ar4_base_AdminData`
+    :param adminData: Optional AdminData.
+    :type adminData: None, :ref:`ar4_base_AdminData`. 
     :rtype: :ref:`ar4_constant_Constant`
 
 
@@ -369,7 +374,7 @@ createInternalDataConstraint
     :type upperLimit: int, float.
     :param str lowerLimitType: Interval type of lowerLimit ("OPEN"/"CLOSED").
     :param str upperLimitType: Interval type of upperLimit ("OPEN"/"CLOSED").
-    :rtype: DataConstraint
+    :rtype: :ref:`ar4_datatype_DataConstraint`
 
 
 .. _ar4_package_Package_createPhysicalDataConstraint:
@@ -388,7 +393,7 @@ createPhysicalDataConstraint
     :type upperLimit: int, float.
     :param str lowerLimitType: Interval type of lowerLimit ("OPEN"/"CLOSED").
     :param str upperLimitType: Interval type of upperLimit ("OPEN"/"CLOSED").
-    :rtype: DataConstraint
+    :rtype: :ref:`ar4_datatype_DataConstraint`
 
 
 
@@ -397,16 +402,19 @@ createPhysicalDataConstraint
 createApplicationArrayDataType
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. py:method:: Package.ApplicationArrayDataType(name, element, [swCalibrationAccess = None], [category = None], [adminData = None])
+.. py:method:: Package.createApplicationArrayDataType(name, element, [swCalibrationAccess = None], [category = 'ARRAY'], [adminData = None])
 
     Creates a new ApplicationArrayDataType and appends it to the package.
 
     :param str name: ShortName of the new datatype
     :param ApplicationArrayElement element: An ApplicationArrayElement object
-    :param str swCalibrationAccess: Optional :ref:`calibration access <ar4_package_Package_swCalibrationAccess>`
-    :param str category: Optional category string
-    :param adminData: Optional :ref:`ar4_base_AdminData`
-    :rtype: ApplicationArrayDataType
+    :param swCalibrationAccess: Optional :ref:`calibration access <ar4_package_Package_swCalibrationAccess>`
+    :type swCalibrationAccess: None, str
+    :param category: Optional category string.
+    :type category: None, str
+    :param adminData: Optional AdminData.
+    :type adminData: None, :ref:`ar4_base_AdminData`
+    :rtype: :ref:`ar4_datatype_ApplicationArrayDataType`
 
 
 
@@ -424,9 +432,12 @@ createApplicationPrimitiveDataType
     :param str dataConstraint: Optional name or reference to a DataConstraint object. Empty string means that an automatic data constraint will be created. Set to None to disable.
     :param str compuMethod: Optional name or reference to a CompuMethod object
     :param str unit: Optional name or reference to a Unit object
-    :param str swCalibrationAccess: Optional :ref:`calibration access <ar4_package_Package_swCalibrationAccess>`
-    :param str category: Optional category string
-    :param adminData: Optional :ref:`ar4_base_AdminData`
+    :param swCalibrationAccess: Optional :ref:`calibration access <ar4_package_Package_swCalibrationAccess>`
+    :type swCalibrationAccess: None, str
+    :param category: Category string.
+    :type category: None, str
+    :param adminData: AdminData
+    :type adminData: None, :ref:`ar4_base_AdminData`
     :rtype: ApplicationPrimitiveDataType
 
 
@@ -436,15 +447,19 @@ createApplicationPrimitiveDataType
 createApplicationRecordDataType
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. py:method:: Package.createApplicationRecordDataType(name, elements, [swCalibrationAccess = ""], [category = "STRUCTURE"], [adminData=None])
+.. py:method:: Package.createApplicationRecordDataType(name, [elements = None], [swCalibrationAccess = None], [category = "STRUCTURE"], [adminData = None])
 
     Creates a new ApplicationRecordDataType and appends it to the package.
 
-    :param str name: ShortName of the new datatype
-    :param str elements: List containing tuples. First tuple element is the record name (string), second tuple element is a type reference (string).
-    :param str swCalibrationAccess: Optional :ref:`calibration access <ar4_package_Package_swCalibrationAccess>`
-    :param str category: Category string
-    :param adminData: Optional :ref:`ar4_base_AdminData`
+    :param str name: ShortName.
+    :param elements: List containing tuples. First tuple element is the record name (string), second tuple element is a type reference (string).
+    :type element: None, list
+    :param swCalibrationAccess: Optional :ref:`calibration access <ar4_package_Package_swCalibrationAccess>`
+    :type swCalibrationAccess: None, str
+    :param category: Category string.
+    :type category: None, str
+    :param adminData: AdminData
+    :type adminData: None, :ref:`ar4_base_AdminData`
     :rtype: ApplicationRecordDataType
 
 .. _ar4_package_Package_createBaseType:
@@ -468,11 +483,15 @@ createImplementationArrayDataType
     :param str implementationTypeRef: Reference to (existing) :ref:`ar4_datatype_ImplementationDataType`
     :param int arraySize: Number of elements in array
     :param str elementName: Optional (inner) element name.
-    :param str swCalibrationAccess: Optional :ref:`calibration access <ar4_package_Package_swCalibrationAccess>`
+    :param swCalibrationAccess: Optional :ref:`calibration access <ar4_package_Package_swCalibrationAccess>`
+    :type swCalibrationAccess: None, str
     :param str typeEmitter: Optional type emitter
-    :param str category: Category for the (outer) array data type
-    :param str targetCategory: Category for the (inner) array element
-    :param adminData: Optional :ref:`ar4_base_AdminData`
+    :param category: Category for the (outer) array data type    
+    :type category: None, str
+    :param targetCategory: Category for the (inner) array element
+    :type targetCategory: None, str
+    :param adminData: AdminData
+    :type adminData: None, :ref:`ar4_base_AdminData`
     :rtype: :ref:`ar4_datatype_ImplementationDataType`
 
 
@@ -502,7 +521,8 @@ createImplementationDataType
     :param str lowerLimitType: Selects lowerLimitType ("OPEN" or "CLOSED") if lowerLimit is used. Value None defaults to "CLOSED".
     :param str upperLimitType: Selects upperLimitType ("OPEN" or "CLOSED") if upperLimit is used. Value None defaults to "CLOSED".
     :param str category: Category string.
-    :param adminData: Optional :ref:`ar4_base_AdminData`
+    :param adminData: Optional AdminData.
+    :type adminData: None, :ref:`ar4_base_AdminData`. 
     :rtype: :ref:`ar4_datatype_ImplementationDataType`
 
 Example
@@ -539,7 +559,8 @@ createImplementationDataTypeRef
     :param str lowerLimitType: Selects lowerLimitType ("OPEN" or "CLOSED") if lowerLimit is used. Value None defaults to "CLOSED".
     :param str upperLimitType: Selects upperLimitType ("OPEN" or "CLOSED") if upperLimit is used. Value None defaults to "CLOSED".
     :param str category: Category string.
-    :param adminData: Optional :ref:`ar4_base_AdminData`
+    :param adminData: Optional AdminData.
+    :type adminData: None, :ref:`ar4_base_AdminData`. 
     :rtype: :ref:`ar4_datatype_ImplementationDataType`
 
 
@@ -565,7 +586,8 @@ createImplementationDataTypePtr
    :param str swImplPolicy: Optional swImplPolicy.
    :param str category: Optional category string (for the datatype)
    :param str targetCategory: Optional category string for the inner target property.
-   :param adminData: Optional :ref:`ar4_base_AdminData`
+   :param adminData: Optional AdminData.
+   :type adminData: None, :ref:`ar4_base_AdminData`.
    :rtype: :ref:`ar4_datatype_ImplementationDataType`
 
 Example
@@ -589,7 +611,8 @@ createImplementationRecordDataType
     :param str swCalibrationAccess: Optional :ref:`calibration access <ar4_package_Package_swCalibrationAccess>`
     :param str category: Category for the (outer) array data type
     :param str targetCategory: Category for the (inner) array element
-    :param adminData: Optional :ref:`ar4_base_AdminData`
+    :param adminData: Optional AdminData.
+    :type adminData: None, :ref:`ar4_base_AdminData`. 
     :rtype: :ref:`ar4_datatype_ImplementationDataType`
 
 
@@ -607,7 +630,8 @@ createSwBaseType
     :param str encoding: Encoding string
     :param str nativeDeclaration: Used to map this base type to one of the native types known to the RTE
     :param str category: Category string
-    :param adminData: Optional :ref:`ar4_base_AdminData`
+    :param adminData: Optional AdminData.
+    :type adminData: None, :ref:`ar4_base_AdminData`. 
 
 Example
 ^^^^^^^
@@ -629,7 +653,8 @@ createModeDeclarationGroup
     :type modeDeclarations: list(str)
     :param str initialMode: Initial mode value (must be one of strings from modeDeclarations list)
     :param str category: Optional category
-    :param adminData: Optional :ref:`ar4_base_AdminData`
+    :param adminData: Optional AdminData.
+    :type adminData: None, :ref:`ar4_base_AdminData`. 
     :rtype: :ref:`ar4_mode_ModeDeclarationGroup`
 
 .. _ar4_package_Package_createClientServerInterface:
@@ -648,7 +673,8 @@ createClientServerInterface
     :type errors: ApplicationError or list(ApplicationError)
     :param bool isService: Set this to True for service interfaces
     :param str serviceKind: Optional serviceKind string
-    :param adminData: Optional :ref:`ar4_base_AdminData`
+    :param adminData: Optional AdminData.
+    :type adminData: None, :ref:`ar4_base_AdminData`. 
     :rtype: :ref:`ar4_portinterface_clientServerInterface`
 
 Example
@@ -671,7 +697,8 @@ createModeSwitchInterface
     :param modeGroup: mode group object
     :type modeGroup: :ref:`ar4_mode_ModeGroup`
     :param bool isService: Set this to True for service interfaces
-    :param adminData: Optional :ref:`ar4_base_AdminData`
+    :param adminData: Optional AdminData.
+    :type adminData: None, :ref:`ar4_base_AdminData`. 
     :rtype: :ref:`ar4_portinterface_ModeSwitchInterface`
 
 .. _ar4_package_Package_createNvDataInterface:
@@ -687,7 +714,8 @@ createNvDataInterface
     :param nvDatas: data element(s)
     :type nvDatas: :ref:`ar4_element_DataElement` or list(:ref:`ar4_element_DataElement`)
     :param bool isService: Set this to True for service interfaces
-    :param adminData: Optional :ref:`ar4_base_AdminData`
+    :param adminData: Optional AdminData.
+    :type adminData: None, :ref:`ar4_base_AdminData`. 
     :rtype: NvDataInterface
 
 .. _ar4_package_Package_createParameterInterface:
@@ -703,7 +731,8 @@ createParameterInterface
     :param parameters: Parameter or parameters
     :type parameters: :ref:`ar4_element_ParameterDataPrototype` or list(:ref:`ar4_element_ParameterDataPrototype`)
     :param bool isService: Enables the isService attribute
-    :param adminData: Optional :ref:`ar4_base_AdminData`
+    :param adminData: Optional AdminData.
+    :type adminData: None, :ref:`ar4_base_AdminData`. 
     :rtype: :ref:`ar4_portinterface_ParameterInterface`
 
 .. _ar4_package_Package_createSenderReceiverInterface:
@@ -720,7 +749,8 @@ createSenderReceiverInterface
     :type dataElements: list(DataElement) or DataElement
     :param bool isService: Sets the isService attribute
     :param str serviceKind: Optional serviceKind string
-    :param adminData: Optional :ref:`ar4_base_AdminData`
+    :param adminData: Optional AdminData.
+    :type adminData: None, :ref:`ar4_base_AdminData`. 
     :rtype: :ref:`ar4_portinterface_SenderReceiverInterface`
 
 Examples
@@ -738,13 +768,11 @@ createSubPackage
 
 .. py:method:: Package.createPackage(name, [role=None])
 
-    Creates a new package and appends it to this package as a sub-package.
+    Creates a new :ref:`ar4_package_Package` and appends it to this :ref:`ar4_package_Package` as a sub-package.
 
     :param str name: ShortName of the new package
     :param str role: Optional :ref:`package role <ar4_package_Package_roles>`
     :rtype: :ref:`ar4_package_Package`
-
-
 
 Example
 ^^^^^^^
@@ -759,19 +787,19 @@ createSoftwareAddressMethod
 
 .. py:method:: Package.createSoftwareAddressMethod(name)
 
-    Creates a new SoftwareAddressMethod and adds it to the package.
+    Creates a new :ref:`ar4_element_SoftwareAddressMethod` and adds it to the package.
 
     :param str name: ShortName of the address method
-    :rtype: SoftwareAddressMethod
+    :rtype: :ref:`ar4_element_SoftwareAddressMethod`
 
 .. _ar4_package_Package_createUnit:
 
 createUnit
 ~~~~~~~~~~
 
-.. py:method:: Package.createUnit(self, shortName, [displayName = None], [offset = None], [scaling = None])
+.. py:method:: Package.createUnit(shortName, [displayName = None], [offset = None], [scaling = None])
 
-    Creates a new Unit and adds it to the package.
+    Creates a new :ref:`ar4_datatype_Unit` and adds it to the package.
 
     :param str name: ShortName of the new unit.
     :param str displayName: Optional Display name (Will default to shortName if not set)
@@ -779,22 +807,21 @@ createUnit
     :type offset: None, int, float
     :param factor: Optional scaling factor
     :type factor: None, int, float
-    :rtype: Unit
+    :rtype: :ref:`ar4_datatype_Unit`
 
 .. _ar4_package_Package_createDataTypeMappingSet:
 
 createDataTypeMappingSet
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. py:method:: Package.createDataTypeMappingSet(self, name, [adminData=None])
+.. py:method:: Package.createDataTypeMappingSet(name, [adminData=None])
 
     Creates a new data type mapping set and adds it to the package.
 
     :param str name: ShortName of the new unit.
-    :param adminData: Optional :ref:`ar4_base_AdminData`
+    :param adminData: Optional AdminData.
+    :type adminData: None, :ref:`ar4_base_AdminData`. 
     :rtype: :ref:`ar4_datatype_DataTypeMappingSet`
-
-
 
 Parameter Details
 -----------------
@@ -804,20 +831,22 @@ Parameter Details
 swCalibrationAccess
 ~~~~~~~~~~~~~~~~~~~
 
-+-----------------------+------------------------------------------------------------------------------------------------+
-| Value                 | Description                                                                                    |
-+=======================+================================================================================================+
-| None                  | No calibration access set                                                                      |
-+-----------------------+------------------------------------------------------------------------------------------------+
-| \\"\\" (Empty string) | Create default calibration access value                                                        |
-|                       | as set by Workspace.profile.swCalibrationAccessDefault                                         |
-+-----------------------+------------------------------------------------------------------------------------------------+
-| \\"NOT-ACCESSIBLE\\"  | The element will not be accessible by external tools                                           |
-+-----------------------+------------------------------------------------------------------------------------------------+
-| \\"READ-ONLY\\"       | Read only access                                                                               |
-+-----------------------+------------------------------------------------------------------------------------------------+
-| \\"READ-WRITE\\"      | Read-write access                                                                              |
-+-----------------------+------------------------------------------------------------------------------------------------+
+.. table::
+
+    +------------------------------+------------------------------------------------------------------------------------------------+
+    | Value                        | Description                                                                                    |
+    +==============================+================================================================================================+
+    | :literal:`None`              | No calibration access set                                                                      |
+    +------------------------------+------------------------------------------------------------------------------------------------+
+    | :literal:`""` (Empty string) | Create default calibration access value                                                        |
+    |                              | as set by Workspace.profile.swCalibrationAccessDefault                                         |
+    +------------------------------+------------------------------------------------------------------------------------------------+
+    | :literal:`"NOT-ACCESSIBLE"`  | The element will not be accessible by external tools                                           |
+    +------------------------------+------------------------------------------------------------------------------------------------+
+    | :literal:`"READ-ONLY"`       | Read only access                                                                               |
+    +------------------------------+------------------------------------------------------------------------------------------------+
+    | :literal:`"READ-WRITE"`      | Read-write access                                                                              |
+    +------------------------------+------------------------------------------------------------------------------------------------+
 
 .. _ar4_package_Package_valueTable:
 
