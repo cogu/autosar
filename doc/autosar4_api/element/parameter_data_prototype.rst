@@ -53,13 +53,23 @@ Constructor
     :param parent: Internal use only (leave as None)
     :param adminData: Optional AdminData object
 
-**swCalibrationAccess**
+swCalibrationAccess
+~~~~~~~~~~~~~~~~~~~
 
-* None: No calibration access set
-* \\"\\" (Empty string): Create default calibration access value as set by Workspace.profile.swCalibrationAccessDefault
-* \\"NOT-ACCESSIBLE\\": The element will not be accessible by external tools
-* \\"READ-ONLY\\": Read only access
-* \\"READ-WRITE\\": Read-write access
++------------------------------+------------------------------------------------------------------------------------------------+
+| Value                        | Description                                                                                    |
++==============================+================================================================================================+
+| :literal:`None`              | No calibration access set                                                                      |
++------------------------------+------------------------------------------------------------------------------------------------+
+| :literal:`""` (Empty string) | Create default calibration access value                                                        |
+|                              | as set by Workspace.profile.swCalibrationAccessDefault                                         |
++------------------------------+------------------------------------------------------------------------------------------------+
+| :literal:`"NOT-ACCESSIBLE"`  | The element will not be accessible by external tools                                           |
++------------------------------+------------------------------------------------------------------------------------------------+
+| :literal:`"READ-ONLY"`       | Read only access                                                                               |
++------------------------------+------------------------------------------------------------------------------------------------+
+| :literal:`"READ-WRITE"`      | Read-write access                                                                              |
++------------------------------+------------------------------------------------------------------------------------------------+
 
 Attributes
 -----------
