@@ -31,7 +31,7 @@ class XMLDataTypeWriter(ElementWriter):
                               'ApplicationRecordDataType': self.writeApplicationRecordDataTypeXML
             }
         else:
-            switch.keys = {}
+            self.switcher = {}
 
     def getSupportedXML(self):
         return self.switcher.keys()
@@ -339,24 +339,26 @@ class XMLDataTypeWriter(ElementWriter):
 
     def writeSwBaseTypeXML(self, elem):
         assert(isinstance(elem, autosar.datatype.SwBaseType))
+        ws = elem.rootWS()
+        assert(ws is not None)
         lines = []
-        lines.append("<%s>"%elem.tag(self.version))
-        lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
+        lines.append("<{}>".format(elem.tag(self.version)))
+        lines.append(self.indent('<SHORT-NAME>{}</SHORT-NAME>'.format(elem.name),1))
         tmp = self.writeDescXML(elem)
         if tmp is not None: lines.extend(self.indent(tmp,1))
         if elem.category is not None:
-            lines.append(self.indent('<CATEGORY>%s</CATEGORY>'%elem.category,1))
+            lines.append(self.indent('<CATEGORY>{}</CATEGORY>'.format(elem.category),1))
         if elem.adminData is not None:
             lines.extend(self.indent(self.writeAdminDataXML(elem.adminData),1))
         if elem.size is not None:
-            lines.append(self.indent('<BASE-TYPE-SIZE>%d</BASE-TYPE-SIZE>'%elem.size,1))
-        if elem.typeEncoding is None:
-            lines.append(self.indent('<BASE-TYPE-ENCODING>NONE</BASE-TYPE-ENCODING>',1))
+            lines.append(self.indent('<BASE-TYPE-SIZE>{:d}</BASE-TYPE-SIZE>'.format(elem.size),1))
+        if elem.typeEncoding is None and ws.profile.swBaseTypeEncodingDefault is not None:
+            lines.append(self.indent('<BASE-TYPE-ENCODING>{}</BASE-TYPE-ENCODING>'.format(str(ws.profile.swBaseTypeEncodingDefault)),1))
         else:
-            lines.append(self.indent('<BASE-TYPE-ENCODING>%s</BASE-TYPE-ENCODING>'%elem.typeEncoding,1))
+            lines.append(self.indent('<BASE-TYPE-ENCODING>{}</BASE-TYPE-ENCODING>'.format(elem.typeEncoding),1))
         if elem.nativeDeclaration is not None:
-            lines.append(self.indent('<NATIVE-DECLARATION>%s</NATIVE-DECLARATION>'%elem.nativeDeclaration,1))
-        lines.append("</%s>"%elem.tag(self.version))
+            lines.append(self.indent('<NATIVE-DECLARATION>{}</NATIVE-DECLARATION>'.format(elem.nativeDeclaration),1))
+        lines.append("</{}>".format(elem.tag(self.version)))
         return lines
 
     def writeImplementationDataElementXML(self, ws, elem):
@@ -556,7 +558,7 @@ class CodeDataTypeWriter(ElementWriter):
             self.switcher = {
             }
         else:
-            switch.keys = {}
+            self.switcher = {}
 
     def getSupportedXML(self):
         return []
