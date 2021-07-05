@@ -12,9 +12,9 @@ First install the cfile package.
 PIP Install
 ^^^^^^^^^^^
 
-.. parsed-literal::
+.. code-block:: Text
 
-  $pip3 install cfile
+  pip3 install cfile
 
 
 Manual Install
@@ -24,13 +24,13 @@ Download latest release from the `cfile Github page <https://github.com/cogu/cfi
 
 Unzip the release then install using setuptools.
 
-.. parsed-literal::
+.. code-block:: Text
 
   Linux (shell):
-  $python3 setup.py install
+  python3 setup.py install
 
   Windows (PowerShell):
-  >python setup.py install
+  python setup.py install
 
 Installing the autosar package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -47,26 +47,26 @@ Download latest release from the `autosar Github page <https://github.com/cogu/a
 
 Unzip the release then install using setuptools.
 
-.. parsed-literal::
+.. code-block:: Text
 
    Linux (shell):
-   $python3 setup.py install
+   python3 setup.py install
 
    Windows (PowerShell):
-   >python setup.py install
+   python setup.py install
 
 Running Unit Tests
 ------------------
 
 In case you want to run unit tests you can use the convenience shell scripts to trigger Python to run test cases.
 
-.. parsed-literal::
+.. code-block:: Text
 
-  Linux (shell):
-  $./run_tests.sh
+   Linux (shell):
+   ./run_tests.sh
 
-  Windows (PowerShell):
-  >.\run_tests.cmd
+   Windows (PowerShell):
+   .\run_tests.cmd
 
 Writing your first script
 -------------------------
