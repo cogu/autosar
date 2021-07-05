@@ -16,21 +16,23 @@ AUTOSAR version support
 
 The intent is to add support for AUTOSAR 4.3 and 4.4 in the future. (Timeplan is unknown since I do most of the work in my spare time.)
 
-Prerequisites
--------------
+Requirements
+------------
 
-* `Python 3.x <https://www.python.org/>`_
+* `Python 3 <https://www.python.org/>`_
 * `cfile <https://github.com/cogu/cfile/>`_
 
 Documentation
 -------------
 
-Documentation is published `here <https://autosar.readthedocs.io/en/latest/>`_.
+* `Documentation Root <https://autosar.readthedocs.io/en/latest/>`_.
+* `Installation Guide <https://autosar.readthedocs.io/en/latest/start.html>`_.
+* `AUTOSAR 4 API <https://autosar.readthedocs.io/en/latest/autosar4_api/>`_.
 
 Latest Release
 ---------------
 
-Latest release is `v0.3.0 <https://github.com/cogu/autosar/releases/tag/v0.3.10>`_.
+Latest release is `v0.3.11 <https://github.com/cogu/autosar/releases/tag/v0.3.11>`_.
 
 Current Roadmap
 ---------------
@@ -38,7 +40,7 @@ Current Roadmap
 v0.4.0
 ~~~~~~
 
-* Maintenance track (Relabel v0.3.10 if no issues are found)
+* Maintenance track (Relabel v0.3.11 if no more issues are found)
 
 v0.5.0
 ~~~~~~
