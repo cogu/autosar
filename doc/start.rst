@@ -12,6 +12,8 @@ First install the cfile package.
 PIP Install
 ^^^^^^^^^^^
 
+.. code-block::
+
   $pip3 install cfile
 
 
@@ -22,10 +24,12 @@ Download latest release from the `cfile Github page <https://github.com/cogu/cfi
 
 Unzip the release then install using setuptools.
 
+.. code-block::
+
   Linux (shell):
   $python3 setup.py install
 
-  Windows (cmd):
+  Windows (PowerShell):
   >python setup.py install
 
 Installing the autosar package
@@ -43,6 +47,8 @@ Download latest release from the `autosar Github page <https://github.com/cogu/a
 
 Unzip the release then install using setuptools.
 
+.. code-block::
+
    Linux (shell):
    $python3 setup.py install
 
@@ -54,16 +60,18 @@ Running Unit Tests
 
 In case you want to run unit tests you can use the convenience shell scripts to trigger Python to run test cases.
 
+.. code-block::
+
   Linux (shell):
   $./run_tests.sh
 
   Windows (PowerShell):
   >.\run_tests.cmd
 
-Generating ARXML
-----------------
+Writing your first script
+-------------------------
 
-The primary purpose of the Python AUTOSAR package is to programmatically create contents of AUTOSAR XML files or ARXML for short.
+The primary purpose of the Python AUTOSAR package is to programmatically create AUTOSAR XML files or ARXML for short.
 
 Below is a simple example you can use to see if your installation works as expected.
 

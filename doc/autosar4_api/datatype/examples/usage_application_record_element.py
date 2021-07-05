@@ -16,4 +16,3 @@ def setup():
 ws = setup()
 SensorReading_T = ws.find('SensorReading_T', role='DataType')
 element = autosar.datatype.ApplicationRecordElement('SensorReading', SensorReading_T.ref)
-

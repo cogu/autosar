@@ -18,4 +18,3 @@ dataTypePackage = ws.findRolePackage('DataType')
 dataTypePackage.createApplicationPrimitiveDataType('VehicleSpeed_T', 
     dataConstraint = speedDataConstraint.ref,  compuMethod=speedCompuMethod.ref)
 ws.saveXML('DataTypes.arxml', filters=['/ApplicationTypes'])
-
