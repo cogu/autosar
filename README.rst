@@ -25,9 +25,9 @@ Requirements
 Documentation
 -------------
 
-* `Documentation Root <https://autosar.readthedocs.io/en/latest/>`_.
-* `Installation Guide <https://autosar.readthedocs.io/en/latest/start.html>`_.
-* `AUTOSAR 4 API <https://autosar.readthedocs.io/en/latest/autosar4_api/>`_.
+* `Documentation Root <https://autosar.readthedocs.io/en/latest/>`_
+* `Installation Guide <https://autosar.readthedocs.io/en/latest/start.html>`_
+* `AUTOSAR 4 API <https://autosar.readthedocs.io/en/latest/autosar4_api/>`_
 
 Latest Release
 ---------------
