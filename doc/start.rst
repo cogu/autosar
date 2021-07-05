@@ -12,7 +12,7 @@ First install the cfile package.
 PIP Install
 ^^^^^^^^^^^
 
-.. code-block::
+.. parsed-literal::
 
   $pip3 install cfile
 
@@ -24,7 +24,7 @@ Download latest release from the `cfile Github page <https://github.com/cogu/cfi
 
 Unzip the release then install using setuptools.
 
-.. code-block::
+.. parsed-literal::
 
   Linux (shell):
   $python3 setup.py install
@@ -47,7 +47,7 @@ Download latest release from the `autosar Github page <https://github.com/cogu/a
 
 Unzip the release then install using setuptools.
 
-.. code-block::
+.. parsed-literal::
 
    Linux (shell):
    $python3 setup.py install
@@ -60,7 +60,7 @@ Running Unit Tests
 
 In case you want to run unit tests you can use the convenience shell scripts to trigger Python to run test cases.
 
-.. code-block::
+.. parsed-literal::
 
   Linux (shell):
   $./run_tests.sh
