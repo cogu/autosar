@@ -255,6 +255,8 @@ class BaseParser:
                 typeRef = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'SW-DATA-DEF-PROPS':
                 props_variants = self.parseSwDataDefProps(xmlElem)
+            elif xmlElem.tag == 'INIT-VALUE':
+                pass #Implement later
             else:
                 self.defaultHandler(xmlElem)
         if (self.name is not None) and (typeRef is not None):
