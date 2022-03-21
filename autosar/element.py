@@ -1,4 +1,3 @@
-import xml.etree.ElementTree as ElementTree
 import autosar.base
 
 class Element:
@@ -47,7 +46,7 @@ class LabelElement:
     @property
     def ref(self):
         if self.parent is not None:
-            return self.parent.ref+'/%s'%self.name
+            return self.parent.ref+'/%s'%self.label
         else:
             return None
 
@@ -59,7 +58,8 @@ class LabelElement:
 
 
 class DataElement(Element):
-    def tag(self,version): return "VARIABLE-DATA-PROTOTYPE" if version >= 4.0 else "DATA-ELEMENT-PROTOTYPE"
+    def tag(self,version):
+        return "VARIABLE-DATA-PROTOTYPE" if version >= 4.0 else "DATA-ELEMENT-PROTOTYPE"
     def __init__(self, name, typeRef, isQueued=False, swAddressMethodRef=None, swCalibrationAccess=None, swImplPolicy = None, category = None, parent=None, adminData=None):
         super().__init__(name, parent, adminData, category)
         if isinstance(typeRef,str):
@@ -129,5 +129,5 @@ class SoftwareAddressMethod(Element):
     def __init__(self, name, parent=None, adminData=None):
         super().__init__(name, parent, adminData)
 
-    def tag(self,version=None):
+    def tag(self, version = None): # pylint: disable=unused-argument
         return 'SW-ADDR-METHOD'

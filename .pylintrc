@@ -1,0 +1,3 @@
+[TYPECHECK]
+disable=missing-docstring, invalid-name, abstract-method
+max-line-length=180
