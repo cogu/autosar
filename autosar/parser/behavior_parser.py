@@ -120,7 +120,7 @@ class BehaviorParser(ElementParser):
                         if xmlChild.tag == 'DATA-TYPE-MAPPING-REF':
                             tmp = self.parseTextNode(xmlChild)
                             assert(tmp is not None)
-                            internalBehavior.dataTypeMappingRefs.append(tmp)
+                            internalBehavior.appendDataTypeMappingRef(tmp)
                 elif xmlElem.tag == 'EVENTS':
                     for xmlEvent in xmlElem.findall('./*'):
                         event = None
