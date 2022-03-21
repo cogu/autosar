@@ -70,11 +70,13 @@ class DataElement(Element):
         else:
             raise ValueError("unsupported type for argument: typeRef")
         assert(isinstance(isQueued,bool))
-        self.isQueued=isQueued
+        self.swImplPolicy = swImplPolicy
+        self.isQueued = isQueued
         self.swAddressMethodRef = swAddressMethodRef
         self.swCalibrationAccess = swCalibrationAccess
-        self.swImplPolicy = swImplPolicy
         self.dataConstraintRef = None
+        if self.swImplPolicy is None and self.isQueued:
+            self.swImplPolicy = "QUEUED"
 
     @property
     def swImplPolicy(self):
