@@ -1,12 +1,13 @@
-from autosar.element import (Element, DataElement)
 import collections
+from autosar.element import (Element, DataElement)
 import autosar.base
 import autosar.mode
 
 class InvalidationPolicy:
     valid_values = ['DONT-INVALIDATE', 'EXTERNAL-REPLACEMENT', 'KEEP', 'REPLACE']
 
-    def tag(self, version): return 'INVALIDATION-POLICY'
+    def tag(self, version): # pylint: disable=unused-argument
+        return 'INVALIDATION-POLICY'
 
     def __init__(self, dataElementRef, handleInvalid):
         self.dataElementRef = dataElementRef
@@ -34,9 +35,12 @@ class PortInterface(Element):
         else:
             raise ValueError('expected string')
 
+    def find(self, ref):
+        raise NotImplementedError(type(self))
+
 class SenderReceiverInterface(PortInterface):
 
-    def tag(self,version=None):
+    def tag(self, version = None): #pylint: disable=unused-argument
         return 'SENDER-RECEIVER-INTERFACE'
 
     def __init__(self, name, isService=False, serviceKind = None, parent=None, adminData=None):
@@ -54,10 +58,12 @@ class SenderReceiverInterface(PortInterface):
             self.adminData == other.adminData and len(self.dataElements) == len(other.dataElements):
                 if (self.modeGroups is not None) and (other.modeGroups is not None) and len(self.modeGroups) == len(other.modeGroups):
                     for i,elem in enumerate(self.modeGroups):
-                        if elem != other.modeGroups[i]: return False
-                return True
+                        if elem != other.modeGroups[i]:
+                            return False
+                    return True
                 for i,elem in enumerate(self.dataElements):
-                    if elem != other.dataElements[i]: return False
+                    if elem != other.dataElements[i]:
+                        return False
         return False
 
     def __ne__(self, other):
@@ -124,7 +130,7 @@ class ClientServerInterface(PortInterface):
         self.operations=[]
         self.applicationErrors=[]
 
-    def tag(self,version=None):
+    def tag(self, version = None): #pylint: disable=unused-argument
         return 'CLIENT-SERVER-INTERFACE'
 
     def __eq__(self, other):
@@ -291,7 +297,7 @@ class Argument(Element):
             raise autosar.base.InvalidDataTypeRef(other.typeRef)
         if self.direction != other.direction: return False
         if (self.swCalibrationAccess is None and other.swCalibrationAccess is not None) or (self.swCalibrationAccess is not None and other.swCalibrationAccess is None):
-             return False
+            return False
         if self.swCalibrationAccess is not None and other.swCalibrationAccess is not None:
             if self.swCalibrationAccess != other.swCalibrationAccess: return False
         if (self.serverArgumentImplPolicy is None and other.serverArgumentImplPolicy is not None) or (self.serverArgumentImplPolicy is not None and other.serverArgumentImplPolicy is None):
@@ -308,7 +314,7 @@ class ApplicationError(Element):
         super().__init__(name, parent, adminData)
         self.errorCode=int(errorCode)
 
-    def tag(self,version=None):
+    def tag(self, version = None):  #pylint: disable=unused-argument
         return 'APPLICATION-ERROR'
 
     def asdict(self):
@@ -319,7 +325,8 @@ class ModeSwitchInterface(PortInterface):
     Implementation of <MODE-SWITCH-INTERFACE> (AUTOSAR 4)
     """
 
-    def tag(self, version): return 'MODE-SWITCH-INTERFACE'
+    def tag(self, version = None):  #pylint: disable=unused-argument
+        return 'MODE-SWITCH-INTERFACE'
 
     def __init__(self, name, isService=None, parent=None, adminData=None):
         """
