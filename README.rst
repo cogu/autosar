@@ -29,21 +29,23 @@ Documentation
 * `Installation Guide <https://autosar.readthedocs.io/en/latest/start.html>`_
 * `AUTOSAR 4 API <https://autosar.readthedocs.io/en/latest/autosar4_api/>`_
 
-Latest Release
----------------
+Release Tracks
+--------------
 
-Latest release is `v0.3.11 <https://github.com/cogu/autosar/releases/tag/v0.3.11>`_.
+Stable (v0.4)
+~~~~~~~~~~~~~
 
-Current Roadmap
----------------
+This is the stable release track. Only bug fixes and stability improvements will be made.
 
-v0.4.0
-~~~~~~
+Latest stable release is `v0.4.0 <https://github.com/cogu/autosar/releases/tag/v0.4.0>`_.
 
-* Maintenance track (Relabel v0.3.11 if no more issues are found)
+Future work will be tracked on branch *release/0.4*.
 
-v0.5.0
-~~~~~~
+Experimental (v0.5)
+~~~~~~~~~~~~~~~~~~~
 
-* Complete rewrite of RTE contract phase generator (upgrade to AUTOSAR4)
-* At the same time upgrade the `autosar-demo project <https://github.com/cogu/autosar-demo>`_ to AUTOSAR4
+This is the development track for new features. Future changes might break existing APIs from v0.4.x. Use at your own risk.
+
+First release *v0.5.0* is not yet made.
+
+Future work will be tracked on branch *master*.
