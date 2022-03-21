@@ -95,7 +95,7 @@ class ModeDependency(object):
 
 class ModeInstanceRef:
     """
-    Implementation of MODE-IREF (AUTOSAR3)
+    Implementation of MODE-IREF (AUTOSAR3, AUTOSAR4)
     """
     def __init__(self,modeDeclarationRef,modeDeclarationGroupPrototypeRef=None,requirePortPrototypeRef=None):
         self.modeDeclarationRef=modeDeclarationRef #MODE-DECLARATION-REF
@@ -1379,6 +1379,12 @@ class SwcInternalBehavior(InternalBehaviorCommon):
         self.events.append(event)
         return event
 
+    def appendDataTypeMappingRef(self, dataTypeMappingRef):
+        """
+        Adds dataTypeMappingRef to the internal dataTypeMappingRefs list
+        """
+        self.dataTypeMappingRefs.append(str(dataTypeMappingRef))
+
 class VariableAccess(Element):
     def __init__(self, name, portPrototypeRef, targetDataPrototypeRef, parent=None):
         super().__init__(name, parent)
@@ -1772,7 +1778,7 @@ class AutosarVariableRef(object):
     """
     Base class for type AUTOSAR-VARIABLE-REF
     * localVariableRef: This reference is used if the variable is local to the current component.
-    * autosarVariablePortRef: Port part of the autosarVariableRef. 
+    * autosarVariablePortRef: Port part of the autosarVariableRef.
     * autosarVariableElementRef: Element part of the autosarVariableRef.
     """
     def tag(self,version):
