@@ -7,8 +7,9 @@ def readme():
 
 setup(name='autosar',
       version='0.4.0',
-      description='autosar python module',
+      description='A set of Python modules for working with AUTOSAR XML files',
       long_description=readme(),
+      long_description_content_type='text/x-rst',
       classifiers=[
         'Development Status :: 3 - Alpha',
         'License :: OSI Approved :: MIT License',
@@ -23,6 +24,5 @@ setup(name='autosar',
           'cfile>=0.1.4',
       ],
       packages=['autosar','autosar.parser','autosar.writer','autosar.rte', 'autosar.bsw', 'autosar.util'],
-	  dependency_links=['https://github.com/cogu/cfile/archive/v0.1.5.tar.gz#egg=cfile-0.1.5'],
 	  zip_safe=False,
 	  test_suite='tests.my_test_suite')
