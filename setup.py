@@ -17,6 +17,9 @@ setup(name='autosar',
         'Topic :: Text Processing :: Markup :: XML',
       ],
       url='http://github.com/cogu/autosar',
+      project_urls={
+        'Documentation': 'autosar.readthedocs.io/'
+      },
       author='Conny Gustafsson',
       author_email='congus8@gmail.com',
       license='MIT',
