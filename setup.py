@@ -18,7 +18,7 @@ setup(name='autosar',
       ],
       url='http://github.com/cogu/autosar',
       project_urls={
-        'Documentation': 'autosar.readthedocs.io/'
+        'Documentation': 'https://autosar.readthedocs.io/'
       },
       author='Conny Gustafsson',
       author_email='congus8@gmail.com',
