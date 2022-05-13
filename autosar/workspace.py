@@ -179,7 +179,7 @@ class Workspace:
         self.openXML(filename)
         self.loadPackage('*')
         if roles is not None:
-            if not isinstance(roles, collections.Mapping):
+            if not isinstance(roles, collections.abc.Mapping):
                 raise ValueError('roles parameter must be a dictionary or Mapping')
             for ref,role in roles.items():
                 self.setRole(ref,role)

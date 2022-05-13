@@ -3,6 +3,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../.
 import autosar
 from tests.arxml.common import ARXMLTestClass
 import unittest
+import warnings
+warnings.simplefilter("error", DeprecationWarning)
 
 def _create_packages(ws):
 

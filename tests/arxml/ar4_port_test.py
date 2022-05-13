@@ -3,6 +3,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../.
 import autosar
 from tests.arxml.common import ARXMLTestClass
 import unittest
+import warnings
+warnings.simplefilter("error", DeprecationWarning)
 
 def _create_packages(ws):
 
@@ -94,6 +96,23 @@ class ARXML4PortCreateTest(ARXMLTestClass):
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
         swc2 = ws2.find(swc1.ref)
         self.assertIsInstance(swc2, autosar.component.ApplicationSoftwareComponent)
+
+    def test_create_non_queued_provider_port_single_data_element_direct_comspec(self):
+        ws = autosar.workspace(version="4.2.2")
+        _init_ws(ws)
+        package = ws.find('/ComponentTypes')
+        swc1 = package.createApplicationSoftwareComponent('MyApplication')
+        swc1.createProvidePort('VehicleSpeed', 'VehicleSpeed_I', comspec = {'dataElement': 'VehicleSpeed', 'initValueRef': 'VehicleSpeed_IV'})
+        file_name = 'ar4_non_queued_provider_port_single_data_element_direct_comspec.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'port', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
+        ws2 = autosar.workspace(ws.version_str)
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        swc2 = ws2.find(swc1.ref)
+        self.assertIsInstance(swc2, autosar.component.ApplicationSoftwareComponent)
+
+
 
     def test_create_non_queued_receiver_port_single_data_element(self):
         ws = autosar.workspace(version="4.2.2")

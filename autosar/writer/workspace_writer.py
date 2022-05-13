@@ -95,7 +95,7 @@ class WorkspaceWriter(BaseWriter):
                 ]
             if len(head)!=2:
                 raise ValueError('when module=True then head must have exactly two elements (list of lists)')
-            if isinstance(head[0], collections.Iterable):
+            if isinstance(head[0], collections.abc.Iterable):
                 head[0] = '\n'.join(head[0])
             assert(isinstance(head[0],str))
             result = head[0]+'\n\n'
@@ -110,7 +110,7 @@ class WorkspaceWriter(BaseWriter):
 
             #tail
             result+="\nif __name__=='__main__':\n"
-            if isinstance(head[1], collections.Iterable):
+            if isinstance(head[1], collections.abc.Iterable):
                 head[1] = '\n'.join([indentStr+x for x in head[1]])
             else:
                 head[1] = '\n'.join([indentStr+x for x in head[1].split('\n')])
