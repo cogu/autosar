@@ -37,7 +37,7 @@ Stable (v0.4)
 
 This is the stable release track. Only bug fixes and stability improvements will be made.
 
-Latest stable release is `v0.4.0 <https://github.com/cogu/autosar/releases/tag/v0.4.0>`_.
+Latest stable release is `v0.4.1 <https://github.com/cogu/autosar/releases/tag/v0.4.1>`_.
 
 Future work will be tracked on branch *release/0.4*.
 
