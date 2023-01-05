@@ -226,6 +226,8 @@ class RunnableEntity(Element):
         self.exclusiveAreaRefs=[]
         self.modeAccessPoints=[] #AUTOSAR4 only
         self.modeSwitchPoints=[] #AUTOSAR4 only
+        self.dataReadAccess=[] #AUTOSAR4 only?
+        self.dataWriteAccess=[] #AUTOSAR4 only?
         self.parameterAccessPoints = [] #AUTOSAR4 only
 
     def tag(self,version=None):

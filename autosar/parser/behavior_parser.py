@@ -204,6 +204,8 @@ class BehaviorParser(ElementParser):
         canBeInvokedConcurrently = False
         xmlModeSwitchPoints = None
         minStartInterval = None
+        xmlDataReadAccess = None
+        xmlDataWriteAccess = None
         if self.version < 4.0:
             for xmlElem in xmlRoot.findall('*'):
                 if xmlElem.tag=='SHORT-NAME':
@@ -255,9 +257,9 @@ class BehaviorParser(ElementParser):
                 elif xmlElem.tag == 'WRITTEN-LOCAL-VARIABLES':
                     pass #implement later
                 elif xmlElem.tag == 'DATA-READ-ACCESSS':
-                    pass #implement later
+                    xmlDataReadAccess = xmlElem
                 elif xmlElem.tag == 'DATA-WRITE-ACCESSS':
-                    pass #implement later
+                    xmlDataWriteAccess = xmlElem
                 elif xmlElem.tag == 'RUNS-INSIDE-EXCLUSIVE-AREA-REFS':
                     pass #implement later
                 else:
@@ -326,6 +328,25 @@ class BehaviorParser(ElementParser):
                     runnableEntity.modeSwitchPoints.append(modeSwitchPoint)
                 else:
                     raise NotImplementedError(xmlElem.tag)
+
+        if xmlDataReadAccess is not None:
+            for xmlElem in xmlDataReadAccess.findall('./*'):
+                if xmlElem.tag == 'VARIABLE-ACCESS':
+                    variableAccess = self._parseVariableAccess(xmlElem)
+                    assert(variableAccess is not None)
+                    runnableEntity.dataReadAccess.append(variableAccess)
+                else:
+                    raise NotImplementedError(xmlElem.tag)
+        
+        if xmlDataWriteAccess is not None:
+            for xmlElem in xmlDataWriteAccess.findall('./*'):
+                if xmlElem.tag == 'VARIABLE-ACCESS':
+                    variableAccess = self._parseVariableAccess(xmlElem)
+                    assert(variableAccess is not None)
+                    runnableEntity.dataWriteAccess.append(variableAccess)
+                else:
+                    raise NotImplementedError(xmlElem.tag)
+        
         if runnableEntity is not None:
             runnableEntity.adminData = adminData
         return runnableEntity
@@ -365,6 +386,18 @@ class BehaviorParser(ElementParser):
             else:
                 raise NotImplementedError(xmlElem.tag)
         return autosar.behavior.ModeSwitchPoint(name, modeGroupInstanceRef)
+
+    def _parseVariableAccess(self, xmlRoot):
+        assert(xmlRoot.tag == 'VARIABLE-ACCESS')
+        (name, variableAccess) = (None, None)
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == 'SHORT-NAME':
+                name = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'ACCESSED-VARIABLE':
+                variableAccess = self.parseAccessedVariable(xmlElem)
+            else:
+                raise NotImplementedError(xmlElem.tag)
+        return autosar.behavior.VariableAccess(name, variableAccess.portPrototypeRef, variableAccess.targetDataPrototypeRef)
 
     def parseParameterAccessPoint(self, xmlRoot, parent = None):
         assert(xmlRoot.tag == 'PARAMETER-ACCESS')

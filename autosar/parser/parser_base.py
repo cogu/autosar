@@ -23,6 +23,7 @@ class CommonTagsResult:
         self.longNameAttr = None
         self.name = None
         self.category = None
+        self.displayFormat = None
 
 
 class BaseParser:
@@ -62,6 +63,8 @@ class BaseParser:
             self.common[-1].desc, self.common[-1].desc_attr = self.parseDescDirect(xmlElem)
         elif xmlElem.tag == 'LONG-NAME':
             self.common[-1].longName, self.common[-1].longName_attr = self.parseLongNameDirect(xmlElem)
+        elif xmlElem.tag == 'DISPLAY-FORMAT':
+            self.common[-1].displayFormat = None
         else:
             raise NotImplementedError(xmlElem.tag)
     
