@@ -14,8 +14,6 @@ AUTOSAR version support
 * AUTOSAR 3.0
 * AUTOSAR 4.2
 
-The intent is to add support for AUTOSAR 4.3 and 4.4 in the future. (Timeplan is unknown since I do most of the work in my spare time.)
-
 Requirements
 ------------
 
@@ -29,23 +27,14 @@ Documentation
 * `Installation Guide <https://autosar.readthedocs.io/en/latest/start.html>`_
 * `AUTOSAR 4 API <https://autosar.readthedocs.io/en/latest/autosar4_api/>`_
 
-Release Tracks
---------------
-
-Stable (v0.4)
-~~~~~~~~~~~~~
-
-This is the stable release track. Only bug fixes and stability improvements will be made.
+Releases
+--------
 
 Latest stable release is `v0.4.1 <https://github.com/cogu/autosar/releases/tag/v0.4.1>`_.
 
-Future work will be tracked on branch *release/0.4*.
+Branches
+--------
 
-Experimental (v0.5)
-~~~~~~~~~~~~~~~~~~~
+Bug fixes to v0.4.x will be tracked on branch `maintenance/0.4 <https://github.com/cogu/autosar/tree/maintenance/0.4>`_.
 
-This is the development track for new features. Future changes might break existing APIs from v0.4.x. Use at your own risk.
-
-First release *v0.5.0* is not yet made.
-
-Future work will be tracked on branch *master*.
+Research for future versions will be tracked on branch `research/0.5 <https://github.com/cogu/autosar/tree/research/0.5>`_.
