@@ -253,6 +253,14 @@ class SwValueCont:
                 self.values = list(values)
             else:
                 self.values = values
+        if swArraySize is None:
+            self.swArraySize = None
+        else:
+            if isinstance(swArraySize, list):
+                self.swArraySize = list(swArraySize)
+            else:
+                self.swArraySize = swArraySize
+                
         self.unitRef = unitRef
         self.unitDisplayName = unitDisplayName
         self.swArraySize = swArraySize
@@ -270,7 +278,13 @@ class SwAxisCont:
         self.unitRef = unitRef
         self.unitDisplayName = unitDisplayName
         self.swAxisIndex = swAxisIndex
-        self.swArraySize = swArraySize
+        if swArraySize is None:
+            self.swArraySize = None
+        else:
+            if isinstance(swArraySize, list):
+                self.swArraySize = list(swArraySize)
+            else:
+                self.swArraySize = swArraySize
         self.category = category
         if values is None:
             self.values = None
@@ -279,3 +293,4 @@ class SwAxisCont:
                 self.values = list(values)
             else:
                 self.values = values
+        

@@ -200,6 +200,7 @@ class ConstantParser(ElementParser):
     def _parseSwValueCont(self, xmlRoot):
         unitRef = None
         valueList = []
+        sizeList = []
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'UNIT-REF':
                 unitRef = self.parseTextNode(xmlElem)
@@ -211,15 +212,22 @@ class ConstantParser(ElementParser):
                         valueList.append(self.parseTextNode(xmlChild))
                     else:
                         raise NotImplementedError(xmlChild.tag)
+            elif xmlElem.tag == 'SW-ARRAYSIZE':
+                for xmlChild in xmlElem.findall('./*'):
+                    if xmlChild.tag == 'V':
+                        sizeList.append(self.parseNumberNode(xmlChild))
+                    else:
+                        raise NotImplementedError(xmlChild.tag)
             else:
                 raise NotImplementedError(xmlElem.tag)
         if len(valueList)==0:
             valueList = None
-        return autosar.constant.SwValueCont(valueList, unitRef)
+        return autosar.constant.SwValueCont(valueList, unitRef,swArraySize=sizeList)
 
     def _parseSwAxisCont(self, xmlRoot):
         unitRef = None
         valueList = []
+        sizeList = []
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'UNIT-REF':
                 unitRef = self.parseTextNode(xmlElem)
@@ -229,8 +237,18 @@ class ConstantParser(ElementParser):
                         valueList.append(self.parseNumberNode(xmlChild))
                     else:
                         raise NotImplementedError(xmlChild.tag)
+            elif xmlElem.tag == 'SW-ARRAYSIZE':
+                for xmlChild in xmlElem.findall('./*'):
+                    if xmlChild.tag == 'V':
+                        sizeList.append(self.parseNumberNode(xmlChild))
+                    else:
+                        raise NotImplementedError(xmlChild.tag)
+            elif xmlElem.tag == 'CATEGORY':
+                cat = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'SW-AXIS-INDEX':
+                swAxIndex = self.parseNumberNode(xmlElem)
             else:
                 raise NotImplementedError(xmlElem.tag)
         if len(valueList)==0:
             valueList = None
-        return autosar.constant.SwAxisCont(valueList, unitRef)
+        return autosar.constant.SwAxisCont(valueList, unitRef, category=cat, swAxisIndex=swAxIndex, swArraySize=sizeList)
