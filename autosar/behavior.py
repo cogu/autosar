@@ -1500,9 +1500,10 @@ class ParameterAccessPoint(Element):
     Represents <PARAMETER-ACCESS> (AUTOSAR 4)
     """
 
-    def __init__(self, name, accessedParameter = None, parent = None, adminData = None):
+    def __init__(self, name, accessedParameter = None, parent = None, adminData = None, swDataDefProps = None):
         super().__init__(name, parent, adminData)
         self.accessedParameter = accessedParameter #this can be NoneType or LocalParameterRef or ParameterInstanceRef
+        self.swDataDefProps = swDataDefProps
 
     def tag(self, version): return 'PARAMETER-ACCESS'
 

@@ -201,6 +201,8 @@ class PortInterfacePackageParser(ElementParser):
                         portInterface.applicationErrors.append(applicationError)
                 elif xmlElem.tag == 'SERVICE-KIND':
                     portInterface.serviceKind = self.parseTextNode(xmlElem)
+                elif xmlElem.tag == 'LONG-NAME':
+                    portInterface.longName = self.parseTextNode(xmlElem)
                 else:
                     raise NotImplementedError(xmlElem.tag)
             return portInterface
@@ -261,7 +263,7 @@ class PortInterfacePackageParser(ElementParser):
         return autosar.mode.ModeGroup(name, typeRef, parent)
 
     def _parseOperationPrototype(self, xmlOperation, parent):
-        (name, xmlDesc, xmlArguments, xmlPossibleErrorRefs) = (None, None, None, None)
+        (name, xmlDesc, xmlArguments, xmlPossibleErrorRefs, longName) = (None, None, None, None, None)
         for xmlElem in xmlOperation.findall('./*'):
             if xmlElem.tag == 'ADMIN-DATA':
                 pass #implement later
@@ -273,6 +275,9 @@ class PortInterfacePackageParser(ElementParser):
                 xmlArguments = xmlElem
             elif xmlElem.tag == 'POSSIBLE-ERROR-REFS':
                 xmlPossibleErrorRefs = xmlElem
+            elif xmlElem.tag == 'LONG-NAME':
+                longName = xmlElem
+                # todo implement
             else:
                 raise NotImplementedError(xmlElem.tag)
 
