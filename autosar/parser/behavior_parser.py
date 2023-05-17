@@ -55,7 +55,8 @@ class BehaviorParser(ElementParser):
                         elif xmlEvent.tag == 'OPERATION-INVOKED-EVENT':
                             event = self.parseOperationInvokedEvent(xmlEvent,internalBehavior)
                         else:
-                            raise NotImplementedError(xmlEvent.tag)
+                            print("Warning: " + str(xmlEvent.tag) + " has not been implemented")
+                            # raise NotImplementedError(xmlEvent.tag)
                         if event is not None:
                             internalBehavior.events.append(event)
                         else:
@@ -79,7 +80,8 @@ class BehaviorParser(ElementParser):
                             swcNvBlockNeeds=self.parseSwcNvBlockNeeds(xmlElem)
                             if swcNvBlockNeeds is not None: internalBehavior.swcNvBlockNeeds.append(swcNvBlockNeeds)
                         else:
-                            raise NotImplementedError(xmlElem.tag)
+                            print("Warning: " + str(xmlEvent.tag) + " has not been implemented")
+                            # raise NotImplementedError(xmlElem.tag)
                 elif xmlNode.tag == 'SHARED-CALPRMS':
                     for xmlElem in xmlNode.findall('./*'):
                         if xmlElem.tag=='CALPRM-ELEMENT-PROTOTYPE':
@@ -87,16 +89,19 @@ class BehaviorParser(ElementParser):
                             assert(calPrmElemPrototype is not None)
                             internalBehavior.sharedCalParams.append(calPrmElemPrototype)
                         else:
-                            raise NotImplementedError(xmlElem.tag)
+                            print("Warning: " + str(xmlEvent.tag) + " has not been implemented")
+                            # raise NotImplementedError(xmlElem.tag)
                 elif xmlNode.tag == 'EXCLUSIVE-AREAS':
                     for xmlElem in xmlNode.findall('./*'):
                         if xmlElem.tag=='EXCLUSIVE-AREA':
                             exclusiveArea=autosar.behavior.ExclusiveArea(self.parseTextNode(xmlElem.find('SHORT-NAME')), internalBehavior)
                             internalBehavior.exclusiveAreas.append(exclusiveArea)
                         else:
-                            raise NotImplementedError(xmlElem.tag)
+                            print("Warning: " + str(xmlEvent.tag) + " has not been implemented")
+                            # raise NotImplementedError(xmlElem.tag)
                 else:
-                    raise NotImplementedError(xmlNode.tag)
+                    print("Warning: " + str(xmlNode.tag) + " has not been implemented")
+                    # raise NotImplementedError(xmlNode.tag)
             return internalBehavior
 
     def parseSWCInternalBehavior(self, xmlRoot, parent):
@@ -141,7 +146,8 @@ class BehaviorParser(ElementParser):
                             #TODO: Implement later
                             pass
                         else:
-                            raise NotImplementedError(xmlEvent.tag)
+                            print("Warning: " + str(xmlEvent.tag) + " has not been implemented")
+                            # raise NotImplementedError(xmlEvent.tag)
                         if event is not None:
                             internalBehavior.events.append(event)
                 elif xmlElem.tag == 'PORT-API-OPTIONS':
@@ -159,14 +165,16 @@ class BehaviorParser(ElementParser):
                             dataElement = self.parseVariableDataPrototype(xmlChild, internalBehavior)
                             internalBehavior.perInstanceMemories.append(dataElement)
                         else:
-                            raise NotImplementedError(xmlChild.tag)
+                            print("Warning: " + str(xmlEvent.tag) + " has not been implemented")
+                            # raise NotImplementedError(xmlChild.tag)
                 elif xmlElem.tag == 'SERVICE-DEPENDENCYS':
                     for xmlChildElem in xmlElem.findall('./*'):
                         if xmlChildElem.tag == 'SWC-SERVICE-DEPENDENCY':
                             swcServiceDependency = self.parseSwcServiceDependency(xmlChildElem, internalBehavior)
                             internalBehavior.serviceDependencies.append(swcServiceDependency)
                         else:
-                            raise NotImplementedError(xmlChildElem.tag)
+                            print("Warning: " + str(xmlChildElem.tag) + " has not been implemented")
+                            # raise NotImplementedError(xmlChildElem.tag)
                 elif xmlElem.tag == 'SHARED-PARAMETERS':
                     for xmlChildElem in xmlElem.findall('./*'):
                         if xmlChildElem.tag == 'PARAMETER-DATA-PROTOTYPE':
@@ -174,14 +182,16 @@ class BehaviorParser(ElementParser):
                             if tmp is not None:
                                 internalBehavior.parameterDataPrototype.append(tmp)
                         else:
-                            raise NotImplementedError(xmlChildElem.tag)
+                            print("Warning: " + str(xmlChildElem.tag) + " has not been implemented")
+                            # raise NotImplementedError(xmlChildElem.tag)
                 elif xmlElem.tag == 'EXCLUSIVE-AREAS':
                     for xmlChild in xmlElem.findall('./*'):
                         if xmlChild.tag=='EXCLUSIVE-AREA':
                             exclusiveArea=autosar.behavior.ExclusiveArea(self.parseTextNode(xmlChild.find('SHORT-NAME')), internalBehavior)
                             internalBehavior.exclusiveAreas.append(exclusiveArea)
                         else:
-                            raise NotImplementedError(xmlChild.tag)
+                            print("Warning: " + str(xmlEvent.tag) + " has not been implemented")
+                            # raise NotImplementedError(xmlChild.tag)
                 elif xmlElem.tag == 'PER-INSTANCE-PARAMETERS':
                     pass #implement later
                 elif xmlElem.tag == 'EXPLICIT-INTER-RUNNABLE-VARIABLES':
@@ -191,7 +201,8 @@ class BehaviorParser(ElementParser):
                 elif xmlElem.tag == 'STATIC-MEMORYS':
                     pass #implement later
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    print("Warning: " + str(xmlEvent.tag) + " has not been implemented")
+                            # raise NotImplementedError(xmlElem.tag)
             return internalBehavior
 
     def parseRunnableEntity(self, xmlRoot, parent):
@@ -226,7 +237,8 @@ class BehaviorParser(ElementParser):
                 elif xmlElem.tag=='ADMIN-DATA':
                     adminData=self.parseAdminDataNode(xmlElem)
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                            # raise NotImplementedError(xmlElem.tag)
         else:
             for xmlElem in xmlRoot.findall('*'):
                 if xmlElem.tag=='SHORT-NAME':
@@ -264,7 +276,8 @@ class BehaviorParser(ElementParser):
                 elif xmlElem.tag == 'RUNS-INSIDE-EXCLUSIVE-AREA-REFS':
                     pass #implement later
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                    # raise NotImplementedError(xmlElem.tag)
         runnableEntity = autosar.behavior.RunnableEntity(name, canBeInvokedConcurrently, symbol, parent)
         if minStartInterval is not None:
             runnableEntity.minStartInterval = float(1000 * minStartInterval)
@@ -305,7 +318,8 @@ class BehaviorParser(ElementParser):
                     assert(modeAccessPoint is not None)
                     runnableEntity.modeAccessPoints.append(modeAccessPoint)
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                    # raise NotImplementedError(xmlElem.tag)
         if xmlServerCallPoints is not None:
             for xmlServerCallPoint in xmlServerCallPoints.findall('./SYNCHRONOUS-SERVER-CALL-POINT'):
                 syncServerCallPoint = self.parseSyncServerCallPoint(xmlServerCallPoint)
@@ -320,7 +334,8 @@ class BehaviorParser(ElementParser):
                     if tmp is not None:
                         runnableEntity.parameterAccessPoints.append(tmp)
                 else:
-                    raise NotImplementedError(xmlChild.tag)
+                    print("Warning: " + str(xmlChild.tag) + " has not been implemented")
+                    # raise NotImplementedError(xmlChild.tag)
         if xmlModeSwitchPoints is not None:
             for xmlElem in xmlModeSwitchPoints.findall('./*'):
                 if xmlElem.tag == 'MODE-SWITCH-POINT':
@@ -328,7 +343,8 @@ class BehaviorParser(ElementParser):
                     assert(modeSwitchPoint is not None)
                     runnableEntity.modeSwitchPoints.append(modeSwitchPoint)
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                    # raise NotImplementedError(xmlElem.tag)
 
         if xmlDataReadAccess is not None:
             for xmlElem in xmlDataReadAccess.findall('./*'):
@@ -337,7 +353,8 @@ class BehaviorParser(ElementParser):
                     assert(variableAccess is not None)
                     runnableEntity.dataReadAccess.append(variableAccess)
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                    # raise NotImplementedError(xmlElem.tag)
         
         if xmlDataWriteAccess is not None:
             for xmlElem in xmlDataWriteAccess.findall('./*'):
@@ -346,7 +363,8 @@ class BehaviorParser(ElementParser):
                     assert(variableAccess is not None)
                     runnableEntity.dataWriteAccess.append(variableAccess)
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                    # raise NotImplementedError(xmlElem.tag)
         
         if runnableEntity is not None:
             runnableEntity.adminData = adminData
@@ -371,9 +389,11 @@ class BehaviorParser(ElementParser):
                         else:
                             raise NotImplementedError('Multiple instances of P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF not implemented')
                     else:
-                        raise NotImplementedError(childElem.tag)
+                        print("Warning: " + str(childElem.tag) + " has not been implemented")
+                        # raise NotImplementedError(childElem.tag)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         return autosar.behavior.ModeAccessPoint(name, modeGroupInstanceRef)
 
     def _parseModeSwitchPoint(self, xmlRoot):
@@ -385,7 +405,8 @@ class BehaviorParser(ElementParser):
             elif xmlElem.tag == 'MODE-GROUP-IREF':
                 modeGroupInstanceRef=self._parseProvideModeGroupInstanceRef(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         return autosar.behavior.ModeSwitchPoint(name, modeGroupInstanceRef)
 
     def _parseVariableAccess(self, xmlRoot):
@@ -397,7 +418,8 @@ class BehaviorParser(ElementParser):
             elif xmlElem.tag == 'ACCESSED-VARIABLE':
                 variableAccess = self.parseAccessedVariable(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         return autosar.behavior.VariableAccess(name, variableAccess.portPrototypeRef, variableAccess.targetDataPrototypeRef)
 
     def parseParameterAccessPoint(self, xmlRoot, parent = None):
@@ -413,11 +435,13 @@ class BehaviorParser(ElementParser):
                     elif xmlChild.tag == 'LOCAL-PARAMETER-REF':
                         accessedParameter = autosar.behavior.LocalParameterRef(self.parseTextNode(xmlChild))
                     else:
-                        raise NotImplementedError(xmlChild.tag)
+                        print("Warning: " + str(xmlChild.tag) + " has not been implemented")
+                        # raise NotImplementedError(xmlChild.tag)
             elif xmlElem.tag == 'SW-DATA-DEF-PROPS':
                 swDataDefProps = self.parseSwDataDefProps(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         if (name is not None) and (accessedParameter is not None):
             return autosar.behavior.ParameterAccessPoint(name, accessedParameter, swDataDefProps=swDataDefProps)
 
@@ -431,7 +455,8 @@ class BehaviorParser(ElementParser):
             elif xmlElem.tag == 'TARGET-MODE-GROUP-REF':
                 modeGroupRef = self.parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         if requirePortRef is None:
             raise RuntimeError('CONTEXT-R-PORT-REF not set')
         if modeGroupRef is None:
@@ -449,7 +474,8 @@ class BehaviorParser(ElementParser):
             elif xmlElem.tag == 'TARGET-MODE-GROUP-REF':
                 modeGroupRef = self.parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         if providePortRef is None:
             raise RuntimeError('CONTEXT-P-PORT-REF not set')
         if modeGroupRef is None:
@@ -506,7 +532,8 @@ class BehaviorParser(ElementParser):
             if xmlElem.tag == 'DISABLED-MODE-IREF':
                 disabledInModes.append(self._parseDisabledModeInstanceRef(xmlElem))
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         return disabledInModes
 
     def _parseDisabledModeInstanceRef(self, xmlRoot):
@@ -520,7 +547,8 @@ class BehaviorParser(ElementParser):
             elif xmlElem.tag == 'TARGET-MODE-DECLARATION-REF':
                 modeDeclarationRef = self.parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         if (modeDeclarationRef is not None) and (modeDeclarationGroupPrototypeRef is not None) and (requirePortPrototypeRef is not None):
             return autosar.behavior.DisabledModeInstanceRef(modeDeclarationRef,modeDeclarationGroupPrototypeRef,requirePortPrototypeRef)
         else:
@@ -550,7 +578,8 @@ class BehaviorParser(ElementParser):
                 if xmlElem.tag == 'MODE-IREF':
                     modeInstanceRefs.append(self.parseModeInstanceRef(xmlElem))
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                    # raise NotImplementedError(xmlElem.tag)
             startOnEventRef = self.parseTextNode(xmlNode.find('START-ON-EVENT-REF'))
             activation = self.parseTextNode(xmlNode.find('ACTIVATION'))
             modeSwitchEvent=autosar.behavior.ModeSwitchEvent(name, startOnEventRef, activation, parent, self.version)
@@ -575,7 +604,8 @@ class BehaviorParser(ElementParser):
                 elif xmlElem.tag == 'EVENT-SOURCE-REF':
                     eventSourceRef = self.parseTextNode(xmlElem)
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                    # raise NotImplementedError(xmlElem.tag)
             modeSwitchEvent = autosar.behavior.ModeSwitchAckEvent(name, startOnEventRef, eventSourceRef, parent)
             if xmlDisabledModeRefs is not None:
                 modeSwitchEvent.disabledInModes = self._parseDisabledModesInstanceRefs(xmlDisabledModeRefs, parent)
@@ -595,7 +625,8 @@ class BehaviorParser(ElementParser):
             elif xmlElem.tag == 'PERIOD':
                 period = self.parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
 
         if (name is not None) and (startOnEventRef is not None) and (period is not None):
             timingEvent=autosar.behavior.TimingEvent(name, startOnEventRef, float(period)*1000, parent)
@@ -632,7 +663,8 @@ class BehaviorParser(ElementParser):
             elif xmlElem.tag == 'MODE-DEPENDENCY':
                 modeDependency = self._parseModeDependency(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         operationInvokedEvent=autosar.behavior.OperationInvokedEvent(name, startOnEventRef, parent)
         operationInvokedEvent.modeDependency = modeDependency
         operationInvokedEvent.operationInstanceRef = operationInstanceRef
@@ -649,7 +681,8 @@ class BehaviorParser(ElementParser):
             elif xmlElem.tag == dataElemTag:
                 dataElemRef = self.parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         return autosar.behavior.DataInstanceRef(portRef,dataElemRef)
 
     def parseOperationInstanceRef(self,xmlRoot,portTag):
@@ -713,7 +746,8 @@ class BehaviorParser(ElementParser):
             if xmlElem.tag=='SW-ADDR-METHOD-REF':
                 calPrmElemPrototype.swDataDefsProps.append(self.parseTextNode(xmlElem))
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         return calPrmElemPrototype
 
     def parseSyncServerCallPoint(self, xmlRoot):
@@ -732,7 +766,8 @@ class BehaviorParser(ElementParser):
                 elif xmlElem.tag=='TIMEOUT':
                     timeout=self.parseFloatNode(xmlElem)
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                    # raise NotImplementedError(xmlElem.tag)
         else:
             for xmlElem in xmlRoot.findall('*'):
                 if xmlElem.tag=='SHORT-NAME':
@@ -743,11 +778,13 @@ class BehaviorParser(ElementParser):
                         if xmlOperation.tag=='OPERATION-IREF':
                             operationInstanceRefs.append(self.parseOperationInstanceRef(xmlOperation,'R-PORT-PROTOTYPE-REF'))
                         else:
-                            raise NotImplementedError(xmlElem.tag)
+                            print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                            # raise NotImplementedError(xmlElem.tag)
                 elif xmlElem.tag=='TIMEOUT':
                     timeout=self.parseFloatNode(xmlElem)
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                    # raise NotImplementedError(xmlElem.tag)
         retval=autosar.behavior.SyncServerCallPoint(name,timeout)
         retval.operationInstanceRefs=operationInstanceRefs
         return retval
@@ -777,18 +814,21 @@ class BehaviorParser(ElementParser):
                         tmp = self._parseRoleBasedDataAssignment(xmlChildElem)
                         if tmp is not None: roleBasedDataAssignments.append(tmp)
                     else:
-                        raise NotImplementedError(xmlChildElem.tag)
+                        print("Warning: " + str(xmlChildElem.tag) + " has not been implemented")
+                        # raise NotImplementedError(xmlChildElem.tag)
             elif xmlElem.tag == 'ASSIGNED-PORTS':
                 for xmlChildElem in xmlElem.findall('./*'):
                     if xmlChildElem.tag == 'ROLE-BASED-PORT-ASSIGNMENT':
                         tmp = self._parseRoleBasedPortAssignment(xmlChildElem)
                         if tmp is not None: roleBasedPortAssignments.append(tmp)
                     else:
-                        raise NotImplementedError(xmlChildElem.tag)
+                        print("Warning: " + str(xmlChildElem.tag) + " has not been implemented")
+                        # raise NotImplementedError(xmlChildElem.tag)
             elif xmlElem.tag == 'SERVICE-NEEDS':
                 serviceNeeds = self.parseServiceNeeds(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         swcServiceDependency = autosar.behavior.SwcServiceDependency(name, parent = parent)
         if desc is not None:
             swcServiceDependency.desc=desc[0]
@@ -840,7 +880,8 @@ class BehaviorParser(ElementParser):
             if xmlElem.tag == 'NV-BLOCK-NEEDS':
                 xmlNvBlockNeeds = xmlElem
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         serviceNeeds = autosar.behavior.ServiceNeeds(None, parent)
         if xmlNvBlockNeeds is not None:
             serviceNeeds.nvmBlockNeeds = self.parseNvmBlockNeeds(xmlElem, serviceNeeds)
@@ -914,16 +955,19 @@ class BehaviorParser(ElementParser):
                     if xmlChild.tag == 'LOCAL-VARIABLE-REF':
                         localVariableRef = self.parseTextNode(xmlChild)
                     else:
-                        raise NotImplementedError(xmlChild.tag)
+                        print("Warning: " + str(xmlChild.tag) + " has not been implemented")
+                        # raise NotImplementedError(xmlChild.tag)
             elif xmlElem.tag == 'USED-PARAMETER-ELEMENT':
                 pass
                 for xmlChild in xmlElem.findall('./*'):
                     if xmlChild.tag == 'LOCAL-PARAMETER-REF':
                         localParameterRef = autosar.behavior.LocalParameterRef(self.parseTextNode(xmlChild))
                     else:
-                        raise NotImplementedError(xmlChild.tag)
+                        print("Warning: " + str(xmlChild.tag) + " has not been implemented")
+                        # raise NotImplementedError(xmlChild.tag)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         if (role is not None) and ( (localVariableRef is not None) or (localParameterRef is not None) ):
             return autosar.behavior.RoleBasedDataAssignment(role, localVariableRef, localParameterRef)
         return None
@@ -998,7 +1042,8 @@ class BehaviorParser(ElementParser):
                                     raise ValueError('Cannot find needed AUTOSAR-VARIABLE-IREF or AUTOSAR-VARIABLE-IN-IMPL-DATATYPE for WRITTEN-READ-NV-DATA in {0}'.format(descriptor.name))
                                 dataMapping.writtenReadNvData = autosar.behavior.WrittenReadNvData(dataMapping, autosarVariablePortRef=portPrototypeRef, autosarVariableElementRef=targetDataPrototypeRef)
                             else:
-                                raise NotImplementedError(xmlData.tag)
+                                print("Warning: " + str(xmlData.tag) + " has not been implemented")
+                                # raise NotImplementedError(xmlData.tag)
                 elif xmlElem.tag == 'NV-BLOCK-NEEDS':
                     descriptor.nvBlockNeeds = self.parseNvmBlockNeeds(xmlElem, descriptor)
                 elif xmlElem.tag == 'RAM-BLOCK':
@@ -1033,5 +1078,6 @@ class BehaviorParser(ElementParser):
                         raise ValueError('Cannot find timing event {0}'.format(timingRef))
                     descriptor.timingEventRef = timingEvent.name
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                    # raise NotImplementedError(xmlElem.tag)
             return descriptor

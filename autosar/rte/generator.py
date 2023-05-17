@@ -124,7 +124,8 @@ class TypeGenerator:
                      platform_typename = 'float32'
                   hfile.code.append('typedef %s %s;'%(platform_typename, dataType.name))
                else:
-                  raise NotImplementedError(type(dataType))
+                  print("Warning: " + str(type(dataType)) + " has not been implemented")
+                  # raise NotImplementedError(type(dataType))
                   #sys.stderr.write('not implemented: %s\n'%str(type(dataType)))
             else:
                raise ValueError(ref)
@@ -525,7 +526,8 @@ class ComponentHeaderGenerator():
       elif isinstance(value, autosar.constant.ArrayValue):
          pass
       else:
-         raise NotImplementedError(type(value))
+         print("Warning: " + str(type(value)) + " has not been implemented")
+         # raise NotImplementedError(type(value))
       return code
 
    def _writeRunnableProto(self, runnable):

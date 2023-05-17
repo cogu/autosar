@@ -46,7 +46,8 @@ class SignalParser(ElementParser):
                     if L2Xml is not None:
                         desc = parseTextNode(L2Xml)
             else:
-                raise NotImplementedError(elem.tag)
+                print("Warning: " + str(elem.tag) + " has not been implemented")
+                # raise NotImplementedError(elem.tag)
 #      if (name is not None) and (dataTypeRef is not None) and (initValueRef is not None) and length is not None:
         if (name is not None) and length is not None:  #All signals doesn't have IV constant Ref or DatatypeRef
             return SystemSignal(name, dataTypeRef, initValueRef, length, desc, parent)
@@ -64,9 +65,11 @@ class SignalParser(ElementParser):
                     if childElem.tag=='SYSTEM-SIGNAL-REF':
                         systemSignalRefs.append(parseTextNode(childElem))
                     else:
-                        raise NotImplementedError(childElem.tag)
+                        print("Warning: " + str(childElem.tag) + " has not been implemented")
+                        # raise NotImplementedError(childElem.tag)
             else:
-                raise NotImplementedError(elem.tag)
+                print("Warning: " + str(elem.tag) + " has not been implemented")
+                # raise NotImplementedError(elem.tag)
 
         if (name is not None) and (isinstance(systemSignalRefs,list)):
             return SystemSignalGroup(name,systemSignalRefs)

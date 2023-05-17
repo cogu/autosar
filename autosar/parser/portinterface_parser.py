@@ -86,7 +86,8 @@ class PortInterfacePackageParser(ElementParser):
                 if dataElem is not None:
                     dataElements.append(dataElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         return dataElements
 
     def _parseModeGroups(self, xmlRoot):
@@ -106,7 +107,8 @@ class PortInterfacePackageParser(ElementParser):
                     modeGroups.append(autosar.portinterface.ModeGroup(self.name, typeRef))
                 self.pop()
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         return modeGroups
 
     def _parseInvalidationPolicys(self, xmlRoot):
@@ -118,7 +120,8 @@ class PortInterfacePackageParser(ElementParser):
                 if invalidationPolicy is not None:
                     policyList.append(invalidationPolicy)
             else:
-                raise NotImplementedError(xmlChild.tag)
+                print("Warning: " + str(xmlChild.tag) + " has not been implemented")
+# raise NotImplementedError(xmlChild.tag)
         return policyList
 
     def _parseDataElementPrototype(self, xmlRoot):
@@ -148,7 +151,8 @@ class PortInterfacePackageParser(ElementParser):
             elif xmlElem.tag == 'HANDLE-INVALID':
                 handleInvalid = self.parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         if (dataElementRef is not None) and (handleInvalid is not None):
             return autosar.portinterface.InvalidationPolicy(dataElementRef, handleInvalid)
         else:
@@ -194,7 +198,8 @@ class PortInterfacePackageParser(ElementParser):
                             operation = self._parseOperationPrototype(xmlChildItem, portInterface)
                             portInterface.operations.append(operation)
                         else:
-                            raise NotImplementedError(xmlChildItem.tag)
+                            print("Warning: " + str(xmlChildItem.tag) + " has not been implemented")
+                            # raise NotImplementedError(xmlChildItem.tag)
                 elif xmlElem.tag == 'POSSIBLE-ERRORS':
                     for xmlError in xmlElem.findall('APPLICATION-ERROR'):
                         applicationError = self._parseApplicationError(xmlError, portInterface)
@@ -204,7 +209,8 @@ class PortInterfacePackageParser(ElementParser):
                 elif xmlElem.tag == 'LONG-NAME':
                     portInterface.longName = self.parseTextNode(xmlElem)
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                    # raise NotImplementedError(xmlElem.tag)
             return portInterface
 
     def parseParameterInterface(self,xmlRoot,parent=None):
@@ -220,7 +226,8 @@ class PortInterfacePackageParser(ElementParser):
             elif xmlElem.tag == 'PARAMETERS':
                 xmlParameters = xmlElem
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
 
         if (name is not None) and (xmlParameters is not None):
             portInterface = autosar.portinterface.ParameterInterface(name, isService, parent, adminData)
@@ -229,7 +236,8 @@ class PortInterfacePackageParser(ElementParser):
                     parameter = self._parseParameterDataPrototype(xmlChild, portInterface)
                     portInterface.append(parameter)
                 else:
-                    raise NotImplementedError(xmlChild.tag)
+                    print("Warning: " + str(xmlChild.tag) + " has not been implemented")
+                    # raise NotImplementedError(xmlChild.tag)
             return portInterface
 
 
@@ -246,7 +254,8 @@ class PortInterfacePackageParser(ElementParser):
             elif xmlElem.tag == 'MODE-GROUP':
                 xmlModeGroup = xmlElem
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
 
         if (name is not None) and (xmlModeGroup is not None):
             portInterface = autosar.portinterface.ModeSwitchInterface(name, isService, parent, adminData)
@@ -279,7 +288,8 @@ class PortInterfacePackageParser(ElementParser):
                 longName = xmlElem
                 # todo implement
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
 
         if name is not None:
             operation = autosar.portinterface.Operation(name, parent)
@@ -296,13 +306,15 @@ class PortInterfacePackageParser(ElementParser):
                         operation.arguments.append(argument)
                         argument.parent=operation
                     else:
-                        raise NotImplementedError(xmlChild.tag)
+                        print("Warning: " + str(xmlChild.tag) + " has not been implemented")
+                        # raise NotImplementedError(xmlChild.tag)
             if xmlPossibleErrorRefs is not None:
                 for xmlChild in xmlPossibleErrorRefs.findall('./*'):
                     if xmlChild.tag == 'POSSIBLE-ERROR-REF':
                         operation.errorRefs.append(self.parseTextNode(xmlChild))
                     else:
-                        raise NotImplementedError(xmlChild.tag)
+                        print("Warning: " + str(xmlChild.tag) + " has not been implemented")
+                        # raise NotImplementedError(xmlChild.tag)
             return operation
 
     def _parseOperationArgumentV3(self, xmlArgument, parent):
@@ -315,7 +327,8 @@ class PortInterfacePackageParser(ElementParser):
             elif xmlElem.tag == 'DIRECTION':
                 direction = self.parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         if (name is not None) and (typeRef is not None) and (direction is not None):
             return autosar.portinterface.Argument(name, typeRef, direction)
         else:
@@ -361,7 +374,8 @@ class PortInterfacePackageParser(ElementParser):
             elif xmlElem.tag == 'TYPE-TREF':
                 typeRef = self.parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
 
         if (name is not None) and (typeRef is not None):
             parameter = autosar.element.ParameterDataPrototype(name, typeRef, parent=parent, adminData=adminData)

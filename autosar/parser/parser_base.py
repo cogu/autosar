@@ -66,7 +66,8 @@ class BaseParser:
         elif xmlElem.tag == 'DISPLAY-FORMAT':
             self.common[-1].displayFormat = None
         else:
-            raise NotImplementedError(xmlElem.tag)
+            print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+            # raise NotImplementedError(xmlElem.tag)
     
     def applyDesc(self, obj):
         if self.common[-1].desc is not None:            
@@ -177,7 +178,8 @@ class BaseParser:
                         except KeyError: pass
                         specialDataGroup.SD.append(SpecialData(TEXT, SD_GID))
                     else:
-                        raise NotImplementedError(xmlChild.tag)
+                        print("Warning: " + str(xmlChild.tag) + " has not been implemented")
+                        # raise NotImplementedError(xmlChild.tag)
                 adminData.specialDataGroups.append(specialDataGroup)
         return adminData
 
@@ -192,9 +194,11 @@ class BaseParser:
                         assert(variant is not None)
                         variants.append(variant)
                     else:
-                        raise NotImplementedError(subItemXML.tag)
+                        print("Warning: " + str(subItemXML.tag) + " has not been implemented")
+                        # raise NotImplementedError(subItemXML.tag)
             else:
-                raise NotImplementedError(itemXML.tag)
+                print("Warning: " + str(itemXML.tag) + " has not been implemented")
+                # raise NotImplementedError(itemXML.tag)
         return variants if len(variants)>0 else None
 
     def parseSwDataDefPropsConditional(self, xmlRoot):
@@ -239,7 +243,8 @@ class BaseParser:
                 print("[BaseParser] unhandled: %s"%xmlItem.tag)
                 pass #implement later
             else:
-                raise NotImplementedError(xmlItem.tag)
+                print("Warning: " + str(xmlItem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlItem.tag)
         variant = SwDataDefPropsConditional(baseTypeRef, implementationTypeRef, swAddressMethodRef, swCalibrationAccess, swImplPolicy, None, compuMethodRef, dataConstraintRef, unitRef)
         if swPointerTargetPropsXML is not None:
             variant.swPointerTargetProps = self.parseSwPointerTargetProps(swPointerTargetPropsXML, variant)
@@ -288,7 +293,8 @@ class BaseParser:
             elif xmlElem.tag == 'SYMBOL':
                 symbol = self.parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         return SymbolProps(name, symbol)
             
 class ElementParser(BaseParser, metaclass=abc.ABCMeta):

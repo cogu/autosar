@@ -48,7 +48,8 @@ class DataTypeParser(ElementParser):
                     if elem.tag=='COMPU-METHOD-REF':
                         dataType.compuMethodRef=self.parseTextNode(elem)
                     else:
-                        raise NotImplementedError(elem.tag)
+                        print("Warning: " + str(elem.tag) + " has not been implemented")
+                        # raise NotImplementedError(elem.tag)
             return dataType
 
     def parseRecordType(self,root,parent=None):
@@ -123,7 +124,8 @@ class DataTypeParser(ElementParser):
                     elif xmlChildElem.tag == 'CONSTR-LEVEL':
                         constraintLevel = self.parseIntNode(xmlChildElem)
                     else:
-                        raise NotImplementedError(xmlChildElem.tag)
+                        print("Warning: " + str(xmlChildElem.tag) + " has not been implemented")
+                        # raise NotImplementedError(xmlChildElem.tag)
             else:
                 self.defaultHandler(xmlElem)
         elem = autosar.datatype.DataConstraint(self.name, rules, constraintLevel, parent, self.adminData)
@@ -191,7 +193,8 @@ class DataTypeParser(ElementParser):
             if xmlElem.tag == 'IMPLEMENTATION-DATA-TYPE-ELEMENT':
                 elements.append(self.parseImplementationDataTypeElement(xmlElem, parent))
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+# raise NotImplementedError(xmlElem.tag)
         return elements
 
     def parseImplementationDataTypeElement(self, xmlRoot, parent):
@@ -252,7 +255,8 @@ class DataTypeParser(ElementParser):
                         assert(dataTypeMap is not None)
                         dataTypeMaps.append(dataTypeMap)
                     else:
-                        raise NotImplementedError(xmlElem.tag)
+                        print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                        # raise NotImplementedError(xmlElem.tag)
             elif xmlElem.tag == 'MODE-REQUEST-TYPE-MAPS':
                 for xmlChild in xmlElem.findall('./*'):
                     if xmlChild.tag == 'MODE-REQUEST-TYPE-MAP':
@@ -260,9 +264,11 @@ class DataTypeParser(ElementParser):
                         assert(modeRequestTypeMap is not None)
                         modeRequestTypeMaps.append(modeRequestTypeMap)
                     else:
-                        raise NotImplementedError(xmlElem.tag)
+                        print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                        # raise NotImplementedError(xmlElem.tag)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         if (name is None):
             raise RuntimeError('SHORT-NAME cannot be None')
         elem = autosar.datatype.DataTypeMappingSet(name, parent, adminData)
@@ -340,7 +346,8 @@ class DataTypeParser(ElementParser):
                 if xmlChild.tag == 'APPLICATION-RECORD-ELEMENT':
                     elem.elements.append(self._parseApplicationRecordElementXML(xmlChild, parent = elem))
                 else:
-                    raise NotImplementedError(xmlChild.tag)
+                    print("Warning: " + str(xmlChild.tag) + " has not been implemented")
+                    # raise NotImplementedError(xmlChild.tag)
         self.pop(elem)
         return elem
 
@@ -369,7 +376,8 @@ class DataTypeParser(ElementParser):
             elif xmlElem.tag == 'IMPLEMENTATION-DATA-TYPE-REF':
                 implementationDataTypeRef = self.parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         return autosar.datatype.DataTypeMap(applicationDataTypeRef, implementationDataTypeRef)
 
     def _parseModeRequestTypeMapXML(self, xmlRoot):
@@ -381,7 +389,8 @@ class DataTypeParser(ElementParser):
             elif xmlElem.tag == 'IMPLEMENTATION-DATA-TYPE-REF':
                 implementationDataTypeRef = self.parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         return autosar.datatype.ModeRequestTypeMap(modeDeclarationGroupRef, implementationDataTypeRef)
 
 class DataTypeSemanticsParser(ElementParser):
@@ -441,9 +450,11 @@ class DataTypeSemanticsParser(ElementParser):
                         computation.defaultValue = self.parseNumberNode(xmlChild)
                         break
                     else:
-                        raise NotImplementedError(xmlChild.tag)
+                        print("Warning: " + str(xmlChild.tag) + " has not been implemented")
+                        # raise NotImplementedError(xmlChild.tag)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         return computation
 
     def _parseCompuScaleXML(self, xmlRoot):
@@ -475,7 +486,8 @@ class DataTypeSemanticsParser(ElementParser):
             elif xmlElem.tag == 'MASK':
                 mask = self.parseIntNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         compuScale = autosar.datatype.CompuScaleElement(lowerLimit, upperLimit, lowerLimitType, upperLimitType, label, symbol, adminData)
         compuScale.offset = offset
         compuScale.numerator = numerator

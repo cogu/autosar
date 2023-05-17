@@ -93,7 +93,8 @@ class ConstantParser(ElementParser):
             elif xmlElem.tag == 'APPLICATION-VALUE-SPECIFICATION':
                 result.append(self._parseApplicationValueSpecification(xmlElem, parent))
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         return result
 
     def _parseTextValueSpecification(self, xmlValue, parent):
@@ -104,7 +105,8 @@ class ConstantParser(ElementParser):
             elif xmlElem.tag == 'VALUE':
                 value = self.parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
 
         if value is not None:
             return autosar.constant.TextValue(label, value, parent)
@@ -119,7 +121,8 @@ class ConstantParser(ElementParser):
             elif xmlElem.tag == 'VALUE':
                 value = self.parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
 
         if value is not None:
             return autosar.constant.NumericalValue(label, value, parent)
@@ -134,7 +137,8 @@ class ConstantParser(ElementParser):
             elif xmlElem.tag == 'FIELDS':
                 xmlFields = xmlElem
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
 
         if (xmlFields is not None):
             record = autosar.constant.RecordValue(label, parent=parent)
@@ -151,7 +155,8 @@ class ConstantParser(ElementParser):
             elif xmlElem.tag == 'ELEMENTS':
                 xmlElements = xmlElem
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
 
         if (xmlElements is not None):
             array = autosar.constant.ArrayValueAR4(label, parent=parent)
@@ -193,7 +198,8 @@ class ConstantParser(ElementParser):
                 if xmlChild is not None:
                     swAxisCont = self._parseSwAxisCont(xmlChild)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         value = autosar.constant.ApplicationValue(label, swValueCont = swValueCont, swAxisCont = swAxisCont, category = category, parent = parent)
         return value
 
@@ -211,15 +217,18 @@ class ConstantParser(ElementParser):
                     elif xmlChild.tag == 'VT':
                         valueList.append(self.parseTextNode(xmlChild))
                     else:
-                        raise NotImplementedError(xmlChild.tag)
+                        print("Warning: " + str(xmlChild.tag) + " has not been implemented")
+                        # raise NotImplementedError(xmlChild.tag)
             elif xmlElem.tag == 'SW-ARRAYSIZE':
                 for xmlChild in xmlElem.findall('./*'):
                     if xmlChild.tag == 'V':
                         sizeList.append(self.parseNumberNode(xmlChild))
                     else:
-                        raise NotImplementedError(xmlChild.tag)
+                        print("Warning: " + str(xmlChild.tag) + " has not been implemented")
+                        # raise NotImplementedError(xmlChild.tag)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         if len(valueList)==0:
             valueList = None
         return autosar.constant.SwValueCont(valueList, unitRef,swArraySize=sizeList)
@@ -236,19 +245,22 @@ class ConstantParser(ElementParser):
                     if xmlChild.tag == 'V':
                         valueList.append(self.parseNumberNode(xmlChild))
                     else:
-                        raise NotImplementedError(xmlChild.tag)
+                        print("Warning: " + str(xmlChild.tag) + " has not been implemented")
+                        # raise NotImplementedError(xmlChild.tag)
             elif xmlElem.tag == 'SW-ARRAYSIZE':
                 for xmlChild in xmlElem.findall('./*'):
                     if xmlChild.tag == 'V':
                         sizeList.append(self.parseNumberNode(xmlChild))
                     else:
-                        raise NotImplementedError(xmlChild.tag)
+                        print("Warning: " + str(xmlChild.tag) + " has not been implemented")
+                        # raise NotImplementedError(xmlChild.tag)
             elif xmlElem.tag == 'CATEGORY':
                 cat = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'SW-AXIS-INDEX':
                 swAxIndex = self.parseNumberNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         if len(valueList)==0:
             valueList = None
         return autosar.constant.SwAxisCont(valueList, unitRef, category=cat, swAxisIndex=swAxIndex, swArraySize=sizeList)

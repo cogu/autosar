@@ -1,6 +1,7 @@
 from autosar.base import parseXMLFile,splitRef,parseTextNode,parseIntNode,hasAdminData,parseAdminDataNode
 from autosar.system import *
 from autosar.parser.parser_base import ElementParser
+import sys
 
 class SystemParser(ElementParser):
     def __init__(self,version=3.0):
@@ -26,6 +27,12 @@ class SystemParser(ElementParser):
             for xmlElem in xmlRoot.findall('./*'):
                 if xmlElem.tag=='SHORT-NAME':
                     pass
+                elif xmlElem.tag=='CATEGORY':
+                    print("Unhandled: %s"%xmlElem.tag)
+                elif xmlElem.tag=='MAPPINGS':
+                    print("Unhandled: %s"%xmlElem.tag)
+                elif xmlElem.tag=='ROOT-SOFTWARE-COMPOSITIONS':
+                    print("Unhandled: %s"%xmlElem.tag)
                 elif xmlElem.tag=='ADMIN-DATA':
                     system.adminData=parseAdminDataNode(xmlElem)
                 elif xmlElem.tag=='FIBEX-ELEMENT-REFS':
@@ -35,7 +42,8 @@ class SystemParser(ElementParser):
                 elif xmlElem.tag=='SOFTWARE-COMPOSITION':
                     self.parseSoftwareComposition(xmlElem,system)
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                    # raise NotImplementedError(xmlElem.tag)
             return system
         else:
             raise KeyError('expected to find <SHORT-NAME> inside <SYSTEM> tag')
@@ -45,7 +53,8 @@ class SystemParser(ElementParser):
             if xmlElem.tag=='FIBEX-ELEMENT-REF':
                 system.fibexElementRefs.append(parseTextNode(xmlElem))
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
 
     def parseSystemMapping(self,xmlRoot,system):
         """parses <MAPPING>"""
@@ -62,7 +71,8 @@ class SystemParser(ElementParser):
             elif xmlElem.tag=='SW-MAPPINGS':
                 self.parseSwMapping(xmlElem,system.mapping)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
 
     def parseDataMapping(self,xmlRoot,dataMapping):
         """parses <DATA-MAPPINGS>"""
@@ -75,7 +85,8 @@ class SystemParser(ElementParser):
             elif xmlElem.tag=='SENDER-RECEIVER-TO-SIGNAL-GROUP-MAPPING':
                 dataMapping.senderReceiverToSignalGroup.append(self.parseSenderReceiverToSignalGroupMapping(xmlElem))
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
 
     def parseSwImplMapping(self,xmlRoot,mapping):
         """parses <SW-IMPL-MAPPINGS>"""
@@ -84,7 +95,8 @@ class SystemParser(ElementParser):
             if xmlElem.tag=='SWC-TO-IMPL-MAPPING':
                 pass
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
 
     def parseSwMapping(self,xmlRoot,mapping):
         """parses <SW-MAPPINGS>"""
@@ -93,7 +105,8 @@ class SystemParser(ElementParser):
             if xmlElem.tag=='SWC-TO-ECU-MAPPING':
                 pass
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
 
     def parseSoftwareComposition(self,xmlRoot,system):
         """parses <SOFTWARE-COMPOSITION>"""
@@ -105,7 +118,8 @@ class SystemParser(ElementParser):
             elif xmlElem.tag=='SOFTWARE-COMPOSITION-TREF':
                 pass
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
 
     def parseSenderReceiverToSignalMapping(self,xmlRoot):
         """parses <'SENDER-RECEIVER-TO-SIGNAL-MAPPING'>"""
@@ -118,7 +132,8 @@ class SystemParser(ElementParser):
             elif xmlElem.tag=='SIGNAL-REF':
                 signalRef=parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         if (dataElemIRef is not None) and (signalRef is not None):
             return SenderReceiverToSignalMapping(dataElemIRef,signalRef)
         else:
@@ -146,9 +161,11 @@ class SystemParser(ElementParser):
                         for xmlItem in xmlChild.findall('./RECORD-ELEMENT-MAPPINGS/SENDER-REC-RECORD-ELEMENT-MAPPING'):
                             typeMapping.elements.append(self.parseSenderRecRecordElementMapping(xmlItem))
                     else:
-                        raise NotImplementedError(xmlChild.tag)
+                        print("Warning: " + str(xmlChild.tag) + " has not been implemented")
+                        # raise NotImplementedError(xmlChild.tag)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         return SenderReceiverToSignalGroupMapping(dataElemIRef,signalGroupRef,typeMapping)
 
     def parseDataElemInstanceRef(self,xmlRoot):
@@ -165,7 +182,8 @@ class SystemParser(ElementParser):
             elif xmlChild.tag=='PORT-PROTOTYPE-REF':
                 dataElemIRef.portPrototypeRef=parseTextNode(xmlChild)
             else:
-                raise NotImplementedError(xmlChild.tag)
+                print("Warning: " + str(xmlChild.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlChild.tag)
         return dataElemIRef
 
     def parseSenderRecRecordElementMapping(self,xmlRoot):
@@ -179,10 +197,12 @@ class SystemParser(ElementParser):
             elif xmlElem.tag=='SIGNAL-REF': #minOccurs="0" maxOccurs="1"
                 signalRef=parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
+                # raise NotImplementedError(xmlElem.tag)
         return SenderRecRecordElementMapping(recordElementRef,signalRef)
 
     def parseSenderRecArrayElementMapping(self,xmlRoot):
         """parses <'SENDER-REC-RECORD-ELEMENT-MAPPING'>"""
         assert(xmlRoot.tag=='SENDER-REC-RECORD-ELEMENT-MAPPING')
-        raise NotImplementedError(xmlRoot.tag)
+        print("Warning: " + str(xmlRoot.tag) + " has not been implemented")
+        # raise NotImplementedError(xmlRoot.tag)
