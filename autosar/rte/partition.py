@@ -217,8 +217,7 @@ class Component:
             assert (operation is not None)
             event = autosar.rte.base.OperationInvokedEvent(ar_event, runnable, port, operation)
          else:
-            print("Warning: " + str(type(event)) + " has not been implemented")
-            # raise NotImplementedError(str(type(event)))
+            raise NotImplementedError(str(type(event)))
          self.events.append(event)
             
    def _process_port_access(self):
@@ -226,8 +225,7 @@ class Component:
          if isinstance(access, autosar.rte.base.OperationPortAccess):
             proto = access.port.create_server_call_api(access.operation)
          else:
-            print("Warning: " + str(type(access)) + " has not been implemented")
-            # raise NotImplementedError(str(type(access)))
+            raise NotImplementedError(str(type(access)))
    def _runnables_finalize(self):
       #operation_invoke_events = [event for event in self.events if isinstance(event, OperationInvokedEvent)]         
       for runnable in self.runnables:

@@ -13,8 +13,7 @@ def initializer_string(constant):
             values.append(initializer_string(elem))
         return prolog+', '.join(values) + epilog
     else:
-        print("Warning: " + str(type(constant)) + " has not been implemented")
-        # raise NotImplementedError(str(type(constant)))
+        raise NotImplementedError(str(type(constant)))
 
 
 class Value(Element):

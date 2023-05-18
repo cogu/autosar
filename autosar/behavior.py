@@ -261,8 +261,7 @@ class RunnableEntity(Element):
             self.dataSendPoints.append(dataSendPoint)
             dataSendPoint.parent=self
         else:
-            print("Warning: " + str(type(elem)) + " has not been implemented")
-            # raise NotImplementedError(str(type(elem)))
+            raise NotImplementedError(str(type(elem)))
 
     def _verifyDataReceivePoint(self,dataReceivePoint):
         ws=self.rootWS()
@@ -754,8 +753,7 @@ class InternalBehaviorCommon(Element):
                             raise ValueError('invalid operation reference: '+str(elem))
                         self._createSyncServerCallPoint(port,operation,runnable)
                     else:
-                        print("Warning: " + str(type(portInterface)) + " has not been implemented")
-                        # raise NotImplementedError(type(portInterface))
+                        raise NotImplementedError(type(portInterface))
         if exclusiveAreas is not None:
             if isinstance(exclusiveAreas, str):
                 exclusiveAreas =[exclusiveAreas]
@@ -786,8 +784,7 @@ class InternalBehaviorCommon(Element):
                     modeGroup = portInterface.modeGroup
                     self._createModeSwitchPoint(port, modeGroup, runnable)
                 else:
-                    print("Warning: " + str(type(portInterface)) + " has not been implemented")
-                    # raise NotImplementedError(str(type(portInterface)))
+                    raise NotImplementedError(str(type(portInterface)))
         return runnable
 
     def _createSendReceivePoint(self,port,dataElement,runnable):
@@ -836,8 +833,7 @@ class InternalBehaviorCommon(Element):
         elif isinstance(portInterface, autosar.portinterface.ModeSwitchInterface):
             modeGroup = portInterface.modeGroup
         else:
-            print("Warning: " + str(type(portInterface)) + " has not been implemented")
-            # raise NotImplementedError(type(portInterface))
+            raise NotImplementedError(type(portInterface))
         assert(modeGroup is not None)
         dataType = ws.find(modeGroup.typeRef)
         if (dataType is None):
@@ -1093,8 +1089,7 @@ class InternalBehavior(InternalBehaviorCommon):
             self.runnables.append(elem)
             elem.parent=self
         else:
-            print("Warning: " + str(type(elem)) + " has not been implemented")
-            # raise NotImplementedError(str(type(elem)))
+            raise NotImplementedError(str(type(elem)))
 
     def find(self, ref):
         if ref is None: return None

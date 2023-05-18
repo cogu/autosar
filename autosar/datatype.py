@@ -374,8 +374,7 @@ class DataConstraint(Element):
             elif rule['type'] == 'physicalConstraint':
                 self.rules.append(PhysicalConstraint(lowerLimit=rule['lowerLimit'], upperLimit=rule['upperLimit'], lowerLimitType=rule['lowerLimitType'], upperLimitType=rule['upperLimitType']))
             else:
-                print("Warning: " + str(rule) + " has not been implemented")
-                # raise NotImplementedError
+                raise NotImplementedError
     @property
     def constraintLevel(self):
         if self.level is None or isinstance(self.level, int):

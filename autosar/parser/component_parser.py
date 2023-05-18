@@ -106,8 +106,7 @@ class ComponentTypeParser(ElementParser):
         elif xmlRoot.tag == 'NV-BLOCK-SW-COMPONENT-TYPE': #for AUTOSAR 4.x
             componentType = autosar.component.NvBlockComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
         else:
-            print("Warning: " + str(xmlRoot.tag) + " has not been implemented")
-            # raise NotImplementedError(xmlRoot.tag)
+            raise NotImplementedError(xmlRoot.tag)
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag not in handledTags:
                 if xmlElem.tag == 'ADMIN-DATA':
@@ -178,8 +177,7 @@ class ComponentTypeParser(ElementParser):
                             assert(comspec is not None)
                             port.comspec.append(comspec)
                         else:
-                            print("Warning: " + str(xmlItem.tag) + " has not been implemented")
-                            # raise NotImplementedError(xmlItem.tag)
+                            raise NotImplementedError(xmlItem.tag)
                 componentType.requirePorts.append(port)
             elif(xmlPort.tag == 'P-PORT-PROTOTYPE'):
                 portName = xmlPort.find('SHORT-NAME').text
@@ -225,8 +223,7 @@ class ComponentTypeParser(ElementParser):
                             assert(comspec is not None)
                             port.comspec.append(comspec)
                         else:
-                            print("Warning: " + str(xmlItem.tag) + " has not been implemented")
-                            # raise NotImplementedError(xmlItem.tag)
+                            raise NotImplementedError(xmlItem.tag)
                 componentType.providePorts.append(port)
 
     def parseCompositionType(self, xmlRoot, parent=None):
@@ -277,8 +274,7 @@ class ComponentTypeParser(ElementParser):
                 typeRef=self.parseTextNode(elem.find('TYPE-TREF'))
                 parent.components.append(autosar.component.ComponentPrototype(name,typeRef,parent))
             else:
-                print("Warning: " + str(elem.tag) + " has not been implemented")
-                # raise NotImplementedError(elem.tag)
+                raise NotImplementedError(elem.tag)
 
     def parseConnectorsV3(self,xmlRoot,parent=None):
         """
@@ -300,8 +296,7 @@ class ComponentTypeParser(ElementParser):
                 outerPortRef=self.parseTextNode(elem.find('./OUTER-PORT-REF'))
                 parent.delegationConnectors.append(autosar.component.DelegationConnector(name, autosar.component.InnerPortInstanceRef(innerComponentRef,innerPortRef), autosar.component.OuterPortRef(outerPortRef)))
             else:
-                print("Warning: " + str(elem.tag) + " has not been implemented")
-# raise NotImplementedError(elem.tag)
+                raise NotImplementedError(elem.tag)
 
     def parseConnectorsV4(self,xmlRoot,parent=None):
         """
@@ -321,8 +316,7 @@ class ComponentTypeParser(ElementParser):
                         requesterComponentRef=self.parseTextNode(xmlChild.find('./CONTEXT-COMPONENT-REF'))
                         requesterPortRef=self.parseTextNode(xmlChild.find('./TARGET-R-PORT-REF'))
                     else:
-                        print("Warning: " + str(xmlChild.tag) + " has not been implemented")
-                        # raise NotImplementedError(xmlChild.tag)
+                        raise NotImplementedError(xmlChild.tag)
                 if providerComponentRef is None:
                     raise RuntimeError('PROVIDER-IREF/CONTEXT-COMPONENT-REF is missing: item=%s'%name)
                 if providerComponentRef is None:
@@ -343,13 +337,11 @@ class ComponentTypeParser(ElementParser):
                         innerComponentRef=self.parseTextNode(xmlChild.find('./CONTEXT-COMPONENT-REF'))
                         innerPortRef=self.parseTextNode(xmlChild.find('./TARGET-P-PORT-REF'))
                     else:
-                        print("Warning: " + str(xmlChild.tag) + " has not been implemented")
-                        # raise NotImplementedError(xmlChild.tag)
+                        raise NotImplementedError(xmlChild.tag)
                 outerPortRef=self.parseTextNode(xmlElem.find('./OUTER-PORT-REF'))
                 parent.delegationConnectors.append(autosar.component.DelegationConnector(name, autosar.component.InnerPortInstanceRef(innerComponentRef,innerPortRef), autosar.component.OuterPortRef(outerPortRef)))
             else:
-                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
-                # raise NotImplementedError(xmlElem.tag)
+                raise NotImplementedError(xmlElem.tag)
 
     def _parseModeSwitchReceiverComSpec(self, xmlRoot):
         (enhancedMode, supportAsync, modeGroupRef) = (None, None, None)
@@ -362,8 +354,7 @@ class ComponentTypeParser(ElementParser):
             elif xmlElem.tag == 'MODE-GROUP-REF':
                 modeGroupRef = self.parseTextNode(xmlElem)
             else:
-                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
-                # raise NotImplementedError(xmlElem.tag)
+                raise NotImplementedError(xmlElem.tag)
         return autosar.port.ModeSwitchComSpec(None, enhancedMode, supportAsync, modeGroupRef = modeGroupRef)
 
     def _parseModeSwitchSenderComSpec(self, xmlRoot):
@@ -383,8 +374,7 @@ class ComponentTypeParser(ElementParser):
             elif xmlElem.tag == 'QUEUE-LENGTH':
                 queueLength = self.parseIntNode(xmlElem)
             else:
-                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
-                # raise NotImplementedError(xmlElem.tag)
+                raise NotImplementedError(xmlElem.tag)
         return autosar.port.ModeSwitchComSpec(None, enhancedMode, None, queueLength, modeSwitchAckTimeout, modeGroupRef)
 
     def _parseParameterComSpec(self, xmlRoot, portInterfaceRef):
@@ -397,8 +387,7 @@ class ComponentTypeParser(ElementParser):
             elif xmlElem.tag == 'PARAMETER-REF':
                 name = _getParameterNameFromComSpec(xmlElem, portInterfaceRef)
             else:
-                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
-                # raise NotImplementedError(xmlElem.tag)
+                raise NotImplementedError(xmlElem.tag)
         if (name is not None):
             return autosar.port.ParameterComSpec(name, initValue)
         else:
@@ -414,8 +403,7 @@ class ComponentTypeParser(ElementParser):
             elif xmlElem.tag == 'VARIABLE-REF':
                 name = _getVariableNameFromComSpec(xmlElem, portInterfaceRef)
             else:
-                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
-                # raise NotImplementedError(xmlElem.tag)
+                raise NotImplementedError(xmlElem.tag)
         if (name is not None):
             return autosar.port.NvProvideComSpec(name, ramBlockInitValue=ramBlockInitValue,
                                                     ramBlockInitValueRef=ramBlockInitValueRef,
@@ -432,8 +420,7 @@ class ComponentTypeParser(ElementParser):
             elif xmlElem.tag == 'VARIABLE-REF':
                 name = _getVariableNameFromComSpec(xmlElem, portInterfaceRef)
             else:
-                print("Warning: " + str(xmlElem.tag) + " has not been implemented")
-                # raise NotImplementedError(xmlElem.tag)
+                raise NotImplementedError(xmlElem.tag)
         if (name is not None):
             return autosar.port.NvRequireComSpec(name, initValue=initValue,
                                                     initValueRef=initValueRef)

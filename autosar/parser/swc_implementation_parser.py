@@ -44,8 +44,7 @@ class SwcImplementationParser(ElementParser):
                     if codeElem.tag  == 'CODE':
                         implementation.codeDescriptors.append(self.parseCodeDescriptor(codeElem, parent=implementation))
                     else:
-                        print("Warning: " + str(codeElem.tag) + " has not been implemented")
-                        # raise NotImplementedError(codeElem.tag)
+                        raise NotImplementedError(codeElem.tag)
             elif xmlElem.tag == 'COMPILERS':
                 #TODO: Implement later
                 continue

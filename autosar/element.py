@@ -103,8 +103,7 @@ class DataElement(Element):
             self.swImplPolicy = props.swImplPolicy
             self.dataConstraintRef = props.dataConstraintRef
         else:
-            print("Warning: " + str(type(props)) + " has not been implemented")
-            # raise NotImplementedError(type(props))
+            raise NotImplementedError(type(props))
 
 class ParameterDataPrototype(Element):
     """

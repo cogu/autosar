@@ -60,11 +60,9 @@ class ValueBuilder:
                         raise ValueError('Invalid reference: '+str(referencedTypeRef))
                     value = self._createFromDataTypeInternal(ws, label, referencedType, rawValue, parent)
                 else:
-                    print("Warning: " + str(type(dataType.category)) + " has not been implemented")
-                    # raise NotImplementedError(dataType.category)
+                    raise NotImplementedError(dataType.category)
         else:
-            print("Warning: " + str(type(dataType)) + " has not been implemented")
-            # raise NotImplementedError(type(dataType))
+            raise NotImplementedError(type(dataType))
         return value
 
     def _createRecordValueFromTypeInternal(self, ws, label, dataType, initValue, parent=None):
@@ -160,5 +158,4 @@ class ValueBuilder:
                     raise RuntimeError('Failed to build init-value for "{}"'.format(str(inner_value)))
             return array_value
         else:
-            print("Warning: " + str(type(value)) + " has not been implemented")
-            # raise NotImplementedError(type(value))
+            raise NotImplementedError(type(value))
