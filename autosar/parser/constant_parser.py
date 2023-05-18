@@ -222,7 +222,7 @@ class ConstantParser(ElementParser):
                 raise NotImplementedError(xmlElem.tag)
         if len(valueList)==0:
             valueList = None
-        return autosar.constant.SwValueCont(valueList, unitRef,swArraySize=sizeList)
+        return autosar.constant.SwValueCont(valueList, unitRef, swArraySize=sizeList)
 
     def _parseSwAxisCont(self, xmlRoot):
         unitRef = None

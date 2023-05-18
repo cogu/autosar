@@ -260,7 +260,6 @@ class SwValueCont:
                 self.swArraySize = list(swArraySize)
             else:
                 self.swArraySize = swArraySize
-                
         self.unitRef = unitRef
         self.unitDisplayName = unitDisplayName
         self.swArraySize = swArraySize
@@ -293,4 +292,3 @@ class SwAxisCont:
                 self.values = list(values)
             else:
                 self.values = values
-        

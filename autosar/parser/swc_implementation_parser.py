@@ -86,7 +86,7 @@ class SwcImplementationParser(ElementParser):
 
         self.pop(implementation)
         # Find the SWC and connect the swc to the implementation.
-        # Attention this relies on a specific order of the tags and cannot be guaranteed!!!!!!!
+        # FIXME: this assumes that 'behavior' has already been parsed but this depends on TAGs and parsing order!
         behavior = ws.find(behaviorRef)
         if behavior is not None:
             swc = ws.find(behavior.componentRef)

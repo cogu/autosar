@@ -1,4 +1,3 @@
-import pdb
 import autosar.behavior
 from autosar.parser.parser_base import ElementParser
 from autosar.parser.constant_parser import ConstantParser
