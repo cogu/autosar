@@ -26,6 +26,12 @@ class SystemParser(ElementParser):
             for xmlElem in xmlRoot.findall('./*'):
                 if xmlElem.tag=='SHORT-NAME':
                     pass
+                elif xmlElem.tag=='CATEGORY':
+                    print("Unhandled: %s"%xmlElem.tag)
+                elif xmlElem.tag=='MAPPINGS':
+                    print("Unhandled: %s"%xmlElem.tag)
+                elif xmlElem.tag=='ROOT-SOFTWARE-COMPOSITIONS':
+                    print("Unhandled: %s"%xmlElem.tag)
                 elif xmlElem.tag=='ADMIN-DATA':
                     system.adminData=parseAdminDataNode(xmlElem)
                 elif xmlElem.tag=='FIBEX-ELEMENT-REFS':
