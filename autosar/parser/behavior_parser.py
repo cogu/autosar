@@ -401,7 +401,7 @@ class BehaviorParser(ElementParser):
 
     def parseParameterAccessPoint(self, xmlRoot, parent = None):
         assert(xmlRoot.tag == 'PARAMETER-ACCESS')
-        (name, accessedParameter) = (None, None)
+        (name, accessedParameter, swDataDefProps) = (None, None, None)
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'SHORT-NAME':
                 name = self.parseTextNode(xmlElem)
@@ -413,10 +413,12 @@ class BehaviorParser(ElementParser):
                         accessedParameter = autosar.behavior.LocalParameterRef(self.parseTextNode(xmlChild))
                     else:
                         raise NotImplementedError(xmlChild.tag)
+            elif xmlElem.tag == 'SW-DATA-DEF-PROPS':
+                swDataDefProps = self.parseSwDataDefProps(xmlElem)
             else:
                 raise NotImplementedError(xmlElem.tag)
         if (name is not None) and (accessedParameter is not None):
-            return autosar.behavior.ParameterAccessPoint(name, accessedParameter)
+            return autosar.behavior.ParameterAccessPoint(name, accessedParameter, swDataDefProps=swDataDefProps)
 
     def _parseRequireModeGroupInstanceRef(self, xmlRoot):
         """parses <R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF>"""

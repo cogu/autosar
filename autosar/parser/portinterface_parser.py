@@ -201,6 +201,8 @@ class PortInterfacePackageParser(ElementParser):
                         portInterface.applicationErrors.append(applicationError)
                 elif xmlElem.tag == 'SERVICE-KIND':
                     portInterface.serviceKind = self.parseTextNode(xmlElem)
+                elif xmlElem.tag == 'LONG-NAME':
+                    portInterface.longName = self.parseTextNode(xmlElem)
                 else:
                     raise NotImplementedError(xmlElem.tag)
             return portInterface
@@ -273,6 +275,8 @@ class PortInterfacePackageParser(ElementParser):
                 xmlArguments = xmlElem
             elif xmlElem.tag == 'POSSIBLE-ERROR-REFS':
                 xmlPossibleErrorRefs = xmlElem
+            elif xmlElem.tag == 'LONG-NAME':
+                pass #implement later
             else:
                 raise NotImplementedError(xmlElem.tag)
 
