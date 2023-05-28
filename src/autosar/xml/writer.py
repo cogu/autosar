@@ -169,6 +169,7 @@ class Writer(_XMLWriter):
             # DataDictionary Elements
             'SwDataDefPropsConditional': self._write_sw_data_def_props_conditional,
             'SwBaseTypeRef': self._write_sw_base_type_ref,
+            'SwBitRepresentation': self._write_sw_bit_represenation,
         }
         self.switcher_all = {}  # All concrete elements (used for unit testing)
         self.switcher_all.update(self.switcher_collectable)
@@ -770,6 +771,11 @@ class Writer(_XMLWriter):
             self._add_content('SW-ALIGNMENT', elem.alignment)
         if elem.base_type_ref is not None:
             self._write_sw_base_type_ref(elem.base_type_ref)
+        if elem.bit_representation is not None:
+            self._write_sw_bit_represenation(elem.bit_representation)
+        if elem.calibration_access is not None:
+            self._add_content('SW-CALIBRATION-ACCESS',
+                              ar_enum.enum_to_xml(elem.calibration_access))
 
     # Reference Elements
 
@@ -805,3 +811,20 @@ class Writer(_XMLWriter):
                                          elem: ar_element.SwAddrMethodRef,
                                          attr: TupleList) -> None:
         attr.append(('DEST', ar_enum.enum_to_xml(elem.dest)))
+
+    def _write_sw_bit_represenation(self, elem: ar_element.SwBitRepresentation) -> None:
+        """
+        Writes AR:SW-BIT-REPRESENTATION
+        Type: Concrete
+        Tag Variants: 'SW-BIT-REPRESENTATION'
+        """
+        tag = 'SW-BIT-REPRESENTATION'
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.position is not None:
+                self._add_content('BIT-POSITION', str(elem.position))
+            if elem.num_bits is not None:
+                self._add_content('NUMBER-OF-BITS', str(elem.num_bits))
+            self._leave_child()

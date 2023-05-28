@@ -68,6 +68,10 @@ class ARObject:
         else:
             self._set_attr_with_implicit_cast(attr_name, value, type_name)
 
+    def _assign_optional(self, attr_name: str, value: Any, type_name: type) -> None:
+        if value is not None:
+            self._assign(attr_name, value, type_name)
+
     def _set_attr_with_strict_type(self, attr_name: str, value: Any, type_class: type) -> None:
         """
         Sets object attribute only if the value is matches given type-class
@@ -963,6 +967,22 @@ class SwBaseType(BaseType):
         return SwAddrMethodRef(value)
 
 
+class SwBitRepresentation(ARObject):
+    """
+    SW-BIT-REPRESENTATION
+    Type: Concrete
+    """
+
+    def __init__(self,
+                 position: int | None = None,
+                 num_bits: int | None = None) -> None:
+        super().__init__()
+        self.position: int | None = None
+        self.num_bits: int | None = None
+        self._assign_optional('position', position, int)
+        self._assign_optional('num_bits', num_bits, int)
+
+
 class SwDataDefPropsConditional(ARObject):
     """
     Merge of Complex-types AR:SW-DATA-DEF-PROPS-CONDITIONAL and
@@ -971,7 +991,10 @@ class SwDataDefPropsConditional(ARObject):
     Tag Variants: SW-DATA-DEF-PROPS-CONDITIONAL
     """
 
-    def __init__(self, **kwargs: dict) -> None:
+    def __init__(self,
+                 bit_representation: SwBitRepresentation | None = None,
+                 calibration_access: ar_enum.SwCalibrationAccess | None = None,
+                 **kwargs) -> None:
         # .DISPLAY-PRESENTATION
         self.display_presentation: ar_enum.DisplayPresentation | None = None
         self.step_size: float | None = None  # .STEP-SIZE : AR:FLOAT
@@ -980,8 +1003,8 @@ class SwDataDefPropsConditional(ARObject):
         self.sw_addr_method_ref = None  # .SW-ADDR-METHOD-REF
         self.alignment = None  # .SW-ALIGNMENT
         self.base_type_ref = None  # .BASE-TYPE-REF
-        self.bit_representation = None  # .SW-BIT-REPRESENTATION
-        self.calibration_access = None  # .SW-CALIBRATION-ACCESS
+        self.bit_representation: SwBitRepresentation | None = None  # .SW-BIT-REPRESENTATION
+        self.calibration_access: ar_enum.SwCalibrationAccess | None = None  # .SW-CALIBRATION-ACCESS
         self.value_block_size = None  # .SW-VALUE-BLOCK-SIZE
         self.calprm_axis_set = None  # .SW-CALPRM-AXIS-SET
         self.text_props = None  # .SW-TEXT-PROPS
@@ -1031,6 +1054,12 @@ class SwDataDefPropsConditional(ARObject):
         self._consume(kwargs, 'sw_addr_method_ref', SwAddrMethodRef)
         self._consume_alignment(kwargs)
         self._consume(kwargs, 'base_type_ref', SwBaseTypeRef)
+        if bit_representation is not None:
+            if not isinstance(bit_representation, SwBitRepresentation):
+                raise TypeError(f"param bit_representation: Invalid type '{str(type(bit_representation))}'."
+                                " Expected 'SwBitRepresentation'")
+            self.bit_representation = bit_representation
+        self._assign_optional('calibration_access', calibration_access, ar_enum.SwCalibrationAccess)
 
     def accepted_params(self) -> set[str]:
         """
@@ -1042,7 +1071,7 @@ class SwDataDefPropsConditional(ARObject):
                 'sw_addr_method_ref',
                 'alignment',
                 'base_type_ref',
-                #                'data_constraint_ref'
+                'bit_representation'
                 }
 
 
@@ -1081,28 +1110,6 @@ class SwAddrMethod(ARElement):
         self.parent.update_ref_parts(ref_parts)
         value = '/'.join(reversed(ref_parts))
         return SwAddrMethodRef(value)
-
-
-class SwBitRepresentation(ARObject):
-    """
-    SW-BIT-REPRESENTATION
-    Type: Concrete
-    """
-
-    def __init__(self, **kwargs) -> None:
-        super().__init__()
-        self.bit_position: None | int = None
-        self.number_of_bits: None | int = None
-        self._check_params(self.__class__.__name__,
-                           kwargs, self.accepted_params())
-        self._consume(kwargs, 'bit_position', int)
-        self._consume(kwargs, 'number_of_bits', int)
-
-    def accepted_params(self) -> set[str]:
-        """
-        Accepted kwarg parameters during init
-        """
-        return {'bit_position', 'number_of_bits'}
 
 
 class SwDataDefProps(ARObject):

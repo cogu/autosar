@@ -191,6 +191,52 @@ class TestSwBaseTypeRef(unittest.TestCase):
         self.assertIsInstance(elem, ar_element.SwBaseTypeRef)
         self.assertEqual(elem.value, '/Package/ElementName')
 
+class TestSwBitRepresentation(unittest.TestCase):
+    def test_write_empty(self):
+        element = ar_element.SwBitRepresentation()
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element),
+                         '<SW-BIT-REPRESENTATION/>')
+
+    def test_read_empty(self):
+        xml = '<SW-BIT-REPRESENTATION/>'
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwBitRepresentation = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwBitRepresentation)
+
+    def test_write_bit_position(self):
+        element = ar_element.SwBitRepresentation(position=3)
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), '''<SW-BIT-REPRESENTATION>
+  <BIT-POSITION>3</BIT-POSITION>
+</SW-BIT-REPRESENTATION>''')
+
+    def test_read_bit_position(self):
+        xml = '''
+<SW-BIT-REPRESENTATION>
+  <BIT-POSITION>3</BIT-POSITION>
+</SW-BIT-REPRESENTATION>'''
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwBitRepresentation = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwBitRepresentation)
+        self.assertEqual(elem.position, 3)
+
+    def test_write_number_of_bits(self):
+        element = ar_element.SwBitRepresentation(num_bits=1)
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), '''<SW-BIT-REPRESENTATION>
+  <NUMBER-OF-BITS>1</NUMBER-OF-BITS>
+</SW-BIT-REPRESENTATION>''')
+
+    def test_read__number_of_bits(self):
+        xml = '''
+<SW-BIT-REPRESENTATION>
+  <NUMBER-OF-BITS>1</NUMBER-OF-BITS>
+</SW-BIT-REPRESENTATION>'''
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwBitRepresentation = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwBitRepresentation)
+        self.assertEqual(elem.num_bits, 1)
 
 class TestDataDefPropsConditional(unittest.TestCase):
 
@@ -383,7 +429,7 @@ class TestDataDefPropsConditional(unittest.TestCase):
   <BASE-TYPE-REF DEST="SW-BASE-TYPE">/BaseTypes/TypeName</BASE-TYPE-REF>
 </SW-DATA-DEF-PROPS-CONDITIONAL>''')
 
-    def test_read_base_ref_ref(self):
+    def test_read_base_ref(self):
         xml = '''
 <SW-DATA-DEF-PROPS-CONDITIONAL>
   <BASE-TYPE-REF DEST="SW-BASE-TYPE">/BaseTypes/TypeName</BASE-TYPE-REF>
@@ -395,6 +441,51 @@ class TestDataDefPropsConditional(unittest.TestCase):
         self.assertEqual(ref.value, '/BaseTypes/TypeName')
         self.assertEqual(ref.dest, ar_enum.IdentifiableSubTypes.SW_BASE_TYPE)
 
+    def test_write_sw_bit_representation(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.SwDataDefPropsConditional(
+            bit_representation = ar_element.SwBitRepresentation(position=1, num_bits=2))
+        self.assertEqual(writer.write_str_elem(element),
+                         '''<SW-DATA-DEF-PROPS-CONDITIONAL>
+  <SW-BIT-REPRESENTATION>
+    <BIT-POSITION>1</BIT-POSITION>
+    <NUMBER-OF-BITS>2</NUMBER-OF-BITS>
+  </SW-BIT-REPRESENTATION>
+</SW-DATA-DEF-PROPS-CONDITIONAL>''')
+
+    def test_read_sw_bit_representation(self):
+        xml = '''
+<SW-DATA-DEF-PROPS-CONDITIONAL>
+  <SW-BIT-REPRESENTATION>
+    <BIT-POSITION>1</BIT-POSITION>
+    <NUMBER-OF-BITS>2</NUMBER-OF-BITS>
+  </SW-BIT-REPRESENTATION>
+</SW-DATA-DEF-PROPS-CONDITIONAL>'''
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwDataDefPropsConditional = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwDataDefPropsConditional)
+        child_elem : ar_element.SwBitRepresentation = elem.bit_representation
+        self.assertEqual(child_elem.position, 1)
+        self.assertEqual(child_elem.num_bits, 2)
+
+    def test_write_sw_calibration_access(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.SwDataDefPropsConditional(
+            calibration_access = ar_enum.SwCalibrationAccess.READ_ONLY)
+        self.assertEqual(writer.write_str_elem(element),
+                         '''<SW-DATA-DEF-PROPS-CONDITIONAL>
+  <SW-CALIBRATION-ACCESS>READ-ONLY</SW-CALIBRATION-ACCESS>
+</SW-DATA-DEF-PROPS-CONDITIONAL>''')
+
+    def test_read_sw_calibration_access(self):
+        xml = '''
+<SW-DATA-DEF-PROPS-CONDITIONAL>
+  <SW-CALIBRATION-ACCESS>READ-ONLY</SW-CALIBRATION-ACCESS>
+</SW-DATA-DEF-PROPS-CONDITIONAL>'''
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwDataDefPropsConditional = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwDataDefPropsConditional)
+        self.assertEqual(elem.calibration_access, ar_enum.SwCalibrationAccess.READ_ONLY)
 
 
 if __name__ == '__main__':

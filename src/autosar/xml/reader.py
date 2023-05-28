@@ -115,8 +115,8 @@ class Reader:
             'VERBATIM': self._read_multi_language_verbatim,
             # DataDictionary elements
             'BASE-TYPE-REF': self._read_sw_base_type_ref,
+            'SW-BIT-REPRESENTATION': self._read_sw_bit_representation,
             'SW-DATA-DEF-PROPS-CONDITIONAL': self._read_sw_data_def_props_conditional,
-
         }
         self.switcher_all = {}
         self.switcher_all.update(self.switcher_collectable)
@@ -587,7 +587,7 @@ class Reader:
                 elem.append(xml_elem.text)
 
     def _read_multi_language_overview_paragraph(self,
-                                            xml_elem: ElementTree.Element) -> ar_element.MultiLanguageOverviewParagraph:
+                                                xml_elem: ElementTree.Element) -> ar_element.MultiLanguageOverviewParagraph:
         """
         Reads complexType AR:MULTI-LANGUAGE-OVERVIEW-PARAGRAPH
         Type: Concrete
@@ -884,10 +884,10 @@ class Reader:
         child_elements = ChildElementMap(xml_element)
         bit_position = child_elements.get('BIT-POSITION')
         if bit_position is not None:
-            data['bit_position'] = int(bit_position.text)
+            data['position'] = int(bit_position.text)
         number_of_bits = child_elements.get('NUMBER-OF-BITS')
         if number_of_bits is not None:
-            data['number_of_bits'] = int(number_of_bits.text)
+            data['num_bits'] = int(number_of_bits.text)
         self._report_unprocessed_elements(child_elements)
         return ar_element.SwBitRepresentation(**data)
 
@@ -952,22 +952,20 @@ class Reader:
         xml_child = child_elements.get('SW-ALIGNMENT')
         if xml_child is not None:
             try:
-                sw_alignment = int(xml_child.text,0)
+                sw_alignment = int(xml_child.text, 0)
             except ValueError:
                 sw_alignment = xml_child.text
             data['alignment'] = sw_alignment
         xml_child = child_elements.get('BASE-TYPE-REF')
         if xml_child is not None:
             data['base_type_ref'] = self._read_sw_base_type_ref(xml_child)
-        # sw_bit_representation = child_elements.find('SW-BIT-REPRESENTATION')
-        # if sw_bit_representation is not None:
-        #     data['sw_bit_representation'] = self._read_sw_bit_representation(
-        #         sw_bit_representation)
-        # sw_calibration_access = child_elements.find('SW-CALIBRATION-ACCESS')
-        # if sw_calibration_access is not None:
-        #     data['sw_calibration_access'] = ar_enum.xml_to_enum('SwCalibrationAccess',
-        #                                                         sw_calibration_access.text,
-        #                                                         self.schema_version)
+        xml_child = child_elements.get('SW-BIT-REPRESENTATION')
+        if xml_child is not None:
+            data['bit_representation'] = self._read_sw_bit_representation(xml_child)
+        xml_child = child_elements.get('SW-CALIBRATION-ACCESS')
+        if xml_child is not None:
+            data['calibration_access'] = ar_enum.xml_to_enum('SwCalibrationAccess',
+                                                             xml_child.text)
         self._report_unprocessed_elements(child_elements)
 
     # Reference elements
