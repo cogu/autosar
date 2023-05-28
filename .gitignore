@@ -1,0 +1,8 @@
+.venv/
+build/
+sandbox/
+usage_tests/
+**/autosar.egg-info/
+**/__pycache__/
+**/data/*.xsd
+**/data/validate_all.sh
