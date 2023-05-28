@@ -1,62 +1,72 @@
-# autosar
+# Python AUTOSAR
 
-Redesign of the AUTOSAR Python package.
+A set of Python modules for working with [AUTOSAR](https://www.autosar.org/) XML files.
 
-## DISCLAIMER
+The primary use case is to enable Python to generate ARXML files for further importing into other (commercial AUTOSAR) toolchains.
+It also has some support for parsing ARXML files.
 
-THIS IS FOR RESEARCH-PURPOSES ONLY.
+## Version 0.4
 
-## Requirements
+Stable version. Latest release is [v0.4.1](https://github.com/cogu/autosar/releases/tag/v0.4.1).
+
+[Documentation for v0.4](https://autosar.readthedocs.io/en/latest/).
+
+### Supported AUTOSAR versions (v0.4)
+
+* AUTOSAR 3.0
+* AUTOSAR 4.2
+
+Classic AUTOSAR only.
+
+### Requirements (v0.4)
+
+* Python 3.4+
+* cfile
+
+### Installation (v0.4)
+
+```bash
+pip install "autosar<0.5"
+```
+
+For now it works to install without the version part, it's there for future proofing the instruction
+after newer versions are released to PyPI.
+
+## Version 0.5
+
+Development and research version. Not yet released.
+
+Documentation for v0.5 will be maintained in the [project Wiki](https://github.com/cogu/autosar/wiki).
+
+### Supported AUTOSAR versions (v0.5)
+
+* R21-11 (Schema version 50).
+
+Classic AUTOSAR only.
+
+### Requirements (v0.5)
 
 * Python 3.10+
 * lxml
 
-## Abstract
+### Installation (v0.5)
 
-Investigate how the AUTOSAR XML schema can be realized as Python classes.
+Manual install required as this version is not available on PyPI.
 
-* How would such a software design look like?
-* Is it useful?
+1. Make sure you have the latest version of `setuptools` installed.
+2. Download source or clone git repo.
+3. Install locally using one of the below methods.
 
-## Project Scope
+#### Standard install
 
-### New class hierarchy
+```bash
+pip install  .
+```
 
-* Follow XML schema as much as possible.
-* Evaluate variadic arguments in class constructors.
-  * Is it user-friendly enough or too hard to use?
-  * How to document?
-* Which factory methods are needed to create elements programmatically?
+#### Editable install (Development mode)
 
-### Modern coding style
-
-* Snake-case naming on variable and method names.
-* Modern type-hinting, this forces Python 3.10+.
-* Python Enum classes for enumeration types seen in XML schema.
-
-### New approach to reading and writing XML
-
-* Simplify reuse by following the new class hierachy (polymorphism).
-* Evaulate lxml module, can it be used to improve error handling?
-
-### Unit testing
-
-* Evaluate reading and writing ARXML only for the element under test instead of entire ARXML files.
-
-## Project Limitations
-
-* Support AUTOSAR classic platform only.
-* Support only newer AUTOSAR schema versions, starting with R21-11.
-* Don't support blueprints or variant handling of any kind.
-
-## Supported Elements
-
-Supported elements will be listed here. If an element is not mentioned below it's not yet supported.
-
-### Packageable Elements
-
-No packageable elements are supported.
-
-### Other Elements
-
-No other elements are supported.
+```bash
+python -m venv .venv
+#Activate your venv environment
+pip install --editable .
+```
