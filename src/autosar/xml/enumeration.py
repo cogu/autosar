@@ -9,22 +9,25 @@ import autosar.xml.exception as ar_exception
 
 DEFAULT_SCHEMA_VERSION = 50
 
+
 class ByteOrder(Enum):
     """
-    BYTE-ORDER-ENUM    
+    BYTE-ORDER-ENUM
     Note: The XML schema actually uses phrasing such as
     "most significant byte first" but no developer I know
-    speaks like that. 
+    speaks like that.
     No, let's stick to terminology used since the 1960s.
     """
     BIG_ENDIAN = 0
     LITTLE_ENDIAN = 1
     OPAQUE = 2
 
+
 class DisplayPresentation(Enum):
     "DISPLAY-PRESENTATION-ENUM"
     CONTINUOUS = 0
-    DISCRETE=1
+    DISCRETE = 1
+
 
 class EmphasisType(Enum):
     """
@@ -490,6 +493,11 @@ xml_to_enum_map = {
         'NO-PGWIDE': VersionedEnumValue(PageWide.NO_PGWIDE, {50}),
         'PGWIDE': VersionedEnumValue(PageWide.PGWIDE, {50})
     },
+    'SwCalibrationAccess': {
+        'NOT-ACCESSIBLE': VersionedEnumValue(SwCalibrationAccess.NOT_ACCESSIBLE, {50}),
+        'READ-ONLY': VersionedEnumValue(SwCalibrationAccess.READ_ONLY, {50}),
+        'READ-WRITE': VersionedEnumValue(SwCalibrationAccess.READ_WRITE, {50})
+    },
 }
 
 
@@ -685,6 +693,11 @@ enum_to_xml_map = {
     'PageWide': [
         VersionedTextValue('NO-PGWIDE', {50}),   # 0
         VersionedTextValue('PGWIDE', {50}),      # 1
+    ],
+    'SwCalibrationAccess': [
+        VersionedTextValue('NOT-ACCESSIBLE', {50}),  # 0
+        VersionedTextValue('READ-ONLY', {50}),       # 1
+        VersionedTextValue('READ-WRITE', {50}),      # 2
     ],
 
 }
