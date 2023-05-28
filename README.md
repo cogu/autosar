@@ -1,3 +1,5 @@
+[![Python package](https://github.com/cogu/autosar/actions/workflows/python-package.yml/badge.svg?branch=research%2F0.5)](https://github.com/cogu/autosar/actions/workflows/python-package.yml)
+
 # Python AUTOSAR
 
 A set of Python modules for working with [AUTOSAR](https://www.autosar.org/) XML files.
