@@ -11,6 +11,9 @@ import autosar.xml.enumeration as ar_enum
 # import autosar.xml.exception
 import autosar.xml.package as ar_package
 
+# Type aliases
+
+MultiLanguageOverviewParagraph = ar_element.MultiLanguageOverviewParagraph
 TupleList = list[tuple[str, str]]
 
 
@@ -486,7 +489,7 @@ class Writer(_XMLWriter):
         attr.append(('L', ar_enum.enum_to_xml(elem.language))
                     )  # The L attribute is mandatory
 
-    def _write_multi_language_overview_paragraph(self, elem: ar_element.MultiLanguageOverviewParagraph, tag: str) -> None:
+    def _write_multi_language_overview_paragraph(self, elem: MultiLanguageOverviewParagraph, tag: str) -> None:
         """
         Writes complexType AR:MULTI-LANGUAGE-OVERVIEW-PARAGRAPH
         Type: Concrete
