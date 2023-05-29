@@ -15,6 +15,10 @@ import autosar.xml.enumeration as ar_enum
 
 DEFAULT_SCHEMA_VERSION = 50
 
+# Type aliases
+
+MultiLanguageOverviewParagraph = ar_element.MultiLanguageOverviewParagraph
+
 
 class WrappedElement:
     """
@@ -587,14 +591,14 @@ class Reader:
                 elem.append(xml_elem.text)
 
     def _read_multi_language_overview_paragraph(self,
-                                                xml_elem: ElementTree.Element) -> ar_element.MultiLanguageOverviewParagraph:
+                                                xml_elem: ElementTree.Element) -> MultiLanguageOverviewParagraph:
         """
         Reads complexType AR:MULTI-LANGUAGE-OVERVIEW-PARAGRAPH
         Type: Concrete
         Tag variants: 'DESC' | 'ITEM-LABEL' | 'CHANGE' | 'REASON'
         """
         assert xml_elem.tag in {'DESC', 'ITEM-LABEL', 'CHANGE', 'REASON'}
-        elem = ar_element.MultiLanguageOverviewParagraph()
+        elem = MultiLanguageOverviewParagraph()
         for xml_child_elem in xml_elem.findall('./*'):
             if xml_child_elem.tag == 'L-2':
                 elem.append(
@@ -948,7 +952,8 @@ class Reader:
             data['annotations'] = self._read_annotations(xml_child)
         xml_child = child_elements.get('SW-ADDR-METHOD-REF')
         if xml_child is not None:
-            data['sw_addr_method_ref'] = self._read_sw_addr_method_ref(xml_child)
+            data['sw_addr_method_ref'] = self._read_sw_addr_method_ref(
+                xml_child)
         xml_child = child_elements.get('SW-ALIGNMENT')
         if xml_child is not None:
             try:
@@ -961,7 +966,8 @@ class Reader:
             data['base_type_ref'] = self._read_sw_base_type_ref(xml_child)
         xml_child = child_elements.get('SW-BIT-REPRESENTATION')
         if xml_child is not None:
-            data['bit_representation'] = self._read_sw_bit_representation(xml_child)
+            data['bit_representation'] = self._read_sw_bit_representation(
+                xml_child)
         xml_child = child_elements.get('SW-CALIBRATION-ACCESS')
         if xml_child is not None:
             data['calibration_access'] = ar_enum.xml_to_enum('SwCalibrationAccess',
@@ -1030,8 +1036,7 @@ class Reader:
         Element-Type: Concrete
         """
         xml_data_elements = element_map.get('DATA-ELEMENTS')
-        invalidation_policys = element_map.skip(
-            'INVALIDATION-POLICYS')  # Implement later
+        element_map.skip('INVALIDATION-POLICYS')  # Implement later
         # META-DATA-ITEM-SETS not supported
 
         if xml_data_elements is not None:

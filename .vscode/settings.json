@@ -1,5 +1,5 @@
 {
-    "python.linting.pylintEnabled": true,
+    "python.linting.pylintEnabled": false,
     "python.linting.enabled": true,
     "python.testing.unittestArgs": [
         "-v",
@@ -10,7 +10,8 @@
     ],
     "python.testing.pytestEnabled": false,
     "python.testing.unittestEnabled": true,
-    "autopep8.args": [
+    "flake8.args": [
         "--max-line-length=120"
     ],
+    "python.linting.flake8Enabled": true,
 }

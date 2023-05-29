@@ -55,9 +55,18 @@ Classic AUTOSAR only.
 
 Manual install required as this version is not available on PyPI.
 
-1. Make sure you have the latest version of `setuptools` installed.
+1. Make sure you have the latest version of `pip` and `setuptools` installed.
 2. Download source or clone git repo.
 3. Install locally using one of the below methods.
+
+#### Preparation
+
+Run in either venv or local.
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install --upgrade setuptools
+```
 
 #### Standard install
 
@@ -69,6 +78,7 @@ pip install  .
 
 ```bash
 python -m venv .venv
-#Activate your venv environment
+# Activate your venv environment
 pip install --editable .
+pip install flake8
 ```

@@ -358,7 +358,10 @@ class TechnicalTerm(ARObject):
 
     """
 
-    def __init__(self, text: str, tex_render: str = None, type: str = None) -> None:  # pylint: disable=redefined-builtin
+    def __init__(self,
+                 text: str,
+                 tex_render: str = None,
+                 type: str = None) -> None:  # pylint: disable=redefined-builtin
         self.tex_render = tex_render  # attribute @TEX-RENDER
         self.type = type  # attribute @TYPE
         self.text = text  # Text content
