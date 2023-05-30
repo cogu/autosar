@@ -232,6 +232,8 @@ class ConstantParser(ElementParser):
         unitRef = None
         valueList = []
         sizeList = []
+        category = None
+        swAxisIndex = None
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'UNIT-REF':
                 unitRef = self.parseTextNode(xmlElem)
@@ -248,11 +250,11 @@ class ConstantParser(ElementParser):
                     else:
                         raise NotImplementedError(xmlChild.tag)
             elif xmlElem.tag == 'CATEGORY':
-                cat = self.parseTextNode(xmlElem)
+                category = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'SW-AXIS-INDEX':
-                swAxIndex = self.parseNumberNode(xmlElem)
+                swAxisIndex = self.parseNumberNode(xmlElem)
             else:
                 raise NotImplementedError(xmlElem.tag)
         if len(valueList)==0:
             valueList = None
-        return autosar.constant.SwAxisCont(valueList, unitRef, category=cat, swAxisIndex=swAxIndex, swArraySize=sizeList)
+        return autosar.constant.SwAxisCont(valueList, unitRef, category=category, swAxisIndex=swAxisIndex, swArraySize=sizeList)
