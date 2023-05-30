@@ -4,7 +4,7 @@ Implements the class SwcImplementationParser
 import sys
 from autosar.base import splitRef, hasAdminData, parseAdminDataNode
 import autosar.component
-from autosar.parser.parser_base import ElementParser
+from autosar.parser.parser_base import ElementParser, parseElementUUID
 
 class SwcImplementationParser(ElementParser):
     """
@@ -18,6 +18,7 @@ class SwcImplementationParser(ElementParser):
     def getSupportedTags(self):
         return [self.classTag]
 
+    @parseElementUUID
     def parseElement(self, xmlElement, parent = None):
         """
         parser for the class.
@@ -95,6 +96,7 @@ class SwcImplementationParser(ElementParser):
 
         return implementation
 
+    @parseElementUUID
     def parseCodeDescriptor(self, xmlElement, parent = None):
         """
         Parser for implementation code descriptor.
@@ -136,6 +138,7 @@ class SwcImplementationParser(ElementParser):
         self.pop(code)
         return code
 
+    @parseElementUUID
     def parseResourceConsumption(self, xmlElement, parent = None):
         """
         Parser for implementation resource consumption.
@@ -169,6 +172,7 @@ class SwcImplementationParser(ElementParser):
         self.pop(res)
         return res
 
+    @parseElementUUID
     def parseMemorySection(self, xmlElement, parent = None):
         """
         Parser for memory section.

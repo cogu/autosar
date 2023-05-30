@@ -1,6 +1,6 @@
 from autosar.base import parseXMLFile,splitRef,parseTextNode,parseIntNode
 from autosar.signal import *
-from autosar.parser.parser_base import ElementParser
+from autosar.parser.parser_base import ElementParser, parseElementUUID
 
 class SignalParser(ElementParser):
     def __init__(self,version=3):
@@ -17,6 +17,7 @@ class SignalParser(ElementParser):
     def getSupportedTags(self):
         return self.switcher.keys()
 
+    @parseElementUUID
     def parseElement(self, xmlElement, parent = None):
         parseFunc = self.switcher.get(xmlElement.tag)
         if parseFunc is not None:
@@ -24,6 +25,7 @@ class SignalParser(ElementParser):
         else:
             return None
 
+    @parseElementUUID
     def parseSystemSignal(self,xmlRoot,parent=None):
         """
         parses <SYSTEM-SIGNAL>
@@ -53,6 +55,7 @@ class SignalParser(ElementParser):
         else:
             raise RuntimeError('failed to parse %s'%xmlRoot.tag)
 
+    @parseElementUUID
     def parseSystemSignalGroup(self, xmlRoot, parent=None):
         name,systemSignalRefs=None,None
         for elem in xmlRoot.findall('./*'):

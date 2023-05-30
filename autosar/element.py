@@ -1,7 +1,7 @@
 import autosar.base
 
 class Element:
-    def __init__(self, name, parent = None, adminData = None, category = None):
+    def __init__(self, name, parent = None, adminData = None, category = None, uuid = None):
         if isinstance(adminData, dict):
             adminDataObj=autosar.base.createAdminData(adminData)
         else:
@@ -12,6 +12,7 @@ class Element:
         self.adminData=adminDataObj
         self.parent=parent
         self.category=category
+        self.uuid=uuid
 
     @property
     def ref(self):

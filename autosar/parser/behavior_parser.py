@@ -1,5 +1,5 @@
 import autosar.behavior
-from autosar.parser.parser_base import ElementParser
+from autosar.parser.parser_base import ElementParser, parseElementUUID
 from autosar.parser.constant_parser import ConstantParser
 
 class BehaviorParser(ElementParser):
@@ -15,6 +15,7 @@ class BehaviorParser(ElementParser):
         else:
             return []
 
+    @parseElementUUID
     def parseElement(self, xmlElement, parent = None):
         if (self.version >=3.0) and (self.version < 4.0) and xmlElement.tag == 'INTERNAL-BEHAVIOR':
             return self.parseInternalBehavior(xmlElement, parent)
@@ -23,6 +24,7 @@ class BehaviorParser(ElementParser):
         else:
             return None
 
+    @parseElementUUID
     def parseInternalBehavior(self,xmlRoot,parent):
         """AUTOSAR 3 Internal Behavior"""
         assert(xmlRoot.tag == 'INTERNAL-BEHAVIOR')
@@ -98,6 +100,7 @@ class BehaviorParser(ElementParser):
                     raise NotImplementedError(xmlNode.tag)
             return internalBehavior
 
+    @parseElementUUID
     def parseSWCInternalBehavior(self, xmlRoot, parent):
         """AUTOSAR 4 internal behavior"""
         assert(xmlRoot.tag == 'SWC-INTERNAL-BEHAVIOR')
@@ -193,6 +196,7 @@ class BehaviorParser(ElementParser):
                     raise NotImplementedError(xmlElem.tag)
             return internalBehavior
 
+    @parseElementUUID
     def parseRunnableEntity(self, xmlRoot, parent):
         xmlDataReceivePoints = None
         xmlDataSendPoints = None
@@ -375,6 +379,7 @@ class BehaviorParser(ElementParser):
                 raise NotImplementedError(xmlElem.tag)
         return autosar.behavior.ModeAccessPoint(name, modeGroupInstanceRef)
 
+    @parseElementUUID
     def _parseModeSwitchPoint(self, xmlRoot):
         assert(xmlRoot.tag == 'MODE-SWITCH-POINT')
         (name, modeGroupInstanceRef) = (None, None)
@@ -387,6 +392,7 @@ class BehaviorParser(ElementParser):
                 raise NotImplementedError(xmlElem.tag)
         return autosar.behavior.ModeSwitchPoint(name, modeGroupInstanceRef)
 
+    @parseElementUUID
     def _parseVariableAccess(self, xmlRoot):
         assert(xmlRoot.tag == 'VARIABLE-ACCESS')
         (name, variableAccess) = (None, None)
@@ -399,6 +405,7 @@ class BehaviorParser(ElementParser):
                 raise NotImplementedError(xmlElem.tag)
         return autosar.behavior.VariableAccess(name, variableAccess.portPrototypeRef, variableAccess.targetDataPrototypeRef)
 
+    @parseElementUUID
     def parseParameterAccessPoint(self, xmlRoot, parent = None):
         assert(xmlRoot.tag == 'PARAMETER-ACCESS')
         (name, accessedParameter, swDataDefProps) = (None, None, None)
@@ -525,12 +532,14 @@ class BehaviorParser(ElementParser):
         else:
             raise RuntimeError('Parse Error: <CONTEXT-PORT-REF DEST>, <CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF> and <TARGET-MODE-DECLARATION-REF> must be defined')
 
+    @parseElementUUID
     def parseInitEvent(self,xmlNode,parent=None):
         name = self.parseTextNode(xmlNode.find('SHORT-NAME'))
         startOnEventRef = self.parseTextNode(xmlNode.find('START-ON-EVENT-REF'))
         initEvent=autosar.behavior.InitEvent(name, startOnEventRef, parent)
         return initEvent
 
+    @parseElementUUID
     def parseModeSwitchEvent(self,xmlNode,parent=None):
         """parses AUTOSAR3 <MODE-SWITCH-EVENT>"""
         if self.version < 4.0:
@@ -558,6 +567,7 @@ class BehaviorParser(ElementParser):
             raise NotImplementedError('version: '+self.version)
         return modeSwitchEvent
 
+    @parseElementUUID
     def parseModeSwitchedAckEvent(self, xmlNode, parent = None):
         if self.version < 4.0:
             raise NotImplementedError(xmlNode.tag)
@@ -580,6 +590,7 @@ class BehaviorParser(ElementParser):
                 modeSwitchEvent.disabledInModes = self._parseDisabledModesInstanceRefs(xmlDisabledModeRefs, parent)
             return modeSwitchEvent
 
+    @parseElementUUID
     def parseTimingEvent(self,xmlNode,parent=None):
         (name, startOnEventRef, period, xmlModeDepency, xmlDisabledModeRefs) = (None, None, None, None, None)
         for xmlElem in xmlNode.findall('./*'):
@@ -606,6 +617,7 @@ class BehaviorParser(ElementParser):
         else:
             raise RuntimeError('Parse error: <SHORT-NAME> and <START-ON-EVENT-REF> and <PERIOD> must be defined')
 
+    @parseElementUUID
     def parseDataReceivedEvent(self,xmlRoot,parent=None):
         name = self.parseTextNode(xmlRoot.find('SHORT-NAME'))
         startOnEventRef = self.parseTextNode(xmlRoot.find('START-ON-EVENT-REF'))
@@ -618,6 +630,7 @@ class BehaviorParser(ElementParser):
         dataReceivedEvent.dataInstanceRef=dataInstanceRef
         return dataReceivedEvent
 
+    @parseElementUUID
     def parseOperationInvokedEvent(self,xmlRoot,parent=None):
         (name, startOnEventRef, modeDependency, operationInstanceRef) = (None, None, None, None)
         for xmlElem in xmlRoot.findall('./*'):
@@ -700,6 +713,7 @@ class BehaviorParser(ElementParser):
             serviceCallPorts.append(roleBasedRPortAssignment)
         return serviceCallPorts
 
+    @parseElementUUID
     def parseCalPrmElemPrototype(self, xmlRoot, parent):
         """
         parses <CALPRM-ELEMENT-PROTOTYPE>
@@ -751,6 +765,7 @@ class BehaviorParser(ElementParser):
         retval.operationInstanceRefs=operationInstanceRefs
         return retval
 
+    @parseElementUUID
     def parseAccessedVariable(self, xmlRoot):
         assert(xmlRoot.tag == 'ACCESSED-VARIABLE')
         xmlPortPrototypeRef = xmlRoot.find('./AUTOSAR-VARIABLE-IREF/PORT-PROTOTYPE-REF')
@@ -759,6 +774,7 @@ class BehaviorParser(ElementParser):
         assert (xmlTargetDataPrototypeRef is not None)
         return autosar.behavior.VariableAccess(self.parseTextNode(xmlRoot.find('SHORT-NAME')),self.parseTextNode(xmlPortPrototypeRef), self.parseTextNode(xmlTargetDataPrototypeRef))
 
+    @parseElementUUID
     def parseSwcServiceDependency(self, xmlRoot, parent = None):
         """parses <SWC-SERVICE-DEPENDENCY>"""
         assert(xmlRoot.tag == 'SWC-SERVICE-DEPENDENCY')
@@ -801,6 +817,7 @@ class BehaviorParser(ElementParser):
         return swcServiceDependency
 
 
+    @parseElementUUID
     def parseParameterDataPrototype(self, xmlRoot, parent = None):
         """parses <PARAMETER-DATA-PROTOTYPE> (AUTOSAR 4)"""
         assert(xmlRoot.tag == 'PARAMETER-DATA-PROTOTYPE')
@@ -831,6 +848,7 @@ class BehaviorParser(ElementParser):
         self.pop(obj)
         return obj
 
+    @parseElementUUID
     def parseServiceNeeds(self, xmlRoot, parent = None):
         """parses <SERVICE-NEEDS> (AUTOSAR 4)"""
         assert(xmlRoot.tag == 'SERVICE-NEEDS')
@@ -956,6 +974,7 @@ class BehaviorParser(ElementParser):
                 targetDataPrototypeRef = self.parseTextNode(xmlTargetDataPrototypeRef)
         return localVariableRef, portPrototypeRef, targetDataPrototypeRef
 
+    @parseElementUUID
     def parseNvBlockSWCnvBlockDescriptor(self, xmlRoot, parent):
         """AUTOSAR 4 NV-BLOCK-DESCRIPTOR"""
         assert(xmlRoot.tag == 'NV-BLOCK-DESCRIPTOR')

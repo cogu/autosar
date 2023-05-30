@@ -2,7 +2,7 @@ import sys
 from autosar.base import splitRef, hasAdminData, parseAdminDataNode
 import autosar.component
 from autosar.parser.behavior_parser import BehaviorParser
-from autosar.parser.parser_base import ElementParser
+from autosar.parser.parser_base import ElementParser, parseElementUUID
 from autosar.parser.constant_parser import ConstantParser
 
 def _getDataElemNameFromComSpec(xmlElem,portInterfaceRef):
@@ -79,6 +79,7 @@ class ComponentTypeParser(ElementParser):
     def getSupportedTags(self):
         return self.switcher.keys()
 
+    @parseElementUUID
     def parseElement(self, xmlElement, parent = None):
         parseFunc = self.switcher.get(xmlElement.tag)
         if parseFunc is not None:
@@ -86,6 +87,7 @@ class ComponentTypeParser(ElementParser):
         else:
             return None
 
+    @parseElementUUID
     def parseSoftwareComponent(self, xmlRoot, parent=None):
         componentType=None
         handledTags = ['SHORT-NAME']
@@ -226,6 +228,7 @@ class ComponentTypeParser(ElementParser):
                             raise NotImplementedError(xmlItem.tag)
                 componentType.providePorts.append(port)
 
+    @parseElementUUID
     def parseCompositionType(self, xmlRoot, parent=None):
         """
         parses COMPOSITION-TYPE
