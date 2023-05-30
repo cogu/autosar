@@ -346,7 +346,7 @@ def parseElementUUID(parser_func):
         # retrieve the UUID from the xml element and attach it to the Autosar Element
         xmlElementArg = xmlElementArgs[0]
         if 'UUID' in xmlElementArg.attrib:
-            result.uuid = xmlElementArg.attrib
+            result.uuid = xmlElementArg.attrib['UUID'].lower()
         return result
 
     return parseUUID
