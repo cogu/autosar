@@ -2,6 +2,8 @@ import abc
 from collections import deque
 from autosar.base import (AdminData, SpecialDataGroup, SpecialData, SwDataDefPropsConditional, SwPointerTargetProps, SymbolProps)
 import autosar.element
+import xml
+from functools import wraps
 
 def _parseBoolean(value):
     if value is None:
@@ -10,6 +12,45 @@ def _parseBoolean(value):
         if value == 'true': return True
         elif value =='false': return False
     raise ValueError(value)
+
+def parseElementUUID(parser_func):
+    """
+    Decorator that adds parsing of the UUID field for autosar.element.Element
+
+    The decorator should be added to methods that parse an xml.etree.ElementTree.Element
+    argument and returns a autosar.element.Element. In case the xml element contains
+    the UUID attribute, this will be inserted into the Autosar Element.
+    """
+    @wraps(parser_func)
+    def parseUUID(*args, **kwargs):
+
+        # call original parser function
+        result = parser_func(*args, **kwargs)
+
+        # if the result is not an Autosar Element, simply return
+        if not isinstance(result, autosar.element.Element):
+            return result
+    
+        # search for an argument of type xml.etree.ElementTree.Element    
+        xmlElementArgs = []
+        for arg in args:
+            if isinstance(arg, xml.etree.ElementTree.Element):
+                xmlElementArgs.append(arg)
+        for _, arg in kwargs.items():
+            if isinstance(arg, xml.etree.ElementTree.Element):
+                xmlElementArgs.append(arg)
+        
+        # if we cannot determine in a unique way which argument to use, just return
+        if len(xmlElementArgs) != 1:
+            return result
+    
+        # retrieve the UUID from the xml element and attach it to the Autosar Element
+        xmlElementArg = xmlElementArgs[0]
+        if 'UUID' in xmlElementArg.attrib:
+            result.uuid = xmlElementArg.attrib['UUID'].lower()
+        return result
+
+    return parseUUID
 
 class CommonTagsResult:
     def __init__(self):
@@ -255,6 +296,7 @@ class BaseParser:
                 props.variants = self.parseSwDataDefProps(itemXML)
         return props
 
+    @parseElementUUID
     def parseVariableDataPrototype(self, xmlRoot, parent = None):
         assert(xmlRoot.tag == 'VARIABLE-DATA-PROTOTYPE')
         (typeRef, props_variants, isQueued) = (None, None, False)

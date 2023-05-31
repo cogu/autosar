@@ -1,5 +1,5 @@
 import sys
-from autosar.parser.parser_base import ElementParser
+from autosar.parser.parser_base import ElementParser, parseElementUUID
 import autosar.datatype
 
 class ModeDeclarationParser(ElementParser):
@@ -18,6 +18,7 @@ class ModeDeclarationParser(ElementParser):
     def getSupportedTags(self):
         return self.switcher.keys()
 
+    @parseElementUUID
     def parseElement(self, xmlElement, parent = None):
         parseFunc = self.switcher.get(xmlElement.tag)
         if parseFunc is not None:
@@ -25,6 +26,7 @@ class ModeDeclarationParser(ElementParser):
         else:
             return None
 
+    @parseElementUUID
     def parseModeDeclarationGroup(self,xmlRoot,rootProject=None,parent=None):
         assert(xmlRoot.tag == 'MODE-DECLARATION-GROUP')
         name = self.parseTextNode(xmlRoot.find("./SHORT-NAME"))

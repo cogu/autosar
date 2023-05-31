@@ -1,7 +1,7 @@
 from autosar.element import Element
 import autosar.constant
 from autosar.base import hasAdminData,parseAdminDataNode
-from autosar.parser.parser_base import ElementParser
+from autosar.parser.parser_base import ElementParser, parseElementUUID
 
 class ConstantParser(ElementParser):
     """
@@ -13,12 +13,14 @@ class ConstantParser(ElementParser):
     def getSupportedTags(self):
         return ['CONSTANT-SPECIFICATION']
 
+    @parseElementUUID
     def parseElement(self, xmlElement, parent = None):
         if xmlElement.tag == 'CONSTANT-SPECIFICATION':
             return self.parseConstantSpecification(xmlElement, parent)
         else:
             return None
 
+    @parseElementUUID
     def parseConstantSpecification(self, xmlElem, rootProject=None, parent=None):
         assert(xmlElem.tag == 'CONSTANT-SPECIFICATION')
         (xmlValue, xmlValueSpec) = (None, None)
@@ -48,6 +50,7 @@ class ConstantParser(ElementParser):
         self.pop(retval)
         return retval
 
+    @parseElementUUID
     def _parseValueV3(self, xmlValue, parent):
         constantValue = None
         xmlName = xmlValue.find('SHORT-NAME')
@@ -126,6 +129,7 @@ class ConstantParser(ElementParser):
         else:
             raise RuntimeError("value must not be None")
 
+    @parseElementUUID
     def _parseRecordValueSpecification(self, xmlValue, parent):
         (label, xmlFields) = (None, None)
         for xmlElem in xmlValue.findall('./*'):
@@ -228,6 +232,8 @@ class ConstantParser(ElementParser):
         unitRef = None
         valueList = []
         sizeList = []
+        category = None
+        swAxisIndex = None
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'UNIT-REF':
                 unitRef = self.parseTextNode(xmlElem)
@@ -244,11 +250,11 @@ class ConstantParser(ElementParser):
                     else:
                         raise NotImplementedError(xmlChild.tag)
             elif xmlElem.tag == 'CATEGORY':
-                cat = self.parseTextNode(xmlElem)
+                category = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'SW-AXIS-INDEX':
-                swAxIndex = self.parseNumberNode(xmlElem)
+                swAxisIndex = self.parseNumberNode(xmlElem)
             else:
                 raise NotImplementedError(xmlElem.tag)
         if len(valueList)==0:
             valueList = None
-        return autosar.constant.SwAxisCont(valueList, unitRef, category=cat, swAxisIndex=swAxIndex, swArraySize=sizeList)
+        return autosar.constant.SwAxisCont(valueList, unitRef, category=category, swAxisIndex=swAxisIndex, swArraySize=sizeList)

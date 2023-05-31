@@ -1,5 +1,5 @@
 import sys
-from autosar.parser.parser_base import ElementParser
+from autosar.parser.parser_base import ElementParser, parseElementUUID
 import autosar.datatype
 
 class DataTypeParser(ElementParser):
@@ -27,6 +27,7 @@ class DataTypeParser(ElementParser):
     def getSupportedTags(self):
         return self.switcher.keys()
 
+    @parseElementUUID
     def parseElement(self, xmlElement, parent = None):
         parseFunc = self.switcher.get(xmlElement.tag)
         if parseFunc is not None:
@@ -35,6 +36,7 @@ class DataTypeParser(ElementParser):
             return None
 
 
+    @parseElementUUID
     def parseIntegerType(self,root,parent=None):
         if self.version>=3.0:
             name=root.find("./SHORT-NAME").text
@@ -51,6 +53,7 @@ class DataTypeParser(ElementParser):
                         raise NotImplementedError(elem.tag)
             return dataType
 
+    @parseElementUUID
     def parseRecordType(self,root,parent=None):
         if self.version>=3.0:
             elements = []
@@ -63,6 +66,7 @@ class DataTypeParser(ElementParser):
             self.parseDesc(root,dataType)
             return dataType
 
+    @parseElementUUID
     def parseArrayType(self,root,parent=None):
         if self.version>=3.0:
             name=root.find("./SHORT-NAME").text
@@ -72,6 +76,7 @@ class DataTypeParser(ElementParser):
             self.parseDesc(root,dataType)
             return dataType;
 
+    @parseElementUUID
     def parseBooleanType(self,root,parent=None):
         if self.version>=3:
             name=root.find("./SHORT-NAME").text
@@ -79,6 +84,7 @@ class DataTypeParser(ElementParser):
             self.parseDesc(root,dataType)
             return dataType
 
+    @parseElementUUID
     def parseStringType(self,root,parent=None):
         if self.version>=3.0:
             name=root.find("./SHORT-NAME").text
@@ -89,6 +95,7 @@ class DataTypeParser(ElementParser):
             self.parseDesc(root,dataType)
             return dataType
 
+    @parseElementUUID
     def parseRealType(self,root,parent=None):
         if self.version>=3.0:
             name=root.find("./SHORT-NAME").text
@@ -108,6 +115,7 @@ class DataTypeParser(ElementParser):
             self.parseDesc(root,dataType)
             return dataType
 
+    @parseElementUUID
     def parseDataConstraint(self, xmlRoot, parent=None):
         assert (xmlRoot.tag == 'DATA-CONSTR')
         rules=[]
@@ -150,6 +158,7 @@ class DataTypeParser(ElementParser):
             'upperLimitType': upperLimitType}
 
 
+    @parseElementUUID
     def parseImplementationDataType(self, xmlRoot, parent=None):
         assert (xmlRoot.tag == 'IMPLEMENTATION-DATA-TYPE')
         variantProps, typeEmitter, parseTextNode, dynamicArraySizeProfile, subElementsXML, symbolProps = None, None, None, None, None, None
@@ -194,6 +203,7 @@ class DataTypeParser(ElementParser):
                 raise NotImplementedError(xmlElem.tag)
         return elements
 
+    @parseElementUUID
     def parseImplementationDataTypeElement(self, xmlRoot, parent):
         assert (xmlRoot.tag == 'IMPLEMENTATION-DATA-TYPE-ELEMENT')
         (arraySize, arraySizeSemantics, variants) = (None, None, None)
@@ -214,6 +224,7 @@ class DataTypeParser(ElementParser):
         return elem
 
 
+    @parseElementUUID
     def parseSwBaseType(self, xmlRoot, parent = None):
         assert (xmlRoot.tag == 'SW-BASE-TYPE')
         baseTypeSize, baseTypeEncoding, nativeDeclaration = None, None, None
@@ -235,6 +246,7 @@ class DataTypeParser(ElementParser):
         self.pop(elem)
         return elem
 
+    @parseElementUUID
     def parseDataTypeMappingSet(self, xmlRoot, parent = None):
         assert (xmlRoot.tag == 'DATA-TYPE-MAPPING-SET')
         (name, dataTypeMaps, adminData) = (None, None, None)
@@ -270,6 +282,7 @@ class DataTypeParser(ElementParser):
             elem.add(mapping)
         return elem
 
+    @parseElementUUID
     def parseApplicationPrimitiveDataType(self, xmlRoot, parent = None):
         assert (xmlRoot.tag == 'APPLICATION-PRIMITIVE-DATA-TYPE')
         variantProps = None
@@ -285,6 +298,7 @@ class DataTypeParser(ElementParser):
         self.pop(elem)
         return elem
 
+    @parseElementUUID
     def parseApplicationArrayDataType(self, xmlRoot, parent = None):
         assert (xmlRoot.tag == 'APPLICATION-ARRAY-DATA-TYPE')
         element, variantProps = None, None
@@ -304,6 +318,7 @@ class DataTypeParser(ElementParser):
         self.pop(elem)
         return elem
 
+    @parseElementUUID
     def parseApplicationArrayElement(self, xmlRoot):
         assert (xmlRoot.tag == 'ELEMENT')
         (typeRef, arraySize, sizeHandling, sizeSemantics) = (None, None, None, None)
@@ -323,6 +338,7 @@ class DataTypeParser(ElementParser):
         self.pop(elem)
         return elem
 
+    @parseElementUUID
     def parseApplicationRecordDataTypeXML(self, xmlRoot, parent = None):
         assert (xmlRoot.tag == 'APPLICATION-RECORD-DATA-TYPE')
         elementsXML, variantProps = None, None
@@ -344,6 +360,7 @@ class DataTypeParser(ElementParser):
         self.pop(elem)
         return elem
 
+    @parseElementUUID
     def _parseApplicationRecordElementXML(self, xmlRoot, parent):
         assert (xmlRoot.tag == 'APPLICATION-RECORD-ELEMENT')
         typeRef, variantProps = None, None
@@ -391,12 +408,14 @@ class DataTypeSemanticsParser(ElementParser):
     def getSupportedTags(self):
         return ['COMPU-METHOD']
 
+    @parseElementUUID
     def parseElement(self, xmlElement, parent = None):
         if xmlElement.tag == 'COMPU-METHOD':
             return self._parseCompuMethodXML(xmlElement, parent)
         else:
             return None
 
+    @parseElementUUID
     def _parseCompuMethodXML(self, xmlRoot, parent=None):
         assert (xmlRoot.tag == 'COMPU-METHOD')
         compuInternalToPhys, compuPhysToInternal, unitRef = None, None, None
@@ -421,6 +440,7 @@ class DataTypeSemanticsParser(ElementParser):
             compuMethod.physToInt = compuPhysToInternal
         return compuMethod
 
+    @parseElementUUID
     def _parseComputationXML(self, xmlRoot):
         assert (xmlRoot.tag == 'COMPU-INTERNAL-TO-PHYS') or (xmlRoot.tag == 'COMPU-PHYS-TO-INTERNAL')
         computation = autosar.datatype.Computation()
@@ -510,12 +530,14 @@ class DataTypeUnitsParser(ElementParser):
     def getSupportedTags(self):
         return ['UNIT']
 
+    @parseElementUUID
     def parseElement(self, xmlElement, parent = None):
         if xmlElement.tag == 'UNIT':
             return self._parseUnit(xmlElement, parent)
         else:
             return None
 
+    @parseElementUUID
     def _parseUnit(self, xmlRoot, parent=None):
         assert (xmlRoot.tag == 'UNIT')
         name = self.parseTextNode(xmlRoot.find("./SHORT-NAME"))

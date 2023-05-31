@@ -3,7 +3,7 @@ import autosar.portinterface
 import autosar.base
 import autosar.element
 import autosar.mode
-from autosar.parser.parser_base import ElementParser
+from autosar.parser.parser_base import ElementParser, parseElementUUID
 
 class PortInterfacePackageParser(ElementParser):
     def __init__(self, version=3.0):
@@ -26,6 +26,7 @@ class PortInterfacePackageParser(ElementParser):
     def getSupportedTags(self):
         return self.switcher.keys()
 
+    @parseElementUUID
     def parseElement(self, xmlElement, parent = None):
         parseFunc = self.switcher.get(xmlElement.tag)
         if parseFunc is not None:
@@ -35,6 +36,7 @@ class PortInterfacePackageParser(ElementParser):
 
 
 
+    @parseElementUUID
     def parseSenderReceiverInterface(self, xmlRoot, parent=None):
         assert (xmlRoot.tag == 'SENDER-RECEIVER-INTERFACE')
         (isService, serviceKind, dataElements, modeGroups, invalidationPolicys) = (False, None, None, None, None)
@@ -72,6 +74,7 @@ class PortInterfacePackageParser(ElementParser):
             self.pop()
             return None
 
+    @parseElementUUID
     def _parseDataElements(self, xmlRoot):
         dataElements = []
         if self.version >= 4.0:
@@ -89,6 +92,7 @@ class PortInterfacePackageParser(ElementParser):
                 raise NotImplementedError(xmlElem.tag)
         return dataElements
 
+    @parseElementUUID
     def _parseModeGroups(self, xmlRoot):
         assert(xmlRoot.tag == 'MODE-GROUPS')
         modeGroups = []
@@ -121,6 +125,7 @@ class PortInterfacePackageParser(ElementParser):
                 raise NotImplementedError(xmlChild.tag)
         return policyList
 
+    @parseElementUUID
     def _parseDataElementPrototype(self, xmlRoot):
         assert(xmlRoot.tag == 'DATA-ELEMENT-PROTOTYPE')
         (typeRef, isQueued) = (None, False)
@@ -154,6 +159,7 @@ class PortInterfacePackageParser(ElementParser):
         else:
             raise RuntimeError('DATA-ELEMENT-REF and HANDLE-INVALID must not be None')
 
+    @parseElementUUID
     def parseCalPrmInterface(self,xmlRoot,parent=None):
         assert(xmlRoot.tag=='CALPRM-INTERFACE')
         xmlName = xmlRoot.find("./SHORT-NAME")
@@ -173,6 +179,7 @@ class PortInterfacePackageParser(ElementParser):
                     portInterface.append(parameter)
             return portInterface
 
+    @parseElementUUID
     def parseClientServerInterface(self,xmlRoot,parent=None):
         assert(xmlRoot.tag=='CLIENT-SERVER-INTERFACE')
         name = self.parseTextNode(xmlRoot.find('SHORT-NAME'))
@@ -207,6 +214,7 @@ class PortInterfacePackageParser(ElementParser):
                     raise NotImplementedError(xmlElem.tag)
             return portInterface
 
+    @parseElementUUID
     def parseParameterInterface(self,xmlRoot,parent=None):
         (name, adminData, isService, xmlParameters) = (None, None, False, None)
         for xmlElem in xmlRoot.findall('./*'):
@@ -233,6 +241,7 @@ class PortInterfacePackageParser(ElementParser):
             return portInterface
 
 
+    @parseElementUUID
     def parseModeSwitchInterface(self,xmlRoot,parent=None):
         (name, adminData, desc, isService, xmlModeGroup) = (None, None, None, False, None)
         for xmlElem in xmlRoot.findall('./*'):
@@ -253,6 +262,7 @@ class PortInterfacePackageParser(ElementParser):
             portInterface.modeGroup=self._parseModeGroup(xmlModeGroup, portInterface)
             return portInterface
 
+    @parseElementUUID
     def _parseModeGroup(self, xmlModeGroup, parent):
         if self.version>=4.0:
             assert(xmlModeGroup.tag == "MODE-GROUP")
@@ -262,6 +272,7 @@ class PortInterfacePackageParser(ElementParser):
         typeRef = self.parseTextNode(xmlModeGroup.find('TYPE-TREF'))
         return autosar.mode.ModeGroup(name, typeRef, parent)
 
+    @parseElementUUID
     def _parseOperationPrototype(self, xmlOperation, parent):
         (name, xmlDesc, xmlArguments, xmlPossibleErrorRefs) = (None, None, None, None)
         for xmlElem in xmlOperation.findall('./*'):
@@ -304,6 +315,7 @@ class PortInterfacePackageParser(ElementParser):
                         raise NotImplementedError(xmlChild.tag)
             return operation
 
+    @parseElementUUID
     def _parseOperationArgumentV3(self, xmlArgument, parent):
         (name, typeRef, direction) = (None, None, None)
         for xmlElem in xmlArgument.findall('./*'):
@@ -320,6 +332,7 @@ class PortInterfacePackageParser(ElementParser):
         else:
             raise RuntimeError('SHORT-NAME, TYPE-TREF and DIRECTION must have valid values')
 
+    @parseElementUUID
     def _parseOperationArgumentV4(self, xmlArgument, parent):
         (argument, typeRef, direction, props_variants, serverArgumentImplPolicy) = (None, None, None, None, None)
         self.push()
@@ -343,11 +356,13 @@ class PortInterfacePackageParser(ElementParser):
         self.pop(argument)
         return argument
 
+    @parseElementUUID
     def _parseApplicationError(self, xmlElem, parent):
         name=self.parseTextNode(xmlElem.find("./SHORT-NAME"))
         errorCode=self.parseTextNode(xmlElem.find("./ERROR-CODE"))
         return autosar.portinterface.ApplicationError(name, errorCode, parent)
 
+    @parseElementUUID
     def _parseParameterDataPrototype(self, xmlElem, parent):
         (name, adminData, typeRef, props_variants) = (None, None, None, None)
         for xmlElem in xmlElem.findall('./*'):
@@ -369,6 +384,7 @@ class PortInterfacePackageParser(ElementParser):
                 parameter.swAddressMethodRef = props_variants[0].swAddressMethodRef
             return parameter
 
+    @parseElementUUID
     def parseNvDataInterface(self, xmlRoot, parent=None):
         assert (xmlRoot.tag == 'NV-DATA-INTERFACE')
         (isService, serviceKind, nvDatas) = (False, None, None)
@@ -402,12 +418,14 @@ class SoftwareAddressMethodParser(ElementParser):
     def getSupportedTags(self):
         return ['SW-ADDR-METHOD']
 
+    @parseElementUUID
     def parseElement(self, xmlElement, parent = None):
         if xmlElement.tag == 'SW-ADDR-METHOD':
             return self.parseSWAddrMethod(xmlElement, parent)
         else:
             return None
 
+    @parseElementUUID
     def parseSWAddrMethod(self,xmlRoot,rootProject=None,parent=None):
         assert(xmlRoot.tag == 'SW-ADDR-METHOD')
         name = xmlRoot.find("./SHORT-NAME").text

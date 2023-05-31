@@ -1,6 +1,6 @@
 from autosar.base import parseXMLFile,splitRef,parseTextNode,parseIntNode,hasAdminData,parseAdminDataNode
 from autosar.system import *
-from autosar.parser.parser_base import ElementParser
+from autosar.parser.parser_base import ElementParser, parseElementUUID
 
 class SystemParser(ElementParser):
     def __init__(self,version=3.0):
@@ -9,12 +9,14 @@ class SystemParser(ElementParser):
     def getSupportedTags(self):
         return ['SYSTEM']
 
+    @parseElementUUID
     def parseElement(self, xmlElement, parent = None):
         if xmlElement.tag == 'SYSTEM':
             return self.parseSystem(xmlElement, parent)
         else:
             return None
 
+    @parseElementUUID
     def parseSystem(self,xmlRoot,parent=None):
         """
         parses <SYSTEM>
