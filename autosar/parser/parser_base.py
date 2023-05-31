@@ -3,6 +3,7 @@ from collections import deque
 from autosar.base import (AdminData, SpecialDataGroup, SpecialData, SwDataDefPropsConditional, SwPointerTargetProps, SymbolProps)
 import autosar.element
 import xml
+from functools import wraps
 
 def _parseBoolean(value):
     if value is None:
@@ -20,6 +21,7 @@ def parseElementUUID(parser_func):
     argument and returns a autosar.element.Element. In case the xml element contains
     the UUID attribute, this will be inserted into the Autosar Element.
     """
+    @wraps(parser_func)
     def parseUUID(*args, **kwargs):
 
         # call original parser function
