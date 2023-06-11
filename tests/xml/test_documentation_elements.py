@@ -1,17 +1,16 @@
-"""
-Unit tests for documentation-related elements
-"""
-# pylint: disable=missing-class-docstring, missing-function-docstring, line-too-long
+"""Unit tests for documentation-related elements."""
+
+# noqa D101
 import os
 import sys
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
 import unittest
-import autosar.xml.enumeration as ar_enum
-import autosar.xml.element as ar_element
-import autosar
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
+import autosar.xml.enumeration as ar_enum # noqa E402
+import autosar.xml.element as ar_element # noqa E402
+import autosar # noqa E402
 
 
-class TestBreak(unittest.TestCase):
+class TestBreak(unittest.TestCase): # noqa D101
 
     def test_write_element(self):
         element = ar_element.Break()

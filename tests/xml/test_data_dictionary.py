@@ -2,13 +2,13 @@
 Unit tests for elements related to data definitions
 """
 # pylint: disable=missing-class-docstring, missing-function-docstring
+import unittest
 import os
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
-import unittest
-import autosar.xml.enumeration as ar_enum
-import autosar.xml.element as ar_element
-import autosar
+import autosar.xml.enumeration as ar_enum # noqa E402
+import autosar.xml.element as ar_element # noqa E402
+import autosar # noqa E402
 
 
 class TestSwBaseType(unittest.TestCase):
@@ -191,6 +191,7 @@ class TestSwBaseTypeRef(unittest.TestCase):
         self.assertIsInstance(elem, ar_element.SwBaseTypeRef)
         self.assertEqual(elem.value, '/Package/ElementName')
 
+
 class TestSwBitRepresentation(unittest.TestCase):
     def test_write_empty(self):
         element = ar_element.SwBitRepresentation()
@@ -237,6 +238,73 @@ class TestSwBitRepresentation(unittest.TestCase):
         elem: ar_element.SwBitRepresentation = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwBitRepresentation)
         self.assertEqual(elem.num_bits, 1)
+
+
+class TestSwTextProps(unittest.TestCase):
+
+    def test_write_empty(self):
+        element = ar_element.SwTextProps()
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element),
+                         '<SW-TEXT-PROPS/>')
+
+    def test_read_empty(self):
+        xml = '<SW-TEXT-PROPS/>'
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwTextProps = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwTextProps)
+
+    def test_write_array_size_semantics(self):
+        element = ar_element.SwTextProps(array_size_semantics=ar_enum.ArraySizeSemantics.VARIABLE_SIZE)
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element),
+                         '''<SW-TEXT-PROPS>
+  <ARRAY-SIZE-SEMANTICS>VARIABLE-SIZE</ARRAY-SIZE-SEMANTICS>
+</SW-TEXT-PROPS>''')
+
+    def test_read_array_size_semantics(self):
+        xml = '''<SW-TEXT-PROPS>
+  <ARRAY-SIZE-SEMANTICS>VARIABLE-SIZE</ARRAY-SIZE-SEMANTICS>
+</SW-TEXT-PROPS>'''
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwTextProps = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwTextProps)
+        self.assertEqual(elem.array_size_semantics, ar_enum.ArraySizeSemantics.VARIABLE_SIZE)
+
+    def test_write_base_type_ref(self):
+        element = ar_element.SwTextProps(base_type_ref=ar_element.SwBaseTypeRef('/Package/ElementName'))
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element),
+                         '''<SW-TEXT-PROPS>
+  <BASE-TYPE-REF DEST="SW-BASE-TYPE">/Package/ElementName</BASE-TYPE-REF>
+</SW-TEXT-PROPS>''')
+
+    def test_read_base_type_ref(self):
+        xml = '''<SW-TEXT-PROPS>
+  <BASE-TYPE-REF DEST="SW-BASE-TYPE">/Package/ElementName</BASE-TYPE-REF>
+</SW-TEXT-PROPS>'''
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwTextProps = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwTextProps)
+        self.assertEqual(str(elem.base_type_ref), '/Package/ElementName')
+
+    def test_write_fill_char(self):
+        element = ar_element.SwTextProps(fill_char=0x30)
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element),
+                         '''<SW-TEXT-PROPS>
+  <SW-FILL-CHARACTER>48</SW-FILL-CHARACTER>
+</SW-TEXT-PROPS>''')
+
+    def test_read_fill_char(self):
+        xml = '''<SW-TEXT-PROPS>
+  <SW-FILL-CHARACTER>48</SW-FILL-CHARACTER>
+</SW-TEXT-PROPS>'''
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwTextProps = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwTextProps)
+        self.assertEqual(elem.fill_char, 0x30)
+
 
 class TestDataDefPropsConditional(unittest.TestCase):
 
@@ -444,7 +512,7 @@ class TestDataDefPropsConditional(unittest.TestCase):
     def test_write_sw_bit_representation(self):
         writer = autosar.xml.Writer()
         element = ar_element.SwDataDefPropsConditional(
-            bit_representation = ar_element.SwBitRepresentation(position=1, num_bits=2))
+            bit_representation=ar_element.SwBitRepresentation(position=1, num_bits=2))
         self.assertEqual(writer.write_str_elem(element),
                          '''<SW-DATA-DEF-PROPS-CONDITIONAL>
   <SW-BIT-REPRESENTATION>
@@ -464,14 +532,14 @@ class TestDataDefPropsConditional(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.SwDataDefPropsConditional = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwDataDefPropsConditional)
-        child_elem : ar_element.SwBitRepresentation = elem.bit_representation
+        child_elem: ar_element.SwBitRepresentation = elem.bit_representation
         self.assertEqual(child_elem.position, 1)
         self.assertEqual(child_elem.num_bits, 2)
 
     def test_write_sw_calibration_access(self):
         writer = autosar.xml.Writer()
         element = ar_element.SwDataDefPropsConditional(
-            calibration_access = ar_enum.SwCalibrationAccess.READ_ONLY)
+            calibration_access=ar_enum.SwCalibrationAccess.READ_ONLY)
         self.assertEqual(writer.write_str_elem(element),
                          '''<SW-DATA-DEF-PROPS-CONDITIONAL>
   <SW-CALIBRATION-ACCESS>READ-ONLY</SW-CALIBRATION-ACCESS>
