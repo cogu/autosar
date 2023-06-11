@@ -94,10 +94,16 @@ class Reader:
         self.schema_version = schema_version
         self.document: ar_document.Document = None
         self.switcher_collectable = {  # Collectable elements
-            'SENDER-RECEIVER-INTERFACE': self._read_sender_receiver_interface,
+            # CompuMethod
+            'COMPU-METHOD': self._read_compu_method,
+
+            # Data Dictionary
             'SW-BASE-TYPE': self._read_sw_base_type,
             'SW-ADDR-METHOD': self._read_sw_addr_method,
             'IMPLEMENTATION-DATA-TYPE': self._read_implementation_data_type,
+
+            # Port interface
+            'SENDER-RECEIVER-INTERFACE': self._read_sender_receiver_interface,
         }
         self.switcher_non_collectable = {  # Non-collectable, used only for unit testing
             # Documentation elements
@@ -117,10 +123,15 @@ class Reader:
             'SUB': self._read_subscript,
             'TT': self._read_technical_term,
             'VERBATIM': self._read_multi_language_verbatim,
+            # CompuMethod elements
+            'COMPU-INTERNAL-TO-PHYS': self._read_computation,
+            'COMPU-RATIONAL-COEFFS': self._read_compu_rational,
+            'COMPU-SCALE': self._read_compu_scale,
             # DataDictionary elements
             'BASE-TYPE-REF': self._read_sw_base_type_ref,
             'SW-BIT-REPRESENTATION': self._read_sw_bit_representation,
             'SW-DATA-DEF-PROPS-CONDITIONAL': self._read_sw_data_def_props_conditional,
+            'SW-TEXT-PROPS': self._read_sw_text_props,
         }
         self.switcher_all = {}
         self.switcher_all.update(self.switcher_collectable)
@@ -170,9 +181,11 @@ class Reader:
         if xml_elem.tag not in self.observed_unsupported_elements:
             self.observed_unsupported_elements.add(xml_elem.tag)
             if self.warn_on_unprocessed_element:
-                file = self.file_path if self.use_full_path_on_warning else self.file_base_name
-                print(
-                    f"{file}({xml_elem.sourceline}): Unprocessed element <{xml_elem.tag}>", file=sys.stderr)
+                if self.file_path is not None:
+                    file = self.file_path if self.use_full_path_on_warning else self.file_base_name
+                    print(f"{file}({xml_elem.sourceline}): Unprocessed element <{xml_elem.tag}>", file=sys.stderr)
+                else:
+                    print(f"Unprocessed element <{xml_elem.tag}>", file=sys.stderr)
 
     def _raise_parse_error(self, element: ElementTree.Element, message: str):
         """
@@ -180,13 +193,13 @@ class Reader:
         """
         file = self.file_path if self.use_full_path_on_warning else self.file_base_name
         header = f"{file}({element.sourceline}): "
-        raise ar_exception.ParseError(header+message)
+        raise ar_exception.ParseError(header + message)
 
     def _clean_namespace(self, namespace: str) -> None:
         """
         Removes XML namespace in place.
         """
-        wrapped = '{'+namespace+'}'
+        wrapped = '{' + namespace + '}'
         wrapped_len = len(wrapped)
         for elem in self.xml_root.iter():
             if isinstance(elem.tag, str) and elem.tag.startswith(wrapped):
@@ -196,12 +209,25 @@ class Reader:
         """
         Reads simpleType AR:BOOLEAN--SIMPLE
         """
-        if value == '0' or 'false':
+        if value in ('0', 'false'):
             return False
-        elif value == '1' or 'true':
+        elif value in ('1', 'true'):
             return True
         else:
-            raise ar_exception.ParseError('Not a boolean value: '+str(value))
+            raise ar_exception.ParseError('Not a boolean value: ' + str(value))
+
+    def _read_number(self, text: str) -> int | float:
+        """
+        Attempts to convert text to either int or float
+        """
+        try:
+            value = int(text)
+        except ValueError:
+            try:
+                value = float(text)
+            except ValueError as exc:
+                raise ar_exception.ParseError(f"Not a number: {text}") from exc
+        return value
 
     # Abstract base classes
 
@@ -312,7 +338,7 @@ class Reader:
                 match = re.search(r'AUTOSAR_(\d+).xsd',
                                   self.xml_root.attrib[key])
                 if match is not None:
-                    self.schema_file = 'AUTOSAR_'+match.group(1)+'.xsd'
+                    self.schema_file = 'AUTOSAR_' + match.group(1) + '.xsd'
                     self.schema_version = int(match.group(1))
 
     # def _read_file_info_comment(self, xml_node, parent):
@@ -386,17 +412,6 @@ class Reader:
             child_package = self._read_package(xml_child_package)
             assert isinstance(child_package, ar_package.Package)
             package.packages.append(child_package)
-
-    # References
-
-    def _read_sw_base_type_reference(self, xml_elem: ElementTree.Element):
-        dest_text = xml_elem.attrib['DEST']
-        dest_enum = ar_enum.xml_to_enum(
-            'IdentifableSubTypes', dest_text, self.schema_version)
-        if dest_enum != ar_enum.IdentifiableSubTypes.SW_BASE_TYPE:
-            self._raise_parse_error(
-                xml_elem, f"Invalid DEST attribute '{dest_text}'. Expected 'SW-BASE-TYPE'")
-        return ar_element.SwBaseTypeRef(xml_elem.text)
 
     # Documentation elements
 
@@ -811,7 +826,174 @@ class Reader:
             data['page_wide'] = ar_enum.xml_to_enum(
                 'PageWide', attrib['PGWIDE'])
 
-    # DataDictionary Elements
+    # CompuMethod elements
+
+    def _read_compu_method(self, xml_element: ElementTree.Element) -> ar_element.CompuMethod:
+        """
+        Reads Complex type AR:COMPU-METHOD
+        Type: Concrete
+        Tag variants: 'COMPU-METHOD'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_compu_method_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.CompuMethod(data['short_name'], **data)
+
+    def _read_compu_method_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group type AR:COMPU-METHOD
+        Type: Abstract
+        Tag variants: 'COMPU-METHOD'
+        """
+        xml_child = child_elements.get("DISPLAY-FORMAT")
+        if xml_child is not None:
+            data["display_format"] = xml_child.text
+        xml_child = child_elements.get("UNIT-REF")
+        if xml_child is not None:
+            data["unit_ref"] = self._read_unit_ref(xml_child)
+        xml_child = child_elements.get("COMPU-INTERNAL-TO-PHYS")
+        if xml_child is not None:
+            data["int_to_phys"] = self._read_computation(xml_child)
+        xml_child = child_elements.get("COMPU-PHYS-TO-INTERNAL")
+        if xml_child is not None:
+            data["phys_to_int"] = self._read_computation(xml_child)
+
+    def _read_computation(self, xml_element: ElementTree.Element) -> ar_element.Computation:
+        """
+        Reads AR:COMPUTATION
+        Type: Concrete
+        Tag variants: 'COMPU-INT-TO-PHYS', 'COMPU-PHYS-TO-INT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get('COMPU-SCALES')
+        if xml_child is not None:
+            data["compu_scales"] = self._read_compu_scales(xml_child)
+        xml_child = child_elements.get('COMPU-DEFAULT-VALUE')
+        if xml_child is not None:
+            data["default_value"] = self._read_compu_const(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.Computation(**data)
+
+    def _read_compu_scales(self, xml_element: ElementTree.Element) -> list[ar_element.CompuScale]:
+        """
+        Reads AR:COMPU-SCALES
+        Type: Concrete
+        Tag variants: 'COMPU-SCALES'
+        """
+        compu_scales = []
+        for xml_child in xml_element.findall("./COMPU-SCALE"):
+            compu_scales.append(self._read_compu_scale(xml_child))
+        return compu_scales
+
+    def _read_compu_scale(self, xml_element: ElementTree.Element) -> list[ar_element.CompuScale]:
+        """
+        Reads AR:COMPU-SCALE
+        Type: Concrete
+        Tag variants: 'COMPU-SCALE'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("SHORT-LABEL")
+        if xml_child is not None:
+            data["label"] = xml_child.text
+        xml_child = child_elements.get("SYMBOL")
+        if xml_child is not None:
+            data["symbol"] = xml_child.text
+        xml_child = child_elements.get("DESC")
+        if xml_child is not None:
+            data["desc"] = self._read_multi_language_overview_paragraph(xml_child)
+        xml_child = child_elements.get("MASK")
+        if xml_child is not None:
+            data["mask"] = int(xml_child.text)
+        xml_child = child_elements.get("LOWER-LIMIT")
+        if xml_child is not None:
+            limit, interval_type = self._read_limit(xml_child)
+            data["lower_limit"] = limit
+            data["lower_limit_type"] = interval_type
+        xml_child = child_elements.get("UPPER-LIMIT")
+        if xml_child is not None:
+            limit, interval_type = self._read_limit(xml_child)
+            data["upper_limit"] = limit
+            data["upper_limit_type"] = interval_type
+        xml_child = child_elements.get("COMPU-INVERSE-VALUE")
+        if xml_child is not None:
+            data["inverse_value"] = self._read_compu_const(xml_child)
+        compu_const_xml = child_elements.get("COMPU-CONST")
+        compu_rational_xml = child_elements.get("COMPU-RATIONAL-COEFFS")
+        if (compu_const_xml is not None) and (compu_rational_xml is not None):
+            raise ar_exception.ParseError("Can't define both COMPU-CONST and COMPU-RATIONAL-COEFFS"
+                                          "in the same COMPU-SCALE element")
+        if compu_const_xml is not None:
+            data["content"] = self._read_compu_const(compu_const_xml)
+        elif compu_rational_xml is not None:
+            data["content"] = self._read_compu_rational(compu_rational_xml)
+        child_elements.skip("VARIATION-POINT")  # Not supported
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.CompuScale(**data)
+
+    def _read_limit(self, xml_element: ElementTree.Element) -> tuple[int | float, ar_enum.IntervalType]:
+        interval_type = xml_element.attrib.get("INTERVAL-TYPE")
+        if interval_type is not None:
+            interval_type = ar_enum.xml_to_enum("IntervalType", interval_type)
+        else:
+            # If the attribute is missing the interval shall be considered as "CLOSED"
+            interval_type = ar_enum.IntervalType.CLOSED
+        limit = self._read_number(xml_element.text)
+        return limit, interval_type
+
+    def _read_compu_const(self, xml_element: ElementTree.Element) -> ar_element.CompuConst:
+        """
+        Reads AR:COMPU-CONST
+        Type: Concrete
+        Tag variants: 'COMPU-CONST'
+        """
+        v_xml = xml_element.find("V")
+        vt_xml = xml_element.find("VT")
+        if (v_xml is not None) and (vt_xml is not None):
+            raise ar_exception.ParseError("Can't define both V and VT"
+                                          "in the same COMPU-CONST element")
+        if v_xml is not None:
+            value = self._read_number(v_xml.text)
+        elif vt_xml is not None:
+            value = vt_xml.text
+        else:
+            raise ar_exception.ParseError("COMPU-CONST without value isn't supported")
+        return ar_element.CompuConst(value)
+
+    def _read_compu_rational(self, xml_element: ElementTree.Element) -> ar_element.CompuRational:
+        """
+        Reads AR:COMPU-RATIONAL-COEFFS
+        Type: Concrete
+        Tag variants: 'COMPU-RATIONAL-COEFFS'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get('COMPU-NUMERATOR')
+        if xml_child is not None:
+            data['numerator'] = self._read_compu_numerator_denominator_values(xml_child)
+        xml_child = child_elements.get('COMPU-DENOMINATOR')
+        if xml_child is not None:
+            data['denominator'] = self._read_compu_numerator_denominator_values(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.CompuRational(**data)
+
+    def _read_compu_numerator_denominator_values(self, xml_element: ElementTree.Element) -> tuple:
+        """
+        Reads AR:COMPU-NOMINATOR-DENOMINATOR
+        Type: Concrete
+        Tag variants: 'COMPU-NUMERATOR' | 'COMPU-DENOMINATOR'
+        """
+        values = []
+        for xml_child in xml_element.findall('./V'):
+            num_val = ar_element.NumericalValue(xml_child.text)
+            values.append(num_val.value)
+        return tuple(values)
+
+    # DataDictionary elements
 
     def _read_sw_addr_method(self, xml_element: ElementTree.Element) -> ar_element.SwAddrMethod:
         """
@@ -974,31 +1156,65 @@ class Reader:
                                                              xml_child.text)
         self._report_unprocessed_elements(child_elements)
 
+    def _read_sw_text_props(self, xml_element: ElementTree.Element) -> ar_element.SwBitRepresentation:
+        """
+        Reads AR:SW-TEXT-PROPS
+        Type: Concrete
+        Tag variants: 'SW-TEXT-PROPS'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get('ARRAY-SIZE-SEMANTICS')
+        if xml_child is not None:
+            data['array_size_semantics'] = ar_enum.xml_to_enum('ArraySizeSemantics', xml_child.text)
+        xml_child = child_elements.get('BASE-TYPE-REF')
+        if xml_child is not None:
+            data['base_type_ref'] = self._read_sw_base_type_ref(xml_child)
+        xml_child = child_elements.get('SW-FILL-CHARACTER')
+        if xml_child is not None:
+            data['fill_char'] = int(xml_child.text)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.SwTextProps(**data)
+
     # Reference elements
 
     def _read_sw_base_type_ref(self, xml_elem: ElementTree.Element) -> ar_element.SwAddrMethodRef:
         """
-        Reads complex-type AR:SW-BASE-TYPE-REF
+        Reads AR:SW-BASE-TYPE-REF
+        Type: Concrete
+        Tag Variants: 'SW-BASE-TYPE-REF'
 
-        Note: the name of this complex-type is anonymous in the XML achema
+        Note: the name of this complex type is anonymous in the XML achema
         """
         data = {}
         self._read_base_ref_attributes(xml_elem.attrib, data)
         if data['dest'] != 'SW-BASE-TYPE':
-            raise ar_exception.ParseError(
-                f"Invalid value for DEST. Expected 'SW-BASE-TYPE', got '{data['dest']}'")
+            raise ar_exception.ParseError(f"Invalid value for DEST. Expected 'SW-BASE-TYPE', got '{data['dest']}'")
         return ar_element.SwBaseTypeRef(xml_elem.text)
 
     def _read_sw_addr_method_ref(self, xml_elem: ElementTree.Element) -> ar_element.SwAddrMethodRef:
         """
-        Reads complex-type AR:SW-ADDR-METHOD-REF
+        Reads AR:SW-ADDR-METHOD-REF
+        Type: Concrete
+        Tag variants: 'SW-ADDR-METHOD-REF'
         """
         data = {}
         self._read_base_ref_attributes(xml_elem.attrib, data)
         if data['dest'] != 'SW-ADDR-METHOD':
-            raise ar_exception.ParseError(
-                f"Invalid value for DEST. Expected 'SW-ADDR-METHOD', got '{data['dest']}'")
+            raise ar_exception.ParseError(f"Invalid value for DEST. Expected 'SW-ADDR-METHOD', got '{data['dest']}'")
         return ar_element.SwAddrMethodRef(xml_elem.text)
+
+    def _read_unit_ref(self, xml_elem: ElementTree.Element):
+        """
+        Reads AR:UNIT-REF
+        Type: Concrete
+        Tag variants: 'UNIT-REF'
+        """
+        dest_text = xml_elem.attrib['DEST']
+        dest_enum = ar_enum.xml_to_enum('IdentifableSubTypes', dest_text, self.schema_version)
+        if dest_enum != ar_enum.IdentifiableSubTypes.UNIT:
+            self._raise_parse_error(xml_elem, f"Invalid DEST attribute '{dest_text}'. Expected 'UNIT'")
+        return ar_element.UnitRef(xml_elem.text)
 
     def _read_base_ref_attributes(self, attr: dict, data: dict) -> None:
         data['dest'] = attr.get('DEST', None)

@@ -15,6 +15,38 @@ alignment_type_re = re.compile(
 # Base classes
 
 
+class NumericalValue:
+    """
+    Wrapper for numerical value
+    """
+
+    def __init__(self,
+                 value: int | float | str,
+                 format: ar_enum.ValueFormat = ar_enum.ValueFormat.DEFAULT) -> None:  # pylint:disable=w0622
+        self._value = self._validate_value(value)
+        self.format = format
+
+    @property
+    def value(self):
+        """Value property"""
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        self._value = self._validate_value(value)
+
+    def _validate_value(self, value: Any) -> int | float | str:
+        if isinstance(value, (int, float)):
+            return value
+        elif isinstance(value, str):
+            try:
+                return int(value, 0)
+            except ValueError:
+                return float(value)
+        else:
+            raise TypeError(f"Unexpected type for value {str(type(value))}")
+
+
 class ARObject:
     """
     Base class for all AUTOSAR objects
@@ -240,7 +272,8 @@ class BaseRef(ARObject, abc.ABC):
     Type: Abstract
     """
 
-    def __init__(self, value: str,
+    def __init__(self,
+                 value: str,
                  dest: ar_enum.IdentifiableSubTypes | None = None) -> None:
         self.value = value
         self.dest = dest
@@ -253,6 +286,7 @@ class BaseRef(ARObject, abc.ABC):
         """
 
     def __str__(self) -> str:
+        """Returns reference as string"""
         return self.value
 
 
@@ -290,6 +324,19 @@ class DataConstraintRef(BaseRef):
 
     def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
         return {ar_enum.IdentifiableSubTypes.DATA_CONSTR}
+
+
+class UnitRef(BaseRef):
+    """
+    DataConstraint Reference
+    """
+
+    def __init__(self, value: str) -> None:
+        super().__init__(value, ar_enum.IdentifiableSubTypes.UNIT)
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        return {ar_enum.IdentifiableSubTypes.UNIT}
+
 
 # Documentation Elements
 
@@ -422,7 +469,7 @@ class MixedContentForLongName(LanguageSpecific):
         if isinstance(part, (str, TechnicalTerm, EmphasisText, Subscript, Subscript, IndexEntry)):
             self.parts.append(part)
         else:
-            raise TypeError('Unsupported element type: '+str(type(part)))
+            raise TypeError('Unsupported element type: ' + str(type(part)))
 
 
 class MixedContentForOverviewParagraph(LanguageSpecific):
@@ -446,7 +493,7 @@ class MixedContentForOverviewParagraph(LanguageSpecific):
         if isinstance(part, (str, TechnicalTerm, EmphasisText, Subscript, Subscript, IndexEntry)):
             self.parts.append(part)
         else:
-            raise TypeError('Unsupported element type: '+str(type(part)))
+            raise TypeError('Unsupported element type: ' + str(type(part)))
 
 
 class LanguageLongName(MixedContentForLongName):
@@ -648,10 +695,10 @@ class MixedContentForParagraph(LanguageSpecific):
         """
         Checks type validity before adding element to elements
         """
-        if isinstance(part, (str, Break, EmphasisText, IndexEntry, Subscript, Subscript,  TechnicalTerm)):
+        if isinstance(part, (str, Break, EmphasisText, IndexEntry, Subscript, Subscript, TechnicalTerm)):
             self.parts.append(part)
         else:
-            raise TypeError('Unsupported element type: '+str(type(part)))
+            raise TypeError('Unsupported element type: ' + str(type(part)))
 
 
 class LanguageParagraph(MixedContentForParagraph):
@@ -747,7 +794,7 @@ class MixedContentForVerbatim(LanguageSpecific):
         if isinstance(part, (str, Break, EmphasisText, TechnicalTerm)):
             self.parts.append(part)
         else:
-            raise TypeError('Unsupported element type: '+str(type(part)))
+            raise TypeError('Unsupported element type: ' + str(type(part)))
 
 
 class LanguageVerbatim(MixedContentForVerbatim):
@@ -824,8 +871,7 @@ class DocumentationBlock(ARObject):
 
     def __init__(self,
                  element: MultiLanguageParagraph | MultiLanguageVerbatim | list[Any] | None = None) -> None:
-        self.elements: list[MultiLanguageParagraph |
-                            MultiLanguageVerbatim] = []
+        self.elements: list[MultiLanguageParagraph | MultiLanguageVerbatim] = []
         if element is not None:
             if isinstance(element, Iterable):
                 for elem in element:
@@ -902,10 +948,199 @@ class VariableDataPrototype(AutosarDataPrototype):
     Type: Concrete
     """
 
-    def __init__(self, name: str,  **kwargs) -> None:
+    def __init__(self, name: str, **kwargs) -> None:
         super().__init__(name, kwargs)
         self.init_value = None  # .INIT-VALUE
         # .VARIATION-POINT not supported
+
+# ComputationMethods
+
+
+class CompuRational(ARObject):
+    """
+    AR:COMPU-RATIONAL-COEFFS
+    Type: Concrete
+    Tag variants: 'COMPU-RATIONAL-COEFFS'
+    """
+
+    def __init__(self,
+                 numerator: tuple[int | float] | list[int | float] | None,
+                 denominator: tuple[int | float] | list[int | float] | None = None) -> None:
+        if numerator is not None:
+            if not isinstance(numerator, (tuple, list)):
+                raise TypeError("Parameter for 'numerator' must be either a list or a tuple")
+            self.numerator = tuple(numerator)
+        else:
+            self.numerator = None
+        if denominator is not None:
+            if not isinstance(denominator, (tuple, list)):
+                raise TypeError("Parameter for 'denominator' must be either a list or a tuple")
+            self.denominator = tuple(denominator)
+        else:
+            self.denominator = None
+
+
+class CompuConst(ARObject):
+    """
+    AR:COMPU-CONST
+    Type: Concrete
+
+    Handles AR:COMPU-CONST-NUMERIC-CONTENT
+    and AR:COMPU-CONST-TEXT-CONTENT dynamically
+    """
+
+    def __init__(self, value: int | float | str):
+        self.value = value
+
+
+class CompuScale(ARObject):
+    """
+    AR:COMPU-SCALE
+    Type: Concrete
+    Tag variants: 'COMPU-SCALE'
+    """
+
+    def __init__(self,
+                 content: CompuConst | CompuRational | None = None,
+                 lower_limit: int | float | str | None = None,
+                 upper_limit: int | float | str | None = None,
+                 label: str | None = None,
+                 symbol: str | None = None,
+                 desc: MultiLanguageOverviewParagraph | None = None,
+                 mask: int | None = None,
+                 inverse_value: CompuConst | None = None,
+                 lower_limit_type: ar_enum.IntervalType = ar_enum.IntervalType.CLOSED,
+                 upper_limit_type: ar_enum.IntervalType = ar_enum.IntervalType.CLOSED) -> None:
+        self.content = content                      # CHOICE(COMPU-SCALE-CONSTANT-CONTENTS, COMPU-SCALE-RATIONAL-FORMULA) # noqa E501 pylint: disable=C0301
+        self.lower_limit = lower_limit              # .LOWER-LIMIT
+        self.upper_limit = upper_limit              # .UPPER-LIMIT
+        self.label = label                          # .SHORT-LABEL
+        self.symbol = symbol                        # .SYMBOL
+        self.desc = desc                            # .DESC
+        self.mask = mask                            # .MASK
+        self.inverse_value: CompuConst | None = None  # .COMPU-INVERSE-VALUE
+        if inverse_value is not None:
+            if isinstance(inverse_value, CompuConst):
+                self.inverse_value = inverse_value
+            elif isinstance(inverse_value, (int, float, str)):
+                self.inverse_value = CompuConst(inverse_value)
+            else:
+                raise TypeError(f"Invalid type for 'inverse_value': {str(type(inverse_value))}")
+        self.lower_limit_type = lower_limit_type    # .LOWER-LIMIT@INTERVAL-TYPE
+        self.upper_limit_type = upper_limit_type    # .UPPER-LIMIT@INTERVAL-TYPE
+        # .VARIATION-POINT not supported
+
+    @property
+    def content_type(self) -> ar_enum.CompuScaleContent:
+        """
+        What kind of content does this CompuScale have?
+        """
+        if isinstance(self.content, CompuConst):
+            return ar_enum.CompuScaleContent.CONSTANT
+        elif isinstance(self.content, CompuRational):
+            return ar_enum.CompuScaleContent.RATIONAL
+        else:
+            return ar_enum.CompuScaleContent.NONE
+
+
+class Computation(ARObject):
+    """
+    AR:COMPU
+    Type: Concrete
+    Tag variants: 'COMPU-INTERNAL-TO-PHYS' | 'COMPU-PHYS-TO-INTERNAL'
+    """
+
+    def __init__(self,
+                 compu_scales: list[CompuScale] | None = None,
+                 default_value: CompuConst | int | float | str | None = None) -> None:
+
+        self.compu_scales = compu_scales
+        self.default_value: CompuConst | int | float | str | None = None  # .COMPU-DEFAULT-VALUE
+        if isinstance(default_value, CompuConst):
+            self.default_value = default_value
+        elif isinstance(default_value, (int, float, str)):
+            self.default_value = CompuConst(default_value)
+
+    @classmethod
+    def make_value_table(cls: "Computation",
+                         elements: list[Any],
+                         default_value: CompuConst | int | float | str | None = None,
+                         auto_label: bool = True):
+        """
+        Creates new const-based computation from values in list
+
+        When elements is a list of strings:
+            Creates one CompuScale per list item and automatically calculates lower and upper limits
+
+        When elements is a list of tuples:
+            If 2-tuple: First element is both lower_limit and upper_limit, second element is text value.
+            If 3-tuple: First element is lower_limit, second element is upper_limit, third element is text value.
+
+        auto_label: automatically creates a <SHORT-LABEL> based on the text value.
+
+        """
+        compu_scales = []
+        for i, elem in enumerate(elements):
+            label = None
+            if isinstance(elem, str):
+                lower_limit, upper_limit, value = i, i, elem
+            elif isinstance(elem, tuple):
+                if len(elem) == 2:
+                    lower_limit, upper_limit, value = (elem[0], elem[0], elem[1])
+                elif len(elem) == 3:
+                    lower_limit, upper_limit, value = elem
+                else:
+                    raise ValueError(f"Invalid length of tuple: {len(elem)}")
+            else:
+                raise TypeError(f"Invalid type of element: {str(type(elem))}")
+            if auto_label and isinstance(value, str):
+                label = value
+            compu_scales.append(CompuScale(CompuConst(value), lower_limit, upper_limit, label))
+        return cls(compu_scales, default_value)
+
+    @classmethod
+    def make_rational(cls: "Computation",
+                      scaling_factor: int | float = 1,
+                      offset: int | float = 0,
+                      lower_limit: int | float | str | None = None,
+                      upper_limit: int | float | str | None = None,
+                      default_value: CompuConst | int | float | str | None = None,
+                      lower_limit_type: ar_enum.IntervalType = ar_enum.IntervalType.CLOSED,
+                      upper_limit_type: ar_enum.IntervalType = ar_enum.IntervalType.CLOSED) -> None:
+        """
+        Creates a new Computation instance with one COMPU-SCALE containing numerator
+        and denominator.
+
+        """
+        numerator = [offset, float(scaling_factor)]
+        denominator = [1]
+        compu_scales = [CompuScale(CompuRational(numerator, denominator),
+                                   lower_limit,
+                                   upper_limit,
+                                   lower_limit_type=lower_limit_type,
+                                   upper_limit_type=upper_limit_type)]
+        return cls(compu_scales, default_value)
+
+
+class CompuMethod(ARElement):
+    """
+    AR:COMPU-METHOD
+    Type: Concrete
+    Tag Variants: 'COMPU-METHOD'
+    """
+
+    def __init__(self, name: str,
+                 int_to_phys: Computation | None = None,
+                 phys_to_int: Computation | None = None,
+                 unit_ref: UnitRef | None = None,
+                 display_format: str | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, kwargs)
+        self.int_to_phys = int_to_phys        # .COMPU-INTERNAL-TO-PHYS
+        self.phys_to_int = phys_to_int        # .COMPU-PHYS-TO-INTERNAL
+        self.unit_ref = unit_ref              # .UNIT-REF
+        self.display_format = display_format  # .DISPLAY-FORMAT
+
 
 # Data Dictionary Elements
 
@@ -986,6 +1221,27 @@ class SwBitRepresentation(ARObject):
         self._assign_optional('num_bits', num_bits, int)
 
 
+class SwTextProps(ARObject):
+    """
+    Group AR:SW-TEXT-PROPS
+    Type: Concrete
+    Tag Variants: 'SW-TEXT-PROPS'
+    """
+
+    def __init__(self,
+                 array_size_semantics: ar_enum.ArraySizeSemantics | None = None,
+                 base_type_ref: SwBaseTypeRef | str | None = None,
+                 fill_char: int | None = None,
+                 ):
+        # .SW-MAX-TEXT-SIZE not supported as it seems related to variant-handling.
+        self.array_size_semantics: ar_enum.ArraySizeSemantics | None = None
+        self.base_type_ref: SwBaseTypeRef | str | None = None
+        self.fill_char: int | None = None
+        self._assign_optional('array_size_semantics', array_size_semantics, ar_enum.ArraySizeSemantics)
+        self._assign_optional('base_type_ref', base_type_ref, SwBaseTypeRef)
+        self._assign_optional('fill_char', fill_char, int)
+
+
 class SwDataDefPropsConditional(ARObject):
     """
     Merge of Complex-types AR:SW-DATA-DEF-PROPS-CONDITIONAL and
@@ -1001,38 +1257,35 @@ class SwDataDefPropsConditional(ARObject):
         # .DISPLAY-PRESENTATION
         self.display_presentation: ar_enum.DisplayPresentation | None = None
         self.step_size: float | None = None  # .STEP-SIZE : AR:FLOAT
-        # .SW-VALUE-BLOCK-SIZE-MULTS not supported as it seems related to VariantHandling
+        # .SW-VALUE-BLOCK-SIZE-MULTS not supported. Seems to be related to variant handling
         self.annotations: list[Annotation] = []  # .ANNOTATIONS
         self.sw_addr_method_ref = None  # .SW-ADDR-METHOD-REF
         self.alignment = None  # .SW-ALIGNMENT
         self.base_type_ref = None  # .BASE-TYPE-REF
         self.bit_representation: SwBitRepresentation | None = None  # .SW-BIT-REPRESENTATION
         self.calibration_access: ar_enum.SwCalibrationAccess | None = None  # .SW-CALIBRATION-ACCESS
-        self.value_block_size = None  # .SW-VALUE-BLOCK-SIZE
-        self.calprm_axis_set = None  # .SW-CALPRM-AXIS-SET
+        # .SW-VALUE-BLOCK-SIZE not supported. Seems to be related to variant handling
+        # .SW-CALPRM-AXIS-SET not supported. MCD support is low on priority list.
         self.text_props = None  # .SW-TEXT-PROPS
-        self.comparision_variables = None  # .SW-COMPARISON-VARIABLES
+        # .SW-COMPARISON-VARIABLES  not supported. MCD support is low on priority list.
         self.compu_method_ref = None
         self.data_constraint_ref = None
-        self.data_dependency = None  # .SW-DATA-DEPENDENCY
+        # .SW-DATA-DEPENDENCY not supported. MCD support is low on priority list
         self.display_format = None  # DISPLAY-FORMAT
         self.implementation_data_type_ref = None  # .IMPLEMENTATION-DATA-TYPE-REF
-        self.host_variable = None  # .SW-HOST-VARIABLE (Complex content)
+        # .SW-HOST-VARIABLE not supported. Low on priority list.
         self.impl_policy = None  # .SW-IMPL-POLICY
         self.additional_native_type_qualifier = None  # .ADDITIONAL-NATIVE-TYPE-QUALIFIER
         self.intended_resolution = None  # .SW-INTENDED-RESOLUTION
         self.interpolation_method = None  # .SW-INTENDED-METHOD
-        self.invalid_value = None  # .INVALID-VALUE
-        self.mc_function = None  # .MC-FUNCTION
+        # .INVALID-VALUE not supported. Low on priority list.
+        # .MC-FUNCTION not supported. Low on priority list.
         self.is_virtual = None  # .IS-VIRTUAL
-        # .SW-POINTER-TARGET-PROPS (Complex content)
-        self.sw_pointer_target_props = None
-        self.sw_record_layout_ref = None  # .SW-RECORD-LAYOUT-REF
-        self.sw_record_layout_ref_dest = None  # .SW-RECORD-LAYOUT-REF.dest
-        self.sw_refresh_timing = None  # .SW-REFRESH-TIMING (Complex content)
+        self.sw_pointer_target_props = None  # .SW-POINTER-TARGET-PROPS
+        # .SW-RECORD-LAYOUT-REF. Low on priority list.
+        # .SW-REFRESH-TIMING not supported. Low on priority list.
         self.unit_ref = None  # .UNIT-REF
-        self.value_axis_data_type_ref = None  # .VALUE-AXIS-DATA-TYPE-REF
-        self.value_axis_data_type_ref_dest = None  # .VALUE-AXIS-DATA-TYPE-REF.DEST
+        # .VALUE-AXIS-DATA-TYPE-REF. Low on priority list.
 
         self._check_params(self.__class__.__name__,
                            kwargs, self.accepted_params())
@@ -1146,7 +1399,7 @@ class ARDataType(ARElement):
             'sw_data_def_props', None)
 
     def accepted_params(self) -> set[str]:
-        "Acceped names in kwargs during init"
+        """Acceped names in kwargs during init"""
         params = {'sw_data_def_props'}
         super()._accepted_params(params)
         return params
@@ -1164,7 +1417,7 @@ class ImplementationDataType(ARDataType):
         super().__init__(name, kwargs)
 
     def accepted_params(self) -> set[str]:
-        "Acceped names in kwargs during init"
+        """Acceped names in kwargs during init"""
         params = {'dynamic_array_size_profile',
                   'is_struct_with_optional_element',
                   'sub_elements',

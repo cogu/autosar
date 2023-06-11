@@ -1,6 +1,7 @@
 """
 ARXML writer module
 """
+# pylint: disable=consider-using-with
 from io import StringIO
 from typing import TextIO
 import math
@@ -128,7 +129,7 @@ class _XMLWriter:
         """
         if math.isinf(value):
             return '-INF' if value < 0 else 'INF'
-        elif math.isnan(value):
+        if math.isnan(value):
             return 'NaN'
         else:
             tmp = decimal.Decimal(str(value))
@@ -146,6 +147,8 @@ class Writer(_XMLWriter):
         self.switcher_collectable = {
             # Package
             'Package': self._write_package,
+            # CompuMethod elements
+            'CompuMethod': self._write_compu_method,
             # DataDictionary Elements
             'SwBaseType': self._write_sw_base_type,
             'SwAddrMethod': self._write_sw_addr_method,
@@ -169,10 +172,15 @@ class Writer(_XMLWriter):
             'Superscript': self._write_superscript,
             'Subscript': self._write_subscript,
             'TechnicalTerm': self._write_technical_term,
-            # DataDictionary Elements
+            # CompuMethod elements
+            'Computation': self._write_computation,
+            'CompuRational': self._write_compu_rational,
+            'CompuScale': self._write_compu_scale,
+            # DataDictionary elements
             'SwDataDefPropsConditional': self._write_sw_data_def_props_conditional,
             'SwBaseTypeRef': self._write_sw_base_type_ref,
             'SwBitRepresentation': self._write_sw_bit_represenation,
+            'SwTextProps': self._write_sw_text_props,
         }
         self.switcher_all = {}  # All concrete elements (used for unit testing)
         self.switcher_all.update(self.switcher_collectable)
@@ -479,7 +487,7 @@ class Writer(_XMLWriter):
             elif isinstance(part, ar_element.TechnicalTerm):
                 self._write_technical_term(part, inline=True)
             else:
-                raise TypeError('Unsupported type: '+str(type(part)))
+                raise TypeError('Unsupported type: ' + str(type(part)))
         self._end_line(tag)
 
     def _collect_language_specific_attr(self, elem: ar_element.LanguageSpecific, attr: TupleList) -> None:
@@ -560,7 +568,7 @@ class Writer(_XMLWriter):
             elif isinstance(part, ar_element.TechnicalTerm):
                 self._write_technical_term(part, inline=True)
             else:
-                raise TypeError('Unsupported type: '+str(type(part)))
+                raise TypeError('Unsupported type: ' + str(type(part)))
         self._end_line(tag)
 
     def _write_language_paragraph(self, elem: ar_element.LanguageParagraph) -> None:
@@ -590,7 +598,7 @@ class Writer(_XMLWriter):
             elif isinstance(part, ar_element.TechnicalTerm):
                 self._write_technical_term(part, inline=True)
             else:
-                raise TypeError('Unsupported type: '+str(type(part)))
+                raise TypeError('Unsupported type: ' + str(type(part)))
         self._end_line(tag)
 
     def _write_language_verbatim(self, elem: ar_element.LanguageVerbatim) -> None:
@@ -614,7 +622,7 @@ class Writer(_XMLWriter):
             elif isinstance(part, ar_element.TechnicalTerm):
                 self._write_technical_term(part, inline=True)
             else:
-                raise TypeError('Unsupported type: '+str(type(part)))
+                raise TypeError('Unsupported type: ' + str(type(part)))
         self._end_line(tag)
 
     def _write_multi_language_paragraph(self, elem: ar_element.MultiLanguageParagraph) -> None:
@@ -675,6 +683,155 @@ class Writer(_XMLWriter):
             self._add_content('ANNOTATION-ORIGIN', str(elem.origin))
         if elem.text is not None:
             self._write_documentation_block(elem.text, 'ANNOTATION-TEXT')
+
+    # CompuMethod elements
+
+    def _write_compu_method(self, elem: ar_element.CompuMethod) -> None:
+        """
+        Writes complex type AR:COMPU-METHOD
+        Type: Concrete
+        Tab variants: 'COMPU-METHOD'
+        """
+        assert isinstance(elem, ar_element.CompuMethod)
+        attr: TupleList = []
+        self._collect_identifiable_attributes(elem, attr)
+        self._add_child("COMPU-METHOD", attr)
+        self._write_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_compu_method_group(elem)
+        self._leave_child()
+
+    def _write_compu_method_group(self, elem: ar_element.CompuMethod) -> None:
+        """
+        Writes group AR:COMPU-METHOD
+        """
+        if elem.display_format is not None:
+            self._add_content("DISPLAY-FORMAT", str(elem.display_format))
+        if elem.unit_ref is not None:
+            self._write_unit_ref(elem.unit_ref)
+        if elem.int_to_phys is not None:
+            self._write_computation(elem.int_to_phys, "COMPU-INTERNAL-TO-PHYS")
+        if elem.phys_to_int is not None:
+            self._write_computation(elem.phys_to_int, "COMPU-PHYS-TO-INTERNAL")
+
+    def _write_computation(self, elem: ar_element.Computation, tag: str) -> None:
+        """
+        Writes AR:COMPU
+        Type: Concrete
+        Tag variants: 'COMPU-INTERNAL-TO-PHYS', 'COMPU-PHYS-TO-INTERNAL'
+        """
+        self._add_child(tag)
+        if elem.compu_scales is not None:
+            self._add_child("COMPU-SCALES")
+            for compu_scale in elem.compu_scales:
+                self._write_compu_scale(compu_scale)
+            self._leave_child()
+        if elem.default_value is not None:
+            self._write_compu_const(elem.default_value, "COMPU-DEFAULT-VALUE")
+        self._leave_child()
+
+    def _write_compu_scale(self, elem: ar_element.CompuScale) -> None:
+        """
+        Writes AR:COMPU-SCALE
+        Type: Concrete
+        Tag variants: 'COMPU-SCALE'
+        """
+        assert isinstance(elem, ar_element.CompuScale)
+        tag = "COMPU-SCALE"
+        if elem.is_empty:
+            self._add_content(tag)
+            return
+        self._add_child(tag)
+        if elem.label is not None:
+            self._add_content("SHORT-LABEL", str(elem.label))
+        if elem.symbol is not None:
+            self._add_content("SYMBOL", str(elem.symbol))
+        if elem.desc is not None:
+            self._write_multi_language_overview_paragraph(elem.desc, "DESC")
+        if elem.mask is not None:
+            self._add_content("MASK", int(elem.mask))
+        if elem.lower_limit is not None:
+            self._write_limit("LOWER-LIMIT", elem.lower_limit, elem.lower_limit_type)
+        if elem.upper_limit is not None:
+            self._write_limit("UPPER-LIMIT", elem.upper_limit, elem.upper_limit_type)
+        if elem.inverse_value is not None:
+            self._write_compu_const(elem.inverse_value, "COMPU-INVERSE-VALUE")
+        if elem.content is not None:
+            if isinstance(elem.content, ar_element.CompuConst):
+                self._write_compu_const(elem.content, "COMPU-CONST")
+            elif isinstance(elem.content, ar_element.CompuRational):
+                self._write_compu_rational(elem.content)
+        self._leave_child()
+
+    def _write_limit(self,
+                     tag: str,
+                     limit: int | float,
+                     limit_type: ar_enum.IntervalType):
+        assert limit is not None
+        assert limit_type is not None
+        attr: TupleList = [("INTERVAL-TYPE", ar_enum.enum_to_xml(limit_type))]
+        if isinstance(limit, float):
+            text = self._format_float(limit)
+        elif isinstance(limit, int):
+            text = str(limit)
+        else:
+            raise TypeError(f"Unsupported type: {str(type(limit))}")
+        self._add_content(tag, text, attr)
+
+    def _write_compu_const(self, elem: ar_element.CompuConst, tag) -> None:
+        """
+        Writes AR:COMPU-CONST
+        Type: Concrete
+        Tag variants: 'COMPU-CONST', 'COMPU-INVERSE-VALUE', 'COMPU-DEFAULT-VALUE'
+        """
+        assert isinstance(elem, ar_element.CompuConst)
+        self._add_child(tag)
+        if isinstance(elem.value, str):
+            self._add_content("VT", elem.value)
+        elif isinstance(elem.value, float):
+            self._add_content("V", self._format_float(elem.value))
+        elif isinstance(elem.value, int):
+            self._add_content("V", elem.value)
+        else:
+            raise TypeError(f"Unsupported type: {str(type(elem.value))}")
+        self._leave_child()
+
+    def _write_compu_rational(self, elem: ar_element.CompuRational) -> None:
+        """
+        Writes AR:COMPU-RATIONAL-COEFFS
+        Type: Concrete
+        Tag variants: 'COMPU-RATIONAL-COEFFS'
+        """
+        assert isinstance(elem, ar_element.CompuRational)
+        tag = 'COMPU-RATIONAL-COEFFS'
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.numerator is not None:
+                self._add_child('COMPU-NUMERATOR')
+                self._write_numerator_denominator_values(elem.numerator)
+                self._leave_child()
+            if elem.denominator is not None:
+                self._add_child('COMPU-DENOMINATOR')
+                self._write_numerator_denominator_values(elem.denominator)
+                self._leave_child()
+            self._leave_child()
+
+    def _write_numerator_denominator_values(self, value: int | float | tuple):
+        if isinstance(value, tuple):
+            for inner_value in value:
+                if isinstance(inner_value, float):
+                    content = self._format_float(inner_value)
+                else:
+                    content = str(inner_value)
+                self._add_content('V', content)
+        else:
+            if isinstance(value, float):
+                content = self._format_float(value)
+            else:
+                content = str(value)
+            self._add_content('V', content)
 
     # DataDictionary elements
 
@@ -746,7 +903,6 @@ class Writer(_XMLWriter):
         Type: Concrete
         Tag variants: 'SW-DATA-DEF-PROPS-CONDITIONAL'
         """
-
         assert isinstance(elem, ar_element.SwDataDefPropsConditional)
         tag = 'SW-DATA-DEF-PROPS-CONDITIONAL'
         if elem.is_empty:
@@ -780,41 +936,6 @@ class Writer(_XMLWriter):
             self._add_content('SW-CALIBRATION-ACCESS',
                               ar_enum.enum_to_xml(elem.calibration_access))
 
-    # Reference Elements
-
-    def _collect_base_ref_attr(self,
-                               elem: ar_element.BaseRef,
-                               attr: TupleList) -> None:
-        attr.append(('DEST', ar_enum.enum_to_xml(elem.dest)))
-
-    def _write_sw_base_type_ref(self, elem: ar_element.SwBaseTypeRef) -> None:
-        """
-        Writes complex-type SW-BASE-TYPE-REF
-        Type: Concrete
-        Tag variants: 'AR:BASE-TYPE-REF'
-
-        Note: The name of the complex-type is anonymous in the XML schema.
-
-        """
-        attr: TupleList = []
-        self._collect_base_ref_attr(elem, attr)
-        self._add_content('BASE-TYPE-REF', elem.value, attr)
-
-    def _write_sw_addr_method_ref(self, elem: ar_element.SwAddrMethodRef) -> None:
-        """
-        Writes complex-type AR:SW-ADDR-METHOD-REF
-        Type: Concrete
-        Tag variants: 'AR:SW-ADDR-METHOD-REF'
-        """
-        attr: TupleList = []
-        self._collect_base_ref_attr(elem, attr)
-        self._add_content('SW-ADDR-METHOD-REF', elem.value, attr)
-
-    def _collect_sw_addr_method_ref_attr(self,
-                                         elem: ar_element.SwAddrMethodRef,
-                                         attr: TupleList) -> None:
-        attr.append(('DEST', ar_enum.enum_to_xml(elem.dest)))
-
     def _write_sw_bit_represenation(self, elem: ar_element.SwBitRepresentation) -> None:
         """
         Writes AR:SW-BIT-REPRESENTATION
@@ -831,3 +952,65 @@ class Writer(_XMLWriter):
             if elem.num_bits is not None:
                 self._add_content('NUMBER-OF-BITS', str(elem.num_bits))
             self._leave_child()
+
+    def _write_sw_text_props(self, elem: ar_element.SwTextProps) -> None:
+        """
+        Writes AR:SW-TEXT-PROPS
+        Type: Concrete
+        Tag Variants: 'SW-TEXT-PROPS'
+        """
+        tag = 'SW-TEXT-PROPS'
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.array_size_semantics is not None:
+                self._add_content('ARRAY-SIZE-SEMANTICS', ar_enum.enum_to_xml(elem.array_size_semantics))
+            if elem.base_type_ref is not None:
+                self._write_sw_base_type_ref(elem.base_type_ref)
+            if elem.fill_char is not None:
+                self._add_content('SW-FILL-CHARACTER', int(elem.fill_char))
+            self._leave_child()
+
+    # Reference Elements
+
+    def _collect_base_ref_attr(self,
+                               elem: ar_element.BaseRef,
+                               attr: TupleList) -> None:
+        attr.append(('DEST', ar_enum.enum_to_xml(elem.dest)))
+
+    def _write_sw_base_type_ref(self, elem: ar_element.SwBaseTypeRef) -> None:
+        """
+        Writes complex type AR:SW-BASE-TYPE-REF
+        Type: Concrete
+        Tag variants: 'BASE-TYPE-REF'
+
+        Note: The name of the complex-type is anonymous in the XML schema.
+
+        """
+        assert isinstance(elem, ar_element.SwBaseTypeRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content('BASE-TYPE-REF', elem.value, attr)
+
+    def _write_sw_addr_method_ref(self, elem: ar_element.SwAddrMethodRef) -> None:
+        """
+        Writes complex type AR:SW-ADDR-METHOD-REF
+        Type: Concrete
+        Tag variants: 'SW-ADDR-METHOD-REF'
+        """
+        assert isinstance(elem, ar_element.SwAddrMethodRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content('SW-ADDR-METHOD-REF', elem.value, attr)
+
+    def _write_unit_ref(self, elem: ar_element.UnitRef) -> None:
+        """
+        Writes complex type AR:UNIT-REF
+        Type: Concrete
+        Tag variants: 'UNIT-REF'
+        """
+        assert isinstance(elem, ar_element.UnitRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content('UNIT-REF', elem.value, attr)
