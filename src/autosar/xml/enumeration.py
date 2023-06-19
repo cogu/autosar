@@ -103,8 +103,9 @@ class IdentifiableSubTypes(Enum):
 
     DATA_CONSTR = 0
     UNIT = 1
-    SW_ADDR_METHOD = 2
-    SW_BASE_TYPE = 3
+    PHYSICAL_DIMENSION = 2
+    SW_ADDR_METHOD = 3
+    SW_BASE_TYPE = 4
 
 
 class IntervalType(Enum):
@@ -271,6 +272,20 @@ class Language(Enum):
     ZU = 136  # Zulu
 
 
+class Monotony(Enum):
+    """
+    AR:MONOTONY-ENUM--SIMPLE"
+    """
+
+    DECREASING = 0
+    INCREASING = 1
+    MONOTONOUS = 2
+    NO_MONOTONY = 3
+    STRICTLY_DECREASING = 4
+    STRICTLY_INCREASING = 5
+    STRICT_MONOTONOUS = 6
+
+
 class PageBreak(Enum):
     """
     AR:CHAPTER-ENUM-BREAK--SIMPLE
@@ -287,6 +302,17 @@ class PageWide(Enum):
 
     NO_PGWIDE = 0
     PGWIDE = 1
+
+
+class ScaleConstraintValidity(Enum):
+    """
+    AR:SCALE-CONSTR-VALIDITY-ENUM--SIMPLE
+    """
+
+    NOT_AVAILABLE = 0
+    NOT_DEFINED = 1
+    NOT_VALID = 2
+    VALID = 3
 
 
 class ServiceKind(Enum):
@@ -420,6 +446,7 @@ xml_to_enum_map = {
     "IdentifiableSubTypes": {
         "DATA-CONSTR": IdentifiableSubTypes.DATA_CONSTR,
         "UNIT": IdentifiableSubTypes.UNIT,
+        "PHYSICAL-DIMENSION": IdentifiableSubTypes.PHYSICAL_DIMENSION,
         "SW-BASE-TYPE": IdentifiableSubTypes.SW_BASE_TYPE,
         "SW-ADDR-METHOD": IdentifiableSubTypes.SW_ADDR_METHOD,
     },
@@ -570,6 +597,15 @@ xml_to_enum_map = {
         "ZH": VersionedEnumValue(Language.ZH, {50}),
         "ZU": VersionedEnumValue(Language.ZU, {50}),
     },
+    "Monotony": {
+        "DECREASING": VersionedEnumValue(Monotony.DECREASING, {50}),
+        "INCREASING": VersionedEnumValue(Monotony.INCREASING, {50}),
+        "MONOTONOUS": VersionedEnumValue(Monotony.MONOTONOUS, {50}),
+        "NO-MONOTONY": VersionedEnumValue(Monotony.NO_MONOTONY, {50}),
+        "STRICTLY-DECREASING": VersionedEnumValue(Monotony.STRICTLY_DECREASING, {50}),
+        "STRICTLY-INCREASING": VersionedEnumValue(Monotony.STRICTLY_INCREASING, {50}),
+        "STRICT-MONOTONOUS": VersionedEnumValue(Monotony.STRICT_MONOTONOUS, {50}),
+    },
     "PageBreak": {
         "BREAK": VersionedEnumValue(PageBreak.BREAK, {50}),
         "NO-BREAK": VersionedEnumValue(PageBreak.NO_BREAK, {50}),
@@ -577,6 +613,12 @@ xml_to_enum_map = {
     "PageWide": {
         "NO-PGWIDE": VersionedEnumValue(PageWide.NO_PGWIDE, {50}),
         "PGWIDE": VersionedEnumValue(PageWide.PGWIDE, {50}),
+    },
+    "ScaleConstraintValidity": {
+        "NOT-AVAILABLE": ScaleConstraintValidity.NOT_AVAILABLE,
+        "NOT-DEFINED": ScaleConstraintValidity.NOT_DEFINED,
+        "NOT-VALID": ScaleConstraintValidity.NOT_VALID,
+        "VALID": ScaleConstraintValidity.VALID
     },
     "SwCalibrationAccess": {
         "NOT-ACCESSIBLE": VersionedEnumValue(SwCalibrationAccess.NOT_ACCESSIBLE, {50}),
@@ -634,10 +676,11 @@ enum_to_xml_map = {
         VersionedTextValue("NO-FLOAT", {50}),  # 1
     ],
     "IdentifiableSubTypes": [
-        "DATA-CONSTR",     # 0
-        "UNIT",            # 1
-        "SW-ADDR-METHOD",  # 2
-        "SW-BASE-TYPE",    # 3
+        "DATA-CONSTR",         # 0
+        "UNIT",                # 1
+        "PHYSICAL-DIMENSION",  # 2
+        "SW-ADDR-METHOD",      # 3
+        "SW-BASE-TYPE",        # 3
     ],
     "IntervalType": [
         "CLOSED",  # 0
@@ -786,6 +829,15 @@ enum_to_xml_map = {
         VersionedTextValue("ZH", {50}),  # 135
         VersionedTextValue("ZU", {50}),  # 136
     ],
+    "Monotony": [
+        VersionedTextValue("DECREASING", {50}),           # 0
+        VersionedTextValue("INCREASING", {50}),           # 1
+        VersionedTextValue("MONOTONOUS", {50}),           # 2
+        VersionedTextValue("NO-MONOTONY", {50}),          # 3
+        VersionedTextValue("STRICTLY-DECREASING", {50}),  # 4
+        VersionedTextValue("STRICTLY-INCREASING", {50}),  # 5
+        VersionedTextValue("STRICT-MONOTONOUS", {50}),    # 6
+    ],
     "PageBreak": [
         VersionedTextValue("BREAK", {50}),  # 0
         VersionedTextValue("NO-BREAK", {50}),  # 1
@@ -793,6 +845,12 @@ enum_to_xml_map = {
     "PageWide": [
         VersionedTextValue("NO-PGWIDE", {50}),  # 0
         VersionedTextValue("PGWIDE", {50}),  # 1
+    ],
+    "ScaleConstraintValidity": [
+        "NOT-AVAILABLE",   # 0
+        "NOT-DEFINED",     # 1
+        "NOT-VALID",       # 2
+        "VALID"            # 3
     ],
     "SwCalibrationAccess": [
         VersionedTextValue("NOT-ACCESSIBLE", {50}),  # 0

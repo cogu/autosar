@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AUTOSAR xsi:schemaLocation="http://autosar.org/schema/r4.0 AUTOSAR_00050.xsd" xmlns="http://autosar.org/schema/r4.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <AR-PACKAGES>
+    <AR-PACKAGE>
+      <SHORT-NAME>Units</SHORT-NAME>
+      <ELEMENTS>
+        <UNIT>
+          <SHORT-NAME>KmPerHour</SHORT-NAME>
+          <DISPLAY-NAME>KmPerHour</DISPLAY-NAME>
+        </UNIT>
+      </ELEMENTS>
+    </AR-PACKAGE>
+  </AR-PACKAGES>
+</AUTOSAR>
