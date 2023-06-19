@@ -1,6 +1,6 @@
 """Unit tests for documentation-related elements."""
 
-# noqa D101
+# pylint: disable=missing-class-docstring, missing-function-docstring
 import os
 import sys
 import unittest
@@ -12,41 +12,41 @@ import autosar # noqa E402
 
 class TestBreak(unittest.TestCase): # noqa D101
 
-    def test_write_element(self):
+    def test_write_element(self): # noqa D102
         element = ar_element.Break()
         writer = autosar.xml.Writer()
         self.assertEqual(writer.write_str_elem(element), '<BR/>')
 
-    def test_read_element(self):
+    def test_read_element(self): # noqa D102
         xml = '<BR/>'
         reader = autosar.xml.Reader()
         elem: ar_element.Break = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.Break)
 
 
-class TestEmphasisText(unittest.TestCase):
+class TestEmphasisText(unittest.TestCase): # noqa D101
 
-    def test_write_element_default(self):
+    def test_write_element_default(self): # noqa D102
         writer = autosar.xml.Writer()
         element = ar_element.EmphasisText('Services')
         self.assertEqual(writer.write_str_elem(element),
                          '<E>Services</E>')
 
-    def test_write_element_with_type(self):
+    def test_write_element_with_type(self): # noqa D102
         writer = autosar.xml.Writer()
         element = ar_element.EmphasisText('Services',
                                           type=ar_enum.EmphasisType.ITALIC)
         self.assertEqual(writer.write_str_elem(element),
                          '<E TYPE="ITALIC">Services</E>')
 
-    def test_write_element_with_font(self):
+    def test_write_element_with_font(self): # noqa D102
         writer = autosar.xml.Writer()
         element = ar_element.EmphasisText('Services',
                                           font=ar_enum.EmphasisFont.MONO)
         self.assertEqual(writer.write_str_elem(element),
                          '<E FONT="MONO">Services</E>')
 
-    def test_write_element_with_type_and_font(self):
+    def test_write_element_with_type_and_font(self): # noqa D102
         writer = autosar.xml.Writer()
         element = ar_element.EmphasisText('Services',
                                           font=ar_enum.EmphasisFont.MONO,
@@ -54,13 +54,13 @@ class TestEmphasisText(unittest.TestCase):
         self.assertEqual(writer.write_str_elem(element),
                          '<E FONT="MONO" TYPE="PLAIN">Services</E>')
 
-    def test_write_element_with_color(self):
+    def test_write_element_with_color(self): # noqa D102
         writer = autosar.xml.Writer()
         element = ar_element.EmphasisText('Services', color="800000")
         self.assertEqual(writer.write_str_elem(element),
                          '<E COLOR="800000">Services</E>')
 
-    def test_read_element_default(self):
+    def test_read_element_default(self): # noqa D102
         xml = '<E>Services</E>'
         reader = autosar.xml.Reader()
         elem: ar_element.EmphasisText = reader.read_str_elem(xml)
@@ -68,15 +68,15 @@ class TestEmphasisText(unittest.TestCase):
         self.assertEqual(elem.elements[0], 'Services')
 
 
-class TestIndexEntry(unittest.TestCase):
+class TestIndexEntry(unittest.TestCase): # noqa D101
 
-    def test_write_element_default(self):
+    def test_write_element_default(self): # noqa D102
         writer = autosar.xml.Writer()
         element = ar_element.IndexEntry('Entry')
         self.assertEqual(writer.write_str_elem(element),
                          '<IE>Entry</IE>')
 
-    def test_read_element_default(self):
+    def test_read_element_default(self): # noqa D102
         xml = '<IE>Entry</IE>'
         reader = autosar.xml.Reader()
         elem: ar_element.IndexEntry = reader.read_str_elem(xml)
@@ -84,34 +84,34 @@ class TestIndexEntry(unittest.TestCase):
         self.assertEqual(elem.text, 'Entry')
 
 
-class TestTechnicalTerm(unittest.TestCase):
+class TestTechnicalTerm(unittest.TestCase): # noqa D101
 
-    def test_write_element_default(self):
+    def test_write_element_default(self): # noqa D102
         writer = autosar.xml.Writer()
         element = ar_element.TechnicalTerm('Integrator')
         self.assertEqual(writer.write_str_elem(element),
                          '<TT>Integrator</TT>')
 
-    def test_write_element_with_tex_render(self):
+    def test_write_element_with_tex_render(self): # noqa D102
         writer = autosar.xml.Writer()
         element = ar_element.TechnicalTerm('Integrator', tex_render=r'\sep{}')
         self.assertEqual(writer.write_str_elem(element),
                          r'<TT TEX-RENDER="\sep{}">Integrator</TT>')
 
-    def test_write_element_with_type(self):
+    def test_write_element_with_type(self): # noqa D102
         writer = autosar.xml.Writer()
         element = ar_element.TechnicalTerm('Distance', type="CALPRM")
         self.assertEqual(writer.write_str_elem(element),
                          '<TT TYPE="CALPRM">Distance</TT>')
 
-    def test_read_element_default(self):
+    def test_read_element_default(self): # noqa D102
         xml = '<TT>Integrator</TT>'
         reader = autosar.xml.Reader()
         elem: ar_element.TechnicalTerm = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.TechnicalTerm)
         self.assertEqual(elem.text, 'Integrator')
 
-    def test_read_element_with_type(self):
+    def test_read_element_with_type(self): # noqa D102
         xml = '<TT TYPE="ROLE">Integrator</TT>'
         reader = autosar.xml.Reader()
         elem: ar_element.TechnicalTerm = reader.read_str_elem(xml)
@@ -120,15 +120,15 @@ class TestTechnicalTerm(unittest.TestCase):
         self.assertEqual(elem.type, 'ROLE')
 
 
-class TestSubscript(unittest.TestCase):
+class TestSubscript(unittest.TestCase): # noqa D101
 
-    def test_write_element_default(self):
+    def test_write_element_default(self): # noqa D102
         writer = autosar.xml.Writer()
         element = ar_element.Subscript('subscript-text')
         self.assertEqual(writer.write_str_elem(element),
                          '<SUB>subscript-text</SUB>')
 
-    def test_read_element_default(self):
+    def test_read_element_default(self): # noqa D102
         xml = '<SUB>subscript-text</SUB>'
         reader = autosar.xml.Reader()
         elem: ar_element.Subscript = reader.read_str_elem(xml)
@@ -136,15 +136,15 @@ class TestSubscript(unittest.TestCase):
         self.assertEqual(elem.text, 'subscript-text')
 
 
-class TestSuperScript(unittest.TestCase):
+class TestSuperScript(unittest.TestCase): # noqa D101
 
-    def test_write_element_default(self):
+    def test_write_element_default(self): # noqa D102
         writer = autosar.xml.Writer()
         element = ar_element.Superscript('superscript-text')
         self.assertEqual(writer.write_str_elem(element),
                          '<SUP>superscript-text</SUP>')
 
-    def test_read_element_default(self):
+    def test_read_element_default(self): # noqa D102
         reader = autosar.xml.Reader()
         xml = '<SUP>superscript-text</SUP>'
         elem: ar_element.TechnicalTerm = reader.read_str_elem(xml)
@@ -152,9 +152,9 @@ class TestSuperScript(unittest.TestCase):
         self.assertEqual(elem.text, 'superscript-text')
 
 
-class TestMultilanguageLongName(unittest.TestCase):
+class TestMultilanguageLongName(unittest.TestCase): # noqa D101
 
-    def test_write_element_for_all_simple(self):
+    def test_write_element_for_all_simple(self): # noqa D102
         writer = autosar.xml.Writer()
         element = ar_element.MultilanguageLongName(
             (ar_enum.Language.FOR_ALL, 'My Name'))
@@ -162,7 +162,7 @@ class TestMultilanguageLongName(unittest.TestCase):
   <L-4 L="FOR-ALL">My Name</L-4>
 </LONG-NAME>''')
 
-    def test_write_element_for_all_mixed_content(self):
+    def test_write_element_for_all_mixed_content(self): # noqa D102
         writer = autosar.xml.Writer()
         element = ar_element.MultilanguageLongName()
         element.append(ar_element.LanguageLongName(
@@ -176,7 +176,7 @@ class TestMultilanguageLongName(unittest.TestCase):
   <L-4 L="FOR-ALL">Name <SUB>Subscript text</SUB> More text <TT TYPE="MY-TYPE">Technical Term</TT></L-4>
 </LONG-NAME>''')
 
-    def test_read_element_english_simple(self):
+    def test_read_element_english_simple(self): # noqa D102
         xml = '''
 <LONG-NAME>
   <L-4 L="EN">My Name</L-4>'
@@ -189,9 +189,9 @@ class TestMultilanguageLongName(unittest.TestCase):
         self.assertEqual(elem.elements[0].language, ar_enum.Language.EN)
 
 
-class TestMultiLanguageOverviewParagraph(unittest.TestCase):
+class TestMultiLanguageOverviewParagraph(unittest.TestCase): # noqa D101
 
-    def test_write_element_for_all_simple(self):
+    def test_write_element_for_all_simple(self): # noqa D102
         writer = autosar.xml.Writer()
         element = ar_element.MultiLanguageOverviewParagraph(
             (ar_enum.Language.FOR_ALL, 'Description'))
@@ -199,7 +199,7 @@ class TestMultiLanguageOverviewParagraph(unittest.TestCase):
   <L-2 L="FOR-ALL">Description</L-2>
 </DESC>''')
 
-    def test_read_element_english_simple(self):
+    def test_read_element_english_simple(self): # noqa D102
         xml = '''
 <DESC>
   <L-2 L="EN">Description</L-2>'
@@ -211,7 +211,7 @@ class TestMultiLanguageOverviewParagraph(unittest.TestCase):
         self.assertEqual(elem.elements[0].parts[0], 'Description')
         self.assertEqual(elem.elements[0].language, ar_enum.Language.EN)
 
-    def test_read_element_chinese_simple(self):
+    def test_read_element_chinese_simple(self): # noqa D102
         xml = '''
 <DESC>
   <L-2 L="ZH">测试</L-2>'
@@ -224,16 +224,16 @@ class TestMultiLanguageOverviewParagraph(unittest.TestCase):
         self.assertEqual(elem.elements[0].language, ar_enum.Language.ZH)
 
 
-class TestLanguageParagraph(unittest.TestCase):
+class TestLanguageParagraph(unittest.TestCase): # noqa D101
 
-    def test_write_for_all_simple_content(self):
+    def test_write_for_all_simple_content(self): # noqa D102
         writer = autosar.xml.Writer()
         element = ar_element.LanguageParagraph(
             ar_enum.Language.FOR_ALL, 'Text')
         self.assertEqual(writer.write_str_elem(element),
                          '<L-1 L="FOR-ALL">Text</L-1>')
 
-    def test_read_element_english_simple(self):
+    def test_read_element_english_simple(self): # noqa D102
         xml = '<L-1 L="EN">Text</L-1>'
         reader = autosar.xml.Reader()
         elem: ar_element.LanguageParagraph = reader.read_str_elem(xml)
@@ -242,9 +242,9 @@ class TestLanguageParagraph(unittest.TestCase):
         self.assertEqual(elem.language, ar_enum.Language.EN)
 
 
-class TestMultiLanguageParagraph(unittest.TestCase):
+class TestMultiLanguageParagraph(unittest.TestCase): # noqa D101
 
-    def test_write_element_for_all_simple(self):
+    def test_write_element_for_all_simple(self): # noqa D102
         writer = autosar.xml.Writer()
         element = ar_element.MultiLanguageParagraph(
             (ar_enum.Language.FOR_ALL, 'Text'))
@@ -252,7 +252,7 @@ class TestMultiLanguageParagraph(unittest.TestCase):
   <L-1 L="FOR-ALL">Text</L-1>
 </P>''')
 
-    def test_write_element_with_document_selectable_attr(self):
+    def test_write_element_with_document_selectable_attr(self): # noqa D102
         writer = autosar.xml.Writer()
         element = ar_element.MultiLanguageParagraph((ar_enum.Language.FOR_ALL, 'Text'),
                                                     semantic_information='SEMANTIC',
@@ -261,17 +261,18 @@ class TestMultiLanguageParagraph(unittest.TestCase):
   <L-1 L="FOR-ALL">Text</L-1>
 </P>''')
 
-    def test_write_element_with_paginatable_and_help_entry_attr(self):
+    def test_write_element_with_paginatable_and_help_entry_attr(self): # noqa D102
         writer = autosar.xml.Writer()
         element = ar_element.MultiLanguageParagraph((ar_enum.Language.FOR_ALL, 'Text'),
                                                     page_break=ar_enum.PageBreak.NO_BREAK,
                                                     keep_with_previous=ar_enum.KeepWithPrevious.KEEP,
                                                     help_entry='MY-HELP-ENTRY')
-        self.assertEqual(writer.write_str_elem(element), '''<P BREAK="NO-BREAK" KEEP-WITH-PREVIOUS="KEEP" HELP-ENTRY="MY-HELP-ENTRY">
+        self.assertEqual(writer.write_str_elem(element),
+                         '''<P BREAK="NO-BREAK" KEEP-WITH-PREVIOUS="KEEP" HELP-ENTRY="MY-HELP-ENTRY">
   <L-1 L="FOR-ALL">Text</L-1>
 </P>''')
 
-    def test_read_element_for_all_simple(self):
+    def test_read_element_for_all_simple(self): # noqa D102
         xml = '''
 <P>
   <L-1 L="FOR-ALL">Text</L-1>'
@@ -284,16 +285,16 @@ class TestMultiLanguageParagraph(unittest.TestCase):
         self.assertEqual(elem.elements[0].language, ar_enum.Language.FOR_ALL)
 
 
-class TestLanguageVerbatim(unittest.TestCase):
+class TestLanguageVerbatim(unittest.TestCase): # noqa D101
 
-    def test_write_element_for_all_simple(self):
+    def test_write_element_for_all_simple(self): # noqa D102
         writer = autosar.xml.Writer()
         element = ar_element.LanguageVerbatim(
             ar_enum.Language.FOR_ALL, '  Text surrounded by spaces   ')
         self.assertEqual(writer.write_str_elem(
             element), '<L-5 L="FOR-ALL">  Text surrounded by spaces   </L-5>')
 
-    def test_read_element_for_all_simple(self):
+    def test_read_element_for_all_simple(self): # noqa D102
         xml = '<L-5 L="FOR-ALL">  Text surrounded by spaces   </L-5>'
         reader = autosar.xml.Reader()
         elem: ar_element.LanguageVerbatim = reader.read_str_elem(xml)
@@ -302,9 +303,9 @@ class TestLanguageVerbatim(unittest.TestCase):
         self.assertEqual(elem.language, ar_enum.Language.FOR_ALL)
 
 
-class TestMultiLanguageVerbatim(unittest.TestCase):
+class TestMultiLanguageVerbatim(unittest.TestCase): # noqa D101
 
-    def test_write_element_for_all_simple(self):
+    def test_write_element_for_all_simple(self): # noqa D102
         writer = autosar.xml.Writer()
         element = ar_element.MultiLanguageVerbatim(
             (ar_enum.Language.FOR_ALL, 'Text'))
@@ -312,7 +313,7 @@ class TestMultiLanguageVerbatim(unittest.TestCase):
   <L-5 L="FOR-ALL">Text</L-5>
 </VERBATIM>''')
 
-    def test_read_element_for_all_simple(self):
+    def test_read_element_for_all_simple(self): # noqa D102
         xml = '''
 <VERBATIM>
   <L-5 L="FOR-ALL">Text</L-5>'
@@ -325,14 +326,15 @@ class TestMultiLanguageVerbatim(unittest.TestCase):
         self.assertEqual(elem.elements[0].language, ar_enum.Language.FOR_ALL)
 
 
-class TestDocumentationBlock(unittest.TestCase):
-    def test_write_element_default(self):
+class TestDocumentationBlock(unittest.TestCase): # noqa D101
+
+    def test_write_element_default(self): # noqa D102
         writer = autosar.xml.Writer()
         element = ar_element.DocumentationBlock()
         self.assertEqual(writer.write_str_elem(
             element, 'ANNOTATION-TEXT'), '<ANNOTATION-TEXT/>')
 
-    def test_write_element_with_paragraph(self):
+    def test_write_element_with_paragraph(self): # noqa D102
         writer = autosar.xml.Writer()
         element = ar_element.DocumentationBlock()
         element.append(ar_element.MultiLanguageParagraph(
@@ -343,7 +345,7 @@ class TestDocumentationBlock(unittest.TestCase):
   </P>
 </ANNOTATION-TEXT>''')
 
-    def test_write_element_with_verbatim(self):
+    def test_write_element_with_verbatim(self): # noqa D102
         writer = autosar.xml.Writer()
         element = ar_element.DocumentationBlock()
         element.append(ar_element.MultiLanguageVerbatim(
@@ -354,13 +356,13 @@ class TestDocumentationBlock(unittest.TestCase):
   </VERBATIM>
 </ANNOTATION-TEXT>''')
 
-    def test_read_element_default(self):
+    def test_read_element_default(self): # noqa D102
         xml = '<ANNOTATION-TEXT/>'
         reader = autosar.xml.Reader()
         elem: ar_element.DocumentationBlock = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.DocumentationBlock)
 
-    def test_read_element_with_paragraph(self):
+    def test_read_element_with_paragraph(self): # noqa D102
         xml = '''
 <ANNOTATION-TEXT>
   <P>
@@ -375,7 +377,7 @@ class TestDocumentationBlock(unittest.TestCase):
         self.assertEqual(child_elem.elements[0].parts[0], 'Paragraph Text')
         self.assertEqual(child_elem.elements[0].language, ar_enum.Language.EN)
 
-    def test_read_element_with_verbatim(self):
+    def test_read_element_with_verbatim(self): # noqa D102
         xml = '''
 <ANNOTATION-TEXT>
   <VERBATIM>
@@ -391,13 +393,14 @@ class TestDocumentationBlock(unittest.TestCase):
         self.assertEqual(child_elem.elements[0].language, ar_enum.Language.EN)
 
 
-class TestAnnotation(unittest.TestCase):
-    def test_write_element_default(self):
+class TestAnnotation(unittest.TestCase): # noqa D101
+
+    def test_write_element_default(self): # noqa D102
         writer = autosar.xml.Writer()
         element = ar_element.Annotation()
         self.assertEqual(writer.write_str_elem(element), '<ANNOTATION/>')
 
-    def test_write_element_with_label_and_annotation_text(self):
+    def test_write_element_with_label_and_annotation_text(self): # noqa D102
         writer = autosar.xml.Writer()
         element = ar_element.Annotation()
         element.label = ar_element.MultilanguageLongName(
@@ -416,13 +419,13 @@ class TestAnnotation(unittest.TestCase):
   </ANNOTATION-TEXT>
 </ANNOTATION>''')
 
-    def test_read_element_default(self):
+    def test_read_element_default(self): # noqa D102
         xml = '<ANNOTATION/>'
         reader = autosar.xml.Reader()
         elem: ar_element.Annotation = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.Annotation)
 
-    def test_read_element_with_label_and_annotation_text(self):
+    def test_read_element_with_label_and_annotation_text(self): # noqa D102
         xml = '''
 <ANNOTATION>
   <LABEL>
@@ -446,6 +449,41 @@ class TestAnnotation(unittest.TestCase):
         self.assertIsInstance(annotation_text, ar_element.DocumentationBlock)
         self.assertEqual(
             annotation_text.elements[0].elements[0].parts[0], "Paragraph Text")
+
+class TestSingleLanguageUnitNames(unittest.TestCase): # noqa D101
+
+    def test_write_read_empty(self): # noqa D102
+        writer = autosar.xml.Writer()
+        element = ar_element.SingleLanguageUnitNames()
+        xml = '<DISPLAY-NAME></DISPLAY-NAME>'
+        self.assertEqual(writer.write_str_elem(element, "DISPLAY-NAME"), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.Annotation = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SingleLanguageUnitNames)
+
+    def test_write_read_simple(self): # noqa D102
+        writer = autosar.xml.Writer()
+        element = ar_element.SingleLanguageUnitNames("KmPerHour")
+        xml = '<DISPLAY-NAME>KmPerHour</DISPLAY-NAME>'
+        self.assertEqual(writer.write_str_elem(element, "DISPLAY-NAME"), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SingleLanguageUnitNames = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SingleLanguageUnitNames)
+        self.assertEqual(str(elem), "KmPerHour")
+
+    def test_write_read_superscript(self): # noqa D102
+        writer = autosar.xml.Writer()
+        element = ar_element.SingleLanguageUnitNames("m")
+        element.append(ar_element.Superscript("2"))
+        xml = '<DISPLAY-NAME>m<SUP>2</SUP></DISPLAY-NAME>'
+        self.assertEqual(writer.write_str_elem(element, "DISPLAY-NAME"), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SingleLanguageUnitNames = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SingleLanguageUnitNames)
+        self.assertEqual(elem.parts[0], "m")
+        child_elem: ar_element.Superscript = elem.parts[1]
+        self.assertEqual(child_elem.text, "2")
+        self.assertEqual(str(elem), "m^2")
 
 
 if __name__ == '__main__':

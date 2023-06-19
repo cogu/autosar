@@ -66,6 +66,23 @@ class ARObject:
                     return False
         return True
 
+    def is_empty_with_ignore(self, ignore_set: set) -> bool:
+        """
+        Same as is_empty but the caller can give
+        a list of property names to ignore during
+        check
+        """
+        for key in vars(self).keys():
+            if key not in ignore_set:
+                value = getattr(self, key)
+                if isinstance(value, list):
+                    if len(value) > 0:
+                        return False
+                else:
+                    if value is not None:
+                        return False
+        return True
+
     def _accepted_params(self, params: set):
         """
         Acceped kwarg names during init
@@ -101,6 +118,9 @@ class ARObject:
             self._set_attr_with_implicit_cast(attr_name, value, type_name)
 
     def _assign_optional(self, attr_name: str, value: Any, type_name: type) -> None:
+        """
+        Same as _assign but with a None-check
+        """
         if value is not None:
             self._assign(attr_name, value, type_name)
 
@@ -292,7 +312,7 @@ class BaseRef(ARObject, abc.ABC):
 
 class SwAddrMethodRef(BaseRef):
     """
-    SwAddrMethod Reference
+    SwAddrMethod reference
     """
 
     def __init__(self, value: str) -> None:
@@ -304,7 +324,7 @@ class SwAddrMethodRef(BaseRef):
 
 class SwBaseTypeRef(BaseRef):
     """
-    SwBaseType Reference
+    SwBaseType reference
     """
 
     def __init__(self, value: str) -> None:
@@ -316,7 +336,7 @@ class SwBaseTypeRef(BaseRef):
 
 class DataConstraintRef(BaseRef):
     """
-    DataConstraint Reference
+    DataConstraint reference
     """
 
     def __init__(self, value: str) -> None:
@@ -326,9 +346,21 @@ class DataConstraintRef(BaseRef):
         return {ar_enum.IdentifiableSubTypes.DATA_CONSTR}
 
 
+class PhysicalDimentionRef(BaseRef):
+    """
+    PhysicalDimension reference
+    """
+
+    def __init__(self, value: str) -> None:
+        super().__init__(value, ar_enum.IdentifiableSubTypes.PHYSICAL_DIMENSION)
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        return {ar_enum.IdentifiableSubTypes.PHYSICAL_DIMENSION}
+
+
 class UnitRef(BaseRef):
     """
-    DataConstraint Reference
+    DataConstraint reference
     """
 
     def __init__(self, value: str) -> None:
@@ -439,6 +471,12 @@ class Superscript(ARObject):
 
     def __init__(self, text: str) -> None:
         self.text = text  # Simple content
+
+    def __str__(self) -> str:
+        """
+        Convert to basic string
+        """
+        return "^" + self.text
 
 
 class LanguageSpecific(ARObject):
@@ -860,9 +898,61 @@ class MultiLanguageVerbatim(Paginateable):
         super()._accepted_params(params)
 
 
+class MixedContentForUnitNames(ARObject):
+    """
+    Group MIXED-CONTENT-FOR-UNIT-NAMES
+    Type: Abstract
+    """
+
+    def __init__(self) -> None:
+        self.parts = []  # Unbounded list of str | SUB | SUP
+
+    def append(self,
+               part: str | Break | EmphasisText | TechnicalTerm):
+        """
+        Checks type validity before adding element to elements
+        """
+        if isinstance(part, (str, Subscript, Superscript)):
+            self.parts.append(part)
+        else:
+            raise TypeError('Unsupported element type: ' + str(type(part)))
+
+
+class SingleLanguageUnitNames(MixedContentForUnitNames):
+    """
+    Complex type AR:SINGLE-LANGUAGE-UNIT-NAMES
+    Type: Concrete
+    Tag variants: 'PRM-UNIT' | 'UNIT-DISPLAY-NAME' | 'UNIT-DISPLAY-NAME' | 'DISPLAY-NAME'
+    """
+
+    def __init__(self, parts: str | list | None = None) -> None:
+        super().__init__()
+        if parts is not None:
+            if isinstance(parts, Iterable):
+                for part in parts:
+                    self.append(part)
+            else:
+                self.append(parts)
+
+    def __str__(self) -> str:
+        """
+        Convert to string if the unit name has simple
+        type (at most one part of type str).
+        """
+        result = []
+        for part in self.parts:
+            if isinstance(part, str):
+                result.append(part)
+            elif isinstance(part, Superscript):
+                result.append(str(part))
+            else:
+                raise ValueError("Unable to convert to string from multiple parts")
+        return "".join(result)
+
+
 class DocumentationBlock(ARObject):
     """
-    Complex-type AR:DOCUMENTATION-BLOCK
+    Complex type AR:DOCUMENTATION-BLOCK
     Type: Concrete
     Tag Variants: 'INTRODUCTION', 'DEF', 'VALUE', 'ANNOTATION-TEXT', 'REMARK'
                   'COND', 'DESCRICPTION', 'RATIONALE', 'DEPENDENCIES', 'USE-CASE',
@@ -1141,8 +1231,293 @@ class CompuMethod(ARElement):
         self.unit_ref = unit_ref              # .UNIT-REF
         self.display_format = display_format  # .DISPLAY-FORMAT
 
+# Constraint elements
 
-# Data Dictionary Elements
+
+class LimitObject(ARObject):
+    """
+    Base class for elements that has
+    upper and lower limits
+    Type: Abstract
+    """
+
+    def __init__(self,
+                 lower_limit: int | float | None = None,
+                 upper_limit: int | float | None = None,
+                 lower_limit_type: ar_enum.IntervalType = ar_enum.IntervalType.CLOSED,
+                 upper_limit_type: ar_enum.IntervalType = ar_enum.IntervalType.CLOSED) -> None:
+
+        self.lower_limit = lower_limit              # .LOWER-LIMIT
+        self.upper_limit = upper_limit              # .UPPER-LIMIT
+        self.lower_limit_type = lower_limit_type    # .LOWER-LIMIT@INTERVAL-TYPE
+        self.upper_limit_type = upper_limit_type    # .UPPER-LIMIT@INTERVAL-TYPE
+
+    @property
+    def is_empty(self) -> bool:
+        """Overrides is_empty from base class"""
+        return self.is_empty_with_ignore({"lower_limit_type", "upper_limit_type"})
+
+    def check_value(self, value: int | float) -> bool:
+        """
+        Checks if given value is inside the constraint limits
+        """
+        if self.lower_limit_type == ar_enum.IntervalType.CLOSED:
+            if value < self.lower_limit:
+                return False
+        elif value <= self.lower_limit:
+            return False
+        if self.upper_limit_type == ar_enum.IntervalType.CLOSED:
+            if value > self.upper_limit:
+                return False
+        elif value >= self.upper_limit:
+            return False
+        return True
+
+
+class ScaleConstraint(LimitObject):
+    """
+    AR:SCALE-CONSTR
+    Type: Concrete
+    Tag variants: 'SCALE-CONSTR'
+    """
+
+    def __init__(self,
+                 label: str | None = None,
+                 desc: MultiLanguageOverviewParagraph | None = None,
+                 lower_limit: int | float | None = None,
+                 upper_limit: int | float | None = None,
+                 validity: ar_enum.ScaleConstraintValidity | None = None,
+                 lower_limit_type: ar_enum.IntervalType = ar_enum.IntervalType.CLOSED,
+                 upper_limit_type: ar_enum.IntervalType = ar_enum.IntervalType.CLOSED) -> None:
+        super().__init__(lower_limit, upper_limit, lower_limit_type, upper_limit_type)
+        self.label = label
+        self.desc = desc
+        self.validity = validity
+
+
+class ConstraintBase(LimitObject):
+    """
+    Base class data constraint rules
+    Type: Abstract
+    """
+
+    def __init__(self,
+                 lower_limit: int | float | None = None,
+                 upper_limit: int | float | None = None,
+                 scale_constrs: list[ScaleConstraint] | None = None,
+                 max_gradient: int | float | None = None,
+                 max_diff: int | float | None = None,
+                 monotony: ar_enum.Monotony | None = None,
+                 lower_limit_type: ar_enum.IntervalType = ar_enum.IntervalType.CLOSED,
+                 upper_limit_type: ar_enum.IntervalType = ar_enum.IntervalType.CLOSED) -> None:
+        super().__init__(lower_limit, upper_limit, lower_limit_type, upper_limit_type)
+        self.scale_constrs = list(scale_constrs) if scale_constrs else []
+        self.max_gradient = max_gradient
+        self.max_diff = max_diff
+        self.monotony = monotony
+
+
+class InternalConstraint(ConstraintBase):
+    """
+    AR:INTERNAL-CONSTRS
+    Type: Concrete
+    Tag variants: 'INTERNAL-CONSTRS'
+    """
+
+    def __init__(self,
+                 lower_limit: int | float | None = None,
+                 upper_limit: int | float | None = None,
+                 scale_constr: list[ScaleConstraint] | None = None,
+                 max_gradient: int | float | None = None,
+                 max_diff: int | float | None = None,
+                 monotony: ar_enum.Monotony | None = None,
+                 lower_limit_type: ar_enum.IntervalType = ar_enum.IntervalType.CLOSED,
+                 upper_limit_type: ar_enum.IntervalType = ar_enum.IntervalType.CLOSED) -> None:
+        super().__init__(lower_limit,
+                         upper_limit,
+                         scale_constr,
+                         max_gradient,
+                         max_diff,
+                         monotony,
+                         lower_limit_type,
+                         upper_limit_type)
+
+
+class PhysicalConstraint(ConstraintBase):
+    """
+    AR:PHYS-CONSTRS
+    Type: Concrete
+    Tag variants: 'PHYS-CONSTRS'
+    """
+
+    def __init__(self,
+                 lower_limit: int | float | None = None,
+                 upper_limit: int | float | None = None,
+                 scale_constr: list[ScaleConstraint] | None = None,
+                 max_gradient: int | float | None = None,
+                 max_diff: int | float | None = None,
+                 monotony: ar_enum.Monotony | None = None,
+                 unit_ref: UnitRef | None = None,
+                 lower_limit_type: ar_enum.IntervalType = ar_enum.IntervalType.CLOSED,
+                 upper_limit_type: ar_enum.IntervalType = ar_enum.IntervalType.CLOSED) -> None:
+        super().__init__(lower_limit,
+                         upper_limit,
+                         scale_constr,
+                         max_gradient,
+                         max_diff,
+                         monotony,
+                         lower_limit_type,
+                         upper_limit_type)
+        self.unit_ref = unit_ref
+
+
+class DataConstraintRule(ARObject):
+    """
+    AR:DATA-CONSTR-RULE
+    Type: Concrete
+    Tag variants: 'DATA-CONSTR-RULE'
+    """
+
+    def __init__(self,
+                 internal: InternalConstraint | None = None,
+                 physical: PhysicalConstraint | None = None,
+                 level: int | None = None) -> None:
+        self.internal = internal   # .INTERNAL-CONSTRS
+        self.physical = physical   # .PHYS-CONSTRS
+        self.level = level         # .CONSTR-LEVEL
+
+
+class DataConstraint(ARElement):
+    """
+    AR:DATA-CONSTR
+    Type: Concrete
+    Tag variants: 'DATA-CONSTR'
+    """
+
+    def __init__(self, name: str,
+                 rules: list[DataConstraintRule] | None = None,
+                 **kwargs: dict) -> None:
+        self._check_params(self.__class__.__name__,
+                           kwargs, self.accepted_params())
+        super().__init__(name, kwargs)
+        self.rules = []
+        if rules is not None:
+            for rule in rules:
+                assert isinstance(rule, DataConstraintRule)
+            self.rules.extend(rules)
+
+    def accepted_params(self) -> set[str]:
+        """
+        Accepted kwarg parameter names during init
+        """
+        params = set()
+        super()._accepted_params(params)
+        return params
+
+    @classmethod
+    def make_physical(cls: "DataConstraint",
+                      name: str,
+                      lower_limit: int | float | None = None,
+                      upper_limit: int | float | None = None,
+                      scale_constr: list[ScaleConstraint] | None = None,
+                      max_gradient: int | float | None = None,
+                      max_diff: int | float | None = None,
+                      monotony: ar_enum.Monotony | None = None,
+                      unit_ref: UnitRef | None = None,
+                      lower_limit_type: ar_enum.IntervalType = ar_enum.IntervalType.CLOSED,
+                      upper_limit_type: ar_enum.IntervalType = ar_enum.IntervalType.CLOSED,
+                      **kwargs) -> "DataConstraint":
+        """
+        Convenience method for creating a DataConstraint
+        that contains a single physical constraint.
+        """
+        rule = DataConstraintRule(physical=PhysicalConstraint(lower_limit,
+                                                              upper_limit,
+                                                              scale_constr,
+                                                              max_gradient,
+                                                              max_diff,
+                                                              monotony,
+                                                              unit_ref,
+                                                              lower_limit_type,
+                                                              upper_limit_type))
+        return cls(name, [rule], **kwargs)
+
+    @classmethod
+    def make_internal(cls: "DataConstraint",
+                      name: str,
+                      lower_limit: int | float | None = None,
+                      upper_limit: int | float | None = None,
+                      scale_constr: list[ScaleConstraint] | None = None,
+                      max_gradient: int | float | None = None,
+                      max_diff: int | float | None = None,
+                      monotony: ar_enum.Monotony | None = None,
+                      lower_limit_type: ar_enum.IntervalType = ar_enum.IntervalType.CLOSED,
+                      upper_limit_type: ar_enum.IntervalType = ar_enum.IntervalType.CLOSED,
+                      **kwargs) -> "DataConstraint":
+        """
+        Convenience method for creating a DataConstraint
+        that contains a single internal constraint.
+        """
+        rule = DataConstraintRule(internal=InternalConstraint(lower_limit,
+                                                              upper_limit,
+                                                              scale_constr,
+                                                              max_gradient,
+                                                              max_diff,
+                                                              monotony,
+                                                              lower_limit_type,
+                                                              upper_limit_type))
+        return cls(name, [rule], **kwargs)
+
+# Unit elements
+
+
+class Unit(ARElement):
+    """
+    Complex type AR:UNIT
+    Type: Concrete
+    Tag variants: 'UNIT'
+    """
+
+    def __init__(self, name: str,
+                 display_name: str | SingleLanguageUnitNames | None = None,
+                 factor: float | None = None,
+                 offset: float | None = None,
+                 physical_dimension_ref: str | PhysicalDimentionRef | None = None,
+                 **kwargs: dict) -> None:
+        self._check_params(self.__class__.__name__,
+                           kwargs, self.accepted_params())
+        super().__init__(name, kwargs)
+        self.display_name: SingleLanguageUnitNames | None = None  # .DISPLAY-NAME
+        self.physical_dimension_ref: PhysicalDimentionRef | None = None  # .PHYSICAL-DIMENSION-REF
+        self.factor: float | None = None  # .FACTOR-SI-TO-UNIT
+        self.offset: float | None = None  # .OFFSET-SI-TO-UNIT
+        if display_name is not None:
+            if isinstance(display_name, str):
+                self.display_name = SingleLanguageUnitNames(display_name)
+            elif isinstance(display_name, SingleLanguageUnitNames):
+                self.display_name = display_name
+            else:
+                raise TypeError(f"display_name: Invalid type '{str(type(display_name))}'")
+        if physical_dimension_ref is not None:
+            if isinstance(physical_dimension_ref, str):
+                self.physical_dimension_ref = PhysicalDimentionRef(display_name)
+            elif isinstance(physical_dimension_ref, PhysicalDimentionRef):
+                self.physical_dimension_ref = physical_dimension_ref
+            else:
+                raise TypeError(f"physical_dimension_ref: Invalid type '{str(type(physical_dimension_ref))}'")
+        self._assign_optional('factor', factor, float)
+        self._assign_optional('offset', offset, float)
+
+    def accepted_params(self) -> set[str]:
+        """
+        Accepted kwarg parameter names during init
+        """
+        params = set()
+        super()._accepted_params(params)
+        return params
+
+
+# Data dictionary elements
 
 
 class BaseType(ARElement):

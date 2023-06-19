@@ -102,8 +102,14 @@ class Reader:
             'SW-ADDR-METHOD': self._read_sw_addr_method,
             'IMPLEMENTATION-DATA-TYPE': self._read_implementation_data_type,
 
+            # Constraint elements
+            'DATA-CONSTR': self._read_data_constraint,
+
             # Port interface
             'SENDER-RECEIVER-INTERFACE': self._read_sender_receiver_interface,
+
+            # Unit elements
+            'UNIT': self._read_unit,
         }
         self.switcher_non_collectable = {  # Non-collectable, used only for unit testing
             # Documentation elements
@@ -119,6 +125,7 @@ class Reader:
             'LABEL': self._read_multi_language_long_name,
             'LONG-NAME': self._read_multi_language_long_name,
             'P': self._read_multi_language_paragraph,
+            'DISPLAY-NAME': self._read_single_language_unit_names,
             'SUP': self._read_superscript,
             'SUB': self._read_subscript,
             'TT': self._read_technical_term,
@@ -127,11 +134,18 @@ class Reader:
             'COMPU-INTERNAL-TO-PHYS': self._read_computation,
             'COMPU-RATIONAL-COEFFS': self._read_compu_rational,
             'COMPU-SCALE': self._read_compu_scale,
+            # Constraint elements
+            'SCALE-CONSTR': self._read_scale_constraint,
+            'INTERNAL-CONSTRS': self._read_internal_constraint,
+            'PHYS-CONSTRS': self._read_physical_constraint,
+            'DATA-CONSTR-RULE': self._read_data_constraint_rule,
             # DataDictionary elements
             'BASE-TYPE-REF': self._read_sw_base_type_ref,
             'SW-BIT-REPRESENTATION': self._read_sw_bit_representation,
             'SW-DATA-DEF-PROPS-CONDITIONAL': self._read_sw_data_def_props_conditional,
             'SW-TEXT-PROPS': self._read_sw_text_props,
+            # Reference elements
+            'PHYSICAL-DIMENSION-REF': self._read_physical_dimension_ref,
         }
         self.switcher_all = {}
         self.switcher_all.update(self.switcher_collectable)
@@ -826,6 +840,36 @@ class Reader:
             data['page_wide'] = ar_enum.xml_to_enum(
                 'PageWide', attrib['PGWIDE'])
 
+    def _read_single_language_unit_names(self, xml_element: ElementTree.Element) -> ar_element.SingleLanguageUnitNames:
+        """
+        Reads complex type AR:SINGLE-LANGUAGE-UNIT-NAMES
+        Type: concrete
+        Tag variants: 'PRM-UNIT' | 'UNIT-DISPLAY-NAME' | 'UNIT-DISPLAY-NAME' | 'DISPLAY-NAME'
+        """
+        elem = ar_element.SingleLanguageUnitNames()
+        self._read_mixed_content_for_unit_names(xml_element, elem)
+        return elem
+
+    def _read_mixed_content_for_unit_names(self,
+                                           xml_element: ElementTree.Element,
+                                           elem: ar_element.SingleLanguageUnitNames) -> None:
+        """
+        Reads group AR:MIXED-CONTENT-FOR-UNIT-NAMES
+        Type: Abstract
+        """
+        if xml_element.text:
+            elem.append(xml_element.text)
+        for xml_child_elem in xml_element.findall('./*'):
+            if xml_child_elem.tag == 'SUB':
+                elem.append(self._read_subscript(xml_child_elem))
+            elif xml_child_elem.tag == 'SUP':
+                elem.append(self._read_superscript(xml_child_elem))
+            else:
+                self._raise_parse_error(
+                    xml_child_elem, f"Invalid element: <{xml_child_elem.tag}>")
+            if xml_child_elem.tail:
+                elem.append(xml_element.text)
+
     # CompuMethod elements
 
     def _read_compu_method(self, xml_element: ElementTree.Element) -> ar_element.CompuMethod:
@@ -993,11 +1037,184 @@ class Reader:
             values.append(num_val.value)
         return tuple(values)
 
+    # Constraint elements
+
+    def _read_data_constraint(self, xml_element: ElementTree.Element) -> ar_element.DataConstraint:
+        """
+        Writes complex type AR:DATA-CONSTRS
+        Type: Concrete
+        Tag variants: 'DATA-CONSTRS'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_data_constraint_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.DataConstraint(data['short_name'], **data)
+
+    def _read_data_constraint_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group type AR:DATA-CONSTRS
+        Type: Abstract
+        """
+        xml_child = child_elements.get("DATA-CONSTR-RULES")
+        if xml_child is not None:
+            rules = []
+            for xml_data_constr_rule in xml_child.findall("./DATA-CONSTR-RULE"):
+                rules.append(self._read_data_constraint_rule(xml_data_constr_rule))
+            data["rules"] = rules
+
+    def _read_data_constraint_rule(self, xml_element: ElementTree.Element) -> ar_element.DataConstraintRule:
+        """
+        Writes complex type AR:INTERNAL-CONSTRS
+        Type: Concrete
+        Tag variants: 'INTERNAL-CONSTRS'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("CONSTR-LEVEL")
+        if xml_child is not None:
+            data["level"] = int(xml_child.text)
+        xml_child = child_elements.get("PHYS-CONSTRS")
+        if xml_child is not None:
+            data["physical"] = self._read_physical_constraint(xml_child)
+        xml_child = child_elements.get("INTERNAL-CONSTRS")
+        if xml_child is not None:
+            data["internal"] = self._read_internal_constraint(xml_child)
+        return ar_element.DataConstraintRule(**data)
+
+    def _read_internal_constraint(self, xml_element: ElementTree.Element) -> ar_element.InternalConstraint:
+        """
+        Writes complex type AR:INTERNAL-CONSTRS
+        Type: Concrete
+        Tag variants: 'INTERNAL-CONSTRS'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_constraint_base(child_elements, data)
+        return ar_element.InternalConstraint(**data)
+
+    def _read_physical_constraint(self, xml_element: ElementTree.Element) -> ar_element.PhysicalConstraint:
+        """
+        Writes complex type AR:PHYS-CONSTRS
+        Type: Concrete
+        Tag variants: 'PHYS-CONSTRS'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_constraint_base(child_elements, data)
+        xml_child = child_elements.get("UNIT-REF")
+        if xml_child is not None:
+            data["unit_ref"] = self._read_unit_ref(xml_child)
+        return ar_element.PhysicalConstraint(**data)
+
+    def _read_constraint_base(self, child_elements: ChildElementMap, data: dict[str, Any]) -> None:
+        """
+        Reads elements common for both AR:INTERNAL-CONSTRS and AR:PHYS-CONSTRS
+        Type: Abstract
+        """
+        xml_child = child_elements.get("LOWER-LIMIT")
+        if xml_child is not None:
+            limit, interval_type = self._read_limit(xml_child)
+            data["lower_limit"] = limit
+            data["lower_limit_type"] = interval_type
+        xml_child = child_elements.get("UPPER-LIMIT")
+        if xml_child is not None:
+            limit, interval_type = self._read_limit(xml_child)
+            data["upper_limit"] = limit
+            data["upper_limit_type"] = interval_type
+        xml_child = child_elements.get("SCALE-CONSTRS")
+        if xml_child is not None:
+            data["scale_constr"] = self._read_scale_constraints(xml_child)
+        xml_child = child_elements.get("MAX-GRADIENT")
+        if xml_child is not None:
+            data["max_gradient"] = self._read_number(xml_child.text)
+        xml_child = child_elements.get("MAX-DIFF")
+        if xml_child is not None:
+            data["max_diff"] = self._read_number(xml_child.text)
+        xml_child = child_elements.get("MONOTONY")
+        if xml_child is not None:
+            data["monotony"] = ar_enum.xml_to_enum("Monotony", xml_child.text)
+
+    def _read_scale_constraints(self, xml_element: ElementTree.Element) -> list[ar_element.ScaleConstraint]:
+        """
+        Reads SCALE-CONSTRS (list of AR:SCALE-CONSTR)
+        Type: Concrete
+        Tag variant: Not applicable
+        """
+        scale_constrs = []
+        for xml_child in xml_element.findall('./SCALE-CONSTR'):
+            props_conditional = self._read_scale_constraint(
+                xml_child)
+            scale_constrs.append(props_conditional)
+        return scale_constrs
+
+    def _read_scale_constraint(self, xml_element: ElementTree.Element) -> ar_element.ScaleConstraint:
+        """
+        Writes complex type AR:SCALE-CONSTR
+        Type: Concrete
+        Tag variants: 'SCALE-CONSTR'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("SHORT-LABEL")
+        if xml_child is not None:
+            data["label"] = xml_child.text
+        xml_child = child_elements.get("DESC")
+        if xml_child is not None:
+            data["desc"] = self._read_multi_language_overview_paragraph(xml_child)
+        xml_child = child_elements.get("LOWER-LIMIT")
+        if xml_child is not None:
+            limit, interval_type = self._read_limit(xml_child)
+            data["lower_limit"] = limit
+            data["lower_limit_type"] = interval_type
+        xml_child = child_elements.get("UPPER-LIMIT")
+        if xml_child is not None:
+            limit, interval_type = self._read_limit(xml_child)
+            data["upper_limit"] = limit
+            data["upper_limit_type"] = interval_type
+        return ar_element.ScaleConstraint(**data)
+
+    # Unit elements
+
+    def _read_unit(self, xml_element: ElementTree.Element) -> ar_element.Unit:
+        """
+        Reads Complex type AR:UNIT
+        Type: Concrete
+        Tag variants: 'UNIT'
+        """
+        data = {}
+        element_map = ChildElementMap(xml_element)
+        self._read_referrable(element_map, data)
+        self._read_identifiable(element_map, xml_element.attrib, data)
+        self._read_unit_group(element_map, data)
+        self._report_unprocessed_elements(element_map)
+        return ar_element.Unit(data['short_name'], **data)
+
+    def _read_unit_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:SW-ADDR-METHOD
+        Type: Utility
+        """
+        xml_child = child_elements.get("DISPLAY-NAME")
+        if xml_child is not None:
+            data["display_name"] = self._read_single_language_unit_names(xml_child)
+        xml_child = child_elements.get("FACTOR-SI-TO-UNIT")
+        if xml_child is not None:
+            data["factor"] = float(xml_child.text)
+        xml_child = child_elements.get("OFFSET-SI-TO-UNIT")
+        if xml_child is not None:
+            data["offset"] = float(xml_child.text)
+        xml_child = child_elements.get("PHYSICAL-DIMENSION-REF")
+        if xml_child is not None:
+            data["physical_dimension_ref"] = self._read_physical_dimension_ref(xml_child)
+
     # DataDictionary elements
 
     def _read_sw_addr_method(self, xml_element: ElementTree.Element) -> ar_element.SwAddrMethod:
         """
-        Reads Complex-type AR:SW-ADDR-METHOD
+        Reads Complex type AR:SW-ADDR-METHOD
         Type: Concrete
         Tag variants: 'SW-ADDR-METHOD'
         """
@@ -1211,10 +1428,22 @@ class Reader:
         Tag variants: 'UNIT-REF'
         """
         dest_text = xml_elem.attrib['DEST']
-        dest_enum = ar_enum.xml_to_enum('IdentifableSubTypes', dest_text, self.schema_version)
+        dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', dest_text, self.schema_version)
         if dest_enum != ar_enum.IdentifiableSubTypes.UNIT:
             self._raise_parse_error(xml_elem, f"Invalid DEST attribute '{dest_text}'. Expected 'UNIT'")
         return ar_element.UnitRef(xml_elem.text)
+
+    def _read_physical_dimension_ref(self, xml_elem: ElementTree.Element) -> ar_element.PhysicalDimentionRef:
+        """
+        Reads PHYSICAL-DIMENSION-REF
+        Type: Concrete
+        Tag variants: 'PHYSICAL-DIMENSION-REF'
+        """
+        dest_text = xml_elem.attrib['DEST']
+        dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', dest_text, self.schema_version)
+        if dest_enum != ar_enum.IdentifiableSubTypes.PHYSICAL_DIMENSION:
+            self._raise_parse_error(xml_elem, f"Invalid DEST attribute '{dest_text}'. Expected 'UNIT'")
+        return ar_element.PhysicalDimentionRef(xml_elem.text)
 
     def _read_base_ref_attributes(self, attr: dict, data: dict) -> None:
         data['dest'] = attr.get('DEST', None)

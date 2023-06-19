@@ -8,6 +8,8 @@ Notable changes.
 
 * BaseType
 * CompuMethod
+* DataConstraint
+* Unit
 
 ### Documentation elements
 

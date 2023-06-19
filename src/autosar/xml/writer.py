@@ -135,6 +135,17 @@ class _XMLWriter:
             tmp = decimal.Decimal(str(value))
             return tmp.quantize(decimal.Decimal(1)) if tmp == tmp.to_integral() else tmp.normalize()
 
+    def _format_number(self, number: int | float) -> str:
+        """
+        Converts number to string
+        """
+        if isinstance(number, int):
+            return str(number)
+        elif isinstance(number, float):
+            return self._format_float(number)
+        else:
+            raise TypeError("Not supported: " + str(type(number)))
+
 
 class Writer(_XMLWriter):
     """
@@ -149,9 +160,11 @@ class Writer(_XMLWriter):
             'Package': self._write_package,
             # CompuMethod elements
             'CompuMethod': self._write_compu_method,
-            # DataDictionary Elements
+            # DataDictionary elements
             'SwBaseType': self._write_sw_base_type,
             'SwAddrMethod': self._write_sw_addr_method,
+            # Unit elements
+            'Unit': self._write_unit,
         }
         # Elements used only for unit test purposes
         self.switcher_non_collectable = {
@@ -169,6 +182,7 @@ class Writer(_XMLWriter):
             'LanguageParagraph': self._write_language_paragraph,
             'LanguageVerbatim': self._write_language_verbatim,
             'Package': self._write_package,
+            'SingleLanguageUnitNames': self._write_single_language_unit_names,
             'Superscript': self._write_superscript,
             'Subscript': self._write_subscript,
             'TechnicalTerm': self._write_technical_term,
@@ -176,11 +190,19 @@ class Writer(_XMLWriter):
             'Computation': self._write_computation,
             'CompuRational': self._write_compu_rational,
             'CompuScale': self._write_compu_scale,
+            # Constraint elements
+            'ScaleConstraint': self._write_scale_constraint,
+            'InternalConstraint': self._write_internal_constraint,
+            'PhysicalConstraint': self._write_physical_constraint,
+            'DataConstraintRule': self._write_data_constraint_rule,
+            'DataConstraint': self._write_data_constraint,
             # DataDictionary elements
             'SwDataDefPropsConditional': self._write_sw_data_def_props_conditional,
             'SwBaseTypeRef': self._write_sw_base_type_ref,
             'SwBitRepresentation': self._write_sw_bit_represenation,
             'SwTextProps': self._write_sw_text_props,
+            # Reference elements
+            'PhysicalDimentionRef': self._write_physical_dimension_ref,
         }
         self.switcher_all = {}  # All concrete elements (used for unit testing)
         self.switcher_all.update(self.switcher_collectable)
@@ -684,6 +706,25 @@ class Writer(_XMLWriter):
         if elem.text is not None:
             self._write_documentation_block(elem.text, 'ANNOTATION-TEXT')
 
+    def _write_single_language_unit_names(self, elem: ar_element.SingleLanguageUnitNames, tag: str) -> None:
+        """
+        Writes complex type AR:SINGLE-LANGUAGE-UNIT-NAMES
+        Type: Concrete
+        Tab variants: 'PRM-UNIT' | 'UNIT-DISPLAY-NAME' | 'UNIT-DISPLAY-NAME' | 'DISPLAY-NAME'
+        """
+        assert isinstance(elem, ar_element.SingleLanguageUnitNames)
+        self._begin_line(tag)
+        for part in elem.parts:
+            if isinstance(part, str):
+                self._add_inline_text(part)
+            elif isinstance(part, ar_element.Subscript):
+                self._write_subscript(part)
+            elif isinstance(part, ar_element.Superscript):
+                self._write_superscript(part)
+            else:
+                raise TypeError('Unsupported type: ' + str(type(part)))
+        self._end_line(tag)
+
     # CompuMethod elements
 
     def _write_compu_method(self, elem: ar_element.CompuMethod) -> None:
@@ -833,11 +874,165 @@ class Writer(_XMLWriter):
                 content = str(value)
             self._add_content('V', content)
 
+    # Constraint elements
+
+    def _write_data_constraint(self, elem: ar_element.DataConstraint) -> None:
+        """
+        Writes complex type AR:DATA-CONSTR
+        Type: Concrete
+        Tab variants: 'DATA-CONSTR-RULE'
+        """
+        assert isinstance(elem, ar_element.DataConstraint)
+        attr: TupleList = []
+        self._collect_identifiable_attributes(elem, attr)
+        self._add_child("DATA-CONSTR", attr)
+        self._write_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_data_constraint_group(elem)
+        self._leave_child()
+
+    def _write_data_constraint_group(self, elem: ar_element.DataConstraint) -> None:
+        """
+        Writes group AR:DATA-CONSTR-RULE
+        Type: Abstract
+        """
+        if elem.rules:
+            self._add_child("DATA-CONSTR-RULES")
+            for rule in elem.rules:
+                self._write_data_constraint_rule(rule)
+            self._leave_child()
+
+    def _write_data_constraint_rule(self, elem: ar_element.DataConstraintRule) -> None:
+        """
+        Writes complex type AR:DATA-CONSTR-RULE
+        Type: Concrete
+        Tag variants: 'DATA-CONSTR-RULE'
+        """
+        tag = "DATA-CONSTR-RULE"
+        assert isinstance(elem, ar_element.DataConstraintRule)
+        if elem.is_empty:
+            self._add_content(tag)
+            return
+        self._add_child(tag)
+        if elem.level is not None:
+            self._add_content("CONSTR-LEVEL", str(elem.level))
+        if elem.physical is not None:
+            self._write_physical_constraint(elem.physical)
+        if elem.internal is not None:
+            self._write_internal_constraint(elem.internal)
+        self._leave_child()
+
+    def _write_internal_constraint(self, elem: ar_element.InternalConstraint) -> None:
+        """
+        Writes complex type AR:INTERNAL-CONSTRS
+        Type: Concrete
+        Tag variants: 'INTERNAL-CONSTRS'
+        """
+        tag = "INTERNAL-CONSTRS"
+        assert isinstance(elem, ar_element.InternalConstraint)
+        if elem.is_empty:
+            self._add_content(tag)
+            return
+        self._add_child(tag)
+        self._write_constraint_base(elem)
+        self._leave_child()
+
+    def _write_physical_constraint(self, elem: ar_element.PhysicalConstraint) -> None:
+        """
+        Writes complex type AR:PHYS-CONSTRS
+        Type: Concrete
+        Tag variants: 'PHYS-CONSTRS'
+        """
+        tag = "PHYS-CONSTRS"
+        assert isinstance(elem, ar_element.PhysicalConstraint)
+        if elem.is_empty:
+            self._add_content(tag)
+            return
+        self._add_child(tag)
+        self._write_constraint_base(elem)
+        if elem.unit_ref is not None:
+            self._write_unit_ref(elem.unit_ref)
+        self._leave_child()
+
+    def _write_constraint_base(self,
+                               elem: ar_element.InternalConstraint | ar_element.PhysicalConstraint) -> None:
+        """
+        Writes elements common for both AR:INTERNAL-CONSTRS and AR:PHYS-CONSTRS
+        Type: Abstract
+        """
+        if elem.lower_limit is not None:
+            self._write_limit("LOWER-LIMIT", elem.lower_limit, elem.lower_limit_type)
+        if elem.upper_limit is not None:
+            self._write_limit("UPPER-LIMIT", elem.upper_limit, elem.upper_limit_type)
+        if elem.scale_constrs:
+            self._add_child("SCALE-CONSTRS")
+            for scale_constr in elem.scale_constrs:
+                self._write_scale_constraint(scale_constr)
+            self._leave_child()
+        if elem.max_gradient is not None:
+            self._add_content("MAX-GRADIENT", self._format_number(elem.max_gradient))
+        if elem.max_diff is not None:
+            self._add_content("MAX-DIFF", self._format_number(elem.max_diff))
+        if elem.monotony is not None:
+            self._add_content("MONOTONY", ar_enum.enum_to_xml(elem.monotony))
+
+    def _write_scale_constraint(self, elem: ar_element.ScaleConstraint) -> None:
+        """
+        Writes complex type AR:SCALE-CONSTR
+        Type: Concrete
+        Tag variants: 'SCALE-CONSTR'
+        """
+        tag = "SCALE-CONSTR"
+        assert isinstance(elem, ar_element.ScaleConstraint)
+        attr: TupleList = []
+        if elem.validity is not None:
+            attr.append(("VALIDITY", ar_enum.enum_to_xml(elem.validity)))
+        if elem.is_empty:
+            self._add_content(tag, attr=attr)
+            return
+        self._add_child(tag, attr)
+        if elem.label is not None:
+            self._add_content("SHORT-LABEL", elem.label)
+        if elem.desc is not None:
+            self._write_multi_language_overview_paragraph(elem.desc, "DESC")
+        if elem.lower_limit is not None:
+            self._write_limit("LOWER-LIMIT", elem.lower_limit, elem.lower_limit_type)
+        if elem.upper_limit is not None:
+            self._write_limit("UPPER-LIMIT", elem.upper_limit, elem.upper_limit_type)
+        self._leave_child()
+
+    # Unit elements
+
+    def _write_unit(self, elem: ar_element.Unit) -> None:
+        """
+        Writes complex type AR:UNIT
+        Type: Concrete
+        Tag variants: 'UNIT'
+        """
+        assert isinstance(elem, ar_element.Unit)
+        attr: TupleList = []
+        self._collect_identifiable_attributes(elem, attr)
+        self._add_child('UNIT', attr)
+        self._write_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_unit_group(elem)
+        self._leave_child()
+
+    def _write_unit_group(self, elem: ar_element.Unit) -> None:
+        if elem.display_name is not None:
+            self._write_single_language_unit_names(elem.display_name, "DISPLAY-NAME")
+        if elem.factor is not None:
+            self._add_content("FACTOR-SI-TO-UNIT", self._format_float(elem.factor))
+        if elem.offset is not None:
+            self._add_content("OFFSET-SI-TO-UNIT", self._format_float(elem.offset))
+        if elem.physical_dimension_ref is not None:
+            self._write_physical_dimension_ref(elem.physical_dimension_ref)
+
     # DataDictionary elements
 
     def _write_sw_addr_method(self, elem: ar_element.SwAddrMethod) -> None:
         """
-        Writes Complex-type AR:SW-ADDR-METHOD
+        Writes complex type AR:SW-ADDR-METHOD
         Type: Concrete
         Tag variants: 'SW-ADDR-METHOD'
         """
@@ -1014,3 +1209,14 @@ class Writer(_XMLWriter):
         attr: TupleList = []
         self._collect_base_ref_attr(elem, attr)
         self._add_content('UNIT-REF', elem.value, attr)
+
+    def _write_physical_dimension_ref(self, elem: ar_element.PhysicalDimentionRef) -> None:
+        """
+        Writes PHYSICAL-DIMENSION-REF
+        Type: Concrete
+        Tag variants: 'PHYSICAL-DIMENSION-REF'
+        """
+        assert isinstance(elem, ar_element.PhysicalDimentionRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content('PHYSICAL-DIMENSION-REF', elem.value, attr)

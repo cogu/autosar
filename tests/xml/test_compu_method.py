@@ -1,4 +1,4 @@
-"""Unit tests for documentation-related elements."""
+"""Unit tests for computation elements."""
 
 # noqa D101
 # pylint: disable=missing-class-docstring, missing-function-docstring
@@ -12,7 +12,7 @@ import autosar # noqa E402
 
 class TestCompuRational(unittest.TestCase): # noqa D101
 
-    def test_write_read_int_numerator(self):
+    def test_write_read_int_numerator(self):  # noqa D102
         element = ar_element.CompuRational((0, 1))
         writer = autosar.xml.Writer()
         xml = writer.write_str_elem(element)
@@ -27,7 +27,7 @@ class TestCompuRational(unittest.TestCase): # noqa D101
         self.assertIsInstance(elem, ar_element.CompuRational)
         self.assertEqual(elem.numerator, (0, 1))
 
-    def test_write_read_int_tuple_numerator(self):
+    def test_write_read_int_tuple_numerator(self): # noqa D102
         element = ar_element.CompuRational((-1, 2))
         writer = autosar.xml.Writer()
         xml = writer.write_str_elem(element)
@@ -42,7 +42,7 @@ class TestCompuRational(unittest.TestCase): # noqa D101
         self.assertIsInstance(elem, ar_element.CompuRational)
         self.assertEqual(elem.numerator, (-1, 2))
 
-    def test_write_read_float_numerator(self):
+    def test_write_read_float_numerator(self): # noqa D102
         element = ar_element.CompuRational((0, float(1 / 64)))
         writer = autosar.xml.Writer()
         xml = writer.write_str_elem(element)
@@ -57,7 +57,7 @@ class TestCompuRational(unittest.TestCase): # noqa D101
         self.assertIsInstance(elem, ar_element.CompuRational)
         self.assertEqual(elem.numerator, (0, 0.015625))
 
-    def test_write_read_float_tuple_numerator(self):
+    def test_write_read_float_tuple_numerator(self): # noqa D102
         element = ar_element.CompuRational((-140.0, 0.5))
         writer = autosar.xml.Writer()
         xml = writer.write_str_elem(element)
@@ -73,9 +73,9 @@ class TestCompuRational(unittest.TestCase): # noqa D101
         self.assertEqual(elem.numerator, (-140, 0.5))
 
 
-class TestCompuScale(unittest.TestCase):
+class TestCompuScale(unittest.TestCase): # noqa D101
 
-    def test_write_read_label(self):
+    def test_write_read_label(self): # noqa D102
         element = ar_element.CompuScale(label="label")
         writer = autosar.xml.Writer()
         xml = writer.write_str_elem(element)
@@ -87,7 +87,7 @@ class TestCompuScale(unittest.TestCase):
         self.assertIsInstance(elem, ar_element.CompuScale)
         self.assertEqual(elem.label, "label")
 
-    def test_write_read_symbol(self):
+    def test_write_read_symbol(self): # noqa D102
         element = ar_element.CompuScale(symbol="symbol")
         writer = autosar.xml.Writer()
         xml = writer.write_str_elem(element)
@@ -99,7 +99,7 @@ class TestCompuScale(unittest.TestCase):
         self.assertIsInstance(elem, ar_element.CompuScale)
         self.assertEqual(elem.symbol, "symbol")
 
-    def test_write_read_desc(self):
+    def test_write_read_desc(self): # noqa D102
         desc = ar_element.MultiLanguageOverviewParagraph((ar_enum.Language.FOR_ALL, 'Description'))
         element = ar_element.CompuScale(desc=desc)
         writer = autosar.xml.Writer()
@@ -112,11 +112,11 @@ class TestCompuScale(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.CompuScale = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.CompuScale)
-        desc: elem.desc
-        self.assertEqual(elem.desc.elements[0].language, ar_enum.Language.FOR_ALL)
-        self.assertEqual(elem.desc.elements[0].parts[0], "Description")
+        desc = elem.desc
+        self.assertEqual(desc.elements[0].language, ar_enum.Language.FOR_ALL)
+        self.assertEqual(desc.elements[0].parts[0], "Description")
 
-    def test_write_read_mask(self):
+    def test_write_read_mask(self): # noqa D102
         element = ar_element.CompuScale(mask=255)
         writer = autosar.xml.Writer()
         xml = writer.write_str_elem(element)
@@ -128,7 +128,7 @@ class TestCompuScale(unittest.TestCase):
         self.assertIsInstance(elem, ar_element.CompuScale)
         self.assertEqual(elem.mask, 255)
 
-    def test_write_read_limit_with_default_interval_type(self):
+    def test_write_read_limit_with_default_interval_type(self): # noqa D102
         element = ar_element.CompuScale(lower_limit=1, upper_limit=2)
         writer = autosar.xml.Writer()
         xml = writer.write_str_elem(element)
@@ -144,7 +144,7 @@ class TestCompuScale(unittest.TestCase):
         self.assertEqual(elem.lower_limit_type, ar_enum.IntervalType.CLOSED)
         self.assertEqual(elem.upper_limit_type, ar_enum.IntervalType.CLOSED)
 
-    def test_read_limits_missing_interval_type(self):
+    def test_read_limits_missing_interval_type(self): # noqa D102
         xml = '''<COMPU-SCALE>
   <LOWER-LIMIT>1</LOWER-LIMIT>
   <UPPER-LIMIT>2</UPPER-LIMIT>
@@ -157,7 +157,7 @@ class TestCompuScale(unittest.TestCase):
         self.assertEqual(elem.lower_limit_type, ar_enum.IntervalType.CLOSED)
         self.assertEqual(elem.upper_limit_type, ar_enum.IntervalType.CLOSED)
 
-    def test_write_read_limit_with_open_interval_type(self):
+    def test_write_read_limit_with_open_interval_type(self): # noqa D102
         element = ar_element.CompuScale(lower_limit=float("-Inf"),
                                         upper_limit=float("Inf"),
                                         lower_limit_type=ar_enum.IntervalType.OPEN,
@@ -176,7 +176,7 @@ class TestCompuScale(unittest.TestCase):
         self.assertEqual(elem.lower_limit_type, ar_enum.IntervalType.OPEN)
         self.assertEqual(elem.upper_limit_type, ar_enum.IntervalType.OPEN)
 
-    def test_write_read_inverse_value(self):
+    def test_write_read_inverse_value(self): # noqa D102
         element = ar_element.CompuScale(inverse_value=-1)
         writer = autosar.xml.Writer()
         xml = writer.write_str_elem(element)
@@ -191,9 +191,9 @@ class TestCompuScale(unittest.TestCase):
         self.assertEqual(elem.inverse_value.value, -1)
 
 
-class TestComputation(unittest.TestCase):
+class TestComputation(unittest.TestCase): # noqa D101
 
-    def test_make_simple_value_table(self):
+    def test_make_simple_value_table(self): # noqa D102
         element = ar_element.Computation.make_value_table(["FALSE", "TRUE"], auto_label=False)
         writer = autosar.xml.Writer()
         xml = writer.write_str_elem(element, 'COMPU-INTERNAL-TO-PHYS')
@@ -221,7 +221,7 @@ class TestComputation(unittest.TestCase):
         self.assertEqual(elem.compu_scales[0].content.value, "FALSE")
         self.assertEqual(elem.compu_scales[1].content.value, "TRUE")
 
-    def test_make_int_to_phys_rational(self):
+    def test_make_int_to_phys_rational(self): # noqa D102
         element = ar_element.Computation.make_rational(scaling_factor=1 / 64,
                                                        offset=0,
                                                        lower_limit=0,
@@ -257,9 +257,9 @@ class TestComputation(unittest.TestCase):
         self.assertEqual(elem.default_value.value, 65535)
 
 
-class TestCompuMethod(unittest.TestCase):
+class TestCompuMethod(unittest.TestCase): # noqa D101
 
-    def test_write_read_compumethod_boolean(self):
+    def test_write_read_compumethod_boolean(self): # noqa D102
         computation = ar_element.Computation.make_value_table(["FALSE", "TRUE"], default_value="FALSE")
         element = ar_element.CompuMethod("boolean",
                                          int_to_phys=computation,
