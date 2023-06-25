@@ -3,7 +3,7 @@ Classes related to AUTOSAR Elements
 """
 import re
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, Union
 from enum import Enum
 import abc
 import autosar.xml.enumeration as ar_enum
@@ -11,6 +11,9 @@ import autosar.xml.enumeration as ar_enum
 
 alignment_type_re = re.compile(
     r"[1-9][0-9]*|0[xX][0-9a-fA-F]*|0[bB][0-1]+|0[0-7]*|UNSPECIFIED|UNKNOWN|BOOLEAN|PTR")
+
+display_format_str_re = re.compile(
+    r"%[ \-+#]?[0-9]*(\.[0-9]+)?[diouxXfeEgGcs]")
 
 # Base classes
 
@@ -107,6 +110,13 @@ class ARObject:
                     self._assign(target, kwargs[alternative], type_name)
                     break
 
+    def _assign_optional(self, attr_name: str, value: Any, type_name: type) -> None:
+        """
+        Same as _assign but with a None-check
+        """
+        if value is not None:
+            self._assign(attr_name, value, type_name)
+
     def _assign(self, attr_name: str, value: Any, type_name: type) -> None:
         """
         Assign single value to attribute with type check.
@@ -114,15 +124,32 @@ class ARObject:
         """
         if issubclass(type_name, Enum):
             self._set_attr_with_strict_type(attr_name, value, type_name)
+        elif issubclass(type_name, BaseRef):
+            self._set_attr_from_str_or_direct(attr_name, value, type_name)
         else:
-            self._set_attr_with_implicit_cast(attr_name, value, type_name)
+            self._set_attr_with_type_cast(attr_name, value, type_name)
 
-    def _assign_optional(self, attr_name: str, value: Any, type_name: type) -> None:
+    def _assign_int_or_str_pattern_optional(self, attr_name: str, value: int | str | None, pattern: re.Pattern) -> None:
         """
-        Same as _assign but with a None-check
+        Same as _assign_int_or_str_pattern but with a None-check
         """
         if value is not None:
-            self._assign(attr_name, value, type_name)
+            self._assign_int_or_str_pattern(attr_name, value, pattern)
+
+    def _assign_int_or_str_pattern(self, attr_name: str, value: int | str, pattern: re.Pattern) -> None:
+        """
+        Special assignment-function for values that can be either int or conforms
+        to a specific regular expression
+        """
+        if isinstance(value, int):
+            pass
+        elif isinstance(value, str):
+            match = pattern.match(value)
+            if match is None:
+                raise ValueError(f"Invalid parameter '{value}' for '{attr_name}'")
+        else:
+            raise TypeError(f"{attr_name}: Invalid type. Expected (int, str), got '{str(type(value))}'")
+        setattr(self, attr_name, value)
 
     def _set_attr_with_strict_type(self, attr_name: str, value: Any, type_class: type) -> None:
         """
@@ -134,54 +161,27 @@ class ARObject:
             raise TypeError(
                 f"Invalid type for parameter '{attr_name}'. Expected type {str(type_class)}, got {str(type(value))}")
 
-    def _set_attr_with_implicit_cast(self, attr_name: str, value: Any, type_class: type) -> None:
+    def _set_attr_from_str_or_direct(self, attr_name: str, value: Any, type_name: type):
+        """
+        Can create new objects from str if necessary
+        """
+        if isinstance(value, str):
+            new_value = type_name(value)
+        elif isinstance(value, type_name):
+            new_value = value
+        else:
+            raise TypeError(f"{attr_name}: Invalid type '{str(type(value))}'. Expected one of (str, {type_name})")
+        setattr(self, attr_name, new_value)
+
+    def _set_attr_with_type_cast(self, attr_name: str, value: Any, type_class: type) -> None:
         """
         Sets object attribute only if it can be converted to given type.
         """
-        if type_class is int:
-            new_value = int(value)
-        elif type_class is str:
-            new_value = str(value)
-        elif type_class is float:
-            new_value = float(value)
-        elif type_class is SwAddrMethodRef:
-            if isinstance(value, str):
-                new_value = SwAddrMethodRef(value)
-            elif isinstance(value, SwAddrMethodRef):
-                new_value = value
-            else:
-                raise TypeError(
-                    f"Invalid type '{str(type(value))}'. Expected one of (str, SwAddrMethodRef)")
-        elif type_class is SwBaseTypeRef:
-            if isinstance(value, str):
-                new_value = SwBaseTypeRef(value)
-            elif isinstance(value, SwBaseTypeRef):
-                new_value = value
-            else:
-                raise TypeError(
-                    f"Invalid type '{str(type(value))}'. Expected one of (str, SwBaseTypeRef)")
+        if type_class in {bool, int, str, float}:
+            new_value = type_class(value)
         else:
             raise NotImplementedError(type_class)
         setattr(self, attr_name, new_value)
-
-    def _consume_alignment(self, kwargs: dict) -> None:
-        """
-        Special consume-function for AR:ALIGNMENT-TYPE
-        """
-        value = kwargs.get('alignment', None)
-        if value is not None:
-            if isinstance(value, int):
-                alignment = value
-            elif isinstance(value, str):
-                match = alignment_type_re.match(value)
-                if match is not None:
-                    alignment = value
-                else:
-                    raise ValueError(f"Invalid alignment value '{value}'")
-            else:
-                raise TypeError(f"Invalid type for parameter 'alignment'"
-                                f". Expected (int, str), got '{str(type(value))}'")
-            setattr(self, 'alignment', alignment)
 
     def _check_params(self, class_name: str, kwargs: dict, accepted_params: set[str]):
         for key in kwargs.keys():
@@ -308,6 +308,42 @@ class BaseRef(ARObject, abc.ABC):
     def __str__(self) -> str:
         """Returns reference as string"""
         return self.value
+
+
+class CompuMethodRef(BaseRef):
+    """
+    CompuMethod reference
+    """
+
+    def __init__(self, value: str) -> None:
+        super().__init__(value, ar_enum.IdentifiableSubTypes.COMPU_METHOD)
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        return {ar_enum.IdentifiableSubTypes.COMPU_METHOD}
+
+
+class FunctionPtrSignatureRef(BaseRef):
+    """
+    Function pointer signature reference
+    """
+
+    def __init__(self, value: str) -> None:
+        super().__init__(value, ar_enum.IdentifiableSubTypes.BSW_MODULE_ENTRY)
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        return {ar_enum.IdentifiableSubTypes.BSW_MODULE_ENTRY}
+
+
+class ImplementationDataTypeRef(BaseRef):
+    """
+    ImplementationDataType reference
+    """
+
+    def __init__(self, value: str) -> None:
+        super().__init__(value, ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE)
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        return {ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE}
 
 
 class SwAddrMethodRef(BaseRef):
@@ -1598,23 +1634,46 @@ class SwBitRepresentation(ARObject):
 
 class SwTextProps(ARObject):
     """
-    Group AR:SW-TEXT-PROPS
+    Complex type AR:SW-TEXT-PROPS
     Type: Concrete
     Tag Variants: 'SW-TEXT-PROPS'
     """
 
     def __init__(self,
                  array_size_semantics: ar_enum.ArraySizeSemantics | None = None,
+                 max_text_size: int | None = None,
                  base_type_ref: SwBaseTypeRef | str | None = None,
                  fill_char: int | None = None,
                  ):
-        # .SW-MAX-TEXT-SIZE not supported as it seems related to variant-handling.
-        self.array_size_semantics: ar_enum.ArraySizeSemantics | None = None
-        self.base_type_ref: SwBaseTypeRef | str | None = None
-        self.fill_char: int | None = None
+        self.array_size_semantics: ar_enum.ArraySizeSemantics | None = None   # .ARRAY-SIZE-SEMANTICS
+        self.max_text_size: int | None = None                                 # .SW-MAX-TEXT-SIZE
+        self.base_type_ref: SwBaseTypeRef | str | None = None                 # .BASE-TYPE-REF
+        self.fill_char: int | None = None                                     # .FILL-CHAR
         self._assign_optional('array_size_semantics', array_size_semantics, ar_enum.ArraySizeSemantics)
+        self._assign_optional('max_text_size', max_text_size, int)
         self._assign_optional('base_type_ref', base_type_ref, SwBaseTypeRef)
         self._assign_optional('fill_char', fill_char, int)
+
+
+class SwPointerTargetProps(ARObject):
+    """
+    Complex type AR:SW-POINTER-TARGET-PROPS
+    Type: Concrete
+    Tag Variants: 'SW-POINTER-TARGET-PROPS'
+    """
+
+    def __init__(self,
+                 target_category: str | None = None,
+                 sw_data_def_props: Union["SwDataDefProps", None] = None,
+                 function_ptr_signature_ref: FunctionPtrSignatureRef | None = None
+                 ) -> None:
+        self.target_category: str | None = None  # .TARGET-CATEGORY
+        self.sw_data_def_props: Union["SwDataDefProps", None] = None  # .SW-DATA-DEF-PROPS
+        self.function_ptr_signature_ref: FunctionPtrSignatureRef | None = None  # .FUNCTION-POINTER-SIGNATURE-REF
+        self._assign_optional("target_category", target_category, str)
+        self._assign_optional("function_ptr_signature_ref", function_ptr_signature_ref, FunctionPtrSignatureRef)
+        if sw_data_def_props is not None:
+            self._set_attr_with_strict_type("sw_data_def_props", sw_data_def_props, SwDataDefProps)
 
 
 class SwDataDefPropsConditional(ARObject):
@@ -1626,49 +1685,62 @@ class SwDataDefPropsConditional(ARObject):
     """
 
     def __init__(self,
+                 display_presentation: ar_enum.DisplayPresentation | None = None,
+                 step_size: float | None = None,
+                 annotations: list[Annotation] | None = None,
+                 sw_addr_method_ref: SwAddrMethodRef | None = None,
+                 alignment: int | float | None = None,
+                 base_type_ref: SwBaseTypeRef | None = None,
+                 compu_method_ref: CompuMethodRef | None = None,
+                 data_constraint_ref: DataConstraintRef | None = None,
+                 impl_data_type_ref: ImplementationDataTypeRef | None = None,
+                 unit_ref: UnitRef | None = None,
                  bit_representation: SwBitRepresentation | None = None,
                  calibration_access: ar_enum.SwCalibrationAccess | None = None,
-                 **kwargs) -> None:
+                 text_props: SwTextProps | None = None,
+                 display_format: str | None = None,
+                 impl_policy: ar_enum.SwImplPolicy | None = None,
+                 additional_native_type_qualifier: str | None = None,
+                 intended_resolution: int | float | None = None,
+                 interpolation_method: str | None = None,
+                 is_virtual: bool | None = None,
+                 ptr_target_props: SwPointerTargetProps | None = None
+                 ) -> None:
         # .DISPLAY-PRESENTATION
         self.display_presentation: ar_enum.DisplayPresentation | None = None
         self.step_size: float | None = None  # .STEP-SIZE : AR:FLOAT
-        # .SW-VALUE-BLOCK-SIZE-MULTS not supported. Seems to be related to variant handling
+        # .SW-VALUE-BLOCK-SIZE-MULTS not supported.
         self.annotations: list[Annotation] = []  # .ANNOTATIONS
-        self.sw_addr_method_ref = None  # .SW-ADDR-METHOD-REF
-        self.alignment = None  # .SW-ALIGNMENT
-        self.base_type_ref = None  # .BASE-TYPE-REF
+        self.sw_addr_method_ref: SwAddrMethodRef | None = None  # .SW-ADDR-METHOD-REF
+        self.alignment: int | str | None = None  # .SW-ALIGNMENT
+        self.base_type_ref: SwBaseTypeRef | None = None  # .BASE-TYPE-REF
         self.bit_representation: SwBitRepresentation | None = None  # .SW-BIT-REPRESENTATION
         self.calibration_access: ar_enum.SwCalibrationAccess | None = None  # .SW-CALIBRATION-ACCESS
-        # .SW-VALUE-BLOCK-SIZE not supported. Seems to be related to variant handling
-        # .SW-CALPRM-AXIS-SET not supported. MCD support is low on priority list.
-        self.text_props = None  # .SW-TEXT-PROPS
-        # .SW-COMPARISON-VARIABLES  not supported. MCD support is low on priority list.
-        self.compu_method_ref = None
-        self.data_constraint_ref = None
-        # .SW-DATA-DEPENDENCY not supported. MCD support is low on priority list
-        self.display_format = None  # DISPLAY-FORMAT
-        self.implementation_data_type_ref = None  # .IMPLEMENTATION-DATA-TYPE-REF
-        # .SW-HOST-VARIABLE not supported. Low on priority list.
-        self.impl_policy = None  # .SW-IMPL-POLICY
-        self.additional_native_type_qualifier = None  # .ADDITIONAL-NATIVE-TYPE-QUALIFIER
-        self.intended_resolution = None  # .SW-INTENDED-RESOLUTION
-        self.interpolation_method = None  # .SW-INTENDED-METHOD
-        # .INVALID-VALUE not supported. Low on priority list.
-        # .MC-FUNCTION not supported. Low on priority list.
-        self.is_virtual = None  # .IS-VIRTUAL
-        self.sw_pointer_target_props = None  # .SW-POINTER-TARGET-PROPS
-        # .SW-RECORD-LAYOUT-REF. Low on priority list.
-        # .SW-REFRESH-TIMING not supported. Low on priority list.
+        # .SW-VALUE-BLOCK-SIZE not supported.
+        # .SW-CALPRM-AXIS-SET not yet supported. Low on priority list.
+        self.text_props: SwTextProps | None = None  # .SW-TEXT-PROPS
+        # .SW-COMPARISON-VARIABLES not yet supported. Low on priority list.
+        self.compu_method_ref: CompuMethodRef | None = None
+        self.data_constraint_ref: DataConstraintRef | None = None
+        # .SW-DATA-DEPENDENCY not yet supported. Low on priority list.
+        self.display_format: str | None = None  # .DISPLAY-FORMAT
+        self.impl_data_type_ref: ImplementationDataTypeRef | None = None  # .IMPLEMENTATION-DATA-TYPE-REF
+        # .SW-HOST-VARIABLE not yet supported. Low on priority list.
+        self.impl_policy: ar_enum.SwImplPolicy | None = None  # .SW-IMPL-POLICY
+        self.additional_native_type_qualifier: str | None = None  # .ADDITIONAL-NATIVE-TYPE-QUALIFIER
+        self.intended_resolution: int | float | None = None  # .SW-INTENDED-RESOLUTION
+        self.interpolation_method: str | None = None  # .SW-INTERPOLATION-METHOD
+        # .INVALID-VALUE not yet supported.
+        # .MC-FUNCTION not yet supported. Low on priority list.
+        self.is_virtual: bool | None = None  # .IS-VIRTUAL
+        self.ptr_target_props: SwPointerTargetProps | None = None  # .SW-POINTER-TARGET-PROPS
+        # .SW-RECORD-LAYOUT-REF not yet supported. Low on priority list.
+        # .SW-REFRESH-TIMING not yet supported. Low on priority list.
         self.unit_ref = None  # .UNIT-REF
-        # .VALUE-AXIS-DATA-TYPE-REF. Low on priority list.
+        # .VALUE-AXIS-DATA-TYPE-REF not yet supported. Low on priority list.
 
-        self._check_params(self.__class__.__name__,
-                           kwargs, self.accepted_params())
-
-        self._consume(kwargs, 'display_presentation',
-                      ar_enum.DisplayPresentation)
-        self._consume(kwargs, 'step_size', float)
-        annotations = kwargs.get('annotations', None)
+        self._assign_optional('display_presentation', display_presentation, ar_enum.DisplayPresentation)
+        self._assign_optional('step_size', step_size, float)
         if annotations is not None:
             if isinstance(annotations, Annotation):
                 self.annotations.append(annotations)
@@ -1682,28 +1754,37 @@ class SwDataDefPropsConditional(ARObject):
                 raise TypeError(
                     "Param annotations: "
                     f"Expected type 'Annotation' or list[Annotation], got '{str(type(annotations))}'")
-        self._consume(kwargs, 'sw_addr_method_ref', SwAddrMethodRef)
-        self._consume_alignment(kwargs)
-        self._consume(kwargs, 'base_type_ref', SwBaseTypeRef)
+        self._assign_optional('sw_addr_method_ref', sw_addr_method_ref, SwAddrMethodRef)
+        self._assign_int_or_str_pattern_optional('alignment', alignment, alignment_type_re)
+        self._assign_optional('base_type_ref', base_type_ref, SwBaseTypeRef)
         if bit_representation is not None:
             if not isinstance(bit_representation, SwBitRepresentation):
-                raise TypeError(f"param bit_representation: Invalid type '{str(type(bit_representation))}'."
+                raise TypeError(f"bit_representation: Invalid type '{str(type(bit_representation))}'."
                                 " Expected 'SwBitRepresentation'")
             self.bit_representation = bit_representation
         self._assign_optional('calibration_access', calibration_access, ar_enum.SwCalibrationAccess)
-
-    def accepted_params(self) -> set[str]:
-        """
-        Accepted parameter names in kwargs during init
-        """
-        return {'display_presentation',
-                'step_size',
-                'annotations',
-                'sw_addr_method_ref',
-                'alignment',
-                'base_type_ref',
-                'bit_representation'
-                }
+        if text_props is not None:
+            if not isinstance(text_props, SwTextProps):
+                raise TypeError(f"text_props: Invalid type '{str(type(text_props))}'."
+                                " Expected 'SwTextProps'")
+            self.text_props = text_props
+        self._assign_optional('compu_method_ref', compu_method_ref, CompuMethodRef)
+        self._assign_optional('data_constraint_ref', data_constraint_ref, DataConstraintRef)
+        self._assign_optional('impl_data_type_ref', impl_data_type_ref, ImplementationDataTypeRef)
+        self._assign_optional('unit_ref', unit_ref, UnitRef)
+        self._assign_int_or_str_pattern_optional('display_format', display_format, display_format_str_re)
+        self._assign_optional('impl_policy', impl_policy, ar_enum.SwImplPolicy)
+        self._assign_optional('additional_native_type_qualifier',
+                              additional_native_type_qualifier, str)
+        if intended_resolution is not None:
+            if isinstance(intended_resolution, (int, float)):
+                self.intended_resolution = intended_resolution
+            else:
+                raise TypeError(f"Invalid type '{str(type(intended_resolution))}' for paramater 'intended_resolution'")
+        self._assign_optional('interpolation_method', interpolation_method, str)
+        self._assign_optional('is_virtual', is_virtual, bool)
+        if ptr_target_props is not None:
+            self._set_attr_with_strict_type('ptr_target_props', ptr_target_props, SwPointerTargetProps)
 
 
 class SwAddrMethod(ARElement):
@@ -1749,15 +1830,14 @@ class SwDataDefProps(ARObject):
     Type: Concrete
     """
 
-    def __init__(self, variant: "SwDataDefPropsConditional" = None) -> None:
+    def __init__(self, variant: SwDataDefPropsConditional = None) -> None:
         super().__init__()
         self.variants = []  # .SW-DATA-DEF-PROPS-VARIANTS
         if variant is not None:
             if isinstance(variant, SwDataDefPropsConditional):
                 self.variants.append(variant)
             else:
-                raise ValueError(
-                    "value of 'variant' must be of type SwDataDefPropsConditional")
+                raise TypeError("variant must be of type SwDataDefPropsConditional")
 
 
 # !!UNFINISHED!! Data Types

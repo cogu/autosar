@@ -146,6 +146,13 @@ class _XMLWriter:
         else:
             raise TypeError("Not supported: " + str(type(number)))
 
+    def _format_boolean(self, value: bool) -> str:
+        """
+        Converts bool to AR:BOOLEAN
+        """
+        assert isinstance(value, bool)
+        return 'true' if value else 'false'
+
 
 class Writer(_XMLWriter):
     """
@@ -201,6 +208,7 @@ class Writer(_XMLWriter):
             'SwBaseTypeRef': self._write_sw_base_type_ref,
             'SwBitRepresentation': self._write_sw_bit_represenation,
             'SwTextProps': self._write_sw_text_props,
+            'SwPointerTargetProps': self._write_sw_pointer_target_props,
             # Reference elements
             'PhysicalDimentionRef': self._write_physical_dimension_ref,
         }
@@ -1092,6 +1100,9 @@ class Writer(_XMLWriter):
             self._add_content('NATIVE-DECLARATION',
                               str(elem.native_declaration))
 
+    def _write_sw_data_def_props(self, elem: ar_element.SwDataDefProps) -> None:
+        pass  # NOT IMPLEMENTED
+
     def _write_sw_data_def_props_conditional(self, elem: ar_element.SwDataDefPropsConditional) -> None:
         """
         Writes Complex-type AR:SW-DATA-DEF-PROPS-CONDITIONAL
@@ -1130,6 +1141,33 @@ class Writer(_XMLWriter):
         if elem.calibration_access is not None:
             self._add_content('SW-CALIBRATION-ACCESS',
                               ar_enum.enum_to_xml(elem.calibration_access))
+        if elem.text_props is not None:
+            self._write_sw_text_props(elem.text_props)
+        if elem.compu_method_ref is not None:
+            self._write_compu_method_ref(elem.compu_method_ref)
+        if elem.display_format is not None:
+            self._add_content('DISPLAY-FORMAT', elem.display_format)
+        if elem.data_constraint_ref is not None:
+            self._write_data_constraint_ref(elem.data_constraint_ref)
+        if elem.impl_data_type_ref is not None:
+            self._write_impl_data_type_ref(elem.impl_data_type_ref)
+        if elem.impl_policy is not None:
+            self._add_content('SW-IMPL-POLICY',
+                              ar_enum.enum_to_xml(elem.impl_policy))
+        if elem.additional_native_type_qualifier is not None:
+            self._add_content('ADDITIONAL-NATIVE-TYPE-QUALIFIER',
+                              str(elem.additional_native_type_qualifier))
+        if elem.intended_resolution is not None:
+            self._add_content('SW-INTENDED-RESOLUTION',
+                              self._format_number(elem.intended_resolution))
+        if elem.interpolation_method is not None:
+            self._add_content('SW-INTERPOLATION-METHOD', str(elem.interpolation_method))
+        if elem.is_virtual is not None:
+            self._add_content('SW-IS-VIRTUAL', self._format_boolean(elem.is_virtual))
+        if elem.ptr_target_props is not None:
+            self._write_sw_pointer_target_props(elem.ptr_target_props)
+        if elem.unit_ref is not None:
+            self._write_unit_ref(elem.unit_ref)
 
     def _write_sw_bit_represenation(self, elem: ar_element.SwBitRepresentation) -> None:
         """
@@ -1161,10 +1199,31 @@ class Writer(_XMLWriter):
             self._add_child(tag)
             if elem.array_size_semantics is not None:
                 self._add_content('ARRAY-SIZE-SEMANTICS', ar_enum.enum_to_xml(elem.array_size_semantics))
+            if elem.max_text_size is not None:
+                self._add_content('SW-MAX-TEXT-SIZE', int(elem.max_text_size))
             if elem.base_type_ref is not None:
                 self._write_sw_base_type_ref(elem.base_type_ref)
             if elem.fill_char is not None:
                 self._add_content('SW-FILL-CHARACTER', int(elem.fill_char))
+            self._leave_child()
+
+    def _write_sw_pointer_target_props(self, elem: ar_element.SwPointerTargetProps) -> None:
+        """
+        Writes AR:SW-POINTER-TARGET-PROPS
+        Type: Concrete
+        Tag Variants: 'SW-POINTER-TARGET-PROPS'
+        """
+        tag = 'SW-POINTER-TARGET-PROPS'
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.target_category is not None:
+                self._add_content('TARGET-CATEGORY', str(elem.target_category))
+            if elem.sw_data_def_props is not None:
+                self._write_sw_data_def_props(elem.sw_data_def_props)
+            if elem.function_ptr_signature_ref is not None:
+                self._write_function_ptr_signature_ref(elem.function_ptr_signature_ref)
             self._leave_child()
 
     # Reference Elements
@@ -1173,6 +1232,62 @@ class Writer(_XMLWriter):
                                elem: ar_element.BaseRef,
                                attr: TupleList) -> None:
         attr.append(('DEST', ar_enum.enum_to_xml(elem.dest)))
+
+    def _write_compu_method_ref(self, elem: ar_element.CompuMethodRef) -> None:
+        """
+        Writes complex type AR:COMPU-METHOD-REF
+        Type: Concrete
+        Tag variants: 'COMPU-METHOD-REF'
+
+        Note: The name of the complex-type is anonymous in the XML schema.
+
+        """
+        assert isinstance(elem, ar_element.CompuMethodRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content('COMPU-METHOD-REF', elem.value, attr)
+
+    def _write_data_constraint_ref(self, elem: ar_element.DataConstraintRef) -> None:
+        """
+        Writes complex type AR:DATA-CONSTR-REF
+        Type: Concrete
+        Tag variants: 'DATA-CONSTR-REF'
+
+        Note: The name of the complex-type is anonymous in the XML schema.
+
+        """
+        assert isinstance(elem, ar_element.DataConstraintRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content('DATA-CONSTR-REF', elem.value, attr)
+
+    def _write_function_ptr_signature_ref(self, elem: ar_element.FunctionPtrSignatureRef) -> None:
+        """
+        Writes complex type AR:FunctionPtrSignatureRef
+        Type: Concrete
+        Tag variants: 'FunctionPtrSignatureRef'
+
+        Note: The name of the complex-type is anonymous in the XML schema.
+
+        """
+        assert isinstance(elem, ar_element.FunctionPtrSignatureRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content('FUNCTION-POINTER-SIGNATURE-REF', elem.value, attr)
+
+    def _write_impl_data_type_ref(self, elem: ar_element.ImplementationDataTypeRef) -> None:
+        """
+        Writes complex type AR:IMPLEMENTATION-DATA-TYPE-REF
+        Type: Concrete
+        Tag variants: 'IMPLEMENTATION-DATA-TYPE-REF'
+
+        Note: The name of the complex-type is anonymous in the XML schema.
+
+        """
+        assert isinstance(elem, ar_element.ImplementationDataTypeRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content('IMPLEMENTATION-DATA-TYPE-REF', elem.value, attr)
 
     def _write_sw_base_type_ref(self, elem: ar_element.SwBaseTypeRef) -> None:
         """
