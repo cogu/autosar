@@ -144,6 +144,7 @@ class Reader:
             'SW-BIT-REPRESENTATION': self._read_sw_bit_representation,
             'SW-DATA-DEF-PROPS-CONDITIONAL': self._read_sw_data_def_props_conditional,
             'SW-TEXT-PROPS': self._read_sw_text_props,
+            'SW-POINTER-TARGET-PROPS': self._read_sw_pointer_target_props,
             # Reference elements
             'PHYSICAL-DIMENSION-REF': self._read_physical_dimension_ref,
         }
@@ -241,6 +242,16 @@ class Reader:
                 value = float(text)
             except ValueError as exc:
                 raise ar_exception.ParseError(f"Not a number: {text}") from exc
+        return value
+
+    def _read_integer(self, text: str) -> int:
+        """
+        Reads AR:INTEGER
+        """
+        try:
+            value = int(text, 0)
+        except ValueError as exc:
+            raise ar_exception.ParseError(f"Failed to parse integer: {text}") from exc
         return value
 
     # Abstract base classes
@@ -1371,6 +1382,44 @@ class Reader:
         if xml_child is not None:
             data['calibration_access'] = ar_enum.xml_to_enum('SwCalibrationAccess',
                                                              xml_child.text)
+        xml_child = child_elements.get('SW-TEXT-PROPS')
+        if xml_child is not None:
+            data['text_props'] = self._read_sw_text_props(xml_child)
+        xml_child = child_elements.get('COMPU-METHOD-REF')
+        if xml_child is not None:
+            data['compu_method_ref'] = self._read_compu_method_ref(xml_child)
+        xml_child = child_elements.get('DATA-CONSTR-REF')
+        if xml_child is not None:
+            data['data_constraint_ref'] = self._read_data_constraint_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        xml_child = child_elements.get('DISPLAY-FORMAT')
+        if xml_child is not None:
+            data['display_format'] = xml_child.text
+        self._report_unprocessed_elements(child_elements)
+        xml_child = child_elements.get('IMPLEMENTATION-DATA-TYPE-REF')
+        if xml_child is not None:
+            data['impl_data_type_ref'] = self._read_impl_data_type_ref(xml_child)
+        xml_child = child_elements.get('SW-IMPL-POLICY')
+        if xml_child is not None:
+            data['impl_policy'] = ar_enum.xml_to_enum('SwImplPolicy', xml_child.text)
+        xml_child = child_elements.get('ADDITIONAL-NATIVE-TYPE-QUALIFIER')
+        if xml_child is not None:
+            data['additional_native_type_qualifier'] = xml_child.text
+        xml_child = child_elements.get('SW-INTENDED-RESOLUTION')
+        if xml_child is not None:
+            data['intended_resolution'] = self._read_number(xml_child.text)
+        xml_child = child_elements.get('SW-INTERPOLATION-METHOD')
+        if xml_child is not None:
+            data['interpolation_method'] = xml_child.text
+        xml_child = child_elements.get('SW-IS-VIRTUAL')
+        if xml_child is not None:
+            data['is_virtual'] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get('SW-POINTER-TARGET-PROPS')
+        if xml_child is not None:
+            data['ptr_target_props'] = self._read_sw_pointer_target_props(xml_child)
+        xml_child = child_elements.get('UNIT-REF')
+        if xml_child is not None:
+            data['unit_ref'] = self._read_unit_ref(xml_child)
         self._report_unprocessed_elements(child_elements)
 
     def _read_sw_text_props(self, xml_element: ElementTree.Element) -> ar_element.SwBitRepresentation:
@@ -1384,16 +1433,96 @@ class Reader:
         xml_child = child_elements.get('ARRAY-SIZE-SEMANTICS')
         if xml_child is not None:
             data['array_size_semantics'] = ar_enum.xml_to_enum('ArraySizeSemantics', xml_child.text)
+        xml_child = child_elements.get('SW-MAX-TEXT-SIZE')
+        if xml_child is not None:
+            data['max_text_size'] = self._read_integer(xml_child.text)
         xml_child = child_elements.get('BASE-TYPE-REF')
         if xml_child is not None:
             data['base_type_ref'] = self._read_sw_base_type_ref(xml_child)
         xml_child = child_elements.get('SW-FILL-CHARACTER')
         if xml_child is not None:
-            data['fill_char'] = int(xml_child.text)
+            data['fill_char'] = self._read_integer(xml_child.text)
         self._report_unprocessed_elements(child_elements)
         return ar_element.SwTextProps(**data)
 
+    def _read_sw_pointer_target_props(self, xml_element: ElementTree.Element) -> ar_element.SwPointerTargetProps:
+        """
+        Reads AR:SW-POINTER-TARGET-PROPS
+        Type: Concrete
+        Tag variants: 'SW-POINTER-TARGET-PROPS'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get('TARGET-CATEGORY')
+        if xml_child is not None:
+            data['target_category'] = xml_child.text
+        xml_child = child_elements.get('SW-DATA-DEF-PROPS')
+        if xml_child is not None:
+            data['sw_data_def_props'] = self._read_sw_data_def_props(xml_child)
+        xml_child = child_elements.get('FUNCTION-POINTER-SIGNATURE-REF')
+        if xml_child is not None:
+            data['function_ptr_signature_ref'] = self._read_function_ptr_signature_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.SwPointerTargetProps(**data)
+
     # Reference elements
+
+    def _read_compu_method_ref(self, xml_elem: ElementTree.Element) -> ar_element.CompuMethodRef:
+        """
+        Reads AR:COMPU-METHOD-REF
+        Type: Concrete
+        Tag Variants: 'COMPU-METHOD-REF'
+
+        Note: the name of this complex type is anonymous in the XML achema
+        """
+        data = {}
+        self._read_base_ref_attributes(xml_elem.attrib, data)
+        if data['dest'] != 'COMPU-METHOD':
+            raise ar_exception.ParseError(f"Invalid value for DEST. Expected 'COMPU-METHOD', got '{data['dest']}'")
+        return ar_element.CompuMethodRef(xml_elem.text)
+
+    def _read_data_constraint_ref(self, xml_elem: ElementTree.Element) -> ar_element.DataConstraintRef:
+        """
+        Reads AR:DATA-CONSTR-REF
+        Type: Concrete
+        Tag Variants: 'DATA-CONSTR-REF'
+
+        Note: the name of this complex type is anonymous in the XML achema
+        """
+        data = {}
+        self._read_base_ref_attributes(xml_elem.attrib, data)
+        if data['dest'] != 'DATA-CONSTR':
+            raise ar_exception.ParseError(f"Invalid value for DEST. Expected 'DATA-CONSTR', got '{data['dest']}'")
+        return ar_element.DataConstraintRef(xml_elem.text)
+
+    def _read_function_ptr_signature_ref(self, xml_elem: ElementTree.Element) -> ar_element.FunctionPtrSignatureRef:
+        """
+        Reads AR:FUNCTION-POINTER-SIGNATURE-REF
+        Type: Concrete
+        Tag Variants: 'FUNCTION-POINTER-SIGNATURE-REF'
+
+        Note: the name of this complex type is anonymous in the XML achema
+        """
+        data = {}
+        self._read_base_ref_attributes(xml_elem.attrib, data)
+        if data['dest'] != 'BSW-MODULE-ENTRY':
+            raise ar_exception.ParseError(f"Invalid value for DEST. Expected 'BSW-MODULE-ENTRY', got '{data['dest']}'")
+        return ar_element.FunctionPtrSignatureRef(xml_elem.text)
+
+    def _read_impl_data_type_ref(self, xml_elem: ElementTree.Element) -> ar_element.ImplementationDataTypeRef:
+        """
+        Reads AR:IMPLEMENTATION-DATA-TYPE-REF
+        Type: Concrete
+        Tag Variants: 'IMPLEMENTATION-DATA-TYPE-REF'
+
+        Note: the name of this complex type is anonymous in the XML achema
+        """
+        data = {}
+        self._read_base_ref_attributes(xml_elem.attrib, data)
+        if data['dest'] != 'IMPLEMENTATION-DATA-TYPE':
+            raise ar_exception.ParseError(f"Invalid value for DEST. "
+                                          f"Expected 'IMPLEMENTATION-DATA-TYPE', got '{data['dest']}'")
+        return ar_element.ImplementationDataTypeRef(xml_elem.text)
 
     def _read_sw_base_type_ref(self, xml_elem: ElementTree.Element) -> ar_element.SwAddrMethodRef:
         """

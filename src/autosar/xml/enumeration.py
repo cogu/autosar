@@ -101,11 +101,14 @@ class IdentifiableSubTypes(Enum):
     More items will be added as implementation progresses.
     """
 
-    DATA_CONSTR = 0
-    UNIT = 1
-    PHYSICAL_DIMENSION = 2
-    SW_ADDR_METHOD = 3
-    SW_BASE_TYPE = 4
+    BSW_MODULE_ENTRY = 0
+    COMPU_METHOD = 1
+    DATA_CONSTR = 2
+    IMPLEMENTATION_DATA_TYPE = 3
+    UNIT = 4
+    PHYSICAL_DIMENSION = 5
+    SW_ADDR_METHOD = 6
+    SW_BASE_TYPE = 7
 
 
 class IntervalType(Enum):
@@ -364,7 +367,7 @@ class SwImplPolicy(Enum):
 
     CONST = 0
     FIXED = 1
-    MEASURE_POINT = 2
+    MEASUREMENT_POINT = 2
     QUEUED = 3
     STANDARD = 4
 
@@ -444,11 +447,14 @@ xml_to_enum_map = {
         "NO-FLOAT": VersionedEnumValue(Float.NO_FLOAT, {50}),
     },
     "IdentifiableSubTypes": {
+        "BSW-MODULE-ENTRY": IdentifiableSubTypes.BSW_MODULE_ENTRY,
+        "COMPU-METHOD": IdentifiableSubTypes.COMPU_METHOD,
         "DATA-CONSTR": IdentifiableSubTypes.DATA_CONSTR,
+        "IMPLEMENTATION-DATA-TYPE": IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE,
         "UNIT": IdentifiableSubTypes.UNIT,
         "PHYSICAL-DIMENSION": IdentifiableSubTypes.PHYSICAL_DIMENSION,
-        "SW-BASE-TYPE": IdentifiableSubTypes.SW_BASE_TYPE,
         "SW-ADDR-METHOD": IdentifiableSubTypes.SW_ADDR_METHOD,
+        "SW-BASE-TYPE": IdentifiableSubTypes.SW_BASE_TYPE,
     },
     "IntervalType": {
         "CLOSED": IntervalType.CLOSED,
@@ -625,6 +631,13 @@ xml_to_enum_map = {
         "READ-ONLY": VersionedEnumValue(SwCalibrationAccess.READ_ONLY, {50}),
         "READ-WRITE": VersionedEnumValue(SwCalibrationAccess.READ_WRITE, {50}),
     },
+    "SwImplPolicy": {
+        "CONST": SwImplPolicy.CONST,
+        "FIXED": SwImplPolicy.FIXED,
+        "MEASUREMENT-POINT": SwImplPolicy.MEASUREMENT_POINT,
+        "QUEUED": SwImplPolicy.QUEUED,
+        "STANDARD": SwImplPolicy.STANDARD
+    }
 }
 
 
@@ -676,11 +689,14 @@ enum_to_xml_map = {
         VersionedTextValue("NO-FLOAT", {50}),  # 1
     ],
     "IdentifiableSubTypes": [
-        "DATA-CONSTR",         # 0
-        "UNIT",                # 1
-        "PHYSICAL-DIMENSION",  # 2
-        "SW-ADDR-METHOD",      # 3
-        "SW-BASE-TYPE",        # 3
+        "BSW-MODULE-ENTRY",          # 0
+        "COMPU-METHOD",              # 1
+        "DATA-CONSTR",               # 2
+        "IMPLEMENTATION-DATA-TYPE",  # 3
+        "UNIT",                      # 4
+        "PHYSICAL-DIMENSION",        # 5
+        "SW-ADDR-METHOD",            # 6
+        "SW-BASE-TYPE",              # 7
     ],
     "IntervalType": [
         "CLOSED",  # 0
@@ -853,10 +869,17 @@ enum_to_xml_map = {
         "VALID"            # 3
     ],
     "SwCalibrationAccess": [
-        VersionedTextValue("NOT-ACCESSIBLE", {50}),  # 0
-        VersionedTextValue("READ-ONLY", {50}),  # 1
-        VersionedTextValue("READ-WRITE", {50}),  # 2
+        "NOT-ACCESSIBLE",    # 0
+        "READ-ONLY",         # 1
+        "READ-WRITE"         # 2
     ],
+    "SwImplPolicy": [
+        "CONST",                # 0
+        "FIXED",                # 1
+        "MEASUREMENT-POINT",    # 2
+        "QUEUED",               # 3
+        "STANDARD"              # 4
+    ]
 }
 
 

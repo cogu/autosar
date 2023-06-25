@@ -11,15 +11,15 @@ import autosar.xml.element as ar_element # noqa E402
 import autosar # noqa E402
 
 
-class TestSwBaseType(unittest.TestCase): # noqa D101
-    def test_write_default(self): # noqa D102
+class TestSwBaseType(unittest.TestCase):
+    def test_write_default(self):
         element = ar_element.SwBaseType('Typename')
         writer = autosar.xml.Writer()
         self.assertEqual(writer.write_str_elem(element), '''<SW-BASE-TYPE>
   <SHORT-NAME>Typename</SHORT-NAME>
 </SW-BASE-TYPE>''')
 
-    def test_read_default(self): # noqa D102
+    def test_read_default(self):
         xml = '''<SW-BASE-TYPE>
   <SHORT-NAME>Typename</SHORT-NAME>
 </SW-BASE-TYPE>'''
@@ -28,7 +28,7 @@ class TestSwBaseType(unittest.TestCase): # noqa D101
         self.assertIsInstance(elem, ar_element.SwBaseType)
         self.assertEqual(elem.name, 'Typename')
 
-    def test_write_size(self): # noqa D102
+    def test_write_size(self):
         element = ar_element.SwBaseType('Typename', size=16)
         writer = autosar.xml.Writer()
         self.assertEqual(writer.write_str_elem(element), '''<SW-BASE-TYPE>
@@ -36,7 +36,7 @@ class TestSwBaseType(unittest.TestCase): # noqa D101
   <BASE-TYPE-SIZE>16</BASE-TYPE-SIZE>
 </SW-BASE-TYPE>''')
 
-    def test_read_size(self): # noqa D102
+    def test_read_size(self):
         xml = '''<SW-BASE-TYPE>
   <SHORT-NAME>Typename</SHORT-NAME>
   <BASE-TYPE-SIZE>16</BASE-TYPE-SIZE>
@@ -47,7 +47,7 @@ class TestSwBaseType(unittest.TestCase): # noqa D101
         self.assertEqual(elem.name, 'Typename')
         self.assertEqual(elem.size, 16)
 
-    def test_write_max_size(self): # noqa D102
+    def test_write_max_size(self):
         element = ar_element.SwBaseType('Typename', max_size=32)
         writer = autosar.xml.Writer()
         self.assertEqual(writer.write_str_elem(element), '''<SW-BASE-TYPE>
@@ -55,7 +55,7 @@ class TestSwBaseType(unittest.TestCase): # noqa D101
   <MAX-BASE-TYPE-SIZE>32</MAX-BASE-TYPE-SIZE>
 </SW-BASE-TYPE>''')
 
-    def test_read_max_size(self): # noqa D102
+    def test_read_max_size(self):
         xml = '''<SW-BASE-TYPE>
   <SHORT-NAME>Typename</SHORT-NAME>
   <MAX-BASE-TYPE-SIZE>32</MAX-BASE-TYPE-SIZE>
@@ -66,7 +66,7 @@ class TestSwBaseType(unittest.TestCase): # noqa D101
         self.assertEqual(elem.name, 'Typename')
         self.assertEqual(elem.max_size, 32)
 
-    def test_write_encoding(self): # noqa D102
+    def test_write_encoding(self):
         element = ar_element.SwBaseType('Typename', encoding='IEEE754')
         writer = autosar.xml.Writer()
         self.assertEqual(writer.write_str_elem(element), '''<SW-BASE-TYPE>
@@ -74,7 +74,7 @@ class TestSwBaseType(unittest.TestCase): # noqa D101
   <BASE-TYPE-ENCODING>IEEE754</BASE-TYPE-ENCODING>
 </SW-BASE-TYPE>''')
 
-    def test_read_encoding(self): # noqa D102
+    def test_read_encoding(self):
         xml = '''<SW-BASE-TYPE>
   <SHORT-NAME>Typename</SHORT-NAME>
   <BASE-TYPE-ENCODING>IEEE754</BASE-TYPE-ENCODING>
@@ -85,7 +85,7 @@ class TestSwBaseType(unittest.TestCase): # noqa D101
         self.assertEqual(elem.name, 'Typename')
         self.assertEqual(elem.encoding, 'IEEE754')
 
-    def test_write_alignment(self): # noqa D102
+    def test_write_alignment(self):
         element = ar_element.SwBaseType('Typename', alignment=512)
         writer = autosar.xml.Writer()
         self.assertEqual(writer.write_str_elem(element), '''<SW-BASE-TYPE>
@@ -93,7 +93,7 @@ class TestSwBaseType(unittest.TestCase): # noqa D101
   <MEM-ALIGNMENT>512</MEM-ALIGNMENT>
 </SW-BASE-TYPE>''')
 
-    def test_read_alignment(self): # noqa D102
+    def test_read_alignment(self):
         xml = '''<SW-BASE-TYPE>
   <SHORT-NAME>Typename</SHORT-NAME>
   <MEM-ALIGNMENT>512</MEM-ALIGNMENT>
@@ -104,7 +104,7 @@ class TestSwBaseType(unittest.TestCase): # noqa D101
         self.assertEqual(elem.name, 'Typename')
         self.assertEqual(elem.alignment, 512)
 
-    def test_write_byte_order(self): # noqa D102
+    def test_write_byte_order(self):
         element = ar_element.SwBaseType(
             'Typename', byte_order=ar_enum.ByteOrder.BIG_ENDIAN)
         writer = autosar.xml.Writer()
@@ -113,7 +113,7 @@ class TestSwBaseType(unittest.TestCase): # noqa D101
   <BYTE-ORDER>MOST-SIGNIFICANT-BYTE-FIRST</BYTE-ORDER>
 </SW-BASE-TYPE>''')
 
-    def test_read_byte_order(self): # noqa D102
+    def test_read_byte_order(self):
         xml = '''<SW-BASE-TYPE>
   <SHORT-NAME>Typename</SHORT-NAME>
   <BYTE-ORDER>MOST-SIGNIFICANT-BYTE-FIRST</BYTE-ORDER>
@@ -124,7 +124,7 @@ class TestSwBaseType(unittest.TestCase): # noqa D101
         self.assertEqual(elem.name, 'Typename')
         self.assertEqual(elem.byte_order, ar_enum.ByteOrder.BIG_ENDIAN)
 
-    def test_write_sint8(self): # noqa D102
+    def test_write_sint8(self):
         element = ar_element.SwBaseType('sint8',
                                         category='FIXED_LENGTH',
                                         size=8,
@@ -139,7 +139,7 @@ class TestSwBaseType(unittest.TestCase): # noqa D101
   <NATIVE-DECLARATION>sint8</NATIVE-DECLARATION>
 </SW-BASE-TYPE>''')
 
-    def test_read_byte_sint8(self): # noqa D102
+    def test_read_byte_sint8(self):
         xml = '''
 <SW-BASE-TYPE>
   <SHORT-NAME>sint8</SHORT-NAME>
@@ -158,16 +158,16 @@ class TestSwBaseType(unittest.TestCase): # noqa D101
         self.assertEqual(elem.native_declaration, 'sint8')
 
 
-class TestSwAddrMethod(unittest.TestCase): # noqa D101
+class TestSwAddrMethod(unittest.TestCase):
 
-    def test_write_default(self): # noqa D102
+    def test_write_default(self):
         element = ar_element.SwAddrMethod('DEFAULT')
         writer = autosar.xml.Writer()
         self.assertEqual(writer.write_str_elem(element), '''<SW-ADDR-METHOD>
   <SHORT-NAME>DEFAULT</SHORT-NAME>
 </SW-ADDR-METHOD>''')
 
-    def test_read_default(self): # noqa D102
+    def test_read_default(self):
         xml = '''<SW-ADDR-METHOD>
   <SHORT-NAME>DEFAULT</SHORT-NAME>
 </SW-ADDR-METHOD>'''
@@ -177,14 +177,14 @@ class TestSwAddrMethod(unittest.TestCase): # noqa D101
         self.assertEqual(elem.name, 'DEFAULT')
 
 
-class TestSwBaseTypeRef(unittest.TestCase): # noqa D101
-    def test_write_default(self): # noqa D102
+class TestSwBaseTypeRef(unittest.TestCase):
+    def test_write_default(self):
         element = ar_element.SwBaseTypeRef('/Package/ElementName')
         writer = autosar.xml.Writer()
         self.assertEqual(writer.write_str_elem(element),
                          '<BASE-TYPE-REF DEST="SW-BASE-TYPE">/Package/ElementName</BASE-TYPE-REF>')
 
-    def test_read_default(self): # noqa D102
+    def test_read_default(self):
         xml = '<BASE-TYPE-REF DEST="SW-BASE-TYPE">/Package/ElementName</BASE-TYPE-REF>'
         reader = autosar.xml.Reader()
         elem: ar_element.SwBaseTypeRef = reader.read_str_elem(xml)
@@ -192,27 +192,27 @@ class TestSwBaseTypeRef(unittest.TestCase): # noqa D101
         self.assertEqual(elem.value, '/Package/ElementName')
 
 
-class TestSwBitRepresentation(unittest.TestCase): # noqa D101
-    def test_write_empty(self): # noqa D102
+class TestSwBitRepresentation(unittest.TestCase):
+    def test_write_empty(self):
         element = ar_element.SwBitRepresentation()
         writer = autosar.xml.Writer()
         self.assertEqual(writer.write_str_elem(element),
                          '<SW-BIT-REPRESENTATION/>')
 
-    def test_read_empty(self): # noqa D102
+    def test_read_empty(self):
         xml = '<SW-BIT-REPRESENTATION/>'
         reader = autosar.xml.Reader()
         elem: ar_element.SwBitRepresentation = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwBitRepresentation)
 
-    def test_write_bit_position(self): # noqa D102
+    def test_write_bit_position(self):
         element = ar_element.SwBitRepresentation(position=3)
         writer = autosar.xml.Writer()
         self.assertEqual(writer.write_str_elem(element), '''<SW-BIT-REPRESENTATION>
   <BIT-POSITION>3</BIT-POSITION>
 </SW-BIT-REPRESENTATION>''')
 
-    def test_read_bit_position(self): # noqa D102
+    def test_read_bit_position(self):
         xml = '''
 <SW-BIT-REPRESENTATION>
   <BIT-POSITION>3</BIT-POSITION>
@@ -222,14 +222,14 @@ class TestSwBitRepresentation(unittest.TestCase): # noqa D101
         self.assertIsInstance(elem, ar_element.SwBitRepresentation)
         self.assertEqual(elem.position, 3)
 
-    def test_write_number_of_bits(self): # noqa D102
+    def test_write_number_of_bits(self):
         element = ar_element.SwBitRepresentation(num_bits=1)
         writer = autosar.xml.Writer()
         self.assertEqual(writer.write_str_elem(element), '''<SW-BIT-REPRESENTATION>
   <NUMBER-OF-BITS>1</NUMBER-OF-BITS>
 </SW-BIT-REPRESENTATION>''')
 
-    def test_read__number_of_bits(self): # noqa D102
+    def test_read__number_of_bits(self):
         xml = '''
 <SW-BIT-REPRESENTATION>
   <NUMBER-OF-BITS>1</NUMBER-OF-BITS>
@@ -240,65 +240,76 @@ class TestSwBitRepresentation(unittest.TestCase): # noqa D101
         self.assertEqual(elem.num_bits, 1)
 
 
-class TestSwTextProps(unittest.TestCase): # noqa D101
+class TestSwTextProps(unittest.TestCase):
 
-    def test_write_empty(self): # noqa D102
+    def test_read_write_empty(self):
         element = ar_element.SwTextProps()
         writer = autosar.xml.Writer()
-        self.assertEqual(writer.write_str_elem(element),
-                         '<SW-TEXT-PROPS/>')
-
-    def test_read_empty(self): # noqa D102
         xml = '<SW-TEXT-PROPS/>'
+        self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
         elem: ar_element.SwTextProps = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwTextProps)
 
-    def test_write_array_size_semantics(self): # noqa D102
+    def test_read_write_array_size_semantics(self):
         element = ar_element.SwTextProps(array_size_semantics=ar_enum.ArraySizeSemantics.VARIABLE_SIZE)
         writer = autosar.xml.Writer()
-        self.assertEqual(writer.write_str_elem(element),
-                         '''<SW-TEXT-PROPS>
-  <ARRAY-SIZE-SEMANTICS>VARIABLE-SIZE</ARRAY-SIZE-SEMANTICS>
-</SW-TEXT-PROPS>''')
-
-    def test_read_array_size_semantics(self): # noqa D102
         xml = '''<SW-TEXT-PROPS>
   <ARRAY-SIZE-SEMANTICS>VARIABLE-SIZE</ARRAY-SIZE-SEMANTICS>
 </SW-TEXT-PROPS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
         elem: ar_element.SwTextProps = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwTextProps)
         self.assertEqual(elem.array_size_semantics, ar_enum.ArraySizeSemantics.VARIABLE_SIZE)
 
-    def test_write_base_type_ref(self): # noqa D102
+    def test_read_write_max_text_size(self):
+        element = ar_element.SwTextProps(max_text_size=32)
+        writer = autosar.xml.Writer()
+        xml = '''<SW-TEXT-PROPS>
+  <SW-MAX-TEXT-SIZE>32</SW-MAX-TEXT-SIZE>
+</SW-TEXT-PROPS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwTextProps = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwTextProps)
+        self.assertEqual(elem.max_text_size, 32)
+
+    def test_read_write_base_type_ref(self):
         element = ar_element.SwTextProps(base_type_ref=ar_element.SwBaseTypeRef('/Package/ElementName'))
         writer = autosar.xml.Writer()
-        self.assertEqual(writer.write_str_elem(element),
-                         '''<SW-TEXT-PROPS>
-  <BASE-TYPE-REF DEST="SW-BASE-TYPE">/Package/ElementName</BASE-TYPE-REF>
-</SW-TEXT-PROPS>''')
-
-    def test_read_base_type_ref(self): # noqa D102
         xml = '''<SW-TEXT-PROPS>
   <BASE-TYPE-REF DEST="SW-BASE-TYPE">/Package/ElementName</BASE-TYPE-REF>
 </SW-TEXT-PROPS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
         elem: ar_element.SwTextProps = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwTextProps)
         self.assertEqual(str(elem.base_type_ref), '/Package/ElementName')
 
-    def test_write_fill_char(self): # noqa D102
+    def test_read_write_fill_char(self):
+        """
+        Not yet possible to choose integer base in Writer output
+        for selected elements. Use to decimal for now.
+        """
         element = ar_element.SwTextProps(fill_char=0x30)
         writer = autosar.xml.Writer()
-        self.assertEqual(writer.write_str_elem(element),
-                         '''<SW-TEXT-PROPS>
-  <SW-FILL-CHARACTER>48</SW-FILL-CHARACTER>
-</SW-TEXT-PROPS>''')
-
-    def test_read_fill_char(self): # noqa D102
         xml = '''<SW-TEXT-PROPS>
   <SW-FILL-CHARACTER>48</SW-FILL-CHARACTER>
+</SW-TEXT-PROPS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwTextProps = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwTextProps)
+        self.assertEqual(elem.fill_char, 0x30)
+
+    def test_read_hex_literal_fill_char(self):
+        """
+        Verify that we can process fill-char when
+        expressed as hex-literal
+        """
+        xml = '''<SW-TEXT-PROPS>
+  <SW-FILL-CHARACTER>0x30</SW-FILL-CHARACTER>
 </SW-TEXT-PROPS>'''
         reader = autosar.xml.Reader()
         elem: ar_element.SwTextProps = reader.read_str_elem(xml)
@@ -306,85 +317,101 @@ class TestSwTextProps(unittest.TestCase): # noqa D101
         self.assertEqual(elem.fill_char, 0x30)
 
 
-class TestDataDefPropsConditional(unittest.TestCase): # noqa D101
+class TestSwPointerTargetProps(unittest.TestCase):
 
-    def test_write_empty(self): # noqa D102
+    def test_read_write_empty(self):
+        element = ar_element.SwPointerTargetProps()
+        writer = autosar.xml.Writer()
+        xml = '<SW-POINTER-TARGET-PROPS/>'
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.Annotation = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwPointerTargetProps)
+
+    def test_read_write_target_category(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.SwPointerTargetProps(target_category="DATA")
+        xml = '''<SW-POINTER-TARGET-PROPS>
+  <TARGET-CATEGORY>DATA</TARGET-CATEGORY>
+</SW-POINTER-TARGET-PROPS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwPointerTargetProps = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwPointerTargetProps)
+        self.assertEqual(elem.target_category, "DATA")
+
+    def test_read_write_function_ptr_signagure_ref(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.SwPointerTargetProps(function_ptr_signature_ref="/BSW/FunctionName")
+        xml = '''<SW-POINTER-TARGET-PROPS>
+  <FUNCTION-POINTER-SIGNATURE-REF DEST="BSW-MODULE-ENTRY">/BSW/FunctionName</FUNCTION-POINTER-SIGNATURE-REF>
+</SW-POINTER-TARGET-PROPS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwPointerTargetProps = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwPointerTargetProps)
+        ref = elem.function_ptr_signature_ref
+        self.assertEqual(ref.value, '/BSW/FunctionName')
+        self.assertEqual(ref.dest, ar_enum.IdentifiableSubTypes.BSW_MODULE_ENTRY)
+
+
+class TestDataDefPropsConditional(unittest.TestCase):
+
+    def test_read_write_empty(self):
         element = ar_element.SwDataDefPropsConditional()
         writer = autosar.xml.Writer()
-        self.assertEqual(writer.write_str_elem(element),
-                         '<SW-DATA-DEF-PROPS-CONDITIONAL/>')
-
-    def test_read_empty(self): # noqa D102
         xml = '<SW-DATA-DEF-PROPS-CONDITIONAL/>'
+        self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
         elem: ar_element.Annotation = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwDataDefPropsConditional)
 
-    def test_write_display_presentation(self): # noqa D102
+    def test_read_write_display_presentation_continous(self):
         writer = autosar.xml.Writer()
         element = ar_element.SwDataDefPropsConditional(
             display_presentation=ar_enum.DisplayPresentation.CONTINUOUS)
-        self.assertEqual(writer.write_str_elem(element),
-                         '''<SW-DATA-DEF-PROPS-CONDITIONAL>
-  <DISPLAY-PRESENTATION>PRESENTATION-CONTINUOUS</DISPLAY-PRESENTATION>
-</SW-DATA-DEF-PROPS-CONDITIONAL>''')
-
-        element = ar_element.SwDataDefPropsConditional(
-            display_presentation=ar_enum.DisplayPresentation.DISCRETE)
-        self.assertEqual(writer.write_str_elem(element),
-                         '''<SW-DATA-DEF-PROPS-CONDITIONAL>
-  <DISPLAY-PRESENTATION>PRESENTATION-DISCRETE</DISPLAY-PRESENTATION>
-</SW-DATA-DEF-PROPS-CONDITIONAL>''')
-
-    def test_read_display_presentation(self): # noqa D102
-        xml = '''
-<SW-DATA-DEF-PROPS-CONDITIONAL>
+        xml = '''<SW-DATA-DEF-PROPS-CONDITIONAL>
   <DISPLAY-PRESENTATION>PRESENTATION-CONTINUOUS</DISPLAY-PRESENTATION>
 </SW-DATA-DEF-PROPS-CONDITIONAL>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
         elem: ar_element.SwDataDefPropsConditional = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwDataDefPropsConditional)
         self.assertEqual(elem.display_presentation,
                          ar_enum.DisplayPresentation.CONTINUOUS)
 
-    def test_write_step_size(self): # noqa D102
+    def test_read_write_display_presentation_discrete(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.SwDataDefPropsConditional(
+            display_presentation=ar_enum.DisplayPresentation.DISCRETE)
+        xml = '''<SW-DATA-DEF-PROPS-CONDITIONAL>
+  <DISPLAY-PRESENTATION>PRESENTATION-DISCRETE</DISPLAY-PRESENTATION>
+</SW-DATA-DEF-PROPS-CONDITIONAL>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwDataDefPropsConditional = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwDataDefPropsConditional)
+        self.assertEqual(elem.display_presentation,
+                         ar_enum.DisplayPresentation.DISCRETE)
+
+    def test_read_write_step_size(self):
         writer = autosar.xml.Writer()
         element = ar_element.SwDataDefPropsConditional(step_size=1)
-        self.assertEqual(writer.write_str_elem(element),
-                         '''<SW-DATA-DEF-PROPS-CONDITIONAL>
-  <STEP-SIZE>1</STEP-SIZE>
-</SW-DATA-DEF-PROPS-CONDITIONAL>''')
-
-    def test_read_step_size(self): # noqa D102
         xml = '''<SW-DATA-DEF-PROPS-CONDITIONAL>
   <STEP-SIZE>1</STEP-SIZE>
 </SW-DATA-DEF-PROPS-CONDITIONAL>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
         elem: ar_element.SwDataDefPropsConditional = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwDataDefPropsConditional)
         self.assertEqual(elem.step_size, 1.0)
 
-    def test_write_annotations(self): # noqa D102
+    def test_read_write_annotations(self):
         writer = autosar.xml.Writer()
         annotation = ar_element.Annotation(text=ar_element.DocumentationBlock(
             ar_element.MultiLanguageParagraph((ar_enum.Language.EN, 'Some Annotation'))))
         element = ar_element.SwDataDefPropsConditional(annotations=annotation)
-        self.assertEqual(writer.write_str_elem(element),
-                         '''<SW-DATA-DEF-PROPS-CONDITIONAL>
-  <ANNOTATIONS>
-    <ANNOTATION>
-      <ANNOTATION-TEXT>
-        <P>
-          <L-1 L="EN">Some Annotation</L-1>
-        </P>
-      </ANNOTATION-TEXT>
-    </ANNOTATION>
-  </ANNOTATIONS>
-</SW-DATA-DEF-PROPS-CONDITIONAL>''')
-
-    def test_read_annotations(self): # noqa D102
-        xml = '''
-<SW-DATA-DEF-PROPS-CONDITIONAL>
+        xml = '''<SW-DATA-DEF-PROPS-CONDITIONAL>
   <ANNOTATIONS>
     <ANNOTATION>
       <ANNOTATION-TEXT>
@@ -395,6 +422,7 @@ class TestDataDefPropsConditional(unittest.TestCase): # noqa D101
     </ANNOTATION>
   </ANNOTATIONS>
 </SW-DATA-DEF-PROPS-CONDITIONAL>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
         elem: ar_element.SwDataDefPropsConditional = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwDataDefPropsConditional)
@@ -407,29 +435,14 @@ class TestDataDefPropsConditional(unittest.TestCase): # noqa D101
         self.assertEqual(
             annotation_text.elements[0].elements[0].language, ar_enum.Language.EN)
 
-    def test_write_sw_addr_method_ref(self): # noqa D102
+    def test_read_write_sw_addr_method_ref(self):
         writer = autosar.xml.Writer()
         element = ar_element.SwDataDefPropsConditional(
             sw_addr_method_ref=ar_element.SwAddrMethodRef('/SwAddrMethods/DEFAULT'))
-        self.assertEqual(writer.write_str_elem(element),
-                         '''<SW-DATA-DEF-PROPS-CONDITIONAL>
-  <SW-ADDR-METHOD-REF DEST="SW-ADDR-METHOD">/SwAddrMethods/DEFAULT</SW-ADDR-METHOD-REF>
-</SW-DATA-DEF-PROPS-CONDITIONAL>''')
-
-    def test_write_sw_addr_method_ref_implicit(self): # noqa D102
-        writer = autosar.xml.Writer()
-        element = ar_element.SwDataDefPropsConditional(
-            sw_addr_method_ref='/SwAddrMethods/DEFAULT')
-        self.assertEqual(writer.write_str_elem(element),
-                         '''<SW-DATA-DEF-PROPS-CONDITIONAL>
-  <SW-ADDR-METHOD-REF DEST="SW-ADDR-METHOD">/SwAddrMethods/DEFAULT</SW-ADDR-METHOD-REF>
-</SW-DATA-DEF-PROPS-CONDITIONAL>''')
-
-    def test_read_sw_addr_method_ref(self): # noqa D102
-        xml = '''
-<SW-DATA-DEF-PROPS-CONDITIONAL>
+        xml = '''<SW-DATA-DEF-PROPS-CONDITIONAL>
   <SW-ADDR-METHOD-REF DEST="SW-ADDR-METHOD">/SwAddrMethods/DEFAULT</SW-ADDR-METHOD-REF>
 </SW-DATA-DEF-PROPS-CONDITIONAL>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
         elem: ar_element.SwDataDefPropsConditional = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwDataDefPropsConditional)
@@ -437,71 +450,63 @@ class TestDataDefPropsConditional(unittest.TestCase): # noqa D101
         self.assertEqual(ref.value, '/SwAddrMethods/DEFAULT')
         self.assertEqual(ref.dest, ar_enum.IdentifiableSubTypes.SW_ADDR_METHOD)
 
-    def test_write_sw_alignment_int(self): # noqa D102
+    def test_write_sw_addr_method_ref_from_string(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.SwDataDefPropsConditional(
+            sw_addr_method_ref='/SwAddrMethods/DEFAULT')
+        xml = '''<SW-DATA-DEF-PROPS-CONDITIONAL>
+  <SW-ADDR-METHOD-REF DEST="SW-ADDR-METHOD">/SwAddrMethods/DEFAULT</SW-ADDR-METHOD-REF>
+</SW-DATA-DEF-PROPS-CONDITIONAL>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+
+    def test_read_write_sw_alignment_int(self):
         writer = autosar.xml.Writer()
         element = ar_element.SwDataDefPropsConditional(alignment=16)
-        self.assertEqual(writer.write_str_elem(element),
-                         '''<SW-DATA-DEF-PROPS-CONDITIONAL>
-  <SW-ALIGNMENT>16</SW-ALIGNMENT>
-</SW-DATA-DEF-PROPS-CONDITIONAL>''')
-
-    def test_read_sw_alignment_int(self): # noqa D102
-        xml = '''
-<SW-DATA-DEF-PROPS-CONDITIONAL>
+        xml = '''<SW-DATA-DEF-PROPS-CONDITIONAL>
   <SW-ALIGNMENT>16</SW-ALIGNMENT>
 </SW-DATA-DEF-PROPS-CONDITIONAL>'''
+
+        self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
         elem: ar_element.SwDataDefPropsConditional = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwDataDefPropsConditional)
         self.assertEqual(elem.alignment, 16)
 
-    def test_write_sw_alignment_hex_str(self): # noqa D102
+    def test_write_sw_alignment_hex_str(self):
         writer = autosar.xml.Writer()
         element = ar_element.SwDataDefPropsConditional(alignment='0x800')
-        self.assertEqual(writer.write_str_elem(element),
-                         '''<SW-DATA-DEF-PROPS-CONDITIONAL>
+        xml = '''<SW-DATA-DEF-PROPS-CONDITIONAL>
   <SW-ALIGNMENT>0x800</SW-ALIGNMENT>
-</SW-DATA-DEF-PROPS-CONDITIONAL>''')
+</SW-DATA-DEF-PROPS-CONDITIONAL>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
 
-    def test_write_sw_alignment_unspecified(self): # noqa D102
+    def test_write_sw_alignment_unspecified(self):
         writer = autosar.xml.Writer()
         element = ar_element.SwDataDefPropsConditional(alignment='UNSPECIFIED')
-        self.assertEqual(writer.write_str_elem(element),
-                         '''<SW-DATA-DEF-PROPS-CONDITIONAL>
+        xml = '''<SW-DATA-DEF-PROPS-CONDITIONAL>
   <SW-ALIGNMENT>UNSPECIFIED</SW-ALIGNMENT>
-</SW-DATA-DEF-PROPS-CONDITIONAL>''')
+</SW-DATA-DEF-PROPS-CONDITIONAL>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
 
-    def test_write_sw_alignment_ptr(self): # noqa D102
+    def test_read_write_sw_alignment_ptr(self):
         writer = autosar.xml.Writer()
         element = ar_element.SwDataDefPropsConditional(alignment='PTR')
-        self.assertEqual(writer.write_str_elem(element),
-                         '''<SW-DATA-DEF-PROPS-CONDITIONAL>
-  <SW-ALIGNMENT>PTR</SW-ALIGNMENT>
-</SW-DATA-DEF-PROPS-CONDITIONAL>''')
-
-    def test_read_sw_alignment_ptr(self): # noqa D102
-        xml = '''
-<SW-DATA-DEF-PROPS-CONDITIONAL>
+        xml = '''<SW-DATA-DEF-PROPS-CONDITIONAL>
   <SW-ALIGNMENT>PTR</SW-ALIGNMENT>
 </SW-DATA-DEF-PROPS-CONDITIONAL>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
         elem: ar_element.SwDataDefPropsConditional = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwDataDefPropsConditional)
         self.assertEqual(elem.alignment, "PTR")
 
-    def test_write_base_ref(self): # noqa D102
+    def test_read_write_base_ref(self):
         writer = autosar.xml.Writer()
         element = ar_element.SwDataDefPropsConditional(base_type_ref='/BaseTypes/TypeName')
-        self.assertEqual(writer.write_str_elem(element),
-                         '''<SW-DATA-DEF-PROPS-CONDITIONAL>
-  <BASE-TYPE-REF DEST="SW-BASE-TYPE">/BaseTypes/TypeName</BASE-TYPE-REF>
-</SW-DATA-DEF-PROPS-CONDITIONAL>''')
-
-    def test_read_base_ref(self): # noqa D102
-        xml = '''
-<SW-DATA-DEF-PROPS-CONDITIONAL>
+        xml = '''<SW-DATA-DEF-PROPS-CONDITIONAL>
   <BASE-TYPE-REF DEST="SW-BASE-TYPE">/BaseTypes/TypeName</BASE-TYPE-REF>
 </SW-DATA-DEF-PROPS-CONDITIONAL>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
         elem: ar_element.SwDataDefPropsConditional = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwDataDefPropsConditional)
@@ -509,26 +514,17 @@ class TestDataDefPropsConditional(unittest.TestCase): # noqa D101
         self.assertEqual(ref.value, '/BaseTypes/TypeName')
         self.assertEqual(ref.dest, ar_enum.IdentifiableSubTypes.SW_BASE_TYPE)
 
-    def test_write_sw_bit_representation(self): # noqa D102
+    def test_read_write_sw_bit_representation(self):
         writer = autosar.xml.Writer()
         element = ar_element.SwDataDefPropsConditional(
             bit_representation=ar_element.SwBitRepresentation(position=1, num_bits=2))
-        self.assertEqual(writer.write_str_elem(element),
-                         '''<SW-DATA-DEF-PROPS-CONDITIONAL>
-  <SW-BIT-REPRESENTATION>
-    <BIT-POSITION>1</BIT-POSITION>
-    <NUMBER-OF-BITS>2</NUMBER-OF-BITS>
-  </SW-BIT-REPRESENTATION>
-</SW-DATA-DEF-PROPS-CONDITIONAL>''')
-
-    def test_read_sw_bit_representation(self): # noqa D102
-        xml = '''
-<SW-DATA-DEF-PROPS-CONDITIONAL>
+        xml = '''<SW-DATA-DEF-PROPS-CONDITIONAL>
   <SW-BIT-REPRESENTATION>
     <BIT-POSITION>1</BIT-POSITION>
     <NUMBER-OF-BITS>2</NUMBER-OF-BITS>
   </SW-BIT-REPRESENTATION>
 </SW-DATA-DEF-PROPS-CONDITIONAL>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
         elem: ar_element.SwDataDefPropsConditional = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwDataDefPropsConditional)
@@ -536,24 +532,191 @@ class TestDataDefPropsConditional(unittest.TestCase): # noqa D101
         self.assertEqual(child_elem.position, 1)
         self.assertEqual(child_elem.num_bits, 2)
 
-    def test_write_sw_calibration_access(self): # noqa D102
+    def test_read_write_sw_calibration_access(self):
         writer = autosar.xml.Writer()
         element = ar_element.SwDataDefPropsConditional(
             calibration_access=ar_enum.SwCalibrationAccess.READ_ONLY)
-        self.assertEqual(writer.write_str_elem(element),
-                         '''<SW-DATA-DEF-PROPS-CONDITIONAL>
-  <SW-CALIBRATION-ACCESS>READ-ONLY</SW-CALIBRATION-ACCESS>
-</SW-DATA-DEF-PROPS-CONDITIONAL>''')
-
-    def test_read_sw_calibration_access(self): # noqa D102
-        xml = '''
-<SW-DATA-DEF-PROPS-CONDITIONAL>
+        xml = '''<SW-DATA-DEF-PROPS-CONDITIONAL>
   <SW-CALIBRATION-ACCESS>READ-ONLY</SW-CALIBRATION-ACCESS>
 </SW-DATA-DEF-PROPS-CONDITIONAL>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
         elem: ar_element.SwDataDefPropsConditional = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwDataDefPropsConditional)
         self.assertEqual(elem.calibration_access, ar_enum.SwCalibrationAccess.READ_ONLY)
+
+    def test_read_write_sw_text_props(self):
+        writer = autosar.xml.Writer()
+        text_props = ar_element.SwTextProps(array_size_semantics=ar_enum.ArraySizeSemantics.VARIABLE_SIZE,
+                                            max_text_size=128,
+                                            fill_char=0x30)
+        element = ar_element.SwDataDefPropsConditional(text_props=text_props)
+        xml = '''<SW-DATA-DEF-PROPS-CONDITIONAL>
+  <SW-TEXT-PROPS>
+    <ARRAY-SIZE-SEMANTICS>VARIABLE-SIZE</ARRAY-SIZE-SEMANTICS>
+    <SW-MAX-TEXT-SIZE>128</SW-MAX-TEXT-SIZE>
+    <SW-FILL-CHARACTER>48</SW-FILL-CHARACTER>
+  </SW-TEXT-PROPS>
+</SW-DATA-DEF-PROPS-CONDITIONAL>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwDataDefPropsConditional = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwDataDefPropsConditional)
+        props: ar_element.SwTextProps = elem.text_props
+        self.assertEqual(props.array_size_semantics, ar_enum.ArraySizeSemantics.VARIABLE_SIZE)
+        self.assertEqual(props.max_text_size, 128)
+        self.assertEqual(props.fill_char, 0x30)
+
+    def test_read_write_compu_method_ref(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.SwDataDefPropsConditional(compu_method_ref='/CompuMethods/CompuName')
+        xml = '''<SW-DATA-DEF-PROPS-CONDITIONAL>
+  <COMPU-METHOD-REF DEST="COMPU-METHOD">/CompuMethods/CompuName</COMPU-METHOD-REF>
+</SW-DATA-DEF-PROPS-CONDITIONAL>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwDataDefPropsConditional = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwDataDefPropsConditional)
+        ref = elem.compu_method_ref
+        self.assertIsInstance(ref, ar_element.CompuMethodRef)
+        self.assertEqual(ref.value, '/CompuMethods/CompuName')
+        self.assertEqual(ref.dest, ar_enum.IdentifiableSubTypes.COMPU_METHOD)
+
+    def test_read_write_data_constraint_ref(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.SwDataDefPropsConditional(data_constraint_ref='/DataConstraints/ConstraintName')
+        xml = '''<SW-DATA-DEF-PROPS-CONDITIONAL>
+  <DATA-CONSTR-REF DEST="DATA-CONSTR">/DataConstraints/ConstraintName</DATA-CONSTR-REF>
+</SW-DATA-DEF-PROPS-CONDITIONAL>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwDataDefPropsConditional = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwDataDefPropsConditional)
+        ref = elem.data_constraint_ref
+        self.assertIsInstance(ref, ar_element.DataConstraintRef)
+        self.assertEqual(ref.value, '/DataConstraints/ConstraintName')
+        self.assertEqual(ref.dest, ar_enum.IdentifiableSubTypes.DATA_CONSTR)
+
+    def test_read_write_impl_data_type_ref(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.SwDataDefPropsConditional(impl_data_type_ref='/DataTypes/TypeName')
+        xml = '''<SW-DATA-DEF-PROPS-CONDITIONAL>
+  <IMPLEMENTATION-DATA-TYPE-REF DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/TypeName</IMPLEMENTATION-DATA-TYPE-REF>
+</SW-DATA-DEF-PROPS-CONDITIONAL>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwDataDefPropsConditional = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwDataDefPropsConditional)
+        ref = elem.impl_data_type_ref
+        self.assertIsInstance(ref, ar_element.ImplementationDataTypeRef)
+        self.assertEqual(ref.value, '/DataTypes/TypeName')
+        self.assertEqual(ref.dest, ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE)
+
+    def test_read_write_unit_ref(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.SwDataDefPropsConditional(unit_ref='/Units/Kelvin')
+        xml = '''<SW-DATA-DEF-PROPS-CONDITIONAL>
+  <UNIT-REF DEST="UNIT">/Units/Kelvin</UNIT-REF>
+</SW-DATA-DEF-PROPS-CONDITIONAL>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwDataDefPropsConditional = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwDataDefPropsConditional)
+        ref = elem.unit_ref
+        self.assertIsInstance(ref, ar_element.UnitRef)
+        self.assertEqual(ref.value, '/Units/Kelvin')
+        self.assertEqual(ref.dest, ar_enum.IdentifiableSubTypes.UNIT)
+
+    def test_read_write_display_format(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.SwDataDefPropsConditional(display_format=r'%.02f')
+        xml = r'''<SW-DATA-DEF-PROPS-CONDITIONAL>
+  <DISPLAY-FORMAT>%.02f</DISPLAY-FORMAT>
+</SW-DATA-DEF-PROPS-CONDITIONAL>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwDataDefPropsConditional = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwDataDefPropsConditional)
+        self.assertEqual(elem.display_format, r'%.02f')
+
+    def test_read_write_impl_policy(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.SwDataDefPropsConditional(
+            impl_policy=ar_enum.SwImplPolicy.MEASUREMENT_POINT)
+        xml = '''<SW-DATA-DEF-PROPS-CONDITIONAL>
+  <SW-IMPL-POLICY>MEASUREMENT-POINT</SW-IMPL-POLICY>
+</SW-DATA-DEF-PROPS-CONDITIONAL>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwDataDefPropsConditional = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwDataDefPropsConditional)
+        self.assertEqual(elem.impl_policy, ar_enum.SwImplPolicy.MEASUREMENT_POINT)
+
+    def test_read_write_additional_native_type_qualifier(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.SwDataDefPropsConditional(
+            additional_native_type_qualifier="volatile")
+        xml = '''<SW-DATA-DEF-PROPS-CONDITIONAL>
+  <ADDITIONAL-NATIVE-TYPE-QUALIFIER>volatile</ADDITIONAL-NATIVE-TYPE-QUALIFIER>
+</SW-DATA-DEF-PROPS-CONDITIONAL>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwDataDefPropsConditional = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwDataDefPropsConditional)
+        self.assertEqual(elem.additional_native_type_qualifier, "volatile")
+
+    def test_read_write_intended_resolution(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.SwDataDefPropsConditional(intended_resolution=0.03125)
+        xml = '''<SW-DATA-DEF-PROPS-CONDITIONAL>
+  <SW-INTENDED-RESOLUTION>0.03125</SW-INTENDED-RESOLUTION>
+</SW-DATA-DEF-PROPS-CONDITIONAL>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwDataDefPropsConditional = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwDataDefPropsConditional)
+        self.assertEqual(elem.intended_resolution, 0.03125)
+
+    def test_read_write_interpolation_method(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.SwDataDefPropsConditional(interpolation_method="STEPWISE-LINEAR")
+        xml = '''<SW-DATA-DEF-PROPS-CONDITIONAL>
+  <SW-INTERPOLATION-METHOD>STEPWISE-LINEAR</SW-INTERPOLATION-METHOD>
+</SW-DATA-DEF-PROPS-CONDITIONAL>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwDataDefPropsConditional = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwDataDefPropsConditional)
+        self.assertEqual(elem.interpolation_method, "STEPWISE-LINEAR")
+
+    def test_read_write_is_virtual(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.SwDataDefPropsConditional(is_virtual=True)
+        xml = '''<SW-DATA-DEF-PROPS-CONDITIONAL>
+  <SW-IS-VIRTUAL>true</SW-IS-VIRTUAL>
+</SW-DATA-DEF-PROPS-CONDITIONAL>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwDataDefPropsConditional = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwDataDefPropsConditional)
+        self.assertTrue(elem.is_virtual)
+
+    def test_read_write_sw_pointer_target_props(self):
+        writer = autosar.xml.Writer()
+        sw_props = ar_element.SwPointerTargetProps(target_category="MY-CATEGORY")
+        element = ar_element.SwDataDefPropsConditional(ptr_target_props=sw_props)
+        xml = '''<SW-DATA-DEF-PROPS-CONDITIONAL>
+  <SW-POINTER-TARGET-PROPS>
+    <TARGET-CATEGORY>MY-CATEGORY</TARGET-CATEGORY>
+  </SW-POINTER-TARGET-PROPS>
+</SW-DATA-DEF-PROPS-CONDITIONAL>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwDataDefPropsConditional = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwDataDefPropsConditional)
+        props = elem.ptr_target_props
+        self.assertEqual(props.target_category, "MY-CATEGORY")
 
 
 if __name__ == '__main__':

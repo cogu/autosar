@@ -6,7 +6,7 @@ Notable changes.
 
 ### Collectable elements
 
-* BaseType
+* SwBaseType
 * CompuMethod
 * DataConstraint
 * Unit
@@ -22,3 +22,10 @@ Notable changes.
 * Subscript
 * Superscript
 * TechnicalTerm
+
+### DataDictionary elements
+
+* SwBitRepresentation
+* SwDataDefPropsConditional
+* SwPointerTargetProps
+* SwTextProps
