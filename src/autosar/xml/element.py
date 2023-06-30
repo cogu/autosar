@@ -86,30 +86,6 @@ class ARObject:
                         return False
         return True
 
-    def _accepted_params(self, params: set):
-        """
-        Acceped kwarg names during init
-        """
-        params.update(['tag'])
-
-    def _consume(self, kwargs: dict, attr_name: str | tuple[str, ...], type_name: type) -> None:
-        """
-        Consume value of primitive type from kwargs and assign to object attribute based on attr_name
-        """
-        if isinstance(attr_name, tuple):
-            target = attr_name[0]
-            alternatives = list(attr_name[1:])
-        else:
-            target = attr_name
-            alternatives = None
-        if target in kwargs:
-            self._assign(target, kwargs[target], type_name)
-        elif alternatives is not None:
-            for alternative in alternatives:
-                if alternative in kwargs:
-                    self._assign(target, kwargs[alternative], type_name)
-                    break
-
     def _assign_optional(self, attr_name: str, value: Any, type_name: type) -> None:
         """
         Same as _assign but with a None-check
@@ -120,7 +96,6 @@ class ARObject:
     def _assign(self, attr_name: str, value: Any, type_name: type) -> None:
         """
         Assign single value to attribute with type check.
-        This is a simplified version of _consume.
         """
         if issubclass(type_name, Enum):
             self._set_attr_with_strict_type(attr_name, value, type_name)
@@ -183,12 +158,6 @@ class ARObject:
             raise NotImplementedError(type_class)
         setattr(self, attr_name, new_value)
 
-    def _check_params(self, class_name: str, kwargs: dict, accepted_params: set[str]):
-        for key in kwargs.keys():
-            if key not in accepted_params:
-                raise TypeError(
-                    f"'{key}'is an invalid keyword argument for {class_name}")
-
 
 class MultiLanguageReferrable(ARObject):
     """
@@ -196,24 +165,18 @@ class MultiLanguageReferrable(ARObject):
     Type: Abstract
     """
 
-    def __init__(self, name: str, kwargs: dict) -> None:
+    def __init__(self,
+                 name: str,
+                 long_name: Union["MultilanguageLongName", None] = None) -> None:
         self.name = name  # .SHORT-NAME
         self.long_name: MultilanguageLongName | None = None  # .LONG-NAME
         self.parent: 'CollectableElement' = None
-        long_name = kwargs.get('long_name', None)
         if long_name is not None:
             if isinstance(long_name, MultilanguageLongName):
                 self.long_name = long_name
             else:
                 raise TypeError(
                     f'long_name: Expected type "MultilanguageLongName", got "{str(type(long_name))}"')
-
-    def _accepted_params(self, params: set):
-        """
-        Acceped key names in kwargs during init
-        """
-        super()._accepted_params(params)
-        params.update(['short_name', 'long_name', 'parent'])
 
     @property
     def short_name(self) -> str | None:
@@ -229,24 +192,31 @@ class Identifiable(MultiLanguageReferrable):
     Type: Abstract
     """
 
-    def __init__(self, name: str, kwargs: dict) -> None:
-        super().__init__(name, kwargs)
-        self.desc: dict[str, str] | None = None
+    def __init__(self,
+                 name: str,
+                 desc: Union["MultiLanguageOverviewParagraph", tuple, str, None] = None,
+                 category: str | None = None,
+                 uuid: str | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.desc: MultiLanguageOverviewParagraph | None = None
         self.category = None
         self.admin_data = None
         self.introduction = None
         self.annotations = None
         self.uuid = None
-        self._consume(kwargs, 'desc', str)
-        self._consume(kwargs, 'category', str)
-        self._consume(kwargs, 'uuid', str)
-
-    def _accepted_params(self, params: set):
-        """
-        Acceped kwarg names during init
-        """
-        super()._accepted_params(params)
-        params.update(['desc', 'category', 'uuid'])
+        if desc is not None:
+            if isinstance(desc, MultiLanguageOverviewParagraph):
+                self.desc = desc
+            elif isinstance(desc, str):
+                self.desc = MultiLanguageOverviewParagraph.make(ar_enum.Language.FOR_ALL, desc)
+            elif isinstance(desc, tuple) and len(desc) == 2:
+                self.desc = MultiLanguageOverviewParagraph.make(*desc)
+            else:
+                raise TypeError(f"Invalid type for argument 'desc': {str(type(desc))}")
+        self._assign_optional('desc', desc, str)
+        self._assign_optional('category', category, str)
+        self._assign_optional('uuid', uuid, str)
 
 
 class CollectableElement(Identifiable):
@@ -669,9 +639,8 @@ class MultiLanguageOverviewParagraph(ARObject):
         if paragraph is not None:
             if isinstance(paragraph, LanguageOverviewParagraph):
                 self.append(paragraph)
-            elif isinstance(paragraph, tuple):
-                self.append(LanguageOverviewParagraph(
-                    paragraph[0], paragraph[1]))
+            elif isinstance(paragraph, tuple) and len(paragraph) == 2:
+                self.append(LanguageOverviewParagraph(*paragraph))
             else:
                 raise TypeError('Invalid type for paragraph. '
                                 f'Expected tuple[ar_enum.Language,str] or LanguageOverviewParagraph,'
@@ -683,6 +652,13 @@ class MultiLanguageOverviewParagraph(ARObject):
         """
         assert isinstance(paragraph, LanguageOverviewParagraph)
         self.elements.append(paragraph)
+
+    @classmethod
+    def make(cls, language: ar_enum.Language, paragraph: str):
+        """
+        Convenience method for creating instances from text string
+        """
+        return cls(LanguageOverviewParagraph(language, paragraph))
 
 
 class DocumentViewSelectable(ARObject):
@@ -707,13 +683,6 @@ class DocumentViewSelectable(ARObject):
             raise TypeError(
                 f"view: Expected type 'str', got '{str(type(view))}'")
 
-    def _accepted_params(self, params: set):
-        """
-        Acceped key names in kwargs during init
-        """
-        super()._accepted_params(params)
-        params.update(['semantic_information', 'view'])
-
 
 class Paginateable(DocumentViewSelectable):
     """
@@ -737,13 +706,6 @@ class Paginateable(DocumentViewSelectable):
         if (keep_with_previous is not None) and (not isinstance(keep_with_previous, ar_enum.KeepWithPrevious)):
             raise TypeError(
                 f"page_break: Expected type 'PageBreak', got '{str(type(keep_with_previous))}'")
-
-    def _accepted_params(self, params: set):
-        """
-        Acceped key names in kwargs during init
-        """
-        super()._accepted_params(params)
-        params.update(['page_break', 'keep_with_previous'])
 
 
 class MixedContentForParagraph(LanguageSpecific):
@@ -836,13 +798,6 @@ class MultiLanguageParagraph(Paginateable):
         assert isinstance(paragraph, LanguageParagraph)
         self.elements.append(paragraph)
 
-    def accepted_params(self) -> set[str]:
-        """
-        Acceped parameter names in kwargs
-        """
-        params = {'help_entry', 'paragraph'}
-        super()._accepted_params(params)
-
 
 class MixedContentForVerbatim(LanguageSpecific):
     """
@@ -925,13 +880,6 @@ class MultiLanguageVerbatim(Paginateable):
         """
         assert isinstance(paragraph, LanguageVerbatim)
         self.elements.append(paragraph)
-
-    def accepted_params(self) -> set[str]:
-        """
-        Acceped parameter names in kwargs
-        """
-        params = {'element', 'help_entry', 'allow_break', 'page_wide', 'float'}
-        super()._accepted_params(params)
 
 
 class MixedContentForUnitNames(ARObject):
@@ -1261,7 +1209,7 @@ class CompuMethod(ARElement):
                  unit_ref: UnitRef | None = None,
                  display_format: str | None = None,
                  **kwargs) -> None:
-        super().__init__(name, kwargs)
+        super().__init__(name, **kwargs)
         self.int_to_phys = int_to_phys        # .COMPU-INTERNAL-TO-PHYS
         self.phys_to_int = phys_to_int        # .COMPU-PHYS-TO-INTERNAL
         self.unit_ref = unit_ref              # .UNIT-REF
@@ -1433,22 +1381,12 @@ class DataConstraint(ARElement):
     def __init__(self, name: str,
                  rules: list[DataConstraintRule] | None = None,
                  **kwargs: dict) -> None:
-        self._check_params(self.__class__.__name__,
-                           kwargs, self.accepted_params())
-        super().__init__(name, kwargs)
+        super().__init__(name, **kwargs)
         self.rules = []
         if rules is not None:
             for rule in rules:
                 assert isinstance(rule, DataConstraintRule)
             self.rules.extend(rules)
-
-    def accepted_params(self) -> set[str]:
-        """
-        Accepted kwarg parameter names during init
-        """
-        params = set()
-        super()._accepted_params(params)
-        return params
 
     @classmethod
     def make_physical(cls: "DataConstraint",
@@ -1520,9 +1458,7 @@ class Unit(ARElement):
                  offset: float | None = None,
                  physical_dimension_ref: str | PhysicalDimentionRef | None = None,
                  **kwargs: dict) -> None:
-        self._check_params(self.__class__.__name__,
-                           kwargs, self.accepted_params())
-        super().__init__(name, kwargs)
+        super().__init__(name, **kwargs)
         self.display_name: SingleLanguageUnitNames | None = None  # .DISPLAY-NAME
         self.physical_dimension_ref: PhysicalDimentionRef | None = None  # .PHYSICAL-DIMENSION-REF
         self.factor: float | None = None  # .FACTOR-SI-TO-UNIT
@@ -1544,14 +1480,6 @@ class Unit(ARElement):
         self._assign_optional('factor', factor, float)
         self._assign_optional('offset', offset, float)
 
-    def accepted_params(self) -> set[str]:
-        """
-        Accepted kwarg parameter names during init
-        """
-        params = set()
-        super()._accepted_params(params)
-        return params
-
 
 # Data dictionary elements
 
@@ -1563,8 +1491,8 @@ class BaseType(ARElement):
     Type: Abstract
     """
 
-    def __init__(self, name: str, kwargs: dict) -> None:
-        super().__init__(name, kwargs)
+    def __init__(self, name: str, **kwargs: dict) -> None:
+        super().__init__(name, **kwargs)
         self.size: int | None = None  # .BASE-TYPE-SIZE
         self.max_size: int | None = None  # .MAX-BASE-TYPE-SIZE
         self.encoding: str | None = None  # .BASE-TYPE-ENCODING
@@ -1588,23 +1516,13 @@ class SwBaseType(BaseType):
                  byte_order: ar_enum.ByteOrder | None = None,
                  native_declaration: str | None = None,
                  **kwargs) -> None:
-        self._check_params(self.__class__.__name__,
-                           kwargs, self.accepted_params())
-        super().__init__(name, kwargs)
+        super().__init__(name, **kwargs)
         self.size = size
         self.max_size = max_size
         self.encoding = encoding
         self.alignment = alignment
         self.byte_order = byte_order
         self.native_declaration = native_declaration
-
-    def accepted_params(self) -> set[str]:
-        """
-        Accepted kwarg parameter names during init
-        """
-        params = set()
-        super()._accepted_params(params)
-        return params
 
     def ref(self) -> SwAddrMethodRef:
         """
@@ -1795,24 +1713,11 @@ class SwAddrMethod(ARElement):
     """
 
     def __init__(self, name: str, **kwargs) -> None:
-        self._check_params(self.__class__.__name__,
-                           kwargs, self.accepted_params())
-        super().__init__(name, kwargs)
+        super().__init__(name, **kwargs)
         self.memory_allocation_keyword_policy = None  # .MEMORY-ALLOCATION-KEYWORD-POLICY
         self.options = []  # .OPTIONS
         self.section_initialization_policy = None  # .SECTION-INITIALIZATION-POLICY
         self.section_type = None  # .SECTION-TYPE
-
-    def accepted_params(self) -> set[str]:
-        """
-        Accepted kwarg parameters during init
-        """
-        params = {'memory_allocation_keyword_policy',
-                  'options',
-                  'section_initialization_policy',
-                  'section_type'}
-        super()._accepted_params(params)
-        return params
 
     def ref(self) -> SwAddrMethodRef:
         """
@@ -1848,16 +1753,10 @@ class ARDataType(ARElement):
     Type: Abstract
     """
 
-    def __init__(self, name: str, kwargs: dict) -> None:
-        super().__init__(name, kwargs)
+    def __init__(self, name: str, **kwargs: dict) -> None:
+        super().__init__(name, **kwargs)
         self.sw_data_def_props: None | SwDataDefProps = kwargs.get(
             'sw_data_def_props', None)
-
-    def accepted_params(self) -> set[str]:
-        """Acceped names in kwargs during init"""
-        params = {'sw_data_def_props'}
-        super()._accepted_params(params)
-        return params
 
 
 class ImplementationDataType(ARDataType):
@@ -1867,20 +1766,7 @@ class ImplementationDataType(ARDataType):
     """
 
     def __init__(self, name: str, **kwargs: dict) -> None:
-        self._check_params(self.__class__.__name__,
-                           kwargs, self.accepted_params())
-        super().__init__(name, kwargs)
-
-    def accepted_params(self) -> set[str]:
-        """Acceped names in kwargs during init"""
-        params = {'dynamic_array_size_profile',
-                  'is_struct_with_optional_element',
-                  'sub_elements',
-                  'sympol_props',
-                  'type_emitter'
-                  'sw_data_def_props'}
-        super()._accepted_params(params)
-        return params
+        super().__init__(name, **kwargs)
 
 # !!UNFINISHED!! Port Interfaces
 
@@ -1891,8 +1777,8 @@ class PortInterface(ARElement):
     Type: Abstract
     """
 
-    def __init__(self, name: str, kwargs: dict) -> None:
-        super().__init__(name, kwargs)
+    def __init__(self, name: str, **kwargs: dict) -> None:
+        super().__init__(name, **kwargs)
         self.is_service: None | bool = None
         self.namespaces = None
         self.service_kind: None | ar_enum.ServiceKind = None
@@ -1916,7 +1802,7 @@ class SenderReceiverInterface(DataInterface):
     """
 
     def __init__(self, name: str, **kwargs) -> None:
-        super().__init__(name, kwargs)
+        super().__init__(name, **kwargs)
         self.data_elements = []  # .DATA-ELEMENTS
         self.invalidation_policies = None  # .INVALIDATION-POLICYS
         # .META-DATA-ITEM-SETS not supported
@@ -1931,7 +1817,7 @@ class SoftwareComponentType(ARElement):
     """
 
     def __init__(self, name: str, kwargs: dict) -> None:
-        super().__init__(name, kwargs)
+        super().__init__(name, **kwargs)
         self.documentations = None  # AR:SW-COMPONENT-DOCUMENTATIONS
         self.consistency_needs = None  # AR:CONSISTENCY-NEEDSS
         self.ports = None  # AR:PORTS
@@ -1947,7 +1833,7 @@ class AtomicSoftwareComponentType(SoftwareComponentType):
     """
 
     def __init__(self, name: str, kwargs: dict) -> None:
-        super().__init__(name, kwargs)
+        super().__init__(name, **kwargs)
         self.internal_behaviors = None  # AR:INTERNAL-BEHAVIORS
         self.symbol_props = None  # AR:SYMBOL-PROPS
 
