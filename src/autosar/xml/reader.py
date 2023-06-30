@@ -263,7 +263,7 @@ class Reader:
         """
         short_name = element_map.get('SHORT-NAME')
         if short_name is not None:
-            data['short_name'] = short_name.text
+            data['name'] = short_name.text
         else:
             raise ar_exception.ParseError(
                 "Missing required element SHORT-NAME")
@@ -394,7 +394,7 @@ class Reader:
         child_elements = ChildElementMap(elem)
         self._read_referrable(child_elements, data)
         self._read_identifiable(child_elements, elem.attrib, data)
-        package = ar_package.Package(data['short_name'], **data)
+        package = ar_package.Package(**data)
         self._read_package_group(child_elements, package)
         self._report_unprocessed_elements(child_elements)
         return package
@@ -895,7 +895,7 @@ class Reader:
         self._read_identifiable(child_elements, xml_element.attrib, data)
         self._read_compu_method_group(child_elements, data)
         self._report_unprocessed_elements(child_elements)
-        return ar_element.CompuMethod(data['short_name'], **data)
+        return ar_element.CompuMethod(**data)
 
     def _read_compu_method_group(self, child_elements: ChildElementMap, data: dict) -> None:
         """
@@ -1062,7 +1062,7 @@ class Reader:
         self._read_identifiable(child_elements, xml_element.attrib, data)
         self._read_data_constraint_group(child_elements, data)
         self._report_unprocessed_elements(child_elements)
-        return ar_element.DataConstraint(data['short_name'], **data)
+        return ar_element.DataConstraint(**data)
 
     def _read_data_constraint_group(self, child_elements: ChildElementMap, data: dict) -> None:
         """
@@ -1201,7 +1201,7 @@ class Reader:
         self._read_identifiable(element_map, xml_element.attrib, data)
         self._read_unit_group(element_map, data)
         self._report_unprocessed_elements(element_map)
-        return ar_element.Unit(data['short_name'], **data)
+        return ar_element.Unit(**data)
 
     def _read_unit_group(self, child_elements: ChildElementMap, data: dict) -> None:
         """
@@ -1235,7 +1235,7 @@ class Reader:
         self._read_identifiable(element_map, xml_element.attrib, data)
         self._read_sw_addr_method_group(element_map, data)
         self._report_unprocessed_elements(element_map)
-        return ar_element.SwAddrMethod(data['short_name'], **data)
+        return ar_element.SwAddrMethod(**data)
 
     def _read_sw_addr_method_group(self, element_map: ChildElementMap, data: dict) -> None:
         """
@@ -1259,7 +1259,7 @@ class Reader:
         self._read_identifiable(element_map, xml_element.attrib, data)
         self._read_base_type(element_map, data)
         self._report_unprocessed_elements(element_map)
-        return ar_element.SwBaseType(data['short_name'], **data)
+        return ar_element.SwBaseType(**data)
 
     def _read_base_type(self, child_elements: ChildElementMap, data: dict) -> None:
         """

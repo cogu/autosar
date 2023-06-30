@@ -13,7 +13,7 @@ class Package(CollectableElement):
     """
 
     def __init__(self, name: str, **kwargs: dict) -> None:
-        super().__init__(name, kwargs)
+        super().__init__(name, **kwargs)
         self.elements = []
         self.packages = []
         self.role: str | None = None  # TODO: change to enum type

@@ -533,6 +533,7 @@ class Writer(_XMLWriter):
         Type: Concrete
         Tag variants: 'DESC' | 'ITEM-LABEL' | 'CHANGE' | 'REASON'
         """
+        assert isinstance(elem, MultiLanguageOverviewParagraph)
         if tag not in {'DESC', 'ITEM-LABEL', 'CHANGE', 'REASON'}:
             raise ValueError('Invalid tag parameter: ' + tag)
         self._add_child(tag)
