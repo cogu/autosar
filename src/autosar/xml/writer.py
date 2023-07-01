@@ -170,6 +170,7 @@ class Writer(_XMLWriter):
             # DataDictionary elements
             'SwBaseType': self._write_sw_base_type,
             'SwAddrMethod': self._write_sw_addr_method,
+            'ImplementationDataType': self._write_implementation_data_type,
             # Unit elements
             'Unit': self._write_unit,
         }
@@ -209,6 +210,8 @@ class Writer(_XMLWriter):
             'SwBitRepresentation': self._write_sw_bit_represenation,
             'SwTextProps': self._write_sw_text_props,
             'SwPointerTargetProps': self._write_sw_pointer_target_props,
+            'SymbolProps': self._write_symbol_props,
+            'ImplementationDataTypeElement': self._write_implementation_data_type_element,
             # Reference elements
             'PhysicalDimentionRef': self._write_physical_dimension_ref,
         }
@@ -266,10 +269,16 @@ class Writer(_XMLWriter):
 
     def _write_referrable(self, elem: ar_element.MultiLanguageReferrable):
         """
-        Writes groups AR:REFERRABLE and AR:MULTILANGUAGE-REFFERABLE
+        Writes group AR:REFERRABLE
         Type: Abstract
         """
         self._add_content('SHORT-NAME', elem.name)
+
+    def _write_multilanguage_referrable(self, elem: ar_element.MultiLanguageReferrable):
+        """
+        Writes AR:MULTILANGUAGE-REFFERABLE
+        Type: Abstract
+        """
         if elem.long_name is not None:
             self._write_multi_language_long_name(elem.long_name, 'LONG-NAME')
 
@@ -337,6 +346,7 @@ class Writer(_XMLWriter):
         self._collect_identifiable_attributes(package, attr)
         self._add_child("AR-PACKAGE", attr)
         self._write_referrable(package)
+        self._write_multilanguage_referrable(package)
         self._write_identifiable(package)
         if len(package.elements) > 0:
             self._write_package_elements(package)
@@ -747,6 +757,7 @@ class Writer(_XMLWriter):
         self._collect_identifiable_attributes(elem, attr)
         self._add_child("COMPU-METHOD", attr)
         self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
         self._write_identifiable(elem)
         self._write_compu_method_group(elem)
         self._leave_child()
@@ -896,6 +907,7 @@ class Writer(_XMLWriter):
         self._collect_identifiable_attributes(elem, attr)
         self._add_child("DATA-CONSTR", attr)
         self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
         self._write_identifiable(elem)
         self._write_data_constraint_group(elem)
         self._leave_child()
@@ -1023,6 +1035,7 @@ class Writer(_XMLWriter):
         self._collect_identifiable_attributes(elem, attr)
         self._add_child('UNIT', attr)
         self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
         self._write_identifiable(elem)
         self._write_unit_group(elem)
         self._leave_child()
@@ -1050,6 +1063,7 @@ class Writer(_XMLWriter):
         self._collect_identifiable_attributes(elem, attr)
         self._add_child('SW-ADDR-METHOD', attr)
         self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
         self._write_identifiable(elem)
         self._write_sw_addr_method_group(elem)
         self._leave_child()
@@ -1078,6 +1092,7 @@ class Writer(_XMLWriter):
         self._collect_identifiable_attributes(elem, attr)
         self._add_child('SW-BASE-TYPE', attr)
         self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
         self._write_identifiable(elem)
         self._write_base_type(elem)
         self._leave_child()
@@ -1101,8 +1116,23 @@ class Writer(_XMLWriter):
             self._add_content('NATIVE-DECLARATION',
                               str(elem.native_declaration))
 
-    def _write_sw_data_def_props(self, elem: ar_element.SwDataDefProps) -> None:
-        pass  # NOT IMPLEMENTED
+    def _write_sw_data_def_props(self, elem: ar_element.SwDataDefProps, tag: str) -> None:
+        """
+        Writes complex type AR:SW-DATA-DEF-PROPS
+        Type: Concrete
+        Tag Variants: 'SW-DATA-DEF-PROPS', 'NETWORK-REPRESENTATION'
+        """
+        assert isinstance(elem, ar_element.SwDataDefProps)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if len(elem) > 0:
+                self._add_child("SW-DATA-DEF-PROPS-VARIANTS")
+                for child_elem in iter(elem):
+                    self._write_sw_data_def_props_conditional(child_elem)
+                self._leave_child()
+            self._leave_child()
 
     def _write_sw_data_def_props_conditional(self, elem: ar_element.SwDataDefPropsConditional) -> None:
         """
@@ -1220,12 +1250,112 @@ class Writer(_XMLWriter):
         else:
             self._add_child(tag)
             if elem.target_category is not None:
-                self._add_content('TARGET-CATEGORY', str(elem.target_category))
+                self._add_content("TARGET-CATEGORY", str(elem.target_category))
             if elem.sw_data_def_props is not None:
-                self._write_sw_data_def_props(elem.sw_data_def_props)
+                self._write_sw_data_def_props(elem.sw_data_def_props, "SW-DATA-DEF-PROPS")
             if elem.function_ptr_signature_ref is not None:
                 self._write_function_ptr_signature_ref(elem.function_ptr_signature_ref)
             self._leave_child()
+
+    def _write_symbol_props(self, elem: ar_element.SymbolProps, tag: str) -> None:
+        """
+        Writes complex type AR:SYMBOL-PROPS
+        Type: Concrete
+        Tag Variants: 'SYMBOL-PROPS', 'EVENT-SYMBOL-PROPS'
+        """
+        assert isinstance(elem, ar_element.SymbolProps)
+        self._add_child(tag)
+        self._write_referrable(elem)
+        self._write_implementation_props(elem)
+        self._leave_child()
+
+    def _write_implementation_props(self, elem: ar_element.ImplementationProps) -> None:
+        """
+        Writes group AR:IMPLEMENTATION-PROPS
+        Type: Abstract
+        """
+        if elem.symbol is not None:
+            self._add_content("SYMBOL", str(elem.symbol))
+
+    def _write_implementation_data_type_element(self, elem: ar_element.ImplementationDataTypeElement) -> None:
+        """
+        Writes complex type AR:IMPLEMENTATION-DATA-TYPE-ELEMENT
+        Type: Concrete
+        Tag variants: 'IMPLEMENTATION-DATA-TYPE-ELEMENT'
+        """
+        assert isinstance(elem, ar_element.ImplementationDataTypeElement)
+        self._add_child("IMPLEMENTATION-DATA-TYPE-ELEMENT")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self.__write_implementation_data_type_element_group(elem)
+        self._leave_child()
+
+    def __write_implementation_data_type_element_group(self, elem: ar_element.ImplementationDataTypeElement) -> None:
+        """
+        Writes group AR:IMPLEMENTATION-DATA-TYPE-ELEMENT
+        Type: Abstract
+        """
+        if elem.array_impl_policy is not None:
+            self._add_content("ARRAY-IMPL-POLICY", ar_enum.enum_to_xml(elem.array_impl_policy))
+        if elem.array_size is not None:
+            self._add_content("ARRAY-SIZE", str(elem.array_size))
+        if elem.array_size_handling is not None:
+            self._add_content("ARRAY-SIZE-HANDLING", ar_enum.enum_to_xml(elem.array_size_handling))
+        if elem.array_size_semantics is not None:
+            self._add_content("ARRAY-SIZE-SEMANTICS", ar_enum.enum_to_xml(elem.array_size_semantics))
+        if elem.is_optional is not None:
+            self._add_content("IS-OPTIONAL", self._format_boolean(elem.is_optional))
+        if len(elem.sub_elements) > 0:
+            self._add_child("SUB-ELEMENTS")
+            for sub_elem in elem.sub_elements:
+                self._write_implementation_data_type_element(sub_elem)
+            self._leave_child()
+        if elem.sw_data_def_props is not None:
+            self._write_sw_data_def_props(elem.sw_data_def_props, "SW-DATA-DEF-PROPS")
+
+    def _write_implementation_data_type(self, elem: ar_element.ImplementationDataType) -> None:
+        """
+        Writes complex type AR:IMPLEMENTATION-DATA-TYPE
+        Type: Concrete
+        Tag variants: 'IMPLEMENTATION-DATA-TYPE'
+        """
+        assert isinstance(elem, ar_element.ImplementationDataType)
+        self._add_child("IMPLEMENTATION-DATA-TYPE")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_autosar_data_type(elem)
+        self._write_implementation_data_type_group(elem)
+        self._leave_child()
+
+    def _write_implementation_data_type_group(self, elem: ar_element.ImplementationDataType) -> None:
+        """
+        Writes group AR:IMPLEMENTATION-DATA-TYPE
+        Type: Abstract
+        """
+        if elem.dynamic_array_size_profile is not None:
+            self._add_content("DYNAMIC-ARRAY-SIZE-PROFILE", str(elem.dynamic_array_size_profile))
+        if elem.is_struct_with_optional_element is not None:
+            self._add_content("IS-STRUCT-WITH-OPTIONAL-ELEMENT",
+                              self._format_boolean(elem.is_struct_with_optional_element))
+        if len(elem.sub_elements) > 0:
+            self._add_child("SUB-ELEMENTS")
+            for sub_elem in elem.sub_elements:
+                self._write_implementation_data_type_element(sub_elem)
+            self._leave_child()
+        if elem.symbol_props is not None:
+            self._write_symbol_props(elem.symbol_props, "SYMBOL-PROPS")
+        if elem.type_emitter is not None:
+            self._add_content("TYPE-EMITTER", str(elem.type_emitter))
+
+    def _write_autosar_data_type(self, elem: ar_element.ARDataType) -> None:
+        """
+        Writes group AR:AUTOSAR-DATA-TYPE
+        Type: Abstract
+        """
+        if elem.sw_data_def_props is not None:
+            self._write_sw_data_def_props(elem.sw_data_def_props, "SW-DATA-DEF-PROPS")
 
     # Reference Elements
 

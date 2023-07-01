@@ -159,31 +159,41 @@ class ARObject:
         setattr(self, attr_name, new_value)
 
 
-class MultiLanguageReferrable(ARObject):
+class Referrable(ARObject):
     """
-    Combines Complex-types AR:REFFERABLE and AR:MULTILANGUAGE-REFFERABLE
+    Group AR:REFERRABLE
+    Type: Abstract
+    """
+
+    def __init__(self, name: str) -> None:
+        self.name: str = name  # .SHORT-NAME
+        self.parent: 'CollectableElement' = None
+
+    @property
+    def short_name(self) -> str:
+        """
+        Alias for .name
+        """
+        return self.name
+
+
+class MultiLanguageReferrable(Referrable):
+    """
+    Group AR:MULTILANGUAGE-REFERRABLE
     Type: Abstract
     """
 
     def __init__(self,
                  name: str,
                  long_name: Union["MultilanguageLongName", None] = None) -> None:
-        self.name = name  # .SHORT-NAME
-        self.long_name: MultilanguageLongName | None = None  # .LONG-NAME
-        self.parent: 'CollectableElement' = None
+        super().__init__(name)
+        self.long_name: MultilanguageLongName | None = None
         if long_name is not None:
             if isinstance(long_name, MultilanguageLongName):
                 self.long_name = long_name
             else:
                 raise TypeError(
                     f'long_name: Expected type "MultilanguageLongName", got "{str(type(long_name))}"')
-
-    @property
-    def short_name(self) -> str | None:
-        """
-        Alias for .name
-        """
-        return self.name
 
 
 class Identifiable(MultiLanguageReferrable):
@@ -240,6 +250,7 @@ class ARElement(CollectableElement):
 
     Type: Abstract
     """
+
 # AdminData
 
 
@@ -1486,7 +1497,7 @@ class Unit(ARElement):
 
 class BaseType(ARElement):
     """
-    Merge of Complex-types AR:BASE-TYPE, AR:BASE-TYPE-DEFINITION
+    Merge of Complex-types AR:BASE-TYPE, AR:BASE-TYPE-DEFINITION,
     AR:BASE-TYPE-DIRECT-DEFINITION
     Type: Abstract
     """
@@ -1705,6 +1716,191 @@ class SwDataDefPropsConditional(ARObject):
             self._set_attr_with_strict_type('ptr_target_props', ptr_target_props, SwPointerTargetProps)
 
 
+class SwDataDefProps(ARObject):
+    """
+    SW-DATA-DEF-PROPS
+    Type: Concrete
+    """
+
+    def __init__(self, variants: SwDataDefPropsConditional | list[SwDataDefPropsConditional] | None = None) -> None:
+        super().__init__()
+        self.variants: list[SwDataDefPropsConditional] = []  # .SW-DATA-DEF-PROPS-VARIANTS
+        if variants is not None:
+            if isinstance(variants, list):
+                for variant in variants:
+                    self.append(variant)
+            elif isinstance(variants, SwDataDefPropsConditional):
+                self.append(variants)
+            else:
+                raise TypeError("variant must be one of (SwDataDefPropsConditional, list[SwDataDefPropsConditional])")
+
+    def __getitem__(self, index: int) -> SwDataDefPropsConditional:
+        """
+        Accessor of variants list
+        """
+        return self.variants[index]
+
+    def __len__(self) -> int:
+        """
+        Length of variants list
+        """
+        return len(self.variants)
+
+    def __iter__(self):
+        """
+        Iterator of variants list
+        """
+        return iter(self.variants)
+
+    def append(self, variant: SwDataDefPropsConditional):
+        """
+        Appends SW-DATA-DEF-PROPS-CONDITIONAL to variants list
+        """
+        if isinstance(variant, SwDataDefPropsConditional):
+            self.variants.append(variant)
+        else:
+            raise TypeError("variant must be of type SwDataDefPropsConditional")
+
+
+class ARDataType(ARElement):
+    """
+    Element AUTOSAR-DATA-TYPE
+    Type: Abstract
+    """
+
+    def __init__(self,
+                 name: str,
+                 sw_data_def_props: SwDataDefProps | SwDataDefPropsConditional | None = None,
+                 **kwargs: dict) -> None:
+        super().__init__(name, **kwargs)
+        self.sw_data_def_props: SwDataDefProps | None = None
+        if sw_data_def_props is not None:
+            if isinstance(sw_data_def_props, SwDataDefProps):
+                self.sw_data_def_props = sw_data_def_props
+            elif isinstance(sw_data_def_props, SwDataDefPropsConditional):
+                self.sw_data_def_props = SwDataDefProps(sw_data_def_props)
+            else:
+                raise TypeError("'sw_data_def_props' must be one of (SwDataDefProps, SwDataDefPropsConditional)")
+
+
+class ImplementationProps(Referrable):
+    """
+    Complex type AR:IMPLEMENTATION-PROPS
+    Type: Abstract
+    """
+
+    def __init__(self,
+                 name: str,
+                 symbol: str | None = None) -> None:
+        super().__init__(name)
+        self.symbol: str | None = None
+        self._assign_optional('symbol', symbol, str)
+
+
+class SymbolProps(ImplementationProps):
+    """
+    Complex type AR:SYMBOL-PROPS
+    Type: Concrete
+    Tag Variants: 'SYMBOL-PROPS', 'EVENT-SYMBOL-PROPS'
+    """
+
+
+class ImplementationDataTypeElement(Identifiable):
+    """
+    Complex type AR:IMPLEMENTATION-DATA-TYPE-ELEMENT
+    Type: Concrete
+    Tag variants: 'IMPLEMENTATION-DATA-TYPE-ELEMENT'
+    """
+
+    def __init__(self,
+                 name: str,
+                 sw_data_def_props: SwDataDefProps | SwDataDefPropsConditional | None = None,
+                 array_size: int | None = None,
+                 array_impl_policy: ar_enum.ArrayImplPolicy | None = None,
+                 array_size_handling: ar_enum.ArraySizeHandling | None = None,
+                 array_size_semantics: ar_enum.ArraySizeSemantics | None = None,
+                 sub_elements: list["ImplementationDataTypeElement"] | None = None,
+                 is_optional: bool | None = None,
+                 **kwargs: dict) -> None:
+        super().__init__(name, **kwargs)
+        self.array_size: int | None = None                                      # .ARRAY-SIZE
+        self.array_impl_policy: ar_enum.ArrayImplPolicy | None = None           # .ARRAY-IMPL-POLICY
+        self.array_size_handling: ar_enum.ArraySizeHandling | None = None       # .ARRAY-SIZE-HANDLING
+        self.array_size_semantics: ar_enum.ArraySizeSemantics | None = None     # .ARRAY-SIZE-SEMANTICS
+        self.is_optional: bool | None = None                                    # .IS-OPTIONAL
+        self.sub_elements: list["ImplementationDataTypeElement"] | None = []    # .SUB-ELEMENTS
+        self.sw_data_def_props: SwDataDefProps | None = None                    # .SW-DATA-DEF-PROPS
+        self._assign_optional("array_size", array_size, int)  # TODO: Validate positive integer
+        self._assign_optional("array_impl_policy", array_impl_policy, ar_enum.ArrayImplPolicy)
+        self._assign_optional("array_size_handling", array_size_handling, ar_enum.ArraySizeHandling)
+        self._assign_optional("array_size_semantics", array_size_semantics, ar_enum.ArraySizeSemantics)
+        self._assign_optional("is_optional", is_optional, bool)
+        if sub_elements is not None:
+            for elem in sub_elements:
+                self.append(elem)
+        if sw_data_def_props is not None:
+            if isinstance(sw_data_def_props, SwDataDefProps):
+                self.sw_data_def_props = sw_data_def_props
+            elif isinstance(sw_data_def_props, SwDataDefPropsConditional):
+                self.sw_data_def_props = SwDataDefProps(sw_data_def_props)
+            else:
+                raise TypeError("'sw_data_def_props' must be one of (SwDataDefProps, SwDataDefPropsConditional)")
+
+    def append(self, elem: "ImplementationDataTypeElement") -> None:
+        """
+        Appends elem to sub_element list
+        """
+        if isinstance(elem, ImplementationDataTypeElement):
+            self.sub_elements.append(elem)
+        else:
+            raise TypeError("'elem' must be of type ImplementationDataTypeElement")
+
+
+class ImplementationDataType(ARDataType):
+    """
+    IMPLEMENTATION-DATA-TYPE
+    Type: Concrete
+    Tag Variants: 'IMPLEMENTATION-DATA-TYPE-ELEMENT'
+    """
+
+    def __init__(self,
+                 name: str,
+                 dynamic_array_size_profile: str | None = None,
+                 is_struct_with_optional_element: bool | None = None,
+                 sub_elements: list[ImplementationDataTypeElement] | None = None,
+                 symbol_props: SymbolProps | None = None,
+                 type_emitter: str | None = None,
+                 **kwargs: dict) -> None:
+        super().__init__(name, **kwargs)
+        self.dynamic_array_size_profile: str | None = None                  # .DYNAMIC-ARRAY-SIZE-PROFILE
+        self.is_struct_with_optional_element: bool | None = None            # .IS-STRUCT-WITH-OPTIONAL-ELEMENT
+        self.sub_elements: list[ImplementationDataTypeElement] | None = []  # .SUB-ELEMENTS
+        self.symbol_props: SymbolProps | None = None                        # .SYMBOL-PROPS
+        self.type_emitter: str | None = None                                # .TYPE-EMITTER
+        self._assign_optional('dynamic_array_size_profile', dynamic_array_size_profile, str)
+        self._assign_optional('is_struct_with_optional_element', is_struct_with_optional_element, bool)
+        self._assign_optional('type_emitter', type_emitter, str)
+        if sub_elements is not None:
+            for elem in sub_elements:
+                self.append(elem)
+        if symbol_props is not None:
+            if isinstance(symbol_props, SymbolProps):
+                self.symbol_props = symbol_props
+            else:
+                raise TypeError("'symbol_props' must be of type SymbolProps")
+
+    def append(self, elem: ImplementationDataTypeElement) -> None:
+        """
+        Appends elem to sub_element list
+        """
+        if isinstance(elem, ImplementationDataTypeElement):
+            self.sub_elements.append(elem)
+        else:
+            raise TypeError("'elem' must be of type ImplementationDataTypeElement")
+
+# Software address method (partly implemented)
+
+
 class SwAddrMethod(ARElement):
     """
     Complex-type AR:SW-ADDR-METHOD
@@ -1728,45 +1924,6 @@ class SwAddrMethod(ARElement):
         value = '/'.join(reversed(ref_parts))
         return SwAddrMethodRef(value)
 
-
-class SwDataDefProps(ARObject):
-    """
-    SW-DATA-DEF-PROPS
-    Type: Concrete
-    """
-
-    def __init__(self, variant: SwDataDefPropsConditional = None) -> None:
-        super().__init__()
-        self.variants = []  # .SW-DATA-DEF-PROPS-VARIANTS
-        if variant is not None:
-            if isinstance(variant, SwDataDefPropsConditional):
-                self.variants.append(variant)
-            else:
-                raise TypeError("variant must be of type SwDataDefPropsConditional")
-
-
-# !!UNFINISHED!! Data Types
-
-class ARDataType(ARElement):
-    """
-    Element AUTOSAR-DATA-TYPE
-    Type: Abstract
-    """
-
-    def __init__(self, name: str, **kwargs: dict) -> None:
-        super().__init__(name, **kwargs)
-        self.sw_data_def_props: None | SwDataDefProps = kwargs.get(
-            'sw_data_def_props', None)
-
-
-class ImplementationDataType(ARDataType):
-    """
-    IMPLEMENTATION-DATA-TYPE
-    Type: Concrete
-    """
-
-    def __init__(self, name: str, **kwargs: dict) -> None:
-        super().__init__(name, **kwargs)
 
 # !!UNFINISHED!! Port Interfaces
 

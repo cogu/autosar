@@ -719,5 +719,320 @@ class TestDataDefPropsConditional(unittest.TestCase):
         self.assertEqual(props.target_category, "MY-CATEGORY")
 
 
+class TestSymbolProps(unittest.TestCase):
+
+    def test_read_write_name_only(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.SymbolProps('MyName')
+        xml = '''<SYMBOL-PROPS>
+  <SHORT-NAME>MyName</SHORT-NAME>
+</SYMBOL-PROPS>'''
+        self.assertEqual(writer.write_str_elem(element, "SYMBOL-PROPS"), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SymbolProps = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SymbolProps)
+        self.assertEqual(elem.name, 'MyName')
+        self.assertEqual(elem.short_name, 'MyName')
+
+    def test_read_write_symbol(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.SymbolProps('MyName', symbol="Symbol")
+        xml = '''<SYMBOL-PROPS>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <SYMBOL>Symbol</SYMBOL>
+</SYMBOL-PROPS>'''
+        self.assertEqual(writer.write_str_elem(element, "SYMBOL-PROPS"), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SymbolProps = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SymbolProps)
+        self.assertEqual(elem.name, 'MyName')
+        self.assertEqual(elem.symbol, 'Symbol')
+
+
+class TestImplementationDataTypeElement(unittest.TestCase):
+
+    def test_read_write_name_only(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ImplementationDataTypeElement('ElementName')
+        xml = '''<IMPLEMENTATION-DATA-TYPE-ELEMENT>
+  <SHORT-NAME>ElementName</SHORT-NAME>
+</IMPLEMENTATION-DATA-TYPE-ELEMENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ImplementationDataTypeElement = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ImplementationDataTypeElement)
+        self.assertEqual(elem.name, 'ElementName')
+        self.assertEqual(elem.short_name, 'ElementName')
+
+    def test_read_write_array_impl_policy(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ImplementationDataTypeElement('ElementName',
+                    array_impl_policy=ar_enum.ArrayImplPolicy.PAYLOAD_AS_POINTER_TO_ARRAY)  # noqa E128
+        xml = '''<IMPLEMENTATION-DATA-TYPE-ELEMENT>
+  <SHORT-NAME>ElementName</SHORT-NAME>
+  <ARRAY-IMPL-POLICY>PAYLOAD-AS-POINTER-TO-ARRAY</ARRAY-IMPL-POLICY>
+</IMPLEMENTATION-DATA-TYPE-ELEMENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ImplementationDataTypeElement = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ImplementationDataTypeElement)
+        self.assertEqual(elem.name, 'ElementName')
+        self.assertEqual(elem.array_impl_policy, ar_enum.ArrayImplPolicy.PAYLOAD_AS_POINTER_TO_ARRAY)
+
+    def test_read_write_array_size(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ImplementationDataTypeElement('ElementName',
+                                                           array_size=10)
+        xml = '''<IMPLEMENTATION-DATA-TYPE-ELEMENT>
+  <SHORT-NAME>ElementName</SHORT-NAME>
+  <ARRAY-SIZE>10</ARRAY-SIZE>
+</IMPLEMENTATION-DATA-TYPE-ELEMENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ImplementationDataTypeElement = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ImplementationDataTypeElement)
+        self.assertEqual(elem.name, 'ElementName')
+        self.assertEqual(elem.array_size, 10)
+
+    def test_read_write_array_size_handling(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ImplementationDataTypeElement('ElementName',
+                                              array_size_handling=ar_enum.ArraySizeHandling.ALL_INDICES_SAME_ARRAY_SIZE) # noqa E128 #pylint: disable=C0301
+        xml = '''<IMPLEMENTATION-DATA-TYPE-ELEMENT>
+  <SHORT-NAME>ElementName</SHORT-NAME>
+  <ARRAY-SIZE-HANDLING>ALL-INDICES-SAME-ARRAY-SIZE</ARRAY-SIZE-HANDLING>
+</IMPLEMENTATION-DATA-TYPE-ELEMENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ImplementationDataTypeElement = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ImplementationDataTypeElement)
+        self.assertEqual(elem.name, 'ElementName')
+        self.assertEqual(elem.array_size_handling, ar_enum.ArraySizeHandling.ALL_INDICES_SAME_ARRAY_SIZE)
+
+    def test_read_write_array_size_semantics(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ImplementationDataTypeElement('ElementName',
+                                              array_size_semantics=ar_enum.ArraySizeSemantics.FIXED_SIZE) # noqa E128
+        xml = '''<IMPLEMENTATION-DATA-TYPE-ELEMENT>
+  <SHORT-NAME>ElementName</SHORT-NAME>
+  <ARRAY-SIZE-SEMANTICS>FIXED-SIZE</ARRAY-SIZE-SEMANTICS>
+</IMPLEMENTATION-DATA-TYPE-ELEMENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ImplementationDataTypeElement = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ImplementationDataTypeElement)
+        self.assertEqual(elem.name, 'ElementName')
+        self.assertEqual(elem.array_size_semantics, ar_enum.ArraySizeSemantics.FIXED_SIZE)
+
+    def test_read_write_is_optional(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ImplementationDataTypeElement('ElementName',
+                                                           is_optional=True) # noqa E501
+        xml = '''<IMPLEMENTATION-DATA-TYPE-ELEMENT>
+  <SHORT-NAME>ElementName</SHORT-NAME>
+  <IS-OPTIONAL>true</IS-OPTIONAL>
+</IMPLEMENTATION-DATA-TYPE-ELEMENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ImplementationDataTypeElement = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ImplementationDataTypeElement)
+        self.assertEqual(elem.name, 'ElementName')
+        self.assertTrue(elem.is_optional)
+
+    def test_read_write_sub_elements(self):
+        writer = autosar.xml.Writer()
+        child1 = ar_element.ImplementationDataTypeElement('Child1', array_size=4)
+        child2 = ar_element.ImplementationDataTypeElement('Child2', array_size=8, category="MyCategory")
+        element = ar_element.ImplementationDataTypeElement('ElementName',
+                                                           sub_elements=[child1, child2])
+
+        xml = '''<IMPLEMENTATION-DATA-TYPE-ELEMENT>
+  <SHORT-NAME>ElementName</SHORT-NAME>
+  <SUB-ELEMENTS>
+    <IMPLEMENTATION-DATA-TYPE-ELEMENT>
+      <SHORT-NAME>Child1</SHORT-NAME>
+      <ARRAY-SIZE>4</ARRAY-SIZE>
+    </IMPLEMENTATION-DATA-TYPE-ELEMENT>
+    <IMPLEMENTATION-DATA-TYPE-ELEMENT>
+      <SHORT-NAME>Child2</SHORT-NAME>
+      <CATEGORY>MyCategory</CATEGORY>
+      <ARRAY-SIZE>8</ARRAY-SIZE>
+    </IMPLEMENTATION-DATA-TYPE-ELEMENT>
+  </SUB-ELEMENTS>
+</IMPLEMENTATION-DATA-TYPE-ELEMENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ImplementationDataTypeElement = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ImplementationDataTypeElement)
+        self.assertEqual(elem.name, "ElementName")
+        self.assertEqual(len(elem.sub_elements), 2)
+        sub_elem = elem.sub_elements[0]
+        self.assertEqual(sub_elem.name, "Child1")
+        self.assertEqual(sub_elem.array_size, 4)
+        sub_elem = elem.sub_elements[1]
+        self.assertEqual(sub_elem.name, "Child2")
+        self.assertEqual(sub_elem.array_size, 8)
+        self.assertEqual(sub_elem.category, "MyCategory")
+
+    def test_read_write_sw_data_def_props(self):
+        writer = autosar.xml.Writer()
+        uint8_ref = "/PlatformTypes/uint8"
+        sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref=ar_element.SwBaseTypeRef(uint8_ref))
+        element = ar_element.ImplementationDataTypeElement('ElementName',
+                                                           sw_data_def_props = sw_data_def_props) # noqa E501
+        xml = '''<IMPLEMENTATION-DATA-TYPE-ELEMENT>
+  <SHORT-NAME>ElementName</SHORT-NAME>
+  <SW-DATA-DEF-PROPS>
+    <SW-DATA-DEF-PROPS-VARIANTS>
+      <SW-DATA-DEF-PROPS-CONDITIONAL>
+        <BASE-TYPE-REF DEST="SW-BASE-TYPE">/PlatformTypes/uint8</BASE-TYPE-REF>
+      </SW-DATA-DEF-PROPS-CONDITIONAL>
+    </SW-DATA-DEF-PROPS-VARIANTS>
+  </SW-DATA-DEF-PROPS>
+</IMPLEMENTATION-DATA-TYPE-ELEMENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ImplementationDataTypeElement = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ImplementationDataTypeElement)
+        self.assertEqual(elem.name, 'ElementName')
+        self.assertEqual(len(elem.sw_data_def_props), 1)
+        self.assertEqual(str(elem.sw_data_def_props[0].base_type_ref), uint8_ref)
+
+
+class TestImplementationDataType(unittest.TestCase):
+
+    def test_read_write_name_only(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ImplementationDataType('TypeName')
+        xml = '''<IMPLEMENTATION-DATA-TYPE>
+  <SHORT-NAME>TypeName</SHORT-NAME>
+</IMPLEMENTATION-DATA-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ImplementationDataType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ImplementationDataType)
+        self.assertEqual(elem.name, 'TypeName')
+
+    def test_read_write_dynamic_array_size_profile(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ImplementationDataType('TypeName',
+                                                    dynamic_array_size_profile="Profile")
+        xml = '''<IMPLEMENTATION-DATA-TYPE>
+  <SHORT-NAME>TypeName</SHORT-NAME>
+  <DYNAMIC-ARRAY-SIZE-PROFILE>Profile</DYNAMIC-ARRAY-SIZE-PROFILE>
+</IMPLEMENTATION-DATA-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ImplementationDataType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ImplementationDataType)
+        self.assertEqual(elem.name, 'TypeName')
+        self.assertEqual(elem.dynamic_array_size_profile, "Profile")
+
+    def test_read_write_is_struct_with_optional_element(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ImplementationDataType('TypeName',
+                                                    is_struct_with_optional_element=True)
+        xml = '''<IMPLEMENTATION-DATA-TYPE>
+  <SHORT-NAME>TypeName</SHORT-NAME>
+  <IS-STRUCT-WITH-OPTIONAL-ELEMENT>true</IS-STRUCT-WITH-OPTIONAL-ELEMENT>
+</IMPLEMENTATION-DATA-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ImplementationDataType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ImplementationDataType)
+        self.assertEqual(elem.name, 'TypeName')
+        self.assertTrue(elem.is_struct_with_optional_element)
+
+    def test_read_write_sub_elements(self):
+        writer = autosar.xml.Writer()
+        child1 = ar_element.ImplementationDataTypeElement('Child1', array_size=4)
+        child2 = ar_element.ImplementationDataTypeElement('Child2', array_size=8)
+        element = ar_element.ImplementationDataType('TypeName',
+                                                    sub_elements=[child1, child2])
+        xml = '''<IMPLEMENTATION-DATA-TYPE>
+  <SHORT-NAME>TypeName</SHORT-NAME>
+  <SUB-ELEMENTS>
+    <IMPLEMENTATION-DATA-TYPE-ELEMENT>
+      <SHORT-NAME>Child1</SHORT-NAME>
+      <ARRAY-SIZE>4</ARRAY-SIZE>
+    </IMPLEMENTATION-DATA-TYPE-ELEMENT>
+    <IMPLEMENTATION-DATA-TYPE-ELEMENT>
+      <SHORT-NAME>Child2</SHORT-NAME>
+      <ARRAY-SIZE>8</ARRAY-SIZE>
+    </IMPLEMENTATION-DATA-TYPE-ELEMENT>
+  </SUB-ELEMENTS>
+</IMPLEMENTATION-DATA-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ImplementationDataType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ImplementationDataType)
+        self.assertEqual(elem.name, 'TypeName')
+        self.assertEqual(len(elem.sub_elements), 2)
+        sub_elem = elem.sub_elements[0]
+        self.assertEqual(sub_elem.name, "Child1")
+        self.assertEqual(sub_elem.array_size, 4)
+        sub_elem = elem.sub_elements[1]
+        self.assertEqual(sub_elem.name, "Child2")
+        self.assertEqual(sub_elem.array_size, 8)
+
+    def test_read_write_symbol_props(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ImplementationDataType("TypeName",
+                                                    symbol_props=ar_element.SymbolProps("TypeName", "Symbol"))
+        xml = '''<IMPLEMENTATION-DATA-TYPE>
+  <SHORT-NAME>TypeName</SHORT-NAME>
+  <SYMBOL-PROPS>
+    <SHORT-NAME>TypeName</SHORT-NAME>
+    <SYMBOL>Symbol</SYMBOL>
+  </SYMBOL-PROPS>
+</IMPLEMENTATION-DATA-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ImplementationDataType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ImplementationDataType)
+        self.assertEqual(elem.name, "TypeName")
+        self.assertEqual(elem.symbol_props.name, "TypeName")
+        self.assertEqual(elem.symbol_props.symbol, "Symbol")
+
+    def test_read_write_type_emitter(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ImplementationDataType('TypeName',
+                                                    type_emitter="RTE")
+        xml = '''<IMPLEMENTATION-DATA-TYPE>
+  <SHORT-NAME>TypeName</SHORT-NAME>
+  <TYPE-EMITTER>RTE</TYPE-EMITTER>
+</IMPLEMENTATION-DATA-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ImplementationDataType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ImplementationDataType)
+        self.assertEqual(elem.name, 'TypeName')
+        self.assertEqual(elem.type_emitter, "RTE")
+
+    def test_read_sw_data_def_props(self):
+        writer = autosar.xml.Writer()
+        uint8_ref = "/PlatformTypes/uint8"
+        sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref=ar_element.SwBaseTypeRef(uint8_ref))
+        element = ar_element.ImplementationDataType('TypeName',
+                                                    sw_data_def_props=sw_data_def_props)
+        xml = '''<IMPLEMENTATION-DATA-TYPE>
+  <SHORT-NAME>TypeName</SHORT-NAME>
+  <SW-DATA-DEF-PROPS>
+    <SW-DATA-DEF-PROPS-VARIANTS>
+      <SW-DATA-DEF-PROPS-CONDITIONAL>
+        <BASE-TYPE-REF DEST="SW-BASE-TYPE">/PlatformTypes/uint8</BASE-TYPE-REF>
+      </SW-DATA-DEF-PROPS-CONDITIONAL>
+    </SW-DATA-DEF-PROPS-VARIANTS>
+  </SW-DATA-DEF-PROPS>
+</IMPLEMENTATION-DATA-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ImplementationDataType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ImplementationDataType)
+        self.assertEqual(elem.name, 'TypeName')
+        self.assertEqual(len(elem.sw_data_def_props), 1)
+        self.assertEqual(str(elem.sw_data_def_props[0].base_type_ref), uint8_ref)
+
+
 if __name__ == '__main__':
     unittest.main()
