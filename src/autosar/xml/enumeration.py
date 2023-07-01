@@ -11,6 +11,25 @@ import autosar.xml.exception as ar_exception
 DEFAULT_SCHEMA_VERSION = 50
 
 
+class ArrayImplPolicy(Enum):
+    """
+    AR:ARRAY-IMPL-POLICY-ENUM--SIMPLE
+    """
+
+    PAYLOAD_AS_ARRAY = 0
+    PAYLOAD_AS_POINTER_TO_ARRAY = 1
+
+
+class ArraySizeHandling(Enum):
+    """
+    AR:ARRAY-SIZE-HANDLING-ENUM--SIMPLE
+    """
+
+    ALL_INDICES_DIFFERENT_ARRAY_SIZE = 0
+    ALL_INDICES_SAME_ARRAY_SIZE = 1
+    INHERITED_FROM_ARRAY_ELEMENT_TYPE_SIZE = 2
+
+
 class ArraySizeSemantics(Enum):
     """
     AR:ARRAY-SIZE-SEMANTICS-ENUM--SIMPLE
@@ -419,8 +438,17 @@ class VersionedTextValue:
 ###
 
 xml_to_enum_map = {
+    "ArrayImplPolicy": {
+        "PAYLOAD-AS-ARRAY": VersionedEnumValue(ArrayImplPolicy.PAYLOAD_AS_ARRAY, {50}),
+        "PAYLOAD-AS-POINTER-TO-ARRAY": VersionedEnumValue(ArrayImplPolicy.PAYLOAD_AS_POINTER_TO_ARRAY, {50}),
+    },
+    "ArraySizeHandling": {
+        "ALL-INDICES-DIFFERENT-ARRAY-SIZE": ArraySizeHandling.ALL_INDICES_DIFFERENT_ARRAY_SIZE,
+        "ALL-INDICES-SAME-ARRAY-SIZE": ArraySizeHandling.ALL_INDICES_SAME_ARRAY_SIZE,
+        "INHERITED-FROM-ARRAY-ELEMENT-TYPE-SIZE": ArraySizeHandling.INHERITED_FROM_ARRAY_ELEMENT_TYPE_SIZE
+    },
     "ArraySizeSemantics": {
-        "FIXE-SIZE": VersionedEnumValue(ArraySizeSemantics.FIXED_SIZE, {50}),
+        "FIXED-SIZE": VersionedEnumValue(ArraySizeSemantics.FIXED_SIZE, {50}),
         "VARIABLE-SIZE": VersionedEnumValue(ArraySizeSemantics.VARIABLE_SIZE, {50}),
     },
     "ByteOrder": {
@@ -661,6 +689,15 @@ def xml_to_enum(enum_type_name: str, xml_text: str, schema_version: int = DEFAUL
 
 
 enum_to_xml_map = {
+    "ArrayImplPolicy": [
+        VersionedTextValue("PAYLOAD-AS-ARRAY", {50}),             # 0
+        VersionedTextValue("PAYLOAD-AS-POINTER-TO-ARRAY", {50}),  # 1
+    ],
+    "ArraySizeHandling": [
+        "ALL-INDICES-DIFFERENT-ARRAY-SIZE",       # 0
+        "ALL-INDICES-SAME-ARRAY-SIZE",            # 1
+        "INHERITED-FROM-ARRAY-ELEMENT-TYPE-SIZE"  # 2
+    ],
     "ArraySizeSemantics": [
         VersionedTextValue("FIXED-SIZE", {50}),     # 0
         VersionedTextValue("VARIABLE-SIZE", {50}),  # 1

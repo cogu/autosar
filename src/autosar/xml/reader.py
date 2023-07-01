@@ -145,6 +145,8 @@ class Reader:
             'SW-DATA-DEF-PROPS-CONDITIONAL': self._read_sw_data_def_props_conditional,
             'SW-TEXT-PROPS': self._read_sw_text_props,
             'SW-POINTER-TARGET-PROPS': self._read_sw_pointer_target_props,
+            'SYMBOL-PROPS': self._read_symbol_props,
+            'IMPLEMENTATION-DATA-TYPE-ELEMENT': self._read_implementation_data_type_element,
             # Reference elements
             'PHYSICAL-DIMENSION-REF': self._read_physical_dimension_ref,
         }
@@ -258,7 +260,7 @@ class Reader:
 
     def _read_referrable(self, element_map: ChildElementMap, data: dict) -> None:
         """
-        Reads groups AR:REFERRABLE and AR:MULTILANGUAGE-REFFERABLE
+        Reads group AR:REFERRABLE
         Type: Abstract
         """
         short_name = element_map.get('SHORT-NAME')
@@ -271,6 +273,15 @@ class Reader:
         if xml_long_name is not None:
             data['long_name'] = self._read_multi_language_long_name(
                 xml_long_name)
+
+    def _read_multi_language_referrable(self, element_map: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:MULTILANGUAGE-REFERRABLE
+        Type: Abstract
+        """
+        xml_long_name = element_map.get('LONG-NAME')
+        if xml_long_name is not None:
+            data['long_name'] = self._read_multi_language_long_name(xml_long_name)
 
     def _read_identifiable(self, element_map: ChildElementMap, attr: dict, data: dict) -> None:
         """
@@ -393,6 +404,7 @@ class Reader:
         data = {}
         child_elements = ChildElementMap(elem)
         self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
         self._read_identifiable(child_elements, elem.attrib, data)
         package = ar_package.Package(**data)
         self._read_package_group(child_elements, package)
@@ -892,6 +904,7 @@ class Reader:
         data = {}
         child_elements = ChildElementMap(xml_element)
         self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
         self._read_identifiable(child_elements, xml_element.attrib, data)
         self._read_compu_method_group(child_elements, data)
         self._report_unprocessed_elements(child_elements)
@@ -1059,6 +1072,7 @@ class Reader:
         data = {}
         child_elements = ChildElementMap(xml_element)
         self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
         self._read_identifiable(child_elements, xml_element.attrib, data)
         self._read_data_constraint_group(child_elements, data)
         self._report_unprocessed_elements(child_elements)
@@ -1196,11 +1210,12 @@ class Reader:
         Tag variants: 'UNIT'
         """
         data = {}
-        element_map = ChildElementMap(xml_element)
-        self._read_referrable(element_map, data)
-        self._read_identifiable(element_map, xml_element.attrib, data)
-        self._read_unit_group(element_map, data)
-        self._report_unprocessed_elements(element_map)
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_unit_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
         return ar_element.Unit(**data)
 
     def _read_unit_group(self, child_elements: ChildElementMap, data: dict) -> None:
@@ -1230,22 +1245,23 @@ class Reader:
         Tag variants: 'SW-ADDR-METHOD'
         """
         data = {}
-        element_map = ChildElementMap(xml_element)
-        self._read_referrable(element_map, data)
-        self._read_identifiable(element_map, xml_element.attrib, data)
-        self._read_sw_addr_method_group(element_map, data)
-        self._report_unprocessed_elements(element_map)
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_sw_addr_method_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
         return ar_element.SwAddrMethod(**data)
 
-    def _read_sw_addr_method_group(self, element_map: ChildElementMap, data: dict) -> None:
+    def _read_sw_addr_method_group(self, child_elements: ChildElementMap, data: dict) -> None:
         """
         Reads group AR:SW-ADDR-METHOD
         Type: Utility
         """
-        element_map.skip('MEMORY-ALLOCATION-KEYWORD-POLICY')  # Not implemented
-        element_map.skip('OPTIONS')  # Not implemented
-        element_map.skip('SECTION-INITIALIZATION-POLICY')  # Not implemented
-        element_map.skip('SECTION-TYPE')  # Not Implemented
+        child_elements.skip('MEMORY-ALLOCATION-KEYWORD-POLICY')  # Not implemented
+        child_elements.skip('OPTIONS')  # Not implemented
+        child_elements.skip('SECTION-INITIALIZATION-POLICY')  # Not implemented
+        child_elements.skip('SECTION-TYPE')  # Not Implemented
 
     def _read_sw_base_type(self, xml_element: ElementTree.Element) -> ar_element.SwBaseType:
         """
@@ -1254,11 +1270,12 @@ class Reader:
         Tag variants: 'SW-BASE-TYPE'
         """
         data = {}
-        element_map = ChildElementMap(xml_element)
-        self._read_referrable(element_map, data)
-        self._read_identifiable(element_map, xml_element.attrib, data)
-        self._read_base_type(element_map, data)
-        self._report_unprocessed_elements(element_map)
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_base_type(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
         return ar_element.SwBaseType(**data)
 
     def _read_base_type(self, child_elements: ChildElementMap, data: dict) -> None:
@@ -1305,17 +1322,18 @@ class Reader:
         self._report_unprocessed_elements(child_elements)
         return ar_element.SwBitRepresentation(**data)
 
-    def _read_sw_data_def_props(self, xml_elem: ElementTree.Element) -> ar_element.SwDataDefProps:
+    def _read_sw_data_def_props(self, xml_element: ElementTree.Element) -> ar_element.SwDataDefProps:
         """
-        Reads SW-DATA-DEF-PROPS
+        Reads complex type AR:SW-DATA-DEF-PROPS
         Type: Concrete
+        Tag Variants: 'SW-DATA-DEF-PROPS', 'NETWORK-REPRESENTATION'
         """
-        xml_child = xml_elem.find('./SW-DATA-DEF-PROPS-VARIANTS')
-        sw_data_def_props_variants = ar_element.SwDataDefProps()
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("SW-DATA-DEF-PROPS-VARIANTS")
         if xml_child is not None:
-            variants = self._read_sw_data_def_props_variants(xml_child)
-            sw_data_def_props_variants.variants.extend(variants)
-        return sw_data_def_props_variants
+            data['variants'] = self._read_sw_data_def_props_variants(xml_child)
+        return ar_element.SwDataDefProps(**data)
 
     def _read_sw_data_def_props_variants(self,
                                          xml_elem: ElementTree.Element) -> list[ar_element.SwDataDefPropsConditional]:
@@ -1324,7 +1342,7 @@ class Reader:
         Type: Concrete
         """
         variants = []
-        for xml_child in xml_elem.findall('./SW-DATA-DEF_PROPS_CONDITIONAL'):
+        for xml_child in xml_elem.findall('./SW-DATA-DEF-PROPS-CONDITIONAL'):
             props_conditional = self._read_sw_data_def_props_conditional(
                 xml_child)
             variants.append(props_conditional)
@@ -1338,17 +1356,17 @@ class Reader:
         Tag variants: 'AR:SW-DATA-DEF-PROPS-CONDITIONAL'
         """
         data = {}
-        self._read_sw_data_def_props_content(xml_elem, data)
+        child_elements = ChildElementMap(xml_elem)
+        self._read_sw_data_def_props_content(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
         return ar_element.SwDataDefPropsConditional(**data)
 
-    def _read_sw_data_def_props_content(self, xml_elem: ElementTree.Element, data: dict[str, Any]) -> None:
+    def _read_sw_data_def_props_content(self, child_elements: ChildElementMap, data: dict[str, Any]) -> None:
         """
         Reads Group SW-DATA-DEF-PROPS-CONTENT
         Type: Abstract
         """
-        child_elements = ChildElementMap(xml_elem)
-        xml_child: ElementTree.Element | None = None
-        xml_child = child_elements.get('DISPLAY-PRESENTATION')
+        xml_child: ElementTree.Element = child_elements.get('DISPLAY-PRESENTATION')
         if xml_child is not None:
             data['display_presentation'] = ar_enum.xml_to_enum(
                 'DisplayPresentation', xml_child.text)
@@ -1391,11 +1409,9 @@ class Reader:
         xml_child = child_elements.get('DATA-CONSTR-REF')
         if xml_child is not None:
             data['data_constraint_ref'] = self._read_data_constraint_ref(xml_child)
-        self._report_unprocessed_elements(child_elements)
         xml_child = child_elements.get('DISPLAY-FORMAT')
         if xml_child is not None:
             data['display_format'] = xml_child.text
-        self._report_unprocessed_elements(child_elements)
         xml_child = child_elements.get('IMPLEMENTATION-DATA-TYPE-REF')
         if xml_child is not None:
             data['impl_data_type_ref'] = self._read_impl_data_type_ref(xml_child)
@@ -1420,7 +1436,6 @@ class Reader:
         xml_child = child_elements.get('UNIT-REF')
         if xml_child is not None:
             data['unit_ref'] = self._read_unit_ref(xml_child)
-        self._report_unprocessed_elements(child_elements)
 
     def _read_sw_text_props(self, xml_element: ElementTree.Element) -> ar_element.SwBitRepresentation:
         """
@@ -1464,6 +1479,129 @@ class Reader:
             data['function_ptr_signature_ref'] = self._read_function_ptr_signature_ref(xml_child)
         self._report_unprocessed_elements(child_elements)
         return ar_element.SwPointerTargetProps(**data)
+
+    def _read_symbol_props(self, xml_element: ElementTree.Element) -> ar_element.SymbolProps:
+        """
+        Reads complex type AR:SYMBOL-PROPS
+        Type: Concrete
+        Tag variants: 'SYMBOL-PROPS', 'EVENT-SYMBOL-PROPS'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_implementation_props(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.SymbolProps(**data)
+
+    def _read_implementation_props(self,
+                                   child_elements: ChildElementMap,
+                                   data: dict) -> None:
+        """
+        Reads group AR:IMPLEMENTATION-PROPS
+        Type: Abstract
+        """
+        xml_child = child_elements.get('SYMBOL')
+        if xml_child is not None:
+            data['symbol'] = xml_child.text
+
+    def _read_implementation_data_type_element(self,
+            xml_element: ElementTree.Element) -> ar_element.ImplementationDataTypeElement:  # noqa E128
+        """
+        Reads complex type AR:IMPLEMENTATION-DATA-TYPE-ELEMENT
+        Type: Concrete
+        Tag variants: 'IMPLEMENTATION-DATA-TYPE-ELEMENT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_implementation_data_type_element_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ImplementationDataTypeElement(**data)
+
+    def _read_implementation_data_type_element_group(self,
+                                                     child_elements: ChildElementMap,
+                                                     data: dict) -> None:
+        """
+        Reads group AR:IMPLEMENTATION-DATA-TYPE-ELEMENT
+        Type: Abstract
+        """
+        xml_child = child_elements.get("ARRAY-IMPL-POLICY")
+        if xml_child is not None:
+            data["array_impl_policy"] = ar_enum.xml_to_enum("ArrayImplPolicy", xml_child.text)
+        xml_child = child_elements.get("ARRAY-SIZE")
+        if xml_child is not None:
+            data["array_size"] = int(xml_child.text)
+        xml_child = child_elements.get("ARRAY-SIZE-HANDLING")
+        if xml_child is not None:
+            data["array_size_handling"] = ar_enum.xml_to_enum("ArraySizeHandling", xml_child.text)
+        xml_child = child_elements.get("ARRAY-SIZE-SEMANTICS")
+        if xml_child is not None:
+            data["array_size_semantics"] = ar_enum.xml_to_enum("ArraySizeSemantics", xml_child.text)
+        xml_child = child_elements.get("IS-OPTIONAL")
+        if xml_child is not None:
+            data["is_optional"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("SUB-ELEMENTS")
+        if xml_child is not None:
+            sub_elements = []
+            for sub_element_xml in xml_child.findall("./IMPLEMENTATION-DATA-TYPE-ELEMENT"):
+                sub_elements.append(self._read_implementation_data_type_element(sub_element_xml))
+            data["sub_elements"] = sub_elements
+        xml_child = child_elements.get("SW-DATA-DEF-PROPS")
+        if xml_child is not None:
+            data["sw_data_def_props"] = self._read_sw_data_def_props(xml_child)
+        xml_child = child_elements.get("ARRAY-IMPL-POLICY")
+        child_elements.skip("VARIATION-POINT")  # Not supported
+
+    def _read_implementation_data_type(self, xml_element: ElementTree.Element) -> ar_element.ImplementationDataType:
+        """
+        Reads complex type AR:IMPLEMENTATION-DATA-TYPE
+        Type: Concrete
+        Tag Variants: 'IMPLEMENTATION-DATA-TYPE'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_autosar_data_type(child_elements, data)
+        self._read_implementation_data_type_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ImplementationDataType(**data)
+
+    def _read_implementation_data_type_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:IMPLEMENTATION-DATA-TYPE
+        Type: Abstract
+        """
+        xml_child = child_elements.get("DYNAMIC-ARRAY-SIZE-PROFILE")
+        if xml_child is not None:
+            data["dynamic_array_size_profile"] = xml_child.text
+        xml_child = child_elements.get("IS-STRUCT-WITH-OPTIONAL-ELEMENT")
+        if xml_child is not None:
+            data["is_struct_with_optional_element"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("SUB-ELEMENTS")
+        if xml_child is not None:
+            sub_elements = []
+            for sub_element_xml in xml_child.findall("./IMPLEMENTATION-DATA-TYPE-ELEMENT"):
+                sub_elements.append(self._read_implementation_data_type_element(sub_element_xml))
+            data["sub_elements"] = sub_elements
+        xml_child = child_elements.get("SYMBOL-PROPS")
+        if xml_child is not None:
+            data["symbol_props"] = self._read_symbol_props(xml_child)
+        xml_child = child_elements.get("TYPE-EMITTER")
+        if xml_child is not None:
+            data["type_emitter"] = xml_child.text
+
+    def _read_autosar_data_type(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:AUTOSAR-DATA-TYPE
+        Type: Abstract
+        """
+        xml_child = child_elements.get("SW-DATA-DEF-PROPS")
+        if xml_child is not None:
+            data["sw_data_def_props"] = self._read_sw_data_def_props(xml_child)
 
     # Reference elements
 
@@ -1586,12 +1724,13 @@ class Reader:
         Element-Type: Concrete
         """
         data = {}
-        element_map = ChildElementMap(xml_element)
-        self._read_referrable(element_map, data)
-        self._read_identifiable(element_map, xml_element.attrib, data)
-        self._read_port_interface(element_map, data)
-        self._read_sender_receiver_interface_group(element_map, data)
-        self._report_unprocessed_elements(element_map)
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_port_interface(child_elements, data)
+        self._read_sender_receiver_interface_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
 
     def _read_port_interface(self, xml_elements: ChildElementMap, data: dict) -> None:
         """
@@ -1633,6 +1772,7 @@ class Reader:
         data = {}
         child_elements = ChildElementMap(elem)
         self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
         self._read_identifiable(child_elements, elem.attrib, data)
         self._read_data_prototype(child_elements, data)
         self._read_autosar_data_prototype(child_elements, data)
@@ -1655,30 +1795,3 @@ class Reader:
         if xml_init_value is not None:
             pass
         xml_elements.skip('VARIATION-POINT')  # Not supported
-
-    def _read_implementation_data_type(self, xml_element: ElementTree.Element) -> None:
-        """
-        Element-Type: Concrete
-        """
-        data = {}
-        elemept_map = ChildElementMap(xml_element)
-        self._read_referrable(elemept_map, data)
-        self._read_identifiable(elemept_map, xml_element.attrib, data)
-        self._read_autosar_data_type(elemept_map, data)
-        self._read_implementation_data_type_group(elemept_map, data)
-        self._report_unprocessed_elements(elemept_map)
-
-    def _read_autosar_data_type(self, element_map: ChildElementMap, data: dict) -> None:
-        """
-        Pases AUTOSAR-DATA-TYPE
-        Type: Abstract
-        """
-        xml_sw_data_def_props = element_map.find('SW-DATA-DEF-PROPS')
-        if xml_sw_data_def_props is not None:
-            data['sw_data_def_props'] = self._read_sw_data_def_props(
-                xml_sw_data_def_props)
-
-    def _read_implementation_data_type_group(self, element_map: ChildElementMap, data: dict) -> None:
-        xml_init_value = element_map.find('INIT-VALUE')
-        if xml_init_value is not None:
-            pass
