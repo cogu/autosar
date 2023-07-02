@@ -1075,5 +1075,297 @@ class TestApplicationPrimitiveDataType(unittest.TestCase):
         self.assertEqual(str(props.compu_method_ref), "/CompuMethod/CompuName")
 
 
+class TestApplicationDataTypeRef(unittest.TestCase):
+
+    def test_read_write_application_array_data_type(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ApplicationDataTypeRef(
+            "/Package/ShortName",
+            ar_enum.IdentifiableSubTypes.APPLICATION_ARRAY_DATA_TYPE)
+        xml = '''<APPLICATION-DATA-TYPE-REF DEST="APPLICATION-ARRAY-DATA-TYPE">/Package/ShortName</APPLICATION-DATA-TYPE-REF>'''  # noqa E501 pylint: disable=C0301
+        self.assertEqual(writer.write_str_elem(element, "APPLICATION-DATA-TYPE-REF"), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationDataTypeRef = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationDataTypeRef)
+        self.assertEqual(elem.value, "/Package/ShortName")
+        self.assertEqual(elem.dest, ar_enum.IdentifiableSubTypes.APPLICATION_ARRAY_DATA_TYPE)
+
+    def test_read_write_application_assoc_map_data_type(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ApplicationDataTypeRef(
+            "/Package/ShortName",
+            ar_enum.IdentifiableSubTypes.APPLICATION_ASSOC_MAP_DATA_TYPE)
+        xml = '''<APPLICATION-DATA-TYPE-REF DEST="APPLICATION-ASSOC-MAP-DATA-TYPE">/Package/ShortName</APPLICATION-DATA-TYPE-REF>'''  # noqa E501 pylint: disable=C0301
+        self.assertEqual(writer.write_str_elem(element, "APPLICATION-DATA-TYPE-REF"), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationDataTypeRef = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationDataTypeRef)
+        self.assertEqual(elem.value, "/Package/ShortName")
+        self.assertEqual(elem.dest, ar_enum.IdentifiableSubTypes.APPLICATION_ASSOC_MAP_DATA_TYPE)
+
+    def test_read_write_application_composite_data_type(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ApplicationDataTypeRef(
+            "/Package/ShortName",
+            ar_enum.IdentifiableSubTypes.APPLICATION_COMPOSITE_DATA_TYPE)
+        xml = '''<APPLICATION-DATA-TYPE-REF DEST="APPLICATION-COMPOSITE-DATA-TYPE">/Package/ShortName</APPLICATION-DATA-TYPE-REF>'''  # noqa E501 pylint: disable=C0301
+        self.assertEqual(writer.write_str_elem(element, "APPLICATION-DATA-TYPE-REF"), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationDataTypeRef = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationDataTypeRef)
+        self.assertEqual(elem.value, "/Package/ShortName")
+        self.assertEqual(elem.dest, ar_enum.IdentifiableSubTypes.APPLICATION_COMPOSITE_DATA_TYPE)
+
+    def test_read_write_application_data_type(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ApplicationDataTypeRef(
+            "/Package/ShortName",
+            ar_enum.IdentifiableSubTypes.APPLICATION_DATA_TYPE)
+        xml = '''<APPLICATION-DATA-TYPE-REF DEST="APPLICATION-DATA-TYPE">/Package/ShortName</APPLICATION-DATA-TYPE-REF>'''  # noqa E501 pylint: disable=C0301
+        self.assertEqual(writer.write_str_elem(element, "APPLICATION-DATA-TYPE-REF"), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationDataTypeRef = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationDataTypeRef)
+        self.assertEqual(elem.value, "/Package/ShortName")
+        self.assertEqual(elem.dest, ar_enum.IdentifiableSubTypes.APPLICATION_DATA_TYPE)
+
+    def test_read_write_application_deferred_data_type(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ApplicationDataTypeRef(
+            "/Package/ShortName",
+            ar_enum.IdentifiableSubTypes.APPLICATION_DEFERRED_DATA_TYPE)
+        xml = '''<APPLICATION-DATA-TYPE-REF DEST="APPLICATION-DEFERRED-DATA-TYPE">/Package/ShortName</APPLICATION-DATA-TYPE-REF>'''  # noqa E501 pylint: disable=C0301
+        self.assertEqual(writer.write_str_elem(element, "APPLICATION-DATA-TYPE-REF"), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationDataTypeRef = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationDataTypeRef)
+        self.assertEqual(elem.value, "/Package/ShortName")
+        self.assertEqual(elem.dest, ar_enum.IdentifiableSubTypes.APPLICATION_DEFERRED_DATA_TYPE)
+
+    def test_read_write_application_primitive_data_type(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ApplicationDataTypeRef(
+            "/Package/ShortName",
+            ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE)
+        xml = '''<APPLICATION-DATA-TYPE-REF DEST="APPLICATION-PRIMITIVE-DATA-TYPE">/Package/ShortName</APPLICATION-DATA-TYPE-REF>'''  # noqa E501 pylint: disable=C0301
+        self.assertEqual(writer.write_str_elem(element, "APPLICATION-DATA-TYPE-REF"), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationDataTypeRef = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationDataTypeRef)
+        self.assertEqual(elem.value, "/Package/ShortName")
+        self.assertEqual(elem.dest, ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE)
+
+    def test_read_write_application_record_data_type(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ApplicationDataTypeRef(
+            "/Package/ShortName",
+            ar_enum.IdentifiableSubTypes.APPLICATION_RECORD_DATA_TYPE)
+        xml = '''<APPLICATION-DATA-TYPE-REF DEST="APPLICATION-RECORD-DATA-TYPE">/Package/ShortName</APPLICATION-DATA-TYPE-REF>'''  # noqa E501 pylint: disable=C0301
+        self.assertEqual(writer.write_str_elem(element, "APPLICATION-DATA-TYPE-REF"), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationDataTypeRef = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationDataTypeRef)
+        self.assertEqual(elem.value, "/Package/ShortName")
+        self.assertEqual(elem.dest, ar_enum.IdentifiableSubTypes.APPLICATION_RECORD_DATA_TYPE)
+
+
+class TestApplicationArrayElement(unittest.TestCase):
+
+    def test_read_write_name_only(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ApplicationArrayElement("ElementName")
+        xml = '''<ELEMENT>
+  <SHORT-NAME>ElementName</SHORT-NAME>
+</ELEMENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationArrayElement = reader.read_str_elem(xml, "ApplicationArrayElement")
+        self.assertIsInstance(elem, ar_element.ApplicationArrayElement)
+        self.assertEqual(elem.name, "ElementName")
+
+    def test_read_write_sw_data_def_props(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ApplicationArrayElement(
+            "ElementName",
+            category="VALUE",
+            sw_data_def_props=ar_element.SwDataDefPropsConditional(compu_method_ref="/CompuMethod/CompuName"))
+        xml = '''<ELEMENT>
+  <SHORT-NAME>ElementName</SHORT-NAME>
+  <CATEGORY>VALUE</CATEGORY>
+  <SW-DATA-DEF-PROPS>
+    <SW-DATA-DEF-PROPS-VARIANTS>
+      <SW-DATA-DEF-PROPS-CONDITIONAL>
+        <COMPU-METHOD-REF DEST="COMPU-METHOD">/CompuMethod/CompuName</COMPU-METHOD-REF>
+      </SW-DATA-DEF-PROPS-CONDITIONAL>
+    </SW-DATA-DEF-PROPS-VARIANTS>
+  </SW-DATA-DEF-PROPS>
+</ELEMENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationArrayElement = reader.read_str_elem(xml, "ApplicationArrayElement")
+        self.assertIsInstance(elem, ar_element.ApplicationArrayElement)
+        self.assertEqual(elem.name, "ElementName")
+        self.assertEqual(elem.category, "VALUE")
+        props: ar_element.SwDataDefPropsConditional = elem.sw_data_def_props[0]
+        self.assertEqual(str(props.compu_method_ref), "/CompuMethod/CompuName")
+
+    def test_read_write_type_ref(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ApplicationArrayElement(
+            "ElementName",
+            type_ref=ar_element.ApplicationDataTypeRef("/ApplicationTypes/TypeName",
+                                                       ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE))
+        xml = '''<ELEMENT>
+  <SHORT-NAME>ElementName</SHORT-NAME>
+  <TYPE-TREF DEST="APPLICATION-PRIMITIVE-DATA-TYPE">/ApplicationTypes/TypeName</TYPE-TREF>
+</ELEMENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationArrayElement = reader.read_str_elem(xml, "ApplicationArrayElement")
+        self.assertIsInstance(elem, ar_element.ApplicationArrayElement)
+        self.assertEqual(elem.name, "ElementName")
+        self.assertEqual(elem.type_ref.value, "/ApplicationTypes/TypeName")
+        self.assertEqual(elem.type_ref.dest, ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE)
+
+    def test_read_write_array_size_handling(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ApplicationArrayElement(
+            "ElementName",
+            array_size_handling=ar_enum.ArraySizeHandling.ALL_INDICES_DIFFERENT_ARRAY_SIZE)
+        xml = '''<ELEMENT>
+  <SHORT-NAME>ElementName</SHORT-NAME>
+  <ARRAY-SIZE-HANDLING>ALL-INDICES-DIFFERENT-ARRAY-SIZE</ARRAY-SIZE-HANDLING>
+</ELEMENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationArrayElement = reader.read_str_elem(xml, "ApplicationArrayElement")
+        self.assertIsInstance(elem, ar_element.ApplicationArrayElement)
+        self.assertEqual(elem.name, "ElementName")
+        self.assertEqual(elem.array_size_handling, ar_enum.ArraySizeHandling.ALL_INDICES_DIFFERENT_ARRAY_SIZE)
+
+    def test_read_write_array_size_semantics(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ApplicationArrayElement(
+            "ElementName",
+            array_size_semantics=ar_enum.ArraySizeSemantics.FIXED_SIZE)
+        xml = '''<ELEMENT>
+  <SHORT-NAME>ElementName</SHORT-NAME>
+  <ARRAY-SIZE-SEMANTICS>FIXED-SIZE</ARRAY-SIZE-SEMANTICS>
+</ELEMENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationArrayElement = reader.read_str_elem(xml, "ApplicationArrayElement")
+        self.assertIsInstance(elem, ar_element.ApplicationArrayElement)
+        self.assertEqual(elem.name, "ElementName")
+        self.assertEqual(elem.array_size_semantics, ar_enum.ArraySizeSemantics.FIXED_SIZE)
+
+    def test_read_write_index_data_type_ref(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ApplicationArrayElement(
+            "ElementName",
+            index_data_type_ref="/Package/TypeName")
+        xml = '''<ELEMENT>
+  <SHORT-NAME>ElementName</SHORT-NAME>
+  <INDEX-DATA-TYPE-REF DEST="APPLICATION-PRIMITIVE-DATA-TYPE">/Package/TypeName</INDEX-DATA-TYPE-REF>
+</ELEMENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationArrayElement = reader.read_str_elem(xml, "ApplicationArrayElement")
+        self.assertIsInstance(elem, ar_element.ApplicationArrayElement)
+        self.assertEqual(elem.name, "ElementName")
+        self.assertEqual(str(elem.index_data_type_ref), "/Package/TypeName")
+
+    def test_read_write_max_number_of_elements(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ApplicationArrayElement(
+            "ElementName",
+            max_number_of_elements=100)
+        xml = '''<ELEMENT>
+  <SHORT-NAME>ElementName</SHORT-NAME>
+  <MAX-NUMBER-OF-ELEMENTS>100</MAX-NUMBER-OF-ELEMENTS>
+</ELEMENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationArrayElement = reader.read_str_elem(xml, "ApplicationArrayElement")
+        self.assertIsInstance(elem, ar_element.ApplicationArrayElement)
+        self.assertEqual(elem.name, "ElementName")
+        self.assertEqual(elem.max_number_of_elements, 100)
+
+
+class TestApplicationRecordElement(unittest.TestCase):
+
+    def test_read_write_name_only(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ApplicationRecordElement("ElementName")
+        xml = '''<APPLICATION-RECORD-ELEMENT>
+  <SHORT-NAME>ElementName</SHORT-NAME>
+</APPLICATION-RECORD-ELEMENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationRecordElement = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationRecordElement)
+        self.assertEqual(elem.name, "ElementName")
+
+    def test_read_write_sw_data_def_props(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ApplicationRecordElement(
+            "ElementName",
+            category="VALUE",
+            sw_data_def_props=ar_element.SwDataDefPropsConditional(compu_method_ref="/CompuMethod/CompuName"))
+        xml = '''<APPLICATION-RECORD-ELEMENT>
+  <SHORT-NAME>ElementName</SHORT-NAME>
+  <CATEGORY>VALUE</CATEGORY>
+  <SW-DATA-DEF-PROPS>
+    <SW-DATA-DEF-PROPS-VARIANTS>
+      <SW-DATA-DEF-PROPS-CONDITIONAL>
+        <COMPU-METHOD-REF DEST="COMPU-METHOD">/CompuMethod/CompuName</COMPU-METHOD-REF>
+      </SW-DATA-DEF-PROPS-CONDITIONAL>
+    </SW-DATA-DEF-PROPS-VARIANTS>
+  </SW-DATA-DEF-PROPS>
+</APPLICATION-RECORD-ELEMENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationRecordElement = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationRecordElement)
+        self.assertEqual(elem.name, "ElementName")
+        self.assertEqual(elem.category, "VALUE")
+        props: ar_element.SwDataDefPropsConditional = elem.sw_data_def_props[0]
+        self.assertEqual(str(props.compu_method_ref), "/CompuMethod/CompuName")
+
+    def test_read_write_type_ref(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ApplicationRecordElement(
+            "ElementName",
+            type_ref=ar_element.ApplicationDataTypeRef("/ApplicationTypes/TypeName",
+                                                       ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE))
+        xml = '''<APPLICATION-RECORD-ELEMENT>
+  <SHORT-NAME>ElementName</SHORT-NAME>
+  <TYPE-TREF DEST="APPLICATION-PRIMITIVE-DATA-TYPE">/ApplicationTypes/TypeName</TYPE-TREF>
+</APPLICATION-RECORD-ELEMENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationRecordElement = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationRecordElement)
+        self.assertEqual(elem.name, "ElementName")
+        self.assertEqual(elem.type_ref.value, "/ApplicationTypes/TypeName")
+        self.assertEqual(elem.type_ref.dest, ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE)
+
+    def test_read_write_is_optional(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ApplicationRecordElement(
+            "ElementName",
+            is_optional=False)
+        xml = '''<APPLICATION-RECORD-ELEMENT>
+  <SHORT-NAME>ElementName</SHORT-NAME>
+  <IS-OPTIONAL>false</IS-OPTIONAL>
+</APPLICATION-RECORD-ELEMENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationRecordElement = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationRecordElement)
+        self.assertEqual(elem.name, "ElementName")
+        self.assertFalse(elem.is_optional)
+
+
 if __name__ == '__main__':
     unittest.main()

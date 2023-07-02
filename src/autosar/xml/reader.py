@@ -148,12 +148,17 @@ class Reader:
             'SW-POINTER-TARGET-PROPS': self._read_sw_pointer_target_props,
             'SYMBOL-PROPS': self._read_symbol_props,
             'IMPLEMENTATION-DATA-TYPE-ELEMENT': self._read_implementation_data_type_element,
+            'APPLICATION-RECORD-ELEMENT': self._read_application_record_element,
             # Reference elements
             'PHYSICAL-DIMENSION-REF': self._read_physical_dimension_ref,
+            'APPLICATION-DATA-TYPE-REF': self._read_application_data_type_ref,
         }
         self.switcher_all = {}
         self.switcher_all.update(self.switcher_collectable)
         self.switcher_all.update(self.switcher_non_collectable)
+        self._switcher_type_name = {
+            "ApplicationArrayElement": self._read_application_array_element
+        }
 
     def read_file(self, file_path: str) -> ar_document.Document:
         """
@@ -169,14 +174,17 @@ class Reader:
         self._read_packages()
         return self.document
 
-    def read_str_elem(self, xml: str) -> None | ar_element.ARObject:
+    def read_str_elem(self, xml: str, type_name: str | None = None) -> None | ar_element.ARObject:
         """
         Reads a concrete ARXML element from string.
         This is primarily used for unit-testing.
         """
         self.observed_unsupported_elements = set()
         elem = ElementTree.fromstring(xml)
-        read_method = self.switcher_all.get(elem.tag, None)
+        if type_name is not None:
+            read_method = self._switcher_type_name.get(type_name, None)
+        else:
+            read_method = self.switcher_all.get(elem.tag, None)
         if read_method is not None:
             return read_method(elem)
         else:
@@ -1604,6 +1612,15 @@ class Reader:
         if xml_child is not None:
             data["sw_data_def_props"] = self._read_sw_data_def_props(xml_child)
 
+    def _read_data_prototype(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:DATA-PROTOTYPE
+        Type: Abstract
+        """
+        xml_child = child_elements.get("SW-DATA-DEF-PROPS")
+        if xml_child is not None:
+            data["sw_data_def_props"] = self._read_sw_data_def_props(xml_child)
+
     def _read_application_primitive_data_type(
             self,
             xml_element: ElementTree.Element) -> ar_element.ApplicationPrimitiveDataType:
@@ -1618,7 +1635,91 @@ class Reader:
         self._read_multi_language_referrable(child_elements, data)
         self._read_identifiable(child_elements, xml_element.attrib, data)
         self._read_autosar_data_type(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
         return ar_element.ApplicationPrimitiveDataType(**data)
+
+    def _read_application_composite_element_data_prototype(
+            self,
+            child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:APPLICATION-COMPOSITE-ELEMENT-DATA-PROTOTYPE
+        Type: Abstract
+        """
+        xml_child = child_elements.get("TYPE-TREF")
+        if xml_child is not None:
+            data["type_ref"] = self._read_application_data_type_ref(xml_child)
+
+    def _read_autosar_data_prototype(
+            self,
+            child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:AUTOSAR-DATA-PROTOTYPE
+        Type: Abstract
+        """
+        xml_child = child_elements.get("TYPE-TREF")
+        if xml_child is not None:
+            data["type_ref"] = self._read_autosar_data_type_ref(xml_child)
+
+    def _read_application_array_element(self, xml_element: ElementTree.Element) -> ar_element.ApplicationArrayElement:
+        """
+        Reads complex type AR:APPLICATION-ARRAY-ELEMENT
+        Type: Concrete
+        Tag variants: 'ELEMENT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_data_prototype(child_elements, data)
+        self._read_application_composite_element_data_prototype(child_elements, data)
+        self._read_application_array_element_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ApplicationArrayElement(**data)
+
+    def _read_application_array_element_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads complex type AR:APPLICATION-ARRAY-ELEMENT
+        Type: Abstract
+        """
+        xml_child = child_elements.get("ARRAY-SIZE-HANDLING")
+        if xml_child is not None:
+            data["array_size_handling"] = ar_enum.xml_to_enum("ArraySizeHandling", xml_child.text)
+        xml_child = child_elements.get("ARRAY-SIZE-SEMANTICS")
+        if xml_child is not None:
+            data["array_size_semantics"] = ar_enum.xml_to_enum("ArraySizeSemantics", xml_child.text)
+        xml_child = child_elements.get("INDEX-DATA-TYPE-REF")
+        if xml_child is not None:
+            data["index_data_type_ref"] = self._read_index_data_type_ref(xml_child)
+        xml_child = child_elements.get("MAX-NUMBER-OF-ELEMENTS")
+        if xml_child is not None:
+            data["max_number_of_elements"] = int(xml_child.text)
+
+    def _read_application_record_element(self, xml_element: ElementTree.Element) -> ar_element.ApplicationRecordElement:
+        """
+        Reads complex type AR:APPLICATION-RECORD-ELEMENT
+        Type: Concrete
+        Tag variants: 'APPLICATION-RECORD-ELEMENT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_data_prototype(child_elements, data)
+        self._read_application_composite_element_data_prototype(child_elements, data)
+        self._read_application_record_element_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ApplicationRecordElement(**data)
+
+    def _read_application_record_element_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads complex type AR:APPLICATION-RECORD-ELEMENT
+        Type: Abstract
+        """
+        xml_child = child_elements.get("IS-OPTIONAL")
+        if xml_child is not None:
+            data["is_optional"] = self._read_boolean(xml_child.text)
 
     # Reference elements
 
@@ -1726,8 +1827,46 @@ class Reader:
         dest_text = xml_elem.attrib['DEST']
         dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', dest_text, self.schema_version)
         if dest_enum != ar_enum.IdentifiableSubTypes.PHYSICAL_DIMENSION:
-            self._raise_parse_error(xml_elem, f"Invalid DEST attribute '{dest_text}'. Expected 'UNIT'")
+            self._raise_parse_error(xml_elem, f"Invalid DEST attribute '{dest_text}'. Expected 'PHYSICAL-DIMENSION'")
         return ar_element.PhysicalDimentionRef(xml_elem.text)
+
+    def _read_index_data_type_ref(self, xml_elem: ElementTree.Element) -> ar_element.IndexDataTypeRef:
+        """
+        Reads reference to IndexDataType
+        Type: Concrete
+        Tag variants: 'INDEX-DATA-TYPE-REF'
+        """
+        dest_text = xml_elem.attrib['DEST']
+        dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', dest_text, self.schema_version)
+        if dest_enum != ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE:
+            self._raise_parse_error(xml_elem,
+                                    f"Invalid DEST attribute '{dest_text}'."
+                                    f"Expected 'APPLICATION-PRIMITIVE-DATA-TYPE'")
+        return ar_element.IndexDataTypeRef(xml_elem.text)
+
+    def _read_application_data_type_ref(
+            self,
+            xml_elem: ElementTree.Element) -> ar_element.ApplicationDataTypeRef:
+        """
+        Reads reference to ApplicationDataType
+        Type: Concrete
+        Tag variants: 'TYPE-TREF', 'APPLICATION-DATA-TYPE-REF'
+        """
+        dest_text = xml_elem.attrib['DEST']
+        dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', dest_text, self.schema_version)
+        return ar_element.ApplicationDataTypeRef(xml_elem.text, dest_enum)
+
+    def _read_autosar_data_type_ref(
+            self,
+            xml_elem: ElementTree.Element) -> ar_element.AutosarDataTypeRef:
+        """
+        Reads reference to AutosarDataType
+        Type: Concrete
+        Tag variants: 'TYPE-TREF'
+        """
+        dest_text = xml_elem.attrib['DEST']
+        dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', dest_text, self.schema_version)
+        return ar_element.AutosarDataTypeRef(xml_elem.text, dest_enum)
 
     def _read_base_ref_attributes(self, attr: dict, data: dict) -> None:
         data['dest'] = attr.get('DEST', None)
@@ -1796,16 +1935,6 @@ class Reader:
         self._read_variable_data_prototype_elem(child_elements, data)
         self._report_unprocessed_elements(child_elements)
         return data
-
-    def _read_data_prototype(self, xml_elements: ChildElementMap, data: dict) -> None:
-        xml_sw_data_def_props = xml_elements.find('SW-DATA-DEF-PROPS')
-        if xml_sw_data_def_props is not None:
-            pass
-
-    def _read_autosar_data_prototype(self, xml_elements: ChildElementMap, data: dict) -> None:
-        xml_type_tref = xml_elements.find('TYPE-TREF')
-        if xml_type_tref is not None:
-            pass
 
     def _read_variable_data_prototype_elem(self, xml_elements: ChildElementMap, data: dict) -> None:
         xml_init_value = xml_elements.find('INIT-VALUE')

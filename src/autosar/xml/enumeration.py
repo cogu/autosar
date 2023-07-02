@@ -120,21 +120,23 @@ class IdentifiableSubTypes(Enum):
     More items will be added as implementation progresses.
     """
 
-    APPLICATION_ARRAY_DATA_TYPE = 0
-    APPLICATION_ASSOC_MAP_DATA_TYPE = 1
-    APPLICATION_COMPOSITE_DATA_TYPE = 2
-    APPLICATION_DATA_TYPE = 3
-    APPLICATION_DEFERRED_DATA_TYPE = 4
-    APPLICATION_PRIMITIVE_DATA_TYPE = 5
-    APPLICATION_RECORD_DATA_TYPE = 6
-    BSW_MODULE_ENTRY = 7
-    COMPU_METHOD = 8
-    DATA_CONSTR = 9
-    IMPLEMENTATION_DATA_TYPE = 10
-    UNIT = 11
-    PHYSICAL_DIMENSION = 12
-    SW_ADDR_METHOD = 13
-    SW_BASE_TYPE = 14
+    ABSTRACT_IMPLEMENTATION_DATA_TYPE = 0
+    APPLICATION_ARRAY_DATA_TYPE = 1
+    APPLICATION_ASSOC_MAP_DATA_TYPE = 2
+    APPLICATION_COMPOSITE_DATA_TYPE = 3
+    APPLICATION_DATA_TYPE = 4
+    APPLICATION_DEFERRED_DATA_TYPE = 5
+    APPLICATION_PRIMITIVE_DATA_TYPE = 6
+    APPLICATION_RECORD_DATA_TYPE = 7
+    AUTOSAR_DATA_TYPE = 8
+    BSW_MODULE_ENTRY = 9
+    COMPU_METHOD = 10
+    DATA_CONSTR = 11
+    IMPLEMENTATION_DATA_TYPE = 12
+    PHYSICAL_DIMENSION = 13
+    SW_ADDR_METHOD = 14
+    SW_BASE_TYPE = 15
+    UNIT = 16
 
 
 class IntervalType(Enum):
@@ -482,6 +484,7 @@ xml_to_enum_map = {
         "NO-FLOAT": VersionedEnumValue(Float.NO_FLOAT, {50}),
     },
     "IdentifiableSubTypes": {
+        "ABSTRACT-IMPLEMENTATION-DATA-TYPE": IdentifiableSubTypes.ABSTRACT_IMPLEMENTATION_DATA_TYPE,
         "APPLICATION-ARRAY-DATA-TYPE": IdentifiableSubTypes.APPLICATION_ARRAY_DATA_TYPE,
         "APPLICATION-ASSOC-MAP-DATA-TYPE": IdentifiableSubTypes.APPLICATION_ASSOC_MAP_DATA_TYPE,
         "APPLICATION-COMPOSITE-DATA-TYPE": IdentifiableSubTypes.APPLICATION_COMPOSITE_DATA_TYPE,
@@ -489,6 +492,7 @@ xml_to_enum_map = {
         "APPLICATION-DEFERRED-DATA-TYPE": IdentifiableSubTypes.APPLICATION_DEFERRED_DATA_TYPE,
         "APPLICATION-PRIMITIVE-DATA-TYPE": IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE,
         "APPLICATION-RECORD-DATA-TYPE": IdentifiableSubTypes.APPLICATION_RECORD_DATA_TYPE,
+        "AUTOSAR-DATA-TYPE": IdentifiableSubTypes.AUTOSAR_DATA_TYPE,
         "BSW-MODULE-ENTRY": IdentifiableSubTypes.BSW_MODULE_ENTRY,
         "COMPU-METHOD": IdentifiableSubTypes.COMPU_METHOD,
         "DATA-CONSTR": IdentifiableSubTypes.DATA_CONSTR,
@@ -740,21 +744,23 @@ enum_to_xml_map = {
         VersionedTextValue("NO-FLOAT", {50}),  # 1
     ],
     "IdentifiableSubTypes": [
-        "APPLICATION-ARRAY-DATA-TYPE",      # 0
-        "APPLICATION-ASSOC-MAP-DATA-TYPE",  # 1
-        "APPLICATION-COMPOSITE-DATA-TYPE",  # 2
-        "APPLICATION-DATA-TYPE",            # 3
-        "APPLICATION-DEFERRED-DATA-TYPE",   # 4
-        "APPLICATION_PRIMITIVE_DATA_TYPE",  # 5
-        "APPLICATION-RECORD-DATA-TYPE",     # 6
-        "BSW-MODULE-ENTRY",                 # 7
-        "COMPU-METHOD",                     # 8
-        "DATA-CONSTR",                      # 9
-        "IMPLEMENTATION-DATA-TYPE",         # 10
-        "UNIT",                             # 11
-        "PHYSICAL-DIMENSION",               # 12
-        "SW-ADDR-METHOD",                   # 13
-        "SW-BASE-TYPE",                     # 14
+        "ABSTRACT-IMPLEMENTATION-DATA-TYPE",  # 0
+        "APPLICATION-ARRAY-DATA-TYPE",        # 1
+        "APPLICATION-ASSOC-MAP-DATA-TYPE",    # 2
+        "APPLICATION-COMPOSITE-DATA-TYPE",    # 3
+        "APPLICATION-DATA-TYPE",              # 4
+        "APPLICATION-DEFERRED-DATA-TYPE",     # 5
+        "APPLICATION-PRIMITIVE-DATA-TYPE",    # 6
+        "APPLICATION-RECORD-DATA-TYPE",       # 7
+        "AUTOSAR-DATA-TYPE",                  # 8
+        "BSW-MODULE-ENTRY",                   # 9
+        "COMPU-METHOD",                       # 10
+        "DATA-CONSTR",                        # 11
+        "IMPLEMENTATION-DATA-TYPE",           # 12
+        "PHYSICAL-DIMENSION",                 # 13
+        "SW-ADDR-METHOD",                     # 14
+        "SW-BASE-TYPE",                       # 15
+        "UNIT",                               # 16
     ],
     "IntervalType": [
         "CLOSED",  # 0

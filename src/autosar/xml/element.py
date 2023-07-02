@@ -180,7 +180,7 @@ class ARObject:
         if not isinstance(value, int):
             raise TypeError(f"Invalid type for '{attr_name}'. Expected int, got '{str(type(value))}'")
         if value < 0:
-            raise ValueError("Positive integer expected, got {value}")
+            raise ValueError(f"Positive integer expected: {value}")
         setattr(self, attr_name, value)
 
 
@@ -300,7 +300,7 @@ class BaseRef(ARObject, abc.ABC):
 
     def __init__(self,
                  value: str,
-                 dest: ar_enum.IdentifiableSubTypes | None = None) -> None:
+                 dest: ar_enum.IdentifiableSubTypes) -> None:
         self.value = value
         self.dest: ar_enum.IdentifiableSubTypes = None
         if dest in self._accepted_subtypes():
@@ -451,6 +451,25 @@ class ApplicationDataTypeRef(BaseRef):
                 ar_enum.IdentifiableSubTypes.APPLICATION_DEFERRED_DATA_TYPE,
                 ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE,
                 ar_enum.IdentifiableSubTypes.APPLICATION_RECORD_DATA_TYPE}
+
+
+class AutosarDataTypeRef(BaseRef):
+    """
+    References to elements in AR:AUTOSAR-DATA-TYPE--SUBTYPES-ENUM
+    """
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.ABSTRACT_IMPLEMENTATION_DATA_TYPE,
+                ar_enum.IdentifiableSubTypes.APPLICATION_ARRAY_DATA_TYPE,
+                ar_enum.IdentifiableSubTypes.APPLICATION_ASSOC_MAP_DATA_TYPE,
+                ar_enum.IdentifiableSubTypes.APPLICATION_COMPOSITE_DATA_TYPE,
+                ar_enum.IdentifiableSubTypes.APPLICATION_DATA_TYPE,
+                ar_enum.IdentifiableSubTypes.APPLICATION_DEFERRED_DATA_TYPE,
+                ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE,
+                ar_enum.IdentifiableSubTypes.APPLICATION_RECORD_DATA_TYPE,
+                ar_enum.IdentifiableSubTypes.AUTOSAR_DATA_TYPE,
+                ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE}
 
 
 # Documentation Elements
@@ -1792,7 +1811,7 @@ class SwDataDefProps(ARObject):
             raise TypeError("variant must be of type SwDataDefPropsConditional")
 
 
-class ARDataType(ARElement):
+class AutosarDataType(ARElement):
     """
     Element AUTOSAR-DATA-TYPE
     Type: Abstract
@@ -1886,7 +1905,7 @@ class ImplementationDataTypeElement(Identifiable):
             raise TypeError("'elem' must be of type ImplementationDataTypeElement")
 
 
-class ImplementationDataType(ARDataType):
+class ImplementationDataType(AutosarDataType):
     """
     IMPLEMENTATION-DATA-TYPE
     Type: Concrete
@@ -1950,18 +1969,22 @@ class DataPrototype(Identifiable):
                 raise TypeError("'sw_data_def_props' must be one of (SwDataDefProps, SwDataDefPropsConditional)")
 
 
-class ARDataPrototype(DataPrototype):
+class AutosarDataPrototype(DataPrototype):
     """
     AR:AUTOSAR-DATA-PROTOTYPE
     Type: Abstract
     """
 
-    def __init__(self, name: str, kwargs: dict) -> None:
-        super().__init__(name, kwargs)
-        self.type_ref = None  # .TYPE-TREF
+    def __init__(self,
+                 name: str,
+                 type_ref: AutosarDataTypeRef | None = None,
+                 **kwargs: dict) -> None:
+        super().__init__(name, **kwargs)
+        self.type_ref: AutosarDataTypeRef | None = None  # .TYPE-TREF
+        self._assign_optional_strict("type_ref", type_ref, AutosarDataTypeRef)
 
 
-class VariableDataPrototype(ARDataPrototype):
+class VariableDataPrototype(AutosarDataPrototype):
     """
     AR:VARIABLE-DATA-PROTOTYPE
     Type: Concrete
@@ -1973,7 +1996,7 @@ class VariableDataPrototype(ARDataPrototype):
         # .VARIATION-POINT not supported
 
 
-class ApplicationDataType(ARDataType):
+class ApplicationDataType(AutosarDataType):
     """
     Group AR:APPLICATION-DATA-TYPE
     Type: Abstract
@@ -2015,7 +2038,7 @@ class ApplicationCompositeElementDataPrototype(DataPrototype):
                  name: str,
                  type_ref: ApplicationDataTypeRef | None = None,
                  **kwargs: dict) -> None:
-        super().__init__(name, kwargs)
+        super().__init__(name, **kwargs)
         self.type_ref: ApplicationDataTypeRef | None = None  # .TYPE-TREF
         self._assign_optional_strict('type_ref', type_ref, ApplicationDataTypeRef)
 

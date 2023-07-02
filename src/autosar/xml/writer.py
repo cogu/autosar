@@ -213,8 +213,11 @@ class Writer(_XMLWriter):
             'SwPointerTargetProps': self._write_sw_pointer_target_props,
             'SymbolProps': self._write_symbol_props,
             'ImplementationDataTypeElement': self._write_implementation_data_type_element,
+            'ApplicationArrayElement': self._write_application_array_element,
+            'ApplicationRecordElement': self._write_application_record_element,
             # Reference elements
             'PhysicalDimentionRef': self._write_physical_dimension_ref,
+            'ApplicationDataTypeRef': self._write_application_data_type_ref,
         }
         self.switcher_all = {}  # All concrete elements (used for unit testing)
         self.switcher_all.update(self.switcher_collectable)
@@ -1350,7 +1353,7 @@ class Writer(_XMLWriter):
         if elem.type_emitter is not None:
             self._add_content("TYPE-EMITTER", str(elem.type_emitter))
 
-    def _write_autosar_data_type(self, elem: ar_element.ARDataType) -> None:
+    def _write_autosar_data_type(self, elem: ar_element.AutosarDataType) -> None:
         """
         Writes group AR:AUTOSAR-DATA-TYPE
         Type: Abstract
@@ -1358,11 +1361,13 @@ class Writer(_XMLWriter):
         if elem.sw_data_def_props is not None:
             self._write_sw_data_def_props(elem.sw_data_def_props, "SW-DATA-DEF-PROPS")
 
-    def _write_application_data_type(self, elem: ar_element.ApplicationPrimitiveDataType) -> None:
+    def _write_data_prototype(self, elem: ar_element.DataPrototype) -> None:
         """
-        Writes complex type AR:APPLICATION-DATA-TYPE
-        Type: abstract
+        Writes group AR:DATA-PROTOTYPE
+        Type: Abstract
         """
+        if elem.sw_data_def_props is not None:
+            self._write_sw_data_def_props(elem.sw_data_def_props, "SW-DATA-DEF-PROPS")
 
     def _write_application_primitive_data_type(self, elem: ar_element.ApplicationPrimitiveDataType) -> None:
         """
@@ -1377,6 +1382,71 @@ class Writer(_XMLWriter):
         self._write_identifiable(elem)
         self._write_autosar_data_type(elem)
         self._leave_child()
+
+    def _write_application_composite_element_data_prototype(
+            self,
+            elem: ar_element.ApplicationCompositeElementDataPrototype) -> None:
+        """
+        Writes group AR:APPLICATION-COMPOSITE-ELEMENT-DATA-PROTOTYPE
+        Type: Abstract
+        """
+        assert isinstance(elem, ar_element.ApplicationCompositeElementDataPrototype)
+        if elem.type_ref is not None:
+            self._write_application_data_type_ref(elem.type_ref, 'TYPE-TREF')
+
+    def _write_application_array_element(self, elem: ar_element.ApplicationArrayElement) -> None:
+        """
+        Writes complex type AR:APPLICATION-ARRAY-ELEMENT
+        Type: Concrete
+        Tag variants: 'ELEMENT'
+        """
+        assert isinstance(elem, ar_element.ApplicationArrayElement)
+        self._add_child("ELEMENT")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_data_prototype(elem)
+        self._write_application_composite_element_data_prototype(elem)
+        self._write_application_array_element_group(elem)
+        self._leave_child()
+
+    def _write_application_array_element_group(self, elem: ar_element.ApplicationArrayElement) -> None:
+        """
+        Writes group AR:APPLICATION-ARRAY-ELEMENT
+        Type: Abstract
+        """
+        if elem.array_size_handling is not None:
+            self._add_content("ARRAY-SIZE-HANDLING", ar_enum.enum_to_xml(elem.array_size_handling))
+        if elem.array_size_semantics is not None:
+            self._add_content("ARRAY-SIZE-SEMANTICS", ar_enum.enum_to_xml(elem.array_size_semantics))
+        if elem.index_data_type_ref is not None:
+            self._write_index_data_type_ref(elem.index_data_type_ref)
+        if elem.max_number_of_elements is not None:
+            self._add_content("MAX-NUMBER-OF-ELEMENTS", elem.max_number_of_elements)
+
+    def _write_application_record_element(self, elem: ar_element.ApplicationRecordElement) -> None:
+        """
+        Writes complex type AR:APPLICATION-RECORD-ELEMENT
+        Type: Concrete
+        Tag variants: 'APPLICATION-RECORD-ELEMENT'
+        """
+        assert isinstance(elem, ar_element.ApplicationRecordElement)
+        self._add_child("APPLICATION-RECORD-ELEMENT")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_data_prototype(elem)
+        self._write_application_composite_element_data_prototype(elem)
+        self._write_application_record_element_group(elem)
+        self._leave_child()
+
+    def _write_application_record_element_group(self, elem: ar_element.ApplicationRecordElement) -> None:
+        """
+        Writes group AR:APPLICATION-RECORD-ELEMENT
+        Type: Abstract
+        """
+        if elem.is_optional is not None:
+            self._add_content('IS-OPTIONAL', self._format_boolean(elem.is_optional))
 
     # Reference Elements
 
@@ -1487,3 +1557,25 @@ class Writer(_XMLWriter):
         attr: TupleList = []
         self._collect_base_ref_attr(elem, attr)
         self._add_content('PHYSICAL-DIMENSION-REF', elem.value, attr)
+
+    def _write_index_data_type_ref(self, elem: ar_element.IndexDataTypeRef) -> None:
+        """
+        Writes reference to IndexDataType
+        Type: Concrete
+        Tag variants: 'INDEX-DATA-TYPE-REF'
+        """
+        assert isinstance(elem, ar_element.IndexDataTypeRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content('INDEX-DATA-TYPE-REF', elem.value, attr)
+
+    def _write_application_data_type_ref(self, elem: ar_element.ApplicationDataTypeRef, tag: str) -> None:
+        """
+        Writes reference to ApplicationDataType
+        Type: Concrete
+        Tag variants: 'TYPE-TREF', 'APPLICATION-DATA-TYPE-REF'
+        """
+        assert isinstance(elem, ar_element.ApplicationDataTypeRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content(tag, elem.value, attr)
