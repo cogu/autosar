@@ -27,7 +27,9 @@ Notable changes.
 
 ### DataDictionary elements
 
-* ARDataType
+* ApplicationArrayElement
+* ApplicationRecordElement
+* AutosarDataType
 * ImplementationDataTypeElement
 * SwBitRepresentation
 * SwDataDefProps
