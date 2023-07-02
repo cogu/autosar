@@ -98,6 +98,7 @@ class Reader:
             'COMPU-METHOD': self._read_compu_method,
 
             # Data Dictionary
+            'APPLICATION-PRIMITIVE-DATA-TYPE': self._read_application_primitive_data_type,
             'SW-BASE-TYPE': self._read_sw_base_type,
             'SW-ADDR-METHOD': self._read_sw_addr_method,
             'IMPLEMENTATION-DATA-TYPE': self._read_implementation_data_type,
@@ -1602,6 +1603,22 @@ class Reader:
         xml_child = child_elements.get("SW-DATA-DEF-PROPS")
         if xml_child is not None:
             data["sw_data_def_props"] = self._read_sw_data_def_props(xml_child)
+
+    def _read_application_primitive_data_type(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.ApplicationPrimitiveDataType:
+        """
+        Reads complex type AR:APPLICATION-PRIMITIVE-DATA-TYPE
+        Type: Concrete
+        Tag variants: 'APPLICATION-PRIMITIVE-DATA-TYPE'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_autosar_data_type(child_elements, data)
+        return ar_element.ApplicationPrimitiveDataType(**data)
 
     # Reference elements
 
