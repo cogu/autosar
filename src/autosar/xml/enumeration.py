@@ -120,14 +120,21 @@ class IdentifiableSubTypes(Enum):
     More items will be added as implementation progresses.
     """
 
-    BSW_MODULE_ENTRY = 0
-    COMPU_METHOD = 1
-    DATA_CONSTR = 2
-    IMPLEMENTATION_DATA_TYPE = 3
-    UNIT = 4
-    PHYSICAL_DIMENSION = 5
-    SW_ADDR_METHOD = 6
-    SW_BASE_TYPE = 7
+    APPLICATION_ARRAY_DATA_TYPE = 0
+    APPLICATION_ASSOC_MAP_DATA_TYPE = 1
+    APPLICATION_COMPOSITE_DATA_TYPE = 2
+    APPLICATION_DATA_TYPE = 3
+    APPLICATION_DEFERRED_DATA_TYPE = 4
+    APPLICATION_PRIMITIVE_DATA_TYPE = 5
+    APPLICATION_RECORD_DATA_TYPE = 6
+    BSW_MODULE_ENTRY = 7
+    COMPU_METHOD = 8
+    DATA_CONSTR = 9
+    IMPLEMENTATION_DATA_TYPE = 10
+    UNIT = 11
+    PHYSICAL_DIMENSION = 12
+    SW_ADDR_METHOD = 13
+    SW_BASE_TYPE = 14
 
 
 class IntervalType(Enum):
@@ -475,6 +482,13 @@ xml_to_enum_map = {
         "NO-FLOAT": VersionedEnumValue(Float.NO_FLOAT, {50}),
     },
     "IdentifiableSubTypes": {
+        "APPLICATION-ARRAY-DATA-TYPE": IdentifiableSubTypes.APPLICATION_ARRAY_DATA_TYPE,
+        "APPLICATION-ASSOC-MAP-DATA-TYPE": IdentifiableSubTypes.APPLICATION_ASSOC_MAP_DATA_TYPE,
+        "APPLICATION-COMPOSITE-DATA-TYPE": IdentifiableSubTypes.APPLICATION_COMPOSITE_DATA_TYPE,
+        "APPLICATION-DATA-TYPE": IdentifiableSubTypes.APPLICATION_DATA_TYPE,
+        "APPLICATION-DEFERRED-DATA-TYPE": IdentifiableSubTypes.APPLICATION_DEFERRED_DATA_TYPE,
+        "APPLICATION-PRIMITIVE-DATA-TYPE": IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE,
+        "APPLICATION-RECORD-DATA-TYPE": IdentifiableSubTypes.APPLICATION_RECORD_DATA_TYPE,
         "BSW-MODULE-ENTRY": IdentifiableSubTypes.BSW_MODULE_ENTRY,
         "COMPU-METHOD": IdentifiableSubTypes.COMPU_METHOD,
         "DATA-CONSTR": IdentifiableSubTypes.DATA_CONSTR,
@@ -726,14 +740,21 @@ enum_to_xml_map = {
         VersionedTextValue("NO-FLOAT", {50}),  # 1
     ],
     "IdentifiableSubTypes": [
-        "BSW-MODULE-ENTRY",          # 0
-        "COMPU-METHOD",              # 1
-        "DATA-CONSTR",               # 2
-        "IMPLEMENTATION-DATA-TYPE",  # 3
-        "UNIT",                      # 4
-        "PHYSICAL-DIMENSION",        # 5
-        "SW-ADDR-METHOD",            # 6
-        "SW-BASE-TYPE",              # 7
+        "APPLICATION-ARRAY-DATA-TYPE",      # 0
+        "APPLICATION-ASSOC-MAP-DATA-TYPE",  # 1
+        "APPLICATION-COMPOSITE-DATA-TYPE",  # 2
+        "APPLICATION-DATA-TYPE",            # 3
+        "APPLICATION-DEFERRED-DATA-TYPE",   # 4
+        "APPLICATION_PRIMITIVE_DATA_TYPE",  # 5
+        "APPLICATION-RECORD-DATA-TYPE",     # 6
+        "BSW-MODULE-ENTRY",                 # 7
+        "COMPU-METHOD",                     # 8
+        "DATA-CONSTR",                      # 9
+        "IMPLEMENTATION-DATA-TYPE",         # 10
+        "UNIT",                             # 11
+        "PHYSICAL-DIMENSION",               # 12
+        "SW-ADDR-METHOD",                   # 13
+        "SW-BASE-TYPE",                     # 14
     ],
     "IntervalType": [
         "CLOSED",  # 0

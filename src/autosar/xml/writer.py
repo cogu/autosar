@@ -168,6 +168,7 @@ class Writer(_XMLWriter):
             # CompuMethod elements
             'CompuMethod': self._write_compu_method,
             # DataDictionary elements
+            'ApplicationPrimitiveDataType': self._write_application_primitive_data_type,
             'SwBaseType': self._write_sw_base_type,
             'SwAddrMethod': self._write_sw_addr_method,
             'ImplementationDataType': self._write_implementation_data_type,
@@ -1356,6 +1357,26 @@ class Writer(_XMLWriter):
         """
         if elem.sw_data_def_props is not None:
             self._write_sw_data_def_props(elem.sw_data_def_props, "SW-DATA-DEF-PROPS")
+
+    def _write_application_data_type(self, elem: ar_element.ApplicationPrimitiveDataType) -> None:
+        """
+        Writes complex type AR:APPLICATION-DATA-TYPE
+        Type: abstract
+        """
+
+    def _write_application_primitive_data_type(self, elem: ar_element.ApplicationPrimitiveDataType) -> None:
+        """
+        Writes complex type AR:APPLICATION-PRIMITIVE-DATA-TYPE
+        Type: Concrete
+        Tag variants: 'APPLICATION-PRIMITIVE-DATA-TYPE'
+        """
+        assert isinstance(elem, ar_element.ApplicationPrimitiveDataType)
+        self._add_child("APPLICATION-PRIMITIVE-DATA-TYPE")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_autosar_data_type(elem)
+        self._leave_child()
 
     # Reference Elements
 

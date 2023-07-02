@@ -1034,5 +1034,46 @@ class TestImplementationDataType(unittest.TestCase):
         self.assertEqual(str(elem.sw_data_def_props[0].base_type_ref), uint8_ref)
 
 
+class TestApplicationPrimitiveDataType(unittest.TestCase):
+
+    def test_read_write_name_only(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ApplicationPrimitiveDataType("TypeName")
+        xml = '''<APPLICATION-PRIMITIVE-DATA-TYPE>
+  <SHORT-NAME>TypeName</SHORT-NAME>
+</APPLICATION-PRIMITIVE-DATA-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationPrimitiveDataType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationPrimitiveDataType)
+        self.assertEqual(elem.name, "TypeName")
+
+    def test_read_write_sw_data_def_props(self):
+        writer = autosar.xml.Writer()
+        sw_data_def_props = ar_element.SwDataDefPropsConditional(compu_method_ref="/CompuMethod/CompuName")
+        element = ar_element.ApplicationPrimitiveDataType("TypeName",
+                                                          category="VALUE",
+                                                          sw_data_def_props=sw_data_def_props)
+        xml = '''<APPLICATION-PRIMITIVE-DATA-TYPE>
+  <SHORT-NAME>TypeName</SHORT-NAME>
+  <CATEGORY>VALUE</CATEGORY>
+  <SW-DATA-DEF-PROPS>
+    <SW-DATA-DEF-PROPS-VARIANTS>
+      <SW-DATA-DEF-PROPS-CONDITIONAL>
+        <COMPU-METHOD-REF DEST="COMPU-METHOD">/CompuMethod/CompuName</COMPU-METHOD-REF>
+      </SW-DATA-DEF-PROPS-CONDITIONAL>
+    </SW-DATA-DEF-PROPS-VARIANTS>
+  </SW-DATA-DEF-PROPS>
+</APPLICATION-PRIMITIVE-DATA-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationPrimitiveDataType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationPrimitiveDataType)
+        self.assertEqual(elem.name, "TypeName")
+        self.assertEqual(elem.category, "VALUE")
+        props: ar_element.SwDataDefPropsConditional = elem.sw_data_def_props[0]
+        self.assertEqual(str(props.compu_method_ref), "/CompuMethod/CompuName")
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -6,6 +6,7 @@ Notable changes.
 
 ### Collectable elements
 
+* ApplicationPrimitiveDataType
 * CompuMethod
 * DataConstraint
 * ImplementationDataType
@@ -26,6 +27,7 @@ Notable changes.
 
 ### DataDictionary elements
 
+* ARDataType
 * ImplementationDataTypeElement
 * SwBitRepresentation
 * SwDataDefProps

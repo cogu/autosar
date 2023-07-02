@@ -126,6 +126,20 @@ class ARObject:
             raise TypeError(f"{attr_name}: Invalid type. Expected (int, str), got '{str(type(value))}'")
         setattr(self, attr_name, value)
 
+    def _assign_optional_strict(self, attr_name: str, value: Any, type_name: type) -> None:
+        """
+        Sets object attribute with strict type check
+        """
+        if value is not None:
+            self._set_attr_with_strict_type(attr_name, value, type_name)
+
+    def _assign_optional_positive_int(self, attr_name, value: int) -> None:
+        """
+        Checks that the optional value is a positive integer before assignment
+        """
+        if value is not None:
+            self._set_attr_positive_int(attr_name, value)
+
     def _set_attr_with_strict_type(self, attr_name: str, value: Any, type_class: type) -> None:
         """
         Sets object attribute only if the value is matches given type-class
@@ -145,7 +159,8 @@ class ARObject:
         elif isinstance(value, type_name):
             new_value = value
         else:
-            raise TypeError(f"{attr_name}: Invalid type '{str(type(value))}'. Expected one of (str, {type_name})")
+            raise TypeError(f"Invalid type  for '{attr_name}'"
+                            f". Expected one of (str, {type_name}), got '{str(type(value))}'")
         setattr(self, attr_name, new_value)
 
     def _set_attr_with_type_cast(self, attr_name: str, value: Any, type_class: type) -> None:
@@ -157,6 +172,16 @@ class ARObject:
         else:
             raise NotImplementedError(type_class)
         setattr(self, attr_name, new_value)
+
+    def _set_attr_positive_int(self, attr_name: str, value: int) -> None:
+        """
+        Checks that value is non-negative before updating attribute
+        """
+        if not isinstance(value, int):
+            raise TypeError(f"Invalid type for '{attr_name}'. Expected int, got '{str(type(value))}'")
+        if value < 0:
+            raise ValueError("Positive integer expected, got {value}")
+        setattr(self, attr_name, value)
 
 
 class Referrable(ARObject):
@@ -277,13 +302,17 @@ class BaseRef(ARObject, abc.ABC):
                  value: str,
                  dest: ar_enum.IdentifiableSubTypes | None = None) -> None:
         self.value = value
-        self.dest = dest
+        self.dest: ar_enum.IdentifiableSubTypes = None
+        if dest in self._accepted_subtypes():
+            self.dest = dest
+        else:
+            raise ValueError(f"{str(dest)} is not a valid sub-type for {str(type(self))}")
 
     @abc.abstractmethod
     def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
         """
         Subset of ar_enum.IdentifiableSubTypes defining
-        which enum valuesa are acceptable for child
+        which enum values are acceptable for dest
         """
 
     def __str__(self) -> str:
@@ -300,6 +329,7 @@ class CompuMethodRef(BaseRef):
         super().__init__(value, ar_enum.IdentifiableSubTypes.COMPU_METHOD)
 
     def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
         return {ar_enum.IdentifiableSubTypes.COMPU_METHOD}
 
 
@@ -312,6 +342,7 @@ class FunctionPtrSignatureRef(BaseRef):
         super().__init__(value, ar_enum.IdentifiableSubTypes.BSW_MODULE_ENTRY)
 
     def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
         return {ar_enum.IdentifiableSubTypes.BSW_MODULE_ENTRY}
 
 
@@ -324,6 +355,7 @@ class ImplementationDataTypeRef(BaseRef):
         super().__init__(value, ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE)
 
     def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
         return {ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE}
 
 
@@ -336,6 +368,7 @@ class SwAddrMethodRef(BaseRef):
         super().__init__(value, ar_enum.IdentifiableSubTypes.SW_ADDR_METHOD)
 
     def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
         return {ar_enum.IdentifiableSubTypes.SW_ADDR_METHOD}
 
 
@@ -348,6 +381,7 @@ class SwBaseTypeRef(BaseRef):
         super().__init__(value, ar_enum.IdentifiableSubTypes.SW_BASE_TYPE)
 
     def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
         return {ar_enum.IdentifiableSubTypes.SW_BASE_TYPE}
 
 
@@ -360,6 +394,7 @@ class DataConstraintRef(BaseRef):
         super().__init__(value, ar_enum.IdentifiableSubTypes.DATA_CONSTR)
 
     def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
         return {ar_enum.IdentifiableSubTypes.DATA_CONSTR}
 
 
@@ -372,6 +407,7 @@ class PhysicalDimentionRef(BaseRef):
         super().__init__(value, ar_enum.IdentifiableSubTypes.PHYSICAL_DIMENSION)
 
     def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
         return {ar_enum.IdentifiableSubTypes.PHYSICAL_DIMENSION}
 
 
@@ -384,7 +420,37 @@ class UnitRef(BaseRef):
         super().__init__(value, ar_enum.IdentifiableSubTypes.UNIT)
 
     def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
         return {ar_enum.IdentifiableSubTypes.UNIT}
+
+
+class IndexDataTypeRef(BaseRef):
+    """
+    IndexDataType reference
+    """
+
+    def __init__(self, value: str) -> None:
+        super().__init__(value, ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE)
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE}
+
+
+class ApplicationDataTypeRef(BaseRef):
+    """
+    Application data type reference
+    """
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.APPLICATION_ARRAY_DATA_TYPE,
+                ar_enum.IdentifiableSubTypes.APPLICATION_ASSOC_MAP_DATA_TYPE,
+                ar_enum.IdentifiableSubTypes.APPLICATION_COMPOSITE_DATA_TYPE,
+                ar_enum.IdentifiableSubTypes.APPLICATION_DATA_TYPE,
+                ar_enum.IdentifiableSubTypes.APPLICATION_DEFERRED_DATA_TYPE,
+                ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE,
+                ar_enum.IdentifiableSubTypes.APPLICATION_RECORD_DATA_TYPE}
 
 
 # Documentation Elements
@@ -1002,44 +1068,8 @@ class Annotation(GeneralAnnotation):
                  text: DocumentationBlock | None = None) -> None:
         super().__init__(label, origin, text)
 
-# DataPrototypes
-
-
-class DataPrototype(Identifiable):
-    """
-    AR:DATA-PROTOTYPE
-    Type: Abstract
-    """
-
-    def __init__(self, name: str, kwargs: dict) -> None:
-        super().__init__(name, kwargs)
-        self.data_def_props = None  # .SW-DATA-DEF-PROPS
-
-
-class AutosarDataPrototype(DataPrototype):
-    """
-    AR:AUTOSAR-DATA-PROTOTYPE
-    Type: Abstract
-    """
-
-    def __init__(self, name: str, kwargs: dict) -> None:
-        super().__init__(name, kwargs)
-        self.type_ref = None  # .TYPE-TREF
-
-
-class VariableDataPrototype(AutosarDataPrototype):
-    """
-    AR:VARIABLE-DATA-PROTOTYPE
-    Type: Concrete
-    """
-
-    def __init__(self, name: str, **kwargs) -> None:
-        super().__init__(name, kwargs)
-        self.init_value = None  # .INIT-VALUE
-        # .VARIATION-POINT not supported
 
 # ComputationMethods
-
 
 class CompuRational(ARObject):
     """
@@ -1616,14 +1646,14 @@ class SwDataDefPropsConditional(ARObject):
     def __init__(self,
                  display_presentation: ar_enum.DisplayPresentation | None = None,
                  step_size: float | None = None,
-                 annotations: list[Annotation] | None = None,
-                 sw_addr_method_ref: SwAddrMethodRef | None = None,
-                 alignment: int | float | None = None,
+                 annotations: Annotation | list[Annotation] | None = None,
+                 sw_addr_method_ref: str | SwAddrMethodRef | None = None,
                  base_type_ref: SwBaseTypeRef | None = None,
-                 compu_method_ref: CompuMethodRef | None = None,
-                 data_constraint_ref: DataConstraintRef | None = None,
-                 impl_data_type_ref: ImplementationDataTypeRef | None = None,
-                 unit_ref: UnitRef | None = None,
+                 compu_method_ref: str | CompuMethodRef | None = None,
+                 data_constraint_ref: str | DataConstraintRef | None = None,
+                 impl_data_type_ref: str | ImplementationDataTypeRef | None = None,
+                 unit_ref: str | UnitRef | None = None,
+                 alignment: int | float | None = None,
                  bit_representation: SwBitRepresentation | None = None,
                  calibration_access: ar_enum.SwCalibrationAccess | None = None,
                  text_props: SwTextProps | None = None,
@@ -1830,7 +1860,7 @@ class ImplementationDataTypeElement(Identifiable):
         self.is_optional: bool | None = None                                    # .IS-OPTIONAL
         self.sub_elements: list["ImplementationDataTypeElement"] | None = []    # .SUB-ELEMENTS
         self.sw_data_def_props: SwDataDefProps | None = None                    # .SW-DATA-DEF-PROPS
-        self._assign_optional("array_size", array_size, int)  # TODO: Validate positive integer
+        self._assign_optional_positive_int("array_size", array_size)
         self._assign_optional("array_impl_policy", array_impl_policy, ar_enum.ArrayImplPolicy)
         self._assign_optional("array_size_handling", array_size_handling, ar_enum.ArraySizeHandling)
         self._assign_optional("array_size_semantics", array_size_semantics, ar_enum.ArraySizeSemantics)
@@ -1874,7 +1904,7 @@ class ImplementationDataType(ARDataType):
         super().__init__(name, **kwargs)
         self.dynamic_array_size_profile: str | None = None                  # .DYNAMIC-ARRAY-SIZE-PROFILE
         self.is_struct_with_optional_element: bool | None = None            # .IS-STRUCT-WITH-OPTIONAL-ELEMENT
-        self.sub_elements: list[ImplementationDataTypeElement] | None = []  # .SUB-ELEMENTS
+        self.sub_elements: list[ImplementationDataTypeElement] = []         # .SUB-ELEMENTS
         self.symbol_props: SymbolProps | None = None                        # .SYMBOL-PROPS
         self.type_emitter: str | None = None                                # .TYPE-EMITTER
         self._assign_optional('dynamic_array_size_profile', dynamic_array_size_profile, str)
@@ -1897,6 +1927,193 @@ class ImplementationDataType(ARDataType):
             self.sub_elements.append(elem)
         else:
             raise TypeError("'elem' must be of type ImplementationDataTypeElement")
+
+
+class DataPrototype(Identifiable):
+    """
+    AR:DATA-PROTOTYPE
+    Type: Abstract
+    """
+
+    def __init__(self,
+                 name: str,
+                 sw_data_def_props: SwDataDefProps | SwDataDefPropsConditional | None = None,
+                 **kwargs: dict) -> None:
+        super().__init__(name, **kwargs)
+        self.sw_data_def_props: SwDataDefProps | None = None  # .SW-DATA-DEF-PROPS
+        if sw_data_def_props is not None:
+            if isinstance(sw_data_def_props, SwDataDefProps):
+                self.sw_data_def_props = sw_data_def_props
+            elif isinstance(sw_data_def_props, SwDataDefPropsConditional):
+                self.sw_data_def_props = SwDataDefProps(sw_data_def_props)
+            else:
+                raise TypeError("'sw_data_def_props' must be one of (SwDataDefProps, SwDataDefPropsConditional)")
+
+
+class ARDataPrototype(DataPrototype):
+    """
+    AR:AUTOSAR-DATA-PROTOTYPE
+    Type: Abstract
+    """
+
+    def __init__(self, name: str, kwargs: dict) -> None:
+        super().__init__(name, kwargs)
+        self.type_ref = None  # .TYPE-TREF
+
+
+class VariableDataPrototype(ARDataPrototype):
+    """
+    AR:VARIABLE-DATA-PROTOTYPE
+    Type: Concrete
+    """
+
+    def __init__(self, name: str, **kwargs) -> None:
+        super().__init__(name, kwargs)
+        self.init_value = None  # .INIT-VALUE
+        # .VARIATION-POINT not supported
+
+
+class ApplicationDataType(ARDataType):
+    """
+    Group AR:APPLICATION-DATA-TYPE
+    Type: Abstract
+    """
+
+
+class ApplicationCompositeDataType(ApplicationDataType):
+    """
+    Group AR:APPLICATION-COMPOSITE-DATA-TYPE
+    Type: Abstract
+    """
+
+    @property
+    def is_composite(self):
+        """Is this a composite data type?"""
+        return True
+
+
+class ApplicationPrimitiveDataType(ApplicationDataType):
+    """
+    Complex type AR:APPLICATION-PRIMITIVE-DATA-TYPE
+    Type Concrete
+    Tag variants: 'APPLICATION-PRIMITIVE-DATA-TYPE'
+    """
+
+    @property
+    def is_composite(self):
+        """Is this a composite data type?"""
+        return False
+
+
+class ApplicationCompositeElementDataPrototype(DataPrototype):
+    """
+    AR:APPLICATION-COMPOSITE-ELEMENT-DATA-PROTOTYPE
+    Type: Abstract
+    """
+
+    def __init__(self,
+                 name: str,
+                 type_ref: ApplicationDataTypeRef | None = None,
+                 **kwargs: dict) -> None:
+        super().__init__(name, kwargs)
+        self.type_ref: ApplicationDataTypeRef | None = None  # .TYPE-TREF
+        self._assign_optional_strict('type_ref', type_ref, ApplicationDataTypeRef)
+
+
+class ApplicationArrayElement(ApplicationCompositeElementDataPrototype):
+    """
+    Complex type AR:APPLICATION-ARRAY-ELEMENT
+    Type: Concrete
+    Tag variants: 'ELEMENT'
+    """
+
+    def __init__(self,
+                 name: str,
+                 max_number_of_elements: int | None = None,
+                 array_size_handling: ar_enum.ArraySizeHandling | None = None,
+                 array_size_semantics: ar_enum.ArraySizeSemantics | None = None,
+                 index_data_type_ref: IndexDataTypeRef | None = None,
+                 **kwargs: dict) -> None:
+        super().__init__(name, **kwargs)
+        self.array_size_handling: ar_enum.ArraySizeHandling | None = None     # .ARRAY-SIZE-HANDLING
+        self.array_size_semantics: ar_enum.ArraySizeSemantics | None = None   # .ARRAY-SIZE-SEMANTICS
+        self.max_number_of_elements: int | None = None                        # ."MAX-NUMBER-OF-ELEMENTS
+        self.index_data_type_ref: IndexDataTypeRef | None = None              # .INDEX-DATA-TYPE-REF
+        self._assign_optional("array_size_handling", array_size_handling, ar_enum.ArraySizeHandling)
+        self._assign_optional("array_size_semantics", array_size_semantics, ar_enum.ArraySizeSemantics)
+        self._assign_optional_positive_int("max_number_of_elements", max_number_of_elements)
+        self._assign_optional("index_data_type_ref", index_data_type_ref, IndexDataTypeRef)
+
+
+class ApplicationArrayDataType(ApplicationCompositeDataType):
+    """
+    Complex type AR:APPLICATION-ARRAY-DATA-TYPE
+    Type: Concrete
+    Tag variants: 'APPLICATION-ARRAY-DATA-TYPE'
+    """
+
+    def __init__(self,
+                 name: str,
+                 dynamic_array_size_profile: str | None = None,
+                 element: ApplicationArrayElement | None = None,
+                 **kwargs: dict) -> None:
+        super().__init__(name, **kwargs)
+        self.dynamic_array_size_profile: str | None = None                  # .DYNAMIC-ARRAY-SIZE-PROFILE
+        self.element: ApplicationArrayElement | None = None                 # .ELEMENT
+        self._assign_optional('dynamic_array_size_profile', dynamic_array_size_profile, str)
+        self._assign_optional_strict('element', element, ApplicationArrayElement)
+
+
+class ApplicationRecordElement(ApplicationCompositeElementDataPrototype):
+    """
+    Complex type AR:APPLICATION-RECORD-ELEMENT
+    Type: Concrete
+    Tag variants: 'APPLICATION-RECORD-ELEMENT'
+    """
+
+    def __init__(self,
+                 name: str,
+                 is_optional: bool | None = None,
+                 **kwargs: dict) -> None:
+        super().__init__(name, **kwargs)
+        self.is_optional: bool | None = None                  # .IS-OPTIONAL
+        self._assign_optional('is_optional', is_optional, bool)
+
+
+class ApplicationRecordDataType(ApplicationCompositeDataType):
+    """
+    Complex type AR:APPLICATION-RECORD-DATA-TYPE
+    Type: Concrete
+    Tag variants: 'APPLICATION-RECORD-DATA-TYPE'
+    """
+
+    def __init__(self,
+                 name: str,
+                 elements: ApplicationRecordElement | list[ApplicationRecordElement] | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.elements: list[ApplicationRecordElement] = []
+        if elements is not None:
+            if isinstance(elements, ApplicationRecordElement):
+                self.append(elements)
+            elif isinstance(elements, list):
+                self.extend(elements)
+
+    def append(self, element: ApplicationRecordElement) -> None:
+        """
+        Appends element to elements list
+        """
+        if isinstance(element, ApplicationRecordElement):
+            self.elements.append(element)
+        else:
+            raise TypeError("'element' must be of type ApplicationRecordElement")
+
+    def extend(self, elements: list[ApplicationRecordElement]) -> None:
+        """
+        Extends elements to elements list
+        """
+        for element in elements:  # We want to type-check each element before adding to internal list
+            self.append(element)
 
 # Software address method (partly implemented)
 
