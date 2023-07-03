@@ -6,7 +6,9 @@ Notable changes.
 
 ### Collectable elements
 
+* ApplicationArrayDataType
 * ApplicationPrimitiveDataType
+* ApplicationRecordDataType
 * CompuMethod
 * DataConstraint
 * ImplementationDataType

@@ -1367,5 +1367,210 @@ class TestApplicationRecordElement(unittest.TestCase):
         self.assertFalse(elem.is_optional)
 
 
+class TestApplicationArrayDataType(unittest.TestCase):
+
+    def test_read_write_name_only(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ApplicationArrayDataType("TypeName")
+        xml = '''<APPLICATION-ARRAY-DATA-TYPE>
+  <SHORT-NAME>TypeName</SHORT-NAME>
+</APPLICATION-ARRAY-DATA-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationArrayDataType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationArrayDataType)
+        self.assertEqual(elem.name, "TypeName")
+
+    def test_read_write_dynamic_array_size_profile(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ApplicationArrayDataType(
+            "TypeName",
+            dynamic_array_size_profile="Profile")
+        xml = '''<APPLICATION-ARRAY-DATA-TYPE>
+  <SHORT-NAME>TypeName</SHORT-NAME>
+  <DYNAMIC-ARRAY-SIZE-PROFILE>Profile</DYNAMIC-ARRAY-SIZE-PROFILE>
+</APPLICATION-ARRAY-DATA-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationArrayDataType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationArrayDataType)
+        self.assertEqual(elem.name, "TypeName")
+        self.assertEqual(elem.dynamic_array_size_profile, "Profile")
+
+    def test_read_write_element(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ApplicationArrayElement(
+            "ElementName",
+            type_ref=ar_element.ApplicationDataTypeRef("/ApplicationTypes/TypeName",
+                                                       ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE),
+            max_number_of_elements=8)
+        datatype1 = ar_element.ApplicationArrayDataType(
+            "TypeName",
+            element=element)
+        xml = '''<APPLICATION-ARRAY-DATA-TYPE>
+  <SHORT-NAME>TypeName</SHORT-NAME>
+  <ELEMENT>
+    <SHORT-NAME>ElementName</SHORT-NAME>
+    <TYPE-TREF DEST="APPLICATION-PRIMITIVE-DATA-TYPE">/ApplicationTypes/TypeName</TYPE-TREF>
+    <MAX-NUMBER-OF-ELEMENTS>8</MAX-NUMBER-OF-ELEMENTS>
+  </ELEMENT>
+</APPLICATION-ARRAY-DATA-TYPE>'''
+        self.assertEqual(writer.write_str_elem(datatype1), xml)
+        reader = autosar.xml.Reader()
+        datatype2: ar_element.ApplicationArrayDataType = reader.read_str_elem(xml)
+        self.assertIsInstance(datatype2, ar_element.ApplicationArrayDataType)
+        self.assertEqual(datatype2.name, "TypeName")
+        element = datatype2.element
+        self.assertEqual(element.name, "ElementName")
+        self.assertEqual(element.type_ref.value, "/ApplicationTypes/TypeName")
+        self.assertEqual(element.type_ref.dest, ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE)
+        self.assertEqual(element.max_number_of_elements, 8)
+
+    def test_read_write_sw_data_def_props(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ApplicationArrayDataType(
+            "TypeName",
+            category="ARRAY",
+            sw_data_def_props=ar_element.SwDataDefPropsConditional(compu_method_ref="/CompuMethod/CompuName"))
+        xml = '''<APPLICATION-ARRAY-DATA-TYPE>
+  <SHORT-NAME>TypeName</SHORT-NAME>
+  <CATEGORY>ARRAY</CATEGORY>
+  <SW-DATA-DEF-PROPS>
+    <SW-DATA-DEF-PROPS-VARIANTS>
+      <SW-DATA-DEF-PROPS-CONDITIONAL>
+        <COMPU-METHOD-REF DEST="COMPU-METHOD">/CompuMethod/CompuName</COMPU-METHOD-REF>
+      </SW-DATA-DEF-PROPS-CONDITIONAL>
+    </SW-DATA-DEF-PROPS-VARIANTS>
+  </SW-DATA-DEF-PROPS>
+</APPLICATION-ARRAY-DATA-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationArrayDataType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationArrayDataType)
+        self.assertEqual(elem.name, "TypeName")
+        self.assertEqual(elem.category, "ARRAY")
+        props: ar_element.SwDataDefPropsConditional = elem.sw_data_def_props[0]
+        self.assertEqual(str(props.compu_method_ref), "/CompuMethod/CompuName")
+
+
+class TestApplicationRecordDataType(unittest.TestCase):
+
+    def test_read_write_name_only(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ApplicationRecordDataType("TypeName")
+        xml = '''<APPLICATION-RECORD-DATA-TYPE>
+  <SHORT-NAME>TypeName</SHORT-NAME>
+</APPLICATION-RECORD-DATA-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationRecordDataType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationRecordDataType)
+        self.assertEqual(elem.name, "TypeName")
+
+    def test_read_write_elements_directly_defined_using_sw_data_def_props(self):
+        writer = autosar.xml.Writer()
+        element1 = ar_element.ApplicationRecordElement(
+            "Pitch",
+            sw_data_def_props=ar_element.SwDataDefPropsConditional(
+                compu_method_ref="/DataTypes/CompuMethods/Pitch_T",
+                data_constraint_ref="/DataTypes/DataConstrs/Pitch_DataConstr",
+                unit_ref="/DataTypes/Units/deg"))
+        element2 = ar_element.ApplicationRecordElement(
+            "Yaw",
+            sw_data_def_props=ar_element.SwDataDefPropsConditional(
+                compu_method_ref="/DataTypes/CompuMethods/Yaw_T",
+                data_constraint_ref="/DataTypes/DataConstrs/Yaw_DataConstr",
+                unit_ref="/DataTypes/Units/deg"))
+        datatype = ar_element.ApplicationRecordDataType(
+            "TypeName",
+            elements=[element1, element2])
+        xml = '''<APPLICATION-RECORD-DATA-TYPE>
+  <SHORT-NAME>TypeName</SHORT-NAME>
+  <ELEMENTS>
+    <APPLICATION-RECORD-ELEMENT>
+      <SHORT-NAME>Pitch</SHORT-NAME>
+      <SW-DATA-DEF-PROPS>
+        <SW-DATA-DEF-PROPS-VARIANTS>
+          <SW-DATA-DEF-PROPS-CONDITIONAL>
+            <COMPU-METHOD-REF DEST="COMPU-METHOD">/DataTypes/CompuMethods/Pitch_T</COMPU-METHOD-REF>
+            <DATA-CONSTR-REF DEST="DATA-CONSTR">/DataTypes/DataConstrs/Pitch_DataConstr</DATA-CONSTR-REF>
+            <UNIT-REF DEST="UNIT">/DataTypes/Units/deg</UNIT-REF>
+          </SW-DATA-DEF-PROPS-CONDITIONAL>
+        </SW-DATA-DEF-PROPS-VARIANTS>
+      </SW-DATA-DEF-PROPS>
+    </APPLICATION-RECORD-ELEMENT>
+    <APPLICATION-RECORD-ELEMENT>
+      <SHORT-NAME>Yaw</SHORT-NAME>
+      <SW-DATA-DEF-PROPS>
+        <SW-DATA-DEF-PROPS-VARIANTS>
+          <SW-DATA-DEF-PROPS-CONDITIONAL>
+            <COMPU-METHOD-REF DEST="COMPU-METHOD">/DataTypes/CompuMethods/Yaw_T</COMPU-METHOD-REF>
+            <DATA-CONSTR-REF DEST="DATA-CONSTR">/DataTypes/DataConstrs/Yaw_DataConstr</DATA-CONSTR-REF>
+            <UNIT-REF DEST="UNIT">/DataTypes/Units/deg</UNIT-REF>
+          </SW-DATA-DEF-PROPS-CONDITIONAL>
+        </SW-DATA-DEF-PROPS-VARIANTS>
+      </SW-DATA-DEF-PROPS>
+    </APPLICATION-RECORD-ELEMENT>
+  </ELEMENTS>
+</APPLICATION-RECORD-DATA-TYPE>'''
+        self.assertEqual(writer.write_str_elem(datatype), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationRecordDataType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationRecordDataType)
+        self.assertEqual(elem.name, "TypeName")
+        self.assertEqual(len(elem.elements), 2)
+        child_elem = elem.elements[0]
+        self.assertEqual(child_elem.name, "Pitch")
+        child_elem = elem.elements[1]
+        self.assertEqual(child_elem.name, "Yaw")
+
+    def test_read_write_elements_by_reference(self):
+        writer = autosar.xml.Writer()
+        element1 = ar_element.ApplicationRecordElement(
+            "Pitch",
+            category="VALUE",
+            type_ref=ar_element.ApplicationDataTypeRef(
+                "/DataTypes/Pitch_T",
+                ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE))
+        element2 = ar_element.ApplicationRecordElement(
+            "Yaw",
+            category="VALUE",
+            type_ref=ar_element.ApplicationDataTypeRef(
+                "/DataTypes/Yaw_T",
+                ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE))
+        datatype = ar_element.ApplicationRecordDataType(
+            "TypeName",
+            category="STRUCTURE",
+            elements=[element1, element2])
+        xml = '''<APPLICATION-RECORD-DATA-TYPE>
+  <SHORT-NAME>TypeName</SHORT-NAME>
+  <CATEGORY>STRUCTURE</CATEGORY>
+  <ELEMENTS>
+    <APPLICATION-RECORD-ELEMENT>
+      <SHORT-NAME>Pitch</SHORT-NAME>
+      <CATEGORY>VALUE</CATEGORY>
+      <TYPE-TREF DEST="APPLICATION-PRIMITIVE-DATA-TYPE">/DataTypes/Pitch_T</TYPE-TREF>
+    </APPLICATION-RECORD-ELEMENT>
+    <APPLICATION-RECORD-ELEMENT>
+      <SHORT-NAME>Yaw</SHORT-NAME>
+      <CATEGORY>VALUE</CATEGORY>
+      <TYPE-TREF DEST="APPLICATION-PRIMITIVE-DATA-TYPE">/DataTypes/Yaw_T</TYPE-TREF>
+    </APPLICATION-RECORD-ELEMENT>
+  </ELEMENTS>
+</APPLICATION-RECORD-DATA-TYPE>'''
+        self.assertEqual(writer.write_str_elem(datatype), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationRecordDataType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationRecordDataType)
+        self.assertEqual(elem.name, "TypeName")
+        self.assertEqual(len(elem.elements), 2)
+        child_elem = elem.elements[0]
+        self.assertEqual(child_elem.name, "Pitch")
+        self.assertEqual(str(child_elem.type_ref), "/DataTypes/Pitch_T")
+        child_elem = elem.elements[1]
+        self.assertEqual(child_elem.name, "Yaw")
+        self.assertEqual(str(child_elem.type_ref), "/DataTypes/Yaw_T")
+
+
 if __name__ == '__main__':
     unittest.main()

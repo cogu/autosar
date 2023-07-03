@@ -168,6 +168,8 @@ class Writer(_XMLWriter):
             # CompuMethod elements
             'CompuMethod': self._write_compu_method,
             # DataDictionary elements
+            'ApplicationArrayDataType': self._write_application_array_data_type,
+            'ApplicationRecordDataType': self._write_application_record_data_type,
             'ApplicationPrimitiveDataType': self._write_application_primitive_data_type,
             'SwBaseType': self._write_sw_base_type,
             'SwAddrMethod': self._write_sw_addr_method,
@@ -1447,6 +1449,57 @@ class Writer(_XMLWriter):
         """
         if elem.is_optional is not None:
             self._add_content('IS-OPTIONAL', self._format_boolean(elem.is_optional))
+
+    def _write_application_array_data_type(self, elem: ar_element.ApplicationArrayDataType) -> None:
+        """
+        Writes complex type AR:APPLICATION-ARRAY-DATA-TYPE
+        Type: Concrete
+        Tag variants: 'APPLICATION-ARRAY-DATA-TYPE'
+        """
+        assert isinstance(elem, ar_element.ApplicationArrayDataType)
+        self._add_child("APPLICATION-ARRAY-DATA-TYPE")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_autosar_data_type(elem)
+        self._write_application_array_data_type_group(elem)
+        self._leave_child()
+
+    def _write_application_array_data_type_group(self, elem: ar_element.ApplicationArrayDataType) -> None:
+        """
+        Writes group AR:APPLICATION-ARRAY-DATA-TYPE
+        Type: Abstract
+        """
+        if elem.dynamic_array_size_profile is not None:
+            self._add_content("DYNAMIC-ARRAY-SIZE-PROFILE", str(elem.dynamic_array_size_profile))
+        if elem.element is not None:
+            self._write_application_array_element(elem.element)
+
+    def _write_application_record_data_type(self, elem: ar_element.ApplicationRecordDataType) -> None:
+        """
+        Writes complex type AR:APPLICATION-RECORD-DATA-TYPE
+        Type: Concrete
+        Tag variants: 'APPLICATION-RECORD-DATA-TYPE'
+        """
+        assert isinstance(elem, ar_element.ApplicationRecordDataType)
+        self._add_child("APPLICATION-RECORD-DATA-TYPE")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_autosar_data_type(elem)
+        self._write_application_record_data_type_group(elem)
+        self._leave_child()
+
+    def _write_application_record_data_type_group(self, elem: ar_element.ApplicationRecordDataType) -> None:
+        """
+        Writes group AR:APPLICATION-RECORD-DATA-TYPE
+        Type: Abstract
+        """
+        if len(elem.elements) > 0:
+            self._add_child("ELEMENTS")
+            for child_elem in elem.elements:
+                self._write_application_record_element(child_elem)
+            self._leave_child()
 
     # Reference Elements
 

@@ -98,6 +98,8 @@ class Reader:
             'COMPU-METHOD': self._read_compu_method,
 
             # Data Dictionary
+            'APPLICATION-ARRAY-DATA-TYPE': self._read_application_array_data_type,
+            'APPLICATION-RECORD-DATA-TYPE': self._read_application_record_data_type,
             'APPLICATION-PRIMITIVE-DATA-TYPE': self._read_application_primitive_data_type,
             'SW-BASE-TYPE': self._read_sw_base_type,
             'SW-ADDR-METHOD': self._read_sw_addr_method,
@@ -1720,6 +1722,64 @@ class Reader:
         xml_child = child_elements.get("IS-OPTIONAL")
         if xml_child is not None:
             data["is_optional"] = self._read_boolean(xml_child.text)
+
+    def _read_application_array_data_type(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.ApplicationArrayDataType:
+        """
+        Reads complex type AR:APPLICATION-ARRAY-DATA-TYPE
+        Type: Concrete
+        Tag variants: 'APPLICATION-ARRAY-DATA-TYPE'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_autosar_data_type(child_elements, data)
+        self._read_application_array_data_type_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ApplicationArrayDataType(**data)
+
+    def _read_application_array_data_type_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:APPLICATION-ARRAY-DATA-TYPE
+        """
+        xml_child = child_elements.get("DYNAMIC-ARRAY-SIZE-PROFILE")
+        if xml_child is not None:
+            data["dynamic_array_size_profile"] = xml_child.text
+        xml_child = child_elements.get("ELEMENT")
+        if xml_child is not None:
+            data["element"] = self._read_application_array_element(xml_child)
+
+    def _read_application_record_data_type(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.ApplicationRecordDataType:
+        """
+        Reads complex type AR:APPLICATION-RECORD-DATA-TYPE
+        Type: Concrete
+        Tag variants: 'APPLICATION-RECORD-DATA-TYPE'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_autosar_data_type(child_elements, data)
+        self._read_application_record_data_type_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ApplicationRecordDataType(**data)
+
+    def _read_application_record_data_type_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:APPLICATION-RECORD-DATA-TYPE
+        """
+        xml_child = child_elements.get("ELEMENTS")
+        if xml_child is not None:
+            elements = []
+            for xml_record_element in xml_child.findall("./APPLICATION-RECORD-ELEMENT"):
+                elements.append(self._read_application_record_element(xml_record_element))
+            data["elements"] = elements
 
     # Reference elements
 
