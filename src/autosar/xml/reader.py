@@ -10,7 +10,6 @@ import lxml.etree as ElementTree
 import autosar.xml.document as ar_document
 import autosar.xml.exception as ar_exception
 import autosar.xml.element as ar_element
-import autosar.xml.package as ar_package
 import autosar.xml.enumeration as ar_enum
 
 DEFAULT_SCHEMA_VERSION = 50
@@ -411,18 +410,18 @@ class Reader:
                 package = self._read_package(xml_node)
                 self.document.append(package)
 
-    def _read_package(self, elem: ElementTree.Element) -> ar_package.Package:
+    def _read_package(self, elem: ElementTree.Element) -> ar_element.Package:
         data = {}
         child_elements = ChildElementMap(elem)
         self._read_referrable(child_elements, data)
         self._read_multi_language_referrable(child_elements, data)
         self._read_identifiable(child_elements, elem.attrib, data)
-        package = ar_package.Package(**data)
+        package = ar_element.Package(**data)
         self._read_package_group(child_elements, package)
         self._report_unprocessed_elements(child_elements)
         return package
 
-    def _read_package_group(self, element_map: ChildElementMap, package: ar_package.Package) -> None:
+    def _read_package_group(self, element_map: ChildElementMap, package: ar_element.Package) -> None:
         """
         Reads group AR:AR-PACKAGE
         Type: Utility
@@ -436,7 +435,7 @@ class Reader:
         if xml_packages is not None:
             self._read_sub_packages(package, xml_packages)
 
-    def _read_package_elements(self, package: ar_package.Package, xml_elements: ElementTree.Element) -> None:
+    def _read_package_elements(self, package: ar_element.Package, xml_elements: ElementTree.Element) -> None:
         """
         Reads AR:AR-PACKAGE.ELEMENTS
         Type: Utility
@@ -451,14 +450,14 @@ class Reader:
             else:
                 self._report_unprocessed_element(xml_child_elem)
 
-    def _read_sub_packages(self, package: ar_package.Package, xml_packages: ElementTree.Element) -> None:
+    def _read_sub_packages(self, package: ar_element.Package, xml_packages: ElementTree.Element) -> None:
         """
         Reads AR:AR-PACKAGE.ELEMENTS
         Type: Utility
         """
         for xml_child_package in xml_packages.findall('./PACKAGE'):
             child_package = self._read_package(xml_child_package)
-            assert isinstance(child_package, ar_package.Package)
+            assert isinstance(child_package, ar_element.Package)
             package.packages.append(child_package)
 
     # Documentation elements

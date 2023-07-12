@@ -1,3 +1,0 @@
-"""
-AUTOSAR Workspace
-"""

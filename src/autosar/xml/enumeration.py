@@ -317,6 +317,23 @@ class Monotony(Enum):
     STRICT_MONOTONOUS = 6
 
 
+class PackageRole(Enum):
+    """
+    Supported package roles
+    """
+
+    APPLICATION_DATA_TYPE = 0
+    BASE_TYPE = 1
+    COMPONENT_TYPE = 2
+    COMPU_METHOD = 3
+    DATA_CONSTRAINT = 4
+    IMPLEMENTATION_DATA_TYPE = 5
+    MODE_DECLARATION_GROUP = 6
+    PORT_INTERFACE = 7
+    UNIT = 8
+    VALUE_SPECIFICATION = 9
+
+
 class PageBreak(Enum):
     """
     AR:CHAPTER-ENUM-BREAK--SIMPLE
@@ -961,3 +978,36 @@ def enum_to_xml(enum_item: Enum, schema_version=DEFAULT_SCHEMA_VERSION):
             raise ar_exception.VersionError(f"'{enum_item}'")
         return entry.value
     raise NotImplementedError("Multiple entry support not yet implemented")
+
+
+str_to_enum_map = {
+    "PackageRole": {
+        "APPLICATION_DATA_TYPE": PackageRole.APPLICATION_DATA_TYPE,
+        "ApplicationDataType": PackageRole.APPLICATION_DATA_TYPE,
+        "BASE_TYPE": PackageRole.BASE_TYPE,
+        "BaseType": PackageRole.BASE_TYPE,
+        "COMPONENT_TYPE": PackageRole.COMPONENT_TYPE,
+        "ComponentType": PackageRole.COMPONENT_TYPE,
+        "COMPU_METHOD": PackageRole.COMPU_METHOD,
+        "CompuMethod": PackageRole.COMPU_METHOD,
+        "DATA_CONSTRAINT": PackageRole.DATA_CONSTRAINT,
+        "DataConstraint": PackageRole.DATA_CONSTRAINT,
+        "IMPLEMENTATION_DATA_TYPE": PackageRole.IMPLEMENTATION_DATA_TYPE,
+        "ImplementationDataType": PackageRole.IMPLEMENTATION_DATA_TYPE,
+        "MODE_DECLARATION_GROUP": PackageRole.MODE_DECLARATION_GROUP,
+        "ModeDeclartionGroup": PackageRole.MODE_DECLARATION_GROUP,
+        "PORT_INTERFACE": PackageRole.PORT_INTERFACE,
+        "PortInterface": PackageRole.PORT_INTERFACE,
+        "Unit": PackageRole.UNIT,
+        "UNIT": PackageRole.UNIT,
+        "VALUE_SPECIFICATION": PackageRole.VALUE_SPECIFICATION,
+        "ValueSpefication": PackageRole.VALUE_SPECIFICATION,
+    }
+}
+
+
+def str_to_package_role(name: str) -> PackageRole:
+    """
+    Convert string to PackageRole Enum
+    """
+    return str_to_enum_map["PackageRole"][name]
