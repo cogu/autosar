@@ -1,9 +1,10 @@
 
 """
-Classes related to AUTOSAR Documents (a.k.a. ARXML files)
+AUTOSAR Document
 """
+
 from typing import Any
-from autosar.xml.package import Package
+import autosar.xml.element as ar_element
 
 
 class DocumentMeta:
@@ -27,7 +28,7 @@ class Document(DocumentMeta):
     Implements AUTOSAR root description element
     """
 
-    def __init__(self, packages: list[Package] | None = None) -> None:
+    def __init__(self, packages: list[ar_element.Package] | None = None) -> None:
         super().__init__()
         self.file_info_comment = None  # .FILE-INFO-COMMENT
         self.admin_data = None  # .ADMIN-DATA
@@ -38,12 +39,12 @@ class Document(DocumentMeta):
             for package in packages:
                 self.append(package)
 
-    def append(self, package: Package):
+    def append(self, package: ar_element.Package):
         """
         Appends package to this document and
         appropriately updates reference links
         """
-        if isinstance(package, Package):
+        if isinstance(package, ar_element.Package):
             if package.name in self._package_map:
                 raise ValueError(
                     f"Package with SHORT-NAME '{package.name}' already exists")
@@ -53,27 +54,18 @@ class Document(DocumentMeta):
 
     def find(self, ref: str) -> Any:
         """
-        Find items using a reference string
+        Finds item by reference
         """
-        if ref[0] == '/':  # remove initial '/' if it exists
+        if ref.startswith('/'):
             ref = ref[1:]
-        return self.find_from_parts(ref.split('/'))
+        parts = ref.partition('/')
+        package = self._package_map.get(parts[0], None)
+        if (package is not None) and (len(parts[2]) > 0):
+            return package.find(parts[2])
+        return package
 
     def update_ref_parts(self, ref_parts: list[str]):
         """
         Utility method used generating XML references
         """
         ref_parts.append('')
-
-    def find_from_parts(self, ref_parts: list) -> Any:
-        """
-        Utility function that finds inner elements
-        from a list of reference parts.
-        """
-        if not ref_parts:
-            return None
-        short_name = ref_parts.pop(0)
-        package = self._package_map.get(short_name, None)
-        if package is not None and len(ref_parts) > 0:
-            return package.find_from_parts(ref_parts)
-        return package

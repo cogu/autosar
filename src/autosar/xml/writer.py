@@ -10,7 +10,6 @@ import autosar.xml.document as ar_document
 import autosar.xml.element as ar_element
 import autosar.xml.enumeration as ar_enum
 # import autosar.xml.exception
-import autosar.xml.package as ar_package
 
 # Type aliases
 
@@ -174,6 +173,8 @@ class Writer(_XMLWriter):
             'SwBaseType': self._write_sw_base_type,
             'SwAddrMethod': self._write_sw_addr_method,
             'ImplementationDataType': self._write_implementation_data_type,
+            # DataConstraint elements
+            'DataConstraint': self._write_data_constraint,
             # Unit elements
             'Unit': self._write_unit,
         }
@@ -206,7 +207,7 @@ class Writer(_XMLWriter):
             'InternalConstraint': self._write_internal_constraint,
             'PhysicalConstraint': self._write_physical_constraint,
             'DataConstraintRule': self._write_data_constraint_rule,
-            'DataConstraint': self._write_data_constraint,
+
             # DataDictionary elements
             'SwDataDefPropsConditional': self._write_sw_data_def_props_conditional,
             'SwBaseTypeRef': self._write_sw_base_type_ref,
@@ -335,7 +336,7 @@ class Writer(_XMLWriter):
             self._write_packages(document.packages)
         self._leave_child()
 
-    def _write_packages(self, packages: list[ar_package.Package]):
+    def _write_packages(self, packages: list[ar_element.Package]):
         self._add_child("AR-PACKAGES")
         for package in packages:
             self._write_package(package)
@@ -343,11 +344,13 @@ class Writer(_XMLWriter):
 
     # AUTOSAR PACKAGE
 
-    def _write_package(self, package: ar_package.Package) -> None:
+    def _write_package(self, package: ar_element.Package) -> None:
         """
-        Write AR-PACKAGE element
+        Writes AR-PACKAGE
         Type: Concrete
+        Tag variants: 'AR-PACKAGE'
         """
+        assert isinstance(package, ar_element.Package)
         attr: TupleList = []
         self._collect_identifiable_attributes(package, attr)
         self._add_child("AR-PACKAGE", attr)
@@ -356,9 +359,11 @@ class Writer(_XMLWriter):
         self._write_identifiable(package)
         if len(package.elements) > 0:
             self._write_package_elements(package)
+        if len(package.packages) > 0:
+            self._write_sub_packages(package)
         self._leave_child()
 
-    def _write_package_elements(self, package: ar_package.Package) -> None:
+    def _write_package_elements(self, package: ar_element.Package) -> None:
         self._add_child('ELEMENTS')
         for elem in package.elements:
             class_name = elem.__class__.__name__
@@ -368,6 +373,12 @@ class Writer(_XMLWriter):
             else:
                 raise NotImplementedError(
                     f"Package: Found no writer for {class_name}")
+        self._leave_child()
+
+    def _write_sub_packages(self, package: ar_element.Package) -> None:
+        self._add_child('AR-PACKAGES')
+        for sub_package in package.packages:
+            self._write_package(sub_package)
         self._leave_child()
 
     # Documentation Elements

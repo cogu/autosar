@@ -249,7 +249,6 @@ class Identifiable(MultiLanguageReferrable):
                 self.desc = MultiLanguageOverviewParagraph.make(*desc)
             else:
                 raise TypeError(f"Invalid type for argument 'desc': {str(type(desc))}")
-        self._assign_optional('desc', desc, str)
         self._assign_optional('category', category, str)
         self._assign_optional('uuid', uuid, str)
 
@@ -1448,6 +1447,15 @@ class DataConstraint(ARElement):
                 assert isinstance(rule, DataConstraintRule)
             self.rules.extend(rules)
 
+    def ref(self) -> DataConstraintRef:
+        """
+        Reference
+        """
+        ref_parts: list[str] = [self.name]
+        self.parent.update_ref_parts(ref_parts)
+        value = '/'.join(reversed(ref_parts))
+        return DataConstraintRef(value)
+
     @classmethod
     def make_physical(cls: "DataConstraint",
                       name: str,
@@ -1568,7 +1576,8 @@ class SwBaseType(BaseType):
     Tag variants: SW-BASE-TYPE
     """
 
-    def __init__(self, name: str,
+    def __init__(self,
+                 name: str,
                  size: int | None = None,
                  max_size: int | None = None,
                  encoding: str | None = None,
@@ -2243,3 +2252,92 @@ class ApplicationSoftwareComponentType(AtomicSoftwareComponentType):
 
     def __init__(self, name: str, **kwargs) -> None:
         super().__init__(name, kwargs)
+
+# Package (Partly implemented)
+
+
+class Package(CollectableElement):
+    """
+    AR:PACKAGE
+    """
+
+    def __init__(self, name: str, **kwargs: dict) -> None:
+        super().__init__(name, **kwargs)
+        self.elements = []
+        self.packages = []
+        self._collection_map = {}
+
+    def append(self, item: Any):
+        """
+        Append element or sub-package
+        """
+        if isinstance(item, Package):
+            package: Package = item
+            if package.name in self._collection_map:
+                raise ValueError(
+                    f"Package with SHORT-NAME '{package.name}' already exists in package '{self.name}")
+            package.parent = self
+            self.packages.append(package)
+            self._collection_map[package.name] = package
+        elif isinstance(item, ARElement):
+            elem: ARElement = item
+            if elem.name in self._collection_map:
+                raise ValueError(
+                    f"Element with SHORT-NAME '{elem.name}' already exists in package '{self.name}'")
+            elem.parent = self
+            self.elements.append(elem)
+            self._collection_map[elem.name] = elem
+        else:
+            raise TypeError(f"Invalid type {str(type(item))}")
+
+    def make_packages(self, ref: str) -> "Package":
+        """
+        Recursively creates sub-packages
+        """
+        if ref.startswith('/'):
+            raise ValueError("Reference string can't start with '/'")
+        parts = ref.partition('/')
+        package = self._collection_map.get(parts[0], None)
+        if package is None:
+            package = self.create_package(parts[0])
+        elif not isinstance(package, Package):
+            raise KeyError(f"Item with name '{parts[0]}' already exists but isn't a package")
+        if len(parts[2]) > 0:
+            return package.make_packages(parts[2])
+        else:
+            return package
+
+    def create_package(self, name: str, **kwargs) -> "Package":
+        """
+        Creates new sub-package
+        """
+        if name in self._collection_map:
+            return ValueError(f"Package with name '{name}' already exists")
+        package = Package(name, **kwargs)
+        self._collection_map[name] = package
+        self.packages.append(package)
+        package.parent = self
+        return package
+
+    def find(self, ref: str) -> Any:
+        """
+        Finds item by reference
+        """
+        if ref.startswith('/'):
+            ref = ref[1:]
+        parts = ref.partition('/')
+        item = self._collection_map.get(parts[0], None)
+        if item is not None:
+            if len(parts[2]) > 0:
+                if isinstance(item, Package):
+                    return item.find(parts[2])
+                else:
+                    raise KeyError(f"Item '{parts[0]}' exists but isn't a package")
+        return item
+
+    def update_ref_parts(self, ref_parts: list[str]):
+        """
+        Utility method used generating XML references
+        """
+        ref_parts.append(self.name)
+        self.parent.update_ref_parts(ref_parts)
