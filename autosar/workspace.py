@@ -17,6 +17,7 @@ from autosar.parser.system_parser import SystemParser
 from autosar.parser.signal_parser import SignalParser
 from autosar.parser.mode_parser import ModeDeclarationParser
 from autosar.parser.swc_implementation_parser import SwcImplementationParser
+from autosar.parser.ecu_configuration_parser import EcuConfigurationParser
 #default writers
 from autosar.writer.datatype_writer import XMLDataTypeWriter, CodeDataTypeWriter
 from autosar.writer.constant_writer import XMLConstantWriter, CodeConstantWriter
@@ -477,6 +478,7 @@ class Workspace:
         parser.registerElementParser(SystemParser(self.version))
         parser.registerElementParser(SignalParser(self.version))
         parser.registerElementParser(SwcImplementationParser(self.version))
+        parser.registerElementParser(EcuConfigurationParser(self.version))
 
     def _registerDefaultElementWriters(self, writer):
         writer.registerElementWriter(XMLDataTypeWriter(self.version, self.patch))

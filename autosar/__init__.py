@@ -15,6 +15,7 @@ import autosar.base
 import autosar.bsw.com
 import autosar.bsw.os
 import autosar.util
+import autosar.ecuc
 
 import ntpath
 import os
