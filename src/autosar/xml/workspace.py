@@ -88,10 +88,17 @@ class Workspace:
         if name in self._package_map:
             return ValueError(f"Package with name '{name}' already exists")
         package = ar_element.Package(name, **kwargs)
-        self._package_map[name] = package
+        self.append(package)
+        return package
+
+    def append(self, package: ar_element.Package):
+        """
+        Appends package to this worksapace
+        """
+        assert isinstance(package, ar_element.Package)
+        self._package_map[package.name] = package
         self.packages.append(package)
         package.parent = self
-        return package
 
     def find(self, ref: str) -> Any:
         """
