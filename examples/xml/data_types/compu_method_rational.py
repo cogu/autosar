@@ -9,7 +9,7 @@ import autosar.xml.element as ar_element
 if __name__ == "__main__":
 
     # Create package and elements
-    package = autosar.xml.package.Package("CompuMethods")
+    package = ar_element.Package("CompuMethods")
     computation = ar_element.Computation.make_rational(scaling_factor=1 / 64,
                                                        offset=0,
                                                        lower_limit=0,

@@ -9,7 +9,7 @@ import autosar.xml.element as ar_element
 if __name__ == "__main__":
 
     # Create document
-    package = autosar.xml.package.Package('BaseTypes')
+    package = ar_element.Package('BaseTypes')
     elem = ar_element.SwBaseType('Typename')
     package.append(elem)
     document = autosar.xml.document.Document()

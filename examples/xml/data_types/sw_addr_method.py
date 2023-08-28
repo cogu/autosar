@@ -9,7 +9,7 @@ import autosar.xml.element as ar_element
 if __name__ == "__main__":
 
     #Create document
-    package = autosar.xml.package.Package('SwAddrMethod')
+    package = ar_element.Package('SwAddrMethod')
     elem = ar_element.SwAddrMethod('DEFAULT')
     package.append(elem)
     document = autosar.xml.document.Document()
