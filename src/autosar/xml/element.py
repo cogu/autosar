@@ -293,6 +293,7 @@ class AdminData(ARObject):
 
 class BaseRef(ARObject, abc.ABC):
     """
+    Bas type for all references
     Complex-type AR:REF
     Type: Abstract
     """
@@ -1451,6 +1452,7 @@ class DataConstraint(ARElement):
         """
         Reference
         """
+        assert self.parent is not None
         ref_parts: list[str] = [self.name]
         self.parent.update_ref_parts(ref_parts)
         value = '/'.join(reversed(ref_parts))
@@ -1600,7 +1602,7 @@ class SwBaseType(BaseType):
         ref_parts: list[str] = [self.name]
         self.parent.update_ref_parts(ref_parts)
         value = '/'.join(reversed(ref_parts))
-        return SwAddrMethodRef(value)
+        return SwBaseTypeRef(value)
 
 
 class SwBitRepresentation(ARObject):
@@ -1918,7 +1920,7 @@ class ImplementationDataType(AutosarDataType):
     """
     IMPLEMENTATION-DATA-TYPE
     Type: Concrete
-    Tag Variants: 'IMPLEMENTATION-DATA-TYPE-ELEMENT'
+    Tag Variants: 'IMPLEMENTATION-DATA-TYPE'
     """
 
     def __init__(self,
@@ -1955,6 +1957,16 @@ class ImplementationDataType(AutosarDataType):
             self.sub_elements.append(elem)
         else:
             raise TypeError("'elem' must be of type ImplementationDataTypeElement")
+
+    def ref(self):
+        """
+        Returns a new reference to this object
+        """
+        assert self.parent is not None
+        ref_parts: list[str] = [self.name]
+        self.parent.update_ref_parts(ref_parts)
+        value = '/'.join(reversed(ref_parts))
+        return ImplementationDataTypeRef(value)
 
 
 class DataPrototype(Identifiable):
@@ -2168,6 +2180,7 @@ class SwAddrMethod(ARElement):
         """
         Reference
         """
+        assert self.parent is not None
         ref_parts: list[str] = [self.name]
         self.parent.update_ref_parts(ref_parts)
         value = '/'.join(reversed(ref_parts))
