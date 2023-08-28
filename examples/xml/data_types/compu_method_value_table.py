@@ -9,7 +9,7 @@ import autosar.xml.element as ar_element
 if __name__ == "__main__":
 
     # Create package and elements
-    package = autosar.xml.package.Package("CompuMethods")
+    package = ar_element.Package("CompuMethods")
     computation = ar_element.Computation.make_value_table(["FALSE", "TRUE"],
                                                           default_value="FALSE")
     package.append(ar_element.CompuMethod(name='boolean',
