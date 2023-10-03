@@ -313,6 +313,9 @@ class BehaviorParser(ElementParser):
             for xmlServerCallPoint in xmlServerCallPoints.findall('./SYNCHRONOUS-SERVER-CALL-POINT'):
                 syncServerCallPoint = self.parseSyncServerCallPoint(xmlServerCallPoint)
                 if syncServerCallPoint is not None: runnableEntity.serverCallPoints.append(syncServerCallPoint)
+            for xmlServerCallPoint in xmlServerCallPoints.findall('./ASYNCHRONOUS-SERVER-CALL-POINT'):
+                asyncServerCallPoint = self.parseAsyncServerCallPoint(xmlServerCallPoint)
+                if asyncServerCallPoint is not None: runnableEntity.serverCallPoints.append(asyncServerCallPoint)
         if xmlCanEnterExclusiveAreas is not None:
             for xmlCanEnterExclusiveAreaRef in xmlCanEnterExclusiveAreas.findall('./CAN-ENTER-EXCLUSIVE-AREA-REF'):
                 runnableEntity.exclusiveAreaRefs.append(self.parseTextNode(xmlCanEnterExclusiveAreaRef))
@@ -729,11 +732,7 @@ class BehaviorParser(ElementParser):
                 raise NotImplementedError(xmlElem.tag)
         return calPrmElemPrototype
 
-    def parseSyncServerCallPoint(self, xmlRoot):
-        """
-        parses <SYNCHRONOUS-SERVER-CALL-POINT>
-        """
-        assert(xmlRoot.tag=='SYNCHRONOUS-SERVER-CALL-POINT')
+    def _parseServerCallPoint(self, xmlRoot, callType):
         timeout=0.0
         if self.version >= 4.0:
             operationInstanceRefs=[]
@@ -761,9 +760,23 @@ class BehaviorParser(ElementParser):
                     timeout=self.parseFloatNode(xmlElem)
                 else:
                     raise NotImplementedError(xmlElem.tag)
-        retval=autosar.behavior.SyncServerCallPoint(name,timeout)
+        retval=callType(name,timeout)
         retval.operationInstanceRefs=operationInstanceRefs
         return retval
+    
+    def parseAsyncServerCallPoint(self, xmlRoot):
+        """
+        parses <ASYNCHRONOUS-SERVER-CALL-POINT>
+        """
+        assert(xmlRoot.tag=='ASYNCHRONOUS-SERVER-CALL-POINT')
+        return self._parseServerCallPoint(xmlRoot, autosar.behavior.AsyncServerCallPoint)
+
+    def parseSyncServerCallPoint(self, xmlRoot):
+        """
+        parses <SYNCHRONOUS-SERVER-CALL-POINT>
+        """
+        assert(xmlRoot.tag=='SYNCHRONOUS-SERVER-CALL-POINT')
+        return self._parseServerCallPoint(xmlRoot, autosar.behavior.SyncServerCallPoint)
 
     @parseElementUUID
     def parseAccessedVariable(self, xmlRoot):

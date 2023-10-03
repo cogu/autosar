@@ -614,9 +614,9 @@ class ExclusiveArea(Element):
 
 
 
-class SyncServerCallPoint(object):
+class ServerCallPointCommon(object):
     """
-    <SYNCHRONOUS-SERVER-CALL-POINT>
+    Base class for AsyncServerCallPoint and SyncServerCallPoint
     """
     def __init__(self, name, timeout=0.0):
         self.name=name
@@ -628,6 +628,16 @@ class SyncServerCallPoint(object):
         data['operationInstanceRefs'] = [x.asdict() for x in self.operationInstanceRefs]
         if len(data['operationInstanceRefs'])==0: del data['operationInstanceRefs']
         return data
+
+class SyncServerCallPoint(ServerCallPointCommon):
+    """
+    <SYNCHRONOUS-SERVER-CALL-POINT>
+    """
+
+class AsyncServerCallPoint(ServerCallPointCommon):
+    """
+    <ASYNCHRONOUS-SERVER-CALL-POINT>
+    """
 
 class InternalBehaviorCommon(Element):
     """
@@ -808,6 +818,18 @@ class InternalBehaviorCommon(Element):
         """
         if isinstance(port,autosar.port.RequirePort):
             callPoint=SyncServerCallPoint('SC_{0.name}_{1.name}'.format(port,operation))
+            callPoint.operationInstanceRefs.append(OperationInstanceRef(port.ref, operation.ref))
+            runnable.serverCallPoints.append(callPoint)
+        else:
+            raise ValueError('unexpected type: '+str(type(port)))
+
+    def _createAsyncServerCallPoint(self,port,operation,runnable):
+        """
+        internal function that creates an AsyncServerCallPoint named according to the AUTOSAR
+        naming convention (SC_<name of the Require Port offering the Interface>_<name of the operation>)
+        """
+        if isinstance(port,autosar.port.RequirePort):
+            callPoint=AsyncServerCallPoint('SC_{0.name}_{1.name}'.format(port,operation))
             callPoint.operationInstanceRefs.append(OperationInstanceRef(port.ref, operation.ref))
             runnable.serverCallPoints.append(callPoint)
         else:

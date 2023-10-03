@@ -275,8 +275,13 @@ class XMLBehaviorWriter(ElementWriter):
 
     def _writeServerCallPointXML(self, ws, runnable, callPoint):
         lines=[]
-        if isinstance(callPoint, autosar.behavior.SyncServerCallPoint):
-            lines.append('<SYNCHRONOUS-SERVER-CALL-POINT>')
+        if isinstance(callPoint, autosar.behavior.ServerCallPointCommon):
+            if isinstance(callPoint, autosar.behavior.SyncServerCallPoint):
+                lines.append('<SYNCHRONOUS-SERVER-CALL-POINT>')
+            elif isinstance(callPoint, autosar.behavior.AsyncServerCallPoint):
+                lines.append('<ASYNCHRONOUS-SERVER-CALL-POINT>')
+            else:
+                raise NotImplementedError(type(callPoint))
             lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%callPoint.name,1))
             if self.version >= 4.0:
                 for operationIRef in callPoint.operationInstanceRefs:
