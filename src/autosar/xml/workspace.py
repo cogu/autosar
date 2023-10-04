@@ -67,18 +67,19 @@ class Workspace:
             raise ValueError(f"Role '{str(role)}'not in namespace map") from ex
         return posixpath.normpath(posixpath.join(base_ref, rel_path))
 
-    def make_packages(self, ref: str) -> ar_element.Package:
+    def make_packages(self, *refs: list[str]) -> ar_element.Package:
         """
-        Recursively creates packages from reference
+        Recursively creates packages from reference(s)
         """
-        if ref.startswith('/'):
-            ref = ref[1:]
-        parts = ref.partition('/')
-        package = self._package_map.get(parts[0], None)
-        if package is None:
-            package = self.create_package(parts[0])
-        if len(parts[2]) > 0:
-            return package.make_packages(parts[2])
+        for ref in refs:
+            if ref.startswith('/'):
+                ref = ref[1:]
+            parts = ref.partition('/')
+            package = self._package_map.get(parts[0], None)
+            if package is None:
+                package = self.create_package(parts[0])
+            if len(parts[2]) > 0:
+                package = package.make_packages(parts[2])
         return package
 
     def create_package(self, name: str, **kwargs) -> ar_element.Package:

@@ -39,3 +39,8 @@ Notable changes.
 * SwPointerTargetProps
 * SwTextProps
 * SymbolProps
+
+### Application model (RTE)
+
+* Data type generator
+

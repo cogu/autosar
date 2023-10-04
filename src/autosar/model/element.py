@@ -3,37 +3,51 @@ AUTOSAR Model elements
 
 This is the meta-model used by RTE and BSW. For XML model see the autosar.xml modules.
 """
+#from typing import Any
 
 
-class BaseType:
+class DataType:
+    """
+    Base class for both BaseType and ImplementationType
+    """
+    def __init__(self, ref: str) -> None:
+        self.ref = ref
+
+
+class BaseType(DataType):
     """
     A data type created from a SwBaseType
     """
 
-    def __init__(self, name: str, native_declaration: str | None = None) -> None:
+    def __init__(self, xml_ref: str, name: str, native_declaration: str | None = None) -> None:
+        super().__init__(xml_ref)
         self.name = name
         self.native_declaration = native_declaration
 
 
-class DataType:
+class ImplementationType(DataType):
     """
     Implementation data type
     """
 
     def __init__(self,
+                 xml_ref: str,
                  name: str,
                  symbol_name: str | None = None,
-                 const: bool = False
+                 const: bool = False,
+                 type_emitter: str | None = None,
                  ) -> None:
+        super().__init__(xml_ref)
         self.name = name
         self.const = const
+        self.type_emitter = type_emitter
         if symbol_name is None:
             self.symbol_name = name
         else:
             self.symbol_name = symbol_name
 
 
-class ScalarType(DataType):
+class ScalarType(ImplementationType):
     """
     A data type that can represent a single value.
     Created from ar_elements where the category is set to VALUE.
@@ -42,15 +56,17 @@ class ScalarType(DataType):
     """
 
     def __init__(self,
+                 xml_ref: str,
                  name: str,
                  base_type: BaseType,
                  symbol_name: str | None = None,
-                 const: bool = False) -> None:
-        super().__init__(name, symbol_name, const)
+                 const: bool = False,
+                 type_emitter: str | None = None) -> None:
+        super().__init__(xml_ref, name, symbol_name, const, type_emitter)
         self.base_type = base_type
 
 
-class ArrayType(DataType):
+class ArrayType(ImplementationType):
     """
     A data type that can represent an array.
     Created from ar_elements where the category is set to ARRAY.
@@ -59,28 +75,37 @@ class ArrayType(DataType):
     """
 
 
-class RefType(DataType):
+class RefType(ImplementationType):
     """
     A data type that references another ImplementationDataType (typedef).
     Created from ar_elements where the category is set to TYPE_REFERENCE.
     """
 
+    def __init__(self,
+                 xml_ref: str,
+                 name: str,
+                 impl_type: ScalarType,
+                 symbol_name: str | None = None,
+                 const: bool = False) -> None:
+        super().__init__(xml_ref, name, symbol_name, const)
+        self.impl_type = impl_type
 
-class PointerType(DataType):
+
+class PointerType(ImplementationType):
     """
     A pointer to another ImplementationDataType.
     Created from ar_elements where the category is set to DATA_REFERENCE.
     """
 
 
-class StructType(DataType):
+class StructType(ImplementationType):
     """
     A data type that can represent a structure.
     Created from ar_elements where the category is set to STRUCTURE.
     """
 
 
-class UnionType(DataType):
+class UnionType(ImplementationType):
     """
     A data type that can represent a union.
     Created from ar_elements where the category is set to UNION.
