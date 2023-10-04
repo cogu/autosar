@@ -1,10 +1,12 @@
 """
 RTE type generator
-Requires cfile v0.3.0 (unreleased)
+Requires cfile v0.3.0
 """
 import os
+from typing import Iterator
 import cfile
 import autosar.model.element as rte_element
+import autosar.model.application as application
 
 C = cfile.CFactory()
 
@@ -55,7 +57,7 @@ class TypeGenerator:
         code.append(C.blank())
         code.append(C.block_comment("*     CONSTANTS AND DATA TYPES     *", width=35))
         code.append(C.blank())
-        code.extend(self._gen_type_defs())
+        code.extend(self._gen_type_defs(self.gen_data_type_creation_order()))
         code.append(C.blank())
         code.append(C.ifndef("__cplusplus", adjust=1))
         code.append(C.line(C.extern("C")))
@@ -64,33 +66,40 @@ class TypeGenerator:
         code.append([C.endif(), C.line_comment(" " + include_guard)])
         return code
 
-    def _gen_type_defs(self) -> cfile.core.Sequence:
+    def gen_data_type_creation_order(self) -> list:
+        """
+        Resolves type definition order
+        """
+        instance_refs = set()
+        result = []
+        for root_node in self.application.gen_type_dependency_trees():
+            node: application.Node
+            for node in self.application.get_type_creation_order(root_node):
+                data_type = node.data
+                if data_type.ref not in instance_refs:
+                    instance_refs.add(data_type.ref)
+                    # Ignore BaseTypes without native declaration
+                    if isinstance(data_type, rte_element.BaseType) and not data_type.native_declaration:
+                        continue
+                    # Ignore ImplementationTypes with non-RTE type emitter
+                    if isinstance(data_type, rte_element.ImplementationType) and (
+                            data_type.type_emitter is not None and data_type.type_emitter.upper() != "RTE"):
+                        continue
+                    result.append(data_type)
+        return result
+
+    def _gen_type_defs(self, data_types: Iterator[rte_element.DataType]) -> cfile.core.Sequence:
         """
         Generates typedefs section
         """
         code = C.sequence()
-        for data_type in self.application.base_types.values():
-            if data_type.native_declaration:
+        for data_type in data_types:
+            if isinstance(data_type, rte_element.BaseType):
                 code.append(C.statement(C.typedef(data_type.name, data_type.native_declaration)))
-        primitive_types = []
-        array_types = []
-        struct_types = []
-        union_types = []
-
-        for data_type in self.application.implementation_types.values():
-            if isinstance(data_type, (rte_element.ScalarType, rte_element.RefType, rte_element.PointerType)):
-                primitive_types.append(data_type)
-            elif isinstance(data_type, rte_element.ArrayType):
-                array_types.append(data_type)
-            elif isinstance(data_type, rte_element.StructType):
-                struct_types.append(data_type)
-            elif isinstance(data_type, rte_element.UnionType):
-                union_types.append(data_type)
-            else:
-                raise NotImplementedError(str(type(data_type)))
-        for data_type in primitive_types:
-            if isinstance(data_type, rte_element.ScalarType):
+            elif isinstance(data_type, rte_element.ScalarType):
                 code.append(C.statement(C.typedef(data_type.name, data_type.base_type.name)))
+            elif isinstance(data_type, rte_element.RefType):
+                code.append(C.statement(C.typedef(data_type.name, data_type.impl_type.name)))
             else:
                 raise NotImplementedError(str(type(data_type)))
         return code
@@ -100,6 +109,6 @@ class TypeGenerator:
         Returns typedefs section as a string.
         Used primarily for unit test validation
         """
-        code = self._gen_type_defs()
+        code = self._gen_type_defs(self.gen_data_type_creation_order())
         writer = cfile.Writer(cfile.StyleOptions())
         return writer.write_str(code)

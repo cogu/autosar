@@ -71,6 +71,20 @@ class WorkspaceTests(unittest.TestCase):
         self.assertIsInstance(package, ar_element.Package)
         self.assertEqual(package.name, "BaseTypes")
 
+    def test_make_packages_multiple(self):
+        workspace = ar_workspace.Workspace()
+        package = workspace.make_packages("DataTypes/BaseTypes", "DataTypes/ImplementationDataTypes")
+        self.assertIsInstance(package, ar_element.Package)
+        self.assertEqual(package.name, "ImplementationDataTypes")
+        package = workspace.find("DataTypes/BaseTypes")
+        self.assertIsInstance(package, ar_element.Package)
+        self.assertEqual(package.name, "BaseTypes")
+        self.assertEqual(package.parent.name, "DataTypes")
+        package = workspace.find("DataTypes/ImplementationDataTypes")
+        self.assertIsInstance(package, ar_element.Package)
+        self.assertEqual(package.name, "ImplementationDataTypes")
+        self.assertEqual(package.parent.name, "DataTypes")
+
     def test_find_package_depth1(self):
         workspace = ar_workspace.Workspace()
         workspace.make_packages("/AUTOSAR_Platform/BaseTypes")
