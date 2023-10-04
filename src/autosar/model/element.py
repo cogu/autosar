@@ -3,13 +3,13 @@ AUTOSAR Model elements
 
 This is the meta-model used by RTE and BSW. For XML model see the autosar.xml modules.
 """
-#from typing import Any
 
 
 class DataType:
     """
     Base class for both BaseType and ImplementationType
     """
+
     def __init__(self, ref: str) -> None:
         self.ref = ref
 
