@@ -112,7 +112,11 @@ class Application:
         symbol = None
         if element.symbol_props is not None:
             symbol = element.symbol_props.symbol
-        scalar_type = rte_element.ScalarType(str(elem_ref), element.name, base_type, symbol, type_emitter=element.type_emitter)
+        scalar_type = rte_element.ScalarType(str(elem_ref),
+                                             element.name,
+                                             base_type,
+                                             symbol,
+                                             type_emitter=element.type_emitter)
         self.data_types[str(elem_ref)] = scalar_type
         return scalar_type
 
