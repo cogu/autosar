@@ -34,18 +34,15 @@ class TestTypeGenerator(unittest.TestCase):
     def test_type_creation_order_from_scalar_type(self):
         # Setup
         workspace = autosar.xml.Workspace()
-        workspace.make_packages("DataTypes/BaseTypes",
-                                "DataTypes/ImplementationDataTypes")
+        packages = workspace.make_packages("DataTypes/BaseTypes",
+                                           "DataTypes/ImplementationDataTypes")
         base_type = ar_element.SwBaseType('MyUInt8Base', native_declaration="unsigned char")
-        package = workspace.find("DataTypes/BaseTypes")
-        package.append(base_type)
+        packages[0].append(base_type)
         sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref=base_type.ref())
         impl_type = ar_element.ImplementationDataType("MyUInt8",
                                                       category="VALUE",
                                                       sw_data_def_props=sw_data_def_props)
-        package = workspace.find("DataTypes/ImplementationDataTypes")
-        package.append(impl_type)
-
+        packages[1].append(impl_type)
         application = Application(workspace)
         application.create_from_element(impl_type)
 

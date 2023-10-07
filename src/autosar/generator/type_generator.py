@@ -6,7 +6,7 @@ import os
 from typing import Iterator
 import cfile
 import autosar.model.element as rte_element
-import autosar.model.application as application
+from autosar.model import application
 
 C = cfile.CFactory()
 
@@ -16,8 +16,8 @@ class TypeGenerator:
     RTE type generator class
     """
 
-    def __init__(self, application):
-        self.application = application
+    def __init__(self, app: application.Application):
+        self.application = app
         self.style = cfile.StyleOptions(break_before_braces=cfile.BreakBeforeBraces.ATTACH,
                                         pointer_alignment=cfile.Alignment.RIGHT)
         self.writer = cfile.Writer(self.style)

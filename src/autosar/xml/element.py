@@ -183,6 +183,16 @@ class ARObject:
             raise ValueError(f"Positive integer expected: {value}")
         setattr(self, attr_name, value)
 
+    def _find_by_name(self, elements: list, name: str):
+        """
+        Iterates through list of elements and return the first whose
+        name matches the name argument
+        """
+        for elem in elements:
+            if elem.name == name:
+                return elem
+        return None
+
 
 class Referrable(ARObject):
     """
@@ -1595,7 +1605,7 @@ class SwBaseType(BaseType):
         self.byte_order = byte_order
         self.native_declaration = native_declaration
 
-    def ref(self) -> SwAddrMethodRef:
+    def ref(self) -> SwBaseTypeRef:
         """
         Reference
         """
@@ -1967,6 +1977,13 @@ class ImplementationDataType(AutosarDataType):
         self.parent.update_ref_parts(ref_parts)
         value = '/'.join(reversed(ref_parts))
         return ImplementationDataTypeRef(value)
+
+    def find(self, ref: str) -> Any:
+        """
+        Finds item by reference
+        """
+        assert "/" not in ref
+        return self._find_by_name(self.sub_elements, ref)
 
 
 class DataPrototype(Identifiable):
@@ -2342,10 +2359,7 @@ class Package(CollectableElement):
         item = self._collection_map.get(parts[0], None)
         if item is not None:
             if len(parts[2]) > 0:
-                if isinstance(item, Package):
-                    return item.find(parts[2])
-                else:
-                    raise KeyError(f"Item '{parts[0]}' exists but isn't a package")
+                return item.find(parts[2])
         return item
 
     def update_ref_parts(self, ref_parts: list[str]):

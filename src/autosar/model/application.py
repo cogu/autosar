@@ -65,6 +65,7 @@ class Application:
                     raise NotImplementedError("ImplementationDataType::" + str(element.category))
             else:
                 raise NotImplementedError(str(type(element)))
+        return self.data_types[str(elem_ref)]
 
     def gen_type_dependency_trees(self) -> list[Node]:
         """

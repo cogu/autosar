@@ -1034,6 +1034,83 @@ class TestImplementationDataType(unittest.TestCase):
         self.assertEqual(str(elem.sw_data_def_props[0].base_type_ref), uint8_ref)
 
 
+class TestCompleteImplementationDataType(unittest.TestCase):
+
+    def test_array_data_type_with_value_element(self):
+        sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref="/DataTypes/BaseTypes/uint8")
+        sub_element = ar_element.ImplementationDataTypeElement("Element",
+                                                               category="VALUE",
+                                                               array_size=4,
+                                                               sw_data_def_props=sw_data_def_props)
+        element = ar_element.ImplementationDataType("U8Buf4_T",
+                                                    category="ARRAY",
+                                                    sub_elements=[sub_element])
+        xml = '''<IMPLEMENTATION-DATA-TYPE>
+  <SHORT-NAME>U8Buf4_T</SHORT-NAME>
+  <CATEGORY>ARRAY</CATEGORY>
+  <SUB-ELEMENTS>
+    <IMPLEMENTATION-DATA-TYPE-ELEMENT>
+      <SHORT-NAME>Element</SHORT-NAME>
+      <CATEGORY>VALUE</CATEGORY>
+      <ARRAY-SIZE>4</ARRAY-SIZE>
+      <SW-DATA-DEF-PROPS>
+        <SW-DATA-DEF-PROPS-VARIANTS>
+          <SW-DATA-DEF-PROPS-CONDITIONAL>
+            <BASE-TYPE-REF DEST="SW-BASE-TYPE">/DataTypes/BaseTypes/uint8</BASE-TYPE-REF>
+          </SW-DATA-DEF-PROPS-CONDITIONAL>
+        </SW-DATA-DEF-PROPS-VARIANTS>
+      </SW-DATA-DEF-PROPS>
+    </IMPLEMENTATION-DATA-TYPE-ELEMENT>
+  </SUB-ELEMENTS>
+</IMPLEMENTATION-DATA-TYPE>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ImplementationDataType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ImplementationDataType)
+        self.assertEqual(elem.name, 'U8Buf4_T')
+        sub_elem = elem.find("Element")
+        self.assertIsInstance(sub_elem, ar_element.ImplementationDataTypeElement)
+        self.assertEqual(sub_elem.name, "Element")
+
+    def test_array_data_type_with_ref_type_element(self):
+        sw_data_def_props = ar_element.SwDataDefPropsConditional(impl_data_type_ref="/DataTypes/InactiveActive_T")
+        sub_element = ar_element.ImplementationDataTypeElement("Element",
+                                                               category="TYPE_REFERENCE",
+                                                               array_size=2,
+                                                               sw_data_def_props=sw_data_def_props)
+        element = ar_element.ImplementationDataType("InactiveActiveArray2_T",
+                                                    category="ARRAY",
+                                                    sub_elements=[sub_element])
+        xml = '''<IMPLEMENTATION-DATA-TYPE>
+  <SHORT-NAME>InactiveActiveArray2_T</SHORT-NAME>
+  <CATEGORY>ARRAY</CATEGORY>
+  <SUB-ELEMENTS>
+    <IMPLEMENTATION-DATA-TYPE-ELEMENT>
+      <SHORT-NAME>Element</SHORT-NAME>
+      <CATEGORY>TYPE_REFERENCE</CATEGORY>
+      <ARRAY-SIZE>2</ARRAY-SIZE>
+      <SW-DATA-DEF-PROPS>
+        <SW-DATA-DEF-PROPS-VARIANTS>
+          <SW-DATA-DEF-PROPS-CONDITIONAL>
+            <IMPLEMENTATION-DATA-TYPE-REF DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/InactiveActive_T</IMPLEMENTATION-DATA-TYPE-REF>
+          </SW-DATA-DEF-PROPS-CONDITIONAL>
+        </SW-DATA-DEF-PROPS-VARIANTS>
+      </SW-DATA-DEF-PROPS>
+    </IMPLEMENTATION-DATA-TYPE-ELEMENT>
+  </SUB-ELEMENTS>
+</IMPLEMENTATION-DATA-TYPE>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ImplementationDataType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ImplementationDataType)
+        self.assertEqual(elem.name, 'InactiveActiveArray2_T')
+        sub_elem = elem.find("Element")
+        self.assertIsInstance(sub_elem, ar_element.ImplementationDataTypeElement)
+        self.assertEqual(sub_elem.name, "Element")
+
+
 class TestApplicationPrimitiveDataType(unittest.TestCase):
 
     def test_read_write_name_only(self):

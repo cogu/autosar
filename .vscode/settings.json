@@ -18,4 +18,5 @@
         "--ignore=D101,D102,D107,D200,D205,D400,D401"
     ],
     "python.linting.flake8Enabled": false,
+    "python.analysis.typeCheckingMode": "off",
 }

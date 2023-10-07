@@ -45,17 +45,16 @@ class TestScalarType(unittest.TestCase):
     def test_create_from_custom_uint8_impl_type(self):
         # Setup
         workspace = autosar.xml.Workspace()
-        workspace.make_packages("DataTypes/BaseTypes",
-                                "DataTypes/ImplementationDataTypes")
-        package = workspace.find("DataTypes/BaseTypes")
+        packages = workspace.make_packages("DataTypes/BaseTypes",
+                                           "DataTypes/ImplementationDataTypes")
+
         base_type = ar_element.SwBaseType('MyUint8Base', native_declaration="unsigned char")
-        package.append(base_type)
-        package = workspace.find("DataTypes/ImplementationDataTypes")
+        packages[0].append(base_type)
         sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref=base_type.ref())
         impl_type = ar_element.ImplementationDataType("MyUint8",
                                                       category="VALUE",
                                                       sw_data_def_props=sw_data_def_props)
-        package.append(impl_type)
+        packages[1].append(impl_type)
 
         # Test
         application = Application(workspace)
@@ -72,23 +71,21 @@ class TestRefType(unittest.TestCase):
     def test_create_from_uint8_impl_type(self):
         # Setup
         workspace = autosar.xml.Workspace()
-        workspace.make_packages("DataTypes/BaseTypes",
-                                "DataTypes/ImplementationDataTypes")
-        package = workspace.find("DataTypes/BaseTypes")
+        packages = workspace.make_packages("DataTypes/BaseTypes",
+                                           "DataTypes/ImplementationDataTypes")
         uint8_base_type = ar_element.SwBaseType('uint8', 8)
-        package.append(uint8_base_type)
-        package = workspace.find("DataTypes/ImplementationDataTypes")
+        packages[0].append(uint8_base_type)
         sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref=uint8_base_type.ref())
         uint8_impl_type = ar_element.ImplementationDataType("uint8",
                                                             category="VALUE",
                                                             sw_data_def_props=sw_data_def_props,
                                                             type_emitter="Platform")
-        package.append(uint8_impl_type)
+        packages[1].append(uint8_impl_type)
         sw_data_def_props = ar_element.SwDataDefPropsConditional(impl_data_type_ref=uint8_impl_type.ref())
         impl_type = ar_element.ImplementationDataType("InactiveActive_T",
                                                       category="TYPE_REFERENCE",
                                                       sw_data_def_props=sw_data_def_props)
-        package.append(impl_type)
+        packages[1].append(impl_type)
 
         # Test
         application = Application(workspace)
@@ -106,24 +103,22 @@ class TestRefType(unittest.TestCase):
 
         # Setup
         workspace = autosar.xml.Workspace()
-        workspace.make_packages("DataTypes/BaseTypes",
-                                "DataTypes/ImplementationDataTypes")
-        package = workspace.find("DataTypes/BaseTypes")
+        packages = workspace.make_packages("DataTypes/BaseTypes",
+                                           "DataTypes/ImplementationDataTypes")
         base_type = ar_element.SwBaseType('uint8', 8)
-        package.append(base_type)
+        packages[0].append(base_type)
 
-        package = workspace.find("DataTypes/ImplementationDataTypes")
         sw_data_def_props = ar_element.SwDataDefPropsConditional(
             impl_data_type_ref="/DataTypes/ImplementationDataTypes/InactiveActive_T")
         impl_type1 = ar_element.ImplementationDataType("PowerSwitch_T",
                                                        category="TYPE_REFERENCE",
                                                        sw_data_def_props=sw_data_def_props)
-        package.append(impl_type1)
+        packages[1].append(impl_type1)
         sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref="DataTypes/BaseTypes/uint8")
         impl_type2 = ar_element.ImplementationDataType("InactiveActive_T",
                                                        category="VALUE",
                                                        sw_data_def_props=sw_data_def_props)
-        package.append(impl_type2)
+        packages[1].append(impl_type2)
 
         application = Application(workspace)
         application.create_from_element(impl_type1)
@@ -144,31 +139,29 @@ class TestRefType(unittest.TestCase):
 
         # Setup
         workspace = autosar.xml.Workspace()
-        workspace.make_packages("DataTypes/BaseTypes",
-                                "DataTypes/ImplementationDataTypes")
-        package = workspace.find("DataTypes/BaseTypes")
+        packages = workspace.make_packages("DataTypes/BaseTypes",
+                                           "DataTypes/ImplementationDataTypes")
         base_type = ar_element.SwBaseType('uint8', 8)
-        package.append(base_type)
+        packages[0].append(base_type)
 
-        package = workspace.find("DataTypes/ImplementationDataTypes")
         sw_data_def_props = ar_element.SwDataDefPropsConditional(
             impl_data_type_ref="/DataTypes/ImplementationDataTypes/InactiveActive_T")
         impl_type1 = ar_element.ImplementationDataType("PowerSwitch_T",
                                                        category="TYPE_REFERENCE",
                                                        sw_data_def_props=sw_data_def_props)
-        package.append(impl_type1)
+        packages[1].append(impl_type1)
         sw_data_def_props = ar_element.SwDataDefPropsConditional(
             impl_data_type_ref="/DataTypes/ImplementationDataTypes/uint8")
         impl_type2 = ar_element.ImplementationDataType("InactiveActive_T",
                                                        category="TYPE_REFERENCE",
                                                        sw_data_def_props=sw_data_def_props)
-        package.append(impl_type2)
+        packages[1].append(impl_type2)
         sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref="DataTypes/BaseTypes/uint8")
         impl_type3 = ar_element.ImplementationDataType("uint8",
                                                        category="VALUE",
                                                        sw_data_def_props=sw_data_def_props,
                                                        type_emitter="Platform")
-        package.append(impl_type3)
+        packages[1].append(impl_type3)
 
         application = Application(workspace)
         application.create_from_element(impl_type1)
@@ -192,24 +185,22 @@ class TestRefType(unittest.TestCase):
     def test_get_type_creation_order(self):
         # Setup
         workspace = autosar.xml.Workspace()
-        workspace.make_packages("DataTypes/BaseTypes",
-                                "DataTypes/ImplementationDataTypes")
-        package = workspace.find("DataTypes/BaseTypes")
+        packages = workspace.make_packages("DataTypes/BaseTypes",
+                                           "DataTypes/ImplementationDataTypes")
         base_type = ar_element.SwBaseType('uint8', 8)
-        package.append(base_type)
+        packages[0].append(base_type)
 
-        package = workspace.find("DataTypes/ImplementationDataTypes")
         sw_data_def_props = ar_element.SwDataDefPropsConditional(
             impl_data_type_ref="/DataTypes/ImplementationDataTypes/InactiveActive_T")
         impl_type1 = ar_element.ImplementationDataType("PowerSwitch_T",
                                                        category="TYPE_REFERENCE",
                                                        sw_data_def_props=sw_data_def_props)
-        package.append(impl_type1)
+        packages[1].append(impl_type1)
         sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref="DataTypes/BaseTypes/uint8")
         impl_type2 = ar_element.ImplementationDataType("InactiveActive_T",
                                                        category="VALUE",
                                                        sw_data_def_props=sw_data_def_props)
-        package.append(impl_type2)
+        packages[1].append(impl_type2)
 
         application = Application(workspace)
         application.create_from_element(impl_type1)
@@ -224,31 +215,29 @@ class TestRefType(unittest.TestCase):
     def test_get_type_creation_order_with_more_depth(self):
         # Setup
         workspace = autosar.xml.Workspace()
-        workspace.make_packages("DataTypes/BaseTypes",
-                                "DataTypes/ImplementationDataTypes")
-        package = workspace.find("DataTypes/BaseTypes")
+        packages = workspace.make_packages("DataTypes/BaseTypes",
+                                           "DataTypes/ImplementationDataTypes")
         base_type = ar_element.SwBaseType('uint8', 8)
-        package.append(base_type)
+        packages[0].append(base_type)
 
-        package = workspace.find("DataTypes/ImplementationDataTypes")
         sw_data_def_props = ar_element.SwDataDefPropsConditional(
             impl_data_type_ref="/DataTypes/ImplementationDataTypes/InactiveActive_T")
         impl_type1 = ar_element.ImplementationDataType("PowerSwitch_T",
                                                        category="TYPE_REFERENCE",
                                                        sw_data_def_props=sw_data_def_props)
-        package.append(impl_type1)
+        packages[1].append(impl_type1)
         sw_data_def_props = ar_element.SwDataDefPropsConditional(
             impl_data_type_ref="/DataTypes/ImplementationDataTypes/uint8")
         impl_type2 = ar_element.ImplementationDataType("InactiveActive_T",
                                                        category="TYPE_REFERENCE",
                                                        sw_data_def_props=sw_data_def_props)
-        package.append(impl_type2)
+        packages[1].append(impl_type2)
         sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref="DataTypes/BaseTypes/uint8")
         impl_type3 = ar_element.ImplementationDataType("uint8",
                                                        category="VALUE",
                                                        sw_data_def_props=sw_data_def_props,
                                                        type_emitter="Platform")
-        package.append(impl_type3)
+        packages[1].append(impl_type3)
 
         application = Application(workspace)
         application.create_from_element(impl_type1)
