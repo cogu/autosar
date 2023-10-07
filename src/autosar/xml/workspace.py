@@ -67,10 +67,13 @@ class Workspace:
             raise ValueError(f"Role '{str(role)}'not in namespace map") from ex
         return posixpath.normpath(posixpath.join(base_ref, rel_path))
 
-    def make_packages(self, *refs: list[str]) -> ar_element.Package:
+    def make_packages(self, *refs: list[str]) -> list[ar_element.Package] | ar_element.Package:
         """
         Recursively creates packages from reference(s)
+        Returns a list of created packages.
+        If only one argument is given it will return that package (not a list).
         """
+        result = []
         for ref in refs:
             if ref.startswith('/'):
                 ref = ref[1:]
@@ -80,7 +83,8 @@ class Workspace:
                 package = self.create_package(parts[0])
             if len(parts[2]) > 0:
                 package = package.make_packages(parts[2])
-        return package
+            result.append(package)
+        return result[0] if len(result) == 1 else result
 
     def create_package(self, name: str, **kwargs) -> ar_element.Package:
         """
@@ -146,8 +150,8 @@ class Workspace:
         if template.depends is not None:
             dependencies = self._create_dependencies(template.depends)
         package_ref = self.get_package_ref_by_role(template.namespace_name, template.package_role)
-        package = self.make_packages(package_ref)
-        elem = package.find(template.element_name)
+        package: ar_element.Package = self.make_packages(package_ref)
+        elem = package.find(template.element_name)  # pylint: disable=E1101
         if elem is None:
             elem = template.apply(self, depends=dependencies, **kwargs)
             package.append(elem)
