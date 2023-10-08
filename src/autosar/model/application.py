@@ -3,9 +3,10 @@ Application model
 """
 from typing import Any, Iterator
 from collections import deque
-import autosar.xml
+from autosar.xml import Workspace
 import autosar.xml.element as ar_element
 import autosar.model.element as rte_element
+import autosar.model.enumeration as rte_enumeration
 
 
 class Node:
@@ -13,7 +14,7 @@ class Node:
     Node used for type dependency trees
     """
 
-    def __init__(self, data: rte_element.DataType) -> None:
+    def __init__(self, data: rte_element.Element) -> None:
         self.data = data
         self.children = []
 
@@ -30,7 +31,7 @@ class Application:
     Needs an assigned XML workspace to pull elements from as needed
     """
 
-    def __init__(self, workspace: autosar.xml.Workspace) -> None:
+    def __init__(self, workspace: Workspace) -> None:
         self.workspace = workspace
         self.data_types = {}
         self.source_type_refs = set()
@@ -61,6 +62,8 @@ class Application:
                     return self._create_scalar_type_from_element(element)
                 if element.category == "TYPE_REFERENCE":
                     return self._create_ref_type_from_element(element)
+                if element.category == "ARRAY":
+                    return self._create_array_type_from_element(element)
                 else:
                     raise NotImplementedError("ImplementationDataType::" + str(element.category))
             else:
@@ -135,7 +138,64 @@ class Application:
         self.data_types[str(elem_ref)] = ref_type
         return ref_type
 
-    def _create_tree_node(self, data_type: rte_element.DataType) -> Node:
+    def _create_array_type_from_element(self, element: ar_element.ImplementationDataType) -> rte_element.ArrayType:
+        elem_ref = str(element.ref())
+        symbol = None
+        if element.symbol_props is not None:
+            symbol = element.symbol_props.symbol
+        data_type = rte_element.ArrayType(elem_ref, element.name, symbol_name=symbol, type_emitter=element.type_emitter)
+        last_element = element.sub_elements[-1]
+        if last_element.category == "VALUE":
+            sub_element = self._create_array_type_element_from_scalar_type(elem_ref, last_element)
+        elif last_element.category == "TYPE_REFERENCE":
+            sub_element = self._create_array_type_element_from_ref_type(elem_ref, last_element)
+        else:
+            raise NotImplementedError(last_element.category)
+        if last_element.array_impl_policy is not None:
+            sub_element.impl_policy = rte_enumeration.ArrayImplPolicy(last_element.array_impl_policy)
+        if last_element.array_size_handling is not None:
+            sub_element.size_handling = rte_enumeration.ArraySizeHandling(last_element.array_size_handling)
+        if last_element.array_size_semantics is not None:
+            sub_element.size_semantics = rte_enumeration.ArraySizeSemantics(last_element.array_size_semantics)
+        data_type.sub_elements.append(sub_element)
+        for ar_sub_elem in reversed(element.sub_elements[:-1]):
+            xml_ref = elem_ref + "/" + ar_sub_elem.name
+            assert isinstance(xml_ref.array_size, int)
+            rte_sub_element = rte_element.ArrayTypeElement(xml_ref, ar_sub_elem.name, ar_sub_elem.array_size)
+            data_type.sub_elements.insert(0, rte_sub_element)
+        return data_type
+
+    def _create_array_type_element_from_scalar_type(self,
+                                                    parent_ref: str,
+                                                    element: ar_element.ImplementationDataTypeElement
+                                                    ) -> rte_element.ArrayTypeElement:
+        element_ref = parent_ref + "/" + element.name
+        sw_data_def_props = element.sw_data_def_props
+        base_type = self.create_from_ref(sw_data_def_props[0].base_type_ref, False)
+        scalar_type = rte_element.ScalarType(element_ref,
+                                             element.name,
+                                             base_type)
+        assert isinstance(element.array_size, int)
+        return rte_element.ArrayTypeElement(element_ref,
+                                            element.name,
+                                            element.array_size,
+                                            scalar_type)
+
+    def _create_array_type_element_from_ref_type(self,
+                                                 parent_ref: str,
+                                                 element: ar_element.ImplementationDataTypeElement
+                                                 ) -> rte_element.ArrayTypeElement:
+        element_ref = parent_ref + "/" + element.name
+        sw_data_def_props = element.sw_data_def_props
+        impl_type = self.create_from_ref(sw_data_def_props[0].impl_data_type_ref, False)
+        ref_type = rte_element.RefType(element_ref, element.name, impl_type)
+        assert isinstance(element.array_size, int)
+        return rte_element.ArrayTypeElement(element_ref,
+                                            element.name,
+                                            element.array_size,
+                                            ref_type)
+
+    def _create_tree_node(self, data_type: rte_element.Element) -> Node:
         node = Node(data_type)
         if isinstance(data_type, rte_element.BaseType):
             pass

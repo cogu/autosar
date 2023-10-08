@@ -1,6 +1,6 @@
 [project]
 name = "autosar"
-version = "0.5.0a6"
+version = "0.5.0a7"
 description = "A set of Python modules for working with AUTOSAR XML files"
 readme = "README.md"
 requires-python = ">=3.10"

@@ -21,7 +21,7 @@ def create_array_impl_type_with_value_element():
                                                            category="VALUE",
                                                            array_size=4,
                                                            sw_data_def_props=sw_data_def_props)
-    impl_type = ar_element.ImplementationDataType('U8Buf4_T',
+    impl_type = ar_element.ImplementationDataType('U8Array4_T',
                                                   category="ARRAY",
                                                   sub_elements=[sub_element])
     packages[1].append(impl_type)

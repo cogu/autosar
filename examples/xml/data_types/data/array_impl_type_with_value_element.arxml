@@ -16,7 +16,7 @@
           <SHORT-NAME>ImplementationDataTypes</SHORT-NAME>
           <ELEMENTS>
             <IMPLEMENTATION-DATA-TYPE>
-              <SHORT-NAME>U8Buf4_T</SHORT-NAME>
+              <SHORT-NAME>U8Array4_T</SHORT-NAME>
               <CATEGORY>ARRAY</CATEGORY>
               <SUB-ELEMENTS>
                 <IMPLEMENTATION-DATA-TYPE-ELEMENT>

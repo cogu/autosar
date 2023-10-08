@@ -38,18 +38,27 @@ after newer versions are released to PyPI.
 
 Development and research version. Not yet released.
 
-Documentation for v0.5 will be maintained in the [project Wiki](https://github.com/cogu/autosar/wiki).
+See CHANGELOG for latest updates.
 
 ### Supported AUTOSAR versions (v0.5)
 
-* R21-11 (Schema version 50).
+The XML of all examples are continously validated against the following schemas:
 
-Classic AUTOSAR only.
+* 48 (R19-11, Classic AUTOSAR 4.5)
+* 49 (R20-11, Classic AUTOSAR 4.6)
+* 50 (R21-11, Classic AUTOSAR 4.7)
+* 51 (R22-11, Classic AUTOSAR 4.8)
+
+So far the implementation is compatible with all the above versions.
+Officially though, the implementation is attempting to follow schema versions 50 and 51.
+
+Only Clasic AUTOSAR is supported.
 
 ### Requirements (v0.5)
 
 * Python 3.10+
 * lxml
+* cfile 0.3.0 (Used by RTE generator)
 
 ### Installation (v0.5)
 

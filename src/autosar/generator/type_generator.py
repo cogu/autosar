@@ -88,7 +88,7 @@ class TypeGenerator:
                     result.append(data_type)
         return result
 
-    def _gen_type_defs(self, data_types: Iterator[rte_element.DataType]) -> cfile.core.Sequence:
+    def _gen_type_defs(self, data_types: Iterator[rte_element.Element]) -> cfile.core.Sequence:
         """
         Generates typedefs section
         """
