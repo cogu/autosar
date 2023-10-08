@@ -25,12 +25,10 @@ def create_array_impl_type_with_value_element():
                                                   category="ARRAY",
                                                   sub_elements=[sub_element])
     packages[1].append(impl_type)
-    file_path = os.path.abspath(os.path.join(os.path.dirname(
+    document_path = os.path.abspath(os.path.join(os.path.dirname(
         __file__), 'data', 'array_impl_type_with_value_element.arxml'))
-    writer = autosar.xml.Writer()
-    document = autosar.xml.document.Document()
-    document.append(workspace.find("/DataTypes"))
-    writer.write_file(document, file_path)
+    workspace.create_document(document_path, packages="/DataTypes")
+    workspace.write_documents()
 
 
 def create_array_impl_type_with_type_ref_element():
@@ -56,12 +54,10 @@ def create_array_impl_type_with_type_ref_element():
                                                    category="ARRAY",
                                                    sub_elements=[sub_element])
     packages[1].append(array_type)
-    file_path = os.path.abspath(os.path.join(os.path.dirname(
+    document_path = os.path.abspath(os.path.join(os.path.dirname(
         __file__), 'data', 'array_impl_type_with_type_ref_element.arxml'))
-    writer = autosar.xml.Writer()
-    document = autosar.xml.document.Document()
-    document.append(workspace.find("/DataTypes"))
-    writer.write_file(document, file_path)
+    workspace.create_document(document_path, packages="/DataTypes")
+    workspace.write_documents()
 
 
 if __name__ == "__main__":
