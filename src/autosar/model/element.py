@@ -4,17 +4,20 @@ AUTOSAR Model elements
 This is the meta-model used by RTE and BSW. For XML model see the autosar.xml modules.
 """
 
+import autosar.model.enumeration as rte_enumeration
 
-class DataType:
+
+class Element:
     """
-    Base class for both BaseType and ImplementationType
+    Base class all elements that refers back to its
+    XML counterpart
     """
 
     def __init__(self, ref: str) -> None:
         self.ref = ref
 
 
-class BaseType(DataType):
+class BaseType(Element):
     """
     A data type created from a SwBaseType
     """
@@ -25,7 +28,7 @@ class BaseType(DataType):
         self.native_declaration = native_declaration
 
 
-class ImplementationType(DataType):
+class ImplementationType(Element):
     """
     Implementation data type
     """
@@ -66,6 +69,26 @@ class ScalarType(ImplementationType):
         self.base_type = base_type
 
 
+class ArrayTypeElement(Element):
+    """
+    Element of an array data type
+    """
+
+    def __init__(self,
+                 xml_ref: str,
+                 name: str | None,
+                 array_size: int,
+                 data_type: ImplementationType | None = None
+                 ) -> None:
+        super().__init__(xml_ref)
+        self.name = name
+        self.data_type = data_type
+        self.array_size = array_size
+        self.impl_policy: rte_enumeration.ArrayImplPolicy | None = None
+        self.size_handling: rte_enumeration.ArraySizeHandling | None = None
+        self.size_semantics: rte_enumeration.ArraySizeSemantics | None = None
+
+
 class ArrayType(ImplementationType):
     """
     A data type that can represent an array.
@@ -73,6 +96,14 @@ class ArrayType(ImplementationType):
     Sub-elements are used to define each dimension of the array.
     The array_size specifies the number of array elements of the dimension.
     """
+
+    def __init__(self,
+                 xml_ref: str,
+                 name: str,
+                 symbol_name: str | None = None,
+                 type_emitter: str | None = None) -> None:
+        super().__init__(xml_ref, name, symbol_name, False, type_emitter)
+        self.sub_elements: list[ArrayTypeElement] = []
 
 
 class RefType(ImplementationType):

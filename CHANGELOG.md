@@ -4,7 +4,7 @@ Notable changes.
 
 ## [Unreleased]
 
-### Collectable elements
+### XML - Collectable elements
 
 * ApplicationArrayDataType
 * ApplicationPrimitiveDataType
@@ -15,7 +15,7 @@ Notable changes.
 * SwBaseType
 * Unit
 
-### Documentation elements
+### XML - Documentation elements
 
 * DocumentationBlock
 * EmphasisText
@@ -27,7 +27,7 @@ Notable changes.
 * Superscript
 * TechnicalTerm
 
-### DataDictionary elements
+### XML - DataDictionary elements
 
 * ApplicationArrayElement
 * ApplicationRecordElement
@@ -40,7 +40,15 @@ Notable changes.
 * SwTextProps
 * SymbolProps
 
-### Application model (RTE)
+### Runtime Model - Elements
 
-* Data type generator
+* ArrayType
+* BaseType
+* RefType
+* ScalarType
 
+### RTE Data Type Generator
+
+* BaseType
+* RefType
+* ScalarType

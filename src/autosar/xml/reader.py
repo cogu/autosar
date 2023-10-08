@@ -1561,7 +1561,6 @@ class Reader:
         xml_child = child_elements.get("SW-DATA-DEF-PROPS")
         if xml_child is not None:
             data["sw_data_def_props"] = self._read_sw_data_def_props(xml_child)
-        xml_child = child_elements.get("ARRAY-IMPL-POLICY")
         child_elements.skip("VARIATION-POINT")  # Not supported
 
     def _read_implementation_data_type(self, xml_element: ElementTree.Element) -> ar_element.ImplementationDataType:
