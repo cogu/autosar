@@ -6,6 +6,8 @@ from typing import Any
 import autosar.xml.element as ar_element
 import autosar.xml.enumeration as ar_enum
 import autosar.xml.template as ar_template
+from autosar.xml.document import Document
+from autosar.xml.writer import Writer
 
 
 class Namespace:
@@ -36,6 +38,7 @@ class Workspace:
         self.namespaces: dict[str, Namespace] = {}
         self.packages: list[ar_element.Package] = []
         self._package_map: dict[str, ar_element.Package] = {}
+        self.documents: list[tuple(Document, str)] = []
 
     def create_namespace(self, name: str, package_map: dict[str, str], base_ref: str = None) -> None:
         """
@@ -133,6 +136,28 @@ class Workspace:
             return template.apply(self, **kwargs)
         else:
             raise NotImplementedError(f"Unknown template type: {str(type(template))}")
+
+    def create_document(self, file_path: str, packages: str | list[str]) -> Document:
+        """
+        Creates a new document object and appends one or more packages to it.
+        Use the write_documents method to write documents to file system
+        """
+        document = Document()
+        if isinstance(packages, str):
+            document.append(self.find(packages))
+        else:
+            for package_ref in packages:
+                document.append(self.find(package_ref))
+        self.documents.append((document, file_path))
+        return document
+
+    def write_documents(self) -> None:
+        """
+        Writes all documents to file system
+        """
+        writer = Writer()
+        for (document, file_path) in self.documents:
+            writer.write_file(document, file_path)
 
     def _apply_element_template(self, template: ar_template.ElementTemplate, kwargs: dict):
         """
