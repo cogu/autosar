@@ -47,6 +47,7 @@ Notable changes.
 * RefType
 * ScalarType
 * StructType
+* PointerType
 
 ### RTE Data Type Generator
 

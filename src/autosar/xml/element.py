@@ -1663,7 +1663,7 @@ class SwPointerTargetProps(ARObject):
 
     def __init__(self,
                  target_category: str | None = None,
-                 sw_data_def_props: Union["SwDataDefProps", None] = None,
+                 sw_data_def_props: Union["SwDataDefProps", "SwDataDefPropsConditional", None] = None,
                  function_ptr_signature_ref: FunctionPtrSignatureRef | None = None
                  ) -> None:
         self.target_category: str | None = None  # .TARGET-CATEGORY
@@ -1672,7 +1672,12 @@ class SwPointerTargetProps(ARObject):
         self._assign_optional("target_category", target_category, str)
         self._assign_optional("function_ptr_signature_ref", function_ptr_signature_ref, FunctionPtrSignatureRef)
         if sw_data_def_props is not None:
-            self._set_attr_with_strict_type("sw_data_def_props", sw_data_def_props, SwDataDefProps)
+            if isinstance(sw_data_def_props, SwDataDefProps):
+                self.sw_data_def_props = sw_data_def_props
+            elif isinstance(sw_data_def_props, SwDataDefPropsConditional):
+                self.sw_data_def_props = SwDataDefProps(sw_data_def_props)
+            else:
+                raise TypeError("'sw_data_def_props' must be one of (SwDataDefProps, SwDataDefPropsConditional)")
 
 
 class SwDataDefPropsConditional(ARObject):

@@ -17,7 +17,13 @@ class Element:
         self.ref = ref
 
 
-class BaseType(Element):
+class DataType(Element):
+    """
+    Base class for BaseType and ImplementationType
+    """
+
+
+class BaseType(DataType):
     """
     A data type created from a SwBaseType
     """
@@ -28,7 +34,7 @@ class BaseType(Element):
         self.native_declaration = native_declaration
 
 
-class ImplementationType(Element):
+class ImplementationType(DataType):
     """
     Implementation data type
     """
@@ -115,7 +121,7 @@ class RefType(ImplementationType):
     def __init__(self,
                  xml_ref: str,
                  name: str,
-                 impl_type: ScalarType,
+                 impl_type: ImplementationType,
                  symbol_name: str | None = None,
                  const: bool = False) -> None:
         super().__init__(xml_ref, name, symbol_name, const)
@@ -127,6 +133,16 @@ class PointerType(ImplementationType):
     A pointer to another ImplementationDataType.
     Created from ar_elements where the category is set to DATA_REFERENCE.
     """
+
+    def __init__(self,
+                 xml_ref: str,
+                 name: str,
+                 target_type: DataType,
+                 symbol_name: str | None = None,
+                 const: bool = False,
+                 type_emitter: str | None = None) -> None:
+        super().__init__(xml_ref, name, symbol_name, const, type_emitter)
+        self.target_type = target_type
 
 
 class StructTypeElement(Element):
