@@ -129,11 +129,34 @@ class PointerType(ImplementationType):
     """
 
 
+class StructTypeElement(Element):
+    """
+    Element of a struct
+    """
+
+    def __init__(self,
+                 xml_ref: str,
+                 name: str | None,
+                 data_type: ImplementationType | None = None
+                 ) -> None:
+        super().__init__(xml_ref)
+        self.name = name
+        self.data_type = data_type
+
+
 class StructType(ImplementationType):
     """
     A data type that can represent a structure.
     Created from ar_elements where the category is set to STRUCTURE.
     """
+
+    def __init__(self,
+                 xml_ref: str,
+                 name: str,
+                 symbol_name: str | None = None,
+                 type_emitter: str | None = None) -> None:
+        super().__init__(xml_ref, name, symbol_name, False, type_emitter)
+        self.sub_elements: list[StructTypeElement] = []
 
 
 class UnionType(ImplementationType):

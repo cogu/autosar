@@ -1111,6 +1111,120 @@ DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/InactiveActive_T</IMPLEMENTATION-DATA
         self.assertIsInstance(sub_elem, ar_element.ImplementationDataTypeElement)
         self.assertEqual(sub_elem.name, "Element")
 
+    def test_struct_data_type_with_value_elements(self):
+        sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref="/DataTypes/BaseTypes/uint8")
+        elem1 = ar_element.ImplementationDataTypeElement("Elem1",
+                                                         category="VALUE",
+                                                         sw_data_def_props=sw_data_def_props)
+        sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref="/DataTypes/BaseTypes/uint32")
+        elem2 = ar_element.ImplementationDataTypeElement("Elem2",
+                                                         category="VALUE",
+                                                         sw_data_def_props=sw_data_def_props)
+        element = ar_element.ImplementationDataType("StructType_T",
+                                                    category="STRUCTURE",
+                                                    sub_elements=[elem1, elem2])
+        xml = '''<IMPLEMENTATION-DATA-TYPE>
+  <SHORT-NAME>StructType_T</SHORT-NAME>
+  <CATEGORY>STRUCTURE</CATEGORY>
+  <SUB-ELEMENTS>
+    <IMPLEMENTATION-DATA-TYPE-ELEMENT>
+      <SHORT-NAME>Elem1</SHORT-NAME>
+      <CATEGORY>VALUE</CATEGORY>
+      <SW-DATA-DEF-PROPS>
+        <SW-DATA-DEF-PROPS-VARIANTS>
+          <SW-DATA-DEF-PROPS-CONDITIONAL>
+            <BASE-TYPE-REF DEST="SW-BASE-TYPE">/DataTypes/BaseTypes/uint8</BASE-TYPE-REF>
+          </SW-DATA-DEF-PROPS-CONDITIONAL>
+        </SW-DATA-DEF-PROPS-VARIANTS>
+      </SW-DATA-DEF-PROPS>
+    </IMPLEMENTATION-DATA-TYPE-ELEMENT>
+    <IMPLEMENTATION-DATA-TYPE-ELEMENT>
+      <SHORT-NAME>Elem2</SHORT-NAME>
+      <CATEGORY>VALUE</CATEGORY>
+      <SW-DATA-DEF-PROPS>
+        <SW-DATA-DEF-PROPS-VARIANTS>
+          <SW-DATA-DEF-PROPS-CONDITIONAL>
+            <BASE-TYPE-REF DEST="SW-BASE-TYPE">/DataTypes/BaseTypes/uint32</BASE-TYPE-REF>
+          </SW-DATA-DEF-PROPS-CONDITIONAL>
+        </SW-DATA-DEF-PROPS-VARIANTS>
+      </SW-DATA-DEF-PROPS>
+    </IMPLEMENTATION-DATA-TYPE-ELEMENT>
+  </SUB-ELEMENTS>
+</IMPLEMENTATION-DATA-TYPE>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ImplementationDataType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ImplementationDataType)
+        self.assertEqual(elem.name, 'StructType_T')
+        sub_elem = elem.find("Elem1")
+        self.assertIsInstance(sub_elem, ar_element.ImplementationDataTypeElement)
+        self.assertEqual(sub_elem.name, "Elem1")
+        sub_elem = elem.find("Elem2")
+        self.assertIsInstance(sub_elem, ar_element.ImplementationDataTypeElement)
+        self.assertEqual(sub_elem.name, "Elem2")
+
+    def test_struct_data_type_with_ref_type_elements(self):
+        sw_data_def_props = ar_element.SwDataDefPropsConditional(
+            impl_data_type_ref="/AUTOSAR_Platform/ImplementationTypes/uint8")
+        elem1 = ar_element.ImplementationDataTypeElement("Elem1",
+                                                         category="TYPE_REFERENCE",
+                                                         sw_data_def_props=sw_data_def_props)
+        sw_data_def_props = ar_element.SwDataDefPropsConditional(
+            impl_data_type_ref="/AUTOSAR_Platform/ImplementationTypes/uint32")
+        elem2 = ar_element.ImplementationDataTypeElement("Elem2",
+                                                         category="TYPE_REFERENCE",
+                                                         sw_data_def_props=sw_data_def_props)
+        element = ar_element.ImplementationDataType("StructType_T",
+                                                    category="STRUCTURE",
+                                                    sub_elements=[elem1, elem2])
+        xml = '''<IMPLEMENTATION-DATA-TYPE>
+  <SHORT-NAME>StructType_T</SHORT-NAME>
+  <CATEGORY>STRUCTURE</CATEGORY>
+  <SUB-ELEMENTS>
+    <IMPLEMENTATION-DATA-TYPE-ELEMENT>
+      <SHORT-NAME>Elem1</SHORT-NAME>
+      <CATEGORY>TYPE_REFERENCE</CATEGORY>
+      <SW-DATA-DEF-PROPS>
+        <SW-DATA-DEF-PROPS-VARIANTS>
+          <SW-DATA-DEF-PROPS-CONDITIONAL>
+            <IMPLEMENTATION-DATA-TYPE-REF \
+DEST="IMPLEMENTATION-DATA-TYPE">/AUTOSAR_Platform/ImplementationTypes/uint8</IMPLEMENTATION-DATA-TYPE-REF>
+          </SW-DATA-DEF-PROPS-CONDITIONAL>
+        </SW-DATA-DEF-PROPS-VARIANTS>
+      </SW-DATA-DEF-PROPS>
+    </IMPLEMENTATION-DATA-TYPE-ELEMENT>
+    <IMPLEMENTATION-DATA-TYPE-ELEMENT>
+      <SHORT-NAME>Elem2</SHORT-NAME>
+      <CATEGORY>TYPE_REFERENCE</CATEGORY>
+      <SW-DATA-DEF-PROPS>
+        <SW-DATA-DEF-PROPS-VARIANTS>
+          <SW-DATA-DEF-PROPS-CONDITIONAL>
+            <IMPLEMENTATION-DATA-TYPE-REF \
+DEST="IMPLEMENTATION-DATA-TYPE">/AUTOSAR_Platform/ImplementationTypes/uint32</IMPLEMENTATION-DATA-TYPE-REF>
+          </SW-DATA-DEF-PROPS-CONDITIONAL>
+        </SW-DATA-DEF-PROPS-VARIANTS>
+      </SW-DATA-DEF-PROPS>
+    </IMPLEMENTATION-DATA-TYPE-ELEMENT>
+  </SUB-ELEMENTS>
+</IMPLEMENTATION-DATA-TYPE>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ImplementationDataType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ImplementationDataType)
+        self.assertEqual(elem.name, 'StructType_T')
+        sub_elem: ar_element.ImplementationDataTypeElement = elem.find("Elem1")
+        self.assertIsInstance(sub_elem, ar_element.ImplementationDataTypeElement)
+        self.assertEqual(sub_elem.name, "Elem1")
+        self.assertEqual(str(sub_elem.sw_data_def_props[0].impl_data_type_ref),
+                         "/AUTOSAR_Platform/ImplementationTypes/uint8")
+        sub_elem: ar_element.ImplementationDataTypeElement = elem.find("Elem2")
+        self.assertIsInstance(sub_elem, ar_element.ImplementationDataTypeElement)
+        self.assertEqual(sub_elem.name, "Elem2")
+        self.assertEqual(str(sub_elem.sw_data_def_props[0].impl_data_type_ref),
+                         "/AUTOSAR_Platform/ImplementationTypes/uint32")
+
 
 class TestApplicationPrimitiveDataType(unittest.TestCase):
 
