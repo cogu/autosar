@@ -1225,6 +1225,87 @@ DEST="IMPLEMENTATION-DATA-TYPE">/AUTOSAR_Platform/ImplementationTypes/uint32</IM
         self.assertEqual(str(sub_elem.sw_data_def_props[0].impl_data_type_ref),
                          "/AUTOSAR_Platform/ImplementationTypes/uint32")
 
+    def test_pointer_data_type_to_value_type(self):
+        sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref="/DataTypes/BaseTypes/uint8")
+        pointer_target_props = ar_element.SwPointerTargetProps("VALUE", sw_data_def_props)
+        sw_data_def_props = ar_element.SwDataDefPropsConditional(ptr_target_props=pointer_target_props)
+        element = ar_element.ImplementationDataType("dataPtr_T",
+                                                    category="DATA_REFERENCE",
+                                                    sw_data_def_props=sw_data_def_props
+                                                    )
+        xml = '''<IMPLEMENTATION-DATA-TYPE>
+  <SHORT-NAME>dataPtr_T</SHORT-NAME>
+  <CATEGORY>DATA_REFERENCE</CATEGORY>
+  <SW-DATA-DEF-PROPS>
+    <SW-DATA-DEF-PROPS-VARIANTS>
+      <SW-DATA-DEF-PROPS-CONDITIONAL>
+        <SW-POINTER-TARGET-PROPS>
+          <TARGET-CATEGORY>VALUE</TARGET-CATEGORY>
+          <SW-DATA-DEF-PROPS>
+            <SW-DATA-DEF-PROPS-VARIANTS>
+              <SW-DATA-DEF-PROPS-CONDITIONAL>
+                <BASE-TYPE-REF DEST="SW-BASE-TYPE">/DataTypes/BaseTypes/uint8</BASE-TYPE-REF>
+              </SW-DATA-DEF-PROPS-CONDITIONAL>
+            </SW-DATA-DEF-PROPS-VARIANTS>
+          </SW-DATA-DEF-PROPS>
+        </SW-POINTER-TARGET-PROPS>
+      </SW-DATA-DEF-PROPS-CONDITIONAL>
+    </SW-DATA-DEF-PROPS-VARIANTS>
+  </SW-DATA-DEF-PROPS>
+</IMPLEMENTATION-DATA-TYPE>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ImplementationDataType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ImplementationDataType)
+        self.assertEqual(elem.name, 'dataPtr_T')
+        ptr_target_props = elem.sw_data_def_props[0].ptr_target_props
+        self.assertEqual(ptr_target_props.target_category, "VALUE")
+        sw_data_def_props = ptr_target_props.sw_data_def_props
+        self.assertEqual(str(sw_data_def_props[0].base_type_ref), "/DataTypes/BaseTypes/uint8")
+
+    def test_pointer_data_type_to_ref_type(self):
+        sw_data_def_props = ar_element.SwDataDefPropsConditional(
+            impl_data_type_ref="/DataTypes/ImplementationTypes/InactiveActive_T")
+        pointer_target_props = ar_element.SwPointerTargetProps("TYPE_REFERENCE", sw_data_def_props)
+        sw_data_def_props = ar_element.SwDataDefPropsConditional(ptr_target_props=pointer_target_props)
+        element = ar_element.ImplementationDataType("dataPtr_T",
+                                                    category="DATA_REFERENCE",
+                                                    sw_data_def_props=sw_data_def_props
+                                                    )
+        xml = '''<IMPLEMENTATION-DATA-TYPE>
+  <SHORT-NAME>dataPtr_T</SHORT-NAME>
+  <CATEGORY>DATA_REFERENCE</CATEGORY>
+  <SW-DATA-DEF-PROPS>
+    <SW-DATA-DEF-PROPS-VARIANTS>
+      <SW-DATA-DEF-PROPS-CONDITIONAL>
+        <SW-POINTER-TARGET-PROPS>
+          <TARGET-CATEGORY>TYPE_REFERENCE</TARGET-CATEGORY>
+          <SW-DATA-DEF-PROPS>
+            <SW-DATA-DEF-PROPS-VARIANTS>
+              <SW-DATA-DEF-PROPS-CONDITIONAL>
+                <IMPLEMENTATION-DATA-TYPE-REF DEST="IMPLEMENTATION-DATA-TYPE">\
+/DataTypes/ImplementationTypes/InactiveActive_T</IMPLEMENTATION-DATA-TYPE-REF>
+              </SW-DATA-DEF-PROPS-CONDITIONAL>
+            </SW-DATA-DEF-PROPS-VARIANTS>
+          </SW-DATA-DEF-PROPS>
+        </SW-POINTER-TARGET-PROPS>
+      </SW-DATA-DEF-PROPS-CONDITIONAL>
+    </SW-DATA-DEF-PROPS-VARIANTS>
+  </SW-DATA-DEF-PROPS>
+</IMPLEMENTATION-DATA-TYPE>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ImplementationDataType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ImplementationDataType)
+        self.assertEqual(elem.name, 'dataPtr_T')
+        ptr_target_props = elem.sw_data_def_props[0].ptr_target_props
+        self.assertEqual(ptr_target_props.target_category, "TYPE_REFERENCE")
+        sw_data_def_props = ptr_target_props.sw_data_def_props
+        self.assertEqual(str(sw_data_def_props[0].impl_data_type_ref),
+                         "/DataTypes/ImplementationTypes/InactiveActive_T")
+
 
 class TestApplicationPrimitiveDataType(unittest.TestCase):
 

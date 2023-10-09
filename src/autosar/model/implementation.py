@@ -66,8 +66,9 @@ class ImplementationModel:
                     return self._create_array_type_from_element(element)
                 if element.category == "STRUCTURE":
                     return self._create_struct_type_from_element(element)
-                else:
-                    raise NotImplementedError("ImplementationDataType::" + str(element.category))
+                if element.category == "DATA_REFERENCE":
+                    return self._create_ptr_type_from_element(element)
+                raise NotImplementedError("ImplementationDataType::" + str(element.category))
             else:
                 raise NotImplementedError(str(type(element)))
         return self.data_types[str(elem_ref)]
@@ -241,6 +242,26 @@ class ImplementationModel:
         return rte_element.StructTypeElement(element_ref,
                                              element.name,
                                              ref_type)
+
+    def _create_ptr_type_from_element(self, element: ar_element.ImplementationDataType) -> rte_element.PointerType:
+        elem_ref = str(element.ref())
+        symbol = None
+        if element.symbol_props is not None:
+            symbol = element.symbol_props.symbol
+        ptr_target_props: ar_element.SwPointerTargetProps = element.sw_data_def_props[0].ptr_target_props
+        if ptr_target_props.target_category == "VALUE":
+            target_type = self.create_from_ref(ptr_target_props.sw_data_def_props[0].base_type_ref, False)
+        elif ptr_target_props.target_category == "TYPE_REFERENCE":
+            target_type = self.create_from_ref(ptr_target_props.sw_data_def_props[0].impl_data_type_ref, False)
+        else:
+            raise NotImplementedError
+        data_type = rte_element.PointerType(elem_ref,
+                                            element.name,
+                                            target_type,
+                                            symbol_name=symbol,
+                                            type_emitter=element.type_emitter)
+        self.data_types[str(elem_ref)] = data_type
+        return data_type
 
     def _create_tree_node(self, data_type: rte_element.Element) -> Node:
         node = Node(data_type)

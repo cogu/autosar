@@ -367,8 +367,8 @@ class TestStructDataType(unittest.TestCase):
         packages["ImplementationDataTypes"].append(struct_type)
 
         # Test
-        model = ImplementationModel(workspace)
-        elem: rte_element.StructType = model.create_from_element(struct_type)
+        implementation = ImplementationModel(workspace)
+        elem: rte_element.StructType = implementation.create_from_element(struct_type)
         self.assertIsInstance(elem, rte_element.StructType)
         self.assertEqual(elem.name, "StructType_T")
         self.assertEqual(len(elem.sub_elements), 2)
@@ -419,8 +419,8 @@ class TestStructDataType(unittest.TestCase):
         packages["ImplementationDataTypes"].append(struct_type)
 
         # Test
-        model = ImplementationModel(workspace)
-        elem: rte_element.StructType = model.create_from_element(struct_type)
+        implementation = ImplementationModel(workspace)
+        elem: rte_element.StructType = implementation.create_from_element(struct_type)
         self.assertIsInstance(elem, rte_element.StructType)
         self.assertEqual(elem.name, "StructType_T")
         self.assertEqual(len(elem.sub_elements), 2)
@@ -436,6 +436,64 @@ class TestStructDataType(unittest.TestCase):
         data_type: rte_element.RefType = sub_element.data_type
         self.assertIsInstance(data_type, rte_element.RefType)
         self.assertEqual(data_type.impl_type.ref, "/DataTypes/ImplementationDataTypes/uint32")
+
+
+class TestPtrType(unittest.TestCase):
+
+    def test_ptr_type_to_value_type(self):
+        # Setup
+        workspace = Workspace()
+        packages = dict(zip(["BaseTypes", "ImplementationDataTypes"],
+                            workspace.make_packages("DataTypes/BaseTypes",
+                                                    "DataTypes/ImplementationDataTypes")))
+        uint8_base_type = ar_element.SwBaseType("uint8")
+        packages["BaseTypes"].append(uint8_base_type)
+        sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref=uint8_base_type.ref())
+        uint8_impl_type = ar_element.ImplementationDataType("uint8",
+                                                            category="VALUE",
+                                                            sw_data_def_props=sw_data_def_props)
+        packages["ImplementationDataTypes"].append(uint8_impl_type)
+
+        sw_data_def_props = ar_element.SwDataDefPropsConditional(impl_data_type_ref=uint8_impl_type.ref())
+        pointer_target_props = ar_element.SwPointerTargetProps("TYPE_REFERENCE", sw_data_def_props)
+        sw_data_def_props = ar_element.SwDataDefPropsConditional(ptr_target_props=pointer_target_props)
+        ptr_type = ar_element.ImplementationDataType("U8Ptr_T",
+                                                     category="DATA_REFERENCE",
+                                                     sw_data_def_props=sw_data_def_props
+                                                     )
+        packages["ImplementationDataTypes"].append(ptr_type)
+        # Test
+        implementation = ImplementationModel(workspace)
+        elem: rte_element.PointerType = implementation.create_from_element(ptr_type)
+        self.assertIsInstance(elem, rte_element.PointerType)
+        self.assertEqual(elem.name, "U8Ptr_T")
+        self.assertIsInstance(elem.target_type, rte_element.ScalarType)
+        self.assertEqual(elem.target_type.name, "uint8")
+
+    def test_ptr_type_to_ref_type(self):
+        # Setup
+        workspace = Workspace()
+        packages = dict(zip(["BaseTypes", "ImplementationDataTypes"],
+                            workspace.make_packages("DataTypes/BaseTypes",
+                                                    "DataTypes/ImplementationDataTypes")))
+        uint8_base_type = ar_element.SwBaseType("uint8")
+        packages["BaseTypes"].append(uint8_base_type)
+
+        sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref=uint8_base_type.ref())
+        pointer_target_props = ar_element.SwPointerTargetProps("VALUE", sw_data_def_props)
+        sw_data_def_props = ar_element.SwDataDefPropsConditional(ptr_target_props=pointer_target_props)
+        ptr_type = ar_element.ImplementationDataType("dataPtr_T",
+                                                     category="DATA_REFERENCE",
+                                                     sw_data_def_props=sw_data_def_props
+                                                     )
+        packages["ImplementationDataTypes"].append(ptr_type)
+        # Test
+        implementation = ImplementationModel(workspace)
+        elem: rte_element.PointerType = implementation.create_from_element(ptr_type)
+        self.assertIsInstance(elem, rte_element.PointerType)
+        self.assertEqual(elem.name, "dataPtr_T")
+        self.assertIsInstance(elem.target_type, rte_element.BaseType)
+        self.assertEqual(elem.target_type.name, "uint8")
 
 
 if __name__ == '__main__':
