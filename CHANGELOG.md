@@ -40,7 +40,7 @@ Notable changes.
 * SwTextProps
 * SymbolProps
 
-### Application Model - Elements
+### Implementation Model - Elements
 
 * ArrayType
 * BaseType

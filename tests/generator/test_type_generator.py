@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../.
 import autosar # noqa E402
 import autosar.xml.element as ar_element  # noqa E402
 import autosar.model.element as rte_element  # noqa E402
-from autosar.model import Application # noqa E402
+from autosar.model import ImplementationModel # noqa E402
 import autosar.generator # noqa E402
 
 
@@ -20,11 +20,11 @@ class TestTypeGenerator(unittest.TestCase):
         package = workspace.make_packages("DataTypes/BaseTypes")
         base_type = ar_element.SwBaseType('MyUInt8Base', native_declaration="unsigned char")
         package.append(base_type)
-        application = Application(workspace)
-        application.create_from_element(base_type)
+        implementation = ImplementationModel(workspace)
+        implementation.create_from_element(base_type)
 
         # Test
-        type_generator = autosar.generator.TypeGenerator(application)
+        type_generator = autosar.generator.TypeGenerator(implementation)
         data_types = type_generator.gen_data_type_creation_order()
         self.assertEqual(len(data_types), 1)
         data_type = data_types[0]
@@ -43,11 +43,11 @@ class TestTypeGenerator(unittest.TestCase):
                                                       category="VALUE",
                                                       sw_data_def_props=sw_data_def_props)
         packages[1].append(impl_type)
-        application = Application(workspace)
-        application.create_from_element(impl_type)
+        implementation = ImplementationModel(workspace)
+        implementation.create_from_element(impl_type)
 
         # Test
-        type_generator = autosar.generator.TypeGenerator(application)
+        type_generator = autosar.generator.TypeGenerator(implementation)
         data_types = type_generator.gen_data_type_creation_order()
         self.assertEqual(len(data_types), 2)
         data_type = data_types[0]
@@ -79,11 +79,11 @@ class TestTypeGenerator(unittest.TestCase):
                                                               sw_data_def_props=sw_data_def_props)
         package.append(inactive_active_t)
 
-        application = Application(workspace)
-        application.create_from_element(inactive_active_t)
+        implementation = ImplementationModel(workspace)
+        implementation.create_from_element(inactive_active_t)
 
         # Test
-        type_generator = autosar.generator.TypeGenerator(application)
+        type_generator = autosar.generator.TypeGenerator(implementation)
         data_types = type_generator.gen_data_type_creation_order()
         self.assertEqual(len(data_types), 1)
         data_type = data_types[0]
