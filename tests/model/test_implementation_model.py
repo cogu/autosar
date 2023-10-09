@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../.
 from autosar.xml import Workspace  # noqa E402
 import autosar.xml.element as ar_element  # noqa E402
 import autosar.model.element as rte_element  # noqa E402
-from autosar.model import Application # noqa E402
+from autosar.model import ImplementationModel # noqa E402
 
 
 class TestBaseType(unittest.TestCase):
@@ -21,8 +21,8 @@ class TestBaseType(unittest.TestCase):
         package.append(base_type)
 
         # Test
-        application = Application(workspace)
-        elem: rte_element.BaseType = application.create_from_element(base_type)
+        implementation = ImplementationModel(workspace)
+        elem: rte_element.BaseType = implementation.create_from_element(base_type)
         self.assertEqual(elem.name, "uint8")
         self.assertIsNone(elem.native_declaration)
 
@@ -34,8 +34,8 @@ class TestBaseType(unittest.TestCase):
         package.append(base_type)
 
         # Test
-        application = Application(workspace)
-        elem: rte_element.BaseType = application.create_from_element(base_type)
+        implementation = ImplementationModel(workspace)
+        elem: rte_element.BaseType = implementation.create_from_element(base_type)
         self.assertEqual(elem.name, base_type.name)
         self.assertEqual(elem.native_declaration, base_type.native_declaration)
 
@@ -57,8 +57,8 @@ class TestScalarType(unittest.TestCase):
         packages[1].append(impl_type)
 
         # Test
-        application = Application(workspace)
-        elem: rte_element.ScalarType = application.create_from_element(impl_type)
+        implementation = ImplementationModel(workspace)
+        elem: rte_element.ScalarType = implementation.create_from_element(impl_type)
         self.assertIsInstance(elem, rte_element.ScalarType)
         self.assertEqual(elem.name, "MyUint8")
         self.assertIsInstance(elem.base_type, rte_element.BaseType)
@@ -88,8 +88,8 @@ class TestRefType(unittest.TestCase):
         packages[1].append(impl_type)
 
         # Test
-        application = Application(workspace)
-        elem: rte_element.RefType = application.create_from_element(impl_type)
+        implementation = ImplementationModel(workspace)
+        elem: rte_element.RefType = implementation.create_from_element(impl_type)
         self.assertIsInstance(elem, rte_element.RefType)
         self.assertEqual(elem.name, "InactiveActive_T")
         self.assertIsInstance(elem.impl_type, rte_element.ScalarType)
@@ -120,11 +120,11 @@ class TestRefType(unittest.TestCase):
                                                        sw_data_def_props=sw_data_def_props)
         packages[1].append(impl_type2)
 
-        application = Application(workspace)
-        application.create_from_element(impl_type1)
+        implementation = ImplementationModel(workspace)
+        implementation.create_from_element(impl_type1)
 
         # Test
-        depency_trees = application.gen_type_dependency_trees()
+        depency_trees = implementation.gen_type_dependency_trees()
         self.assertEqual(len(depency_trees), 1)
         root = depency_trees[0]
         self.assertEqual(root.data.ref, "/DataTypes/ImplementationDataTypes/PowerSwitch_T")
@@ -163,11 +163,11 @@ class TestRefType(unittest.TestCase):
                                                        type_emitter="Platform")
         packages[1].append(impl_type3)
 
-        application = Application(workspace)
-        application.create_from_element(impl_type1)
+        implementation = ImplementationModel(workspace)
+        implementation.create_from_element(impl_type1)
 
         # Test
-        depency_trees = application.gen_type_dependency_trees()
+        depency_trees = implementation.gen_type_dependency_trees()
         self.assertEqual(len(depency_trees), 1)
         root = depency_trees[0]
         self.assertEqual(root.data.ref, "/DataTypes/ImplementationDataTypes/PowerSwitch_T")
@@ -202,11 +202,11 @@ class TestRefType(unittest.TestCase):
                                                        sw_data_def_props=sw_data_def_props)
         packages[1].append(impl_type2)
 
-        application = Application(workspace)
-        application.create_from_element(impl_type1)
+        implementation = ImplementationModel(workspace)
+        implementation.create_from_element(impl_type1)
         # Test
-        depency_trees = application.gen_type_dependency_trees()
-        creation_order = list(application.get_type_creation_order(depency_trees[0]))
+        depency_trees = implementation.gen_type_dependency_trees()
+        creation_order = list(implementation.get_type_creation_order(depency_trees[0]))
         self.assertEqual(len(creation_order), 3)
         self.assertEqual(creation_order[0].data.name, "uint8")
         self.assertEqual(creation_order[1].data.name, "InactiveActive_T")
@@ -239,12 +239,12 @@ class TestRefType(unittest.TestCase):
                                                        type_emitter="Platform")
         packages[1].append(impl_type3)
 
-        application = Application(workspace)
-        application.create_from_element(impl_type1)
+        implementation = ImplementationModel(workspace)
+        implementation.create_from_element(impl_type1)
 
         # Test
-        depency_trees = application.gen_type_dependency_trees()
-        creation_order = list(application.get_type_creation_order(depency_trees[0]))
+        depency_trees = implementation.gen_type_dependency_trees()
+        creation_order = list(implementation.get_type_creation_order(depency_trees[0]))
         self.assertEqual(len(creation_order), 4)
         self.assertEqual(creation_order[0].data.name, "uint8")
         self.assertIsInstance(creation_order[0].data, rte_element.BaseType)
@@ -277,8 +277,8 @@ class TestArrayDataType(unittest.TestCase):
         packages["ImplementationDataTypes"].append(impl_type)
 
         # Test
-        application = Application(workspace)
-        elem: rte_element.ArrayType = application.create_from_element(impl_type)
+        implementation = ImplementationModel(workspace)
+        elem: rte_element.ArrayType = implementation.create_from_element(impl_type)
         self.assertIsInstance(elem, rte_element.ArrayType)
         self.assertEqual(elem.name, "U8Array4_T")
         self.assertEqual(len(elem.sub_elements), 1)
@@ -322,8 +322,8 @@ class TestArrayDataType(unittest.TestCase):
         packages["ImplementationDataTypes"].append(array_type)
 
         # Test
-        application = Application(workspace)
-        elem: rte_element.ArrayType = application.create_from_element(array_type)
+        implementation = ImplementationModel(workspace)
+        elem: rte_element.ArrayType = implementation.create_from_element(array_type)
         self.assertIsInstance(elem, rte_element.ArrayType)
         self.assertEqual(elem.name, "InactiveActiveArray2_T")
         self.assertEqual(len(elem.sub_elements), 1)
@@ -367,7 +367,7 @@ class TestStructDataType(unittest.TestCase):
         packages["ImplementationDataTypes"].append(struct_type)
 
         # Test
-        model = Application(workspace)
+        model = ImplementationModel(workspace)
         elem: rte_element.StructType = model.create_from_element(struct_type)
         self.assertIsInstance(elem, rte_element.StructType)
         self.assertEqual(elem.name, "StructType_T")
@@ -419,7 +419,7 @@ class TestStructDataType(unittest.TestCase):
         packages["ImplementationDataTypes"].append(struct_type)
 
         # Test
-        model = Application(workspace)
+        model = ImplementationModel(workspace)
         elem: rte_element.StructType = model.create_from_element(struct_type)
         self.assertIsInstance(elem, rte_element.StructType)
         self.assertEqual(elem.name, "StructType_T")

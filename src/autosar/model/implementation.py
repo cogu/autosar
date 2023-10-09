@@ -25,9 +25,9 @@ class Node:
         self.children.append(child)
 
 
-class Application:
+class ImplementationModel:
     """
-    Application model
+    Implementation model
     Needs an assigned XML workspace to pull elements from as needed
     """
 

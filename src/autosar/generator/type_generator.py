@@ -6,7 +6,7 @@ import os
 from typing import Iterator
 import cfile
 import autosar.model.element as rte_element
-from autosar.model import application
+from autosar.model.implementation import ImplementationModel, Node
 
 C = cfile.CFactory()
 
@@ -16,8 +16,8 @@ class TypeGenerator:
     RTE type generator class
     """
 
-    def __init__(self, app: application.Application):
-        self.application = app
+    def __init__(self, implementation: ImplementationModel):
+        self.implementation = implementation
         self.style = cfile.StyleOptions(break_before_braces=cfile.BreakBeforeBraces.ATTACH,
                                         pointer_alignment=cfile.Alignment.RIGHT)
         self.writer = cfile.Writer(self.style)
@@ -72,9 +72,9 @@ class TypeGenerator:
         """
         instance_refs = set()
         result = []
-        for root_node in self.application.gen_type_dependency_trees():
-            node: application.Node
-            for node in self.application.get_type_creation_order(root_node):
+        for root_node in self.implementation.gen_type_dependency_trees():
+            node: Node
+            for node in self.implementation.get_type_creation_order(root_node):
                 data_type = node.data
                 if data_type.ref not in instance_refs:
                     instance_refs.add(data_type.ref)
