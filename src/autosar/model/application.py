@@ -64,6 +64,8 @@ class Application:
                     return self._create_ref_type_from_element(element)
                 if element.category == "ARRAY":
                     return self._create_array_type_from_element(element)
+                if element.category == "STRUCTURE":
+                    return self._create_struct_type_from_element(element)
                 else:
                     raise NotImplementedError("ImplementationDataType::" + str(element.category))
             else:
@@ -194,6 +196,51 @@ class Application:
                                             element.name,
                                             element.array_size,
                                             ref_type)
+
+    def _create_struct_type_from_element(self, element: ar_element.ImplementationDataType) -> rte_element.ArrayType:
+        elem_ref = str(element.ref())
+        symbol = None
+        if element.symbol_props is not None:
+            symbol = element.symbol_props.symbol
+        data_type = rte_element.StructType(elem_ref,
+                                           element.name,
+                                           symbol_name=symbol,
+                                           type_emitter=element.type_emitter)
+        for ar_sub_elem in element.sub_elements:
+            if ar_sub_elem.category == "VALUE":
+                sub_element = self._create_struct_type_element_from_scalar_type(elem_ref, ar_sub_elem)
+            elif ar_sub_elem.category == "TYPE_REFERENCE":
+                sub_element = self._create_struct_type_element_from_ref_type(elem_ref, ar_sub_elem)
+            else:
+                raise NotImplementedError(ar_sub_elem.category)
+            data_type.sub_elements.append(sub_element)
+        return data_type
+
+    def _create_struct_type_element_from_scalar_type(self,
+                                                     parent_ref: str,
+                                                     element: ar_element.ImplementationDataTypeElement
+                                                     ) -> rte_element.ArrayTypeElement:
+        element_ref = parent_ref + "/" + element.name
+        sw_data_def_props = element.sw_data_def_props
+        base_type = self.create_from_ref(sw_data_def_props[0].base_type_ref, False)
+        scalar_type = rte_element.ScalarType(element_ref,
+                                             element.name,
+                                             base_type)
+        return rte_element.StructTypeElement(element_ref,
+                                             element.name,
+                                             scalar_type)
+
+    def _create_struct_type_element_from_ref_type(self,
+                                                  parent_ref: str,
+                                                  element: ar_element.ImplementationDataTypeElement
+                                                  ) -> rte_element.ArrayTypeElement:
+        element_ref = parent_ref + "/" + element.name
+        sw_data_def_props = element.sw_data_def_props
+        impl_type = self.create_from_ref(sw_data_def_props[0].impl_data_type_ref, False)
+        ref_type = rte_element.RefType(element_ref, element.name, impl_type)
+        return rte_element.StructTypeElement(element_ref,
+                                             element.name,
+                                             ref_type)
 
     def _create_tree_node(self, data_type: rte_element.Element) -> Node:
         node = Node(data_type)

@@ -40,12 +40,13 @@ Notable changes.
 * SwTextProps
 * SymbolProps
 
-### Runtime Model - Elements
+### Application Model - Elements
 
 * ArrayType
 * BaseType
 * RefType
 * ScalarType
+* StructType
 
 ### RTE Data Type Generator
 

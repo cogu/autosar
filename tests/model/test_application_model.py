@@ -339,5 +339,104 @@ class TestArrayDataType(unittest.TestCase):
         self.assertEqual(impl_type.base_type.name, "uint8")
 
 
+class TestStructDataType(unittest.TestCase):
+
+    def test_create_struct_from_scalar_types(self):
+        # Setup
+        workspace = Workspace()
+        packages = dict(zip(["BaseTypes", "ImplementationDataTypes"],
+                            workspace.make_packages("DataTypes/BaseTypes",
+                                                    "DataTypes/ImplementationDataTypes")))
+        uint8_base_type = ar_element.SwBaseType("uint8")
+        packages["BaseTypes"].append(uint8_base_type)
+
+        uint32_base_type = ar_element.SwBaseType("uint32")
+        packages["BaseTypes"].append(uint32_base_type)
+
+        sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref=uint8_base_type.ref())
+        elem1 = ar_element.ImplementationDataTypeElement("Elem1",
+                                                         category="VALUE",
+                                                         sw_data_def_props=sw_data_def_props)
+        sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref=uint32_base_type.ref())
+        elem2 = ar_element.ImplementationDataTypeElement("Elem2",
+                                                         category="VALUE",
+                                                         sw_data_def_props=sw_data_def_props)
+        struct_type = ar_element.ImplementationDataType("StructType_T",
+                                                        category="STRUCTURE",
+                                                        sub_elements=[elem1, elem2])
+        packages["ImplementationDataTypes"].append(struct_type)
+
+        # Test
+        model = Application(workspace)
+        elem: rte_element.StructType = model.create_from_element(struct_type)
+        self.assertIsInstance(elem, rte_element.StructType)
+        self.assertEqual(elem.name, "StructType_T")
+        self.assertEqual(len(elem.sub_elements), 2)
+        sub_element = elem.sub_elements[0]
+        self.assertEqual(sub_element.name, "Elem1")
+        self.assertIsInstance(sub_element, rte_element.StructTypeElement)
+        data_type: rte_element.ScalarType = sub_element.data_type
+        self.assertIsInstance(data_type, rte_element.ScalarType)
+        self.assertEqual(data_type.base_type.ref, "/DataTypes/BaseTypes/uint8")
+        sub_element = elem.sub_elements[1]
+        self.assertEqual(sub_element.name, "Elem2")
+        self.assertIsInstance(sub_element, rte_element.StructTypeElement)
+        data_type: rte_element.ScalarType = sub_element.data_type
+        self.assertIsInstance(data_type, rte_element.ScalarType)
+        self.assertEqual(data_type.base_type.ref, "/DataTypes/BaseTypes/uint32")
+
+    def test_create_struct_from_ref_types(self):
+        # Setup
+        workspace = Workspace()
+        packages = dict(zip(["BaseTypes", "ImplementationDataTypes"],
+                            workspace.make_packages("DataTypes/BaseTypes",
+                                                    "DataTypes/ImplementationDataTypes")))
+        uint8_base_type = ar_element.SwBaseType("uint8")
+        packages["BaseTypes"].append(uint8_base_type)
+        uint32_base_type = ar_element.SwBaseType("uint32")
+        packages["BaseTypes"].append(uint32_base_type)
+        sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref=uint8_base_type.ref())
+        uint8_impl_type = ar_element.ImplementationDataType("uint8",
+                                                            category="VALUE",
+                                                            sw_data_def_props=sw_data_def_props)
+        packages["ImplementationDataTypes"].append(uint8_impl_type)
+        uint32_impl_type = ar_element.ImplementationDataType("uint32",
+                                                             category="VALUE",
+                                                             sw_data_def_props=sw_data_def_props)
+        packages["ImplementationDataTypes"].append(uint32_impl_type)
+
+        sw_data_def_props = ar_element.SwDataDefPropsConditional(impl_data_type_ref=uint8_impl_type.ref())
+        elem1 = ar_element.ImplementationDataTypeElement("Elem1",
+                                                         category="TYPE_REFERENCE",
+                                                         sw_data_def_props=sw_data_def_props)
+        sw_data_def_props = ar_element.SwDataDefPropsConditional(impl_data_type_ref=uint32_impl_type.ref())
+        elem2 = ar_element.ImplementationDataTypeElement("Elem2",
+                                                         category="TYPE_REFERENCE",
+                                                         sw_data_def_props=sw_data_def_props)
+        struct_type = ar_element.ImplementationDataType("StructType_T",
+                                                        category="STRUCTURE",
+                                                        sub_elements=[elem1, elem2])
+        packages["ImplementationDataTypes"].append(struct_type)
+
+        # Test
+        model = Application(workspace)
+        elem: rte_element.StructType = model.create_from_element(struct_type)
+        self.assertIsInstance(elem, rte_element.StructType)
+        self.assertEqual(elem.name, "StructType_T")
+        self.assertEqual(len(elem.sub_elements), 2)
+        sub_element = elem.sub_elements[0]
+        self.assertEqual(sub_element.name, "Elem1")
+        self.assertIsInstance(sub_element, rte_element.StructTypeElement)
+        data_type: rte_element.RefType = sub_element.data_type
+        self.assertIsInstance(data_type, rte_element.RefType)
+        self.assertEqual(data_type.impl_type.ref, "/DataTypes/ImplementationDataTypes/uint8")
+        sub_element = elem.sub_elements[1]
+        self.assertEqual(sub_element.name, "Elem2")
+        self.assertIsInstance(sub_element, rte_element.StructTypeElement)
+        data_type: rte_element.RefType = sub_element.data_type
+        self.assertIsInstance(data_type, rte_element.RefType)
+        self.assertEqual(data_type.impl_type.ref, "/DataTypes/ImplementationDataTypes/uint32")
+
+
 if __name__ == '__main__':
     unittest.main()
