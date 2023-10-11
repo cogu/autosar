@@ -177,6 +177,8 @@ class Writer(_XMLWriter):
             'DataConstraint': self._write_data_constraint,
             # Unit elements
             'Unit': self._write_unit,
+            # Datatype elements
+            'DataTypeMappingSet': self._write_data_type_mapping_set,
         }
         # Elements used only for unit test purposes
         self.switcher_non_collectable = {
@@ -207,7 +209,6 @@ class Writer(_XMLWriter):
             'InternalConstraint': self._write_internal_constraint,
             'PhysicalConstraint': self._write_physical_constraint,
             'DataConstraintRule': self._write_data_constraint_rule,
-
             # DataDictionary elements
             'SwDataDefPropsConditional': self._write_sw_data_def_props_conditional,
             'SwBaseTypeRef': self._write_sw_base_type_ref,
@@ -221,6 +222,8 @@ class Writer(_XMLWriter):
             # Reference elements
             'PhysicalDimentionRef': self._write_physical_dimension_ref,
             'ApplicationDataTypeRef': self._write_application_data_type_ref,
+            # Datatype elements
+            'DataTypeMap': self._write_data_type_map,
         }
         self.switcher_all = {}  # All concrete elements (used for unit testing)
         self.switcher_all.update(self.switcher_collectable)
@@ -1643,3 +1646,40 @@ class Writer(_XMLWriter):
         attr: TupleList = []
         self._collect_base_ref_attr(elem, attr)
         self._add_content(tag, elem.value, attr)
+
+# Datatype elements
+
+    def _write_data_type_map(self, elem: ar_element.DataTypeMap) -> None:
+        """
+        Writes DataTypeMap
+        Type: Concrete
+        Tag variants: 'DATA-TYPE-MAP'
+        """
+        assert isinstance(elem, ar_element.DataTypeMap)
+        self._add_child("DATA-TYPE-MAP")
+        if elem.appl_data_type_ref is not None:
+            self._write_application_data_type_ref(elem.appl_data_type_ref, "APPLICATION-DATA-TYPE-REF")
+        if elem.impl_data_type_ref is not None:
+            self._write_impl_data_type_ref(elem.impl_data_type_ref)
+        self._leave_child()
+
+    def _write_data_type_mapping_set(self, elem: ar_element.DataTypeMappingSet) -> None:
+        """
+        Writes DataTypeMappingSet
+        Type: Concrete
+        Tag variants: 'DATA-TYPE-MAPPING-SET'
+        """
+        assert isinstance(elem, ar_element.DataTypeMappingSet)
+        attr: TupleList = []
+        self._collect_identifiable_attributes(elem, attr)
+        self._add_child("DATA-TYPE-MAPPING-SET", attr)
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        if len(elem.data_type_maps) > 0:
+            self._add_child("DATA-TYPE-MAPS")
+            for child_elem in elem.data_type_maps:
+                self._write_data_type_map(child_elem)
+            self._leave_child()
+        # .MODE-REQUEST-TYPE-MAPS not yet implemented
+        self._leave_child()

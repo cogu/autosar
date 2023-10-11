@@ -2070,6 +2070,16 @@ class ApplicationPrimitiveDataType(ApplicationDataType):
         """Is this a composite data type?"""
         return False
 
+    def ref(self) -> ApplicationDataTypeRef:
+        """
+        Reference
+        """
+        assert self.parent is not None
+        ref_parts: list[str] = [self.name]
+        self.parent.update_ref_parts(ref_parts)
+        value = '/'.join(reversed(ref_parts))
+        return ApplicationDataTypeRef(value, ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE)
+
 
 class ApplicationCompositeElementDataPrototype(DataPrototype):
     """
@@ -2129,6 +2139,16 @@ class ApplicationArrayDataType(ApplicationCompositeDataType):
         self._assign_optional('dynamic_array_size_profile', dynamic_array_size_profile, str)
         self._assign_optional_strict('element', element, ApplicationArrayElement)
 
+    def ref(self) -> ApplicationDataTypeRef:
+        """
+        Reference
+        """
+        assert self.parent is not None
+        ref_parts: list[str] = [self.name]
+        self.parent.update_ref_parts(ref_parts)
+        value = '/'.join(reversed(ref_parts))
+        return ApplicationDataTypeRef(value, ar_enum.IdentifiableSubTypes.APPLICATION_ARRAY_DATA_TYPE)
+
 
 class ApplicationRecordElement(ApplicationCompositeElementDataPrototype):
     """
@@ -2181,6 +2201,16 @@ class ApplicationRecordDataType(ApplicationCompositeDataType):
         for element in elements:  # We want to type-check each element before adding to internal list
             self.append(element)
 
+    def ref(self) -> ApplicationDataTypeRef:
+        """
+        Reference
+        """
+        assert self.parent is not None
+        ref_parts: list[str] = [self.name]
+        self.parent.update_ref_parts(ref_parts)
+        value = '/'.join(reversed(ref_parts))
+        return ApplicationDataTypeRef(value, ar_enum.IdentifiableSubTypes.APPLICATION_RECORD_DATA_TYPE)
+
 # Software address method (partly implemented)
 
 
@@ -2208,6 +2238,57 @@ class SwAddrMethod(ARElement):
         value = '/'.join(reversed(ref_parts))
         return SwAddrMethodRef(value)
 
+# Datatype elements
+
+
+class DataTypeMap(ARObject):
+    """
+    AR:DATA-TYPE-MAP
+    Type: Concrete
+    Tag variants: 'DATA-TYPE-MAP'
+    """
+
+    def __init__(self,
+                 appl_data_type_ref: ApplicationDataTypeRef | None = None,
+                 impl_data_type_ref: ImplementationDataTypeRef | None = None,
+                 ) -> None:
+        self.appl_data_type_ref = appl_data_type_ref   # .APPLICATION-DATA-TYPE-REF
+        self.impl_data_type_ref = impl_data_type_ref   # .IMPLEMENTATION-DATA-TYPE-REF
+
+
+class DataTypeMappingSet(ARElement):
+    """
+    AR:DATA-TYPE-MAPPING-SET
+    Type: Concrete
+    Tag variants: 'DATA-TYPE-MAPPING-SET'
+    """
+
+    def __init__(self,
+                 name: str,
+                 data_type_maps: DataTypeMap | list[DataTypeMap] | None = None,
+                 **kwargs: dict) -> None:
+        super().__init__(name, **kwargs)
+        self.data_type_maps: list[DataTypeMap] = []  # .DATA-TYPE-MAPS
+        self.mode_request_type_maps = []  # .MODE-REQUEST-TYPE-MAPS (Not yet implemented)
+        if data_type_maps is not None:
+            if isinstance(data_type_maps, DataTypeMap):
+                self.append(data_type_maps)
+            elif isinstance(data_type_maps, list):
+                for data_type_map in data_type_maps:
+                    self.append(data_type_map)
+            else:
+                raise TypeError(f'data_type_maps: Invalid type "{str(type(data_type_maps))}"')
+
+    def append(self, element: DataTypeMap) -> None:
+        """
+        Appends element to one of the inner lists based on parameter type
+        Currently, appending to mode_request_type_maps isn't
+        implemented.
+        """
+        if isinstance(element, DataTypeMap):
+            self.data_type_maps.append(element)
+        else:
+            raise TypeError(f'Unexpected type: "{str(type(element))}"')
 
 # !!UNFINISHED!! Port Interfaces
 
