@@ -4,7 +4,6 @@ Implementation data type examples
 import os
 import autosar
 import autosar.xml.element as ar_element
-import autosar.generator
 
 
 def create_array_impl_type_with_value_element():

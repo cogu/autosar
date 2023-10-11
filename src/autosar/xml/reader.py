@@ -112,6 +112,9 @@ class Reader:
 
             # Unit elements
             'UNIT': self._read_unit,
+
+            # Datatype elements
+            'DATA-TYPE-MAPPING-SET': self._read_data_type_mapping_set,
         }
         self.switcher_non_collectable = {  # Non-collectable, used only for unit testing
             # Documentation elements
@@ -153,6 +156,8 @@ class Reader:
             # Reference elements
             'PHYSICAL-DIMENSION-REF': self._read_physical_dimension_ref,
             'APPLICATION-DATA-TYPE-REF': self._read_application_data_type_ref,
+            # Datatype elements
+            'DATA-TYPE-MAP': self._read_data_type_map,
         }
         self.switcher_all = {}
         self.switcher_all.update(self.switcher_collectable)
@@ -1930,6 +1935,51 @@ class Reader:
         data['dest'] = attr.get('DEST', None)
         if data['dest'] is None:
             raise ar_exception.ParseError("Missing required attribute 'DEST'")
+
+    # DataType elements
+
+    def _read_data_type_map(self, xml_element: ElementTree.Element) -> ar_element.DataTypeMap:
+        """
+        Reads AR:DATA-TYPE-MAP
+        Type: Concrete
+        Tag variants: 'DATA-TYPE-MAP'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("APPLICATION-DATA-TYPE-REF")
+        if xml_child is not None:
+            data["appl_data_type_ref"] = self._read_application_data_type_ref(xml_child)
+        xml_child = child_elements.get("IMPLEMENTATION-DATA-TYPE-REF")
+        if xml_child is not None:
+            data["impl_data_type_ref"] = self._read_impl_data_type_ref(xml_child)
+        return ar_element.DataTypeMap(**data)
+
+    def _read_data_type_mapping_set(self, xml_element: ElementTree.Element) -> ar_element.DataTypeMappingSet:
+        """
+        Reads AR:DATA-TYPE-MAPPING-SET
+        Type: Concrete
+        Tag variants: 'DATA-TYPE-MAPPING-SET'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_read_data_type_mapping_set_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        element = ar_element.DataTypeMappingSet(**data)
+        return element
+
+    def _read_read_data_type_mapping_set_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:DATA-TYPE-MAPPING-SET
+        """
+        xml_child = child_elements.get("DATA-TYPE-MAPS")
+        if xml_child is not None:
+            data_type_maps = []
+            for xml_data_type_map_element in xml_child.findall("./DATA-TYPE-MAP"):
+                data_type_maps.append(self._read_data_type_map(xml_data_type_map_element))
+            data["data_type_maps"] = data_type_maps
 
     # UNFINISHED ELEMENTS - NEEDS REFACTORING
 

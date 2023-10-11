@@ -1845,5 +1845,100 @@ class TestApplicationRecordDataType(unittest.TestCase):
         self.assertEqual(str(child_elem.type_ref), "/DataTypes/Yaw_T")
 
 
+class TestDataTypeMap(unittest.TestCase):
+    def test_read_write_appplication_array_data_type_ref(self):
+        element = ar_element.DataTypeMap(
+            ar_element.ApplicationDataTypeRef("/ApplicationTypes/ShortName",
+                                              ar_enum.IdentifiableSubTypes.APPLICATION_ARRAY_DATA_TYPE))
+        xml = '''<DATA-TYPE-MAP>
+  <APPLICATION-DATA-TYPE-REF DEST="APPLICATION-ARRAY-DATA-TYPE">/ApplicationTypes/ShortName</APPLICATION-DATA-TYPE-REF>
+</DATA-TYPE-MAP>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DataTypeMap = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DataTypeMap)
+        self.assertEqual(str(elem.appl_data_type_ref), "/ApplicationTypes/ShortName")
+        self.assertEqual(elem.appl_data_type_ref.dest, ar_enum.IdentifiableSubTypes.APPLICATION_ARRAY_DATA_TYPE)
+
+    def test_read_write_primitive_appplication_data_type_ref(self):
+        element = ar_element.DataTypeMap(
+            ar_element.ApplicationDataTypeRef("/ApplicationTypes/ShortName",
+                                              ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE))
+        xml = '''<DATA-TYPE-MAP>
+  <APPLICATION-DATA-TYPE-REF DEST="APPLICATION-PRIMITIVE-DATA-TYPE">\
+/ApplicationTypes/ShortName</APPLICATION-DATA-TYPE-REF>
+</DATA-TYPE-MAP>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DataTypeMap = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DataTypeMap)
+        self.assertEqual(str(elem.appl_data_type_ref), "/ApplicationTypes/ShortName")
+        self.assertEqual(elem.appl_data_type_ref.dest, ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE)
+
+    def test_read_write_implementation_data_type_ref(self):
+        element = ar_element.DataTypeMap(
+            impl_data_type_ref=ar_element.ImplementationDataTypeRef("/ImplementationTypes/ShortName"))
+        xml = '''<DATA-TYPE-MAP>
+  <IMPLEMENTATION-DATA-TYPE-REF DEST="IMPLEMENTATION-DATA-TYPE">\
+/ImplementationTypes/ShortName</IMPLEMENTATION-DATA-TYPE-REF>
+</DATA-TYPE-MAP>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DataTypeMap = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DataTypeMap)
+        self.assertEqual(str(elem.impl_data_type_ref), "/ImplementationTypes/ShortName")
+        self.assertEqual(elem.impl_data_type_ref.dest, ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE)
+
+
+class TestDataTypeMappingSet(unittest.TestCase):
+
+    def test_read_write_empty(self):
+        element = ar_element.DataTypeMappingSet("ShortName")
+        writer = autosar.xml.Writer()
+        xml = '''<DATA-TYPE-MAPPING-SET>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+</DATA-TYPE-MAPPING-SET>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DataTypeMappingSet = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DataTypeMappingSet)
+
+    def test_read_write_data_type_maps(self):
+        data_type_map = ar_element.DataTypeMap(
+            appl_data_type_ref=ar_element.ApplicationDataTypeRef(
+                "/ApplicationTypes/ShortName", ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE),
+            impl_data_type_ref=ar_element.ImplementationDataTypeRef("/ImplementationTypes/ShortName"))
+        element = ar_element.DataTypeMappingSet("MappingSet", data_type_maps=data_type_map)
+        xml = '''<DATA-TYPE-MAPPING-SET>
+  <SHORT-NAME>MappingSet</SHORT-NAME>
+  <DATA-TYPE-MAPS>
+    <DATA-TYPE-MAP>
+      <APPLICATION-DATA-TYPE-REF DEST="APPLICATION-PRIMITIVE-DATA-TYPE">\
+/ApplicationTypes/ShortName</APPLICATION-DATA-TYPE-REF>
+      <IMPLEMENTATION-DATA-TYPE-REF DEST="IMPLEMENTATION-DATA-TYPE">\
+/ImplementationTypes/ShortName</IMPLEMENTATION-DATA-TYPE-REF>
+    </DATA-TYPE-MAP>
+  </DATA-TYPE-MAPS>
+</DATA-TYPE-MAPPING-SET>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DataTypeMappingSet = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DataTypeMappingSet)
+        self.assertEqual(len(elem.data_type_maps), 1)
+        data_type_map = elem.data_type_maps[0]
+        self.assertEqual(str(data_type_map.appl_data_type_ref),
+                         "/ApplicationTypes/ShortName")
+        self.assertEqual(data_type_map.appl_data_type_ref.dest,
+                         ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE)
+        self.assertEqual(str(data_type_map.impl_data_type_ref),
+                         "/ImplementationTypes/ShortName")
+        self.assertEqual(data_type_map.impl_data_type_ref.dest,
+                         ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE)
+
+
 if __name__ == '__main__':
     unittest.main()

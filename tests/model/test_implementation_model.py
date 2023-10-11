@@ -438,9 +438,9 @@ class TestStructDataType(unittest.TestCase):
         self.assertEqual(data_type.impl_type.ref, "/DataTypes/ImplementationDataTypes/uint32")
 
 
-class TestPtrType(unittest.TestCase):
+class TestPointerType(unittest.TestCase):
 
-    def test_ptr_type_to_value_type(self):
+    def test_pointer_type_to_value_type(self):
         # Setup
         workspace = Workspace()
         packages = dict(zip(["BaseTypes", "ImplementationDataTypes"],
@@ -470,7 +470,7 @@ class TestPtrType(unittest.TestCase):
         self.assertIsInstance(elem.target_type, rte_element.ScalarType)
         self.assertEqual(elem.target_type.name, "uint8")
 
-    def test_ptr_type_to_ref_type(self):
+    def test_pointer_type_to_ref_type(self):
         # Setup
         workspace = Workspace()
         packages = dict(zip(["BaseTypes", "ImplementationDataTypes"],

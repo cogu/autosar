@@ -14,6 +14,7 @@ Notable changes.
 * ImplementationDataType
 * SwBaseType
 * Unit
+* DataTypeMappingSet
 
 ### XML - Documentation elements
 
@@ -39,6 +40,10 @@ Notable changes.
 * SwPointerTargetProps
 * SwTextProps
 * SymbolProps
+
+### XML - Datatype elements
+
+* DataTypeMap
 
 ### Implementation Model - Elements
 
