@@ -166,6 +166,7 @@ class ImplementationModel:
             assert isinstance(xml_ref.array_size, int)
             rte_sub_element = rte_element.ArrayTypeElement(xml_ref, ar_sub_elem.name, ar_sub_elem.array_size)
             data_type.sub_elements.insert(0, rte_sub_element)
+        self.data_types[str(elem_ref)] = data_type
         return data_type
 
     def _create_array_type_element_from_scalar_type(self,
@@ -198,7 +199,7 @@ class ImplementationModel:
                                             element.array_size,
                                             ref_type)
 
-    def _create_struct_type_from_element(self, element: ar_element.ImplementationDataType) -> rte_element.ArrayType:
+    def _create_struct_type_from_element(self, element: ar_element.ImplementationDataType) -> rte_element.StructType:
         elem_ref = str(element.ref())
         symbol = None
         if element.symbol_props is not None:
@@ -215,6 +216,7 @@ class ImplementationModel:
             else:
                 raise NotImplementedError(ar_sub_elem.category)
             data_type.sub_elements.append(sub_element)
+        self.data_types[str(elem_ref)] = data_type
         return data_type
 
     def _create_struct_type_element_from_scalar_type(self,
@@ -271,6 +273,14 @@ class ImplementationModel:
             node.add_child(self._create_tree_node(data_type.base_type))
         elif isinstance(data_type, rte_element.RefType):
             node.add_child(self._create_tree_node(data_type.impl_type))
+        elif isinstance(data_type, (rte_element.ArrayType, )):
+            last_element: rte_element.ArrayTypeElement = data_type.sub_elements[-1]
+            if isinstance(last_element.data_type, rte_element.ScalarType):
+                pass  # Arrays uses the native declaration directly instead of the base type name
+            elif isinstance(last_element.data_type, rte_element.RefType):
+                node.add_child(self._create_tree_node(last_element.data_type.impl_type))
+            else:
+                raise NotImplementedError(str(type(last_element.data_type)))
         else:
             raise NotImplementedError(str(type(data_type)))
         return node

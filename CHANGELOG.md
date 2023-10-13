@@ -56,6 +56,7 @@ Notable changes.
 
 ### RTE Data Type Generator
 
+* ArrayType
 * BaseType
 * RefType
 * ScalarType

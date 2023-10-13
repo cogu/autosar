@@ -5,6 +5,7 @@ Requires cfile v0.3.0
 import os
 from typing import Iterator
 import cfile
+import cfile.core
 import autosar.model.element as rte_element
 from autosar.model.implementation import ImplementationModel, Node
 
@@ -88,6 +89,15 @@ class TypeGenerator:
                     result.append(data_type)
         return result
 
+    def write_type_defs_str(self) -> str:
+        """
+        Returns typedefs section as a string.
+        Used primarily for unit test validation
+        """
+        code = self._gen_type_defs(self.gen_data_type_creation_order())
+        writer = cfile.Writer(cfile.StyleOptions())
+        return writer.write_str(code)
+
     def _gen_type_defs(self, data_types: Iterator[rte_element.Element]) -> cfile.core.Sequence:
         """
         Generates typedefs section
@@ -100,15 +110,22 @@ class TypeGenerator:
                 code.append(C.statement(C.typedef(data_type.name, data_type.base_type.name)))
             elif isinstance(data_type, rte_element.RefType):
                 code.append(C.statement(C.typedef(data_type.name, data_type.impl_type.name)))
+            elif isinstance(data_type, rte_element.ArrayType):
+                code.append(self._gen_array_type_def(data_type))
             else:
                 raise NotImplementedError(str(type(data_type)))
         return code
 
-    def write_type_defs_str(self) -> str:
-        """
-        Returns typedefs section as a string.
-        Used primarily for unit test validation
-        """
-        code = self._gen_type_defs(self.gen_data_type_creation_order())
-        writer = cfile.Writer(cfile.StyleOptions())
-        return writer.write_str(code)
+    def _gen_array_type_def(self, data_type: rte_element.ArrayType) -> cfile.core.Statement:
+        last_element = data_type.sub_elements[-1]
+        if isinstance(last_element.data_type, rte_element.ScalarType):
+            scalar_type: rte_element.ScalarType = last_element.data_type
+            if scalar_type.base_type.native_declaration:
+                target_type = C.type(scalar_type.base_type.native_declaration)
+            else:
+                target_type = C.type(scalar_type.base_type.name)
+        elif isinstance(last_element.data_type, rte_element.RefType):
+            target_type = C.type(last_element.data_type.impl_type.name)
+        else:
+            raise NotImplementedError(str(type(last_element.data_type)))
+        return C.statement(C.typedef(data_type.name, target_type, array=last_element.array_size))
