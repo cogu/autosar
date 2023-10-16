@@ -49,14 +49,15 @@ Notable changes.
 
 * ArrayType
 * BaseType
+* PointerType
+* RecordType
 * RefType
 * ScalarType
-* StructType
-* PointerType
 
 ### RTE Data Type Generator
 
 * ArrayType
 * BaseType
+* RecordType
 * RefType
 * ScalarType

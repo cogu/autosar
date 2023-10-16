@@ -361,26 +361,26 @@ class TestStructDataType(unittest.TestCase):
         elem2 = ar_element.ImplementationDataTypeElement("Elem2",
                                                          category="VALUE",
                                                          sw_data_def_props=sw_data_def_props)
-        struct_type = ar_element.ImplementationDataType("StructType_T",
+        struct_type = ar_element.ImplementationDataType("RecordType_T",
                                                         category="STRUCTURE",
                                                         sub_elements=[elem1, elem2])
         packages["ImplementationDataTypes"].append(struct_type)
 
         # Test
         implementation = ImplementationModel(workspace)
-        elem: rte_element.StructType = implementation.create_from_element(struct_type)
-        self.assertIsInstance(elem, rte_element.StructType)
-        self.assertEqual(elem.name, "StructType_T")
+        elem: rte_element.RecordType = implementation.create_from_element(struct_type)
+        self.assertIsInstance(elem, rte_element.RecordType)
+        self.assertEqual(elem.name, "RecordType_T")
         self.assertEqual(len(elem.sub_elements), 2)
         sub_element = elem.sub_elements[0]
         self.assertEqual(sub_element.name, "Elem1")
-        self.assertIsInstance(sub_element, rte_element.StructTypeElement)
+        self.assertIsInstance(sub_element, rte_element.RecordTypeElement)
         data_type: rte_element.ScalarType = sub_element.data_type
         self.assertIsInstance(data_type, rte_element.ScalarType)
         self.assertEqual(data_type.base_type.ref, "/DataTypes/BaseTypes/uint8")
         sub_element = elem.sub_elements[1]
         self.assertEqual(sub_element.name, "Elem2")
-        self.assertIsInstance(sub_element, rte_element.StructTypeElement)
+        self.assertIsInstance(sub_element, rte_element.RecordTypeElement)
         data_type: rte_element.ScalarType = sub_element.data_type
         self.assertIsInstance(data_type, rte_element.ScalarType)
         self.assertEqual(data_type.base_type.ref, "/DataTypes/BaseTypes/uint32")
@@ -413,26 +413,26 @@ class TestStructDataType(unittest.TestCase):
         elem2 = ar_element.ImplementationDataTypeElement("Elem2",
                                                          category="TYPE_REFERENCE",
                                                          sw_data_def_props=sw_data_def_props)
-        struct_type = ar_element.ImplementationDataType("StructType_T",
+        struct_type = ar_element.ImplementationDataType("RecordType_T",
                                                         category="STRUCTURE",
                                                         sub_elements=[elem1, elem2])
         packages["ImplementationDataTypes"].append(struct_type)
 
         # Test
         implementation = ImplementationModel(workspace)
-        elem: rte_element.StructType = implementation.create_from_element(struct_type)
-        self.assertIsInstance(elem, rte_element.StructType)
-        self.assertEqual(elem.name, "StructType_T")
+        elem: rte_element.RecordType = implementation.create_from_element(struct_type)
+        self.assertIsInstance(elem, rte_element.RecordType)
+        self.assertEqual(elem.name, "RecordType_T")
         self.assertEqual(len(elem.sub_elements), 2)
         sub_element = elem.sub_elements[0]
         self.assertEqual(sub_element.name, "Elem1")
-        self.assertIsInstance(sub_element, rte_element.StructTypeElement)
+        self.assertIsInstance(sub_element, rte_element.RecordTypeElement)
         data_type: rte_element.RefType = sub_element.data_type
         self.assertIsInstance(data_type, rte_element.RefType)
         self.assertEqual(data_type.impl_type.ref, "/DataTypes/ImplementationDataTypes/uint8")
         sub_element = elem.sub_elements[1]
         self.assertEqual(sub_element.name, "Elem2")
-        self.assertIsInstance(sub_element, rte_element.StructTypeElement)
+        self.assertIsInstance(sub_element, rte_element.RecordTypeElement)
         data_type: rte_element.RefType = sub_element.data_type
         self.assertIsInstance(data_type, rte_element.RefType)
         self.assertEqual(data_type.impl_type.ref, "/DataTypes/ImplementationDataTypes/uint32")
