@@ -1120,11 +1120,11 @@ DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/InactiveActive_T</IMPLEMENTATION-DATA
         elem2 = ar_element.ImplementationDataTypeElement("Elem2",
                                                          category="VALUE",
                                                          sw_data_def_props=sw_data_def_props)
-        element = ar_element.ImplementationDataType("StructType_T",
+        element = ar_element.ImplementationDataType("RecordType_T",
                                                     category="STRUCTURE",
                                                     sub_elements=[elem1, elem2])
         xml = '''<IMPLEMENTATION-DATA-TYPE>
-  <SHORT-NAME>StructType_T</SHORT-NAME>
+  <SHORT-NAME>RecordType_T</SHORT-NAME>
   <CATEGORY>STRUCTURE</CATEGORY>
   <SUB-ELEMENTS>
     <IMPLEMENTATION-DATA-TYPE-ELEMENT>
@@ -1156,7 +1156,7 @@ DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/InactiveActive_T</IMPLEMENTATION-DATA
         reader = autosar.xml.Reader()
         elem: ar_element.ImplementationDataType = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.ImplementationDataType)
-        self.assertEqual(elem.name, 'StructType_T')
+        self.assertEqual(elem.name, 'RecordType_T')
         sub_elem = elem.find("Elem1")
         self.assertIsInstance(sub_elem, ar_element.ImplementationDataTypeElement)
         self.assertEqual(sub_elem.name, "Elem1")
@@ -1175,11 +1175,11 @@ DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/InactiveActive_T</IMPLEMENTATION-DATA
         elem2 = ar_element.ImplementationDataTypeElement("Elem2",
                                                          category="TYPE_REFERENCE",
                                                          sw_data_def_props=sw_data_def_props)
-        element = ar_element.ImplementationDataType("StructType_T",
+        element = ar_element.ImplementationDataType("RecordType_T",
                                                     category="STRUCTURE",
                                                     sub_elements=[elem1, elem2])
         xml = '''<IMPLEMENTATION-DATA-TYPE>
-  <SHORT-NAME>StructType_T</SHORT-NAME>
+  <SHORT-NAME>RecordType_T</SHORT-NAME>
   <CATEGORY>STRUCTURE</CATEGORY>
   <SUB-ELEMENTS>
     <IMPLEMENTATION-DATA-TYPE-ELEMENT>
@@ -1213,7 +1213,7 @@ DEST="IMPLEMENTATION-DATA-TYPE">/AUTOSAR_Platform/ImplementationTypes/uint32</IM
         reader = autosar.xml.Reader()
         elem: ar_element.ImplementationDataType = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.ImplementationDataType)
-        self.assertEqual(elem.name, 'StructType_T')
+        self.assertEqual(elem.name, 'RecordType_T')
         sub_elem: ar_element.ImplementationDataTypeElement = elem.find("Elem1")
         self.assertIsInstance(sub_elem, ar_element.ImplementationDataTypeElement)
         self.assertEqual(sub_elem.name, "Elem1")

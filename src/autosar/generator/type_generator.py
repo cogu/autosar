@@ -1,6 +1,6 @@
 """
 RTE type generator
-Requires cfile v0.3.0
+Requires cfile v0.3.1
 """
 import os
 from typing import Iterator
@@ -48,10 +48,10 @@ class TypeGenerator:
         code.append(C.ifndef(include_guard))
         code.append(C.define(include_guard))
         code.append(C.blank())
-        code.append(C.ifndef("__cplusplus", adjust=1))
+        code.append(C.ifndef("__cplusplus"))
         code.append(C.line(C.extern("C")))
         code.append(C.line("{"))
-        code.append(C.endif(adjust=1))
+        code.append(C.endif())
         code.append(C.blank())
         code.append(C.block_comment("*             INCLUDES             *", width=35))
         code.append(C.include("Rte.h"))
@@ -60,10 +60,9 @@ class TypeGenerator:
         code.append(C.blank())
         code.extend(self._gen_type_defs(self.gen_data_type_creation_order()))
         code.append(C.blank())
-        code.append(C.ifndef("__cplusplus", adjust=1))
-        code.append(C.line(C.extern("C")))
+        code.append(C.ifndef("__cplusplus"))
         code.append(C.line("}"))
-        code.append(C.endif(adjust=1))
+        code.append([C.endif(), C.line_comment(" __cplusplus")])
         code.append([C.endif(), C.line_comment(" " + include_guard)])
         return code
 
@@ -112,6 +111,8 @@ class TypeGenerator:
                 code.append(C.statement(C.typedef(data_type.name, data_type.impl_type.name)))
             elif isinstance(data_type, rte_element.ArrayType):
                 code.append(self._gen_array_type_def(data_type))
+            elif isinstance(data_type, rte_element.RecordType):
+                code.extend(self._gen_record_type_def(data_type))
             else:
                 raise NotImplementedError(str(type(data_type)))
         return code
@@ -129,3 +130,23 @@ class TypeGenerator:
         else:
             raise NotImplementedError(str(type(last_element.data_type)))
         return C.statement(C.typedef(data_type.name, target_type, array=last_element.array_size))
+
+    def _gen_record_type_def(self, data_type: rte_element.RecordType) -> cfile.core.Statement:
+        members = []
+        for element in data_type.sub_elements:
+            if isinstance(element.data_type, rte_element.ScalarType):
+                scalar_type: rte_element.ScalarType = element.data_type
+                if scalar_type.base_type.native_declaration:
+                    target_type = C.type(scalar_type.base_type.native_declaration)
+                else:
+                    target_type = C.type(scalar_type.base_type.name)
+            elif isinstance(element.data_type, rte_element.RefType):
+                target_type = C.type(element.data_type.impl_type.name)
+            else:
+                raise NotImplementedError(str(type(element.data_type)))
+            members.append(C.struct_member(element.name, target_type))
+        struct_name = "Rte_struct_" + data_type.name
+        code = C.sequence()
+        code.append(C.statement(C.struct(struct_name, members)))
+        code.append(C.statement(C.typedef(data_type.name, C.struct_ref(struct_name))))
+        return code

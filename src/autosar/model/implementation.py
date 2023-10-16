@@ -199,12 +199,12 @@ class ImplementationModel:
                                             element.array_size,
                                             ref_type)
 
-    def _create_struct_type_from_element(self, element: ar_element.ImplementationDataType) -> rte_element.StructType:
+    def _create_struct_type_from_element(self, element: ar_element.ImplementationDataType) -> rte_element.RecordType:
         elem_ref = str(element.ref())
         symbol = None
         if element.symbol_props is not None:
             symbol = element.symbol_props.symbol
-        data_type = rte_element.StructType(elem_ref,
+        data_type = rte_element.RecordType(elem_ref,
                                            element.name,
                                            symbol_name=symbol,
                                            type_emitter=element.type_emitter)
@@ -229,7 +229,7 @@ class ImplementationModel:
         scalar_type = rte_element.ScalarType(element_ref,
                                              element.name,
                                              base_type)
-        return rte_element.StructTypeElement(element_ref,
+        return rte_element.RecordTypeElement(element_ref,
                                              element.name,
                                              scalar_type)
 
@@ -241,7 +241,7 @@ class ImplementationModel:
         sw_data_def_props = element.sw_data_def_props
         impl_type = self.create_from_ref(sw_data_def_props[0].impl_data_type_ref, False)
         ref_type = rte_element.RefType(element_ref, element.name, impl_type)
-        return rte_element.StructTypeElement(element_ref,
+        return rte_element.RecordTypeElement(element_ref,
                                              element.name,
                                              ref_type)
 
@@ -273,14 +273,20 @@ class ImplementationModel:
             node.add_child(self._create_tree_node(data_type.base_type))
         elif isinstance(data_type, rte_element.RefType):
             node.add_child(self._create_tree_node(data_type.impl_type))
-        elif isinstance(data_type, (rte_element.ArrayType, )):
+        elif isinstance(data_type, rte_element.ArrayType):
             last_element: rte_element.ArrayTypeElement = data_type.sub_elements[-1]
-            if isinstance(last_element.data_type, rte_element.ScalarType):
-                pass  # Arrays uses the native declaration directly instead of the base type name
-            elif isinstance(last_element.data_type, rte_element.RefType):
-                node.add_child(self._create_tree_node(last_element.data_type.impl_type))
-            else:
-                raise NotImplementedError(str(type(last_element.data_type)))
+            self._process_array_or_record_element_tree_node(node, last_element.data_type)
+        elif isinstance(data_type, rte_element.RecordType):
+            for element in data_type.sub_elements:
+                self._process_array_or_record_element_tree_node(node, element.data_type)
         else:
             raise NotImplementedError(str(type(data_type)))
         return node
+
+    def _process_array_or_record_element_tree_node(self, node: Node, element: rte_element.Element) -> None:
+        if isinstance(element, rte_element.ScalarType):
+            pass  # Arrays and records/structs use the native declaration directly instead of the base type name
+        elif isinstance(element, rte_element.RefType):
+            node.add_child(self._create_tree_node(element.impl_type))
+        else:
+            raise NotImplementedError(str(type(element)))

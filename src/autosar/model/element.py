@@ -145,7 +145,7 @@ class PointerType(ImplementationType):
         self.target_type = target_type
 
 
-class StructTypeElement(Element):
+class RecordTypeElement(Element):
     """
     Element of a struct
     """
@@ -160,7 +160,7 @@ class StructTypeElement(Element):
         self.data_type = data_type
 
 
-class StructType(ImplementationType):
+class RecordType(ImplementationType):
     """
     A data type that can represent a structure.
     Created from ar_elements where the category is set to STRUCTURE.
@@ -172,7 +172,7 @@ class StructType(ImplementationType):
                  symbol_name: str | None = None,
                  type_emitter: str | None = None) -> None:
         super().__init__(xml_ref, name, symbol_name, False, type_emitter)
-        self.sub_elements: list[StructTypeElement] = []
+        self.sub_elements: list[RecordTypeElement] = []
 
 
 class UnionType(ImplementationType):

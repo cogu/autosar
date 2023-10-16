@@ -23,7 +23,7 @@ Classic AUTOSAR only.
 ### Requirements (v0.4)
 
 * Python 3.4+
-* cfile
+* cfile v0.2.0
 
 ### Installation (v0.4)
 
@@ -58,7 +58,7 @@ Only Clasic AUTOSAR is supported.
 
 * Python 3.10+
 * lxml
-* cfile 0.3.0 (Used by RTE generator)
+* cfile v0.3.1+
 
 ### Installation (v0.5)
 
@@ -75,6 +75,11 @@ Run in either venv or local.
 ```bash
 python -m pip install --upgrade pip
 python -m pip install --upgrade setuptools
+git clone https://github.com/cogu/cfile.git cfile_0.3
+cd cfile_0.3
+git checkout v0.3.1
+cd ..
+python -m pip install --upgrade .
 ```
 
 #### Standard install
