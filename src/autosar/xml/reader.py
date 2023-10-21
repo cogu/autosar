@@ -7,12 +7,11 @@ import sys
 
 from typing import Iterable, Any
 import lxml.etree as ElementTree
+import autosar.base as ar_base
 import autosar.xml.document as ar_document
 import autosar.xml.exception as ar_exception
 import autosar.xml.element as ar_element
 import autosar.xml.enumeration as ar_enum
-
-DEFAULT_SCHEMA_VERSION = 50
 
 # Type aliases
 
@@ -82,7 +81,7 @@ class Reader:
     def __init__(self,
                  warn_on_unprocessed_element: bool = True,
                  use_full_path_on_warning: bool = False,
-                 schema_version: int = DEFAULT_SCHEMA_VERSION) -> None:
+                 schema_version: int = ar_base.DEFAULT_SCHEMA_VERSION) -> None:
         self.xml_root: ElementTree.Element = None
         self.file_path: str = None
         self.file_base_name: str = None

@@ -1285,6 +1285,18 @@ class CompuMethod(ARElement):
         self.unit_ref = unit_ref              # .UNIT-REF
         self.display_format = display_format  # .DISPLAY-FORMAT
 
+    def ref(self) -> CompuMethodRef | None:
+        """
+        Reference
+        """
+        if self.parent is None:
+            return None
+        ref_parts: list[str] = [self.name]
+        self.parent.update_ref_parts(ref_parts)
+        value = '/'.join(reversed(ref_parts))
+        return CompuMethodRef(value)
+
+
 # Constraint elements
 
 
@@ -1605,10 +1617,12 @@ class SwBaseType(BaseType):
         self.byte_order = byte_order
         self.native_declaration = native_declaration
 
-    def ref(self) -> SwBaseTypeRef:
+    def ref(self) -> SwBaseTypeRef | None:
         """
         Reference
         """
+        if self.parent is None:
+            return None
         ref_parts: list[str] = [self.name]
         self.parent.update_ref_parts(ref_parts)
         value = '/'.join(reversed(ref_parts))
@@ -1977,7 +1991,8 @@ class ImplementationDataType(AutosarDataType):
         """
         Returns a new reference to this object
         """
-        assert self.parent is not None
+        if self.parent is None:
+            return None
         ref_parts: list[str] = [self.name]
         self.parent.update_ref_parts(ref_parts)
         value = '/'.join(reversed(ref_parts))
@@ -2074,7 +2089,8 @@ class ApplicationPrimitiveDataType(ApplicationDataType):
         """
         Reference
         """
-        assert self.parent is not None
+        if self.parent is None:
+            return None
         ref_parts: list[str] = [self.name]
         self.parent.update_ref_parts(ref_parts)
         value = '/'.join(reversed(ref_parts))
@@ -2139,11 +2155,12 @@ class ApplicationArrayDataType(ApplicationCompositeDataType):
         self._assign_optional('dynamic_array_size_profile', dynamic_array_size_profile, str)
         self._assign_optional_strict('element', element, ApplicationArrayElement)
 
-    def ref(self) -> ApplicationDataTypeRef:
+    def ref(self) -> ApplicationDataTypeRef | None:
         """
         Reference
         """
-        assert self.parent is not None
+        if self.parent is None:
+            return None
         ref_parts: list[str] = [self.name]
         self.parent.update_ref_parts(ref_parts)
         value = '/'.join(reversed(ref_parts))
@@ -2201,11 +2218,12 @@ class ApplicationRecordDataType(ApplicationCompositeDataType):
         for element in elements:  # We want to type-check each element before adding to internal list
             self.append(element)
 
-    def ref(self) -> ApplicationDataTypeRef:
+    def ref(self) -> ApplicationDataTypeRef | None:
         """
         Reference
         """
-        assert self.parent is not None
+        if self.parent is None:
+            return None
         ref_parts: list[str] = [self.name]
         self.parent.update_ref_parts(ref_parts)
         value = '/'.join(reversed(ref_parts))

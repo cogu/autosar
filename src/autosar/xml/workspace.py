@@ -3,10 +3,11 @@ AUTOSAR XML Workspace
 """
 import posixpath
 from typing import Any
+import autosar.base as ar_base
 import autosar.xml.element as ar_element
 import autosar.xml.enumeration as ar_enum
 import autosar.xml.template as ar_template
-from autosar.xml.document import Document
+import autosar.xml.document as ar_document
 from autosar.xml.writer import Writer
 
 
@@ -38,7 +39,7 @@ class Workspace:
         self.namespaces: dict[str, Namespace] = {}
         self.packages: list[ar_element.Package] = []
         self._package_map: dict[str, ar_element.Package] = {}
-        self.documents: list[tuple(Document, str)] = []
+        self.documents: list[tuple(ar_document.Document, str)] = []
 
     def create_namespace(self, name: str, package_map: dict[str, str], base_ref: str = None) -> None:
         """
@@ -137,12 +138,12 @@ class Workspace:
         else:
             raise NotImplementedError(f"Unknown template type: {str(type(template))}")
 
-    def create_document(self, file_path: str, packages: str | list[str]) -> Document:
+    def create_document(self, file_path: str, packages: str | list[str]) -> ar_document.Document:
         """
         Creates a new document object and appends one or more packages to it.
         Use the write_documents method to write documents to file system
         """
-        document = Document()
+        document = ar_document.Document()
         if isinstance(packages, str):
             document.append(self.find(packages))
         else:
@@ -151,12 +152,13 @@ class Workspace:
         self.documents.append((document, file_path))
         return document
 
-    def write_documents(self) -> None:
+    def write_documents(self, scehema_version=ar_base.DEFAULT_SCHEMA_VERSION) -> None:
         """
         Writes all documents to file system
         """
         writer = Writer()
         for (document, file_path) in self.documents:
+            document.schema_version = scehema_version
             writer.write_file(document, file_path)
 
     def _apply_element_template(self, template: ar_template.ElementTemplate, kwargs: dict):

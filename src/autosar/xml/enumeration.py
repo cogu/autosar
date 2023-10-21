@@ -6,9 +6,8 @@ from enum import Enum
 
 # from typing import Any
 from dataclasses import dataclass
+import autosar.base as ar_base
 import autosar.xml.exception as ar_exception
-
-DEFAULT_SCHEMA_VERSION = 50
 
 
 class ArrayImplPolicy(Enum):
@@ -465,8 +464,8 @@ class VersionedTextValue:
 
 xml_to_enum_map = {
     "ArrayImplPolicy": {
-        "PAYLOAD-AS-ARRAY": VersionedEnumValue(ArrayImplPolicy.PAYLOAD_AS_ARRAY, {50}),
-        "PAYLOAD-AS-POINTER-TO-ARRAY": VersionedEnumValue(ArrayImplPolicy.PAYLOAD_AS_POINTER_TO_ARRAY, {50}),
+        "PAYLOAD-AS-ARRAY": VersionedEnumValue(ArrayImplPolicy.PAYLOAD_AS_ARRAY, {49, 50, 51}),
+        "PAYLOAD-AS-POINTER-TO-ARRAY": VersionedEnumValue(ArrayImplPolicy.PAYLOAD_AS_POINTER_TO_ARRAY, {49, 50, 51}),
     },
     "ArraySizeHandling": {
         "ALL-INDICES-DIFFERENT-ARRAY-SIZE": ArraySizeHandling.ALL_INDICES_DIFFERENT_ARRAY_SIZE,
@@ -474,31 +473,31 @@ xml_to_enum_map = {
         "INHERITED-FROM-ARRAY-ELEMENT-TYPE-SIZE": ArraySizeHandling.INHERITED_FROM_ARRAY_ELEMENT_TYPE_SIZE
     },
     "ArraySizeSemantics": {
-        "FIXED-SIZE": VersionedEnumValue(ArraySizeSemantics.FIXED_SIZE, {50}),
-        "VARIABLE-SIZE": VersionedEnumValue(ArraySizeSemantics.VARIABLE_SIZE, {50}),
+        "FIXED-SIZE": ArraySizeSemantics.FIXED_SIZE,
+        "VARIABLE-SIZE": ArraySizeSemantics.VARIABLE_SIZE
     },
     "ByteOrder": {
-        "MOST-SIGNIFICANT-BYTE-FIRST": VersionedEnumValue(ByteOrder.BIG_ENDIAN, {50}),
-        "MOST-SIGNIFICANT-BYTE-LAST": VersionedEnumValue(ByteOrder.LITTLE_ENDIAN, {50}),
-        "OPAQUE": VersionedEnumValue(ByteOrder.OPAQUE, {50}),
+        "MOST-SIGNIFICANT-BYTE-FIRST": ByteOrder.BIG_ENDIAN,
+        "MOST-SIGNIFICANT-BYTE-LAST": ByteOrder.LITTLE_ENDIAN,
+        "OPAQUE": ByteOrder.OPAQUE,
     },
     "DisplayPresentation": {
-        "PRESENTATION-CONTINUOUS": VersionedEnumValue(DisplayPresentation.CONTINUOUS, {50}),
-        "PRESENTATION-DISCRETE": VersionedEnumValue(DisplayPresentation.DISCRETE, {50}),
+        "PRESENTATION-CONTINUOUS": DisplayPresentation.CONTINUOUS,
+        "PRESENTATION-DISCRETE": DisplayPresentation.DISCRETE
     },
     "EmphasisFont": {
-        "DEFAULT": VersionedEnumValue(EmphasisFont.DEFAULT, {50}),
-        "MONO": VersionedEnumValue(EmphasisFont.MONO, {50}),
+        "DEFAULT": EmphasisFont.DEFAULT,
+        "MONO": EmphasisFont.MONO,
     },
     "EmphasisType": {
-        "BOLD": VersionedEnumValue(EmphasisType.BOLD, {50}),
-        "BOLDITALIC": VersionedEnumValue(EmphasisType.BOLDITALIC, {50}),
-        "ITALIC": VersionedEnumValue(EmphasisType.ITALIC, {50}),
-        "PLAIN": VersionedEnumValue(EmphasisType.PLAIN, {50}),
+        "BOLD": EmphasisType.BOLD,
+        "BOLDITALIC": EmphasisType.BOLDITALIC,
+        "ITALIC": EmphasisType.ITALIC,
+        "PLAIN": EmphasisType.PLAIN,
     },
     "Float": {
-        "FLOAT": VersionedEnumValue(Float.FLOAT, {50}),
-        "NO-FLOAT": VersionedEnumValue(Float.NO_FLOAT, {50}),
+        "FLOAT": Float.FLOAT,
+        "NO-FLOAT": Float.NO_FLOAT,
     },
     "IdentifiableSubTypes": {
         "ABSTRACT-IMPLEMENTATION-DATA-TYPE": IdentifiableSubTypes.ABSTRACT_IMPLEMENTATION_DATA_TYPE,
@@ -524,164 +523,164 @@ xml_to_enum_map = {
         "OPEN": IntervalType.OPEN
     },
     "KeepWithPrevious": {
-        "KEEP": VersionedEnumValue(KeepWithPrevious.KEEP, {50}),
-        "NO-KEEP": VersionedEnumValue(KeepWithPrevious.NO_KEEP, {50}),
+        "KEEP": KeepWithPrevious.KEEP,
+        "NO-KEEP": KeepWithPrevious.NO_KEEP,
     },
     "Language": {
-        "AA": VersionedEnumValue(Language.AA, {50}),
-        "AB": VersionedEnumValue(Language.AB, {50}),
-        "AF": VersionedEnumValue(Language.AF, {50}),
-        "AM": VersionedEnumValue(Language.AM, {50}),
-        "AR": VersionedEnumValue(Language.AR, {50}),
-        "AS": VersionedEnumValue(Language.AS, {50}),
-        "AY": VersionedEnumValue(Language.AY, {50}),
-        "AZ": VersionedEnumValue(Language.AZ, {50}),
-        "BA": VersionedEnumValue(Language.BA, {50}),
-        "BE": VersionedEnumValue(Language.BE, {50}),
-        "BG": VersionedEnumValue(Language.BG, {50}),
-        "BH": VersionedEnumValue(Language.BH, {50}),
-        "BI": VersionedEnumValue(Language.BI, {50}),
-        "BN": VersionedEnumValue(Language.BN, {50}),
-        "BO": VersionedEnumValue(Language.BO, {50}),
-        "BR": VersionedEnumValue(Language.BR, {50}),
-        "CA": VersionedEnumValue(Language.CA, {50}),
-        "CO": VersionedEnumValue(Language.CO, {50}),
-        "CS": VersionedEnumValue(Language.CS, {50}),
-        "CY": VersionedEnumValue(Language.CY, {50}),
-        "DA": VersionedEnumValue(Language.DA, {50}),
-        "DE": VersionedEnumValue(Language.DE, {50}),
-        "DZ": VersionedEnumValue(Language.DZ, {50}),
-        "EL": VersionedEnumValue(Language.EL, {50}),
-        "EN": VersionedEnumValue(Language.EN, {50}),
-        "EO": VersionedEnumValue(Language.EO, {50}),
-        "ES": VersionedEnumValue(Language.ES, {50}),
-        "ET": VersionedEnumValue(Language.ET, {50}),
-        "EU": VersionedEnumValue(Language.EU, {50}),
-        "FA": VersionedEnumValue(Language.FA, {50}),
-        "FI": VersionedEnumValue(Language.FI, {50}),
-        "FJ": VersionedEnumValue(Language.FJ, {50}),
-        "FO": VersionedEnumValue(Language.FO, {50}),
-        "FOR-ALL": VersionedEnumValue(Language.FOR_ALL, {50}),
-        "FR": VersionedEnumValue(Language.FR, {50}),
-        "FY": VersionedEnumValue(Language.FY, {50}),
-        "GA": VersionedEnumValue(Language.GA, {50}),
-        "GD": VersionedEnumValue(Language.GD, {50}),
-        "GL": VersionedEnumValue(Language.GL, {50}),
-        "GN": VersionedEnumValue(Language.GN, {50}),
-        "GU": VersionedEnumValue(Language.GU, {50}),
-        "HA": VersionedEnumValue(Language.HA, {50}),
-        "HI": VersionedEnumValue(Language.HI, {50}),
-        "HR": VersionedEnumValue(Language.HR, {50}),
-        "HU": VersionedEnumValue(Language.HU, {50}),
-        "HY": VersionedEnumValue(Language.HY, {50}),
-        "IA": VersionedEnumValue(Language.IA, {50}),
-        "IE": VersionedEnumValue(Language.IE, {50}),
-        "IK": VersionedEnumValue(Language.IK, {50}),
-        "IN": VersionedEnumValue(Language.IN, {50}),
-        "IS": VersionedEnumValue(Language.IS, {50}),
-        "IT": VersionedEnumValue(Language.IT, {50}),
-        "IW": VersionedEnumValue(Language.IW, {50}),
-        "JA": VersionedEnumValue(Language.JA, {50}),
-        "JI": VersionedEnumValue(Language.JI, {50}),
-        "JW": VersionedEnumValue(Language.JW, {50}),
-        "KA": VersionedEnumValue(Language.KA, {50}),
-        "KK": VersionedEnumValue(Language.KK, {50}),
-        "KL": VersionedEnumValue(Language.KL, {50}),
-        "KM": VersionedEnumValue(Language.KM, {50}),
-        "KN": VersionedEnumValue(Language.KN, {50}),
-        "KO": VersionedEnumValue(Language.KO, {50}),
-        "KS": VersionedEnumValue(Language.KS, {50}),
-        "KU": VersionedEnumValue(Language.KU, {50}),
-        "KY": VersionedEnumValue(Language.KY, {50}),
-        "LA": VersionedEnumValue(Language.LA, {50}),
-        "LN": VersionedEnumValue(Language.LN, {50}),
-        "LO": VersionedEnumValue(Language.LO, {50}),
-        "LT": VersionedEnumValue(Language.LT, {50}),
-        "LV": VersionedEnumValue(Language.LV, {50}),
-        "MG": VersionedEnumValue(Language.MG, {50}),
-        "MI": VersionedEnumValue(Language.MI, {50}),
-        "MK": VersionedEnumValue(Language.MK, {50}),
-        "ML": VersionedEnumValue(Language.ML, {50}),
-        "MN": VersionedEnumValue(Language.MN, {50}),
-        "MO": VersionedEnumValue(Language.MO, {50}),
-        "MR": VersionedEnumValue(Language.MR, {50}),
-        "MS": VersionedEnumValue(Language.MS, {50}),
-        "MT": VersionedEnumValue(Language.MT, {50}),
-        "MY": VersionedEnumValue(Language.MY, {50}),
-        "NA": VersionedEnumValue(Language.NA, {50}),
-        "NE": VersionedEnumValue(Language.NE, {50}),
-        "NL": VersionedEnumValue(Language.NL, {50}),
-        "NO": VersionedEnumValue(Language.NO, {50}),
-        "OC": VersionedEnumValue(Language.OC, {50}),
-        "OM": VersionedEnumValue(Language.OM, {50}),
-        "OR": VersionedEnumValue(Language.OR, {50}),
-        "PA": VersionedEnumValue(Language.PA, {50}),
-        "PL": VersionedEnumValue(Language.PL, {50}),
-        "PS": VersionedEnumValue(Language.PS, {50}),
-        "PT": VersionedEnumValue(Language.PT, {50}),
-        "QU": VersionedEnumValue(Language.QU, {50}),
-        "RM": VersionedEnumValue(Language.RM, {50}),
-        "RN": VersionedEnumValue(Language.RN, {50}),
-        "RO": VersionedEnumValue(Language.RO, {50}),
-        "RU": VersionedEnumValue(Language.RU, {50}),
-        "RW": VersionedEnumValue(Language.RW, {50}),
-        "SA": VersionedEnumValue(Language.SA, {50}),
-        "SD": VersionedEnumValue(Language.SD, {50}),
-        "SG": VersionedEnumValue(Language.SG, {50}),
-        "SH": VersionedEnumValue(Language.SH, {50}),
-        "SI": VersionedEnumValue(Language.SI, {50}),
-        "SK": VersionedEnumValue(Language.SK, {50}),
-        "SL": VersionedEnumValue(Language.SL, {50}),
-        "SM": VersionedEnumValue(Language.SM, {50}),
-        "SN": VersionedEnumValue(Language.SN, {50}),
-        "SO": VersionedEnumValue(Language.SO, {50}),
-        "SQ": VersionedEnumValue(Language.SQ, {50}),
-        "SR": VersionedEnumValue(Language.SR, {50}),
-        "SS": VersionedEnumValue(Language.SS, {50}),
-        "ST": VersionedEnumValue(Language.ST, {50}),
-        "SU": VersionedEnumValue(Language.SU, {50}),
-        "SV": VersionedEnumValue(Language.SV, {50}),
-        "SW": VersionedEnumValue(Language.SW, {50}),
-        "TA": VersionedEnumValue(Language.TA, {50}),
-        "TE": VersionedEnumValue(Language.TE, {50}),
-        "TG": VersionedEnumValue(Language.TG, {50}),
-        "TH": VersionedEnumValue(Language.TH, {50}),
-        "TI": VersionedEnumValue(Language.TI, {50}),
-        "TK": VersionedEnumValue(Language.TK, {50}),
-        "TL": VersionedEnumValue(Language.TL, {50}),
-        "TN": VersionedEnumValue(Language.TN, {50}),
-        "TO": VersionedEnumValue(Language.TO, {50}),
-        "TR": VersionedEnumValue(Language.TR, {50}),
-        "TS": VersionedEnumValue(Language.TS, {50}),
-        "TT": VersionedEnumValue(Language.TT, {50}),
-        "TW": VersionedEnumValue(Language.TW, {50}),
-        "UK": VersionedEnumValue(Language.UK, {50}),
-        "UR": VersionedEnumValue(Language.UR, {50}),
-        "UZ": VersionedEnumValue(Language.UZ, {50}),
-        "VI": VersionedEnumValue(Language.VI, {50}),
-        "VO": VersionedEnumValue(Language.VO, {50}),
-        "WO": VersionedEnumValue(Language.WO, {50}),
-        "XH": VersionedEnumValue(Language.XH, {50}),
-        "YO": VersionedEnumValue(Language.YO, {50}),
-        "ZH": VersionedEnumValue(Language.ZH, {50}),
-        "ZU": VersionedEnumValue(Language.ZU, {50}),
+        "AA": Language.AA,
+        "AB": Language.AB,
+        "AF": Language.AF,
+        "AM": Language.AM,
+        "AR": Language.AR,
+        "AS": Language.AS,
+        "AY": Language.AY,
+        "AZ": Language.AZ,
+        "BA": Language.BA,
+        "BE": Language.BE,
+        "BG": Language.BG,
+        "BH": Language.BH,
+        "BI": Language.BI,
+        "BN": Language.BN,
+        "BO": Language.BO,
+        "BR": Language.BR,
+        "CA": Language.CA,
+        "CO": Language.CO,
+        "CS": Language.CS,
+        "CY": Language.CY,
+        "DA": Language.DA,
+        "DE": Language.DE,
+        "DZ": Language.DZ,
+        "EL": Language.EL,
+        "EN": Language.EN,
+        "EO": Language.EO,
+        "ES": Language.ES,
+        "ET": Language.ET,
+        "EU": Language.EU,
+        "FA": Language.FA,
+        "FI": Language.FI,
+        "FJ": Language.FJ,
+        "FO": Language.FO,
+        "FOR-ALL": Language.FOR_ALL,
+        "FR": Language.FR,
+        "FY": Language.FY,
+        "GA": Language.GA,
+        "GD": Language.GD,
+        "GL": Language.GL,
+        "GN": Language.GN,
+        "GU": Language.GU,
+        "HA": Language.HA,
+        "HI": Language.HI,
+        "HR": Language.HR,
+        "HU": Language.HU,
+        "HY": Language.HY,
+        "IA": Language.IA,
+        "IE": Language.IE,
+        "IK": Language.IK,
+        "IN": Language.IN,
+        "IS": Language.IS,
+        "IT": Language.IT,
+        "IW": Language.IW,
+        "JA": Language.JA,
+        "JI": Language.JI,
+        "JW": Language.JW,
+        "KA": Language.KA,
+        "KK": Language.KK,
+        "KL": Language.KL,
+        "KM": Language.KM,
+        "KN": Language.KN,
+        "KO": Language.KO,
+        "KS": Language.KS,
+        "KU": Language.KU,
+        "KY": Language.KY,
+        "LA": Language.LA,
+        "LN": Language.LN,
+        "LO": Language.LO,
+        "LT": Language.LT,
+        "LV": Language.LV,
+        "MG": Language.MG,
+        "MI": Language.MI,
+        "MK": Language.MK,
+        "ML": Language.ML,
+        "MN": Language.MN,
+        "MO": Language.MO,
+        "MR": Language.MR,
+        "MS": Language.MS,
+        "MT": Language.MT,
+        "MY": Language.MY,
+        "NA": Language.NA,
+        "NE": Language.NE,
+        "NL": Language.NL,
+        "NO": Language.NO,
+        "OC": Language.OC,
+        "OM": Language.OM,
+        "OR": Language.OR,
+        "PA": Language.PA,
+        "PL": Language.PL,
+        "PS": Language.PS,
+        "PT": Language.PT,
+        "QU": Language.QU,
+        "RM": Language.RM,
+        "RN": Language.RN,
+        "RO": Language.RO,
+        "RU": Language.RU,
+        "RW": Language.RW,
+        "SA": Language.SA,
+        "SD": Language.SD,
+        "SG": Language.SG,
+        "SH": Language.SH,
+        "SI": Language.SI,
+        "SK": Language.SK,
+        "SL": Language.SL,
+        "SM": Language.SM,
+        "SN": Language.SN,
+        "SO": Language.SO,
+        "SQ": Language.SQ,
+        "SR": Language.SR,
+        "SS": Language.SS,
+        "ST": Language.ST,
+        "SU": Language.SU,
+        "SV": Language.SV,
+        "SW": Language.SW,
+        "TA": Language.TA,
+        "TE": Language.TE,
+        "TG": Language.TG,
+        "TH": Language.TH,
+        "TI": Language.TI,
+        "TK": Language.TK,
+        "TL": Language.TL,
+        "TN": Language.TN,
+        "TO": Language.TO,
+        "TR": Language.TR,
+        "TS": Language.TS,
+        "TT": Language.TT,
+        "TW": Language.TW,
+        "UK": Language.UK,
+        "UR": Language.UR,
+        "UZ": Language.UZ,
+        "VI": Language.VI,
+        "VO": Language.VO,
+        "WO": Language.WO,
+        "XH": Language.XH,
+        "YO": Language.YO,
+        "ZH": Language.ZH,
+        "ZU": Language.ZU,
     },
     "Monotony": {
-        "DECREASING": VersionedEnumValue(Monotony.DECREASING, {50}),
-        "INCREASING": VersionedEnumValue(Monotony.INCREASING, {50}),
-        "MONOTONOUS": VersionedEnumValue(Monotony.MONOTONOUS, {50}),
-        "NO-MONOTONY": VersionedEnumValue(Monotony.NO_MONOTONY, {50}),
-        "STRICTLY-DECREASING": VersionedEnumValue(Monotony.STRICTLY_DECREASING, {50}),
-        "STRICTLY-INCREASING": VersionedEnumValue(Monotony.STRICTLY_INCREASING, {50}),
-        "STRICT-MONOTONOUS": VersionedEnumValue(Monotony.STRICT_MONOTONOUS, {50}),
+        "DECREASING": Monotony.DECREASING,
+        "INCREASING": Monotony.INCREASING,
+        "MONOTONOUS": Monotony.MONOTONOUS,
+        "NO-MONOTONY": Monotony.NO_MONOTONY,
+        "STRICTLY-DECREASING": Monotony.STRICTLY_DECREASING,
+        "STRICTLY-INCREASING": Monotony.STRICTLY_INCREASING,
+        "STRICT-MONOTONOUS": Monotony.STRICT_MONOTONOUS,
     },
     "PageBreak": {
-        "BREAK": VersionedEnumValue(PageBreak.BREAK, {50}),
-        "NO-BREAK": VersionedEnumValue(PageBreak.NO_BREAK, {50}),
+        "BREAK": PageBreak.BREAK,
+        "NO-BREAK": PageBreak.NO_BREAK,
     },
     "PageWide": {
-        "NO-PGWIDE": VersionedEnumValue(PageWide.NO_PGWIDE, {50}),
-        "PGWIDE": VersionedEnumValue(PageWide.PGWIDE, {50}),
+        "NO-PGWIDE": PageWide.NO_PGWIDE,
+        "PGWIDE": PageWide.PGWIDE,
     },
     "ScaleConstraintValidity": {
         "NOT-AVAILABLE": ScaleConstraintValidity.NOT_AVAILABLE,
@@ -690,9 +689,9 @@ xml_to_enum_map = {
         "VALID": ScaleConstraintValidity.VALID
     },
     "SwCalibrationAccess": {
-        "NOT-ACCESSIBLE": VersionedEnumValue(SwCalibrationAccess.NOT_ACCESSIBLE, {50}),
-        "READ-ONLY": VersionedEnumValue(SwCalibrationAccess.READ_ONLY, {50}),
-        "READ-WRITE": VersionedEnumValue(SwCalibrationAccess.READ_WRITE, {50}),
+        "NOT-ACCESSIBLE": SwCalibrationAccess.NOT_ACCESSIBLE,
+        "READ-ONLY": SwCalibrationAccess.READ_ONLY,
+        "READ-WRITE": SwCalibrationAccess.READ_WRITE,
     },
     "SwImplPolicy": {
         "CONST": SwImplPolicy.CONST,
@@ -704,7 +703,7 @@ xml_to_enum_map = {
 }
 
 
-def xml_to_enum(enum_type_name: str, xml_text: str, schema_version: int = DEFAULT_SCHEMA_VERSION) -> Enum:
+def xml_to_enum(enum_type_name: str, xml_text: str, schema_version: int = ar_base.DEFAULT_SCHEMA_VERSION) -> Enum:
     """
     Converts XML string to Python-defined enumeration
     """
@@ -725,8 +724,8 @@ def xml_to_enum(enum_type_name: str, xml_text: str, schema_version: int = DEFAUL
 
 enum_to_xml_map = {
     "ArrayImplPolicy": [
-        VersionedTextValue("PAYLOAD-AS-ARRAY", {50}),             # 0
-        VersionedTextValue("PAYLOAD-AS-POINTER-TO-ARRAY", {50}),  # 1
+        VersionedTextValue("PAYLOAD-AS-ARRAY", {49, 50, 51}),             # 0
+        VersionedTextValue("PAYLOAD-AS-POINTER-TO-ARRAY", {49, 50, 51}),  # 1
     ],
     "ArraySizeHandling": [
         "ALL-INDICES-DIFFERENT-ARRAY-SIZE",       # 0
@@ -734,31 +733,31 @@ enum_to_xml_map = {
         "INHERITED-FROM-ARRAY-ELEMENT-TYPE-SIZE"  # 2
     ],
     "ArraySizeSemantics": [
-        VersionedTextValue("FIXED-SIZE", {50}),     # 0
-        VersionedTextValue("VARIABLE-SIZE", {50}),  # 1
+        "FIXED-SIZE",     # 0
+        "VARIABLE-SIZE",  # 1
     ],
     "ByteOrder": [
-        VersionedTextValue("MOST-SIGNIFICANT-BYTE-FIRST", {50}),  # 0
-        VersionedTextValue("MOST-SIGNIFICANT-BYTE-LAST", {50}),   # 1
-        VersionedTextValue("OPAQUE", {50}),                       # 2
+        "MOST-SIGNIFICANT-BYTE-FIRST",  # 0
+        "MOST-SIGNIFICANT-BYTE-LAST",   # 1
+        "OPAQUE",                       # 2
     ],
     "DisplayPresentation": [
-        VersionedTextValue("PRESENTATION-CONTINUOUS", {50}),  # 0
-        VersionedTextValue("PRESENTATION-DISCRETE", {50}),  # 1
+        "PRESENTATION-CONTINUOUS",  # 0
+        "PRESENTATION-DISCRETE",    # 1
     ],
     "EmphasisFont": [
-        VersionedTextValue("DEFAULT", {50}),  # 0
-        VersionedTextValue("MONO", {50}),  # 1
+        "DEFAULT",  # 0
+        "MONO",     # 1
     ],
     "EmphasisType": [
-        VersionedTextValue("BOLD", {50}),  # 0
-        VersionedTextValue("BOLDITALIC", {50}),  # 1
-        VersionedTextValue("ITALIC", {50}),  # 2
-        VersionedTextValue("PLAIN", {50}),  # 3
+        "BOLD",        # 0
+        "BOLDITALIC",  # 1
+        "ITALIC",      # 2
+        "PLAIN",       # 3
     ],
     "Float": [
-        VersionedTextValue("FLOAT", {50}),  # 0
-        VersionedTextValue("NO-FLOAT", {50}),  # 1
+        "FLOAT",     # 0
+        "NO-FLOAT",  # 1
     ],
     "IdentifiableSubTypes": [
         "ABSTRACT-IMPLEMENTATION-DATA-TYPE",  # 0
@@ -784,187 +783,187 @@ enum_to_xml_map = {
         "OPEN"  # 1
     ],
     "KeepWithPrevious": [
-        VersionedTextValue("KEEP", {50}),  # 0
-        VersionedTextValue("NO-KEEP", {50}),  # 1
+        "KEEP",  # 0
+        "NO-KEEP",  # 1
     ],
     "Language": [
-        VersionedTextValue("AA", {50}),  # 0
-        VersionedTextValue("AB", {50}),  # 1
-        VersionedTextValue("AF", {50}),  # 2
-        VersionedTextValue("AM", {50}),  # 3
-        VersionedTextValue("AR", {50}),  # 4
-        VersionedTextValue("AS", {50}),  # 5
-        VersionedTextValue("AY", {50}),  # 6
-        VersionedTextValue("AZ", {50}),  # 7
-        VersionedTextValue("BA", {50}),  # 8
-        VersionedTextValue("BE", {50}),  # 9
-        VersionedTextValue("BG", {50}),  # 10
-        VersionedTextValue("BH", {50}),  # 11
-        VersionedTextValue("BI", {50}),  # 12
-        VersionedTextValue("BN", {50}),  # 13
-        VersionedTextValue("BO", {50}),  # 14
-        VersionedTextValue("BR", {50}),  # 15
-        VersionedTextValue("CA", {50}),  # 16
-        VersionedTextValue("CO", {50}),  # 17
-        VersionedTextValue("CS", {50}),  # 18
-        VersionedTextValue("CY", {50}),  # 19
-        VersionedTextValue("DA", {50}),  # 20
-        VersionedTextValue("DE", {50}),  # 21
-        VersionedTextValue("DZ", {50}),  # 22
-        VersionedTextValue("EL", {50}),  # 23
-        VersionedTextValue("EN", {50}),  # 24
-        VersionedTextValue("EO", {50}),  # 25
-        VersionedTextValue("ES", {50}),  # 26
-        VersionedTextValue("ET", {50}),  # 27
-        VersionedTextValue("EU", {50}),  # 28
-        VersionedTextValue("FA", {50}),  # 29
-        VersionedTextValue("FI", {50}),  # 30
-        VersionedTextValue("FJ", {50}),  # 31
-        VersionedTextValue("FO", {50}),  # 32
-        VersionedTextValue("FOR-ALL", {50}),  # 33
-        VersionedTextValue("FR", {50}),  # 34
-        VersionedTextValue("FY", {50}),  # 35
-        VersionedTextValue("GA", {50}),  # 36
-        VersionedTextValue("GD", {50}),  # 37
-        VersionedTextValue("GL", {50}),  # 38
-        VersionedTextValue("GN", {50}),  # 39
-        VersionedTextValue("GU", {50}),  # 40
-        VersionedTextValue("HA", {50}),  # 41
-        VersionedTextValue("HI", {50}),  # 42
-        VersionedTextValue("HR", {50}),  # 43
-        VersionedTextValue("HU", {50}),  # 44
-        VersionedTextValue("HY", {50}),  # 45
-        VersionedTextValue("IA", {50}),  # 46
-        VersionedTextValue("IE", {50}),  # 47
-        VersionedTextValue("IK", {50}),  # 48
-        VersionedTextValue("IN", {50}),  # 49
-        VersionedTextValue("IS", {50}),  # 50
-        VersionedTextValue("IT", {50}),  # 51
-        VersionedTextValue("IW", {50}),  # 52
-        VersionedTextValue("JA", {50}),  # 53
-        VersionedTextValue("JI", {50}),  # 54
-        VersionedTextValue("JW", {50}),  # 55
-        VersionedTextValue("KA", {50}),  # 56
-        VersionedTextValue("KK", {50}),  # 57
-        VersionedTextValue("KL", {50}),  # 58
-        VersionedTextValue("KM", {50}),  # 59
-        VersionedTextValue("KN", {50}),  # 60
-        VersionedTextValue("KO", {50}),  # 61
-        VersionedTextValue("KS", {50}),  # 62
-        VersionedTextValue("KU", {50}),  # 63
-        VersionedTextValue("KY", {50}),  # 64
-        VersionedTextValue("LA", {50}),  # 65
-        VersionedTextValue("LN", {50}),  # 66
-        VersionedTextValue("LO", {50}),  # 67
-        VersionedTextValue("LT", {50}),  # 68
-        VersionedTextValue("LV", {50}),  # 69
-        VersionedTextValue("MG", {50}),  # 70
-        VersionedTextValue("MI", {50}),  # 71
-        VersionedTextValue("MK", {50}),  # 72
-        VersionedTextValue("ML", {50}),  # 73
-        VersionedTextValue("MN", {50}),  # 74
-        VersionedTextValue("MO", {50}),  # 75
-        VersionedTextValue("MR", {50}),  # 76
-        VersionedTextValue("MS", {50}),  # 77
-        VersionedTextValue("MT", {50}),  # 78
-        VersionedTextValue("MY", {50}),  # 79
-        VersionedTextValue("NA", {50}),  # 80
-        VersionedTextValue("NE", {50}),  # 81
-        VersionedTextValue("NL", {50}),  # 82
-        VersionedTextValue("NO", {50}),  # 83
-        VersionedTextValue("OC", {50}),  # 84
-        VersionedTextValue("OM", {50}),  # 85
-        VersionedTextValue("OR", {50}),  # 86
-        VersionedTextValue("PA", {50}),  # 87
-        VersionedTextValue("PL", {50}),  # 88
-        VersionedTextValue("PS", {50}),  # 89
-        VersionedTextValue("PT", {50}),  # 90
-        VersionedTextValue("QU", {50}),  # 91
-        VersionedTextValue("RM", {50}),  # 92
-        VersionedTextValue("RN", {50}),  # 93
-        VersionedTextValue("RO", {50}),  # 94
-        VersionedTextValue("RU", {50}),  # 95
-        VersionedTextValue("RW", {50}),  # 96
-        VersionedTextValue("SA", {50}),  # 97
-        VersionedTextValue("SD", {50}),  # 98
-        VersionedTextValue("SG", {50}),  # 99
-        VersionedTextValue("SH", {50}),  # 100
-        VersionedTextValue("SI", {50}),  # 101
-        VersionedTextValue("SK", {50}),  # 102
-        VersionedTextValue("SL", {50}),  # 103
-        VersionedTextValue("SM", {50}),  # 104
-        VersionedTextValue("SN", {50}),  # 105
-        VersionedTextValue("SO", {50}),  # 106
-        VersionedTextValue("SQ", {50}),  # 107
-        VersionedTextValue("SR", {50}),  # 108
-        VersionedTextValue("SS", {50}),  # 109
-        VersionedTextValue("ST", {50}),  # 110
-        VersionedTextValue("SU", {50}),  # 111
-        VersionedTextValue("SV", {50}),  # 112
-        VersionedTextValue("SW", {50}),  # 113
-        VersionedTextValue("TA", {50}),  # 114
-        VersionedTextValue("TE", {50}),  # 115
-        VersionedTextValue("TG", {50}),  # 116
-        VersionedTextValue("TH", {50}),  # 117
-        VersionedTextValue("TI", {50}),  # 118
-        VersionedTextValue("TK", {50}),  # 119
-        VersionedTextValue("TL", {50}),  # 120
-        VersionedTextValue("TN", {50}),  # 121
-        VersionedTextValue("TO", {50}),  # 122
-        VersionedTextValue("TR", {50}),  # 123
-        VersionedTextValue("TS", {50}),  # 124
-        VersionedTextValue("TT", {50}),  # 125
-        VersionedTextValue("TW", {50}),  # 126
-        VersionedTextValue("UK", {50}),  # 127
-        VersionedTextValue("UR", {50}),  # 128
-        VersionedTextValue("UZ", {50}),  # 129
-        VersionedTextValue("VI", {50}),  # 130
-        VersionedTextValue("VO", {50}),  # 131
-        VersionedTextValue("WO", {50}),  # 132
-        VersionedTextValue("XH", {50}),  # 133
-        VersionedTextValue("YO", {50}),  # 134
-        VersionedTextValue("ZH", {50}),  # 135
-        VersionedTextValue("ZU", {50}),  # 136
+        "AA",  # 0
+        "AB",  # 1
+        "AF",  # 2
+        "AM",  # 3
+        "AR",  # 4
+        "AS",  # 5
+        "AY",  # 6
+        "AZ",  # 7
+        "BA",  # 8
+        "BE",  # 9
+        "BG",  # 10
+        "BH",  # 11
+        "BI",  # 12
+        "BN",  # 13
+        "BO",  # 14
+        "BR",  # 15
+        "CA",  # 16
+        "CO",  # 17
+        "CS",  # 18
+        "CY",  # 19
+        "DA",  # 20
+        "DE",  # 21
+        "DZ",  # 22
+        "EL",  # 23
+        "EN",  # 24
+        "EO",  # 25
+        "ES",  # 26
+        "ET",  # 27
+        "EU",  # 28
+        "FA",  # 29
+        "FI",  # 30
+        "FJ",  # 31
+        "FO",  # 32
+        "FOR-ALL",  # 33
+        "FR",  # 34
+        "FY",  # 35
+        "GA",  # 36
+        "GD",  # 37
+        "GL",  # 38
+        "GN",  # 39
+        "GU",  # 40
+        "HA",  # 41
+        "HI",  # 42
+        "HR",  # 43
+        "HU",  # 44
+        "HY",  # 45
+        "IA",  # 46
+        "IE",  # 47
+        "IK",  # 48
+        "IN",  # 49
+        "IS",  # 50
+        "IT",  # 51
+        "IW",  # 52
+        "JA",  # 53
+        "JI",  # 54
+        "JW",  # 55
+        "KA",  # 56
+        "KK",  # 57
+        "KL",  # 58
+        "KM",  # 59
+        "KN",  # 60
+        "KO",  # 61
+        "KS",  # 62
+        "KU",  # 63
+        "KY",  # 64
+        "LA",  # 65
+        "LN",  # 66
+        "LO",  # 67
+        "LT",  # 68
+        "LV",  # 69
+        "MG",  # 70
+        "MI",  # 71
+        "MK",  # 72
+        "ML",  # 73
+        "MN",  # 74
+        "MO",  # 75
+        "MR",  # 76
+        "MS",  # 77
+        "MT",  # 78
+        "MY",  # 79
+        "NA",  # 80
+        "NE",  # 81
+        "NL",  # 82
+        "NO",  # 83
+        "OC",  # 84
+        "OM",  # 85
+        "OR",  # 86
+        "PA",  # 87
+        "PL",  # 88
+        "PS",  # 89
+        "PT",  # 90
+        "QU",  # 91
+        "RM",  # 92
+        "RN",  # 93
+        "RO",  # 94
+        "RU",  # 95
+        "RW",  # 96
+        "SA",  # 97
+        "SD",  # 98
+        "SG",  # 99
+        "SH",  # 100
+        "SI",  # 101
+        "SK",  # 102
+        "SL",  # 103
+        "SM",  # 104
+        "SN",  # 105
+        "SO",  # 106
+        "SQ",  # 107
+        "SR",  # 108
+        "SS",  # 109
+        "ST",  # 110
+        "SU",  # 111
+        "SV",  # 112
+        "SW",  # 113
+        "TA",  # 114
+        "TE",  # 115
+        "TG",  # 116
+        "TH",  # 117
+        "TI",  # 118
+        "TK",  # 119
+        "TL",  # 120
+        "TN",  # 121
+        "TO",  # 122
+        "TR",  # 123
+        "TS",  # 124
+        "TT",  # 125
+        "TW",  # 126
+        "UK",  # 127
+        "UR",  # 128
+        "UZ",  # 129
+        "VI",  # 130
+        "VO",  # 131
+        "WO",  # 132
+        "XH",  # 133
+        "YO",  # 134
+        "ZH",  # 135
+        "ZU",  # 136
     ],
     "Monotony": [
-        VersionedTextValue("DECREASING", {50}),           # 0
-        VersionedTextValue("INCREASING", {50}),           # 1
-        VersionedTextValue("MONOTONOUS", {50}),           # 2
-        VersionedTextValue("NO-MONOTONY", {50}),          # 3
-        VersionedTextValue("STRICTLY-DECREASING", {50}),  # 4
-        VersionedTextValue("STRICTLY-INCREASING", {50}),  # 5
-        VersionedTextValue("STRICT-MONOTONOUS", {50}),    # 6
+        "DECREASING",           # 0
+        "INCREASING",           # 1
+        "MONOTONOUS",           # 2
+        "NO-MONOTONY",          # 3
+        "STRICTLY-DECREASING",  # 4
+        "STRICTLY-INCREASING",  # 5
+        "STRICT-MONOTONOUS",    # 6
     ],
     "PageBreak": [
-        VersionedTextValue("BREAK", {50}),  # 0
-        VersionedTextValue("NO-BREAK", {50}),  # 1
+        "BREAK",     # 0
+        "NO-BREAK",  # 1
     ],
     "PageWide": [
-        VersionedTextValue("NO-PGWIDE", {50}),  # 0
-        VersionedTextValue("PGWIDE", {50}),  # 1
+        "NO-PGWIDE",  # 0
+        "PGWIDE",     # 1
     ],
     "ScaleConstraintValidity": [
-        "NOT-AVAILABLE",   # 0
-        "NOT-DEFINED",     # 1
-        "NOT-VALID",       # 2
-        "VALID"            # 3
+        "NOT-AVAILABLE",  # 0
+        "NOT-DEFINED",    # 1
+        "NOT-VALID",      # 2
+        "VALID"           # 3
     ],
     "SwCalibrationAccess": [
-        "NOT-ACCESSIBLE",    # 0
-        "READ-ONLY",         # 1
-        "READ-WRITE"         # 2
+        "NOT-ACCESSIBLE",  # 0
+        "READ-ONLY",       # 1
+        "READ-WRITE"       # 2
     ],
     "SwImplPolicy": [
-        "CONST",                # 0
-        "FIXED",                # 1
-        "MEASUREMENT-POINT",    # 2
-        "QUEUED",               # 3
-        "STANDARD"              # 4
+        "CONST",              # 0
+        "FIXED",              # 1
+        "MEASUREMENT-POINT",  # 2
+        "QUEUED",             # 3
+        "STANDARD"            # 4
     ]
 }
 
 
-def enum_to_xml(enum_item: Enum, schema_version=DEFAULT_SCHEMA_VERSION):
+def enum_to_xml(enum_item: Enum, schema_version=ar_base.DEFAULT_SCHEMA_VERSION):
     """
     Converts enum value back to XML
     """
