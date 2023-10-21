@@ -1,11 +1,10 @@
 """
 AUTSOAR XML Package
 """
-# import autosar.xml.element
-# import autosar.xml.enumeration
-# import autosar.xml.exception
+from autosar.xml.document import Document
 from autosar.xml.reader import Reader
-from autosar.xml.writer import Writer
 from autosar.xml.workspace import Workspace
+from autosar.xml.writer import Writer
 
-__all__ = ['Reader', 'Writer', 'Workspace']
+
+__all__ = ["Document", "Reader", "Workspace", "Writer"]

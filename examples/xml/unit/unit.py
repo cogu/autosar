@@ -2,22 +2,23 @@
 Unit example
 """
 import os
-import autosar
+import autosar.xml
+from autosar.xml.document import Document
 import autosar.xml.element as ar_element
 
 
 if __name__ == "__main__":
 
     # Create document
-    package = autosar.xml.package.Package('Units')
+    package = ar_element.Package('Units')
     elem = ar_element.Unit("KmPerHour", "KmPerHour")
     package.append(elem)
-    document = autosar.xml.document.Document()
+    document = Document()
     document.append(package)
 
     # Write document to file system
-    file_path = os.path.abspath(os.path.join(os.path.dirname(
-        __file__), 'data', 'unit_example.arxml'))
+    base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
+    file_path = os.path.join(base_path, "unit_example.arxml")
     writer = autosar.xml.Writer()
     writer.write_file(document, file_path)
 
