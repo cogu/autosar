@@ -1,74 +1,57 @@
 [![Python package](https://github.com/cogu/autosar/actions/workflows/python-package.yml/badge.svg?branch=research%2F0.5)](https://github.com/cogu/autosar/actions/workflows/python-package.yml)
 
-# Python AUTOSAR
+# Python AUTOSAR v0.5
 
 A set of Python modules for working with [AUTOSAR](https://www.autosar.org/) XML files.
 
-The primary use case is to enable Python to generate ARXML files for further importing into other (commercial AUTOSAR) toolchains.
-It also has some support for parsing ARXML files.
+The primary use case is to enable Python to generate ARXML files for further importing into other (commercial) AUTOSAR toolchains.
+It has some support for parsing ARXML files.
 
-## Version 0.4
+## Major design changes
 
-Stable version. Latest release is [v0.4.1](https://github.com/cogu/autosar/releases/tag/v0.4.1).
+Python AUTOSAR v0.5+ uses a new API and is incompatible with previous versions.
 
-[Documentation for v0.4](https://autosar.readthedocs.io/en/latest/).
+For Python AUTOSAR v0.4, see the [v0.4 maintenance branch](https://github.com/cogu/autosar/tree/maintenance/0.4).
 
-### Supported AUTOSAR versions (v0.4)
+### Key features
 
-* AUTOSAR 3.0
-* AUTOSAR 4.2
+* New class hierachy
+  * Attempt to follow the AUTOSAR XML schema file where possible.
+* Snake-case naming of variables and methods (Follow PEP8 standard).
+* Modern type hinting (this unfortunately requires Python 3.10 or later).
+* Python Enum classes for enumeration types.
+* Improved XML reading and writing with lxml.
+* Linting - Source is checked with both Pylint and flake8.
+* Unit tests - New test suite that is more complete and is faster to execute.
 
-Classic AUTOSAR only.
+## Supported AUTOSAR versions
 
-### Requirements (v0.4)
-
-* Python 3.4+
-* cfile v0.2.0
-
-### Installation (v0.4)
-
-```bash
-pip install "autosar<0.5"
-```
-
-For now it works to install without the version part, it's there for future proofing the instruction
-after newer versions are released to PyPI.
-
-## Version 0.5
-
-Development and research version. Not yet released.
-
-See CHANGELOG for latest updates.
-
-### Supported AUTOSAR versions (v0.5)
-
-The XML of all examples are continously validated against the following schemas:
+The implementation tries to follow release R22-11. However, the generated ARXML validates against all versions listed below.
+When saving, use the `schema_version` parameter to select desired version (integer with value 48-51).
 
 * 48 (R19-11, Classic AUTOSAR 4.5)
 * 49 (R20-11, Classic AUTOSAR 4.6)
 * 50 (R21-11, Classic AUTOSAR 4.7)
 * 51 (R22-11, Classic AUTOSAR 4.8)
 
-So far the implementation is compatible with all the above versions.
-Officially though, the implementation is attempting to follow schema versions 50 and 51.
+Only Clasic AUTOSAR will be supported.
 
-Only Clasic AUTOSAR is supported.
-
-### Requirements (v0.5)
+## Requirements
 
 * Python 3.10+
 * lxml
-* cfile v0.3.1+
+* [cfile](https://github.com/cogu/cfile) v0.3.1+
 
-### Installation (v0.5)
+## Installation
 
-Manual install required as this version is not available on PyPI.
+Manual install required as this version is not available on PyPI (until v0.6).
 
 1. Make sure you have the latest version of `pip` and `setuptools` installed.
-2. Download source or clone git repo.
-3. Install locally using one of the below methods.
+2. Download source or clone this repo.
+3. Download source or clone the cfile repo (instruction below).
+4. Install locally using one of the below methods.
 
-#### Preparation
+### Preparation
 
 Run in either venv or local.
 
@@ -79,16 +62,16 @@ git clone https://github.com/cogu/cfile.git cfile_0.3
 cd cfile_0.3
 git checkout v0.3.1
 cd ..
-python -m pip install --upgrade .
+python -m pip install cfile_0.3
 ```
 
-#### Standard install
+### Standard install
 
 ```bash
 pip install  .
 ```
 
-#### Editable install (Development mode)
+### Editable install (Development mode)
 
 ```bash
 python -m venv .venv
@@ -96,3 +79,307 @@ python -m venv .venv
 pip install --editable .
 pip install flake8
 ```
+
+## Usage
+
+Below is a short introduction. A more comprehensive documentation for v0.5 will be written later.
+
+### Workspace
+
+Create a new workspace object.
+
+```python
+import autosar.xml
+
+workspace = autosar.xml.Workspace()
+```
+
+### Creating packages
+
+Packages are created using the `make_packages` method. It can recursively create packages as if they are directories.
+
+If you give it one argument it will return the package created. If you give it more than one argument it will return a list of the packages created.
+
+```python
+import autosar.xml
+
+workspace = autosar.xml.Workspace()
+packages = workspace.make_packages("DataTypes/BaseTypes",
+                                   "DataTypes/ImplementationDataTypes")
+print(packages[0].name)
+print(packages[1].name)
+```
+
+Output
+
+```text
+BaseTypes
+ImplementationDataTypes
+```
+
+Using the builtin `zip`-method you can easily convert the returned list into a dictionary.
+
+```python
+import autosar.xml
+
+workspace = autosar.xml.Workspace()
+packages = dict(zip(["BaseTypes", "ImplementationDataTypes"],
+                    workspace.make_packages("DataTypes/BaseTypes",
+                                            "DataTypes/ImplementationDataTypes")))
+print(packages["BaseTypes"].name)
+print(packages["ImplementationDataTypes"].name)
+```
+
+Output
+
+```text
+BaseTypes
+ImplementationDataTypes
+```
+
+### Saving XML documents
+
+Use the Writer class to save XML documents.
+
+```python
+import os
+from autosar.xml import Document, Writer
+import autosar.xml.element as ar_element
+
+# Create new document object with an empty package
+document = Document()
+package = ar_element.Package("MyPackage")
+document.append(package)
+# Create a new file "document.arxml" in directory "data"
+base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "data"))
+writer = Writer()
+writer.write_file(document, os.path.join(base_path, "document.arxml"))
+```
+
+If you want to avoid creating the Document object(s) manually, the Workspace class offers several convience methods related to saving XML.
+
+```python
+import os
+from autosar.xml import Workspace
+
+workspace = Workspace()
+# Create three packages in workspace
+workspace.make_packages("DataTypes", "PortInterfaces", "ComponentTypes")
+# Save each package to a separate file inside the "data" directory
+base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "data"))
+workspace.create_document(os.path.join(base_path, "datatypes.arxml"),
+                          packages="/DataTypes")
+workspace.create_document(os.path.join(base_path, "port_interfaces.arxml"),
+                          packages="/PortInterfaces")
+workspace.create_document(os.path.join(base_path, "component_types.arxml"),
+                          packages="/ComponentTypes")
+workspace.write_documents()
+```
+
+### Creating data types
+
+The module `autosar.xml.element` contains all supported elements that you can add to a package. Just call the constructor for an object you want to create and then append it to a package.
+
+Here's an example where we create both a base type and a simple implementation data type. Elements must be added to a package before you can reference it.
+
+```python
+import autosar.xml
+import autosar.xml.element as ar_element
+
+workspace = autosar.xml.Workspace()
+packages = dict(zip(["BaseTypes", "ImplementationDataTypes"],
+                    workspace.make_packages("DataTypes/BaseTypes",
+                                            "DataTypes/ImplementationDataTypes")))
+uint8_base_type = ar_element.SwBaseType("uint8")
+
+# Taking a reference before element is added to a package returns None
+print(uint8_base_type.ref())
+# Add base type to package
+packages["BaseTypes"].append(uint8_base_type)
+# Taking a reference after element is added to package returns a SwBaseTypeRef object
+print(uint8_base_type.ref())
+
+# Add implementation data type to package
+sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref=uint8_base_type.ref())
+inactive_active_t = ar_element.ImplementationDataType("InactiveActive_T",
+                                                      category="VALUE",
+                                                      sw_data_def_props=sw_data_def_props)
+# Add implementation data type to package
+packages["ImplementationDataTypes"].append(inactive_active_t)
+# Find newly added element by its reference
+element = workspace.find("/DataTypes/ImplementationDataTypes/InactiveActive_T")
+print(f"{element.name}: {str(type(element))}")
+```
+
+
+Output
+
+```text
+None
+/DataTypes/BaseTypes/uint8
+InactiveActive_T: <class 'autosar.xml.element.ImplementationDataType'>
+```
+
+Here's a more fleshed out example. It adds a `TEXTTABLE` CompuMethod and saves everything as an ARXML file. It also demonstrates how you control the XML schema version
+when saving the file.
+
+```python
+import os
+import autosar.xml
+import autosar.xml.element as ar_element
+
+workspace = autosar.xml.Workspace()
+packages = dict(zip(["BaseTypes", "ImplementationDataTypes", "CompuMethods"],
+                    workspace.make_packages("DataTypes/BaseTypes",
+                                            "DataTypes/ImplementationDataTypes",
+                                            "DataTypes/CompuMethods")))
+uint8_base_type = ar_element.SwBaseType("uint8")
+packages["BaseTypes"].append(uint8_base_type)
+
+# Create CompuMethod
+computation = ar_element.Computation.make_value_table(["Inactive",
+                                                       "Active",
+                                                       "Error",
+                                                       "NotAvailable"])
+compu_method = ar_element.CompuMethod(name='InactiveActive_T',
+                                      int_to_phys=computation,
+                                      category="TEXTTABLE")
+#Add new CompuMethod to CompuMethods package
+packages["CompuMethods"].append(compu_method)
+# Create ImplementantationDataType, referencing the CompuMethod from different package
+sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref=uint8_base_type.ref(),
+                                                         compu_method_ref=compu_method.ref())
+inactive_active_t = ar_element.ImplementationDataType("InactiveActive_T",
+                                                      category="VALUE",
+                                                      sw_data_def_props=sw_data_def_props)
+packages["ImplementationDataTypes"].append(inactive_active_t)
+# Save DataType package and all its sub-packages into data/datatypes.arxml
+# Before saving documents, set schema-version to 48 (R19-11) (Default is 51 or R22-11)
+base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "data"))
+workspace.create_document(os.path.join(base_path, "datatypes.arxml"), packages="/DataTypes")
+workspace.write_documents(scehema_version=48)
+```
+
+### Reading XML files
+
+Use the Reader class to read ARXML from files or strings. The read-methods produces `Document` objects.
+
+```python
+import os
+from autosar.xml import Reader
+
+# Read document from file "data/datatypes.arxml"
+base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "data"))
+file_path = os.path.join(base_path, "datatypes.arxml")
+reader = Reader()
+document = reader.read_file(file_path)
+# Find element by reference and then print name and type
+data_type = document.find("/DataTypes/ImplementationDataTypes/InactiveActive_T")
+print(f"{data_type.name}: {str(type(data_type))}")
+```
+
+Output
+
+```text
+InactiveActive_T: <class 'autosar.xml.element.ImplementationDataType'>
+```
+
+### RTE generator
+
+RTE generation is in prototype stage and can't do very much at this point.
+Here's a simple example how to generate the `Rte_Type.h` header file containing a single type definition.
+
+It uses the latest version of [cfile](https://github.com/cogu/cfile) which has been completely rewritten to better handle complex code generation scenarios.
+
+```python
+import os
+import autosar.xml
+import autosar.xml.element as ar_element
+from autosar.generator import TypeGenerator
+from autosar.model import ImplementationModel
+
+workspace = autosar.xml.Workspace()
+packages = dict(zip(["BaseTypes", "ImplementationDataTypes"],
+                    workspace.make_packages("DataTypes/BaseTypes",
+                                            "DataTypes/ImplementationDataTypes")))
+uint8_base_type = ar_element.SwBaseType("uint8")
+packages["BaseTypes"].append(uint8_base_type)
+sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref=uint8_base_type.ref())
+inactive_active_t = ar_element.ImplementationDataType("InactiveActive_T",
+                                                      category="VALUE",
+                                                      sw_data_def_props=sw_data_def_props)
+packages["ImplementationDataTypes"].append(inactive_active_t)
+# Create ImplementationModel from XML workspace
+implementation = ImplementationModel(workspace)
+# Create data-type instance inside ImplementationModel
+implementation.create_from_element(inactive_active_t)
+# Generate RTE Types header in "data" folder
+type_generator = TypeGenerator(implementation)
+base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "data"))
+type_generator.write_type_header(base_path)
+```
+
+Content of Rte_Type.h
+
+```c
+#ifndef RTE_TYPE_H_
+#define RTE_TYPE_H_
+
+#ifndef __cplusplus
+extern "C"
+{
+#endif
+
+/***********************************
+*             INCLUDES             *
+************************************/
+#include "Rte.h"
+
+/***********************************
+*     CONSTANTS AND DATA TYPES     *
+************************************/
+
+typedef uint8 InactiveActive_T;
+
+#ifndef __cplusplus
+}
+#endif // __cplusplus
+#endif // RTE_TYPE_H_
+```
+
+
+## Python Module Hierachy
+
+### autosar.xml
+
+Packages for handling AUTOSAR XML (ARXML).
+
+### autosar.model
+
+Implementation model, an intermediate model between XML and RTE generation.
+
+### autosar.generator
+
+RTE generators. Right now it only has a generator for the RTE type header.
+This part is in early stages of development and is probably not very useful to anyone.
+
+## Development Roadmap
+
+Below is a very rough roadmap of planned releases.
+
+**v0.5.0:** Data types
+
+**v0.5.1:** Value specifications and constants
+
+**v0.5.2:** Port interfaces
+
+**v0.5.3:** Components and ports
+
+**v0.5.4:** Component (internal) behavior
+
+(There will probably be some intermediate versions here since behavior is a huge area.)
+
+**v0.5.?:** System description
+
+**v0.6.0:** First stable release. Publish to PyPI.
+

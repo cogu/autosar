@@ -19,13 +19,8 @@ def main():
     uint8_base_type = ar_element.SwBaseType("uint8")
     packages["BaseTypes"].append(uint8_base_type)
     sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref=uint8_base_type.ref())
-    uint8_impl_type = ar_element.ImplementationDataType("uint8",
-                                                        category="VALUE",
-                                                        sw_data_def_props=sw_data_def_props, type_emitter="Platform")
-    packages["ImplementationDataTypes"].append(uint8_impl_type)
-    sw_data_def_props = ar_element.SwDataDefPropsConditional(impl_data_type_ref=uint8_impl_type.ref())
     inactive_active_t = ar_element.ImplementationDataType("InactiveActive_T",
-                                                          category="TYPE_REFERENCE",
+                                                          category="VALUE",
                                                           sw_data_def_props=sw_data_def_props)
     packages["ImplementationDataTypes"].append(inactive_active_t)
 
