@@ -179,6 +179,20 @@ class Reader:
         self._read_packages()
         return self.document
 
+    def read_str(self, xml: str) -> None | ar_document.Document:
+        """
+        Reads ARXML document from string.
+        """
+        self.observed_unsupported_elements = set()
+        self.document = None
+        self.xml_root = ElementTree.fromstring(bytes(xml, encoding="utf-8"))
+        self.file_path = ""
+        self.file_base_name = ""
+        self._clean_namespace('http://autosar.org/schema/r4.0')
+        self._read_root_element()
+        self._read_packages()
+        return self.document
+
     def read_str_elem(self, xml: str, type_name: str | None = None) -> None | ar_element.ARObject:
         """
         Reads a concrete ARXML element from string.
@@ -459,10 +473,10 @@ class Reader:
         Reads AR:AR-PACKAGE.ELEMENTS
         Type: Utility
         """
-        for xml_child_package in xml_packages.findall('./PACKAGE'):
+        for xml_child_package in xml_packages.findall('./AR-PACKAGE'):
             child_package = self._read_package(xml_child_package)
             assert isinstance(child_package, ar_element.Package)
-            package.packages.append(child_package)
+            package.append(child_package)
 
     # Documentation elements
 
@@ -1267,7 +1281,7 @@ class Reader:
         self._report_unprocessed_elements(child_elements)
         return ar_element.SwAddrMethod(**data)
 
-    def _read_sw_addr_method_group(self, child_elements: ChildElementMap, data: dict) -> None:
+    def _read_sw_addr_method_group(self, child_elements: ChildElementMap, _: dict) -> None:
         """
         Reads group AR:SW-ADDR-METHOD
         Type: Utility
@@ -2043,7 +2057,7 @@ class Reader:
         self._report_unprocessed_elements(child_elements)
         return data
 
-    def _read_variable_data_prototype_elem(self, xml_elements: ChildElementMap, data: dict) -> None:
+    def _read_variable_data_prototype_elem(self, xml_elements: ChildElementMap, _: dict) -> None:
         xml_init_value = xml_elements.find('INIT-VALUE')
         if xml_init_value is not None:
             pass
