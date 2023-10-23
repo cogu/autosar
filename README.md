@@ -11,12 +11,14 @@ It has some support for parsing ARXML files.
 
 Python AUTOSAR v0.5+ uses a new API and is incompatible with previous versions.
 
+Currently, only AUTOSAR data types are supported. If you want a full API, wait for v0.6.0.
+
 For Python AUTOSAR v0.4, see the [v0.4 maintenance branch](https://github.com/cogu/autosar/tree/maintenance/0.4).
 
 ### Key features
 
 * New class hierachy
-  * Attempt to follow the AUTOSAR XML schema file where possible.
+  * Follow the structure of the AUTOSAR XML schema where possible.
 * Snake-case naming of variables and methods (Follow PEP8 standard).
 * Modern type hinting (this unfortunately requires Python 3.10 or later).
 * Python Enum classes for enumeration types.
@@ -64,6 +66,8 @@ git checkout v0.3.1
 cd ..
 python -m pip install cfile_0.3
 ```
+
+You can delete the directory `cfile_0.3` after install.
 
 ### Standard install
 
@@ -190,8 +194,9 @@ workspace = autosar.xml.Workspace()
 packages = dict(zip(["BaseTypes", "ImplementationDataTypes"],
                     workspace.make_packages("DataTypes/BaseTypes",
                                             "DataTypes/ImplementationDataTypes")))
-uint8_base_type = ar_element.SwBaseType("uint8")
 
+#Create new base type
+uint8_base_type = ar_element.SwBaseType("uint8")
 # Taking a reference before element is added to a package returns None
 print(uint8_base_type.ref())
 # Add base type to package
@@ -199,7 +204,7 @@ packages["BaseTypes"].append(uint8_base_type)
 # Taking a reference after element is added to package returns a SwBaseTypeRef object
 print(uint8_base_type.ref())
 
-# Add implementation data type to package
+# Create new implementation data type
 sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref=uint8_base_type.ref())
 inactive_active_t = ar_element.ImplementationDataType("InactiveActive_T",
                                                       category="VALUE",
@@ -210,7 +215,6 @@ packages["ImplementationDataTypes"].append(inactive_active_t)
 element = workspace.find("/DataTypes/ImplementationDataTypes/InactiveActive_T")
 print(f"{element.name}: {str(type(element))}")
 ```
-
 
 Output
 
@@ -262,7 +266,7 @@ workspace.write_documents(scehema_version=48)
 
 ### Reading XML files
 
-Use the Reader class to read ARXML from files or strings. The read-methods produces `Document` objects.
+Use the Reader class to read ARXML from files or strings. The read-methods produce `Document` objects.
 
 ```python
 import os
@@ -347,7 +351,6 @@ typedef uint8 InactiveActive_T;
 #endif // RTE_TYPE_H_
 ```
 
-
 ## Python Module Hierachy
 
 ### autosar.xml
@@ -361,11 +364,11 @@ Implementation model, an intermediate model between XML and RTE generation.
 ### autosar.generator
 
 RTE generators. Right now it only has a generator for the RTE type header.
-This part is in early stages of development and is probably not very useful to anyone.
+This part is in early stages of development and is probably not very useful.
 
 ## Development Roadmap
 
-Below is a very rough roadmap of planned releases.
+Below is a rough roadmap of planned releases.
 
 **v0.5.0:** Data types
 
@@ -382,4 +385,3 @@ Below is a very rough roadmap of planned releases.
 **v0.5.?:** System description
 
 **v0.6.0:** First stable release. Publish to PyPI.
-
