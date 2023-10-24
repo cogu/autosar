@@ -4,27 +4,32 @@
 
 A set of Python modules for working with [AUTOSAR](https://www.autosar.org/) XML files.
 
-The primary use case is to enable Python to generate ARXML files for further importing into other (commercial) AUTOSAR toolchains.
-It has some support for parsing ARXML files.
+The primary use case is to enable Python to generate ARXML files for import in other (commercial) AUTOSAR toolchains.
+It also has some support for parsing AUTOSAR XML files.
+
+**Important notes:**
+
+1. Python AUTOSAR v0.5+ uses a new API and is incompatible with previous versions.
+2. Currently, only AUTOSAR data types are supported. If you want a full API, wait for v0.6.0.
+3. For Python AUTOSAR v0.4, see the [v0.4 maintenance branch](https://github.com/cogu/autosar/tree/maintenance/0.4).
 
 ## Major design changes
 
-Python AUTOSAR v0.5+ uses a new API and is incompatible with previous versions.
+AUTOSAR v0.5 has been rewritten and modernized.
 
-Currently, only AUTOSAR data types are supported. If you want a full API, wait for v0.6.0.
-
-For Python AUTOSAR v0.4, see the [v0.4 maintenance branch](https://github.com/cogu/autosar/tree/maintenance/0.4).
-
-### Key features
+**Key features:**
 
 * New class hierachy
-  * Follow the structure of the AUTOSAR XML schema where possible.
+  * Follows the structure of the AUTOSAR XML schema where possible.
 * Snake-case naming of variables and methods (Follow PEP8 standard).
 * Modern type hinting (this unfortunately requires Python 3.10 or later).
 * Python Enum classes for enumeration types.
 * Improved XML reading and writing with lxml.
-* Linting - Source is checked with both Pylint and flake8.
-* Unit tests - New test suite that is more complete and is faster to execute.
+* Linting support
+  * Source code is checked with both Pylint and flake8.
+* New unit test suite
+  * More comprehensive unit tests for every element.
+  * Much faster to run as it uses the new XML reader and writer.
 
 ## Supported AUTOSAR versions
 
@@ -67,7 +72,7 @@ cd ..
 python -m pip install cfile_0.3
 ```
 
-You can delete the directory `cfile_0.3` after install.
+You can delete the directory `cfile_0.3` after preparation step.
 
 ### Standard install
 
@@ -102,7 +107,7 @@ workspace = autosar.xml.Workspace()
 
 Packages are created using the `make_packages` method. It can recursively create packages as if they are directories.
 
-If you give it one argument it will return the package created. If you give it more than one argument it will return a list of the packages created.
+If you give it a single argument it will return the package created. If you give it multiple arguments it will return a list of packages created.
 
 ```python
 import autosar.xml
@@ -121,7 +126,7 @@ BaseTypes
 ImplementationDataTypes
 ```
 
-Using the builtin `zip`-method you can easily convert the returned list into a dictionary.
+Using the builtin `zip`-method you can easily convert the returned list to a dictionary.
 
 ```python
 import autosar.xml
@@ -160,7 +165,7 @@ writer = Writer()
 writer.write_file(document, os.path.join(base_path, "document.arxml"))
 ```
 
-If you want to avoid creating the Document object(s) manually, the Workspace class offers several convience methods related to saving XML.
+If you want to avoid creating the Document object(s) manually, the Workspace class offers several convenience methods related to saving XML.
 
 ```python
 import os
@@ -180,11 +185,13 @@ workspace.create_document(os.path.join(base_path, "component_types.arxml"),
 workspace.write_documents()
 ```
 
-### Creating data types
+### Creating elements
 
 The module `autosar.xml.element` contains all supported elements that you can add to a package. Just call the constructor for an object you want to create and then append it to a package.
 
-Here's an example where we create both a base type and a simple implementation data type. Elements must be added to a package before you can reference it.
+Some classes, such as `Computation` has static helper methods starting with `make_`. They act like factory-methods for commonly used creation-patterns and returns a constructed object.
+
+Here's an example where we create both a base type and a simple implementation data type. Newly created elements must be added to a package before they can be referenced by other elements.
 
 ```python
 import autosar.xml
@@ -197,12 +204,12 @@ packages = dict(zip(["BaseTypes", "ImplementationDataTypes"],
 
 #Create new base type
 uint8_base_type = ar_element.SwBaseType("uint8")
-# Taking a reference before element is added to a package returns None
+# Taking a reference before the element is added to a package returns None
 print(uint8_base_type.ref())
 # Add base type to package
 packages["BaseTypes"].append(uint8_base_type)
-# Taking a reference after element is added to package returns a SwBaseTypeRef object
-print(uint8_base_type.ref())
+# Taking a reference after the element is added to package returns a SwBaseTypeRef object
+print(uint8_base_type.ref()) # SwBaseTypeRef has built-in string conversion
 
 # Create new implementation data type
 sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref=uint8_base_type.ref())
@@ -224,7 +231,7 @@ None
 InactiveActive_T: <class 'autosar.xml.element.ImplementationDataType'>
 ```
 
-Here's a more fleshed out example. It adds a `TEXTTABLE` CompuMethod and saves everything as an ARXML file. It also demonstrates how you control the XML schema version
+Here's a more fleshed out example, tt adds a `TEXTTABLE` CompuMethod and saves everything to an ARXML file. It also demonstrates how you control the XML schema version
 when saving the file.
 
 ```python
