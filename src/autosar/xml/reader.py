@@ -95,13 +95,14 @@ class Reader:
             # CompuMethod
             'COMPU-METHOD': self._read_compu_method,
 
-            # Data Dictionary
+            # Data type elements
             'APPLICATION-ARRAY-DATA-TYPE': self._read_application_array_data_type,
             'APPLICATION-RECORD-DATA-TYPE': self._read_application_record_data_type,
             'APPLICATION-PRIMITIVE-DATA-TYPE': self._read_application_primitive_data_type,
             'SW-BASE-TYPE': self._read_sw_base_type,
             'SW-ADDR-METHOD': self._read_sw_addr_method,
             'IMPLEMENTATION-DATA-TYPE': self._read_implementation_data_type,
+            'DATA-TYPE-MAPPING-SET': self._read_data_type_mapping_set,
 
             # Constraint elements
             'DATA-CONSTR': self._read_data_constraint,
@@ -111,9 +112,6 @@ class Reader:
 
             # Unit elements
             'UNIT': self._read_unit,
-
-            # Datatype elements
-            'DATA-TYPE-MAPPING-SET': self._read_data_type_mapping_set,
         }
         self.switcher_non_collectable = {  # Non-collectable, used only for unit testing
             # Documentation elements
@@ -143,7 +141,7 @@ class Reader:
             'INTERNAL-CONSTRS': self._read_internal_constraint,
             'PHYS-CONSTRS': self._read_physical_constraint,
             'DATA-CONSTR-RULE': self._read_data_constraint_rule,
-            # DataDictionary elements
+            # Data type elements
             'BASE-TYPE-REF': self._read_sw_base_type_ref,
             'SW-BIT-REPRESENTATION': self._read_sw_bit_representation,
             'SW-DATA-DEF-PROPS-CONDITIONAL': self._read_sw_data_def_props_conditional,
@@ -152,11 +150,10 @@ class Reader:
             'SYMBOL-PROPS': self._read_symbol_props,
             'IMPLEMENTATION-DATA-TYPE-ELEMENT': self._read_implementation_data_type_element,
             'APPLICATION-RECORD-ELEMENT': self._read_application_record_element,
+            'DATA-TYPE-MAP': self._read_data_type_map,
             # Reference elements
             'PHYSICAL-DIMENSION-REF': self._read_physical_dimension_ref,
             'APPLICATION-DATA-TYPE-REF': self._read_application_data_type_ref,
-            # Datatype elements
-            'DATA-TYPE-MAP': self._read_data_type_map,
         }
         self.switcher_all = {}
         self.switcher_all.update(self.switcher_collectable)
@@ -1264,7 +1261,7 @@ class Reader:
         if xml_child is not None:
             data["physical_dimension_ref"] = self._read_physical_dimension_ref(xml_child)
 
-    # DataDictionary elements
+    # Data type elements
 
     def _read_sw_addr_method(self, xml_element: ElementTree.Element) -> ar_element.SwAddrMethod:
         """
@@ -1894,7 +1891,7 @@ class Reader:
             self._raise_parse_error(xml_elem, f"Invalid DEST attribute '{dest_text}'. Expected 'UNIT'")
         return ar_element.UnitRef(xml_elem.text)
 
-    def _read_physical_dimension_ref(self, xml_elem: ElementTree.Element) -> ar_element.PhysicalDimentionRef:
+    def _read_physical_dimension_ref(self, xml_elem: ElementTree.Element) -> ar_element.PhysicalDimensionRef:
         """
         Reads PHYSICAL-DIMENSION-REF
         Type: Concrete
@@ -1904,7 +1901,7 @@ class Reader:
         dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', dest_text, self.schema_version)
         if dest_enum != ar_enum.IdentifiableSubTypes.PHYSICAL_DIMENSION:
             self._raise_parse_error(xml_elem, f"Invalid DEST attribute '{dest_text}'. Expected 'PHYSICAL-DIMENSION'")
-        return ar_element.PhysicalDimentionRef(xml_elem.text)
+        return ar_element.PhysicalDimensionRef(xml_elem.text)
 
     def _read_index_data_type_ref(self, xml_elem: ElementTree.Element) -> ar_element.IndexDataTypeRef:
         """
@@ -1948,8 +1945,6 @@ class Reader:
         data['dest'] = attr.get('DEST', None)
         if data['dest'] is None:
             raise ar_exception.ParseError("Missing required attribute 'DEST'")
-
-    # DataType elements
 
     def _read_data_type_map(self, xml_element: ElementTree.Element) -> ar_element.DataTypeMap:
         """

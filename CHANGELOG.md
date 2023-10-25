@@ -1,51 +1,83 @@
 # Changelog
 
-Notable changes.
+Elements marked as `collectable` means that they can be added directly to a package.
+Non-collectable elements are various sub-elements to collectable elements.
 
-## [Unreleased]
+The name in the parenthesis after each element is the name used in the XML schema (XSD file).
 
-### XML - Collectable elements
+## [v0.5.0]
 
-* ApplicationArrayDataType
-* ApplicationPrimitiveDataType
-* ApplicationRecordDataType
-* CompuMethod
-* DataConstraint
-* ImplementationDataType
-* SwBaseType
-* Unit
-* DataTypeMappingSet
+### Added
 
-### XML - Documentation elements
+#### XML - Documentation elements
 
-* DocumentationBlock
-* EmphasisText
-* MultiLanguageLongName
-* MultiLanguageOverviewParagraph
-* MultiLanguageParagraph
-* MultiLanguageVerbatim
-* Subscript
-* Superscript
-* TechnicalTerm
+* DocumentationBlock | DOCUMENTATION-BLOCK
+* EmphasisText | EMPHASIS-TEXT
+* MultilanguageLongName | MULTILANGUAGE-LONG-NAME
+* MultiLanguageOverviewParagraph | MULTI-LANGUAGE-OVERVIEW-PARAGRAPH
+* MultiLanguageParagraph | MULTI-LANGUAGE-PARAGRAPH
+* MultiLanguageVerbatim | MULTI-LANGUAGE-VERBATIM
+* Subscript | SUPSCRIPT (This not a typo)
+* Superscript | SUPSCRIPT
+* TechnicalTerm | TT
 
-### XML - DataDictionary elements
+#### XML - Data type elements
 
-* ApplicationArrayElement
-* ApplicationRecordElement
-* AutosarDataType
-* ImplementationDataTypeElement
-* SwBitRepresentation
-* SwDataDefProps
-* SwDataDefPropsConditional
-* SwPointerTargetProps
-* SwTextProps
-* SymbolProps
+* ApplicationArrayDataType | APPLICATION-ARRAY-DATA-TYPE | `collectable`
+* ApplicationPrimitiveDataType |  APPLICATION-PRIMITIVE-DATA-TYPE |  `collectable`
+* ApplicationRecordDataType |  APPLICATION-RECORD-DATA-TYPE |  `collectable`
+* DataTypeMappingSet | DATA-TYPE-MAPPING-SET | `collectable`
+* ImplementationDataType |  IMPLEMENTATION-DATA-TYPE |  `collectable`
+* SwBaseType |  SW-BASE-TYPE |  `collectable`
+* ApplicationArrayElement |  APPLICATION-ARRAY-ELEMENT
+* ApplicationRecordElement |  APPLICATION-RECORD-ELEMENT
+* AutosarDataType |  AUTOSAR-DATA-TYPE
+* DataTypeMap |  DATA-TYPE-MAP
+* ImplementationDataTypeElement |  IMPLEMENTATION-DATA-TYPE-ELEMENT
+* SwBitRepresentation | SW-BIT-REPRESENTATION
+* SwDataDefProps | SW-DATA-DEF-PROPS
+* SwDataDefPropsConditional | SW-DATA-DEF-PROPS-CONDITIONAL + SW-DATA-DEF-PROPS-CONTENT
+* SwPointerTargetProps | SW-POINTER-TARGET-PROPS
+* SwTextProps | SW-TEXT-PROPS
+* SymbolProps | SYMBOL-PROPS
 
-### XML - Datatype elements
+#### XML - Unit elements
 
-* DataTypeMap
+* Unit | UNIT | `collectable`
 
-### Implementation Model - Elements
+#### XML - Computation and constraint elements
+
+* CompuMethod |  COMPU-METHOD |  `collectable`
+* DataConstraint |  DATA-CONSTR |  `collectable`
+* CompuConst |  COMPU-CONST
+* CompuRational |  COMPU-RATIONAL-COEFFS
+* CompuScale |  COMPU-SCALE
+* Computation |  COMPU
+* DataConstraintRule |  DATA-CONSTR-RULE
+* InternalConstraint |  INTERNAL-CONSTRS
+* PhysicalConstraint |  PHYS-CONSTRS
+* ScaleConstraint |  SCALE-CONSTR
+
+#### XML - Reference elements
+
+These elements exist in Python only. They are returned as objects when calling
+the `ref` method on various XML elements.
+
+Only a handful of XML element classes have their corresponding `ref` method implemented (will be fixed later).
+
+* ApplicationDataTypeRef
+* AutosarDataTypeRef
+* CompuMethodRef
+* DataConstraintRef
+* FunctionPtrSignatureRef
+* ImplementationDataTypeRef
+* IndexDataTypeRef
+* PhysicalDimensionRef
+* SwAddrMethodRef
+* SwBaseTypeRef
+* UnitRef
+
+#### Implementation Model - Elements
 
 * ArrayType
 * BaseType
@@ -54,7 +86,7 @@ Notable changes.
 * RefType
 * ScalarType
 
-### RTE Data Type Generator
+#### RTE Data Type Generator
 
 * ArrayType
 * BaseType

@@ -408,7 +408,7 @@ class DataConstraintRef(BaseRef):
         return {ar_enum.IdentifiableSubTypes.DATA_CONSTR}
 
 
-class PhysicalDimentionRef(BaseRef):
+class PhysicalDimensionRef(BaseRef):
     """
     PhysicalDimension reference
     """
@@ -1548,11 +1548,11 @@ class Unit(ARElement):
                  display_name: str | SingleLanguageUnitNames | None = None,
                  factor: float | None = None,
                  offset: float | None = None,
-                 physical_dimension_ref: str | PhysicalDimentionRef | None = None,
+                 physical_dimension_ref: str | PhysicalDimensionRef | None = None,
                  **kwargs: dict) -> None:
         super().__init__(name, **kwargs)
         self.display_name: SingleLanguageUnitNames | None = None  # .DISPLAY-NAME
-        self.physical_dimension_ref: PhysicalDimentionRef | None = None  # .PHYSICAL-DIMENSION-REF
+        self.physical_dimension_ref: PhysicalDimensionRef | None = None  # .PHYSICAL-DIMENSION-REF
         self.factor: float | None = None  # .FACTOR-SI-TO-UNIT
         self.offset: float | None = None  # .OFFSET-SI-TO-UNIT
         if display_name is not None:
@@ -1564,8 +1564,8 @@ class Unit(ARElement):
                 raise TypeError(f"display_name: Invalid type '{str(type(display_name))}'")
         if physical_dimension_ref is not None:
             if isinstance(physical_dimension_ref, str):
-                self.physical_dimension_ref = PhysicalDimentionRef(display_name)
-            elif isinstance(physical_dimension_ref, PhysicalDimentionRef):
+                self.physical_dimension_ref = PhysicalDimensionRef(display_name)
+            elif isinstance(physical_dimension_ref, PhysicalDimensionRef):
                 self.physical_dimension_ref = physical_dimension_ref
             else:
                 raise TypeError(f"physical_dimension_ref: Invalid type '{str(type(physical_dimension_ref))}'")
@@ -1573,7 +1573,7 @@ class Unit(ARElement):
         self._assign_optional('offset', offset, float)
 
 
-# Data dictionary elements
+# Data type elements
 
 
 class BaseType(ARElement):
@@ -1947,7 +1947,7 @@ class ImplementationDataTypeElement(Identifiable):
 
 class ImplementationDataType(AutosarDataType):
     """
-    IMPLEMENTATION-DATA-TYPE
+    AR: IMPLEMENTATION-DATA-TYPE
     Type: Concrete
     Tag Variants: 'IMPLEMENTATION-DATA-TYPE'
     """
@@ -2229,35 +2229,6 @@ class ApplicationRecordDataType(ApplicationCompositeDataType):
         value = '/'.join(reversed(ref_parts))
         return ApplicationDataTypeRef(value, ar_enum.IdentifiableSubTypes.APPLICATION_RECORD_DATA_TYPE)
 
-# Software address method (partly implemented)
-
-
-class SwAddrMethod(ARElement):
-    """
-    Complex-type AR:SW-ADDR-METHOD
-    Type: Concrete:
-    Tag Variants: SW-ADDR-METHOD
-    """
-
-    def __init__(self, name: str, **kwargs) -> None:
-        super().__init__(name, **kwargs)
-        self.memory_allocation_keyword_policy = None  # .MEMORY-ALLOCATION-KEYWORD-POLICY
-        self.options = []  # .OPTIONS
-        self.section_initialization_policy = None  # .SECTION-INITIALIZATION-POLICY
-        self.section_type = None  # .SECTION-TYPE
-
-    def ref(self) -> SwAddrMethodRef:
-        """
-        Reference
-        """
-        assert self.parent is not None
-        ref_parts: list[str] = [self.name]
-        self.parent.update_ref_parts(ref_parts)
-        value = '/'.join(reversed(ref_parts))
-        return SwAddrMethodRef(value)
-
-# Datatype elements
-
 
 class DataTypeMap(ARObject):
     """
@@ -2307,6 +2278,34 @@ class DataTypeMappingSet(ARElement):
             self.data_type_maps.append(element)
         else:
             raise TypeError(f'Unexpected type: "{str(type(element))}"')
+
+
+# Software address method (partly implemented)
+
+
+class SwAddrMethod(ARElement):
+    """
+    Complex-type AR:SW-ADDR-METHOD
+    Type: Concrete:
+    Tag Variants: SW-ADDR-METHOD
+    """
+
+    def __init__(self, name: str, **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.memory_allocation_keyword_policy = None  # .MEMORY-ALLOCATION-KEYWORD-POLICY
+        self.options = []  # .OPTIONS
+        self.section_initialization_policy = None  # .SECTION-INITIALIZATION-POLICY
+        self.section_type = None  # .SECTION-TYPE
+
+    def ref(self) -> SwAddrMethodRef:
+        """
+        Reference
+        """
+        assert self.parent is not None
+        ref_parts: list[str] = [self.name]
+        self.parent.update_ref_parts(ref_parts)
+        value = '/'.join(reversed(ref_parts))
+        return SwAddrMethodRef(value)
 
 # !!UNFINISHED!! Port Interfaces
 

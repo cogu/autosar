@@ -43,6 +43,10 @@ When saving, use the `schema_version` parameter to select desired version (integ
 
 Only Clasic AUTOSAR will be supported.
 
+## Supported XML elements
+
+For currently supported XML elements, see the [CHANGELOG](CHANGELOG.md) file.
+
 ## Requirements
 
 * Python 3.10+
