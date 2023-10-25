@@ -11,13 +11,13 @@ import autosar # noqa E402
 
 class TestPhysicalDimensionRef(unittest.TestCase):
     def test_write_read_default(self):
-        element = ar_element.PhysicalDimentionRef("/PhysDimensions/Dimension")
+        element = ar_element.PhysicalDimensionRef("/PhysDimensions/Dimension")
         writer = autosar.xml.Writer()
         xml = '<PHYSICAL-DIMENSION-REF DEST="PHYSICAL-DIMENSION">/PhysDimensions/Dimension</PHYSICAL-DIMENSION-REF>'
         self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
-        elem: ar_element.PhysicalDimentionRef = reader.read_str_elem(xml)
-        self.assertIsInstance(elem, ar_element.PhysicalDimentionRef)
+        elem: ar_element.PhysicalDimensionRef = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.PhysicalDimensionRef)
         self.assertEqual(str(elem), "/PhysDimensions/Dimension")
 
 class TestUnit(unittest.TestCase): # noqa D101
@@ -76,7 +76,7 @@ class TestUnit(unittest.TestCase): # noqa D101
 
     def test_write_read_physical_dimension_ref(self): # noqa D102
         element = ar_element.Unit("MyUnit",
-                                  physical_dimension_ref=ar_element.PhysicalDimentionRef("/Dimensions/Dim1"))
+                                  physical_dimension_ref=ar_element.PhysicalDimensionRef("/Dimensions/Dim1"))
         writer = autosar.xml.Writer()
         xml = '''<UNIT>
   <SHORT-NAME>MyUnit</SHORT-NAME>

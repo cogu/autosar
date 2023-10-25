@@ -166,19 +166,18 @@ class Writer(_XMLWriter):
             'Package': self._write_package,
             # CompuMethod elements
             'CompuMethod': self._write_compu_method,
-            # DataDictionary elements
+            # Data type elements
             'ApplicationArrayDataType': self._write_application_array_data_type,
             'ApplicationRecordDataType': self._write_application_record_data_type,
             'ApplicationPrimitiveDataType': self._write_application_primitive_data_type,
             'SwBaseType': self._write_sw_base_type,
             'SwAddrMethod': self._write_sw_addr_method,
             'ImplementationDataType': self._write_implementation_data_type,
+            'DataTypeMappingSet': self._write_data_type_mapping_set,
             # DataConstraint elements
             'DataConstraint': self._write_data_constraint,
             # Unit elements
             'Unit': self._write_unit,
-            # Datatype elements
-            'DataTypeMappingSet': self._write_data_type_mapping_set,
         }
         # Elements used only for unit test purposes
         self.switcher_non_collectable = {
@@ -209,7 +208,7 @@ class Writer(_XMLWriter):
             'InternalConstraint': self._write_internal_constraint,
             'PhysicalConstraint': self._write_physical_constraint,
             'DataConstraintRule': self._write_data_constraint_rule,
-            # DataDictionary elements
+            # Data type elements
             'SwDataDefPropsConditional': self._write_sw_data_def_props_conditional,
             'SwBaseTypeRef': self._write_sw_base_type_ref,
             'SwBitRepresentation': self._write_sw_bit_represenation,
@@ -219,11 +218,10 @@ class Writer(_XMLWriter):
             'ImplementationDataTypeElement': self._write_implementation_data_type_element,
             'ApplicationArrayElement': self._write_application_array_element,
             'ApplicationRecordElement': self._write_application_record_element,
-            # Reference elements
-            'PhysicalDimentionRef': self._write_physical_dimension_ref,
-            'ApplicationDataTypeRef': self._write_application_data_type_ref,
-            # Datatype elements
             'DataTypeMap': self._write_data_type_map,
+            # Reference elements
+            'PhysicalDimensionRef': self._write_physical_dimension_ref,
+            'ApplicationDataTypeRef': self._write_application_data_type_ref,
         }
         self.switcher_all = {}  # All concrete elements (used for unit testing)
         self.switcher_all.update(self.switcher_collectable)
@@ -1070,7 +1068,7 @@ class Writer(_XMLWriter):
         if elem.physical_dimension_ref is not None:
             self._write_physical_dimension_ref(elem.physical_dimension_ref)
 
-    # DataDictionary elements
+    # Data type elements
 
     def _write_sw_addr_method(self, elem: ar_element.SwAddrMethod) -> None:
         """
@@ -1614,13 +1612,13 @@ class Writer(_XMLWriter):
         self._collect_base_ref_attr(elem, attr)
         self._add_content('UNIT-REF', elem.value, attr)
 
-    def _write_physical_dimension_ref(self, elem: ar_element.PhysicalDimentionRef) -> None:
+    def _write_physical_dimension_ref(self, elem: ar_element.PhysicalDimensionRef) -> None:
         """
         Writes PHYSICAL-DIMENSION-REF
         Type: Concrete
         Tag variants: 'PHYSICAL-DIMENSION-REF'
         """
-        assert isinstance(elem, ar_element.PhysicalDimentionRef)
+        assert isinstance(elem, ar_element.PhysicalDimensionRef)
         attr: TupleList = []
         self._collect_base_ref_attr(elem, attr)
         self._add_content('PHYSICAL-DIMENSION-REF', elem.value, attr)
@@ -1646,8 +1644,6 @@ class Writer(_XMLWriter):
         attr: TupleList = []
         self._collect_base_ref_attr(elem, attr)
         self._add_content(tag, elem.value, attr)
-
-# Datatype elements
 
     def _write_data_type_map(self, elem: ar_element.DataTypeMap) -> None:
         """
