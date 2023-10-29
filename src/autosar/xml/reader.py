@@ -17,6 +17,8 @@ import autosar.xml.enumeration as ar_enum
 
 MultiLanguageOverviewParagraph = ar_element.MultiLanguageOverviewParagraph
 
+# Helper classes
+
 
 class WrappedElement:
     """
@@ -73,6 +75,9 @@ class ChildElementMap:
         return self.elements.values()
 
 
+# Reader class
+
+
 class Reader:
     """
     ARXML Reader class
@@ -113,6 +118,14 @@ class Reader:
             # Unit elements
             'UNIT': self._read_unit,
         }
+        # Value specification elements
+        self.switcher_value_specification = {
+            'TEXT-VALUE-SPECIFICATION': self._read_text_value_specification,
+            'NUMERICAL-VALUE-SPECIFICATION': self._read_numerical_value_specification,
+            'NOT-AVAILABLE-VALUE-SPECIFICATION': self._read_not_available_value_specification,
+            'ARRAY-VALUE-SPECIFICATION': self._read_array_value_specification,
+            'RECORD-VALUE-SPECIFICATION': self._read_record_value_specification,
+        }
         self.switcher_non_collectable = {  # Non-collectable, used only for unit testing
             # Documentation elements
             'ANNOTATION': self._read_annotation,
@@ -151,12 +164,14 @@ class Reader:
             'IMPLEMENTATION-DATA-TYPE-ELEMENT': self._read_implementation_data_type_element,
             'APPLICATION-RECORD-ELEMENT': self._read_application_record_element,
             'DATA-TYPE-MAP': self._read_data_type_map,
+
             # Reference elements
             'PHYSICAL-DIMENSION-REF': self._read_physical_dimension_ref,
             'APPLICATION-DATA-TYPE-REF': self._read_application_data_type_ref,
         }
         self.switcher_all = {}
         self.switcher_all.update(self.switcher_collectable)
+        self.switcher_all.update(self.switcher_value_specification)
         self.switcher_all.update(self.switcher_non_collectable)
         self._switcher_type_name = {
             "ApplicationArrayElement": self._read_application_array_element
@@ -1311,18 +1326,16 @@ class Reader:
         xml_child: ElementTree.Element | None = None
         xml_child = child_elements.get('BASE-TYPE-SIZE')
         if xml_child is not None:
-            data['size'] = int(xml_child.text)  # TODO: Verify positive integer
+            data['size'] = ar_element.PositiveIntegerValue(xml_child.text).value
         xml_child = child_elements.get('MAX-BASE-TYPE-SIZE')
         if xml_child is not None:
-            # TODO: Verify positive integer
-            data['max_size'] = int(xml_child.text)
+            data['max_size'] = ar_element.PositiveIntegerValue(xml_child.text).value
         xml_child = child_elements.get('BASE-TYPE-ENCODING')
         if xml_child is not None:
             data['encoding'] = str(xml_child.text)
         xml_child = child_elements.get('MEM-ALIGNMENT')
         if xml_child is not None:
-            # TODO: Verify positive integer
-            data['alignment'] = int(xml_child.text)
+            data['alignment'] = ar_element.PositiveIntegerValue(xml_child.text).value
         xml_child = child_elements.get('BYTE-ORDER')
         if xml_child is not None:
             data['byte_order'] = ar_enum.xml_to_enum(
@@ -1981,6 +1994,7 @@ class Reader:
     def _read_read_data_type_mapping_set_group(self, child_elements: ChildElementMap, data: dict) -> None:
         """
         Reads group AR:DATA-TYPE-MAPPING-SET
+        Type: Abstract
         """
         xml_child = child_elements.get("DATA-TYPE-MAPS")
         if xml_child is not None:
@@ -1988,6 +2002,152 @@ class Reader:
             for xml_data_type_map_element in xml_child.findall("./DATA-TYPE-MAP"):
                 data_type_maps.append(self._read_data_type_map(xml_data_type_map_element))
             data["data_type_maps"] = data_type_maps
+
+    # Constant and value specifications
+
+    def _read_text_value_specification(self,
+                                       xml_element: ElementTree.Element) -> ar_element.TextValueSpecification:
+        """
+        Reads complex-type AR:TEXT-VALUE-SPECIFICATION
+        Type: Concrete
+        Tag variants: 'TEXT-VALUE-SPECIFICATION'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_value_specification_group(child_elements, data)
+        self._read_text_value_specification_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        element = ar_element.TextValueSpecification(**data)
+        return element
+
+    def _read_text_value_specification_group(self,
+                                             child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:TEXT-VALUE-SPECIFICATION
+        """
+        xml_child = child_elements.get("VALUE")
+        if xml_child is not None:
+            data["value"] = xml_child.text
+
+    def _read_numerical_value_specification(self,
+                                            xml_element: ElementTree.Element
+                                            ) -> ar_element.NumericalValueSpecification:
+        """
+        Reads complex-type AR:NUMERICAL-VALUE-SPECIFICATION
+        Type: Concrete
+        Tag variants: 'NUMERICAL-VALUE-SPECIFICATION'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_value_specification_group(child_elements, data)
+        self._read_numerical_value_specification_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        element = ar_element.NumericalValueSpecification(**data)
+        return element
+
+    def _read_numerical_value_specification_group(self,
+                                                  child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:NUMERICAL-VALUE-SPECIFICATION
+        """
+        xml_child = child_elements.get("VALUE")
+        if xml_child is not None:
+            data["value"] = ar_element.NumericalValue(xml_child.text).value
+
+    def _read_not_available_value_specification(self,
+                                                xml_element: ElementTree.Element
+                                                ) -> ar_element.NotAvailableValueSpecification:
+        """
+        Reads complex-type AR:NOT-AVAILABLE-VALUE-SPECIFICATION
+        Type: Concrete
+        Tag variants: 'NOT-AVAILABLE-VALUE-SPECIFICATION'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_value_specification_group(child_elements, data)
+        self._read_not_available_value_specification_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        element = ar_element.NotAvailableValueSpecification(**data)
+        return element
+
+    def _read_not_available_value_specification_group(self,
+                                                      child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:NOT-AVAILABLE-VALUE-SPECIFICATION
+        """
+        xml_child = child_elements.get("DEFAULT-PATTERN")
+        if xml_child is not None:
+            wrapped_value = ar_element.PositiveIntegerValue(xml_child.text)
+            data["default_pattern"] = wrapped_value.value
+            # TODO: Add support for retaining used number format
+
+    def _read_array_value_specification(self,
+                                        xml_element: ElementTree.Element) -> ar_element.ArrayValueSpecification:
+        """
+        Reads complex-type AR:ARRAY-VALUE-SPECIFICATION
+        Type: Concrete
+        Tag variants: 'ARRAY-VALUE-SPECIFICATION'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_value_specification_group(child_elements, data)
+        self._read_array_value_specification_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        element = ar_element.ArrayValueSpecification(**data)
+        return element
+
+    def _read_array_value_specification_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:ARRAY-VALUE-SPECIFICATION
+        """
+        xml_elements = child_elements.get("ELEMENTS")
+        if xml_elements is not None:
+            elements = []
+            for xml_child_elem in xml_elements.findall('./*'):
+                read_method = self.switcher_value_specification.get(xml_child_elem.tag, None)
+                if read_method is not None:
+                    elements.append(read_method(xml_child_elem))
+                else:
+                    raise NotImplementedError(f"Found no reader for '{xml_child_elem.tag}'")
+            data["elements"] = elements
+
+    def _read_record_value_specification(self,
+                                         xml_element: ElementTree.Element) -> ar_element.RecordValueSpecification:
+        """
+        Reads complex-type AR:RECORD-VALUE-SPECIFICATION
+        Type: Concrete
+        Tag variants: 'RECORD-VALUE-SPECIFICATION'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_value_specification_group(child_elements, data)
+        self._read_record_value_specification_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        element = ar_element.RecordValueSpecification(**data)
+        return element
+
+    def _read_record_value_specification_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:NOT-AVAILABLE-VALUE-SPECIFICATION
+        """
+        xml_elements = child_elements.get("FIELDS")
+        if xml_elements is not None:
+            fields = []
+            for xml_child_elem in xml_elements.findall('./*'):
+                read_method = self.switcher_value_specification.get(xml_child_elem.tag, None)
+                if read_method is not None:
+                    fields.append(read_method(xml_child_elem))
+                else:
+                    raise NotImplementedError(f"Found no reader for '{xml_child_elem.tag}'")
+            data["fields"] = fields
+
+    def _read_value_specification_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:VALUE-SPECIFICATION
+        """
+        xml_child = child_elements.get("SHORT-LABEL")
+        if xml_child is not None:
+            data["label"] = xml_child.text
 
     # UNFINISHED ELEMENTS - NEEDS REFACTORING
 

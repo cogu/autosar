@@ -5,6 +5,20 @@ Non-collectable elements are various sub-elements to collectable elements.
 
 The name in the parenthesis after each element is the name used in the XML schema (XSD file).
 
+## [Unreleased]
+
+### Added
+
+* Value checker for positive integers
+
+#### XML - Value specification elements
+
+* TextValueSpecification | TEXT-VALUE-SPECIFICATION
+* NumericalValueSpecification | NUMERICAL-VALUE-SPECIFICATION
+* NotAvailableValueSpecification | NOT-AVAILABLE-VALUE-SPECIFICATION
+* ArrayValueSpecification | ARRAY-VALUE-SPECIFICATION
+* RecordValueSpecification | RECORD-VALUE-SPECIFICATION
+
 ## [v0.5.0]
 
 ### Added

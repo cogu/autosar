@@ -9,8 +9,6 @@ import autosar.xml.workspace as ar_workspace # noqa E402
 import autosar.xml.enumeration as ar_enum  # noqa E402
 import autosar.xml.element as ar_element  # noqa E402
 import autosar.xml.template as ar_template # noqa E402
-import autosar.xml.document as ar_document # noqa E402
-import autosar.xml.writer as ar_writer # noqa E402
 
 
 class MyBaseTypeTemplate(ar_template.ElementTemplate):
@@ -162,10 +160,6 @@ class ImplementationDataTypeTemplateTests(unittest.TestCase):
         self.assertIsInstance(impl_type, ar_element.ImplementationDataType)
         self.assertEqual(impl_type.name, "uint8")
         self.assertEqual(impl_type.category, "VALUE")
-        # document = ar_document.Document()
-        # document.append(workspace.find("/AUTOSAR_Platform"))
-        # writer = ar_writer.Writer()
-        # print(writer.write_str(document))
 
 
 if __name__ == '__main__':

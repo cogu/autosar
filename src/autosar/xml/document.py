@@ -2,7 +2,7 @@
 """
 AUTOSAR Document
 """
-
+# pylint: disable=R0801
 from typing import Any
 import autosar.xml.element as ar_element
 
