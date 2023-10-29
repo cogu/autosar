@@ -1,7 +1,7 @@
 """
 Enum Definitions
 """
-
+# pylint: disable=R0801
 from enum import Enum
 
 

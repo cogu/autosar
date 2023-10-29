@@ -1,6 +1,8 @@
 """
 Classes related to AUTOSAR Elements
+
 """
+
 import re
 from collections.abc import Iterable
 from typing import Any, Union
@@ -15,7 +17,13 @@ alignment_type_re = re.compile(
 display_format_str_re = re.compile(
     r"%[ \-+#]?[0-9]*(\.[0-9]+)?[diouxXfeEgGcs]")
 
-# Base classes
+# Type aliases
+
+ValueSpeficationElement = Union["TextValueSpecification",
+                                "NumericalValueSpecification",
+                                "NotAvailableValueSpecification"]
+
+# Helper classes
 
 
 class NumericalValue:
@@ -25,9 +33,10 @@ class NumericalValue:
 
     def __init__(self,
                  value: int | float | str,
-                 format: ar_enum.ValueFormat = ar_enum.ValueFormat.DEFAULT) -> None:  # pylint:disable=w0622
+                 value_format: ar_enum.ValueFormat = ar_enum.ValueFormat.DEFAULT
+                 ) -> None:
         self._value = self._validate_value(value)
-        self.format = format
+        self.value_format = value_format
 
     @property
     def value(self):
@@ -48,6 +57,43 @@ class NumericalValue:
                 return float(value)
         else:
             raise TypeError(f"Unexpected type for value {str(type(value))}")
+
+
+class PositiveIntegerValue:
+    """
+    Wrapper for positive value
+    """
+
+    def __init__(self,
+                 value: int,
+                 value_format: ar_enum.ValueFormat = ar_enum.ValueFormat.DEFAULT
+                 ) -> None:
+        self._value = self._validate_value(value)
+        self.value_format = value_format
+
+    @property
+    def value(self):
+        """Value property"""
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        self._value = self._validate_value(value)
+
+    def _validate_value(self, value: int | str) -> int:
+        if isinstance(value, str):
+            try:
+                value = int(value, 0)
+            except ValueError as err:
+                raise TypeError("Unable to convert to integer") from err
+        if isinstance(value, int):
+            if value < 0:
+                raise ValueError("Value must be a positive integer")
+            return value
+        else:
+            raise TypeError(f"Unexpected type for value {str(type(value))}")
+
+# Base classes
 
 
 class ARObject:
@@ -2286,8 +2332,8 @@ class DataTypeMappingSet(ARElement):
 class SwAddrMethod(ARElement):
     """
     Complex-type AR:SW-ADDR-METHOD
-    Type: Concrete:
-    Tag Variants: SW-ADDR-METHOD
+    Type: Concrete
+    Tag Variants: 'SW-ADDR-METHOD'
     """
 
     def __init__(self, name: str, **kwargs) -> None:
@@ -2306,6 +2352,175 @@ class SwAddrMethod(ARElement):
         self.parent.update_ref_parts(ref_parts)
         value = '/'.join(reversed(ref_parts))
         return SwAddrMethodRef(value)
+
+# Constant and value specifications
+
+
+class ValueSpecification(ARObject):
+    """
+    Group AR:VALUE-SPECIFCATION
+    Type: Abstract
+    Base class for value specifications
+    """
+
+    def __init__(self, label: str | None = None) -> None:
+        self.label = label  # .SHORT-LABEL
+        # .VARIATION-POINT not supported
+
+    @classmethod
+    def make_value(cls, data: Any) -> ValueSpeficationElement:
+        """
+        Builds value specification based on Python data
+        """
+        label = None
+        default_pattern = None
+        if isinstance(data, tuple):
+            if not isinstance(data[0], str):
+                raise TypeError("First tuple element must be a string")
+            if len(data) == 2:
+                label, value = data
+            elif len(data) == 3:
+                label, value, default_pattern = data
+            else:
+                raise ValueError(f"Too many elements in tuple: {repr(data)}")
+        else:
+            value = data
+        return ValueSpecification._make_from_args(label, value, default_pattern)
+
+    @classmethod
+    def _make_from_args(cls, label: str | None,
+                        value: Any,
+                        default_pattern: int | None = None) -> ValueSpeficationElement:
+        if isinstance(value, (int, float)):
+            return NumericalValueSpecification(label, value)
+        elif isinstance(value, str):
+            return TextValueSpecification(label, value)
+        elif value is None:
+            return NotAvailableValueSpecification(label, default_pattern)
+        elif isinstance(value, list):
+            if not isinstance(value[0], str):
+                raise TypeError("First element of a list must be a string")
+            if value[0].upper() in ("A", "ARRAY"):
+                return ValueSpecification._make_array_value_spefication(label, value[1:])
+            elif value[0].upper() in ("R", "RECORD"):
+                return ValueSpecification._make_record_value_spefication(label, value[1:])
+            else:
+                raise ValueError(f"Invalid element type: {str(type(value[0]))}")
+
+    @classmethod
+    def _make_array_value_spefication(cls, label: str | None, values: list) -> "ArrayValueSpecification":
+        elements = []
+        for value in values:
+            elements.append(ValueSpecification.make_value(value))
+        return ArrayValueSpecification(label, elements)
+
+    @classmethod
+    def _make_record_value_spefication(cls, label: str | None, values: list) -> "RecordValueSpecification":
+        fields = []
+        for value in values:
+            fields.append(ValueSpecification.make_value(value))
+        return RecordValueSpecification(label, fields)
+
+
+class TextValueSpecification(ValueSpecification):
+    """
+    Complex-type AR:TEXT-VALUE-SPECIFICATION
+    Type: Concrete
+    Tag variants: 'TEXT-VALUE-SPECIFICATION'
+    """
+
+    def __init__(self, label: str | None = None, value: str | None = None) -> None:
+        super().__init__(label)
+        self.value = None if value is None else str(value)
+
+
+class NumericalValueSpecification(ValueSpecification):
+    """
+    Complex-type AR:NUMERICAL-VALUE-SPECIFICATION
+    Type: Concrete
+    Tag variants: 'NUMERICAL-VALUE-SPECIFICATION'
+    """
+
+    def __init__(self, label: str | None = None, value: int | float | None = None) -> None:
+        super().__init__(label)
+        self.value = value
+
+
+class NotAvailableValueSpecification(ValueSpecification):
+    """
+    Complex-type AR:NOT-AVAILABLE-VALUE-SPECIFICATION
+    Type: Concrete
+    Tag variants: 'NOT-AVAILABLE-VALUE-SPECIFICATION'
+    """
+
+    def __init__(self,
+                 label: str | None = None,
+                 default_pattern: int | None = None,
+                 default_pattern_format: ar_enum.ValueFormat = ar_enum.ValueFormat.DEFAULT
+                 ) -> None:
+        super().__init__(label)
+        if isinstance(default_pattern, int) and default_pattern < 0:
+            raise ValueError("default_pattern must be a positive integer")
+        self.default_pattern = default_pattern
+        self.default_pattern_format = default_pattern_format  # Currently not used
+
+
+class ArrayValueSpecification(ValueSpecification):
+    """
+    Complex-type AR:ARRAY-VALUE-SPECIFICATION
+    Type: Concrete
+    Tag variants: 'ARRAY-VALUE-SPECIFICATION'
+    """
+
+    def __init__(self,
+                 label: str | None = None,
+                 elements: list[ValueSpeficationElement] | None = None
+                 ) -> None:
+        super().__init__(label)
+        self.elements: list[ValueSpeficationElement] = []
+        if elements is not None:
+            if isinstance(elements, ValueSpecification):
+                self.append(elements)
+            elif isinstance(elements, list):
+                for element in elements:
+                    self.append(element)
+
+    def append(self, element: ValueSpeficationElement):
+        """
+        Appends element to array specification
+        """
+        if not isinstance(element, ValueSpecification):
+            raise TypeError(f"Invalid type for 'element': {str(type(element))}")
+        self.elements.append(element)
+
+
+class RecordValueSpecification(ValueSpecification):
+    """
+    Complex-type AR:RECORD-VALUE-SPECIFICATION
+    Type: Concrete
+    Tag variants: 'RECORD-VALUE-SPECIFICATION'
+    """
+
+    def __init__(self,
+                 label: str | None = None,
+                 fields: list[ValueSpeficationElement] | None = None
+                 ) -> None:
+        super().__init__(label)
+        self.fields: list[ValueSpeficationElement] = []
+        if fields is not None:
+            if isinstance(fields, ValueSpecification):
+                self.append(fields)
+            elif isinstance(fields, list):
+                for field in fields:
+                    self.append(field)
+
+    def append(self, field: ValueSpeficationElement):
+        """
+        Appends field to record specification
+        """
+        if not isinstance(field, ValueSpecification):
+            raise TypeError(f"Invalid type for 'field': {str(type(field))}")
+        self.fields.append(field)
 
 # !!UNFINISHED!! Port Interfaces
 

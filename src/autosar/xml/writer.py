@@ -3,7 +3,7 @@ ARXML writer module
 """
 # pylint: disable=consider-using-with
 from io import StringIO
-from typing import TextIO
+from typing import TextIO, Union
 import math
 import decimal
 import autosar.xml.document as ar_document
@@ -15,6 +15,9 @@ import autosar.xml.enumeration as ar_enum
 
 MultiLanguageOverviewParagraph = ar_element.MultiLanguageOverviewParagraph
 TupleList = list[tuple[str, str]]
+ValueSpeficationElement = Union[ar_element.TextValueSpecification,
+                                ar_element.NumericalValueSpecification,
+                                ar_element.NotAvailableValueSpecification]
 
 
 class _XMLWriter:
@@ -179,6 +182,14 @@ class Writer(_XMLWriter):
             # Unit elements
             'Unit': self._write_unit,
         }
+        # Value specification elements
+        self.switcher_value_specification = {
+            'TextValueSpecification': self._write_text_value_specification,
+            'NumericalValueSpecification': self._write_numerical_value_specification,
+            'NotAvailableValueSpecification': self._write_not_available_value_specification,
+            'ArrayValueSpecification': self._write_array_value_specification,
+            'RecordValueSpecification': self._write_record_value_specification,
+        }
         # Elements used only for unit test purposes
         self.switcher_non_collectable = {
             # Documentation elements
@@ -225,6 +236,7 @@ class Writer(_XMLWriter):
         }
         self.switcher_all = {}  # All concrete elements (used for unit testing)
         self.switcher_all.update(self.switcher_collectable)
+        self.switcher_all.update(self.switcher_value_specification)
         self.switcher_all.update(self.switcher_non_collectable)
 
     def write_str(self, document: ar_document.Document, skip_root_attr: bool = True) -> str:
@@ -1679,3 +1691,129 @@ class Writer(_XMLWriter):
             self._leave_child()
         # .MODE-REQUEST-TYPE-MAPS not yet implemented
         self._leave_child()
+
+# Constant and value specifications
+
+    def _write_text_value_specification(self, elem: ar_element.TextValueSpecification) -> None:
+        """
+        Writes AR:TEXT-VALUE-SPECIFICATION
+        Type: Concrete
+        Tag variants: 'TEXT-VALUE-SPECIFICATION'
+        """
+        assert isinstance(elem, ar_element.TextValueSpecification)
+        tag = "TEXT-VALUE-SPECIFICATION"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_value_specification_group(elem)
+            if elem.value is not None:
+                self._add_content("VALUE", str(elem.value))
+            self._leave_child()
+
+    def _write_numerical_value_specification(self, elem: ar_element.NumericalValueSpecification) -> None:
+        """
+        Writes AR:NUMERICAL-VALUE-SPECIFICATION
+        Type: Concrete
+        Tag variants: 'NUMERICAL-VALUE-SPECIFICATION'
+        """
+        assert isinstance(elem, ar_element.NumericalValueSpecification)
+        tag = "NUMERICAL-VALUE-SPECIFICATION"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_value_specification_group(elem)
+            if elem.value is not None:
+                self._add_content("VALUE", self._format_number(elem.value))
+            self._leave_child()
+
+    def _write_not_available_value_specification(self, elem: ar_element.NotAvailableValueSpecification) -> None:
+        """
+        Writes AR:NOT-AVAILABLE-VALUE-SPECIFICATION
+        Type: Concrete
+        Tag variants: 'NOT-AVAILABLE-VALUE-SPECIFICATION'
+        """
+        assert isinstance(elem, ar_element.NotAvailableValueSpecification)
+        tag = "NOT-AVAILABLE-VALUE-SPECIFICATION"
+        if elem.is_empty_with_ignore({"default_pattern_format"}):
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_value_specification_group(elem)
+            if elem.default_pattern is not None:
+                self._add_content("DEFAULT-PATTERN", str(elem.default_pattern))  # TODO support numerical formats
+            self._leave_child()
+
+    def _write_array_value_specification(self, elem: ar_element.ArrayValueSpecification) -> None:
+        """
+        Writes complex-type AR:ARRAY-VALUE-SPECIFICATION
+        Type: Concrete
+        Tag variants: 'ARRAY-VALUE-SPECIFICATION'
+        """
+        assert isinstance(elem, ar_element.ArrayValueSpecification)
+        tag = "ARRAY-VALUE-SPECIFICATION"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_value_specification_group(elem)
+            self._write_array_value_specification_group(elem)
+            self._leave_child()
+
+    def _write_array_value_specification_group(self, elem: ar_element.ArrayValueSpecification) -> None:
+        """
+        Writes group AR:ARRAY-VALUE-SPECIFICATION
+        Type: Abstract
+        """
+        if elem.elements:
+            self._add_child("ELEMENTS")
+            for child_element in elem.elements:
+                self._write_value_specification_element(child_element)
+            self._leave_child()
+
+    def _write_record_value_specification(self, elem: ar_element.RecordValueSpecification) -> None:
+        """
+        Writes complex-type AR:RECORD-VALUE-SPECIFICATION
+        Type: Concrete
+        Tag variants: 'RECORD-VALUE-SPECIFICATION'
+        """
+        assert isinstance(elem, ar_element.RecordValueSpecification)
+        tag = "RECORD-VALUE-SPECIFICATION"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_value_specification_group(elem)
+            self._write_record_value_specification_group(elem)
+            self._leave_child()
+
+    def _write_record_value_specification_group(self, elem: ar_element.RecordValueSpecification) -> None:
+        """
+        Writes group AR:RECORD-VALUE-SPECIFICATION
+        Type: Abstract
+        """
+        if elem.fields:
+            self._add_child("FIELDS")
+            for field in elem.fields:
+                self._write_value_specification_element(field)
+            self._leave_child()
+
+    def _write_value_specification_group(self, elem: ar_element.ValueSpecification) -> None:
+        """
+        Writes group AR:VALUE-SPECIFICATION
+        Type: Abstract
+        """
+        if elem.label is not None:
+            self._add_content("SHORT-LABEL", str(elem.label))
+
+    def _write_value_specification_element(self, elem: ValueSpeficationElement) -> None:
+        """
+        Switched writer for value specification elements
+        """
+        class_name = elem.__class__.__name__
+        write_method = self.switcher_value_specification.get(class_name, None)
+        if write_method is not None:
+            write_method(elem)
+        else:
+            raise NotImplementedError(f"Found no writer for class {class_name}")
