@@ -36,6 +36,11 @@ class NumericalValue:
                  value_format: ar_enum.ValueFormat = ar_enum.ValueFormat.DEFAULT
                  ) -> None:
         self._value = self._validate_value(value)
+        if isinstance(value, str):
+            if value.startswith("0x"):
+                value_format = ar_enum.ValueFormat.HEXADECIMAL
+            elif value.startswith("0b"):
+                value_format = ar_enum.ValueFormat.BINARY
         self.value_format = value_format
 
     @property
@@ -1619,7 +1624,7 @@ class Unit(ARElement):
         self._assign_optional('offset', offset, float)
 
 
-# Data type elements
+# DataDictionary and DataType elements
 
 
 class BaseType(ARElement):
@@ -2326,6 +2331,32 @@ class DataTypeMappingSet(ARElement):
             raise TypeError(f'Unexpected type: "{str(type(element))}"')
 
 
+class ValueList(ARObject):
+    """
+    Complex-type AR:VALUE-LIST
+    Type: Concrete
+    Tag variants: 'SW-ARRAYSIZE'
+    """
+
+    def __init__(self, values: list[int | float | NumericalValue] | None = None) -> None:
+        self.values = []
+        if values is not None:
+            if isinstance(values, (int, float)):
+                self.append(values)
+            else:
+                for value in values:
+                    self.append(value)
+
+    def append(self, value: int | float | NumericalValue) -> None:
+        """
+        Adds value to list of values
+        """
+        if isinstance(value, (int, float, NumericalValue)):
+            self.values.append(value)
+        else:
+            raise TypeError(f"Invalid type for value: {str(type(value))}")
+
+
 # Software address method (partly implemented)
 
 
@@ -2352,6 +2383,64 @@ class SwAddrMethod(ARElement):
         self.parent.update_ref_parts(ref_parts)
         value = '/'.join(reversed(ref_parts))
         return SwAddrMethodRef(value)
+
+# Calibration data
+
+
+SwValueElement = Union[int, float, str, NumericalValue, "ValueGroup"]  # Type alias
+
+
+class SwValues(ARObject):
+    """
+    Complex-type AR:SW-VALUES
+    Type: Concrete
+    Tag variants: SW-VALUES-PHYS
+    """
+
+    def __init__(self,
+                 values: list[SwValueElement] | None = None) -> None:
+        self.values = []
+        if values is not None:
+            if isinstance(values, (int, float, str, NumericalValue, ValueGroup)):
+                self.append(values)
+            elif isinstance(values, list):
+                for value in values:
+                    self.append(value)
+
+    def append(self, value: SwValueElement) -> None:
+        """
+        Appends value to list of values
+        XML elements not supported:
+
+        - VTF
+        - VF
+        """
+        if isinstance(value, (int, float, str, NumericalValue, ValueGroup)):
+            self.values.append(value)
+        else:
+            raise TypeError(f"Invalid value type: {str(type(value))}")
+
+
+class ValueGroup(SwValues):
+    """
+    Complex-type AR:VALUE-GROUP
+    Type: Concrete
+    Tag variants: VG
+    """
+
+    def __init__(self,
+                 label: str | MultilanguageLongName | tuple[ar_enum.Language, str] | LanguageLongName | None = None,
+                 values: SwValues | None = None) -> None:
+        self.label: MultilanguageLongName | None = None
+        super().__init__(values)
+        if label is not None:
+            if isinstance(label, MultilanguageLongName):
+                self.label = label
+            elif isinstance(label, (tuple, LanguageLongName)):
+                self.label = MultilanguageLongName(label)
+            else:
+                raise TypeError(f"Invalid type for 'label': {str(type(label))}")
+
 
 # Constant and value specifications
 
@@ -2406,6 +2495,8 @@ class ValueSpecification(ARObject):
                 return ValueSpecification._make_record_value_spefication(label, value[1:])
             else:
                 raise ValueError(f"Invalid element type: {str(type(value[0]))}")
+        else:
+            raise TypeError(f"Invalid value type: {str(type(value))}")
 
     @classmethod
     def _make_array_value_spefication(cls, label: str | None, values: list) -> "ArrayValueSpecification":

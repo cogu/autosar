@@ -425,10 +425,9 @@ class ValueFormat(Enum):
 
     DEFAULT = 0  # Let Python decide the format
     DECIMAL = 1
-    FLOAT = 2
-    HEXADECIMAL = 3
-    BINARY = 4
-    SCIENTIFIC = 5
+    HEXADECIMAL = 2
+    BINARY = 3
+    SCIENTIFIC = 4
 
 
 ########################################

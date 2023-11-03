@@ -100,7 +100,7 @@ class Reader:
             # CompuMethod
             'COMPU-METHOD': self._read_compu_method,
 
-            # Data type elements
+            # DataType and DataDictionary elements
             'APPLICATION-ARRAY-DATA-TYPE': self._read_application_array_data_type,
             'APPLICATION-RECORD-DATA-TYPE': self._read_application_record_data_type,
             'APPLICATION-PRIMITIVE-DATA-TYPE': self._read_application_primitive_data_type,
@@ -108,6 +108,7 @@ class Reader:
             'SW-ADDR-METHOD': self._read_sw_addr_method,
             'IMPLEMENTATION-DATA-TYPE': self._read_implementation_data_type,
             'DATA-TYPE-MAPPING-SET': self._read_data_type_mapping_set,
+
 
             # Constraint elements
             'DATA-CONSTR': self._read_data_constraint,
@@ -154,7 +155,7 @@ class Reader:
             'INTERNAL-CONSTRS': self._read_internal_constraint,
             'PHYS-CONSTRS': self._read_physical_constraint,
             'DATA-CONSTR-RULE': self._read_data_constraint_rule,
-            # Data type elements
+            # DataType and DataDictionary elements
             'BASE-TYPE-REF': self._read_sw_base_type_ref,
             'SW-BIT-REPRESENTATION': self._read_sw_bit_representation,
             'SW-DATA-DEF-PROPS-CONDITIONAL': self._read_sw_data_def_props_conditional,
@@ -164,7 +165,9 @@ class Reader:
             'IMPLEMENTATION-DATA-TYPE-ELEMENT': self._read_implementation_data_type_element,
             'APPLICATION-RECORD-ELEMENT': self._read_application_record_element,
             'DATA-TYPE-MAP': self._read_data_type_map,
-
+            'SW-ARRAYSIZE': self._read_value_list,
+            # CalibrationData elements
+            'SW-VALUES-PHYS': self._read_sw_values,
             # Reference elements
             'PHYSICAL-DIMENSION-REF': self._read_physical_dimension_ref,
             'APPLICATION-DATA-TYPE-REF': self._read_application_data_type_ref,
@@ -2003,6 +2006,25 @@ class Reader:
                 data_type_maps.append(self._read_data_type_map(xml_data_type_map_element))
             data["data_type_maps"] = data_type_maps
 
+    def _read_value_list(self, xml_element: ElementTree.Element) -> ar_element.ValueList:
+        """
+        Reads complex-type AR:VALUE-LIST
+        Type: Concrete
+        Tag variants: 'SW-ARRAYSIZE'
+        """
+        values = []
+        data = {"values": values}
+        for xml_value in xml_element.findall("./V"):
+            number = ar_element.NumericalValue(xml_value.text)
+            if number.value_format in (ar_enum.ValueFormat.HEXADECIMAL,
+                                       ar_enum.ValueFormat.BINARY,
+                                       ar_enum.ValueFormat.SCIENTIFIC):
+                values.append(number)
+            else:
+                values.append(number.value)
+        element = ar_element.ValueList(**data)
+        return element
+
     # Constant and value specifications
 
     def _read_text_value_specification(self,
@@ -2148,6 +2170,65 @@ class Reader:
         xml_child = child_elements.get("SHORT-LABEL")
         if xml_child is not None:
             data["label"] = xml_child.text
+
+    # CalibrationData elements
+
+    def _read_sw_values(self,
+                        xml_element: ElementTree.Element) -> ar_element.SwValues:
+        """
+        Reads complex-type AR:SW-VALUES
+        Type: Concrete
+        Tag variants: 'SW-VALUES-PHYS'
+        """
+        data = {}
+        child_elements = list(xml_element.findall("./*"))
+        self._read_sw_values_group(child_elements, data)
+        element = ar_element.SwValues(**data)
+        return element
+
+    def _read_sw_values_group(self,
+                              xml_child_list: list[ElementTree.Element],
+                              data: dict) -> None:
+        """
+        Reads group AR:SW-VALUES
+        Type: Abstract
+
+        XML elements not supported:
+
+        - VTF
+        - VF
+        """
+        values = []
+        data["values"] = values
+        for xml_child in xml_child_list:
+            if xml_child.tag == "VT":
+                values.append(xml_child.text)
+            elif xml_child.tag == "V":
+                number = ar_element.NumericalValue(xml_child.text)
+                if number.value_format in (ar_enum.ValueFormat.HEXADECIMAL,
+                                           ar_enum.ValueFormat.BINARY,
+                                           ar_enum.ValueFormat.SCIENTIFIC):
+                    values.append(number)
+                else:
+                    values.append(number.value)
+            elif xml_child.tag == "VG":
+                values.append(self._read_value_group(xml_child))
+            elif xml_child.tag in ("VTF", "VG"):
+                continue  # Not supported, skip
+            else:
+                print(f"Unprocessed child element in VALUE-GROUP: <{xml_child.tag}>", file=sys.stderr)
+
+    def _read_value_group(self, xml_element: ElementTree.Element) -> ar_element.ValueGroup:
+        """
+        Reads complex-type AR:VALUE-GROUP
+        """
+        data = {}
+        child_elements = list(xml_element.findall("./*"))
+        if len(child_elements) > 0 and child_elements[0].tag == 'LABEL':
+            data["label"] = self._read_multi_language_long_name(child_elements.pop(0))
+        self._read_sw_values_group(child_elements, data)
+        element = ar_element.ValueGroup(**data)
+        return element
 
     # UNFINISHED ELEMENTS - NEEDS REFACTORING
 
