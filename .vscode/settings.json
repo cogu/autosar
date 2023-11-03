@@ -1,6 +1,4 @@
 {
-    "python.linting.pylintEnabled": true,
-    "python.linting.enabled": true,
     "python.testing.unittestArgs": [
         "-v",
         "-s",
@@ -17,6 +15,5 @@
         "--max-line-length=120",
         "--ignore=D101,D102,D107,D200,D205,D400,D401"
     ],
-    "python.linting.flake8Enabled": false,
     "python.analysis.typeCheckingMode": "off",
 }

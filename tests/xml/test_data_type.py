@@ -1940,5 +1940,63 @@ class TestDataTypeMappingSet(unittest.TestCase):
                          ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE)
 
 
+class TestValueList(unittest.TestCase):
+
+    def test_read_write_empty(self):
+        element = ar_element.ValueList()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<SW-ARRAYSIZE/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.ValueList = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ValueList)
+
+    def test_read_write_int(self):
+        element = ar_element.ValueList(values=[1, 2, 3])
+        writer = autosar.xml.Writer()
+        xml = '''<SW-ARRAYSIZE>
+  <V>1</V>
+  <V>2</V>
+  <V>3</V>
+</SW-ARRAYSIZE>'''
+
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ValueList = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ValueList)
+        self.assertEqual(elem.values, [1, 2, 3])
+
+    def test_read_write_float(self):
+        element = ar_element.ValueList(values=[1.5, 2.4])
+        writer = autosar.xml.Writer()
+        xml = '''<SW-ARRAYSIZE>
+  <V>1.5</V>
+  <V>2.4</V>
+</SW-ARRAYSIZE>'''
+
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ValueList = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ValueList)
+        self.assertEqual(elem.values, [1.5, 2.4])
+
+    def test_read_write_hex_literal(self):
+        element = ar_element.ValueList(values=[ar_element.NumericalValue("0x10")])
+        writer = autosar.xml.Writer()
+        xml = '''<SW-ARRAYSIZE>
+  <V>0x10</V>
+</SW-ARRAYSIZE>'''
+
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ValueList = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ValueList)
+        self.assertEqual(len(elem.values), 1)
+        number: ar_element.NumericalValue = elem.values[0]
+        self.assertIsInstance(number, ar_element.NumericalValue)
+        self.assertEqual(number.value, 16)
+        self.assertEqual(number.value_format, ar_enum.ValueFormat.HEXADECIMAL)
+
+
 if __name__ == '__main__':
     unittest.main()

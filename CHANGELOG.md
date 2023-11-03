@@ -19,6 +19,15 @@ The name in the parenthesis after each element is the name used in the XML schem
 * ArrayValueSpecification | ARRAY-VALUE-SPECIFICATION
 * RecordValueSpecification | RECORD-VALUE-SPECIFICATION
 
+#### XML - Data type elements
+
+* ValueList | VALUE-LIST
+
+#### XML - Calibration elements
+
+* SwValues | AR:SW-VALUES
+* ValueGroup | VALUE-GROUP
+
 ## [v0.5.0]
 
 ### Added

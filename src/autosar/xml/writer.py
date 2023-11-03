@@ -137,7 +137,7 @@ class _XMLWriter:
             tmp = decimal.Decimal(str(value))
             return tmp.quantize(decimal.Decimal(1)) if tmp == tmp.to_integral() else tmp.normalize()
 
-    def _format_number(self, number: int | float) -> str:
+    def _format_number(self, number: int | float | ar_element.NumericalValue) -> str:
         """
         Converts number to string
         """
@@ -145,6 +145,8 @@ class _XMLWriter:
             return str(number)
         elif isinstance(number, float):
             return self._format_float(number)
+        elif isinstance(number, ar_element.NumericalValue):
+            return self._format_numerical_value(number)
         else:
             raise TypeError("Not supported: " + str(type(number)))
 
@@ -154,6 +156,18 @@ class _XMLWriter:
         """
         assert isinstance(value, bool)
         return 'true' if value else 'false'
+
+    def _format_numerical_value(self, number: ar_element.NumericalValue) -> str:
+        if number.value_format in (ar_enum.ValueFormat.DEFAULT, ar_enum.ValueFormat.DECIMAL):
+            return self._format_number(number.value)
+        elif number.value_format == ar_enum.ValueFormat.HEXADECIMAL:
+            return f"0x{number.value:x}"
+        elif number.value_format == ar_enum.ValueFormat.BINARY:
+            return f"0b{number.value:b}"
+        elif number.value_format == ar_enum.ValueFormat.SCIENTIFIC:
+            return f"{number.value:e}"
+        else:
+            raise NotImplementedError
 
 
 class Writer(_XMLWriter):
@@ -219,7 +233,7 @@ class Writer(_XMLWriter):
             'InternalConstraint': self._write_internal_constraint,
             'PhysicalConstraint': self._write_physical_constraint,
             'DataConstraintRule': self._write_data_constraint_rule,
-            # Data type elements
+            # DataType and DataDictionary elements
             'SwDataDefPropsConditional': self._write_sw_data_def_props_conditional,
             'SwBaseTypeRef': self._write_sw_base_type_ref,
             'SwBitRepresentation': self._write_sw_bit_represenation,
@@ -230,6 +244,9 @@ class Writer(_XMLWriter):
             'ApplicationArrayElement': self._write_application_array_element,
             'ApplicationRecordElement': self._write_application_record_element,
             'DataTypeMap': self._write_data_type_map,
+            'ValueList': self._write_value_list,
+            # CalibrationData elements
+            'SwValues': self._write_sw_values,
             # Reference elements
             'PhysicalDimensionRef': self._write_physical_dimension_ref,
             'ApplicationDataTypeRef': self._write_application_data_type_ref,
@@ -1525,6 +1542,65 @@ class Writer(_XMLWriter):
                 self._write_application_record_element(child_elem)
             self._leave_child()
 
+    def _write_data_type_map(self, elem: ar_element.DataTypeMap) -> None:
+        """
+        Writes DataTypeMap
+        Type: Concrete
+        Tag variants: 'DATA-TYPE-MAP'
+        """
+        assert isinstance(elem, ar_element.DataTypeMap)
+        self._add_child("DATA-TYPE-MAP")
+        if elem.appl_data_type_ref is not None:
+            self._write_application_data_type_ref(elem.appl_data_type_ref, "APPLICATION-DATA-TYPE-REF")
+        if elem.impl_data_type_ref is not None:
+            self._write_impl_data_type_ref(elem.impl_data_type_ref)
+        self._leave_child()
+
+    def _write_data_type_mapping_set(self, elem: ar_element.DataTypeMappingSet) -> None:
+        """
+        Writes DataTypeMappingSet
+        Type: Concrete
+        Tag variants: 'DATA-TYPE-MAPPING-SET'
+        """
+        assert isinstance(elem, ar_element.DataTypeMappingSet)
+        attr: TupleList = []
+        self._collect_identifiable_attributes(elem, attr)
+        self._add_child("DATA-TYPE-MAPPING-SET", attr)
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        if len(elem.data_type_maps) > 0:
+            self._add_child("DATA-TYPE-MAPS")
+            for child_elem in elem.data_type_maps:
+                self._write_data_type_map(child_elem)
+            self._leave_child()
+        # .MODE-REQUEST-TYPE-MAPS not yet implemented
+        self._leave_child()
+
+    def _write_value_list(self, elem: ar_element.ValueList) -> None:
+        """
+        Writes complex-type AR:VALUE-LIST
+        Type: Concrete
+        Tag variants: 'SW-ARRAYSIZE'
+        """
+        assert isinstance(elem, ar_element.ValueList)
+        tag = "SW-ARRAYSIZE"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_value_list_group(elem)
+            self._leave_child()
+
+    def _write_value_list_group(self, elem: ar_element.SwValues) -> None:
+        """
+        Writes group AR:VALUE-LIST
+        Type: abstract
+        """
+        for value in elem.values:
+            content = self._format_number(value)
+            self._add_content("V", content)
+
     # Reference Elements
 
     def _collect_base_ref_attr(self,
@@ -1657,41 +1733,6 @@ class Writer(_XMLWriter):
         self._collect_base_ref_attr(elem, attr)
         self._add_content(tag, elem.value, attr)
 
-    def _write_data_type_map(self, elem: ar_element.DataTypeMap) -> None:
-        """
-        Writes DataTypeMap
-        Type: Concrete
-        Tag variants: 'DATA-TYPE-MAP'
-        """
-        assert isinstance(elem, ar_element.DataTypeMap)
-        self._add_child("DATA-TYPE-MAP")
-        if elem.appl_data_type_ref is not None:
-            self._write_application_data_type_ref(elem.appl_data_type_ref, "APPLICATION-DATA-TYPE-REF")
-        if elem.impl_data_type_ref is not None:
-            self._write_impl_data_type_ref(elem.impl_data_type_ref)
-        self._leave_child()
-
-    def _write_data_type_mapping_set(self, elem: ar_element.DataTypeMappingSet) -> None:
-        """
-        Writes DataTypeMappingSet
-        Type: Concrete
-        Tag variants: 'DATA-TYPE-MAPPING-SET'
-        """
-        assert isinstance(elem, ar_element.DataTypeMappingSet)
-        attr: TupleList = []
-        self._collect_identifiable_attributes(elem, attr)
-        self._add_child("DATA-TYPE-MAPPING-SET", attr)
-        self._write_referrable(elem)
-        self._write_multilanguage_referrable(elem)
-        self._write_identifiable(elem)
-        if len(elem.data_type_maps) > 0:
-            self._add_child("DATA-TYPE-MAPS")
-            for child_elem in elem.data_type_maps:
-                self._write_data_type_map(child_elem)
-            self._leave_child()
-        # .MODE-REQUEST-TYPE-MAPS not yet implemented
-        self._leave_child()
-
 # Constant and value specifications
 
     def _write_text_value_specification(self, elem: ar_element.TextValueSpecification) -> None:
@@ -1817,3 +1858,50 @@ class Writer(_XMLWriter):
             write_method(elem)
         else:
             raise NotImplementedError(f"Found no writer for class {class_name}")
+
+# CalibrationData elements
+
+    def _write_sw_values(self, elem: ar_element.SwValues) -> None:
+        """
+        Writes complex-type AR:SW-VALUES
+        Type: Concrete
+        Tag variants: 'SW-VALUES-PHYS'
+        """
+        assert isinstance(elem, ar_element.SwValues)
+        tag = "SW-VALUES-PHYS"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_sw_values_group(elem)
+            self._leave_child()
+
+    def _write_sw_values_group(self, elem: ar_element.SwValues) -> None:
+        """
+        Writes group AR:SW-VALUES (also used part of AR:VALUE-GROUP)
+        Type: abstract
+        """
+        for value in elem.values:
+            if isinstance(value, str):
+                self._add_content("VT", value)
+            elif isinstance(value, (int, float, ar_element.NumericalValue)):
+                self._add_content("V", self._format_number(value))
+            elif isinstance(value, ar_element.ValueGroup):
+                self._write_value_group(value, "VG")
+            else:
+                raise NotImplementedError(str(type(value)))
+
+    def _write_value_group(self, elem: ar_element.ValueGroup, tag: str) -> None:
+        """
+        Writes complex-type AR:VALUE-GROUP
+        Type: Concrete
+        """
+        assert isinstance(elem, ar_element.ValueGroup)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.label is not None:
+                self._write_multi_language_long_name(elem.label, "LABEL")
+            self._write_sw_values_group(elem)
+            self._leave_child()
