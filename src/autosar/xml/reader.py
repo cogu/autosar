@@ -168,6 +168,7 @@ class Reader:
             'SW-ARRAYSIZE': self._read_value_list,
             # CalibrationData elements
             'SW-VALUES-PHYS': self._read_sw_values,
+            'SW-AXIS-CONT': self._read_sw_axis_cont,
             # Reference elements
             'PHYSICAL-DIMENSION-REF': self._read_physical_dimension_ref,
             'APPLICATION-DATA-TYPE-REF': self._read_application_data_type_ref,
@@ -2229,6 +2230,45 @@ class Reader:
         self._read_sw_values_group(child_elements, data)
         element = ar_element.ValueGroup(**data)
         return element
+
+    def _read_sw_axis_cont(self, xml_element: ElementTree.Element) -> ar_element.SwAxisCont:
+        """
+        Reads complex-type AR:SW-AXIS-CONT
+        Type: Concrete
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_sw_axis_cont_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        element = ar_element.SwAxisCont(**data)
+        return element
+
+    def _read_sw_axis_cont_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:SW-AXIS-CONT
+        """
+        xml_child = child_elements.get("CATEGORY")
+        if xml_child is not None:
+            data["category"] = ar_enum.xml_to_enum("CalibrationAxisCategory", xml_child.text)
+        xml_child = child_elements.get("UNIT-REF")
+        if xml_child is not None:
+            data["unit_ref"] = self._read_unit_ref(xml_child)
+        xml_child = child_elements.get("UNIT-DISPLAY-NAME")
+        if xml_child is not None:
+            data["unit_display_name"] = self._read_single_language_unit_names(xml_child)
+        xml_child = child_elements.get("SW-AXIS-INDEX")
+        if xml_child is not None:
+            try:
+                value = int(xml_child.text)
+            except ValueError:
+                value = xml_child.text
+            data["sw_axis_index"] = value
+        xml_child = child_elements.get("SW-ARRAYSIZE")
+        if xml_child is not None:
+            data["sw_array_size"] = self._read_value_list(xml_child)
+        xml_child = child_elements.get("SW-VALUES-PHYS")
+        if xml_child is not None:
+            data["sw_values_phys"] = self._read_sw_values(xml_child)
 
     # UNFINISHED ELEMENTS - NEEDS REFACTORING
 

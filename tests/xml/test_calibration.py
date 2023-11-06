@@ -165,5 +165,101 @@ class TestSwValues(unittest.TestCase): # noqa D101
         self.assertEqual(child.values, [1, 2, "Value"])
 
 
+class TestSwAxisCont(unittest.TestCase):
+
+    def test_read_write_empty(self):
+        element = ar_element.SwAxisCont()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<SW-AXIS-CONT/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwAxisCont = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwAxisCont)
+
+    def test_read_write_category(self):
+        element = ar_element.SwAxisCont(category=ar_enum.CalibrationAxisCategory.STD_AXIS)
+        writer = autosar.xml.Writer()
+        xml = '''<SW-AXIS-CONT>
+  <CATEGORY>STD-AXIS</CATEGORY>
+</SW-AXIS-CONT>'''
+
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwAxisCont = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwAxisCont)
+        self.assertEqual(elem.category, ar_enum.CalibrationAxisCategory.STD_AXIS)
+
+    def test_read_write_unit_ref(self):
+        element = ar_element.SwAxisCont(unit_ref=ar_element.UnitRef("/Units/MyUnit"))
+        writer = autosar.xml.Writer()
+        xml = '''<SW-AXIS-CONT>
+  <UNIT-REF DEST="UNIT">/Units/MyUnit</UNIT-REF>
+</SW-AXIS-CONT>'''
+
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwAxisCont = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwAxisCont)
+        self.assertEqual(str(elem.unit_ref), "/Units/MyUnit")
+
+    def test_read_write_unit_display_name(self):
+        unit_display_name = ar_element.SingleLanguageUnitNames("Km/h")
+        element = ar_element.SwAxisCont(unit_display_name=unit_display_name)
+        writer = autosar.xml.Writer()
+        xml = '''<SW-AXIS-CONT>
+  <UNIT-DISPLAY-NAME>Km/h</UNIT-DISPLAY-NAME>
+</SW-AXIS-CONT>'''
+
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwAxisCont = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwAxisCont)
+        self.assertEqual(str(elem.unit_display_name), "Km/h")
+
+    def test_read_write_sw_axis_index(self):
+        element = ar_element.SwAxisCont(sw_axis_index=1)
+        writer = autosar.xml.Writer()
+        xml = '''<SW-AXIS-CONT>
+  <SW-AXIS-INDEX>1</SW-AXIS-INDEX>
+</SW-AXIS-CONT>'''
+
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwAxisCont = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwAxisCont)
+        self.assertEqual(elem.sw_axis_index, 1)
+
+    def test_read_write_sw_array_size(self):
+        element = ar_element.SwAxisCont(sw_array_size=ar_element.ValueList([1, 2]))
+        writer = autosar.xml.Writer()
+        xml = '''<SW-AXIS-CONT>
+  <SW-ARRAYSIZE>
+    <V>1</V>
+    <V>2</V>
+  </SW-ARRAYSIZE>
+</SW-AXIS-CONT>'''
+
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwAxisCont = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwAxisCont)
+        self.assertEqual(elem.sw_array_size.values, [1, 2])
+
+    def test_read_write_sw_values_phys(self):
+        element = ar_element.SwAxisCont(sw_values_phys=ar_element.SwValues(1))
+        writer = autosar.xml.Writer()
+        xml = '''<SW-AXIS-CONT>
+  <SW-VALUES-PHYS>
+    <V>1</V>
+  </SW-VALUES-PHYS>
+</SW-AXIS-CONT>'''
+
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwAxisCont = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwAxisCont)
+        self.assertEqual(elem.sw_values_phys.values, [1])
+
+
 if __name__ == '__main__':
     unittest.main()

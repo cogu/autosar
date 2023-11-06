@@ -26,9 +26,10 @@ The name in the parenthesis after each element is the name used in the XML schem
 #### XML - Calibration elements
 
 * SwValues | AR:SW-VALUES
-* ValueGroup | VALUE-GROUP
+* ValueGroup | AR:VALUE-GROUP
+* SwAxisCont | AR:SW-AXIS-CONT
 
-## [v0.5.0]
+## [v0.5.0] - 2023-10-27
 
 ### Added
 
