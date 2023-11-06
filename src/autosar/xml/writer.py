@@ -247,6 +247,7 @@ class Writer(_XMLWriter):
             'ValueList': self._write_value_list,
             # CalibrationData elements
             'SwValues': self._write_sw_values,
+            'SwAxisCont': self._write_sw_axis_cont,
             # Reference elements
             'PhysicalDimensionRef': self._write_physical_dimension_ref,
             'ApplicationDataTypeRef': self._write_application_data_type_ref,
@@ -1905,3 +1906,35 @@ class Writer(_XMLWriter):
                 self._write_multi_language_long_name(elem.label, "LABEL")
             self._write_sw_values_group(elem)
             self._leave_child()
+
+    def _write_sw_axis_cont(self, elem: ar_element.SwAxisCont) -> None:
+        """
+        Writes Complex-type SW-AXIS-CONT
+        Type: Concrete
+        """
+        assert isinstance(elem, ar_element.SwAxisCont)
+        tag = "SW-AXIS-CONT"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_sw_axis_cont_group(elem)
+            self._leave_child()
+
+    def _write_sw_axis_cont_group(self, elem: ar_element.SwAxisCont) -> None:
+        """
+        Writes group SW-AXIS-CONT
+        Type: Concrete
+        """
+        if elem.category is not None:
+            self._add_content("CATEGORY", ar_enum.enum_to_xml(elem.category))
+        if elem.unit_ref is not None:
+            self._write_unit_ref(elem.unit_ref)
+        if elem.unit_display_name is not None:
+            self._write_single_language_unit_names(elem.unit_display_name, "UNIT-DISPLAY-NAME")
+        if elem.sw_axis_index is not None:
+            self._add_content("SW-AXIS-INDEX", str(elem.sw_axis_index))
+        if elem.sw_array_size is not None:
+            self._write_value_list(elem.sw_array_size)
+        if elem.sw_values_phys is not None:
+            self._write_sw_values(elem.sw_values_phys)

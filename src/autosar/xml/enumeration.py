@@ -52,6 +52,22 @@ class ByteOrder(Enum):
     OPAQUE = 2
 
 
+class CalibrationAxisCategory(Enum):
+    """
+    AR:CALPRM-AXIS-CATEGORY-ENUM--SIMPLE
+
+    For some reason the XML schema defines the
+    values of this eanum with both '_' and '-' separators.
+    Seems like a mistake.
+    """
+
+    COM_AXIS = 0
+    CURVE_AXIS = 1
+    FIX_AXIS = 2
+    RES_AXIS = 3
+    STD_AXIS = 4
+
+
 class CompuScaleContent(Enum):
     """
     Used internally to differentiate the
@@ -480,6 +496,18 @@ xml_to_enum_map = {
         "MOST-SIGNIFICANT-BYTE-LAST": ByteOrder.LITTLE_ENDIAN,
         "OPAQUE": ByteOrder.OPAQUE,
     },
+    "CalibrationAxisCategory": {
+        "COM_AXIS": CalibrationAxisCategory.COM_AXIS,
+        "COM-AXIS": CalibrationAxisCategory.COM_AXIS,
+        "CURVE_AXIS": CalibrationAxisCategory.CURVE_AXIS,
+        "CURVE-AXIS": CalibrationAxisCategory.CURVE_AXIS,
+        "FIX_AXIS": CalibrationAxisCategory.FIX_AXIS,
+        "FIX-AXIS": CalibrationAxisCategory.FIX_AXIS,
+        "RES_AXIS": CalibrationAxisCategory.RES_AXIS,
+        "RES-AXIS": CalibrationAxisCategory.RES_AXIS,
+        "STD_AXIS": CalibrationAxisCategory.STD_AXIS,
+        "STD-AXIS": CalibrationAxisCategory.STD_AXIS,
+    },
     "DisplayPresentation": {
         "PRESENTATION-CONTINUOUS": DisplayPresentation.CONTINUOUS,
         "PRESENTATION-DISCRETE": DisplayPresentation.DISCRETE
@@ -739,6 +767,13 @@ enum_to_xml_map = {
         "MOST-SIGNIFICANT-BYTE-FIRST",  # 0
         "MOST-SIGNIFICANT-BYTE-LAST",   # 1
         "OPAQUE",                       # 2
+    ],
+    "CalibrationAxisCategory": [
+        "COM-AXIS",    # 0
+        "CURVE-AXIS",  # 1
+        "FIX-AXIS",    # 2
+        "RES-AXIS",    # 3
+        "STD-AXIS"     # 4
     ],
     "DisplayPresentation": [
         "PRESENTATION-CONTINUOUS",  # 0

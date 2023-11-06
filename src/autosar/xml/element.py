@@ -2442,6 +2442,29 @@ class ValueGroup(SwValues):
                 raise TypeError(f"Invalid type for 'label': {str(type(label))}")
 
 
+class SwAxisCont(ARObject):
+    """
+    Complex-type AR:SW-AXIS-CONT
+    Type: Concrete
+    Tag variants: SW-AXIS-CONT
+    """
+
+    def __init__(self,
+                 category: ar_enum.CalibrationAxisCategory | None = None,
+                 unit_ref: UnitRef | None = None,
+                 unit_display_name: SingleLanguageUnitNames | None = None,
+                 sw_axis_index: int | str | None = None,
+                 sw_array_size: ValueList | None = None,
+                 sw_values_phys: SwValues | None = None) -> None:
+        self.category = category  # .CATEGORY
+        self.unit_ref: UnitRef = None  # .UNIT-REF
+        self._assign_optional('unit_ref', unit_ref, UnitRef)
+        self.unit_display_name = unit_display_name  # .UNIT-DISPLAY-NAME"
+        self.sw_axis_index = sw_axis_index    # .SW-AXIS-INDEX
+        self.sw_array_size = sw_array_size    # .SW-ARRAYSIZE
+        self.sw_values_phys = sw_values_phys  # .SW-VALUES-PHYS
+
+
 # Constant and value specifications
 
 
