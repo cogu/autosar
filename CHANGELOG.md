@@ -11,23 +11,25 @@ The name in the parenthesis after each element is the name used in the XML schem
 
 * Value checker for positive integers
 
-#### XML - Value specification elements
-
-* TextValueSpecification | TEXT-VALUE-SPECIFICATION
-* NumericalValueSpecification | NUMERICAL-VALUE-SPECIFICATION
-* NotAvailableValueSpecification | NOT-AVAILABLE-VALUE-SPECIFICATION
-* ArrayValueSpecification | ARRAY-VALUE-SPECIFICATION
-* RecordValueSpecification | RECORD-VALUE-SPECIFICATION
-
 #### XML - Data type elements
 
 * ValueList | VALUE-LIST
 
 #### XML - Calibration elements
 
-* SwValues | AR:SW-VALUES
-* ValueGroup | AR:VALUE-GROUP
-* SwAxisCont | AR:SW-AXIS-CONT
+* SwAValueCont | SW-VALUE-CONT
+* SwAxisCont | SW-AXIS-CONT
+* SwValues | SW-VALUES
+* ValueGroup | VALUE-GROUP
+
+#### XML - Value specification elements
+
+* ApplicationValueSpecification | APPLICATION-VALUE-SPECIFICATION
+* ArrayValueSpecification | ARRAY-VALUE-SPECIFICATION
+* NotAvailableValueSpecification | NOT-AVAILABLE-VALUE-SPECIFICATION
+* NumericalValueSpecification | NUMERICAL-VALUE-SPECIFICATION
+* RecordValueSpecification | RECORD-VALUE-SPECIFICATION
+* TextValueSpecification | TEXT-VALUE-SPECIFICATION
 
 ## [v0.5.0] - 2023-10-27
 

@@ -203,6 +203,7 @@ class Writer(_XMLWriter):
             'NotAvailableValueSpecification': self._write_not_available_value_specification,
             'ArrayValueSpecification': self._write_array_value_specification,
             'RecordValueSpecification': self._write_record_value_specification,
+            'ApplicationValueSpecification': self._write_application_value_specification,
         }
         # Elements used only for unit test purposes
         self.switcher_non_collectable = {
@@ -248,6 +249,7 @@ class Writer(_XMLWriter):
             # CalibrationData elements
             'SwValues': self._write_sw_values,
             'SwAxisCont': self._write_sw_axis_cont,
+            'SwValueCont': self._write_sw_value_cont,
             # Reference elements
             'PhysicalDimensionRef': self._write_physical_dimension_ref,
             'ApplicationDataTypeRef': self._write_application_data_type_ref,
@@ -1841,6 +1843,34 @@ class Writer(_XMLWriter):
                 self._write_value_specification_element(field)
             self._leave_child()
 
+    def _write_application_value_specification(self, elem: ar_element.ApplicationValueSpecification) -> None:
+        """
+        Writes complex-type AR:APPLICATION-VALUE-SPECIFICATION
+        """
+        assert isinstance(elem, ar_element.ApplicationValueSpecification)
+        tag = "APPLICATION-VALUE-SPECIFICATION"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_value_specification_group(elem)
+            self._write_application_specification_group(elem)
+            self._leave_child()
+
+    def _write_application_specification_group(self, elem: ar_element.ApplicationValueSpecification) -> None:
+        """
+        Writes group AR:APPLICATION-VALUE-SPECIFICATION
+        """
+        if elem.category is not None:
+            self._add_content("CATEGORY", str(elem.category))
+        if elem.sw_axis_conts:
+            self._add_child("SW-AXIS-CONTS")
+            for child in elem.sw_axis_conts:
+                self._write_sw_axis_cont(child)
+            self._leave_child()
+        if elem.sw_value_cont is not None:
+            self._write_sw_value_cont(elem.sw_value_cont)
+
     def _write_value_specification_group(self, elem: ar_element.ValueSpecification) -> None:
         """
         Writes group AR:VALUE-SPECIFICATION
@@ -1934,6 +1964,34 @@ class Writer(_XMLWriter):
             self._write_single_language_unit_names(elem.unit_display_name, "UNIT-DISPLAY-NAME")
         if elem.sw_axis_index is not None:
             self._add_content("SW-AXIS-INDEX", str(elem.sw_axis_index))
+        if elem.sw_array_size is not None:
+            self._write_value_list(elem.sw_array_size)
+        if elem.sw_values_phys is not None:
+            self._write_sw_values(elem.sw_values_phys)
+
+    def _write_sw_value_cont(self, elem: ar_element.SwValueCont) -> None:
+        """
+        Writes Complex-type SW-VALUE-CONT
+        Type: Concrete
+        """
+        assert isinstance(elem, ar_element.SwValueCont)
+        tag = "SW-VALUE-CONT"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_sw_value_cont_group(elem)
+            self._leave_child()
+
+    def _write_sw_value_cont_group(self, elem: ar_element.SwValueCont) -> None:
+        """
+        Writes group SW-VALUE-CONT
+        Type: Concrete
+        """
+        if elem.unit_ref is not None:
+            self._write_unit_ref(elem.unit_ref)
+        if elem.unit_display_name is not None:
+            self._write_single_language_unit_names(elem.unit_display_name, "UNIT-DISPLAY-NAME")
         if elem.sw_array_size is not None:
             self._write_value_list(elem.sw_array_size)
         if elem.sw_values_phys is not None:
