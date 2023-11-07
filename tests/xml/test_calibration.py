@@ -261,5 +261,75 @@ class TestSwAxisCont(unittest.TestCase):
         self.assertEqual(elem.sw_values_phys.values, [1])
 
 
+class TestSwValueCont(unittest.TestCase):
+
+    def test_read_write_empty(self):
+        element = ar_element.SwValueCont()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<SW-VALUE-CONT/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwValueCont = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwValueCont)
+
+    def test_read_write_unit_ref(self):
+        element = ar_element.SwValueCont(unit_ref=ar_element.UnitRef("/Units/MyUnit"))
+        writer = autosar.xml.Writer()
+        xml = '''<SW-VALUE-CONT>
+  <UNIT-REF DEST="UNIT">/Units/MyUnit</UNIT-REF>
+</SW-VALUE-CONT>'''
+
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwValueCont = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwValueCont)
+        self.assertEqual(str(elem.unit_ref), "/Units/MyUnit")
+
+    def test_read_write_unit_display_name(self):
+        unit_display_name = ar_element.SingleLanguageUnitNames("Km/h")
+        element = ar_element.SwValueCont(unit_display_name=unit_display_name)
+        writer = autosar.xml.Writer()
+        xml = '''<SW-VALUE-CONT>
+  <UNIT-DISPLAY-NAME>Km/h</UNIT-DISPLAY-NAME>
+</SW-VALUE-CONT>'''
+
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwValueCont = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwValueCont)
+        self.assertEqual(str(elem.unit_display_name), "Km/h")
+
+    def test_read_write_sw_array_size(self):
+        element = ar_element.SwValueCont(sw_array_size=ar_element.ValueList([1, 2]))
+        writer = autosar.xml.Writer()
+        xml = '''<SW-VALUE-CONT>
+  <SW-ARRAYSIZE>
+    <V>1</V>
+    <V>2</V>
+  </SW-ARRAYSIZE>
+</SW-VALUE-CONT>'''
+
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwValueCont = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwValueCont)
+        self.assertEqual(elem.sw_array_size.values, [1, 2])
+
+    def test_read_write_sw_values_phys(self):
+        element = ar_element.SwValueCont(sw_values_phys=ar_element.SwValues(1))
+        writer = autosar.xml.Writer()
+        xml = '''<SW-VALUE-CONT>
+  <SW-VALUES-PHYS>
+    <V>1</V>
+  </SW-VALUES-PHYS>
+</SW-VALUE-CONT>'''
+
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwValueCont = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwValueCont)
+        self.assertEqual(elem.sw_values_phys.values, [1])
+
+
 if __name__ == '__main__':
     unittest.main()

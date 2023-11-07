@@ -2456,13 +2456,45 @@ class SwAxisCont(ARObject):
                  sw_axis_index: int | str | None = None,
                  sw_array_size: ValueList | None = None,
                  sw_values_phys: SwValues | None = None) -> None:
-        self.category = category  # .CATEGORY
+        self.category: ar_enum.CalibrationAxisCategory = None  # .CATEGORY
         self.unit_ref: UnitRef = None  # .UNIT-REF
-        self._assign_optional('unit_ref', unit_ref, UnitRef)
-        self.unit_display_name = unit_display_name  # .UNIT-DISPLAY-NAME"
-        self.sw_axis_index = sw_axis_index    # .SW-AXIS-INDEX
-        self.sw_array_size = sw_array_size    # .SW-ARRAYSIZE
-        self.sw_values_phys = sw_values_phys  # .SW-VALUES-PHYS
+        self.unit_display_name: SingleLanguageUnitNames = None  # .UNIT-DISPLAY_NAME
+        self.sw_axis_index: int | str = None  # .SW-AXIS-INDEX
+        self.sw_array_size: ValueList = None  # .SW-ARRAYSIZE
+        self.sw_values_phys: SwValues = None  # .SW-VALUES-PHYS
+        self._assign_optional('category', category, ar_enum.CalibrationAxisCategory)
+        self._assign_optional_strict('unit_ref', unit_ref, UnitRef)
+        self._assign_optional_strict('unit_display_name', unit_display_name, SingleLanguageUnitNames)
+        if sw_axis_index is not None:
+            if isinstance(sw_axis_index, (int, str)):
+                self.sw_axis_index = sw_axis_index
+            else:
+                error_msg = "Invalid type for parameter 'sw_axis_index'. Expected 'int' or 'str', "
+                raise TypeError(error_msg + f"got '{str(type(sw_axis_index))}'")
+        self._assign_optional_strict('sw_array_size', sw_array_size, ValueList)
+        self._assign_optional_strict('sw_values_phys', sw_values_phys, SwValues)
+
+
+class SwValueCont(ARObject):
+    """
+    Complex-type AR:SW-VALUE-CONT
+    Type: Concrete
+    Tag variants: SW-VALUE-CONT
+    """
+
+    def __init__(self,
+                 unit_ref: UnitRef | None = None,
+                 unit_display_name: SingleLanguageUnitNames | None = None,
+                 sw_array_size: ValueList | None = None,
+                 sw_values_phys: SwValues | None = None) -> None:
+        self.unit_ref: UnitRef = None  # .UNIT-REF
+        self.unit_display_name: SingleLanguageUnitNames = None  # .UNIT-DISPLAY_NAME
+        self.sw_array_size: ValueList = None  # .SW-ARRAYSIZE
+        self.sw_values_phys: SwValues = None  # .SW-VALUES-PHYS
+        self._assign_optional_strict('unit_ref', unit_ref, UnitRef)
+        self._assign_optional_strict('unit_display_name', unit_display_name, SingleLanguageUnitNames)
+        self._assign_optional_strict('sw_array_size', sw_array_size, ValueList)
+        self._assign_optional_strict('sw_values_phys', sw_values_phys, SwValues)
 
 
 # Constant and value specifications
@@ -2635,6 +2667,41 @@ class RecordValueSpecification(ValueSpecification):
         if not isinstance(field, ValueSpecification):
             raise TypeError(f"Invalid type for 'field': {str(type(field))}")
         self.fields.append(field)
+
+
+class ApplicationValueSpecification(ValueSpecification):
+    """
+    Complex-type AR:APPLICATION-VALUE-SPECIFICATION
+    Type: Concrete
+    Tag variants: APPLICATION-VALUE-SPECIFICATION
+    """
+
+    def __init__(self,
+                 label: str | None = None,
+                 category: str | None = None,
+                 sw_axis_conts: SwAxisCont | list[SwAxisCont] | None = None,
+                 sw_value_cont: SwValueCont | None = None
+                 ) -> None:
+        super().__init__(label)
+        self.category: str = None
+        self.sw_axis_conts: list[SwAxisCont] = []
+        self.sw_value_cont: SwValueCont = None
+        self._assign_optional_strict("category", category, str)
+        self._assign_optional_strict("sw_value_cont", sw_value_cont, SwValueCont)
+        if sw_axis_conts is not None:
+            if isinstance(sw_axis_conts, SwAxisCont):
+                self.sw_axis_conts.append(sw_axis_conts)
+            elif isinstance(sw_axis_conts, list):
+                for elem in sw_axis_conts:
+                    if isinstance(elem, SwAxisCont):
+                        self.sw_axis_conts.append(elem)
+                    else:
+                        error_msg = "sw_axis_conts: Elements in list must of type SwAxisCont."
+                        raise TypeError(error_msg + f" Got {str(type(elem))}")
+            else:
+                error_msg = "sw_axis_conts: argument must be either SwAxisCont or list[SwAxisCont]."
+                raise TypeError(error_msg + f" Got {str(type(sw_axis_conts))}")
+
 
 # !!UNFINISHED!! Port Interfaces
 
