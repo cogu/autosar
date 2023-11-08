@@ -146,12 +146,13 @@ class IdentifiableSubTypes(Enum):
     AUTOSAR_DATA_TYPE = 8
     BSW_MODULE_ENTRY = 9
     COMPU_METHOD = 10
-    DATA_CONSTR = 11
-    IMPLEMENTATION_DATA_TYPE = 12
-    PHYSICAL_DIMENSION = 13
-    SW_ADDR_METHOD = 14
-    SW_BASE_TYPE = 15
-    UNIT = 16
+    CONSTANT_SPECIFICATION = 11
+    DATA_CONSTR = 12
+    IMPLEMENTATION_DATA_TYPE = 13
+    PHYSICAL_DIMENSION = 14
+    SW_ADDR_METHOD = 15
+    SW_BASE_TYPE = 16
+    UNIT = 17
 
 
 class IntervalType(Enum):
@@ -538,12 +539,13 @@ xml_to_enum_map = {
         "AUTOSAR-DATA-TYPE": IdentifiableSubTypes.AUTOSAR_DATA_TYPE,
         "BSW-MODULE-ENTRY": IdentifiableSubTypes.BSW_MODULE_ENTRY,
         "COMPU-METHOD": IdentifiableSubTypes.COMPU_METHOD,
+        "CONSTANT-SPECIFICATION": IdentifiableSubTypes.CONSTANT_SPECIFICATION,
         "DATA-CONSTR": IdentifiableSubTypes.DATA_CONSTR,
         "IMPLEMENTATION-DATA-TYPE": IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE,
-        "UNIT": IdentifiableSubTypes.UNIT,
         "PHYSICAL-DIMENSION": IdentifiableSubTypes.PHYSICAL_DIMENSION,
         "SW-ADDR-METHOD": IdentifiableSubTypes.SW_ADDR_METHOD,
         "SW-BASE-TYPE": IdentifiableSubTypes.SW_BASE_TYPE,
+        "UNIT": IdentifiableSubTypes.UNIT,
     },
     "IntervalType": {
         "CLOSED": IntervalType.CLOSED,
@@ -805,12 +807,13 @@ enum_to_xml_map = {
         "AUTOSAR-DATA-TYPE",                  # 8
         "BSW-MODULE-ENTRY",                   # 9
         "COMPU-METHOD",                       # 10
-        "DATA-CONSTR",                        # 11
-        "IMPLEMENTATION-DATA-TYPE",           # 12
-        "PHYSICAL-DIMENSION",                 # 13
-        "SW-ADDR-METHOD",                     # 14
-        "SW-BASE-TYPE",                       # 15
-        "UNIT",                               # 16
+        "CONSTANT-SPECIFICATION",             # 11
+        "DATA-CONSTR",                        # 12
+        "IMPLEMENTATION-DATA-TYPE",           # 13
+        "PHYSICAL-DIMENSION",                 # 14
+        "SW-ADDR-METHOD",                     # 15
+        "SW-BASE-TYPE",                       # 16
+        "UNIT",                               # 17
     ],
     "IntervalType": [
         "CLOSED",  # 0

@@ -17,19 +17,25 @@ The name in the parenthesis after each element is the name used in the XML schem
 
 #### XML - Calibration elements
 
-* SwAValueCont | SW-VALUE-CONT
+* SwValueCont | SW-VALUE-CONT
 * SwAxisCont | SW-AXIS-CONT
 * SwValues | SW-VALUES
 * ValueGroup | VALUE-GROUP
 
-#### XML - Value specification elements
+#### XML - Constant and Value specification elements
 
+* ConstantSpecification | CONSTANT-SPECIFICATION | `collectable`
 * ApplicationValueSpecification | APPLICATION-VALUE-SPECIFICATION
 * ArrayValueSpecification | ARRAY-VALUE-SPECIFICATION
+* ConstantReference | CONSTANT-REFERENCE
 * NotAvailableValueSpecification | NOT-AVAILABLE-VALUE-SPECIFICATION
 * NumericalValueSpecification | NUMERICAL-VALUE-SPECIFICATION
 * RecordValueSpecification | RECORD-VALUE-SPECIFICATION
 * TextValueSpecification | TEXT-VALUE-SPECIFICATION
+
+#### XML - Reference elements
+
+* ConstantRef (different class from ConstantReference)
 
 ## [v0.5.0] - 2023-10-27
 

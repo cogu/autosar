@@ -17,7 +17,11 @@ MultiLanguageOverviewParagraph = ar_element.MultiLanguageOverviewParagraph
 TupleList = list[tuple[str, str]]
 ValueSpeficationElement = Union[ar_element.TextValueSpecification,
                                 ar_element.NumericalValueSpecification,
-                                ar_element.NotAvailableValueSpecification]
+                                ar_element.NotAvailableValueSpecification,
+                                ar_element.ArrayValueSpecification,
+                                ar_element.RecordValueSpecification,
+                                ar_element.ApplicationValueSpecification,
+                                ar_element.ConstantReference]
 
 
 class _XMLWriter:
@@ -195,6 +199,8 @@ class Writer(_XMLWriter):
             'DataConstraint': self._write_data_constraint,
             # Unit elements
             'Unit': self._write_unit,
+            # Constant elements
+            'ConstantSpecification': self._write_constant_specification,
         }
         # Value specification elements
         self.switcher_value_specification = {
@@ -204,6 +210,7 @@ class Writer(_XMLWriter):
             'ArrayValueSpecification': self._write_array_value_specification,
             'RecordValueSpecification': self._write_record_value_specification,
             'ApplicationValueSpecification': self._write_application_value_specification,
+            'ConstantReference': self._write_constant_reference,
         }
         # Elements used only for unit test purposes
         self.switcher_non_collectable = {
@@ -253,6 +260,7 @@ class Writer(_XMLWriter):
             # Reference elements
             'PhysicalDimensionRef': self._write_physical_dimension_ref,
             'ApplicationDataTypeRef': self._write_application_data_type_ref,
+            'ConstantRef': self._write_constant_ref,
         }
         self.switcher_all = {}  # All concrete elements (used for unit testing)
         self.switcher_all.update(self.switcher_collectable)
@@ -1736,6 +1744,19 @@ class Writer(_XMLWriter):
         self._collect_base_ref_attr(elem, attr)
         self._add_content(tag, elem.value, attr)
 
+    def _write_constant_ref(self, elem: ar_element.ApplicationDataTypeRef, tag: str) -> None:
+        """
+        Writes reference to ConstantSpecification
+        Type: Concrete
+        Tag variants: 'CONSTANT-REF'
+
+        Don't confuse this with the ConstantReference class.
+        """
+        assert isinstance(elem, ar_element.ConstantRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content(tag, elem.value, attr)
+
 # Constant and value specifications
 
     def _write_text_value_specification(self, elem: ar_element.TextValueSpecification) -> None:
@@ -1889,6 +1910,44 @@ class Writer(_XMLWriter):
             write_method(elem)
         else:
             raise NotImplementedError(f"Found no writer for class {class_name}")
+
+    def _write_constant_specification(self, elem: ar_element.ConstantSpecification) -> None:
+        """
+        Writes complex type AR:CONSTANT-SPECIFICATION
+        """
+        assert isinstance(elem, ar_element.ConstantSpecification)
+        attr: TupleList = []
+        self._collect_identifiable_attributes(elem, attr)
+        self._add_child('CONSTANT-SPECIFICATION', attr)
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_constant_specification_group(elem)
+        self._leave_child()
+
+    def _write_constant_specification_group(self, elem: ar_element.ConstantSpecification) -> None:
+        """
+        Writes group AR:CONSTANT-SPECIFICATION
+        """
+        if elem.value is not None:
+            self._add_child("VALUE-SPEC")
+            self._write_value_specification_element(elem.value)
+            self._leave_child()
+
+    def _write_constant_reference(self, elem: ar_element.ConstantReference) -> None:
+        """
+        Writes complex type AR:CONSTANT-REFERENCE
+        """
+        assert isinstance(elem, ar_element.ConstantReference)
+        tag = "CONSTANT-REFERENCE"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_value_specification_group(elem)
+            if elem.constant_ref is not None:
+                self._write_constant_ref(elem.constant_ref, "CONSTANT-REF")
+            self._leave_child()
 
 # CalibrationData elements
 

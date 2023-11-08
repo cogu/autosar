@@ -434,5 +434,86 @@ class TestApplicationValueSpecification(unittest.TestCase):
         self.assertEqual(elem.sw_value_cont.sw_values_phys.values, [1, 2, 3, 4])
 
 
+class TestConstantSpecification(unittest.TestCase):
+
+    def test_read_write_name_only(self):
+        element = ar_element.ConstantSpecification("MyName")
+        writer = autosar.xml.Writer()
+        xml = '''<CONSTANT-SPECIFICATION>
+  <SHORT-NAME>MyName</SHORT-NAME>
+</CONSTANT-SPECIFICATION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ConstantSpecification = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ConstantSpecification)
+        self.assertEqual(elem.name, "MyName")
+
+    def test_read_write_value_spec_from_object(self):
+        value = ar_element.NumericalValueSpecification(label="MyLabel", value=2.5)
+        element = ar_element.ConstantSpecification("MyName", value=value)
+        writer = autosar.xml.Writer()
+        xml = '''<CONSTANT-SPECIFICATION>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <VALUE-SPEC>
+    <NUMERICAL-VALUE-SPECIFICATION>
+      <SHORT-LABEL>MyLabel</SHORT-LABEL>
+      <VALUE>2.5</VALUE>
+    </NUMERICAL-VALUE-SPECIFICATION>
+  </VALUE-SPEC>
+</CONSTANT-SPECIFICATION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ConstantSpecification = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ConstantSpecification)
+        self.assertEqual(elem.name, "MyName")
+        self.assertEqual(elem.value.label, "MyLabel")
+        self.assertEqual(elem.value.value, 2.5)
+
+    def test_read_write_value_spec_made_from_value_builder(self):
+        element = ar_element.ConstantSpecification.make_constant("MyName",
+                                                                 ("MyLabel", 2.5))
+        writer = autosar.xml.Writer()
+        xml = '''<CONSTANT-SPECIFICATION>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <VALUE-SPEC>
+    <NUMERICAL-VALUE-SPECIFICATION>
+      <SHORT-LABEL>MyLabel</SHORT-LABEL>
+      <VALUE>2.5</VALUE>
+    </NUMERICAL-VALUE-SPECIFICATION>
+  </VALUE-SPEC>
+</CONSTANT-SPECIFICATION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ConstantSpecification = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ConstantSpecification)
+        self.assertEqual(elem.name, "MyName")
+        self.assertEqual(elem.value.label, "MyLabel")
+        self.assertEqual(elem.value.value, 2.5)
+
+
+class TestConstantReference(unittest.TestCase):
+
+    def test_read_write_empty(self):
+        element = ar_element.ConstantReference()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<CONSTANT-REFERENCE/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.ConstantReference = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ConstantReference)
+
+    def test_read_write_constant_ref(self):
+        element = ar_element.ConstantReference(constant_ref=ar_element.ConstantRef("/Constants/MyConstant"))
+        writer = autosar.xml.Writer()
+        xml = '''<CONSTANT-REFERENCE>
+  <CONSTANT-REF DEST="CONSTANT-SPECIFICATION">/Constants/MyConstant</CONSTANT-REF>
+</CONSTANT-REFERENCE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ConstantReference = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ConstantReference)
+        self.assertEqual(str(elem.constant_ref), "/Constants/MyConstant")
+
+
 if __name__ == '__main__':
     unittest.main()
