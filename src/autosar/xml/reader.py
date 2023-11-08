@@ -5,7 +5,7 @@ import os
 import re
 import sys
 
-from typing import Iterable, Any
+from typing import Iterable, Any, Union
 import lxml.etree as ElementTree
 import autosar.base as ar_base
 import autosar.xml.document as ar_document
@@ -16,6 +16,14 @@ import autosar.xml.enumeration as ar_enum
 # Type aliases
 
 MultiLanguageOverviewParagraph = ar_element.MultiLanguageOverviewParagraph
+
+ValueSpeficationElement = Union[ar_element.TextValueSpecification,
+                                ar_element.NumericalValueSpecification,
+                                ar_element.NotAvailableValueSpecification,
+                                ar_element.ArrayValueSpecification,
+                                ar_element.RecordValueSpecification,
+                                ar_element.ApplicationValueSpecification,
+                                ar_element.ConstantReference]
 
 # Helper classes
 
@@ -118,6 +126,9 @@ class Reader:
 
             # Unit elements
             'UNIT': self._read_unit,
+
+            # Constant elements
+            'CONSTANT-SPECIFICATION': self._read_constant_specification,
         }
         # Value specification elements
         self.switcher_value_specification = {
@@ -127,6 +138,7 @@ class Reader:
             'ARRAY-VALUE-SPECIFICATION': self._read_array_value_specification,
             'RECORD-VALUE-SPECIFICATION': self._read_record_value_specification,
             'APPLICATION-VALUE-SPECIFICATION': self._read_application_value_specification,
+            'CONSTANT-REFERENCE': self._read_constant_reference,
         }
         self.switcher_non_collectable = {  # Non-collectable, used only for unit testing
             # Documentation elements
@@ -174,6 +186,7 @@ class Reader:
             # Reference elements
             'PHYSICAL-DIMENSION-REF': self._read_physical_dimension_ref,
             'APPLICATION-DATA-TYPE-REF': self._read_application_data_type_ref,
+            'CONSTANT-REF': self._read_constant_ref,
         }
         self.switcher_all = {}
         self.switcher_all.update(self.switcher_collectable)
@@ -1813,6 +1826,69 @@ class Reader:
                 elements.append(self._read_application_record_element(xml_record_element))
             data["elements"] = elements
 
+    def _read_data_type_map(self, xml_element: ElementTree.Element) -> ar_element.DataTypeMap:
+        """
+        Reads AR:DATA-TYPE-MAP
+        Type: Concrete
+        Tag variants: 'DATA-TYPE-MAP'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("APPLICATION-DATA-TYPE-REF")
+        if xml_child is not None:
+            data["appl_data_type_ref"] = self._read_application_data_type_ref(xml_child)
+        xml_child = child_elements.get("IMPLEMENTATION-DATA-TYPE-REF")
+        if xml_child is not None:
+            data["impl_data_type_ref"] = self._read_impl_data_type_ref(xml_child)
+        return ar_element.DataTypeMap(**data)
+
+    def _read_data_type_mapping_set(self, xml_element: ElementTree.Element) -> ar_element.DataTypeMappingSet:
+        """
+        Reads AR:DATA-TYPE-MAPPING-SET
+        Type: Concrete
+        Tag variants: 'DATA-TYPE-MAPPING-SET'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_read_data_type_mapping_set_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        element = ar_element.DataTypeMappingSet(**data)
+        return element
+
+    def _read_read_data_type_mapping_set_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:DATA-TYPE-MAPPING-SET
+        Type: Abstract
+        """
+        xml_child = child_elements.get("DATA-TYPE-MAPS")
+        if xml_child is not None:
+            data_type_maps = []
+            for xml_data_type_map_element in xml_child.findall("./DATA-TYPE-MAP"):
+                data_type_maps.append(self._read_data_type_map(xml_data_type_map_element))
+            data["data_type_maps"] = data_type_maps
+
+    def _read_value_list(self, xml_element: ElementTree.Element) -> ar_element.ValueList:
+        """
+        Reads complex-type AR:VALUE-LIST
+        Type: Concrete
+        Tag variants: 'SW-ARRAYSIZE'
+        """
+        values = []
+        data = {"values": values}
+        for xml_value in xml_element.findall("./V"):
+            number = ar_element.NumericalValue(xml_value.text)
+            if number.value_format in (ar_enum.ValueFormat.HEXADECIMAL,
+                                       ar_enum.ValueFormat.BINARY,
+                                       ar_enum.ValueFormat.SCIENTIFIC):
+                values.append(number)
+            else:
+                values.append(number.value)
+        element = ar_element.ValueList(**data)
+        return element
+
     # Reference elements
 
     def _read_compu_method_ref(self, xml_elem: ElementTree.Element) -> ar_element.CompuMethodRef:
@@ -1960,73 +2036,26 @@ class Reader:
         dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', dest_text, self.schema_version)
         return ar_element.AutosarDataTypeRef(xml_elem.text, dest_enum)
 
+    def _read_constant_ref(self,
+                           xml_elem: ElementTree.Element
+                           ) -> ar_element.ConstantRef:
+        """
+        Reads reference to ConstantSpecification
+        Type: Concrete
+        Tag variants: 'CONSTANT-REF'
+        """
+        dest_text = xml_elem.attrib['DEST']
+        dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', dest_text, self.schema_version)
+        if dest_enum != ar_enum.IdentifiableSubTypes.CONSTANT_SPECIFICATION:
+            self._raise_parse_error(xml_elem,
+                                    f"Invalid DEST attribute '{dest_text}'."
+                                    f"Expected 'CONSTANT-SPECIFICATION'")
+        return ar_element.ConstantRef(xml_elem.text)
+
     def _read_base_ref_attributes(self, attr: dict, data: dict) -> None:
         data['dest'] = attr.get('DEST', None)
         if data['dest'] is None:
             raise ar_exception.ParseError("Missing required attribute 'DEST'")
-
-    def _read_data_type_map(self, xml_element: ElementTree.Element) -> ar_element.DataTypeMap:
-        """
-        Reads AR:DATA-TYPE-MAP
-        Type: Concrete
-        Tag variants: 'DATA-TYPE-MAP'
-        """
-        data = {}
-        child_elements = ChildElementMap(xml_element)
-        xml_child = child_elements.get("APPLICATION-DATA-TYPE-REF")
-        if xml_child is not None:
-            data["appl_data_type_ref"] = self._read_application_data_type_ref(xml_child)
-        xml_child = child_elements.get("IMPLEMENTATION-DATA-TYPE-REF")
-        if xml_child is not None:
-            data["impl_data_type_ref"] = self._read_impl_data_type_ref(xml_child)
-        return ar_element.DataTypeMap(**data)
-
-    def _read_data_type_mapping_set(self, xml_element: ElementTree.Element) -> ar_element.DataTypeMappingSet:
-        """
-        Reads AR:DATA-TYPE-MAPPING-SET
-        Type: Concrete
-        Tag variants: 'DATA-TYPE-MAPPING-SET'
-        """
-        data = {}
-        child_elements = ChildElementMap(xml_element)
-        self._read_referrable(child_elements, data)
-        self._read_multi_language_referrable(child_elements, data)
-        self._read_identifiable(child_elements, xml_element.attrib, data)
-        self._read_read_data_type_mapping_set_group(child_elements, data)
-        self._report_unprocessed_elements(child_elements)
-        element = ar_element.DataTypeMappingSet(**data)
-        return element
-
-    def _read_read_data_type_mapping_set_group(self, child_elements: ChildElementMap, data: dict) -> None:
-        """
-        Reads group AR:DATA-TYPE-MAPPING-SET
-        Type: Abstract
-        """
-        xml_child = child_elements.get("DATA-TYPE-MAPS")
-        if xml_child is not None:
-            data_type_maps = []
-            for xml_data_type_map_element in xml_child.findall("./DATA-TYPE-MAP"):
-                data_type_maps.append(self._read_data_type_map(xml_data_type_map_element))
-            data["data_type_maps"] = data_type_maps
-
-    def _read_value_list(self, xml_element: ElementTree.Element) -> ar_element.ValueList:
-        """
-        Reads complex-type AR:VALUE-LIST
-        Type: Concrete
-        Tag variants: 'SW-ARRAYSIZE'
-        """
-        values = []
-        data = {"values": values}
-        for xml_value in xml_element.findall("./V"):
-            number = ar_element.NumericalValue(xml_value.text)
-            if number.value_format in (ar_enum.ValueFormat.HEXADECIMAL,
-                                       ar_enum.ValueFormat.BINARY,
-                                       ar_enum.ValueFormat.SCIENTIFIC):
-                values.append(number)
-            else:
-                values.append(number.value)
-        element = ar_element.ValueList(**data)
-        return element
 
     # Constant and value specifications
 
@@ -2129,11 +2158,8 @@ class Reader:
         if xml_elements is not None:
             elements = []
             for xml_child_elem in xml_elements.findall('./*'):
-                read_method = self.switcher_value_specification.get(xml_child_elem.tag, None)
-                if read_method is not None:
-                    elements.append(read_method(xml_child_elem))
-                else:
-                    raise NotImplementedError(f"Found no reader for '{xml_child_elem.tag}'")
+                element = self._read_value_specification_element(xml_child_elem)
+                elements.append(element)
             data["elements"] = elements
 
     def _read_record_value_specification(self,
@@ -2153,17 +2179,14 @@ class Reader:
 
     def _read_record_value_specification_group(self, child_elements: ChildElementMap, data: dict) -> None:
         """
-        Reads group AR:NOT-AVAILABLE-VALUE-SPECIFICATION
+        Reads group AR:RECORD-VALUE-SPECIFICATION
         """
         xml_elements = child_elements.get("FIELDS")
         if xml_elements is not None:
             fields = []
             for xml_child_elem in xml_elements.findall('./*'):
-                read_method = self.switcher_value_specification.get(xml_child_elem.tag, None)
-                if read_method is not None:
-                    fields.append(read_method(xml_child_elem))
-                else:
-                    raise NotImplementedError(f"Found no reader for '{xml_child_elem.tag}'")
+                field = self._read_value_specification_element(xml_child_elem)
+                fields.append(field)
             data["fields"] = fields
 
     def _read_value_specification_group(self, child_elements: ChildElementMap, data: dict) -> None:
@@ -2206,6 +2229,63 @@ class Reader:
         xml_child = child_elements.get("SW-VALUE-CONT")
         if xml_child is not None:
             data["sw_value_cont"] = self._read_sw_value_cont(xml_child)
+
+    def _read_value_specification_element(self,
+                                          xml_element: ElementTree.Element) -> ValueSpeficationElement:
+        """
+        Reads any ValueSpecificationElement
+        """
+        read_method = self.switcher_value_specification.get(xml_element.tag, None)
+        if read_method is not None:
+            return read_method(xml_element)
+        else:
+            print(f"Found no reader for '{xml_element.tag}'", file=sys.stderr)
+
+    def _read_constant_specification(self,
+                                     xml_element: ElementTree.Element) -> ar_element.ConstantSpecification:
+        """
+        Reads complex type AR:CONSTANT-SPECIFICATION
+        Type: Concrete
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_constant_specification_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ConstantSpecification(**data)
+
+    def _read_constant_specification_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:CONSTANT-SPECIFICATION
+        """
+        xml_child = child_elements.get("VALUE-SPEC")
+        if xml_child is not None:
+            xml_grand_child = xml_child.find("./*")
+            data["value"] = self._read_value_specification_element(xml_grand_child)
+
+    def _read_constant_reference(self,
+                                 xml_element: ElementTree.Element
+                                 ) -> ar_element.ConstantReference:
+        """
+        Reads complex-type AR:CONSTANT-REFERENCE
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_value_specification_group(child_elements, data)
+        self._read_constant_reference_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        element = ar_element.ConstantReference(**data)
+        return element
+
+    def _read_constant_reference_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:CONSTANT-REFERENCE
+        """
+        xml_child = child_elements.get("CONSTANT-REF")
+        if xml_child is not None:
+            data["constant_ref"] = self._read_constant_ref(xml_child)
 
     # CalibrationData elements
 

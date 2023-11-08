@@ -21,7 +21,11 @@ display_format_str_re = re.compile(
 
 ValueSpeficationElement = Union["TextValueSpecification",
                                 "NumericalValueSpecification",
-                                "NotAvailableValueSpecification"]
+                                "NotAvailableValueSpecification",
+                                "ArrayValueSpecification",
+                                "RecordValueSpecification",
+                                "ApplicationValueSpecification",
+                                "ConstantReference"]
 
 # Helper classes
 
@@ -532,6 +536,18 @@ class AutosarDataTypeRef(BaseRef):
                 ar_enum.IdentifiableSubTypes.AUTOSAR_DATA_TYPE,
                 ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE}
 
+
+class ConstantRef(BaseRef):
+    """
+    Reference to ConstantSpecification
+    """
+
+    def __init__(self, value: str) -> None:
+        super().__init__(value, ar_enum.IdentifiableSubTypes.CONSTANT_SPECIFICATION)
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.CONSTANT_SPECIFICATION}
 
 # Documentation Elements
 
@@ -2702,6 +2718,62 @@ class ApplicationValueSpecification(ValueSpecification):
                 error_msg = "sw_axis_conts: argument must be either SwAxisCont or list[SwAxisCont]."
                 raise TypeError(error_msg + f" Got {str(type(sw_axis_conts))}")
 
+
+class ConstantSpecification(ARElement):
+    """
+    Complex-type AR:CONSTANT-SPECIFICATION
+    Type: Concrete
+    Tag Variants: 'CONSTANT-SPECIFICATION'
+    """
+
+    def __init__(self, name: str, value: ValueSpeficationElement | None = None, **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.value: ValueSpeficationElement = None  # .VALUE-SPEC
+        if value is not None:
+            if isinstance(value, ValueSpecification):
+                self.value = value
+            else:
+                error_msg = "Invalid type for parameter 'value'. Expected a subclass of ValueSpecification,"
+                raise TypeError(error_msg + f" got {str(type(value))}")
+
+    def ref(self) -> ConstantRef:
+        """
+        Reference
+        """
+        assert self.parent is not None
+        ref_parts: list[str] = [self.name]
+        self.parent.update_ref_parts(ref_parts)
+        value = '/'.join(reversed(ref_parts))
+        return ConstantRef(value)
+
+    @classmethod
+    def make_constant(cls,
+                      name: str,
+                      value: tuple[str, Any] | Any,
+                      **kwargs) -> "ConstantSpecification":
+        """
+        Creates a new constant object and populates it from Python data.
+        """
+        value = ValueSpecification.make_value(value)
+        return cls(name, value, **kwargs)
+
+
+class ConstantReference(ValueSpecification):
+    """
+    Complex type AR:CONSTANT-REFERENCE
+    Type: Concrete
+    Tag variants 'CONSTANT-REFERENCE'
+
+    It's easy to confuse this with the ConstantRef class.
+    This class is just a wrapper around an instance of ConstantRef.
+    """
+
+    def __init__(self,
+                 label: str | None = None,
+                 constant_ref: ConstantRef | None = None) -> None:
+        self.constant_ref: ConstantRef = None
+        super().__init__(label)
+        self._assign_optional_strict("constant_ref", constant_ref, ConstantRef)
 
 # !!UNFINISHED!! Port Interfaces
 
