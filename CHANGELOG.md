@@ -5,7 +5,7 @@ Non-collectable elements are various sub-elements to collectable elements.
 
 The name in the parenthesis after each element is the name used in the XML schema (XSD file).
 
-## [Unreleased]
+## [v0.5.1] - 2023-11-09
 
 ### Added
 
