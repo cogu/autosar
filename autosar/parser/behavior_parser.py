@@ -187,7 +187,19 @@ class BehaviorParser(ElementParser):
                 elif xmlElem.tag == 'PER-INSTANCE-PARAMETERS':
                     pass #implement later
                 elif xmlElem.tag == 'EXPLICIT-INTER-RUNNABLE-VARIABLES':
-                    pass #implement later
+                    for xmlChild in xmlElem.findall('./*'):
+                        if xmlChild.tag == 'VARIABLE-DATA-PROTOTYPE':
+                            dataElement = self.parseVariableDataPrototype(xmlChild, internalBehavior)
+                            internalBehavior.explicitVariables.append(dataElement)
+                        else:
+                            raise NotImplementedError(xmlChild.tag)
+                elif xmlElem.tag == 'IMPLICIT-INTER-RUNNABLE-VARIABLES':
+                    for xmlChild in xmlElem.findall('./*'):
+                        if xmlChild.tag == 'VARIABLE-DATA-PROTOTYPE':
+                            dataElement = self.parseVariableDataPrototype(xmlChild, internalBehavior)
+                            internalBehavior.implicitVariables.append(dataElement)
+                        else:
+                            raise NotImplementedError(xmlChild.tag)
                 elif xmlElem.tag == 'HANDLE-TERMINATION-AND-RESTART':
                     pass #implement later
                 elif xmlElem.tag == 'STATIC-MEMORYS':
@@ -208,8 +220,12 @@ class BehaviorParser(ElementParser):
         canBeInvokedConcurrently = False
         xmlModeSwitchPoints = None
         minStartInterval = None
+
         xmlDataReadAccess = None
         xmlDataWriteAccess = None
+        xmlLocalDataReadAccess = None
+        xmlLocalDataWriteAccess = None
+
         if self.version < 4.0:
             for xmlElem in xmlRoot.findall('*'):
                 if xmlElem.tag=='SHORT-NAME':
@@ -257,9 +273,9 @@ class BehaviorParser(ElementParser):
                 elif xmlElem.tag == 'MODE-SWITCH-POINTS':
                     xmlModeSwitchPoints = xmlElem
                 elif xmlElem.tag == 'READ-LOCAL-VARIABLES':
-                    pass #implement later
+                    xmlLocalDataReadAccess = xmlElem
                 elif xmlElem.tag == 'WRITTEN-LOCAL-VARIABLES':
-                    pass #implement later
+                    xmlLocalDataWriteAccess = xmlElem
                 elif xmlElem.tag == 'DATA-READ-ACCESSS':
                     xmlDataReadAccess = xmlElem
                 elif xmlElem.tag == 'DATA-WRITE-ACCESSS':
@@ -353,6 +369,24 @@ class BehaviorParser(ElementParser):
                     runnableEntity.dataWriteAccess.append(variableAccess)
                 else:
                     raise NotImplementedError(xmlElem.tag)
+
+        if xmlLocalDataReadAccess is not None:
+            for xmlElem in xmlLocalDataReadAccess.findall('./*'):
+                if xmlElem.tag == 'VARIABLE-ACCESS':
+                    variableAccess = self._parseLocalVariableAccess(xmlElem)
+                    assert(variableAccess is not None)
+                    runnableEntity.dataLocalReadAccess.append(variableAccess)
+                else:
+                    raise NotImplementedError(xmlElem.tag)
+        
+        if xmlLocalDataWriteAccess is not None:
+            for xmlElem in xmlLocalDataWriteAccess.findall('./*'):
+                if xmlElem.tag == 'VARIABLE-ACCESS':
+                    variableAccess = self._parseLocalVariableAccess(xmlElem)
+                    assert(variableAccess is not None)
+                    runnableEntity.dataLocalWriteAccess.append(variableAccess)
+                else:
+                    raise NotImplementedError(xmlElem.tag)
         
         if runnableEntity is not None:
             runnableEntity.adminData = adminData
@@ -407,6 +441,19 @@ class BehaviorParser(ElementParser):
             else:
                 raise NotImplementedError(xmlElem.tag)
         return autosar.behavior.VariableAccess(name, variableAccess.portPrototypeRef, variableAccess.targetDataPrototypeRef)
+
+    @parseElementUUID
+    def _parseLocalVariableAccess(self, xmlRoot):
+        assert(xmlRoot.tag == 'VARIABLE-ACCESS')
+        (name, variableAccess) = (None, None)
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == 'SHORT-NAME':
+                name = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'ACCESSED-VARIABLE':
+                variableAccess = self.parseLocalAccessedVariable(xmlElem)
+            else:
+                raise NotImplementedError(xmlElem.tag)
+        return autosar.behavior.LocalVariableAccess(name, variableAccess.localVariableRef)
 
     @parseElementUUID
     def parseParameterAccessPoint(self, xmlRoot, parent = None):
@@ -464,7 +511,6 @@ class BehaviorParser(ElementParser):
         if modeGroupRef is None:
             raise RuntimeError('TARGET-MODE-GROUP-REF not set')
         return autosar.behavior.ProvideModeGroupInstanceRef(providePortRef, modeGroupRef)
-
 
     def parseModeInstanceRef(self, xmlRoot):
         """parses <MODE-IREF>"""
@@ -781,11 +827,21 @@ class BehaviorParser(ElementParser):
     @parseElementUUID
     def parseAccessedVariable(self, xmlRoot):
         assert(xmlRoot.tag == 'ACCESSED-VARIABLE')
+
         xmlPortPrototypeRef = xmlRoot.find('./AUTOSAR-VARIABLE-IREF/PORT-PROTOTYPE-REF')
         xmlTargetDataPrototypeRef = xmlRoot.find('./AUTOSAR-VARIABLE-IREF/TARGET-DATA-PROTOTYPE-REF')
         assert (xmlPortPrototypeRef is not None)
         assert (xmlTargetDataPrototypeRef is not None)
-        return autosar.behavior.VariableAccess(self.parseTextNode(xmlRoot.find('SHORT-NAME')),self.parseTextNode(xmlPortPrototypeRef), self.parseTextNode(xmlTargetDataPrototypeRef))
+        return autosar.behavior.VariableAccess(self.parseTextNode(xmlRoot.find('SHORT-NAME')), self.parseTextNode(xmlPortPrototypeRef), self.parseTextNode(xmlTargetDataPrototypeRef))
+
+    @parseElementUUID
+    def parseLocalAccessedVariable(self, xmlRoot, local = False):
+        assert(xmlRoot.tag == 'ACCESSED-VARIABLE')
+
+        xmlLocalVariableRef = xmlRoot.find('./LOCAL-VARIABLE-REF')
+        assert xmlLocalVariableRef is not None
+
+        return autosar.behavior.LocalVariableAccess(self.parseTextNode(xmlRoot.find('SHORT-NAME')), self.parseTextNode(xmlLocalVariableRef))
 
     @parseElementUUID
     def parseSwcServiceDependency(self, xmlRoot, parent = None):

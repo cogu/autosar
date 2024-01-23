@@ -226,8 +226,12 @@ class RunnableEntity(Element):
         self.exclusiveAreaRefs=[]
         self.modeAccessPoints=[] #AUTOSAR4 only
         self.modeSwitchPoints=[] #AUTOSAR4 only
+
         self.dataReadAccess=[] #AUTOSAR4 only?
         self.dataWriteAccess=[] #AUTOSAR4 only?
+        self.dataLocalReadAccess=[] #AUTOSAR4 only?
+        self.dataLocalWriteAccess=[] #AUTOSAR4 only?
+
         self.parameterAccessPoints = [] #AUTOSAR4 only
 
     def tag(self,version=None):
@@ -658,6 +662,8 @@ class InternalBehaviorCommon(Element):
         self.runnables = []
         self.exclusiveAreas=[]
         self.perInstanceMemories = []
+        self.implicitVariables = []
+        self.explicitVariables = []
         self.swc = None
 
 
@@ -685,7 +691,7 @@ class InternalBehaviorCommon(Element):
         ref=ref.partition('/')
         name=ref[0]
         foundElem = None
-        for elem in self.runnables + self.perInstanceMemories + self.exclusiveAreas + self.events:
+        for elem in self.runnables + self.perInstanceMemories + self.exclusiveAreas + self.events + self.implicitVariables + self.explicitVariables:
             if elem.name == name:
                 foundElem = elem
                 break
@@ -1414,6 +1420,14 @@ class VariableAccess(Element):
         super().__init__(name, parent)
         self.portPrototypeRef=portPrototypeRef
         self.targetDataPrototypeRef = targetDataPrototypeRef
+
+    def tag(self, version=None):
+        return 'VARIABLE-ACCESS'
+
+class LocalVariableAccess(Element):
+    def __init__(self, name, localVariableRef, parent=None):
+        super().__init__(name, parent)
+        self.localVariableRef=localVariableRef
 
     def tag(self, version=None):
         return 'VARIABLE-ACCESS'
