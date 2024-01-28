@@ -127,6 +127,17 @@ class Float(Enum):
     NO_FLOAT = 1
 
 
+class HandleInvalid(Enum):
+    """
+    HANDLE-INVALID-ENUM--SIMPLE
+    """
+
+    DONT_INVALIDATE = 0
+    EXTERNAL_REPLACEMENT = 1
+    KEEP = 2
+    REPLACE = 3
+
+
 class IdentifiableSubTypes(Enum):
     """
     IDENTIFIABLE--SUBTYPES-ENUM
@@ -153,6 +164,7 @@ class IdentifiableSubTypes(Enum):
     SW_ADDR_METHOD = 15
     SW_BASE_TYPE = 16
     UNIT = 17
+    VARIABLE_DATA_PROTOTYPE = 18
 
 
 class IntervalType(Enum):
@@ -447,6 +459,12 @@ class ValueFormat(Enum):
     SCIENTIFIC = 4
 
 
+class VariableDataPrototype(Enum):
+    """
+    AR:VARIABLE-DATA-PROTOTYPE--SUBTYPES-ENUM
+    """
+
+
 ########################################
 
 
@@ -527,6 +545,12 @@ xml_to_enum_map = {
         "FLOAT": Float.FLOAT,
         "NO-FLOAT": Float.NO_FLOAT,
     },
+    "HandleInvalid": {
+        "DONT-INVALIDATE": HandleInvalid.DONT_INVALIDATE,
+        "EXTERNAL-REPLACEMENT": HandleInvalid.EXTERNAL_REPLACEMENT,
+        "KEEP": HandleInvalid.KEEP,
+        "REPLACE": HandleInvalid.REPLACE,
+    },
     "IdentifiableSubTypes": {
         "ABSTRACT-IMPLEMENTATION-DATA-TYPE": IdentifiableSubTypes.ABSTRACT_IMPLEMENTATION_DATA_TYPE,
         "APPLICATION-ARRAY-DATA-TYPE": IdentifiableSubTypes.APPLICATION_ARRAY_DATA_TYPE,
@@ -546,6 +570,7 @@ xml_to_enum_map = {
         "SW-ADDR-METHOD": IdentifiableSubTypes.SW_ADDR_METHOD,
         "SW-BASE-TYPE": IdentifiableSubTypes.SW_BASE_TYPE,
         "UNIT": IdentifiableSubTypes.UNIT,
+        "VARIABLE-DATA-PROTOTYPE": IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE,
     },
     "IntervalType": {
         "CLOSED": IntervalType.CLOSED,
@@ -795,6 +820,12 @@ enum_to_xml_map = {
         "FLOAT",     # 0
         "NO-FLOAT",  # 1
     ],
+    "HandleInvalid": [
+        "DONT-INVALIDATE",       # 0
+        "EXTERNAL-REPLACEMENT",  # 1
+        "KEEP",                  # 2
+        "REPLACE",               # 3
+    ],
     "IdentifiableSubTypes": [
         "ABSTRACT-IMPLEMENTATION-DATA-TYPE",  # 0
         "APPLICATION-ARRAY-DATA-TYPE",        # 1
@@ -814,6 +845,7 @@ enum_to_xml_map = {
         "SW-ADDR-METHOD",                     # 15
         "SW-BASE-TYPE",                       # 16
         "UNIT",                               # 17
+        "VARIABLE-DATA-PROTOTYPE"             # 18
     ],
     "IntervalType": [
         "CLOSED",  # 0

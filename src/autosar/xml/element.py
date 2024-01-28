@@ -288,7 +288,7 @@ class MultiLanguageReferrable(Referrable):
 
 class Identifiable(MultiLanguageReferrable):
     """
-    Complex-type AR:IDENTIFIABLE
+    Complex type AR:IDENTIFIABLE
     Type: Abstract
     """
 
@@ -345,7 +345,7 @@ class ARElement(CollectableElement):
 
 class AdminData(ARObject):
     """
-    Complex-type AR:ADMIN-DATA
+    Complex type AR:ADMIN-DATA
     Type: Concrete
     Tag variants: 'ADMIN-DATA'
     """
@@ -359,7 +359,7 @@ class AdminData(ARObject):
 class BaseRef(ARObject, abc.ABC):
     """
     Bas type for all references
-    Complex-type AR:REF
+    Complex type AR:REF
     Type: Abstract
     """
 
@@ -549,12 +549,25 @@ class ConstantRef(BaseRef):
         """Acceptable values for dest"""
         return {ar_enum.IdentifiableSubTypes.CONSTANT_SPECIFICATION}
 
+
+class VariableDataPrototypeRef(BaseRef):
+    """
+    Reference to VariableDataPrototype
+    """
+
+    def __init__(self, value: str) -> None:
+        super().__init__(value, ar_enum.IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE)
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE}
+
 # Documentation Elements
 
 
 class Break(ARObject):
     """
-    Complex-type AR:BR
+    Complex type AR:BR
     Type: Concrete
     Tag variants: BR
 
@@ -565,7 +578,7 @@ class Break(ARObject):
 
 class EmphasisText(ARObject):
     """
-    Complex-type AR:EMPHASIS-TEXT
+    Complex type AR:EMPHASIS-TEXT
     Type: Concrete
     Tag variants: E
 
@@ -593,7 +606,7 @@ class EmphasisText(ARObject):
 
 class IndexEntry(ARObject):
     """
-    Complex-type AR:INDEX-ENTRY
+    Complex type AR:INDEX-ENTRY
     Type: Concrete
     Tag variants: IE
 
@@ -608,7 +621,7 @@ class IndexEntry(ARObject):
 
 class TechnicalTerm(ARObject):
     """
-    Complex-type AR:TT
+    Complex type AR:TT
     Type: Concrete
     Tag variants: TT
 
@@ -627,11 +640,11 @@ class TechnicalTerm(ARObject):
 
 class Subscript(ARObject):
     """
-    Complex-type AR:SUPSCRIPT
+    Complex type AR:SUPSCRIPT
     Type: Concrete
     Tag variants: SUB
 
-    Subscript is based on the same Complex-type
+    Subscript is based on the same Complex type
 
     """
 
@@ -641,7 +654,7 @@ class Subscript(ARObject):
 
 class Superscript(ARObject):
     """
-    Complex-type AR:SUPSCRIPT
+    Complex type AR:SUPSCRIPT
     Type: Concrete
     Tag variants: SUP
 
@@ -660,7 +673,7 @@ class Superscript(ARObject):
 
 class LanguageSpecific(ARObject):
     """
-    Complex-type AR:LANGUAGE-SPECIFIC
+    Complex type AR:LANGUAGE-SPECIFIC
     Type: Abstract
     """
 
@@ -700,7 +713,7 @@ class MixedContentForOverviewParagraph(LanguageSpecific):
         self.parts = []  # Unbounded list of str | TT | E | SUP | SUB | IE
         # Unsupported elements:
         # FT : AR:SL-OVERVIEW-PARAGRAPH
-        # TRACE-REF: Complex-type
+        # TRACE-REF: Complex type
         # XREF: AR:-XREF-TARGET
 
     def append(self, part: str | TechnicalTerm | EmphasisText | Subscript | Subscript):
@@ -715,7 +728,7 @@ class MixedContentForOverviewParagraph(LanguageSpecific):
 
 class LanguageLongName(MixedContentForLongName):
     """
-    Complex-type AR:L-LONG-NAME
+    Complex type AR:L-LONG-NAME
     Type: Concrete
     Tag: L-4
 
@@ -743,7 +756,7 @@ class LanguageLongName(MixedContentForLongName):
 
 class MultilanguageLongName(ARObject):
     """
-    Complex-type AR:MULTILANGUAGE-LONG-NAME
+    Complex type AR:MULTILANGUAGE-LONG-NAME
     Type: Concrete
     Tag variants: 'LABEL' | 'LONG-NAME'
     """
@@ -772,7 +785,7 @@ class MultilanguageLongName(ARObject):
 
 class LanguageOverviewParagraph(MixedContentForOverviewParagraph):
     """
-    Complex-type AR:L-OVERVIEW-PARAGRAPH
+    Complex type AR:L-OVERVIEW-PARAGRAPH
     Type: Concrete
     Tag variants: 'L-2'
 
@@ -800,7 +813,7 @@ class LanguageOverviewParagraph(MixedContentForOverviewParagraph):
 
 class MultiLanguageOverviewParagraph(ARObject):
     """
-    Complex-type AR:MULTI-LANGUAGE-OVERVIEW-PARAGRAPH
+    Complex type AR:MULTI-LANGUAGE-OVERVIEW-PARAGRAPH
     Type: Concrete
     Tag variants: 'DESC' | 'ITEM-LABEL' | 'CHANGE' | 'REASON'
     """
@@ -912,7 +925,7 @@ class MixedContentForParagraph(LanguageSpecific):
 
 class LanguageParagraph(MixedContentForParagraph):
     """
-    Complex-type AR:L-PARAGRAPH
+    Complex type AR:L-PARAGRAPH
     Type: Concrete
     Tag variants: 'L-1'
 
@@ -941,7 +954,7 @@ class LanguageParagraph(MixedContentForParagraph):
 
 class MultiLanguageParagraph(Paginateable):
     """
-    Complex-type AR:MULTI-LANGUAGE-PARAGRAPH
+    Complex type AR:MULTI-LANGUAGE-PARAGRAPH
     Type: Concrete
     Tag variants: 'P'
     """
@@ -1001,7 +1014,7 @@ class MixedContentForVerbatim(LanguageSpecific):
 
 class LanguageVerbatim(MixedContentForVerbatim):
     """
-    Complex-type AR:L-VERBATIM
+    Complex type AR:L-VERBATIM
     Type: Concrete
     Tag variants: 'L-5'
     """
@@ -1018,7 +1031,7 @@ class LanguageVerbatim(MixedContentForVerbatim):
 
 class MultiLanguageVerbatim(Paginateable):
     """
-    Complex-type AR:MULTI-LANGUAGE-VERBATIM
+    Complex type AR:MULTI-LANGUAGE-VERBATIM
     Type: Concrete
     Tag variants: 'VERBATIM'
     """
@@ -1154,7 +1167,7 @@ class GeneralAnnotation(ARObject):
 
 class Annotation(GeneralAnnotation):
     """
-    Complex-type AR:ANNOTATION
+    Complex type AR:ANNOTATION
     Type: Concrete
     """
 
@@ -1645,7 +1658,7 @@ class Unit(ARElement):
 
 class BaseType(ARElement):
     """
-    Merge of Complex-types AR:BASE-TYPE, AR:BASE-TYPE-DEFINITION,
+    Merge of Complex types AR:BASE-TYPE, AR:BASE-TYPE-DEFINITION,
     AR:BASE-TYPE-DIRECT-DEFINITION
     Type: Abstract
     """
@@ -1662,7 +1675,7 @@ class BaseType(ARElement):
 
 class SwBaseType(BaseType):
     """
-    Complex-type AR:SW-BASE-TYPE
+    Complex type AR:SW-BASE-TYPE
     Type: Concrete
     Tag variants: SW-BASE-TYPE
     """
@@ -1763,7 +1776,7 @@ class SwPointerTargetProps(ARObject):
 
 class SwDataDefPropsConditional(ARObject):
     """
-    Merge of Complex-types AR:SW-DATA-DEF-PROPS-CONDITIONAL and
+    Merge of Complex types AR:SW-DATA-DEF-PROPS-CONDITIONAL and
     AR:SW-DATA-DEF-PROPS-CONTENT
     Type: Concrete
     Tag Variants: SW-DATA-DEF-PROPS-CONDITIONAL
@@ -2075,7 +2088,7 @@ class ImplementationDataType(AutosarDataType):
 
 class DataPrototype(Identifiable):
     """
-    AR:DATA-PROTOTYPE
+    Group AR:DATA-PROTOTYPE
     Type: Abstract
     """
 
@@ -2096,7 +2109,7 @@ class DataPrototype(Identifiable):
 
 class AutosarDataPrototype(DataPrototype):
     """
-    AR:AUTOSAR-DATA-PROTOTYPE
+    Group AR:AUTOSAR-DATA-PROTOTYPE
     Type: Abstract
     """
 
@@ -2106,19 +2119,26 @@ class AutosarDataPrototype(DataPrototype):
                  **kwargs: dict) -> None:
         super().__init__(name, **kwargs)
         self.type_ref: AutosarDataTypeRef | None = None  # .TYPE-TREF
+        if isinstance(type_ref, ImplementationDataTypeRef):
+            type_ref = AutosarDataTypeRef(type_ref.value, ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE)
         self._assign_optional_strict("type_ref", type_ref, AutosarDataTypeRef)
 
 
 class VariableDataPrototype(AutosarDataPrototype):
     """
-    AR:VARIABLE-DATA-PROTOTYPE
+    Complex type AR:VARIABLE-DATA-PROTOTYPE
     Type: Concrete
+    Tag variants: 'VARIABLE-DATA-PROTOTYPE' | 'BULK-NV-BLOCK' | 'RAM-BLOCK'
     """
 
-    def __init__(self, name: str, **kwargs) -> None:
-        super().__init__(name, kwargs)
-        self.init_value = None  # .INIT-VALUE
+    def __init__(self,
+                 name: str,
+                 init_value: ValueSpeficationElement | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.init_value: ValueSpeficationElement | None = None  # .INIT-VALUE
         # .VARIATION-POINT not supported
+        self._assign_optional_strict("init_value", init_value, ValueSpecification)
 
 
 class ApplicationDataType(AutosarDataType):
@@ -2143,7 +2163,7 @@ class ApplicationCompositeDataType(ApplicationDataType):
 class ApplicationPrimitiveDataType(ApplicationDataType):
     """
     Complex type AR:APPLICATION-PRIMITIVE-DATA-TYPE
-    Type Concrete
+    Type: Concrete
     Tag variants: 'APPLICATION-PRIMITIVE-DATA-TYPE'
     """
 
@@ -2166,7 +2186,7 @@ class ApplicationPrimitiveDataType(ApplicationDataType):
 
 class ApplicationCompositeElementDataPrototype(DataPrototype):
     """
-    AR:APPLICATION-COMPOSITE-ELEMENT-DATA-PROTOTYPE
+    Group AR:APPLICATION-COMPOSITE-ELEMENT-DATA-PROTOTYPE
     Type: Abstract
     """
 
@@ -2246,7 +2266,7 @@ class ApplicationRecordElement(ApplicationCompositeElementDataPrototype):
                  is_optional: bool | None = None,
                  **kwargs: dict) -> None:
         super().__init__(name, **kwargs)
-        self.is_optional: bool | None = None                  # .IS-OPTIONAL
+        self.is_optional: bool | None = None  # .IS-OPTIONAL
         self._assign_optional('is_optional', is_optional, bool)
 
 
@@ -2299,7 +2319,7 @@ class ApplicationRecordDataType(ApplicationCompositeDataType):
 
 class DataTypeMap(ARObject):
     """
-    AR:DATA-TYPE-MAP
+    Complex type AR:DATA-TYPE-MAP
     Type: Concrete
     Tag variants: 'DATA-TYPE-MAP'
     """
@@ -2314,7 +2334,7 @@ class DataTypeMap(ARObject):
 
 class DataTypeMappingSet(ARElement):
     """
-    AR:DATA-TYPE-MAPPING-SET
+    Complex type AR:DATA-TYPE-MAPPING-SET
     Type: Concrete
     Tag variants: 'DATA-TYPE-MAPPING-SET'
     """
@@ -2349,7 +2369,7 @@ class DataTypeMappingSet(ARElement):
 
 class ValueList(ARObject):
     """
-    Complex-type AR:VALUE-LIST
+    Complex type AR:VALUE-LIST
     Type: Concrete
     Tag variants: 'SW-ARRAYSIZE'
     """
@@ -2378,7 +2398,7 @@ class ValueList(ARObject):
 
 class SwAddrMethod(ARElement):
     """
-    Complex-type AR:SW-ADDR-METHOD
+    Complex type AR:SW-ADDR-METHOD
     Type: Concrete
     Tag Variants: 'SW-ADDR-METHOD'
     """
@@ -2408,7 +2428,7 @@ SwValueElement = Union[int, float, str, NumericalValue, "ValueGroup"]  # Type al
 
 class SwValues(ARObject):
     """
-    Complex-type AR:SW-VALUES
+    Complex type AR:SW-VALUES
     Type: Concrete
     Tag variants: SW-VALUES-PHYS
     """
@@ -2439,7 +2459,7 @@ class SwValues(ARObject):
 
 class ValueGroup(SwValues):
     """
-    Complex-type AR:VALUE-GROUP
+    Complex type AR:VALUE-GROUP
     Type: Concrete
     Tag variants: VG
     """
@@ -2460,7 +2480,7 @@ class ValueGroup(SwValues):
 
 class SwAxisCont(ARObject):
     """
-    Complex-type AR:SW-AXIS-CONT
+    Complex type AR:SW-AXIS-CONT
     Type: Concrete
     Tag variants: SW-AXIS-CONT
     """
@@ -2493,7 +2513,7 @@ class SwAxisCont(ARObject):
 
 class SwValueCont(ARObject):
     """
-    Complex-type AR:SW-VALUE-CONT
+    Complex type AR:SW-VALUE-CONT
     Type: Concrete
     Tag variants: SW-VALUE-CONT
     """
@@ -2586,7 +2606,7 @@ class ValueSpecification(ARObject):
 
 class TextValueSpecification(ValueSpecification):
     """
-    Complex-type AR:TEXT-VALUE-SPECIFICATION
+    Complex type AR:TEXT-VALUE-SPECIFICATION
     Type: Concrete
     Tag variants: 'TEXT-VALUE-SPECIFICATION'
     """
@@ -2598,7 +2618,7 @@ class TextValueSpecification(ValueSpecification):
 
 class NumericalValueSpecification(ValueSpecification):
     """
-    Complex-type AR:NUMERICAL-VALUE-SPECIFICATION
+    Complex type AR:NUMERICAL-VALUE-SPECIFICATION
     Type: Concrete
     Tag variants: 'NUMERICAL-VALUE-SPECIFICATION'
     """
@@ -2610,7 +2630,7 @@ class NumericalValueSpecification(ValueSpecification):
 
 class NotAvailableValueSpecification(ValueSpecification):
     """
-    Complex-type AR:NOT-AVAILABLE-VALUE-SPECIFICATION
+    Complex type AR:NOT-AVAILABLE-VALUE-SPECIFICATION
     Type: Concrete
     Tag variants: 'NOT-AVAILABLE-VALUE-SPECIFICATION'
     """
@@ -2629,7 +2649,7 @@ class NotAvailableValueSpecification(ValueSpecification):
 
 class ArrayValueSpecification(ValueSpecification):
     """
-    Complex-type AR:ARRAY-VALUE-SPECIFICATION
+    Complex type AR:ARRAY-VALUE-SPECIFICATION
     Type: Concrete
     Tag variants: 'ARRAY-VALUE-SPECIFICATION'
     """
@@ -2658,7 +2678,7 @@ class ArrayValueSpecification(ValueSpecification):
 
 class RecordValueSpecification(ValueSpecification):
     """
-    Complex-type AR:RECORD-VALUE-SPECIFICATION
+    Complex type AR:RECORD-VALUE-SPECIFICATION
     Type: Concrete
     Tag variants: 'RECORD-VALUE-SPECIFICATION'
     """
@@ -2687,7 +2707,7 @@ class RecordValueSpecification(ValueSpecification):
 
 class ApplicationValueSpecification(ValueSpecification):
     """
-    Complex-type AR:APPLICATION-VALUE-SPECIFICATION
+    Complex type AR:APPLICATION-VALUE-SPECIFICATION
     Type: Concrete
     Tag variants: APPLICATION-VALUE-SPECIFICATION
     """
@@ -2721,7 +2741,7 @@ class ApplicationValueSpecification(ValueSpecification):
 
 class ConstantSpecification(ARElement):
     """
-    Complex-type AR:CONSTANT-SPECIFICATION
+    Complex type AR:CONSTANT-SPECIFICATION
     Type: Concrete
     Tag Variants: 'CONSTANT-SPECIFICATION'
     """
@@ -2774,85 +2794,6 @@ class ConstantReference(ValueSpecification):
         self.constant_ref: ConstantRef = None
         super().__init__(label)
         self._assign_optional_strict("constant_ref", constant_ref, ConstantRef)
-
-# !!UNFINISHED!! Port Interfaces
-
-
-class PortInterface(ARElement):
-    """
-    Implements AR:PORT-INTERFACE
-    Type: Abstract
-    """
-
-    def __init__(self, name: str, **kwargs: dict) -> None:
-        super().__init__(name, **kwargs)
-        self.is_service: None | bool = None
-        self.namespaces = None
-        self.service_kind: None | ar_enum.ServiceKind = None
-
-
-class DataInterface(PortInterface):
-    """
-    AR-DATA-INTERFACE
-    IsAbstract: True
-
-    Base class for data-concerned interfaces (as opposed to operations-based)
-    """
-
-
-class SenderReceiverInterface(DataInterface):
-    """
-    AR-SENDER-RECEIVER-INTERFACE
-    Type: Concrete
-
-    Base class for data-concerned interfaces (as opposed to operations-based)
-    """
-
-    def __init__(self, name: str, **kwargs) -> None:
-        super().__init__(name, **kwargs)
-        self.data_elements = []  # .DATA-ELEMENTS
-        self.invalidation_policies = None  # .INVALIDATION-POLICYS
-        # .META-DATA-ITEM-SETS not supported
-
-# !!UNFINISHED!! Component Types
-
-
-class SoftwareComponentType(ARElement):
-    """
-    Implements AR:SW-COMPONENT-TYPE
-    Type: Abstract
-    """
-
-    def __init__(self, name: str, kwargs: dict) -> None:
-        super().__init__(name, **kwargs)
-        self.documentations = None  # AR:SW-COMPONENT-DOCUMENTATIONS
-        self.consistency_needs = None  # AR:CONSISTENCY-NEEDSS
-        self.ports = None  # AR:PORTS
-        self.port_groups = None  # AR:PORT_GROUPS
-        self.swc_mapping_constraint_refs = None  # AR:SWC-MAPPING-CONSTRAINT-REFS
-        self.unit_group_refs = None  # AR:UNIT-GROUP-REFS
-
-
-class AtomicSoftwareComponentType(SoftwareComponentType):
-    """
-    Implements AR:ATOMIC-SW-COMPONENT-TYPE
-    Type: Abstract
-    """
-
-    def __init__(self, name: str, kwargs: dict) -> None:
-        super().__init__(name, **kwargs)
-        self.internal_behaviors = None  # AR:INTERNAL-BEHAVIORS
-        self.symbol_props = None  # AR:SYMBOL-PROPS
-
-
-class ApplicationSoftwareComponentType(AtomicSoftwareComponentType):
-    """
-    Implements AR:APPLICATION-SW-COMPONENT-TYPE
-    Type: Concrete
-    """
-
-    def __init__(self, name: str, **kwargs) -> None:
-        super().__init__(name, kwargs)
 
 # Package (Partly implemented)
 
@@ -2939,3 +2880,195 @@ class Package(CollectableElement):
         """
         ref_parts.append(self.name)
         self.parent.update_ref_parts(ref_parts)
+
+# Port Interfaces
+
+
+class PortInterface(ARElement):
+    """
+    Group AR:PORT-INTERFACE
+    Type: Abstract
+    """
+
+    def __init__(self,
+                 name: str,
+                 is_service: bool | None = None,
+                 service_kind: ar_enum.ServiceKind | None = None,
+                 **kwargs: dict) -> None:
+        super().__init__(name, **kwargs)
+        self.is_service: bool | None = None  # .IS-SERVICE
+        # .NAMESPACES not supported
+        self.service_kind: ar_enum.ServiceKind | None = None  # .SERVICE-KIND
+        self._assign_optional_strict("is_service", is_service, bool)
+        self._assign_optional_strict("service_kind", service_kind, ar_enum.ServiceKind)
+
+
+class DataInterface(PortInterface):
+    """
+    Group AR-DATA-INTERFACE
+    Type: Abstract
+
+    Base class for data-concerned interfaces (as opposed to operations-based)
+    """
+
+
+class InvalidationPolicy(ARObject):
+    """
+    Complex type AR:INVALIDATION-POLICY
+    Type: Concrete
+    Tag variants: 'INVALIDATION-POLICY'
+    """
+
+    def __init__(self,
+                 data_element_ref: VariableDataPrototypeRef | None = None,
+                 handle_invalid: ar_enum.HandleInvalid | None = None) -> None:
+        self.data_element_ref: VariableDataPrototypeRef | None = None  # .DATA-ELEMENT-REF
+        self.handle_invalid: ar_enum.HandleInvalid | None = None  # .HANDLE-INVALID
+        self._assign_optional("data_element_ref", data_element_ref, VariableDataPrototypeRef)
+        self._assign_optional("handle_invalid", handle_invalid, ar_enum.HandleInvalid)
+
+
+class SenderReceiverInterface(DataInterface):
+    """
+    Complex type AR:SENDER-RECEIVER-INTERFACE
+    Type: Concrete
+    Tag variants: 'SENDER-RECEIVER-INTERFACE'
+    """
+
+    def __init__(self,
+                 name: str,
+                 data_elements: VariableDataPrototype | list[VariableDataPrototype] | None = None,
+                 invalidation_policies: InvalidationPolicy | list[InvalidationPolicy] | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.data_elements: list[VariableDataPrototype] = []  # .DATA-ELEMENTS
+        self.invalidation_policies: list[InvalidationPolicy] = []  # .INVALIDATION-POLICYS
+        # .META-DATA-ITEM-SETS not supported
+        if data_elements is not None:
+            if isinstance(data_elements, VariableDataPrototype):
+                self.append_data_element(data_elements)
+            elif isinstance(data_elements, list):
+                for data_element in data_elements:
+                    self.append_data_element(data_element)
+            else:
+                msg = f"data_elements: Invalid type '{str(type(data_element))}'"
+                raise TypeError(msg + ". Expected 'VariableDataPrototype' or list[VariableDataPrototype]")
+        if invalidation_policies is not None:
+            if isinstance(invalidation_policies, InvalidationPolicy):
+                self.append_invalidation_policy(invalidation_policies)
+            elif isinstance(invalidation_policies, list):
+                for invalidation_policy in invalidation_policies:
+                    self.append_invalidation_policy(invalidation_policy)
+            else:
+                msg = f"data_elements: Invalid type '{str(type(invalidation_policies))}'"
+                raise TypeError(msg + ". Expected 'InvalidationPolicy' or list[InvalidationPolicy]")
+
+    def append_data_element(self, data_element: VariableDataPrototype):
+        """
+        Appends data element to internal list of elements
+        """
+        if isinstance(data_element, VariableDataPrototype):
+            self.data_elements.append(data_element)
+        else:
+            msg = f"data_element: Invalid type '{str(type(data_element))}'"
+            raise TypeError(msg + ". Expected 'VariableDataPrototype'")
+
+    def append_invalidation_policy(self, invalidation_policy: InvalidationPolicy):
+        """
+        Appends invalidation policy to internal list of policies
+        """
+        if isinstance(invalidation_policy, InvalidationPolicy):
+            self.invalidation_policies.append(invalidation_policy)
+        else:
+            msg = f"invalidation_policy: Invalid type '{str(type(invalidation_policy))}'"
+            raise TypeError(msg + ". Expected 'InvalidationPolicy'")
+
+    def make_data_element(self,
+                          name: str,
+                          init_value: ValueSpeficationElement | None = None,
+                          handle_invalid: ar_enum.HandleInvalid | None = None,  # Not yet fully implemented, don't use
+                          **kwargs) -> VariableDataPrototype:
+        """
+        Convenience method for adding a new data element to this port interface
+        """
+        data_element = VariableDataPrototype(name, init_value, **kwargs)
+        self.append_data_element(data_element)
+        if handle_invalid is not None:
+            data_element_ref = "@" + name  # Mark this reference to be resolved later
+            invalidation_policy = InvalidationPolicy(VariableDataPrototypeRef(data_element_ref), handle_invalid)
+            self.append_invalidation_policy(invalidation_policy)
+        return data_element
+
+    def make_invalidation_policy(self,
+                                 data_element_ref: VariableDataPrototypeRef | str,
+                                 handle_invalid: ar_enum.HandleInvalid) -> InvalidationPolicy:
+        """
+        Convenience method for adding a new invalidation policy to this port interface
+        """
+        if isinstance(data_element_ref, str):
+            data_element_ref = VariableDataPrototypeRef(data_element_ref)
+        elif not isinstance(data_element_ref, VariableDataPrototypeRef):
+            msg = f"data_element_ref: Invalid type '{str(type(data_element_ref))}'"
+            raise TypeError(msg + ". Expected 'VariableDataPrototypeRef' or 'str'")
+        if not isinstance(handle_invalid, ar_enum.HandleInvalid):
+            msg = f"handle_invalid: Invalid type '{str(type(data_element_ref))}'"
+            raise TypeError(msg + ". Expected 'HandleInvalid'")
+        invalidation_policy = InvalidationPolicy(data_element_ref, handle_invalid)
+        self.append_invalidation_policy(invalidation_policy)
+        return invalidation_policy
+
+    @classmethod
+    def make_simple(cls,
+                    interface_name: str,
+                    data_element_name: str,
+                    init_value: ValueSpeficationElement | None = None,
+                    handle_invalid: ar_enum.HandleInvalid | None = None,
+                    **kwargs) -> "SenderReceiverInterface":
+        """
+        Convenience-method for creating a new port interface with
+        a single data element
+        """
+        port_interface = cls(interface_name)
+        port_interface.make_data_element(data_element_name, init_value, handle_invalid, **kwargs)
+        return port_interface
+
+
+# !!UNFINISHED!! Component Types
+
+
+class SoftwareComponentType(ARElement):
+    """
+    Implements AR:SW-COMPONENT-TYPE
+    Type: Abstract
+    """
+
+    def __init__(self, name: str, kwargs: dict) -> None:
+        super().__init__(name, **kwargs)
+        self.documentations = None  # AR:SW-COMPONENT-DOCUMENTATIONS
+        self.consistency_needs = None  # AR:CONSISTENCY-NEEDSS
+        self.ports = None  # AR:PORTS
+        self.port_groups = None  # AR:PORT_GROUPS
+        self.swc_mapping_constraint_refs = None  # AR:SWC-MAPPING-CONSTRAINT-REFS
+        self.unit_group_refs = None  # AR:UNIT-GROUP-REFS
+
+
+class AtomicSoftwareComponentType(SoftwareComponentType):
+    """
+    Implements AR:ATOMIC-SW-COMPONENT-TYPE
+    Type: Abstract
+    """
+
+    def __init__(self, name: str, kwargs: dict) -> None:
+        super().__init__(name, **kwargs)
+        self.internal_behaviors = None  # AR:INTERNAL-BEHAVIORS
+        self.symbol_props = None  # AR:SYMBOL-PROPS
+
+
+class ApplicationSoftwareComponentType(AtomicSoftwareComponentType):
+    """
+    Implements AR:APPLICATION-SW-COMPONENT-TYPE
+    Type: Concrete
+    """
+
+    def __init__(self, name: str, **kwargs) -> None:
+        super().__init__(name, kwargs)
