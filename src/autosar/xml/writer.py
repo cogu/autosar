@@ -201,6 +201,8 @@ class Writer(_XMLWriter):
             'Unit': self._write_unit,
             # Constant elements
             'ConstantSpecification': self._write_constant_specification,
+            # Port interface elements
+            'SenderReceiverInterface': self._write_sender_receiver_interface,
         }
         # Value specification elements
         self.switcher_value_specification = {
@@ -253,6 +255,7 @@ class Writer(_XMLWriter):
             'ApplicationRecordElement': self._write_application_record_element,
             'DataTypeMap': self._write_data_type_map,
             'ValueList': self._write_value_list,
+            'VariableDataPrototype': self._write_variable_data_prototype,
             # CalibrationData elements
             'SwValues': self._write_sw_values,
             'SwAxisCont': self._write_sw_axis_cont,
@@ -261,6 +264,8 @@ class Writer(_XMLWriter):
             'PhysicalDimensionRef': self._write_physical_dimension_ref,
             'ApplicationDataTypeRef': self._write_application_data_type_ref,
             'ConstantRef': self._write_constant_ref,
+            # Port interface element
+            'InvalidationPolicy': self._write_invalidation_policy,
         }
         self.switcher_all = {}  # All concrete elements (used for unit testing)
         self.switcher_all.update(self.switcher_collectable)
@@ -1612,6 +1617,42 @@ class Writer(_XMLWriter):
             content = self._format_number(value)
             self._add_content("V", content)
 
+    def _write_autosar_data_prototype(self, elem: ar_element.AutosarDataPrototype) -> None:
+        """
+        Writes group AR:AUTOSAR-DATA-PROTOTYPE
+        Type: Abstract
+        """
+        if elem.type_ref is not None:
+            self._write_autosar_data_type_ref(elem.type_ref, "TYPE-TREF")
+
+    def _write_variable_data_prototype(self, elem: ar_element.VariableDataPrototype, tag: str) -> None:
+        """
+        Reads complex-type AR:VARIABLE-DATA-PROTOTYPE
+        Type: Concrete
+        Tag variants: 'VARIABLE-DATA-PROTOTYPE' | 'BULK-NV-BLOCK' | 'RAM-BLOCK'
+        """
+        assert isinstance(elem, ar_element.VariableDataPrototype)
+        attr: TupleList = []
+        self._collect_identifiable_attributes(elem, attr)
+        self._add_child(tag, attr)
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_data_prototype(elem)
+        self._write_autosar_data_prototype(elem)
+        self._write_variable_data_prototype_group(elem)
+        self._leave_child()
+
+    def _write_variable_data_prototype_group(self, elem: ar_element.VariableDataPrototype) -> None:
+        """
+        Reads group AR:VARIABLE-DATA-PROTOTYPE
+        Type: Abstract
+        """
+        if elem.init_value is not None:
+            self._add_child("INIT-VALUE")
+            self._write_value_specification_element(elem.init_value)
+            self._leave_child()
+
     # Reference Elements
 
     def _collect_base_ref_attr(self,
@@ -1753,6 +1794,32 @@ class Writer(_XMLWriter):
         Don't confuse this with the ConstantReference class.
         """
         assert isinstance(elem, ar_element.ConstantRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content(tag, elem.value, attr)
+
+    def _write_autosar_data_type_ref(self, elem: ar_element.AutosarDataTypeRef, tag: str) -> None:
+        """
+        Writes reference to AutosarDataTypeRef
+        Type: Concrete
+        Tag variants: 'TYPE-TREF',
+                      'AUTOSAR-DATA-TYPE-REF',
+                      'DATA-TYPE-REF,
+                      'CURRENT-DATA-TYPE-REF',
+                      'PREVIOUS-DATA-TYPE-REF'
+        """
+        assert isinstance(elem, ar_element.AutosarDataTypeRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content(tag, elem.value, attr)
+
+    def _write_variable_data_prototype_ref(self, elem: ar_element.VariableDataPrototypeRef, tag: str) -> None:
+        """
+        Write reference to VariableDataPrototype
+        Type: Concrete
+        Tag variants: Too many to list
+        """
+        assert isinstance(elem, ar_element.VariableDataPrototypeRef)
         attr: TupleList = []
         self._collect_base_ref_attr(elem, attr)
         self._add_content(tag, elem.value, attr)
@@ -2055,3 +2122,69 @@ class Writer(_XMLWriter):
             self._write_value_list(elem.sw_array_size)
         if elem.sw_values_phys is not None:
             self._write_sw_values(elem.sw_values_phys)
+
+# Port interface elements
+
+    def _write_port_interface(self, elem: ar_element.PortInterface) -> None:
+        """
+        Writes group AR:PORTINTERFACE
+        Type: Abstract
+        """
+        if elem.is_service is not None:
+            self._add_content("IS-SERVICE", self._format_boolean(elem.is_service))
+        if elem.service_kind is not None:
+            self._add_content("SERVICE-KIND", ar_enum.enum_to_xml(elem.service_kind))
+
+    def _write_sender_receiver_interface(self, elem: ar_element.SenderReceiverInterface) -> None:
+        """
+        Writes complex type AR:SENDER-RECEIVER-INTERFACE
+        Type: Concrete
+        """
+        assert isinstance(elem, ar_element.SenderReceiverInterface)
+        self._add_child("SENDER-RECEIVER-INTERFACE")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_port_interface(elem)
+        self._write_sender_receiver_interface_group(elem)
+        self._leave_child()
+
+    def _write_sender_receiver_interface_group(self, elem: ar_element.SenderReceiverInterface) -> None:
+        """
+        Writes group AR:SENDER-RECEIVER-INTERFACE
+        Type: Abstract
+        """
+        if elem.data_elements:
+            self._add_child("DATA-ELEMENTS")
+            for data_element in elem.data_elements:
+                self._write_variable_data_prototype(data_element, "VARIABLE-DATA-PROTOTYPE")
+            self._leave_child()
+        if elem.invalidation_policies:
+            self._add_child("INVALIDATION-POLICYS")
+            for invalidation_policy in elem.invalidation_policies:
+                self._write_invalidation_policy(invalidation_policy)
+            self._leave_child()
+
+    def _write_invalidation_policy(self, elem: ar_element.InvalidationPolicy) -> None:
+        """
+        Writes complex type AR:INVALIDATION-POLICY
+        Type: Concrete
+        """
+        assert isinstance(elem, ar_element.InvalidationPolicy)
+        tag = "INVALIDATION-POLICY"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_invalidation_policy_group(elem)
+            self._leave_child()
+
+    def _write_invalidation_policy_group(self, elem: ar_element.InvalidationPolicy) -> None:
+        """
+        Writes group AR:INVALIDATION-POLICY
+        Type: Concrete
+        """
+        if elem.data_element_ref is not None:
+            self._write_variable_data_prototype_ref(elem.data_element_ref, "DATA-ELEMENT-REF")
+        if elem.handle_invalid is not None:
+            self._add_content("HANDLE-INVALID", ar_enum.enum_to_xml(elem.handle_invalid))

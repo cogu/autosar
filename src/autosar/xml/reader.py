@@ -54,7 +54,9 @@ class ChildElementMap:
     def __init__(self, elem: ElementTree.Element) -> None:
         self.elements: dict[str, WrappedElement] = {}
         for child_elem in elem.findall('./*'):
-            self.elements[str(child_elem.tag)] = WrappedElement(child_elem)
+            tag = str(child_elem.tag)
+            if tag not in self.elements:
+                self.elements[tag] = WrappedElement(child_elem)
 
     def get(self, tag: str) -> ElementTree.Element:
         """
@@ -187,13 +189,16 @@ class Reader:
             'PHYSICAL-DIMENSION-REF': self._read_physical_dimension_ref,
             'APPLICATION-DATA-TYPE-REF': self._read_application_data_type_ref,
             'CONSTANT-REF': self._read_constant_ref,
+            # Port interface element
+            'INVALIDATION-POLICY': self._read_invalidation_policy,
         }
         self.switcher_all = {}
         self.switcher_all.update(self.switcher_collectable)
         self.switcher_all.update(self.switcher_value_specification)
         self.switcher_all.update(self.switcher_non_collectable)
         self._switcher_type_name = {
-            "ApplicationArrayElement": self._read_application_array_element
+            "ApplicationArrayElement": self._read_application_array_element,
+            "VariableDataPrototype": self._read_variable_data_prototype,
         }
 
     def read_file(self, file_path: str) -> ar_document.Document:
@@ -1889,6 +1894,36 @@ class Reader:
         element = ar_element.ValueList(**data)
         return element
 
+    def _read_variable_data_prototype(self, elem: ElementTree.Element) -> ar_element.VariableDataPrototype:
+        """
+        Reads complex-type AR:VARIABLE-DATA-PROTOTYPE
+        Type: Concrete
+        """
+        data = {}
+        child_elements = ChildElementMap(elem)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, elem.attrib, data)
+        self._read_data_prototype(child_elements, data)
+        self._read_autosar_data_prototype(child_elements, data)
+        self._read_variable_data_prototype_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.VariableDataPrototype(**data)
+
+    def _read_variable_data_prototype_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:VARIABLE-DATA-PROTOTYPE
+        """
+        xml_child = child_elements.get('INIT-VALUE')
+        if xml_child is not None:
+            try:
+                xml_grand_child = xml_child.find("./*")
+                if xml_grand_child is not None:
+                    data["init_value"] = self._read_value_specification_element(xml_grand_child)
+            except KeyError:
+                pass
+        child_elements.skip('VARIATION-POINT')  # Not supported
+
     # Reference elements
 
     def _read_compu_method_ref(self, xml_elem: ElementTree.Element) -> ar_element.CompuMethodRef:
@@ -1980,10 +2015,10 @@ class Reader:
         Type: Concrete
         Tag variants: 'UNIT-REF'
         """
-        dest_text = xml_elem.attrib['DEST']
-        dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', dest_text, self.schema_version)
-        if dest_enum != ar_enum.IdentifiableSubTypes.UNIT:
-            self._raise_parse_error(xml_elem, f"Invalid DEST attribute '{dest_text}'. Expected 'UNIT'")
+        data = {}
+        self._read_base_ref_attributes(xml_elem.attrib, data)
+        if data['dest'] != 'UNIT':
+            raise ar_exception.ParseError(f"Invalid value for DEST. Expected 'UNIT', got '{data['dest']}'")
         return ar_element.UnitRef(xml_elem.text)
 
     def _read_physical_dimension_ref(self, xml_elem: ElementTree.Element) -> ar_element.PhysicalDimensionRef:
@@ -1992,10 +2027,11 @@ class Reader:
         Type: Concrete
         Tag variants: 'PHYSICAL-DIMENSION-REF'
         """
-        dest_text = xml_elem.attrib['DEST']
-        dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', dest_text, self.schema_version)
-        if dest_enum != ar_enum.IdentifiableSubTypes.PHYSICAL_DIMENSION:
-            self._raise_parse_error(xml_elem, f"Invalid DEST attribute '{dest_text}'. Expected 'PHYSICAL-DIMENSION'")
+        data = {}
+        self._read_base_ref_attributes(xml_elem.attrib, data)
+        if data['dest'] != 'PHYSICAL-DIMENSION':
+            msg = f"Invalid value for DEST. Expected 'PHYSICAL-DIMENSION', got '{data['dest']}'"
+            raise ar_exception.ParseError(msg)
         return ar_element.PhysicalDimensionRef(xml_elem.text)
 
     def _read_index_data_type_ref(self, xml_elem: ElementTree.Element) -> ar_element.IndexDataTypeRef:
@@ -2004,12 +2040,11 @@ class Reader:
         Type: Concrete
         Tag variants: 'INDEX-DATA-TYPE-REF'
         """
-        dest_text = xml_elem.attrib['DEST']
-        dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', dest_text, self.schema_version)
-        if dest_enum != ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE:
-            self._raise_parse_error(xml_elem,
-                                    f"Invalid DEST attribute '{dest_text}'."
-                                    f"Expected 'APPLICATION-PRIMITIVE-DATA-TYPE'")
+        data = {}
+        self._read_base_ref_attributes(xml_elem.attrib, data)
+        if data['dest'] != 'APPLICATION-PRIMITIVE-DATA-TYPE':
+            msg = f"Invalid value for DEST. Expected 'APPLICATION-PRIMITIVE-DATA-TYPE', got '{data['dest']}'"
+            raise ar_exception.ParseError(msg)
         return ar_element.IndexDataTypeRef(xml_elem.text)
 
     def _read_application_data_type_ref(
@@ -2020,8 +2055,9 @@ class Reader:
         Type: Concrete
         Tag variants: 'TYPE-TREF', 'APPLICATION-DATA-TYPE-REF'
         """
-        dest_text = xml_elem.attrib['DEST']
-        dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', dest_text, self.schema_version)
+        data = {}
+        self._read_base_ref_attributes(xml_elem.attrib, data)
+        dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', data['dest'], self.schema_version)
         return ar_element.ApplicationDataTypeRef(xml_elem.text, dest_enum)
 
     def _read_autosar_data_type_ref(
@@ -2032,8 +2068,9 @@ class Reader:
         Type: Concrete
         Tag variants: 'TYPE-TREF'
         """
-        dest_text = xml_elem.attrib['DEST']
-        dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', dest_text, self.schema_version)
+        data = {}
+        self._read_base_ref_attributes(xml_elem.attrib, data)
+        dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', data['dest'], self.schema_version)
         return ar_element.AutosarDataTypeRef(xml_elem.text, dest_enum)
 
     def _read_constant_ref(self,
@@ -2044,15 +2081,31 @@ class Reader:
         Type: Concrete
         Tag variants: 'CONSTANT-REF'
         """
-        dest_text = xml_elem.attrib['DEST']
-        dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', dest_text, self.schema_version)
-        if dest_enum != ar_enum.IdentifiableSubTypes.CONSTANT_SPECIFICATION:
-            self._raise_parse_error(xml_elem,
-                                    f"Invalid DEST attribute '{dest_text}'."
-                                    f"Expected 'CONSTANT-SPECIFICATION'")
+        data = {}
+        self._read_base_ref_attributes(xml_elem.attrib, data)
+        if data['dest'] != 'CONSTANT-SPECIFICATION':
+            msg = f"Invalid value for DEST. Expected 'CONSTANT-SPECIFICATION', got '{data['dest']}'"
+            raise ar_exception.ParseError(msg)
         return ar_element.ConstantRef(xml_elem.text)
 
+    def _read_variable_data_prototype_ref(
+            self,
+            xml_elem: ElementTree.Element) -> ar_element.VariableDataPrototypeRef:
+        """
+        Reads reference to VariableDataPrototype
+        Type: Concrete
+        """
+        data = {}
+        self._read_base_ref_attributes(xml_elem.attrib, data)
+        if data['dest'] != 'VARIABLE-DATA-PROTOTYPE':
+            msg = f"Invalid value for DEST. Expected 'VARIABLE-DATA-PROTOTYPE', got '{data['dest']}'"
+            raise ar_exception.ParseError(msg)
+        return ar_element.VariableDataPrototypeRef(xml_elem.text)
+
     def _read_base_ref_attributes(self, attr: dict, data: dict) -> None:
+        """
+        Reads DEST attribute
+        """
         data['dest'] = attr.get('DEST', None)
         if data['dest'] is None:
             raise ar_exception.ParseError("Missing required attribute 'DEST'")
@@ -2239,7 +2292,7 @@ class Reader:
         if read_method is not None:
             return read_method(xml_element)
         else:
-            print(f"Found no reader for '{xml_element.tag}'", file=sys.stderr)
+            raise KeyError(f"Found no reader for '{xml_element.tag}'")
 
     def _read_constant_specification(self,
                                      xml_element: ElementTree.Element) -> ar_element.ConstantSpecification:
@@ -2263,7 +2316,8 @@ class Reader:
         xml_child = child_elements.get("VALUE-SPEC")
         if xml_child is not None:
             xml_grand_child = xml_child.find("./*")
-            data["value"] = self._read_value_specification_element(xml_grand_child)
+            if xml_grand_child is not None:
+                data["value"] = self._read_value_specification_element(xml_grand_child)
 
     def _read_constant_reference(self,
                                  xml_element: ElementTree.Element
@@ -2414,11 +2468,23 @@ class Reader:
         if xml_child is not None:
             data["sw_values_phys"] = self._read_sw_values(xml_child)
 
-    # UNFINISHED ELEMENTS - NEEDS REFACTORING
+    # Port interface elements
 
-    def _read_sender_receiver_interface(self, xml_element: ElementTree.Element) -> None:
+    def _read_port_interface(self, xml_elements: ChildElementMap, data: dict) -> None:
         """
-        Element-Type: Concrete
+        Reads group AR:PORT-INTERFACE
+        Type: Abstract
+        """
+        inner_elem = xml_elements.get('IS-SERVICE')
+        if inner_elem is not None:
+            data['is_service'] = self._read_boolean(inner_elem.text)
+        xml_elements.skip('NAMESPACES')  # Not supported
+        xml_elements.skip('SERVICE-KIND')  # Implement later
+
+    def _read_sender_receiver_interface(self, xml_element: ElementTree.Element) -> ar_element.SenderReceiverInterface:
+        """
+        Reads complex type AR:SENDER-RECEIVER-INTERFACE
+        Type: Concrete
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -2428,57 +2494,42 @@ class Reader:
         self._read_port_interface(child_elements, data)
         self._read_sender_receiver_interface_group(child_elements, data)
         self._report_unprocessed_elements(child_elements)
+        return ar_element.SenderReceiverInterface(**data)
 
-    def _read_port_interface(self, xml_elements: ChildElementMap, data: dict) -> None:
+    def _read_sender_receiver_interface_group(self, child_elements: ChildElementMap, data: dict) -> None:
         """
-        Reads AR:PORTINTERFACE
-        Element-Type: Abstract
+        Reads group AR:AR-SENDER-RECEIVER-INTERFACE
+        Type: Abstract
         """
-        inner_elem = xml_elements.get('IS-SERVICE')
-        if inner_elem is not None:
-            data['is_service'] = self._read_boolean(inner_elem.text)
-        xml_elements.skip('NAMESPACES')  # Not supported
-        xml_elements.skip('SERVICE-KIND')  # Implement later
+        xml_child = child_elements.get('DATA-ELEMENTS')
+        if xml_child is not None:
+            data_elements = []
+            data["data_elements"] = data_elements
+            for xml_grand_child in xml_child.findall('./*'):
+                if xml_grand_child.tag == 'VARIABLE-DATA-PROTOTYPE':
+                    element = self._read_variable_data_prototype(xml_grand_child)
+                    data_elements.append(element)
+        xml_child = child_elements.get('INVALIDATION-POLICYS')
+        if xml_child is not None:
+            policies = []
+            data["invalidation_policies"] = policies
+            for xml_grand_child in xml_child.findall('./*'):
+                if xml_grand_child.tag == 'INVALIDATION-POLICY':
+                    policy = self._read_invalidation_policy(xml_grand_child)
+                    policies.append(policy)
+        child_elements.skip("META-DATA-ITEM-SETS")  # Not supported
 
-    def _read_sender_receiver_interface_group(self, element_map: ChildElementMap, data: dict) -> None:
+    def _read_invalidation_policy(self, xml_element: ElementTree.Element) -> ar_element.InvalidationPolicy:
         """
-        Reads AR:PORTINTERFACE
-        Element-Type: Concrete
-        """
-        xml_data_elements = element_map.get('DATA-ELEMENTS')
-        element_map.skip('INVALIDATION-POLICYS')  # Implement later
-        # META-DATA-ITEM-SETS not supported
-
-        if xml_data_elements is not None:
-            data_elements = self._read_data_elements(xml_data_elements)
-            data['data_elements'] = data_elements
-
-    def _read_data_elements(self, xml_elem: ElementTree.Element) -> list:
-        data_elements = []
-        for xml_child_elem in xml_elem.findall('./*'):
-            if xml_child_elem.tag == 'VARIABLE-DATA-PROTOTYPE':
-                child_data = self._read_variable_data_prototype(xml_child_elem)
-                data_elements.append(child_data)
-        return data_elements
-
-    def _read_variable_data_prototype(self, elem: ElementTree.Element) -> dict:
-        """
-        Reads VARIABLE-DATA-PROTOTYPE
-        Element-Type: Concrete dict
+        Reads complex-type AR:INVALIDATION-POLICY
+        Type: Concrete
         """
         data = {}
-        child_elements = ChildElementMap(elem)
-        self._read_referrable(child_elements, data)
-        self._read_multi_language_referrable(child_elements, data)
-        self._read_identifiable(child_elements, elem.attrib, data)
-        self._read_data_prototype(child_elements, data)
-        self._read_autosar_data_prototype(child_elements, data)
-        self._read_variable_data_prototype_elem(child_elements, data)
-        self._report_unprocessed_elements(child_elements)
-        return data
-
-    def _read_variable_data_prototype_elem(self, xml_elements: ChildElementMap, _: dict) -> None:
-        xml_init_value = xml_elements.find('INIT-VALUE')
-        if xml_init_value is not None:
-            pass
-        xml_elements.skip('VARIATION-POINT')  # Not supported
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("DATA-ELEMENT-REF")
+        if xml_child is not None:
+            data["data_element_ref"] = self._read_variable_data_prototype_ref(xml_child)
+        xml_child = child_elements.get("HANDLE-INVALID")
+        if xml_child is not None:
+            data["handle_invalid"] = ar_enum.xml_to_enum("HandleInvalid", xml_child.text)
+        return ar_element.InvalidationPolicy(**data)

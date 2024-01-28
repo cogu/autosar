@@ -120,7 +120,7 @@
           <SHORT-NAME>RecordConstant</SHORT-NAME>
           <VALUE-SPEC>
             <RECORD-VALUE-SPECIFICATION>
-              <SHORT-LABEL>Label4</SHORT-LABEL>
+              <SHORT-LABEL>Label5</SHORT-LABEL>
               <FIELDS>
                 <TEXT-VALUE-SPECIFICATION>
                   <VALUE>Value1</VALUE>

@@ -1998,5 +1998,80 @@ class TestValueList(unittest.TestCase):
         self.assertEqual(number.value_format, ar_enum.ValueFormat.HEXADECIMAL)
 
 
+class TestVariableDataPrototype(unittest.TestCase):
+
+    def test_read_write_empty(self):
+        element = ar_element.VariableDataPrototype("ShortName")
+        tag = "VARIABLE-DATA-PROTOTYPE"
+        writer = autosar.xml.Writer()
+        xml = '''<VARIABLE-DATA-PROTOTYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+</VARIABLE-DATA-PROTOTYPE>'''
+        self.assertEqual(writer.write_str_elem(element, tag), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.VariableDataPrototype = reader.read_str_elem(xml, "VariableDataPrototype")
+        self.assertIsInstance(elem, ar_element.VariableDataPrototype)
+        self.assertEqual(elem.name, "ShortName")
+
+    def test_read_write_sw_data_def_props(self):
+        sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref="/DataTypes/BaseTypes/uint8")
+        element = ar_element.VariableDataPrototype("ShortName",
+                                                   sw_data_def_props=sw_data_def_props)
+        tag = "VARIABLE-DATA-PROTOTYPE"
+        writer = autosar.xml.Writer()
+        xml = '''<VARIABLE-DATA-PROTOTYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <SW-DATA-DEF-PROPS>
+    <SW-DATA-DEF-PROPS-VARIANTS>
+      <SW-DATA-DEF-PROPS-CONDITIONAL>
+        <BASE-TYPE-REF DEST="SW-BASE-TYPE">/DataTypes/BaseTypes/uint8</BASE-TYPE-REF>
+      </SW-DATA-DEF-PROPS-CONDITIONAL>
+    </SW-DATA-DEF-PROPS-VARIANTS>
+  </SW-DATA-DEF-PROPS>
+</VARIABLE-DATA-PROTOTYPE>'''
+        self.assertEqual(writer.write_str_elem(element, tag), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.VariableDataPrototype = reader.read_str_elem(xml, "VariableDataPrototype")
+        self.assertIsInstance(elem, ar_element.VariableDataPrototype)
+        sw_data_def_props: ar_element.SwDataDefProps = elem.sw_data_def_props
+        self.assertIsInstance(sw_data_def_props, ar_element.SwDataDefProps)
+        self.assertEqual(str(sw_data_def_props.variants[0].base_type_ref), "/DataTypes/BaseTypes/uint8")
+
+    def test_read_write_type_ref(self):
+        type_ref = ar_element.AutosarDataTypeRef("DataTypes/uint16",
+                                                 ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE)
+        element = ar_element.VariableDataPrototype("ShortName", type_ref=type_ref)
+        tag = "VARIABLE-DATA-PROTOTYPE"
+        writer = autosar.xml.Writer()
+        xml = '''<VARIABLE-DATA-PROTOTYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">DataTypes/uint16</TYPE-TREF>
+</VARIABLE-DATA-PROTOTYPE>'''
+        self.assertEqual(writer.write_str_elem(element, tag), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.VariableDataPrototype = reader.read_str_elem(xml, "VariableDataPrototype")
+        self.assertIsInstance(elem, ar_element.VariableDataPrototype)
+        self.assertEqual(str(elem.type_ref), "DataTypes/uint16")
+
+    def test_read_write_init_value(self):
+        init_value = ar_element.NumericalValueSpecification(value=4)
+        element = ar_element.VariableDataPrototype("ShortName", init_value=init_value)
+        tag = "VARIABLE-DATA-PROTOTYPE"
+        writer = autosar.xml.Writer()
+        xml = '''<VARIABLE-DATA-PROTOTYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <INIT-VALUE>
+    <NUMERICAL-VALUE-SPECIFICATION>
+      <VALUE>4</VALUE>
+    </NUMERICAL-VALUE-SPECIFICATION>
+  </INIT-VALUE>
+</VARIABLE-DATA-PROTOTYPE>'''
+        self.assertEqual(writer.write_str_elem(element, tag), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.VariableDataPrototype = reader.read_str_elem(xml, "VariableDataPrototype")
+        self.assertIsInstance(elem, ar_element.VariableDataPrototype)
+        self.assertEqual(elem.init_value.value, 4)
+
+
 if __name__ == '__main__':
     unittest.main()

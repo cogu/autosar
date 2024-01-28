@@ -1,9 +1,22 @@
 # Changelog
 
+The first name in a bullet point below is the Python class name while the second name is the identifier used in the XML schema (XSD file).
+
 Elements marked as `collectable` means that they can be added directly to a package.
 Non-collectable elements are various sub-elements to collectable elements.
 
-The name in the parenthesis after each element is the name used in the XML schema (XSD file).
+## Unreleased
+
+### Added
+
+#### XML Port interface elements
+
+* SenderReceiverInterface | SENDER-RECEIVER-INTERFACE | `collectable`
+* InvalidationPolicy | INVALIDATION-POLICY
+
+#### XML - Data type elements
+
+* VariableDataPrototype | VARIABLE-DATA-PROTOTYPE
 
 ## [v0.5.1] - 2023-11-09
 
