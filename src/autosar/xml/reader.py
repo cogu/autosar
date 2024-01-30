@@ -124,6 +124,8 @@ class Reader:
             'DATA-CONSTR': self._read_data_constraint,
 
             # Port interface
+            'NV-DATA-INTERFACE': self._read_nv_data_interface,
+            'PARAMETER-INTERFACE': self._read_parameter_interface,
             'SENDER-RECEIVER-INTERFACE': self._read_sender_receiver_interface,
 
             # Unit elements
@@ -198,6 +200,7 @@ class Reader:
         self.switcher_all.update(self.switcher_non_collectable)
         self._switcher_type_name = {
             "ApplicationArrayElement": self._read_application_array_element,
+            "ParameterDataPrototype": self._read_parameter_data_prototype,
             "VariableDataPrototype": self._read_variable_data_prototype,
         }
 
@@ -1894,6 +1897,36 @@ class Reader:
         element = ar_element.ValueList(**data)
         return element
 
+    def _read_parameter_data_prototype(self, elem: ElementTree.Element) -> ar_element.ParameterDataPrototype:
+        """
+        Reads complex-type AR:PARAMETER-DATA-PROTOTYPE
+        Type: Concrete
+        """
+        data = {}
+        child_elements = ChildElementMap(elem)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, elem.attrib, data)
+        self._read_data_prototype(child_elements, data)
+        self._read_autosar_data_prototype(child_elements, data)
+        self._read_parameter_data_prototype_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ParameterDataPrototype(**data)
+
+    def _read_parameter_data_prototype_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:PARAMETER-DATA-PROTOTYPE
+        """
+        xml_child = child_elements.get('INIT-VALUE')
+        if xml_child is not None:
+            try:
+                xml_grand_child = xml_child.find("./*")
+                if xml_grand_child is not None:
+                    data["init_value"] = self._read_value_specification_element(xml_grand_child)
+            except KeyError:
+                pass
+        child_elements.skip('VARIATION-POINT')  # Not supported
+
     def _read_variable_data_prototype(self, elem: ElementTree.Element) -> ar_element.VariableDataPrototype:
         """
         Reads complex-type AR:VARIABLE-DATA-PROTOTYPE
@@ -1924,7 +1957,7 @@ class Reader:
                 pass
         child_elements.skip('VARIATION-POINT')  # Not supported
 
-    # Reference elements
+# --- Reference elements
 
     def _read_compu_method_ref(self, xml_elem: ElementTree.Element) -> ar_element.CompuMethodRef:
         """
@@ -2480,6 +2513,64 @@ class Reader:
             data['is_service'] = self._read_boolean(inner_elem.text)
         xml_elements.skip('NAMESPACES')  # Not supported
         xml_elements.skip('SERVICE-KIND')  # Implement later
+
+    def _read_nv_data_interface(self, xml_element: ElementTree.Element) -> ar_element.NvDataInterface:
+        """
+        Reads complex type AR:NV-DATA-INTERFACE
+        Type: Concrete
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_port_interface(child_elements, data)
+        self._read_nv_data_interface_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.NvDataInterface(**data)
+
+    def _read_nv_data_interface_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:NV-DATA-INTERFACE
+        Type: Abstract
+        """
+        xml_child = child_elements.get('NV-DATAS')
+        if xml_child is not None:
+            data_elements = []
+            data["data_elements"] = data_elements
+            for xml_grand_child in xml_child.findall('./*'):
+                if xml_grand_child.tag == 'VARIABLE-DATA-PROTOTYPE':
+                    element = self._read_variable_data_prototype(xml_grand_child)
+                    data_elements.append(element)
+
+    def _read_parameter_interface(self, xml_element: ElementTree.Element) -> ar_element.ParameterInterface:
+        """
+        Reads complex type AR:PARAMETER-INTERFACE
+        Type: Concrete
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_port_interface(child_elements, data)
+        self._read_parameter_interface_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ParameterInterface(**data)
+
+    def _read_parameter_interface_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:PARAMETER-INTERFACE
+        Type: Abstract
+        """
+        xml_child = child_elements.get('PARAMETERS')
+        if xml_child is not None:
+            parameters = []
+            data["parameters"] = parameters
+            for xml_grand_child in xml_child.findall('./*'):
+                if xml_grand_child.tag == 'PARAMETER-DATA-PROTOTYPE':
+                    element = self._read_parameter_data_prototype(xml_grand_child)
+                    parameters.append(element)
 
     def _read_sender_receiver_interface(self, xml_element: ElementTree.Element) -> ar_element.SenderReceiverInterface:
         """

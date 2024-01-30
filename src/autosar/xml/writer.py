@@ -202,6 +202,8 @@ class Writer(_XMLWriter):
             # Constant elements
             'ConstantSpecification': self._write_constant_specification,
             # Port interface elements
+            'NvDataInterface': self._write_nv_data_interface,
+            'ParameterInterface': self._write_parameter_interface,
             'SenderReceiverInterface': self._write_sender_receiver_interface,
         }
         # Value specification elements
@@ -256,6 +258,7 @@ class Writer(_XMLWriter):
             'DataTypeMap': self._write_data_type_map,
             'ValueList': self._write_value_list,
             'VariableDataPrototype': self._write_variable_data_prototype,
+            'ParameterDataPrototype': self._write_parameter_data_prototype,
             # CalibrationData elements
             'SwValues': self._write_sw_values,
             'SwAxisCont': self._write_sw_axis_cont,
@@ -1653,7 +1656,35 @@ class Writer(_XMLWriter):
             self._write_value_specification_element(elem.init_value)
             self._leave_child()
 
-    # Reference Elements
+    def _write_parameter_data_prototype(self, elem: ar_element.ParameterDataPrototype, tag: str) -> None:
+        """
+        Reads complex-type AR:PARAMETER-DATA-PROTOTYPE
+        Type: Concrete
+        Tag variants: 'PARAMETER-DATA-PROTOTYPE' | 'ROM-BLOCK'
+        """
+        assert isinstance(elem, ar_element.ParameterDataPrototype)
+        attr: TupleList = []
+        self._collect_identifiable_attributes(elem, attr)
+        self._add_child(tag, attr)
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_data_prototype(elem)
+        self._write_autosar_data_prototype(elem)
+        self._write_variable_data_prototype_group(elem)
+        self._leave_child()
+
+    def _write_parameter_data_prototype_group(self, elem: ar_element.ParameterDataPrototype) -> None:
+        """
+        Reads group AR:PARAMETER-DATA-PROTOTYPE
+        Type: Abstract
+        """
+        if elem.init_value is not None:
+            self._add_child("INIT-VALUE")
+            self._write_value_specification_element(elem.init_value)
+            self._leave_child()
+
+# --- Reference Elements
 
     def _collect_base_ref_attr(self,
                                elem: ar_element.BaseRef,
@@ -2134,6 +2165,56 @@ class Writer(_XMLWriter):
             self._add_content("IS-SERVICE", self._format_boolean(elem.is_service))
         if elem.service_kind is not None:
             self._add_content("SERVICE-KIND", ar_enum.enum_to_xml(elem.service_kind))
+
+    def _write_nv_data_interface(self, elem: ar_element.NvDataInterface) -> None:
+        """
+        Writes complex type AR:NV-DATA-INTERFACE
+        Type: Concrete
+        """
+        assert isinstance(elem, ar_element.NvDataInterface)
+        self._add_child("NV-DATA-INTERFACE")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_port_interface(elem)
+        self._write_nv_data_interface_group(elem)
+        self._leave_child()
+
+    def _write_nv_data_interface_group(self, elem: ar_element.NvDataInterface) -> None:
+        """
+        Writes group AR:NV-DATA-INTERFACE
+        Type: Abstract
+        """
+        if elem.data_elements:
+            self._add_child("NV-DATAS")
+            for data_element in elem.data_elements:
+                self._write_variable_data_prototype(data_element, "VARIABLE-DATA-PROTOTYPE")
+            self._leave_child()
+
+    def _write_parameter_interface(self, elem: ar_element.ParameterInterface) -> None:
+        """
+        Writes complex type AR:PARAMETER-INTERFACE
+        Type: Concrete
+        """
+        assert isinstance(elem, ar_element.ParameterInterface)
+        self._add_child("PARAMETER-INTERFACE")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_port_interface(elem)
+        self._write_parameter_interface_group(elem)
+        self._leave_child()
+
+    def _write_parameter_interface_group(self, elem: ar_element.ParameterInterface) -> None:
+        """
+        Writes group AR:PARAMETER-INTERFACE
+        Type: Abstract
+        """
+        if elem.parameters:
+            self._add_child("PARAMETERS")
+            for parameter in elem.parameters:
+                self._write_parameter_data_prototype(parameter, "PARAMETER-DATA-PROTOTYPE")
+            self._leave_child()
 
     def _write_sender_receiver_interface(self, elem: ar_element.SenderReceiverInterface) -> None:
         """

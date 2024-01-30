@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AUTOSAR xsi:schemaLocation="http://autosar.org/schema/r4.0 AUTOSAR_00051.xsd" xmlns="http://autosar.org/schema/r4.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <AR-PACKAGES>
+    <AR-PACKAGE>
+      <SHORT-NAME>PortInterfaces</SHORT-NAME>
+      <ELEMENTS>
+        <PARAMETER-INTERFACE>
+          <SHORT-NAME>ParameterInterface1</SHORT-NAME>
+          <PARAMETERS>
+            <PARAMETER-DATA-PROTOTYPE>
+              <SHORT-NAME>Param1</SHORT-NAME>
+              <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">/AUTOSAR_Platform/ImplementationDataTypes/uint8</TYPE-TREF>
+            </PARAMETER-DATA-PROTOTYPE>
+          </PARAMETERS>
+        </PARAMETER-INTERFACE>
+        <PARAMETER-INTERFACE>
+          <SHORT-NAME>ParameterInterface2</SHORT-NAME>
+          <PARAMETERS>
+            <PARAMETER-DATA-PROTOTYPE>
+              <SHORT-NAME>Param1</SHORT-NAME>
+              <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">/AUTOSAR_Platform/ImplementationDataTypes/uint8</TYPE-TREF>
+            </PARAMETER-DATA-PROTOTYPE>
+            <PARAMETER-DATA-PROTOTYPE>
+              <SHORT-NAME>Param2</SHORT-NAME>
+              <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">/AUTOSAR_Platform/ImplementationDataTypes/uint8</TYPE-TREF>
+            </PARAMETER-DATA-PROTOTYPE>
+          </PARAMETERS>
+        </PARAMETER-INTERFACE>
+      </ELEMENTS>
+    </AR-PACKAGE>
+  </AR-PACKAGES>
+</AUTOSAR>
