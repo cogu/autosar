@@ -2115,13 +2115,19 @@ class AutosarDataPrototype(DataPrototype):
 
     def __init__(self,
                  name: str,
-                 type_ref: AutosarDataTypeRef | None = None,
+                 type_ref: AutosarDataTypeRef | ImplementationDataTypeRef | None = None,
                  **kwargs: dict) -> None:
         super().__init__(name, **kwargs)
         self.type_ref: AutosarDataTypeRef | None = None  # .TYPE-TREF
-        if isinstance(type_ref, ImplementationDataTypeRef):
-            type_ref = AutosarDataTypeRef(type_ref.value, ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE)
-        self._assign_optional_strict("type_ref", type_ref, AutosarDataTypeRef)
+        if type_ref is not None:
+            if isinstance(type_ref, AutosarDataTypeRef):
+                pass
+            elif isinstance(type_ref, ImplementationDataTypeRef):
+                type_ref = AutosarDataTypeRef(type_ref.value, ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE)
+            else:
+                msg = f"type_ref: Invalid type '{str(type(type_ref))}'."
+                raise TypeError(msg + " Expected type 'AutosarDataTypeRef' or 'ImplementationDataTypeRef'")
+            self._set_attr_with_strict_type("type_ref", type_ref, AutosarDataTypeRef)
 
 
 class VariableDataPrototype(AutosarDataPrototype):
@@ -2139,6 +2145,16 @@ class VariableDataPrototype(AutosarDataPrototype):
         self.init_value: ValueSpeficationElement | None = None  # .INIT-VALUE
         # .VARIATION-POINT not supported
         self._assign_optional_strict("init_value", init_value, ValueSpecification)
+
+
+class ParameterDataPrototype(VariableDataPrototype):
+    """
+    Complex type AR:PARAMETER-DATA-PROTOTYPE
+    Type: Concrete
+    Tag variants: 'PARAMETER-DATA-PROTOTYPE' | 'ROM-BLOCK'
+
+    This is identical in functionality to VariableDataPrototype, hence the inheritance.
+    """
 
 
 class ApplicationDataType(AutosarDataType):
@@ -2986,17 +3002,12 @@ class SenderReceiverInterface(DataInterface):
     def make_data_element(self,
                           name: str,
                           init_value: ValueSpeficationElement | None = None,
-                          handle_invalid: ar_enum.HandleInvalid | None = None,  # Not yet fully implemented, don't use
                           **kwargs) -> VariableDataPrototype:
         """
         Convenience method for adding a new data element to this port interface
         """
         data_element = VariableDataPrototype(name, init_value, **kwargs)
         self.append_data_element(data_element)
-        if handle_invalid is not None:
-            data_element_ref = "@" + name  # Mark this reference to be resolved later
-            invalidation_policy = InvalidationPolicy(VariableDataPrototypeRef(data_element_ref), handle_invalid)
-            self.append_invalidation_policy(invalidation_policy)
         return data_element
 
     def make_invalidation_policy(self,
@@ -3017,20 +3028,95 @@ class SenderReceiverInterface(DataInterface):
         self.append_invalidation_policy(invalidation_policy)
         return invalidation_policy
 
-    @classmethod
-    def make_simple(cls,
-                    interface_name: str,
-                    data_element_name: str,
-                    init_value: ValueSpeficationElement | None = None,
-                    handle_invalid: ar_enum.HandleInvalid | None = None,
-                    **kwargs) -> "SenderReceiverInterface":
+
+class NvDataInterface(DataInterface):
+    """
+    Complex type AR:NV-DATA-INTERFACE
+    Type: Concrete
+    Tag variants: 'NV-DATA-INTERFACE'
+    """
+
+    def __init__(self,
+                 name: str,
+                 data_elements: VariableDataPrototype | list[VariableDataPrototype] | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.data_elements: list[VariableDataPrototype] = []  # .NV-DATAS
+        if data_elements is not None:
+            if isinstance(data_elements, VariableDataPrototype):
+                self.append_data_element(data_elements)
+            elif isinstance(data_elements, list):
+                for data_element in data_elements:
+                    self.append_data_element(data_element)
+            else:
+                msg = f"nv_datas: Invalid type '{str(type(data_elements))}'"
+                raise TypeError(msg + ". Expected 'VariableDataPrototype' or list[VariableDataPrototype]")
+
+    def append_data_element(self, nv_data: VariableDataPrototype):
         """
-        Convenience-method for creating a new port interface with
-        a single data element
+        Appends data element to internal list of data elements
         """
-        port_interface = cls(interface_name)
-        port_interface.make_data_element(data_element_name, init_value, handle_invalid, **kwargs)
-        return port_interface
+        if isinstance(nv_data, VariableDataPrototype):
+            self.data_elements.append(nv_data)
+        else:
+            msg = f"nv_data: Invalid type '{str(type(nv_data))}'"
+            raise TypeError(msg + ". Expected 'VariableDataPrototype'")
+
+    def make_data_element(self,
+                          name: str,
+                          init_value: ValueSpeficationElement | None = None,
+                          **kwargs) -> VariableDataPrototype:
+        """
+        Convenience method for adding a new data element to this port interface
+        """
+        data_element = VariableDataPrototype(name, init_value, **kwargs)
+        self.append_data_element(data_element)
+        return data_element
+
+
+class ParameterInterface(DataInterface):
+    """
+    Complex type AR:PARAMETER-INTERFACE
+    Type: Concrete
+    Tag variants: 'PARAMETER-INTERFACE'
+    """
+
+    def __init__(self,
+                 name: str,
+                 parameters: ParameterDataPrototype | list[ParameterDataPrototype] | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.parameters: list[ParameterDataPrototype] = []  # .PARAMETERS
+        if parameters is not None:
+            if isinstance(parameters, ParameterDataPrototype):
+                self.append_parameter(parameters)
+            elif isinstance(parameters, list):
+                for parameter in parameters:
+                    self.append_parameter(parameter)
+            else:
+                msg = f"parameters: Invalid type '{str(type(parameters))}'"
+                raise TypeError(msg + ". Expected 'ParameterDataPrototype' or list[ParameterDataPrototype]")
+
+    def append_parameter(self, parameter: ParameterDataPrototype):
+        """
+        Appends parameter to internal list of parameters
+        """
+        if isinstance(parameter, ParameterDataPrototype):
+            self.parameters.append(parameter)
+        else:
+            msg = f"parameter: Invalid type '{str(type(parameter))}'"
+            raise TypeError(msg + ". Expected 'ParameterDataPrototype'")
+
+    def make_parameter(self,
+                       name: str,
+                       init_value: ValueSpeficationElement | None = None,
+                       **kwargs) -> ParameterDataPrototype:
+        """
+        Convenience method for adding a new parameter to this port interface
+        """
+        data_element = ParameterDataPrototype(name, init_value, **kwargs)
+        self.append_parameter(data_element)
+        return data_element
 
 
 # !!UNFINISHED!! Component Types
