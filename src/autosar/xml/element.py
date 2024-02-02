@@ -562,6 +562,20 @@ class VariableDataPrototypeRef(BaseRef):
         """Acceptable values for dest"""
         return {ar_enum.IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE}
 
+
+class ApplicationErrorRef(BaseRef):
+    """
+    Reference to ApplicationError
+    tag variants: 'POSSIBLE-ERROR-REF'
+    """
+
+    def __init__(self, value: str) -> None:
+        super().__init__(value, ar_enum.IdentifiableSubTypes.APPLICATION_ERROR)
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.APPLICATION_ERROR}
+
 # Documentation Elements
 
 
@@ -2153,8 +2167,29 @@ class ParameterDataPrototype(VariableDataPrototype):
     Type: Concrete
     Tag variants: 'PARAMETER-DATA-PROTOTYPE' | 'ROM-BLOCK'
 
-    This is identical in functionality to VariableDataPrototype, hence the inheritance.
+    This is identical in behavior to VariableDataPrototype, hence the inheritance.
     """
+
+
+class ArgumentDataPrototype(AutosarDataPrototype):
+    """
+    Complex type AR:ARGUMENT-DATA-PROTOTYPE
+    Type: Concrete
+    Tag variants: 'ARGUMENT-DATA-PROTOTYPE'
+    """
+
+    def __init__(self,
+                 name: str,
+                 direction: ar_enum.ArgumentDirection | None = None,
+                 server_arg_impl_policy: ar_enum.ServerArgImplPolicy | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.direction: ar_enum.ArgumentDirection | None = None  # .DIRECTION
+        self.server_arg_impl_policy: ar_enum.ServerArgImplPolicy | None = None  # .SERVER-ARGUMENT-IMPL-POLICY
+        # .TYPE-BLUEPRINTS not supported
+        # .VARIATION-POINT not supported
+        self._assign_optional("direction", direction, ar_enum.ArgumentDirection)
+        self._assign_optional("server_arg_impl_policy", server_arg_impl_policy, ar_enum.ServerArgImplPolicy)
 
 
 class ApplicationDataType(AutosarDataType):
@@ -3118,6 +3153,220 @@ class ParameterInterface(DataInterface):
         self.append_parameter(data_element)
         return data_element
 
+
+class ApplicationError(Identifiable):
+    """
+    Complex type AR:APPLICATION-ERROR
+    Tag variants: 'APPLICATION-ERROR'
+    """
+
+    def __init__(self,
+                 name: str,
+                 error_code: int | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.error_code: int | None = None
+        self._assign_optional_strict("error_code", error_code, int)
+
+
+class ClientServerOperation(Identifiable):
+    """
+    Complex type AR:CLIENT-SERVER-OPERATION
+    Tag variants: 'CLIENT-SERVER-OPERATION'
+    """
+
+    def __init__(self,
+                 name: str,
+                 arguments: ArgumentDataPrototype | list[ArgumentDataPrototype] | None = None,
+                 diag_arg_integrity: bool | None = None,
+                 fire_and_forget: bool | None = None,
+                 possible_error_refs: ApplicationErrorRef | list[ApplicationErrorRef] | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.arguments: list[ArgumentDataPrototype] = []  # .ARGUMENTS
+        self.diag_arg_integrity: bool | None = None  # .DIAG-ARG-INTEGRITY
+        self.fire_and_forget: bool | None = None  # .FIRE-AND-FORGET
+        # .POSSIBLE-AP-ERROR-REFS not supported
+        # .POSSIBLE-AP-ERROR-SET-REFS not supported
+        self.possible_error_refs: list[ApplicationErrorRef] = []  # .POSSIBLE-ERROR-REFS
+        # .VARIATION-POINT not supported
+
+        self._assign_optional_strict("diag_arg_integrity", diag_arg_integrity, bool)
+        self._assign_optional_strict("fire_and_forget", fire_and_forget, bool)
+        if arguments is not None:
+            if isinstance(arguments, ArgumentDataPrototype):
+                self.append_argument(arguments)
+            elif isinstance(arguments, list):
+                for argument in arguments:
+                    self.append_argument(argument)
+            else:
+                msg = f"parameters: Invalid type '{str(type(arguments))}'"
+                raise TypeError(msg + ". Expected 'ArgumentDataPrototype' or list[ArgumentDataPrototype]")
+
+        if possible_error_refs is not None:
+            if isinstance(possible_error_refs, ApplicationErrorRef):
+                self.append_argument(arguments)
+            elif isinstance(possible_error_refs, list):
+                for possible_error_ref in possible_error_refs:
+                    self.append_possible_error_ref(possible_error_ref)
+            else:
+                msg = f"possible_error_refs: Invalid type '{str(type(possible_error_refs))}'"
+                raise TypeError(msg + ". Expected 'ApplicationErrorRef' or list[ApplicationErrorRef]")
+
+    def append_argument(self, argument: ArgumentDataPrototype) -> None:
+        """
+        Appends argument to internal list of arguments
+        """
+        if isinstance(argument, ArgumentDataPrototype):
+            self.arguments.append(argument)
+        else:
+            msg = f"argument: Invalid type '{str(type(argument))}'"
+            raise TypeError(msg + ". Expected 'ArgumentDataPrototype'")
+
+    def make_argument(self,
+                      name: str,
+                      direction: ar_enum.ArgumentDirection | None = None,
+                      server_arg_impl_policy: ar_enum.ServerArgImplPolicy | None = None,
+                      **kwargs) -> ArgumentDataPrototype:
+        """
+        Convenience method for adding a new argument to this operation
+        """
+        argument = ArgumentDataPrototype(name, direction, server_arg_impl_policy, **kwargs)
+        self.append_argument(argument)
+        return argument
+
+    def make_in_argument(self,
+                         name: str,
+                         server_arg_impl_policy: ar_enum.ServerArgImplPolicy | None = None,
+                         **kwargs) -> ArgumentDataPrototype:
+        """
+        Convenience method for adding a new in-argument to this operation
+        """
+        argument = ArgumentDataPrototype(name, ar_enum.ArgumentDirection.IN, server_arg_impl_policy, **kwargs)
+        self.append_argument(argument)
+        return argument
+
+    def make_inout_argument(self,
+                            name: str,
+                            server_arg_impl_policy: ar_enum.ServerArgImplPolicy | None = None,
+                            **kwargs) -> ArgumentDataPrototype:
+        """
+        Convenience method for adding a new inout-argument to this operation
+        """
+        argument = ArgumentDataPrototype(name, ar_enum.ArgumentDirection.INOUT, server_arg_impl_policy, **kwargs)
+        self.append_argument(argument)
+        return argument
+
+    def make_out_argument(self,
+                          name: str,
+                          server_arg_impl_policy: ar_enum.ServerArgImplPolicy | None = None,
+                          **kwargs) -> ArgumentDataPrototype:
+        """
+        Convenience method for adding a new out-argument to this operation
+        """
+        argument = ArgumentDataPrototype(name, ar_enum.ArgumentDirection.OUT, server_arg_impl_policy, **kwargs)
+        self.append_argument(argument)
+        return argument
+
+    def append_possible_error_ref(self, possible_error_ref: ApplicationErrorRef) -> None:
+        """
+        Appends error reference to internal list of possible errors for this operation
+        """
+        if isinstance(possible_error_ref, ApplicationErrorRef):
+            self.possible_error_refs.append(possible_error_ref)
+        else:
+            msg = f"argument: Invalid type '{str(type(possible_error_ref))}'"
+            raise TypeError(msg + ". Expected 'ApplicationErrorRef'")
+
+    def make_possible_error_ref(self, value: str) -> ApplicationErrorRef:
+        """
+        Convenience method for creating and adding a new possible error reference to this operation
+        """
+        possible_error_ref = ApplicationErrorRef(value)
+        self.append_possible_error_ref(possible_error_ref)
+        return possible_error_ref
+
+
+class ClientServerInterface(PortInterface):
+    """
+    Complex type AR:CLIENT-SERVER-INTERFACE
+    Tag variants: 'CLIENT-SERVER-INTERFACE'
+    """
+
+    def __init__(self,
+                 name: str,
+                 operations: ClientServerOperation | list[ClientServerOperation] | None = None,
+                 possible_errors: ApplicationError | list[ApplicationError] | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.operations: list[ClientServerOperation] = []
+        self.possible_errors: list[ApplicationError] = []
+
+        if operations is not None:
+            if isinstance(operations, ClientServerOperation):
+                self.append_operation(operations)
+            elif isinstance(operations, list):
+                for operation in operations:
+                    self.append_operation(operation)
+            else:
+                msg = f"operations: Invalid type '{str(type(operations))}'"
+                raise TypeError(msg + ". Expected 'ClientServerOperation' or list[ClientServerOperation]")
+
+        if possible_errors is not None:
+            if isinstance(possible_errors, ApplicationError):
+                self.append_operation(possible_errors)
+            elif isinstance(possible_errors, list):
+                for possible_error in possible_errors:
+                    self.append_possible_errors(possible_error)
+            else:
+                msg = f"possible_errors: Invalid type '{str(type(possible_errors))}'"
+                raise TypeError(msg + ". Expected 'ApplicationError' or list[ApplicationError]")
+
+    def append_operation(self, operation: ClientServerOperation) -> None:
+        """
+        Appends operation to internal list of operations
+        """
+        if isinstance(operation, ClientServerOperation):
+            self.operations.append(operation)
+        else:
+            msg = f"operation: Invalid type '{str(type(operation))}'"
+            raise TypeError(msg + ". Expected 'ClientServerOperation'")
+
+    def append_possible_errors(self, possible_error: ApplicationError) -> None:
+        """
+        Appends possible error to internal list of possible errors
+        """
+        if isinstance(possible_error, ApplicationError):
+            self.possible_errors.append(possible_error)
+        else:
+            msg = f"operation: Invalid type '{str(type(possible_error))}'"
+            raise TypeError(msg + ". Expected 'ApplicationError'")
+
+    def make_operation(self,
+                       name: str,
+                       arguments: ArgumentDataPrototype | list[ArgumentDataPrototype] | None = None,
+                       diag_arg_integrity: bool | None = None,
+                       fire_and_forget: bool | None = None,
+                       possible_error_refs: ApplicationErrorRef | list[ApplicationErrorRef] | None = None,
+                       **kwargs) -> ClientServerOperation:
+        """
+        Convenience method for creating a new operation in this port interface
+        """
+        operation = ClientServerOperation(name, arguments, diag_arg_integrity, fire_and_forget, possible_error_refs,
+                                          **kwargs)
+        self.append_operation(operation)
+        return operation
+
+    def make_possible_error(self,
+                            name: str,
+                            error_code: int | None = None,
+                            **kwargs) -> ApplicationError:
+        """
+        Convenience-method for creating a new possible error in this port interface
+        """
+        possible_error = ApplicationError(name, error_code, **kwargs)
+        self.append_possible_errors(possible_error)
+        return possible_error
 
 # !!UNFINISHED!! Component Types
 

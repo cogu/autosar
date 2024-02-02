@@ -9,6 +9,8 @@ import autosar.xml.enumeration as ar_enum # noqa E402
 import autosar.xml.element as ar_element # noqa E402
 import autosar # noqa E402
 
+IMPLEMENTATION_DATA_TYPE = ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE
+
 
 class TestInvalidationPolicy(unittest.TestCase):
 
@@ -575,6 +577,280 @@ class TestParameterInterface(unittest.TestCase):
         parameter = elem.parameters[1]
         self.assertEqual(parameter.name, "Param2")
         self.assertEqual(str(parameter.type_ref), "AUTOSAR_Platform/ImplementationDataTypes/uint16")
+
+
+class TestApplicationError(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.ApplicationError("ErrorName")
+        writer = autosar.xml.Writer()
+        xml = '''<APPLICATION-ERROR>
+  <SHORT-NAME>ErrorName</SHORT-NAME>
+</APPLICATION-ERROR>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationError = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationError)
+        self.assertEqual(elem.name, "ErrorName")
+
+    def test_error_code(self):
+        element = ar_element.ApplicationError("ErrorName", error_code=10)
+        writer = autosar.xml.Writer()
+        xml = '''<APPLICATION-ERROR>
+  <SHORT-NAME>ErrorName</SHORT-NAME>
+  <ERROR-CODE>10</ERROR-CODE>
+</APPLICATION-ERROR>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationError = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationError)
+        self.assertEqual(elem.name, "ErrorName")
+        self.assertEqual(elem.error_code, 10)
+
+
+class TestClientServerOperation(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.ClientServerOperation("OperationName")
+        writer = autosar.xml.Writer()
+        xml = '''<CLIENT-SERVER-OPERATION>
+  <SHORT-NAME>OperationName</SHORT-NAME>
+</CLIENT-SERVER-OPERATION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ClientServerOperation = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ClientServerOperation)
+        self.assertEqual(elem.name, "OperationName")
+
+    def test_one_argument(self):
+        element = ar_element.ClientServerOperation("OperationName")
+        element.make_in_argument("Arg1",
+                                 type_ref=ar_element.AutosarDataTypeRef("/DataTypes/uint8", IMPLEMENTATION_DATA_TYPE))
+        writer = autosar.xml.Writer()
+        xml = '''<CLIENT-SERVER-OPERATION>
+  <SHORT-NAME>OperationName</SHORT-NAME>
+  <ARGUMENTS>
+    <ARGUMENT-DATA-PROTOTYPE>
+      <SHORT-NAME>Arg1</SHORT-NAME>
+      <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/uint8</TYPE-TREF>
+      <DIRECTION>IN</DIRECTION>
+    </ARGUMENT-DATA-PROTOTYPE>
+  </ARGUMENTS>
+</CLIENT-SERVER-OPERATION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ClientServerOperation = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ClientServerOperation)
+        self.assertEqual(elem.name, "OperationName")
+        self.assertEqual(len(elem.arguments), 1)
+        argument: ar_element.ArgumentDataPrototype = elem.arguments[0]
+        self.assertIsInstance(argument, ar_element.ArgumentDataPrototype)
+        self.assertEqual(argument.name, "Arg1")
+        self.assertEqual(str(argument.type_ref), "/DataTypes/uint8")
+        self.assertEqual(argument.direction, ar_enum.ArgumentDirection.IN)
+
+    def test_two_arguments(self):
+        element = ar_element.ClientServerOperation("OperationName")
+        element.make_in_argument("Arg1",
+                                 type_ref=ar_element.AutosarDataTypeRef("/DataTypes/uint8", IMPLEMENTATION_DATA_TYPE))
+        element.make_out_argument("Arg2",
+                                  type_ref=ar_element.AutosarDataTypeRef("/DataTypes/bool", IMPLEMENTATION_DATA_TYPE))
+        writer = autosar.xml.Writer()
+        xml = '''<CLIENT-SERVER-OPERATION>
+  <SHORT-NAME>OperationName</SHORT-NAME>
+  <ARGUMENTS>
+    <ARGUMENT-DATA-PROTOTYPE>
+      <SHORT-NAME>Arg1</SHORT-NAME>
+      <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/uint8</TYPE-TREF>
+      <DIRECTION>IN</DIRECTION>
+    </ARGUMENT-DATA-PROTOTYPE>
+    <ARGUMENT-DATA-PROTOTYPE>
+      <SHORT-NAME>Arg2</SHORT-NAME>
+      <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/bool</TYPE-TREF>
+      <DIRECTION>OUT</DIRECTION>
+    </ARGUMENT-DATA-PROTOTYPE>
+  </ARGUMENTS>
+</CLIENT-SERVER-OPERATION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ClientServerOperation = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ClientServerOperation)
+        self.assertEqual(len(elem.arguments), 2)
+        argument: ar_element.ArgumentDataPrototype = elem.arguments[0]
+        self.assertIsInstance(argument, ar_element.ArgumentDataPrototype)
+        self.assertEqual(argument.name, "Arg1")
+        self.assertEqual(str(argument.type_ref), "/DataTypes/uint8")
+        self.assertEqual(argument.direction, ar_enum.ArgumentDirection.IN)
+        argument: ar_element.ArgumentDataPrototype = elem.arguments[1]
+        self.assertIsInstance(argument, ar_element.ArgumentDataPrototype)
+        self.assertEqual(argument.name, "Arg2")
+        self.assertEqual(str(argument.type_ref), "/DataTypes/bool")
+        self.assertEqual(argument.direction, ar_enum.ArgumentDirection.OUT)
+
+    def test_diag_arg_integrity(self):
+        element = ar_element.ClientServerOperation("OperationName",
+                                                   diag_arg_integrity=False)
+        writer = autosar.xml.Writer()
+        xml = '''<CLIENT-SERVER-OPERATION>
+  <SHORT-NAME>OperationName</SHORT-NAME>
+  <DIAG-ARG-INTEGRITY>false</DIAG-ARG-INTEGRITY>
+</CLIENT-SERVER-OPERATION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ClientServerOperation = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ClientServerOperation)
+        self.assertFalse(elem.diag_arg_integrity)
+
+    def test_fire_and_forget(self):
+        element = ar_element.ClientServerOperation("OperationName",
+                                                   fire_and_forget=True)
+        writer = autosar.xml.Writer()
+        xml = '''<CLIENT-SERVER-OPERATION>
+  <SHORT-NAME>OperationName</SHORT-NAME>
+  <FIRE-AND-FORGET>true</FIRE-AND-FORGET>
+</CLIENT-SERVER-OPERATION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ClientServerOperation = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ClientServerOperation)
+        self.assertTrue(elem.fire_and_forget)
+
+    def test_single_possible_error(self):
+        element = ar_element.ClientServerOperation("OperationName")
+        element.make_possible_error_ref("/PortInterfaces/OperationName/ErrorName1")
+        writer = autosar.xml.Writer()
+        xml = '''<CLIENT-SERVER-OPERATION>
+  <SHORT-NAME>OperationName</SHORT-NAME>
+  <POSSIBLE-ERROR-REFS>
+    <POSSIBLE-ERROR-REF DEST="APPLICATION-ERROR">/PortInterfaces/OperationName/ErrorName1</POSSIBLE-ERROR-REF>
+  </POSSIBLE-ERROR-REFS>
+</CLIENT-SERVER-OPERATION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ClientServerOperation = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ClientServerOperation)
+        self.assertEqual(elem.name, "OperationName")
+        self.assertEqual(len(elem.possible_error_refs), 1)
+        possible_error_ref: ar_element.ApplicationErrorRef = elem.possible_error_refs[0]
+        self.assertIsInstance(possible_error_ref, ar_element.ApplicationErrorRef)
+        self.assertEqual(str(possible_error_ref), "/PortInterfaces/OperationName/ErrorName1")
+
+    def test_dual_possible_errors(self):
+        element = ar_element.ClientServerOperation("OperationName")
+        element.make_possible_error_ref("/PortInterfaces/OperationName/ErrorName1")
+        element.make_possible_error_ref("/PortInterfaces/OperationName/ErrorName2")
+        writer = autosar.xml.Writer()
+        xml = '''<CLIENT-SERVER-OPERATION>
+  <SHORT-NAME>OperationName</SHORT-NAME>
+  <POSSIBLE-ERROR-REFS>
+    <POSSIBLE-ERROR-REF DEST="APPLICATION-ERROR">/PortInterfaces/OperationName/ErrorName1</POSSIBLE-ERROR-REF>
+    <POSSIBLE-ERROR-REF DEST="APPLICATION-ERROR">/PortInterfaces/OperationName/ErrorName2</POSSIBLE-ERROR-REF>
+  </POSSIBLE-ERROR-REFS>
+</CLIENT-SERVER-OPERATION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ClientServerOperation = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ClientServerOperation)
+        self.assertEqual(elem.name, "OperationName")
+        self.assertEqual(len(elem.possible_error_refs), 2)
+        possible_error_ref: ar_element.ApplicationErrorRef = elem.possible_error_refs[0]
+        self.assertIsInstance(possible_error_ref, ar_element.ApplicationErrorRef)
+        self.assertEqual(str(possible_error_ref), "/PortInterfaces/OperationName/ErrorName1")
+        possible_error_ref: ar_element.ApplicationErrorRef = elem.possible_error_refs[1]
+        self.assertIsInstance(possible_error_ref, ar_element.ApplicationErrorRef)
+        self.assertEqual(str(possible_error_ref), "/PortInterfaces/OperationName/ErrorName2")
+
+
+class TestClientServerInterface(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.ClientServerInterface("InterfaceName")
+        writer = autosar.xml.Writer()
+        xml = '''<CLIENT-SERVER-INTERFACE>
+  <SHORT-NAME>InterfaceName</SHORT-NAME>
+</CLIENT-SERVER-INTERFACE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ClientServerInterface = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ClientServerInterface)
+        self.assertEqual(elem.name, "InterfaceName")
+
+    def test_operation(self):
+        element = ar_element.ClientServerInterface("InterfaceName")
+        operation = element.make_operation("Operation1")
+        operation.make_in_argument("Arg1",
+                                   type_ref=ar_element.AutosarDataTypeRef("/DataTypes/uint8", IMPLEMENTATION_DATA_TYPE))
+        writer = autosar.xml.Writer()
+        xml = '''<CLIENT-SERVER-INTERFACE>
+  <SHORT-NAME>InterfaceName</SHORT-NAME>
+  <OPERATIONS>
+    <CLIENT-SERVER-OPERATION>
+      <SHORT-NAME>Operation1</SHORT-NAME>
+      <ARGUMENTS>
+        <ARGUMENT-DATA-PROTOTYPE>
+          <SHORT-NAME>Arg1</SHORT-NAME>
+          <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/uint8</TYPE-TREF>
+          <DIRECTION>IN</DIRECTION>
+        </ARGUMENT-DATA-PROTOTYPE>
+      </ARGUMENTS>
+    </CLIENT-SERVER-OPERATION>
+  </OPERATIONS>
+</CLIENT-SERVER-INTERFACE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ClientServerInterface = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ClientServerInterface)
+        self.assertEqual(elem.name, "InterfaceName")
+        self.assertEqual(len(elem.operations), 1)
+        operation = elem.operations[0]
+        self.assertIsInstance(operation, ar_element.ClientServerOperation)
+        self.assertEqual(operation.name, "Operation1")
+
+    def test_operation_with_possible_error(self):
+        element = ar_element.ClientServerInterface("InterfaceName")
+        element.make_possible_error("E_NOT_OK")
+        operation = element.make_operation("Operation1")
+        operation.make_in_argument("Arg1",
+                                   type_ref=ar_element.AutosarDataTypeRef("/DataTypes/uint8", IMPLEMENTATION_DATA_TYPE))
+        operation.make_possible_error_ref("/Portinterfaces/InterfaceName/E_NOT_OK")
+        writer = autosar.xml.Writer()
+        xml = '''<CLIENT-SERVER-INTERFACE>
+  <SHORT-NAME>InterfaceName</SHORT-NAME>
+  <OPERATIONS>
+    <CLIENT-SERVER-OPERATION>
+      <SHORT-NAME>Operation1</SHORT-NAME>
+      <ARGUMENTS>
+        <ARGUMENT-DATA-PROTOTYPE>
+          <SHORT-NAME>Arg1</SHORT-NAME>
+          <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/uint8</TYPE-TREF>
+          <DIRECTION>IN</DIRECTION>
+        </ARGUMENT-DATA-PROTOTYPE>
+      </ARGUMENTS>
+      <POSSIBLE-ERROR-REFS>
+        <POSSIBLE-ERROR-REF DEST="APPLICATION-ERROR">/Portinterfaces/InterfaceName/E_NOT_OK</POSSIBLE-ERROR-REF>
+      </POSSIBLE-ERROR-REFS>
+    </CLIENT-SERVER-OPERATION>
+  </OPERATIONS>
+  <POSSIBLE-ERRORS>
+    <APPLICATION-ERROR>
+      <SHORT-NAME>E_NOT_OK</SHORT-NAME>
+    </APPLICATION-ERROR>
+  </POSSIBLE-ERRORS>
+</CLIENT-SERVER-INTERFACE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ClientServerInterface = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ClientServerInterface)
+        self.assertEqual(elem.name, "InterfaceName")
+        self.assertEqual(len(elem.operations), 1)
+        operation = elem.operations[0]
+        self.assertIsInstance(operation, ar_element.ClientServerOperation)
+        self.assertEqual(len(operation.possible_error_refs), 1)
+        possible_error_ref = operation.possible_error_refs[0]
+        self.assertEqual(str(possible_error_ref), "/Portinterfaces/InterfaceName/E_NOT_OK")
+        self.assertEqual(len(elem.possible_errors), 1)
+        possible_errors = elem.possible_errors[0]
+        self.assertEqual(possible_errors.name, "E_NOT_OK")
 
 
 if __name__ == '__main__':

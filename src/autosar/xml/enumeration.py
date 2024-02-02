@@ -10,6 +10,16 @@ import autosar.base as ar_base
 import autosar.xml.exception as ar_exception
 
 
+class ArgumentDirection(Enum):
+    """
+    AR:ARGUMENT-DIRECTION-ENUM--SIMPLE
+    """
+
+    IN = 0
+    INOUT = 1
+    OUT = 2
+
+
 class ArrayImplPolicy(Enum):
     """
     AR:ARRAY-IMPL-POLICY-ENUM--SIMPLE
@@ -151,20 +161,21 @@ class IdentifiableSubTypes(Enum):
     APPLICATION_ASSOC_MAP_DATA_TYPE = 2
     APPLICATION_COMPOSITE_DATA_TYPE = 3
     APPLICATION_DATA_TYPE = 4
-    APPLICATION_DEFERRED_DATA_TYPE = 5
-    APPLICATION_PRIMITIVE_DATA_TYPE = 6
-    APPLICATION_RECORD_DATA_TYPE = 7
-    AUTOSAR_DATA_TYPE = 8
-    BSW_MODULE_ENTRY = 9
-    COMPU_METHOD = 10
-    CONSTANT_SPECIFICATION = 11
-    DATA_CONSTR = 12
-    IMPLEMENTATION_DATA_TYPE = 13
-    PHYSICAL_DIMENSION = 14
-    SW_ADDR_METHOD = 15
-    SW_BASE_TYPE = 16
-    UNIT = 17
-    VARIABLE_DATA_PROTOTYPE = 18
+    APPLICATION_ERROR = 5
+    APPLICATION_DEFERRED_DATA_TYPE = 6
+    APPLICATION_PRIMITIVE_DATA_TYPE = 7
+    APPLICATION_RECORD_DATA_TYPE = 8
+    AUTOSAR_DATA_TYPE = 9
+    BSW_MODULE_ENTRY = 10
+    COMPU_METHOD = 11
+    CONSTANT_SPECIFICATION = 12
+    DATA_CONSTR = 13
+    IMPLEMENTATION_DATA_TYPE = 14
+    PHYSICAL_DIMENSION = 15
+    SW_ADDR_METHOD = 16
+    SW_BASE_TYPE = 17
+    UNIT = 18
+    VARIABLE_DATA_PROTOTYPE = 19
 
 
 class IntervalType(Enum):
@@ -391,6 +402,16 @@ class ScaleConstraintValidity(Enum):
     VALID = 3
 
 
+class ServerArgImplPolicy(Enum):
+    """
+    AR:SERVER-ARGUMENT-IMPL-POLICY-ENUM--SIMPLE
+    """
+
+    USE_ARGUMENT_TYPE = 0
+    USE_ARRAY_BASED_TYPE = 1
+    USE_VOID = 2
+
+
 class ServiceKind(Enum):
     """
     SERVICE-PROVIDER-ENUM--SIMPLE
@@ -497,6 +518,11 @@ class VersionedTextValue:
 ###
 
 xml_to_enum_map = {
+    "ArgumentDirection": {
+        "IN": ArgumentDirection.IN,
+        "INOUT": ArgumentDirection.INOUT,
+        "OUT": ArgumentDirection.OUT,
+    },
     "ArrayImplPolicy": {
         "PAYLOAD-AS-ARRAY": VersionedEnumValue(ArrayImplPolicy.PAYLOAD_AS_ARRAY, {49, 50, 51}),
         "PAYLOAD-AS-POINTER-TO-ARRAY": VersionedEnumValue(ArrayImplPolicy.PAYLOAD_AS_POINTER_TO_ARRAY, {49, 50, 51}),
@@ -557,6 +583,7 @@ xml_to_enum_map = {
         "APPLICATION-ASSOC-MAP-DATA-TYPE": IdentifiableSubTypes.APPLICATION_ASSOC_MAP_DATA_TYPE,
         "APPLICATION-COMPOSITE-DATA-TYPE": IdentifiableSubTypes.APPLICATION_COMPOSITE_DATA_TYPE,
         "APPLICATION-DATA-TYPE": IdentifiableSubTypes.APPLICATION_DATA_TYPE,
+        "APPLICATION-ERROR": IdentifiableSubTypes.APPLICATION_ERROR,
         "APPLICATION-DEFERRED-DATA-TYPE": IdentifiableSubTypes.APPLICATION_DEFERRED_DATA_TYPE,
         "APPLICATION-PRIMITIVE-DATA-TYPE": IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE,
         "APPLICATION-RECORD-DATA-TYPE": IdentifiableSubTypes.APPLICATION_RECORD_DATA_TYPE,
@@ -742,6 +769,11 @@ xml_to_enum_map = {
         "NOT-VALID": ScaleConstraintValidity.NOT_VALID,
         "VALID": ScaleConstraintValidity.VALID
     },
+    "ServerArgImplPolicy": {
+        "USE-ARGUMENT-TYPE": ServerArgImplPolicy.USE_ARGUMENT_TYPE,
+        "USE-ARRAY-BASE-TYPE": ServerArgImplPolicy.USE_ARRAY_BASED_TYPE,
+        "USE-VOID": ServerArgImplPolicy.USE_VOID
+    },
     "SwCalibrationAccess": {
         "NOT-ACCESSIBLE": SwCalibrationAccess.NOT_ACCESSIBLE,
         "READ-ONLY": SwCalibrationAccess.READ_ONLY,
@@ -777,6 +809,11 @@ def xml_to_enum(enum_type_name: str, xml_text: str, schema_version: int = ar_bas
 
 
 enum_to_xml_map = {
+    "ArgumentDirection": [
+        "IN",  # 0
+        "INOUT",  # 1
+        "OUT",  # 2
+    ],
     "ArrayImplPolicy": [
         VersionedTextValue("PAYLOAD-AS-ARRAY", {49, 50, 51}),             # 0
         VersionedTextValue("PAYLOAD-AS-POINTER-TO-ARRAY", {49, 50, 51}),  # 1
@@ -832,20 +869,21 @@ enum_to_xml_map = {
         "APPLICATION-ASSOC-MAP-DATA-TYPE",    # 2
         "APPLICATION-COMPOSITE-DATA-TYPE",    # 3
         "APPLICATION-DATA-TYPE",              # 4
-        "APPLICATION-DEFERRED-DATA-TYPE",     # 5
-        "APPLICATION-PRIMITIVE-DATA-TYPE",    # 6
-        "APPLICATION-RECORD-DATA-TYPE",       # 7
-        "AUTOSAR-DATA-TYPE",                  # 8
-        "BSW-MODULE-ENTRY",                   # 9
-        "COMPU-METHOD",                       # 10
-        "CONSTANT-SPECIFICATION",             # 11
-        "DATA-CONSTR",                        # 12
-        "IMPLEMENTATION-DATA-TYPE",           # 13
-        "PHYSICAL-DIMENSION",                 # 14
-        "SW-ADDR-METHOD",                     # 15
-        "SW-BASE-TYPE",                       # 16
-        "UNIT",                               # 17
-        "VARIABLE-DATA-PROTOTYPE"             # 18
+        "APPLICATION-ERROR",                  # 5
+        "APPLICATION-DEFERRED-DATA-TYPE",     # 6
+        "APPLICATION-PRIMITIVE-DATA-TYPE",    # 7
+        "APPLICATION-RECORD-DATA-TYPE",       # 8
+        "AUTOSAR-DATA-TYPE",                  # 9
+        "BSW-MODULE-ENTRY",                   # 10
+        "COMPU-METHOD",                       # 11
+        "CONSTANT-SPECIFICATION",             # 12
+        "DATA-CONSTR",                        # 13
+        "IMPLEMENTATION-DATA-TYPE",           # 14
+        "PHYSICAL-DIMENSION",                 # 15
+        "SW-ADDR-METHOD",                     # 16
+        "SW-BASE-TYPE",                       # 17
+        "UNIT",                               # 18
+        "VARIABLE-DATA-PROTOTYPE"             # 19
     ],
     "IntervalType": [
         "CLOSED",  # 0
@@ -1016,6 +1054,11 @@ enum_to_xml_map = {
         "NOT-DEFINED",    # 1
         "NOT-VALID",      # 2
         "VALID"           # 3
+    ],
+    "ServerArgImplPolicy": [
+        "USE-ARGUMENT-TYPE",  # 0
+        "USE-ARRAY-BASE-TYPE",  # 1
+        "USE-VOID",  # 2
     ],
     "SwCalibrationAccess": [
         "NOT-ACCESSIBLE",  # 0

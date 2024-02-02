@@ -127,6 +127,7 @@ class Reader:
             'NV-DATA-INTERFACE': self._read_nv_data_interface,
             'PARAMETER-INTERFACE': self._read_parameter_interface,
             'SENDER-RECEIVER-INTERFACE': self._read_sender_receiver_interface,
+            'CLIENT-SERVER-INTERFACE': self._read_client_server_interface,
 
             # Unit elements
             'UNIT': self._read_unit,
@@ -181,6 +182,7 @@ class Reader:
             'SYMBOL-PROPS': self._read_symbol_props,
             'IMPLEMENTATION-DATA-TYPE-ELEMENT': self._read_implementation_data_type_element,
             'APPLICATION-RECORD-ELEMENT': self._read_application_record_element,
+            'ARGUMENT-DATA-PROTOTYPE': self._read_argument_data_prototype,
             'DATA-TYPE-MAP': self._read_data_type_map,
             'SW-ARRAYSIZE': self._read_value_list,
             # CalibrationData elements
@@ -193,6 +195,8 @@ class Reader:
             'CONSTANT-REF': self._read_constant_ref,
             # Port interface element
             'INVALIDATION-POLICY': self._read_invalidation_policy,
+            'APPLICATION-ERROR': self._read_application_error,
+            'CLIENT-SERVER-OPERATION': self._read_client_server_operation,
         }
         self.switcher_all = {}
         self.switcher_all.update(self.switcher_collectable)
@@ -1957,6 +1961,35 @@ class Reader:
                 pass
         child_elements.skip('VARIATION-POINT')  # Not supported
 
+    def _read_argument_data_prototype(self, elem: ElementTree.Element) -> ar_element.ArgumentDataPrototype:
+        """
+        Reads complex-type AR:ARGUMENT-DATA-PROTOTYPE
+        Type: Concrete
+        """
+        data = {}
+        child_elements = ChildElementMap(elem)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, elem.attrib, data)
+        self._read_data_prototype(child_elements, data)
+        self._read_autosar_data_prototype(child_elements, data)
+        self._read_argument_data_prototype_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ArgumentDataPrototype(**data)
+
+    def _read_argument_data_prototype_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:ARGUMENT-DATA-PROTOTYPE
+        """
+        xml_child = child_elements.get('DIRECTION')
+        if xml_child is not None:
+            data["direction"] = ar_enum.xml_to_enum("ArgumentDirection", xml_child.text)
+        xml_child = child_elements.get('SERVER-ARGUMENT-IMPL-POLICY')
+        if xml_child is not None:
+            data["server_arg_impl_policy"] = ar_enum.xml_to_enum("ServerArgImplPolicy", xml_child.text)
+        child_elements.skip("TYPE-BLUEPRINTS")  # Not supported
+        child_elements.skip("VARIATION-POINT")  # Not supported
+
 # --- Reference elements
 
     def _read_compu_method_ref(self, xml_elem: ElementTree.Element) -> ar_element.CompuMethodRef:
@@ -2134,6 +2167,20 @@ class Reader:
             msg = f"Invalid value for DEST. Expected 'VARIABLE-DATA-PROTOTYPE', got '{data['dest']}'"
             raise ar_exception.ParseError(msg)
         return ar_element.VariableDataPrototypeRef(xml_elem.text)
+
+    def _read_application_error_ref(
+            self,
+            xml_elem: ElementTree.Element) -> ar_element.ApplicationErrorRef:
+        """
+        Reads reference to ApplicationError
+        Type: Concrete
+        """
+        data = {}
+        self._read_base_ref_attributes(xml_elem.attrib, data)
+        if data['dest'] != 'APPLICATION-ERROR':
+            msg = f"Invalid value for DEST. Expected 'APPLICATION-ERROR', got '{data['dest']}'"
+            raise ar_exception.ParseError(msg)
+        return ar_element.ApplicationErrorRef(xml_elem.text)
 
     def _read_base_ref_attributes(self, attr: dict, data: dict) -> None:
         """
@@ -2624,3 +2671,105 @@ class Reader:
         if xml_child is not None:
             data["handle_invalid"] = ar_enum.xml_to_enum("HandleInvalid", xml_child.text)
         return ar_element.InvalidationPolicy(**data)
+
+    def _read_application_error(self, xml_element: ElementTree.Element) -> ar_element.ApplicationError:
+        """
+        Reads complex type AR:APPLICATION-ERROR
+        Tag variants: 'APPLICATION-ERROR'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_application_error_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ApplicationError(**data)
+
+    def _read_application_error_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:APPLICATION-ERROR
+        """
+        xml_child = child_elements.get("ERROR-CODE")
+        if xml_child is not None:
+            data["error_code"] = self._read_integer(xml_child.text)
+
+    def _read_client_server_operation(self, xml_element: ElementTree.Element) -> ar_element.ClientServerOperation:
+        """
+        Reads complex type AR:CLIENT-SERVER-OPERATION
+        Tag variants: 'CLIENT-SERVER-OPERATION'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_client_server_operation_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ClientServerOperation(**data)
+
+    def _read_client_server_operation_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:CLIENT-SERVER-OPERATION
+        """
+        xml_child = child_elements.get("ARGUMENTS")
+        if xml_child is not None:
+            arguments = []
+            data["arguments"] = arguments
+            for xml_grand_child in xml_child.findall("./*"):
+                if xml_grand_child.tag == "ARGUMENT-DATA-PROTOTYPE":
+                    element = self._read_argument_data_prototype(xml_grand_child)
+                    arguments.append(element)
+        xml_child = child_elements.get("DIAG-ARG-INTEGRITY")
+        if xml_child is not None:
+            data["diag_arg_integrity"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("FIRE-AND-FORGET")
+        if xml_child is not None:
+            data["fire_and_forget"] = self._read_boolean(xml_child.text)
+        child_elements.skip("POSSIBLE-AP-ERROR-REFS")  # not supported
+        child_elements.skip("POSSIBLE-AP-ERROR-SET-REFS")  # not supported
+        xml_child = child_elements.get("POSSIBLE-ERROR-REFS")
+        if xml_child is not None:
+            possible_error_refs = []
+            data["possible_error_refs"] = possible_error_refs
+            for xml_grand_child in xml_child.findall("./*"):
+                if xml_grand_child.tag == "POSSIBLE-ERROR-REF":
+                    element = self._read_application_error_ref(xml_grand_child)
+                    possible_error_refs.append(element)
+        child_elements.skip("VARIATION-POINT")  # not supported
+
+    def _read_client_server_interface(self, xml_element: ElementTree.Element) -> ar_element.ClientServerInterface:
+        """
+        Reads complex type AR:CLIENT-SERVER-INTERFACE
+        Tag variants: 'CLIENT-SERVER-INTERFACE'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_port_interface(child_elements, data)
+        self._read_client_server_interface_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ClientServerInterface(**data)
+
+    def _read_client_server_interface_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:CLIENT-SERVER-INTERFACE
+        """
+        xml_child = child_elements.get('OPERATIONS')
+        if xml_child is not None:
+            operations = []
+            data["operations"] = operations
+            for xml_grand_child in xml_child.findall('./*'):
+                if xml_grand_child.tag == 'CLIENT-SERVER-OPERATION':
+                    element = self._read_client_server_operation(xml_grand_child)
+                    operations.append(element)
+        xml_child = child_elements.get('POSSIBLE-ERRORS')
+        if xml_child is not None:
+            possible_errors = []
+            data["possible_errors"] = possible_errors
+            for xml_grand_child in xml_child.findall('./*'):
+                if xml_grand_child.tag == 'APPLICATION-ERROR':
+                    element = self._read_application_error(xml_grand_child)
+                    possible_errors.append(element)

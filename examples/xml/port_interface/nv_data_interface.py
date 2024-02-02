@@ -12,11 +12,18 @@ def create_platform_types(packages: dict[str, ar_element.Package]):
     """
     uint8_base_type = ar_element.SwBaseType('uint8', size=8)
     packages["PlatformBaseTypes"].append(uint8_base_type)
+    uint32_base_type = ar_element.SwBaseType('uint32', size=32)
+    packages["PlatformBaseTypes"].append(uint32_base_type)
     sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref=uint8_base_type.ref())
     uint8_impl_type = ar_element.ImplementationDataType("uint8",
                                                         category="VALUE",
                                                         sw_data_def_props=sw_data_def_props)
     packages["PlatformImplementationDataTypes"].append(uint8_impl_type)
+    sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref=uint32_base_type.ref())
+    uint32_impl_type = ar_element.ImplementationDataType("uint32",
+                                                         category="VALUE",
+                                                         sw_data_def_props=sw_data_def_props)
+    packages["PlatformImplementationDataTypes"].append(uint32_impl_type)
 
 
 def create_nv_data_interface_with_one_element(packages: dict[str, ar_element.Package]):
