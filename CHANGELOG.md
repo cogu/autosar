@@ -11,13 +11,17 @@ Non-collectable elements are various sub-elements to collectable elements.
 
 #### XML Port interface elements
 
+* ClientServerInterface | CLIENT-SERVER-INTERFACE | `collectable`
 * NvDataInterface | NV-DATA-INTERFACE | `collectable`
 * ParameterInterface | PARAMETER-INTERFACE | `collectable`
 * SenderReceiverInterface | SENDER-RECEIVER-INTERFACE | `collectable`
+* ApplicationError | APPLICATION-ERROR
+* ClientServerOperation | CLIENT-SERVER-OPERATION
 * InvalidationPolicy | INVALIDATION-POLICY
 
 #### XML - Data type elements
 
+* ArgumentDataPrototype | ARGUMENT-DATA-PROTOTYPE
 * ParameterDataPrototype | PARAMETER-DATA-PROTOTYPE
 * VariableDataPrototype | VARIABLE-DATA-PROTOTYPE
 

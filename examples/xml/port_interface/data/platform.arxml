@@ -11,6 +11,10 @@
               <SHORT-NAME>uint8</SHORT-NAME>
               <BASE-TYPE-SIZE>8</BASE-TYPE-SIZE>
             </SW-BASE-TYPE>
+            <SW-BASE-TYPE>
+              <SHORT-NAME>uint32</SHORT-NAME>
+              <BASE-TYPE-SIZE>32</BASE-TYPE-SIZE>
+            </SW-BASE-TYPE>
           </ELEMENTS>
         </AR-PACKAGE>
         <AR-PACKAGE>
@@ -23,6 +27,17 @@
                 <SW-DATA-DEF-PROPS-VARIANTS>
                   <SW-DATA-DEF-PROPS-CONDITIONAL>
                     <BASE-TYPE-REF DEST="SW-BASE-TYPE">/AUTOSAR_Platform/BaseTypes/uint8</BASE-TYPE-REF>
+                  </SW-DATA-DEF-PROPS-CONDITIONAL>
+                </SW-DATA-DEF-PROPS-VARIANTS>
+              </SW-DATA-DEF-PROPS>
+            </IMPLEMENTATION-DATA-TYPE>
+            <IMPLEMENTATION-DATA-TYPE>
+              <SHORT-NAME>uint32</SHORT-NAME>
+              <CATEGORY>VALUE</CATEGORY>
+              <SW-DATA-DEF-PROPS>
+                <SW-DATA-DEF-PROPS-VARIANTS>
+                  <SW-DATA-DEF-PROPS-CONDITIONAL>
+                    <BASE-TYPE-REF DEST="SW-BASE-TYPE">/AUTOSAR_Platform/BaseTypes/uint32</BASE-TYPE-REF>
                   </SW-DATA-DEF-PROPS-CONDITIONAL>
                 </SW-DATA-DEF-PROPS-VARIANTS>
               </SW-DATA-DEF-PROPS>

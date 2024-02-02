@@ -205,6 +205,7 @@ class Writer(_XMLWriter):
             'NvDataInterface': self._write_nv_data_interface,
             'ParameterInterface': self._write_parameter_interface,
             'SenderReceiverInterface': self._write_sender_receiver_interface,
+            'ClientServerInterface': self._write_client_server_interface,
         }
         # Value specification elements
         self.switcher_value_specification = {
@@ -259,6 +260,7 @@ class Writer(_XMLWriter):
             'ValueList': self._write_value_list,
             'VariableDataPrototype': self._write_variable_data_prototype,
             'ParameterDataPrototype': self._write_parameter_data_prototype,
+            'ArgumentDataPrototype': self._write_argument_data_prototype,
             # CalibrationData elements
             'SwValues': self._write_sw_values,
             'SwAxisCont': self._write_sw_axis_cont,
@@ -269,6 +271,8 @@ class Writer(_XMLWriter):
             'ConstantRef': self._write_constant_ref,
             # Port interface element
             'InvalidationPolicy': self._write_invalidation_policy,
+            'ApplicationError': self._write_application_error,
+            'ClientServerOperation': self._write_client_server_operation,
         }
         self.switcher_all = {}  # All concrete elements (used for unit testing)
         self.switcher_all.update(self.switcher_collectable)
@@ -1684,6 +1688,34 @@ class Writer(_XMLWriter):
             self._write_value_specification_element(elem.init_value)
             self._leave_child()
 
+    def _write_argument_data_prototype(self, elem: ar_element.ArgumentDataPrototype) -> None:
+        """
+        Reads complex-type AR:ARGUMENT-DATA-PROTOTYPE
+        Type: Concrete
+        Tag variants: 'ARGUMENT-DATA-PROTOTYPE'
+        """
+        assert isinstance(elem, ar_element.ArgumentDataPrototype)
+        attr: TupleList = []
+        self._collect_identifiable_attributes(elem, attr)
+        self._add_child("ARGUMENT-DATA-PROTOTYPE", attr)
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_data_prototype(elem)
+        self._write_autosar_data_prototype(elem)
+        self._write_argument_data_prototype_group(elem)
+        self._leave_child()
+
+    def _write_argument_data_prototype_group(self, elem: ar_element.ArgumentDataPrototype) -> None:
+        """
+        Reads group AR:ARGUMENT-DATA-PROTOTYPE
+        Type: Abstract
+        """
+        if elem.direction is not None:
+            self._add_content("DIRECTION", ar_enum.enum_to_xml(elem.direction))
+        if elem.server_arg_impl_policy is not None:
+            self._add_content("SERVER-ARGUMENT-IMPL-POLICY", ar_enum.enum_to_xml(elem.server_arg_impl_policy))
+
 # --- Reference Elements
 
     def _collect_base_ref_attr(self,
@@ -1855,7 +1887,18 @@ class Writer(_XMLWriter):
         self._collect_base_ref_attr(elem, attr)
         self._add_content(tag, elem.value, attr)
 
-# Constant and value specifications
+    def _write_application_error_ref(self, elem: ar_element.ApplicationErrorRef, tag: str) -> None:
+        """
+        Writes reference to ApplicationError
+        Type: Concrete
+        Tag variants: 'POSSIBLE-ERROR-REF' | 'FIRST-APPLICATION-ERROR-REF' | 'SECOND-APPLICATION-ERROR-REF'
+        """
+        assert isinstance(elem, ar_element.ApplicationErrorRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content(tag, elem.value, attr)
+
+# -- Constant and value specifications
 
     def _write_text_value_specification(self, elem: ar_element.TextValueSpecification) -> None:
         """
@@ -2047,7 +2090,7 @@ class Writer(_XMLWriter):
                 self._write_constant_ref(elem.constant_ref, "CONSTANT-REF")
             self._leave_child()
 
-# CalibrationData elements
+# --- CalibrationData elements
 
     def _write_sw_values(self, elem: ar_element.SwValues) -> None:
         """
@@ -2154,7 +2197,7 @@ class Writer(_XMLWriter):
         if elem.sw_values_phys is not None:
             self._write_sw_values(elem.sw_values_phys)
 
-# Port interface elements
+# --- Port interface elements
 
     def _write_port_interface(self, elem: ar_element.PortInterface) -> None:
         """
@@ -2269,3 +2312,84 @@ class Writer(_XMLWriter):
             self._write_variable_data_prototype_ref(elem.data_element_ref, "DATA-ELEMENT-REF")
         if elem.handle_invalid is not None:
             self._add_content("HANDLE-INVALID", ar_enum.enum_to_xml(elem.handle_invalid))
+
+    def _write_application_error(self, elem: ar_element.ApplicationError) -> None:
+        """
+        Writes complex type AR:APPLICATION-ERROR
+        Tag variants: 'APPLICATION-ERROR'
+        """
+        assert isinstance(elem, ar_element.ApplicationError)
+        self._add_child("APPLICATION-ERROR")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_application_error_group(elem)
+        self._leave_child()
+
+    def _write_application_error_group(self, elem: ar_element.ApplicationError) -> None:
+        """
+        Writes group AR:APPLICATION-ERROR
+        """
+        if elem.error_code is not None:
+            self._add_content("ERROR-CODE", str(elem.error_code))
+
+    def _write_client_server_operation(self, elem: ar_element.ClientServerOperation) -> None:
+        """
+        Writes complex type AR:CLIENT-SERVER-OPERATION
+        Tag variants: 'CLIENT-SERVER-OPERATION'
+        """
+        assert isinstance(elem, ar_element.ClientServerOperation)
+        self._add_child("CLIENT-SERVER-OPERATION")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_client_server_operation_group(elem)
+        self._leave_child()
+
+    def _write_client_server_operation_group(self, elem: ar_element.ClientServerOperation) -> None:
+        """
+        Writes group AR:CLIENT-SERVER-OPERATION
+        """
+        if elem.arguments:
+            self._add_child("ARGUMENTS")
+            for argument in elem.arguments:
+                self._write_argument_data_prototype(argument)
+            self._leave_child()
+        if elem.diag_arg_integrity is not None:
+            self._add_content("DIAG-ARG-INTEGRITY", self._format_boolean(elem.diag_arg_integrity))
+        if elem.fire_and_forget is not None:
+            self._add_content("FIRE-AND-FORGET", self._format_boolean(elem.fire_and_forget))
+        if elem.possible_error_refs:
+            self._add_child("POSSIBLE-ERROR-REFS")
+            for possible_error_ref in elem.possible_error_refs:
+                self._write_application_error_ref(possible_error_ref, "POSSIBLE-ERROR-REF")
+            self._leave_child()
+
+    def _write_client_server_interface(self, elem: ar_element.ClientServerInterface) -> None:
+        """
+        Writes complex type AR:CLIENT-SERVER-INTERFACE
+        Tag variants: 'CLIENT-SERVER-INTERFACE'
+        """
+        assert isinstance(elem, ar_element.ClientServerInterface)
+        self._add_child("CLIENT-SERVER-INTERFACE")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_port_interface(elem)
+        self._write_client_server_interface_group(elem)
+        self._leave_child()
+
+    def _write_client_server_interface_group(self, elem: ar_element.ClientServerInterface) -> None:
+        """
+        Writes group AR:CLIENT-SERVER-INTERFACE
+        """
+        if elem.operations:
+            self._add_child("OPERATIONS")
+            for operation in elem.operations:
+                self._write_client_server_operation(operation)
+            self._leave_child()
+        if elem.possible_errors:
+            self._add_child("POSSIBLE-ERRORS")
+            for possible_error in elem.possible_errors:
+                self._write_application_error(possible_error)
+            self._leave_child()

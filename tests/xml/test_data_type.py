@@ -2073,5 +2073,73 @@ class TestVariableDataPrototype(unittest.TestCase):
         self.assertEqual(elem.init_value.value, 4)
 
 
+class TestArgumentDataPrototype(unittest.TestCase):
+
+    def test_read_write_empty(self):
+        element = ar_element.ArgumentDataPrototype("ShortName")
+        writer = autosar.xml.Writer()
+        xml = '''<ARGUMENT-DATA-PROTOTYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+</ARGUMENT-DATA-PROTOTYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ArgumentDataPrototype = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ArgumentDataPrototype)
+        self.assertEqual(elem.name, "ShortName")
+
+    def test_read_write_sw_data_props(self):
+        sw_data_props = ar_element.SwDataDefPropsConditional(
+            calibration_access=ar_enum.SwCalibrationAccess.NOT_ACCESSIBLE)
+        element = ar_element.ArgumentDataPrototype("ShortName", sw_data_def_props=sw_data_props)
+        writer = autosar.xml.Writer()
+        xml = '''<ARGUMENT-DATA-PROTOTYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <SW-DATA-DEF-PROPS>
+    <SW-DATA-DEF-PROPS-VARIANTS>
+      <SW-DATA-DEF-PROPS-CONDITIONAL>
+        <SW-CALIBRATION-ACCESS>NOT-ACCESSIBLE</SW-CALIBRATION-ACCESS>
+      </SW-DATA-DEF-PROPS-CONDITIONAL>
+    </SW-DATA-DEF-PROPS-VARIANTS>
+  </SW-DATA-DEF-PROPS>
+</ARGUMENT-DATA-PROTOTYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ArgumentDataPrototype = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ArgumentDataPrototype)
+        self.assertEqual(elem.name, "ShortName")
+        props: ar_element.SwDataDefPropsConditional = elem.sw_data_def_props[0]
+        self.assertEqual(props.calibration_access, ar_enum.SwCalibrationAccess.NOT_ACCESSIBLE)
+
+    def test_read_write_direction(self):
+        element = ar_element.ArgumentDataPrototype("ShortName",
+                                                   direction=ar_enum.ArgumentDirection.OUT)
+        writer = autosar.xml.Writer()
+        xml = '''<ARGUMENT-DATA-PROTOTYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <DIRECTION>OUT</DIRECTION>
+</ARGUMENT-DATA-PROTOTYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ArgumentDataPrototype = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ArgumentDataPrototype)
+        self.assertEqual(elem.name, "ShortName")
+        self.assertEqual(elem.direction, ar_enum.ArgumentDirection.OUT)
+
+    def test_read_write_server_arg_impl_policu(self):
+        element = ar_element.ArgumentDataPrototype("ShortName",
+                                                   server_arg_impl_policy=ar_enum.ServerArgImplPolicy.USE_ARGUMENT_TYPE)
+        writer = autosar.xml.Writer()
+        xml = '''<ARGUMENT-DATA-PROTOTYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <SERVER-ARGUMENT-IMPL-POLICY>USE-ARGUMENT-TYPE</SERVER-ARGUMENT-IMPL-POLICY>
+</ARGUMENT-DATA-PROTOTYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ArgumentDataPrototype = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ArgumentDataPrototype)
+        self.assertEqual(elem.name, "ShortName")
+        self.assertEqual(elem.server_arg_impl_policy, ar_enum.ServerArgImplPolicy.USE_ARGUMENT_TYPE)
+
+
 if __name__ == '__main__':
     unittest.main()
