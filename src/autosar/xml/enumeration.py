@@ -171,11 +171,13 @@ class IdentifiableSubTypes(Enum):
     CONSTANT_SPECIFICATION = 12
     DATA_CONSTR = 13
     IMPLEMENTATION_DATA_TYPE = 14
-    PHYSICAL_DIMENSION = 15
-    SW_ADDR_METHOD = 16
-    SW_BASE_TYPE = 17
-    UNIT = 18
-    VARIABLE_DATA_PROTOTYPE = 19
+    MODE_DECLARATION = 15
+    MODE_DECLARATION_GROUP = 16
+    PHYSICAL_DIMENSION = 17
+    SW_ADDR_METHOD = 18
+    SW_BASE_TYPE = 19
+    UNIT = 20
+    VARIABLE_DATA_PROTOTYPE = 21
 
 
 class IntervalType(Enum):
@@ -342,6 +344,15 @@ class Language(Enum):
     ZU = 136  # Zulu
 
 
+class ModeErrorReactionPolicy(Enum):
+    """
+    AR:MODE-ERROR-REACTION-POLICY-ENUM--SIMPLE
+    """
+
+    DEFAULT_MODE = 0
+    LAST_MODE = 1
+
+
 class Monotony(Enum):
     """
     AR:MONOTONY-ENUM--SIMPLE"
@@ -367,7 +378,7 @@ class PackageRole(Enum):
     COMPU_METHOD = 3
     DATA_CONSTRAINT = 4
     IMPLEMENTATION_DATA_TYPE = 5
-    MODE_DECLARATION_GROUP = 6
+    MODE_DECLARATION = 6
     PORT_INTERFACE = 7
     UNIT = 8
     VALUE_SPECIFICATION = 9
@@ -593,6 +604,8 @@ xml_to_enum_map = {
         "CONSTANT-SPECIFICATION": IdentifiableSubTypes.CONSTANT_SPECIFICATION,
         "DATA-CONSTR": IdentifiableSubTypes.DATA_CONSTR,
         "IMPLEMENTATION-DATA-TYPE": IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE,
+        "MODE-DECLARATION": IdentifiableSubTypes.MODE_DECLARATION,
+        "MODE-DECLARATION-GROUP": IdentifiableSubTypes.MODE_DECLARATION_GROUP,
         "PHYSICAL-DIMENSION": IdentifiableSubTypes.PHYSICAL_DIMENSION,
         "SW-ADDR-METHOD": IdentifiableSubTypes.SW_ADDR_METHOD,
         "SW-BASE-TYPE": IdentifiableSubTypes.SW_BASE_TYPE,
@@ -746,6 +759,10 @@ xml_to_enum_map = {
         "ZH": Language.ZH,
         "ZU": Language.ZU,
     },
+    "ModeErrorReactionPolicy": {
+        "DEFAULT-MODE": ModeErrorReactionPolicy.DEFAULT_MODE,
+        "LAST-MODE": ModeErrorReactionPolicy.LAST_MODE
+    },
     "Monotony": {
         "DECREASING": Monotony.DECREASING,
         "INCREASING": Monotony.INCREASING,
@@ -879,11 +896,13 @@ enum_to_xml_map = {
         "CONSTANT-SPECIFICATION",             # 12
         "DATA-CONSTR",                        # 13
         "IMPLEMENTATION-DATA-TYPE",           # 14
-        "PHYSICAL-DIMENSION",                 # 15
-        "SW-ADDR-METHOD",                     # 16
-        "SW-BASE-TYPE",                       # 17
-        "UNIT",                               # 18
-        "VARIABLE-DATA-PROTOTYPE"             # 19
+        "MODE-DECLARATION",                   # 15
+        "MODE-DECLARATION-GROUP",             # 16
+        "PHYSICAL-DIMENSION",                 # 17
+        "SW-ADDR-METHOD",                     # 18
+        "SW-BASE-TYPE",                       # 19
+        "UNIT",                               # 20
+        "VARIABLE-DATA-PROTOTYPE"             # 21
     ],
     "IntervalType": [
         "CLOSED",  # 0
@@ -1032,6 +1051,10 @@ enum_to_xml_map = {
         "ZH",  # 135
         "ZU",  # 136
     ],
+    "ModeErrorReactionPolicy": [
+        "DEFAULT-MODE",  # 0
+        "LAST-MODE"      # 1
+    ],
     "Monotony": [
         "DECREASING",           # 0
         "INCREASING",           # 1
@@ -1105,8 +1128,8 @@ str_to_enum_map = {
         "DataConstraint": PackageRole.DATA_CONSTRAINT,
         "IMPLEMENTATION_DATA_TYPE": PackageRole.IMPLEMENTATION_DATA_TYPE,
         "ImplementationDataType": PackageRole.IMPLEMENTATION_DATA_TYPE,
-        "MODE_DECLARATION_GROUP": PackageRole.MODE_DECLARATION_GROUP,
-        "ModeDeclartionGroup": PackageRole.MODE_DECLARATION_GROUP,
+        "MODE_DECLARATION": PackageRole.MODE_DECLARATION,
+        "ModeDeclartion": PackageRole.MODE_DECLARATION,
         "PORT_INTERFACE": PackageRole.PORT_INTERFACE,
         "PortInterface": PackageRole.PORT_INTERFACE,
         "Unit": PackageRole.UNIT,

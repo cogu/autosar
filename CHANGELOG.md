@@ -9,9 +9,24 @@ Non-collectable elements are various sub-elements to collectable elements.
 
 ### Added
 
+#### XML - Data type elements
+
+* ArgumentDataPrototype | ARGUMENT-DATA-PROTOTYPE
+* ParameterDataPrototype | PARAMETER-DATA-PROTOTYPE
+* VariableDataPrototype | VARIABLE-DATA-PROTOTYPE
+
+#### Mode declaration elements
+
+* ModeDeclarationGroup | MODE-DECLARATION-GROUP | `collectable`
+* ModeDeclaration | MODE-DECLARATION
+* ModeDeclarationGroupPrototype | MODE-DECLARATION-GROUP-PROTOTYPE
+* ModeErrorBehavior | MODE-ERROR-BEHAVIOR
+* ModeTransition | MODE-TRANSITION
+
 #### XML Port interface elements
 
 * ClientServerInterface | CLIENT-SERVER-INTERFACE | `collectable`
+* ModeSwitchInterface | MODE-SWITCH-INTERFACE |  `collectable`
 * NvDataInterface | NV-DATA-INTERFACE | `collectable`
 * ParameterInterface | PARAMETER-INTERFACE | `collectable`
 * SenderReceiverInterface | SENDER-RECEIVER-INTERFACE | `collectable`
@@ -19,11 +34,12 @@ Non-collectable elements are various sub-elements to collectable elements.
 * ClientServerOperation | CLIENT-SERVER-OPERATION
 * InvalidationPolicy | INVALIDATION-POLICY
 
-#### XML - Data type elements
+#### XML - Reference elements
 
-* ArgumentDataPrototype | ARGUMENT-DATA-PROTOTYPE
-* ParameterDataPrototype | PARAMETER-DATA-PROTOTYPE
-* VariableDataPrototype | VARIABLE-DATA-PROTOTYPE
+* ApplicationErrorRef
+* ModeDeclarationGroupRef
+* ModeDeclarationRef
+* VariableDataPrototypeRef
 
 ## [v0.5.1] - 2023-11-09
 

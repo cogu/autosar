@@ -3,7 +3,7 @@ ARXML writer module
 """
 # pylint: disable=consider-using-with
 from io import StringIO
-from typing import TextIO, Union
+from typing import TextIO
 import math
 import decimal
 import autosar.xml.document as ar_document
@@ -15,13 +15,6 @@ import autosar.xml.enumeration as ar_enum
 
 MultiLanguageOverviewParagraph = ar_element.MultiLanguageOverviewParagraph
 TupleList = list[tuple[str, str]]
-ValueSpeficationElement = Union[ar_element.TextValueSpecification,
-                                ar_element.NumericalValueSpecification,
-                                ar_element.NotAvailableValueSpecification,
-                                ar_element.ArrayValueSpecification,
-                                ar_element.RecordValueSpecification,
-                                ar_element.ApplicationValueSpecification,
-                                ar_element.ConstantReference]
 
 
 class _XMLWriter:
@@ -206,6 +199,9 @@ class Writer(_XMLWriter):
             'ParameterInterface': self._write_parameter_interface,
             'SenderReceiverInterface': self._write_sender_receiver_interface,
             'ClientServerInterface': self._write_client_server_interface,
+            'ModeSwitchInterface': self._write_mode_switch_interface,
+            # Mode declaration elements
+            'ModeDeclarationGroup': self._write_mode_declaration_group,
         }
         # Value specification elements
         self.switcher_value_specification = {
@@ -269,10 +265,16 @@ class Writer(_XMLWriter):
             'PhysicalDimensionRef': self._write_physical_dimension_ref,
             'ApplicationDataTypeRef': self._write_application_data_type_ref,
             'ConstantRef': self._write_constant_ref,
-            # Port interface element
+            # Port interface elements
             'InvalidationPolicy': self._write_invalidation_policy,
             'ApplicationError': self._write_application_error,
             'ClientServerOperation': self._write_client_server_operation,
+            # ModeDeclaration elements
+            'ModeDeclaration': self._write_mode_declaration,
+            'ModeErrorBehavior': self._write_mode_error_behavior,
+            'ModeTransition': self._write_mode_transition,
+            'ModeDeclarationGroupPrototype': self._write_mode_declaration_group_prototype,
+
         }
         self.switcher_all = {}  # All concrete elements (used for unit testing)
         self.switcher_all.update(self.switcher_collectable)
@@ -1898,6 +1900,28 @@ class Writer(_XMLWriter):
         self._collect_base_ref_attr(elem, attr)
         self._add_content(tag, elem.value, attr)
 
+    def _write_mode_declaration_ref(self, elem: ar_element.ModeDeclarationRef, tag: str) -> None:
+        """
+        Writes reference to ModeDeclaration
+        Type: Concrete
+        Tag variants: Too many to list
+        """
+        assert isinstance(elem, ar_element.ModeDeclarationRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content(tag, elem.value, attr)
+
+    def _write_mode_declaration_group_ref(self, elem: ar_element.ModeDeclarationGroupRef, tag: str) -> None:
+        """
+        Writes reference to ModeDeclaration
+        Type: Concrete
+        Tag variants: Too many to list
+        """
+        assert isinstance(elem, ar_element.ModeDeclarationGroupRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content(tag, elem.value, attr)
+
 # -- Constant and value specifications
 
     def _write_text_value_specification(self, elem: ar_element.TextValueSpecification) -> None:
@@ -2041,7 +2065,7 @@ class Writer(_XMLWriter):
         if elem.label is not None:
             self._add_content("SHORT-LABEL", str(elem.label))
 
-    def _write_value_specification_element(self, elem: ValueSpeficationElement) -> None:
+    def _write_value_specification_element(self, elem: ar_element.ValueSpeficationElement) -> None:
         """
         Switched writer for value specification elements
         """
@@ -2197,7 +2221,125 @@ class Writer(_XMLWriter):
         if elem.sw_values_phys is not None:
             self._write_sw_values(elem.sw_values_phys)
 
-# --- Port interface elements
+    # --- ModeDeclaration elements
+
+    def _write_mode_declaration(self, elem: ar_element.ModeDeclaration) -> None:
+        """
+        Writes complex type AR:MODE-DECLARATION
+        Tag variants: 'MODE-DECLARATION'
+        """
+        assert isinstance(elem, ar_element.ModeDeclaration)
+        self._add_child("MODE-DECLARATION")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        if elem.value is not None:
+            self._add_content("VALUE", str(elem.value))
+        self._leave_child()
+
+    def _write_mode_error_behavior(self, elem: ar_element.ModeErrorBehavior, tag: str) -> None:
+        """
+        Writes complex type AR:MODE-ERROR-BEHAVIOR
+        Tag variants: 'MODE-MANAGER-ERROR-BEHAVIOR' | 'MODE-USER-ERROR-BEHAVIOR'
+        """
+        assert isinstance(elem, ar_element.ModeErrorBehavior)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.default_mode_ref is not None:
+                self._write_mode_declaration_ref(elem.default_mode_ref, "DEFAULT-MODE-REF")
+            if elem.error_reaction_policy is not None:
+                self._add_content("ERROR-REACTION-POLICY", ar_enum.enum_to_xml(elem.error_reaction_policy))
+            self._leave_child()
+
+    def _write_mode_transition(self, elem: ar_element.ModeTransition) -> None:
+        """
+        Complex type AR:MODE-TRANSITION
+        tag variants: 'MODE-TRANSITION'
+        """
+        assert isinstance(elem, ar_element.ModeTransition)
+        self._add_child("MODE-TRANSITION")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_mode_transition_group(elem)
+        self._leave_child()
+
+    def _write_mode_transition_group(self, elem: ar_element.ModeTransition) -> None:
+        """
+        Writes group AR:MODE-TRANSITION
+        """
+        if elem.entered_mode_ref:
+            self._write_mode_declaration_ref(elem.entered_mode_ref, "ENTERED-MODE-REF")
+        if elem.exited_mode_ref:
+            self._write_mode_declaration_ref(elem.exited_mode_ref, "EXITED-MODE-REF")
+
+    def _write_mode_declaration_group(self, elem: ar_element.ModeDeclarationGroup) -> None:
+        """
+        Writes complex type AR:MODE-DECLARATION-GROUP
+        Tag variants: 'MODE-DECLARATION-GROUP'
+        """
+        assert isinstance(elem, ar_element.ModeDeclarationGroup)
+        attr: TupleList = []
+        self._collect_identifiable_attributes(elem, attr)
+        self._add_child("MODE-DECLARATION-GROUP", attr)
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_mode_declaration_group_data(elem)
+        self._leave_child()
+
+    def _write_mode_declaration_group_data(self, elem: ar_element.ModeDeclarationGroup) -> None:
+        """
+        Writes group AR:MODE-DECLARATION-GROUP
+        """
+        if elem.initial_mode_ref is not None:
+            self._write_mode_declaration_ref(elem.initial_mode_ref, "INITIAL-MODE-REF")
+        if elem.mode_declarations:
+            self._add_child("MODE-DECLARATIONS")
+            for mode_declaration in elem.mode_declarations:
+                self._write_mode_declaration(mode_declaration)
+            self._leave_child()
+        if elem.mode_manager_error_behavior is not None:
+            self._write_mode_error_behavior(elem.mode_manager_error_behavior, "MODE-MANAGER-ERROR-BEHAVIOR")
+        if elem.mode_transitions:
+            self._add_child("MODE-TRANSITIONS")
+            for mode_transition in elem.mode_transitions:
+                self._write_mode_transition(mode_transition)
+            self._leave_child()
+        if elem.mode_user_error_behavior is not None:
+            self._write_mode_error_behavior(elem.mode_user_error_behavior, "MODE-USER-ERROR-BEHAVIOR")
+        if elem.on_transition_value is not None:
+            self._add_content("ON-TRANSITION-VALUE", str(elem.on_transition_value))
+
+    def _write_mode_declaration_group_prototype(self, elem: ar_element.ModeDeclarationGroupPrototype, tag: str) -> None:
+        """
+        Writes complex type AR:MODE-DECLARATION-GROUP-PROTOTYPE
+        Tag variants: 'MODE-DECLARATION-GROUP-PROTOTYPE' | 'MODE-GROUP'
+                      | 'PROCESS-STATE-MACHINE' | 'STATE-MACHINE'
+        """
+        assert isinstance(elem, ar_element.ModeDeclarationGroupPrototype)
+        attr: TupleList = []
+        self._collect_identifiable_attributes(elem, attr)
+        self._add_child(tag, attr)
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_mode_declaration_group_prototype_data(elem)
+        self._leave_child()
+
+    def _write_mode_declaration_group_prototype_data(self, elem: ar_element.ModeDeclarationGroupPrototype) -> None:
+        """
+        Writes group AR:MODE-DECLARATION-GROUP-PROTOTYPE
+        """
+        if elem.calibration_access is not None:
+            self._add_content('SW-CALIBRATION-ACCESS',
+                              ar_enum.enum_to_xml(elem.calibration_access))
+        if elem.type_ref is not None:
+            self._write_mode_declaration_group_ref(elem.type_ref, "TYPE-TREF")
+
+    # --- Port interface elements
 
     def _write_port_interface(self, elem: ar_element.PortInterface) -> None:
         """
@@ -2393,3 +2535,18 @@ class Writer(_XMLWriter):
             for possible_error in elem.possible_errors:
                 self._write_application_error(possible_error)
             self._leave_child()
+
+    def _write_mode_switch_interface(self, elem: ar_element.ModeSwitchInterface) -> None:
+        """
+        Writes complex type AR:MODE-SWITCH-INTERFACE
+        Tag variants: 'MODE-SWITCH-INTERFACE'
+        """
+        assert isinstance(elem, ar_element.ModeSwitchInterface)
+        self._add_child("MODE-SWITCH-INTERFACE")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_port_interface(elem)
+        if elem.mode_group is not None:
+            self._write_mode_declaration_group_prototype(elem.mode_group, "MODE-GROUP")
+        self._leave_child()

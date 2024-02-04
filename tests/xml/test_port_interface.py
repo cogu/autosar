@@ -853,5 +853,60 @@ class TestClientServerInterface(unittest.TestCase):
         self.assertEqual(possible_errors.name, "E_NOT_OK")
 
 
+class TestModeSwitchInterface(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.ModeSwitchInterface("InterfaceName")
+        writer = autosar.xml.Writer()
+        xml = '''<MODE-SWITCH-INTERFACE>
+  <SHORT-NAME>InterfaceName</SHORT-NAME>
+</MODE-SWITCH-INTERFACE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ModeSwitchInterface = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ModeSwitchInterface)
+        self.assertEqual(elem.name, "InterfaceName")
+
+    def test_mode_group_in_constructor(self):
+        mode_declaration_ref = "ModeDeclarations/ModeGroupName/Mode1"
+        mode_group = ar_element.ModeDeclarationGroupPrototype("mode", type_ref=mode_declaration_ref)
+        element = ar_element.ModeSwitchInterface("InterfaceName", mode_group=mode_group)
+        writer = autosar.xml.Writer()
+        xml = f'''<MODE-SWITCH-INTERFACE>
+  <SHORT-NAME>InterfaceName</SHORT-NAME>
+  <MODE-GROUP>
+    <SHORT-NAME>mode</SHORT-NAME>
+    <TYPE-TREF DEST="MODE-DECLARATION-GROUP">{mode_declaration_ref}</TYPE-TREF>
+  </MODE-GROUP>
+</MODE-SWITCH-INTERFACE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ModeSwitchInterface = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ModeSwitchInterface)
+        self.assertIsInstance(elem.mode_group, ar_element.ModeDeclarationGroupPrototype)
+        self.assertEqual(elem.mode_group.name, "mode")
+        self.assertEqual(str(elem.mode_group.type_ref), mode_declaration_ref)
+
+    def test_mode_group_from_create_method(self):
+        mode_declaration_ref = "ModeDeclarations/ModeGroupName/Mode1"
+        element = ar_element.ModeSwitchInterface("InterfaceName")
+        element.create_mode_group("mode", type_ref=mode_declaration_ref)
+        writer = autosar.xml.Writer()
+        xml = f'''<MODE-SWITCH-INTERFACE>
+  <SHORT-NAME>InterfaceName</SHORT-NAME>
+  <MODE-GROUP>
+    <SHORT-NAME>mode</SHORT-NAME>
+    <TYPE-TREF DEST="MODE-DECLARATION-GROUP">{mode_declaration_ref}</TYPE-TREF>
+  </MODE-GROUP>
+</MODE-SWITCH-INTERFACE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ModeSwitchInterface = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ModeSwitchInterface)
+        self.assertIsInstance(elem.mode_group, ar_element.ModeDeclarationGroupPrototype)
+        self.assertEqual(elem.mode_group.name, "mode")
+        self.assertEqual(str(elem.mode_group.type_ref), mode_declaration_ref)
+
+
 if __name__ == '__main__':
     unittest.main()

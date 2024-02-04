@@ -317,6 +317,23 @@ class Identifiable(MultiLanguageReferrable):
         self._assign_optional('category', category, str)
         self._assign_optional('uuid', uuid, str)
 
+    def update_ref_parts(self, ref_parts: list[str]):
+        """
+        Utility method used for generating reference strings
+        """
+        ref_parts.append(self.name)
+        self.parent.update_ref_parts(ref_parts)
+
+    def _calc_ref_string(self) -> str | None:
+        """
+        Calculates reference string based on parent
+        """
+        if self.parent is None:
+            return None
+        ref_parts: list[str] = [self.name]
+        self.parent.update_ref_parts(ref_parts)
+        return '/'.join(reversed(ref_parts))
+
 
 class CollectableElement(Identifiable):
     """
@@ -353,7 +370,7 @@ class AdminData(ARObject):
     def __init__(self, data: dict | None = None) -> None:
         self.data = data
 
-# Reference classes
+# --- Reference elements
 
 
 class BaseRef(ARObject, abc.ABC):
@@ -576,7 +593,39 @@ class ApplicationErrorRef(BaseRef):
         """Acceptable values for dest"""
         return {ar_enum.IdentifiableSubTypes.APPLICATION_ERROR}
 
-# Documentation Elements
+
+class ModeDeclarationRef(BaseRef):
+    """
+    Reference to ModeDeclaration
+    tag variants: 'TARGET-MODE-DECLARATION-REF' | 'INITIAL-MODE-REF' |
+                  'FIRST-MODE-REF' | 'SECOND-MODE-REF' | 'MODE-DECLARATION-REF' |
+                  'DEFAULT-MODE-REF' | 'TARGET-MODE-REF' | 'ENTERED-MODE-REF' |
+                  'EXITED-MODE-REF' | 'ENTRY-MODE-DECLARATION-REF' | 'EXIT-MODE-DECLARATION-REF'
+
+    """
+
+    def __init__(self, value: str) -> None:
+        super().__init__(value, ar_enum.IdentifiableSubTypes.MODE_DECLARATION)
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.MODE_DECLARATION}
+
+
+class ModeDeclarationGroupRef(BaseRef):
+    """
+    Reference to ModeDeclarationGroup
+    Tag variants: 'MODE-DECLARATION-GROUP-REF' | 'TYPE-TREF' | 'MODE-GROUP-REF'
+    """
+
+    def __init__(self, value: str) -> None:
+        super().__init__(value, ar_enum.IdentifiableSubTypes.MODE_DECLARATION_GROUP)
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.MODE_DECLARATION_GROUP}
+
+# --- Documentation Elements
 
 
 class Break(ARObject):
@@ -1381,14 +1430,11 @@ class CompuMethod(ARElement):
 
     def ref(self) -> CompuMethodRef | None:
         """
-        Reference
+        Returns a reference to this element or
+        None if the element is not yet part of a package
         """
-        if self.parent is None:
-            return None
-        ref_parts: list[str] = [self.name]
-        self.parent.update_ref_parts(ref_parts)
-        value = '/'.join(reversed(ref_parts))
-        return CompuMethodRef(value)
+        ref_str = self._calc_ref_string()
+        return None if ref_str is None else CompuMethodRef(ref_str)
 
 
 # Constraint elements
@@ -1566,13 +1612,11 @@ class DataConstraint(ARElement):
 
     def ref(self) -> DataConstraintRef:
         """
-        Reference
+        Returns a reference to this element or
+        None if the element is not yet part of a package
         """
-        assert self.parent is not None
-        ref_parts: list[str] = [self.name]
-        self.parent.update_ref_parts(ref_parts)
-        value = '/'.join(reversed(ref_parts))
-        return DataConstraintRef(value)
+        ref_str = self._calc_ref_string()
+        return None if ref_str is None else DataConstraintRef(ref_str)
 
     @classmethod
     def make_physical(cls: "DataConstraint",
@@ -1713,14 +1757,11 @@ class SwBaseType(BaseType):
 
     def ref(self) -> SwBaseTypeRef | None:
         """
-        Reference
+        Returns a reference to this element or
+        None if the element is not yet part of a package
         """
-        if self.parent is None:
-            return None
-        ref_parts: list[str] = [self.name]
-        self.parent.update_ref_parts(ref_parts)
-        value = '/'.join(reversed(ref_parts))
-        return SwBaseTypeRef(value)
+        ref_str = self._calc_ref_string()
+        return None if ref_str is None else SwBaseTypeRef(ref_str)
 
 
 class SwBitRepresentation(ARObject):
@@ -2081,16 +2122,13 @@ class ImplementationDataType(AutosarDataType):
         else:
             raise TypeError("'elem' must be of type ImplementationDataTypeElement")
 
-    def ref(self):
+    def ref(self) -> ImplementationDataTypeRef | None:
         """
-        Returns a new reference to this object
+        Returns a reference to this element or
+        None if the element is not yet part of a package
         """
-        if self.parent is None:
-            return None
-        ref_parts: list[str] = [self.name]
-        self.parent.update_ref_parts(ref_parts)
-        value = '/'.join(reversed(ref_parts))
-        return ImplementationDataTypeRef(value)
+        ref_str = self._calc_ref_string()
+        return None if ref_str is None else ImplementationDataTypeRef(ref_str)
 
     def find(self, ref: str) -> Any:
         """
@@ -2223,16 +2261,15 @@ class ApplicationPrimitiveDataType(ApplicationDataType):
         """Is this a composite data type?"""
         return False
 
-    def ref(self) -> ApplicationDataTypeRef:
+    def ref(self) -> ApplicationDataTypeRef | None:
         """
-        Reference
+        Returns a reference to this element or
+        None if the element is not yet part of a package
         """
-        if self.parent is None:
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
             return None
-        ref_parts: list[str] = [self.name]
-        self.parent.update_ref_parts(ref_parts)
-        value = '/'.join(reversed(ref_parts))
-        return ApplicationDataTypeRef(value, ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE)
+        return ApplicationDataTypeRef(ref_str, ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE)
 
 
 class ApplicationCompositeElementDataPrototype(DataPrototype):
@@ -2295,14 +2332,13 @@ class ApplicationArrayDataType(ApplicationCompositeDataType):
 
     def ref(self) -> ApplicationDataTypeRef | None:
         """
-        Reference
+        Returns a reference to this element or
+        None if the element is not yet part of a package
         """
-        if self.parent is None:
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
             return None
-        ref_parts: list[str] = [self.name]
-        self.parent.update_ref_parts(ref_parts)
-        value = '/'.join(reversed(ref_parts))
-        return ApplicationDataTypeRef(value, ar_enum.IdentifiableSubTypes.APPLICATION_ARRAY_DATA_TYPE)
+        return ApplicationDataTypeRef(ref_str, ar_enum.IdentifiableSubTypes.APPLICATION_ARRAY_DATA_TYPE)
 
 
 class ApplicationRecordElement(ApplicationCompositeElementDataPrototype):
@@ -2358,14 +2394,13 @@ class ApplicationRecordDataType(ApplicationCompositeDataType):
 
     def ref(self) -> ApplicationDataTypeRef | None:
         """
-        Reference
+        Returns a reference to this element or
+        None if the element is not yet part of a package
         """
-        if self.parent is None:
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
             return None
-        ref_parts: list[str] = [self.name]
-        self.parent.update_ref_parts(ref_parts)
-        value = '/'.join(reversed(ref_parts))
-        return ApplicationDataTypeRef(value, ar_enum.IdentifiableSubTypes.APPLICATION_RECORD_DATA_TYPE)
+        return ApplicationDataTypeRef(ref_str, ar_enum.IdentifiableSubTypes.APPLICATION_RECORD_DATA_TYPE)
 
 
 class DataTypeMap(ARObject):
@@ -2461,17 +2496,15 @@ class SwAddrMethod(ARElement):
         self.section_initialization_policy = None  # .SECTION-INITIALIZATION-POLICY
         self.section_type = None  # .SECTION-TYPE
 
-    def ref(self) -> SwAddrMethodRef:
+    def ref(self) -> SwAddrMethodRef | None:
         """
-        Reference
+        Returns a reference to this element or
+        None if the element is not yet part of a package
         """
-        assert self.parent is not None
-        ref_parts: list[str] = [self.name]
-        self.parent.update_ref_parts(ref_parts)
-        value = '/'.join(reversed(ref_parts))
-        return SwAddrMethodRef(value)
+        ref_str = self._calc_ref_string()
+        return None if ref_str is None else SwAddrMethodRef(ref_str)
 
-# Calibration data
+# --- Calibration data elements
 
 
 SwValueElement = Union[int, float, str, NumericalValue, "ValueGroup"]  # Type alias
@@ -2584,7 +2617,7 @@ class SwValueCont(ARObject):
         self._assign_optional_strict('sw_values_phys', sw_values_phys, SwValues)
 
 
-# Constant and value specifications
+# --- Constant and value specifications
 
 
 class ValueSpecification(ARObject):
@@ -2807,15 +2840,13 @@ class ConstantSpecification(ARElement):
                 error_msg = "Invalid type for parameter 'value'. Expected a subclass of ValueSpecification,"
                 raise TypeError(error_msg + f" got {str(type(value))}")
 
-    def ref(self) -> ConstantRef:
+    def ref(self) -> ConstantRef | None:
         """
-        Reference
+        Returns a reference to this element or
+        None if the element is not yet part of a package
         """
-        assert self.parent is not None
-        ref_parts: list[str] = [self.name]
-        self.parent.update_ref_parts(ref_parts)
-        value = '/'.join(reversed(ref_parts))
-        return ConstantRef(value)
+        ref_str = self._calc_ref_string()
+        return None if ref_str is None else ConstantRef(ref_str)
 
     @classmethod
     def make_constant(cls,
@@ -2846,7 +2877,8 @@ class ConstantReference(ValueSpecification):
         super().__init__(label)
         self._assign_optional_strict("constant_ref", constant_ref, ConstantRef)
 
-# Package (Partly implemented)
+
+# --- Package (Partly implemented)
 
 
 class Package(CollectableElement):
@@ -2925,14 +2957,199 @@ class Package(CollectableElement):
                 return item.find(parts[2])
         return item
 
-    def update_ref_parts(self, ref_parts: list[str]):
-        """
-        Utility method used generating XML references
-        """
-        ref_parts.append(self.name)
-        self.parent.update_ref_parts(ref_parts)
+# --- ModeDeclaration elements
 
-# Port Interfaces
+
+class ModeDeclaration(Identifiable):
+    """
+    Complex type AR:MODE-DECLARATION
+    Tag variants: 'MODE-DECLARATION'
+    """
+
+    def __init__(self,
+                 name: str,
+                 value: int | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.value: int | None = None  # .VALUE
+        # .VARIATION-POINT not supported
+        self._assign_optional_positive_int("value", value)
+
+    def ref(self) -> ModeDeclarationRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        return None if ref_str is None else ModeDeclarationRef(ref_str)
+
+
+class ModeErrorBehavior(ARObject):
+    """
+    Complex type AR:MODE-ERROR-BEHAVIOR
+    Tag variants: 'MODE-MANAGER-ERROR-BEHAVIOR' | 'MODE-USER-ERROR-BEHAVIOR'
+    """
+
+    def __init__(self,
+                 default_mode_ref: ModeDeclarationRef | None = None,
+                 error_reaction_policy: ar_enum.ModeErrorReactionPolicy | None = None
+                 ) -> None:
+        self.default_mode_ref: ModeDeclarationRef | None = None
+        self.error_reaction_policy: ar_enum.ModeErrorReactionPolicy | None = None
+        self._assign_optional("default_mode_ref", default_mode_ref, ModeDeclarationRef)
+        self._assign_optional("error_reaction_policy", error_reaction_policy, ar_enum.ModeErrorReactionPolicy)
+
+
+class ModeTransition(Identifiable):
+    """
+    Complex type AR:MODE-TRANSITION
+    tag variants: 'MODE-TRANSITION'
+    """
+
+    def __init__(self,
+                 name: str,
+                 entered_mode_ref: ModeDeclarationRef | None = None,
+                 exited_mode_ref: ModeDeclarationRef | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.entered_mode_ref: ModeDeclarationRef | None = None
+        self.exited_mode_ref: ModeDeclarationRef | None = None
+        self._assign_optional("entered_mode_ref", entered_mode_ref, ModeDeclarationRef)
+        self._assign_optional("exited_mode_ref", exited_mode_ref, ModeDeclarationRef)
+
+
+MODE_DECLARATION_TYPES = ModeDeclaration | list[ModeDeclaration] | list[str] | list[tuple[str, int]]
+
+
+class ModeDeclarationGroup(ARElement):
+    """
+    Complex type AR:MODE-DECLARATION-GROUP
+    Tag variants: 'MODE-DECLARATION-GROUP'
+    """
+
+    def __init__(self,
+                 name: str,
+                 mode_declarations: MODE_DECLARATION_TYPES | None = None,
+                 initial_mode_ref: ModeDeclarationRef | None = None,
+                 mode_manager_error_behavior: ModeErrorBehavior | None = None,
+                 mode_transitions: ModeTransition | list[ModeTransition] | None = None,
+                 mode_user_error_behavior: ModeErrorBehavior | None = None,
+                 on_transition_value: int | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.initial_mode_ref: ModeDeclarationRef | None = None  # .INITIAL-MODE-REF
+        self.mode_declarations: list[ModeDeclaration] = []  # .MODE-DECLARATIONS
+        self.mode_manager_error_behavior: ModeErrorBehavior | None = None  # .MODE-MANAGER-ERROR-BEHAVIOR
+        self.mode_transitions: list[ModeTransition] = []  # .MODE-TRANSITIONS
+        self.mode_user_error_behavior: ModeErrorBehavior | None = None  # .MODE-USER-ERROR-BEHAVIOR
+        self.on_transition_value: int | None = None  # .ON-TRANSITION-VALUE
+        self._assign_optional("initial_mode_ref", initial_mode_ref, ModeDeclarationRef)
+        self._assign_optional_strict("mode_manager_error_behavior", mode_manager_error_behavior, ModeErrorBehavior)
+        self._assign_optional_strict("mode_user_error_behavior", mode_user_error_behavior, ModeErrorBehavior)
+        self._assign_optional_positive_int("on_transition_value", on_transition_value)
+
+        expected_types = "Expected 'ModeDeclaration', list[ModeDeclaration], list[str], list[tuple[str,int]]"
+        if mode_declarations is not None:
+            if isinstance(mode_declarations, ModeDeclaration):
+                self.append_mode_declaratation(mode_declarations)
+            elif isinstance(mode_declarations, list):
+                for mode_declaration in mode_declarations:
+                    if isinstance(mode_declaration, ModeDeclaration):
+                        self.append_mode_declaratation(mode_declaration)
+                    elif isinstance(mode_declaration, str):
+                        self.make_mode_declaration(mode_declaration)
+                    elif isinstance(mode_declaration, tuple):
+                        self.make_mode_declaration(*mode_declaration)
+                    else:
+                        err_msg = f"Invalid type '{str(type(mode_declaration))}'"
+                        raise TypeError(err_msg + ". " + expected_types)
+            else:
+                err_msg = f"mode_declarations: Invalid type '{str(type(mode_declarations))}'"
+                raise TypeError(err_msg + ". " + expected_types)
+
+        if mode_transitions is not None:
+            if isinstance(mode_transitions, ModeTransition):
+                self.append_mode_transition(mode_transitions)
+            elif isinstance(mode_transitions, list):
+                for mode_transition in mode_transitions:
+                    self.append_mode_transition(mode_transition)
+            else:
+                msg = f"operations: Invalid type '{str(type(mode_transitions))}'"
+                raise TypeError(msg + ". Expected 'ModeTransition' or list[ModeTransition]")
+
+    def find(self, name: str) -> ModeDeclaration | ModeTransition | None:
+        """
+        Finds and returns sub-item based on short name
+        """
+        for mode_declaration in self.mode_declarations:
+            if mode_declaration.name == name:
+                return mode_declaration
+        for mode_transition in self.mode_transitions:
+            if mode_transition.name == name:
+                return mode_transition
+        return None
+
+    def append_mode_declaratation(self, mode_declaration: ModeDeclaration) -> None:
+        """
+        Appends mode declaratopm to internal list of mode declarations
+        """
+        if isinstance(mode_declaration, ModeDeclaration):
+            mode_declaration.parent = self
+            self.mode_declarations.append(mode_declaration)
+        else:
+            msg = f"mode_declaration: Invalid type '{str(type(mode_declaration))}'"
+            raise TypeError(msg + ". Expected 'ModeDeclaration'")
+
+    def make_mode_declaration(self,
+                              name: str,
+                              value: int | None = None,
+                              **kwargs) -> ModeDeclaration:
+        """
+        Convenience method for creating a new mode declaration within this group
+        """
+        mode_declaration = ModeDeclaration(name, value, **kwargs)
+        self.append_mode_declaratation(mode_declaration)
+        return mode_declaration
+
+    def append_mode_transition(self, mode_transition: ModeTransition) -> None:
+        """
+        Appends mode transition to internal list of transitions
+        """
+        if isinstance(mode_transition, ModeTransition):
+            mode_transition.parent = mode_transition
+            self.mode_transitions.append(mode_transition)
+        else:
+            msg = f"mode_transition: Invalid type '{str(type(mode_transition))}'"
+            raise TypeError(msg + ". Expected 'ModeTransition'")
+
+    def ref(self) -> ModeDeclarationGroupRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        return None if ref_str is None else ModeDeclarationGroupRef(ref_str)
+
+
+class ModeDeclarationGroupPrototype(Identifiable):
+    """
+    Complex type AR:MODE-DECLARATION-GROUP-PROTOTYPE
+    Tag variants: 'MODE-DECLARATION-GROUP-PROTOTYPE' | 'MODE-GROUP'
+                  | 'PROCESS-STATE-MACHINE' | 'STATE-MACHINE'
+    """
+
+    def __init__(self,
+                 name: str,
+                 type_ref: ModeDeclarationGroupRef | None = None,
+                 calibration_access: ar_enum.SwCalibrationAccess | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.calibration_access: ar_enum.SwCalibrationAccess | None = None  # .SW-CALIBRATION-ACCESS
+        self.type_ref: ModeDeclarationGroupRef | None = None  # .TYPE-TREF
+        self._assign_optional('calibration_access', calibration_access, ar_enum.SwCalibrationAccess)
+        self._assign_optional('type_ref', type_ref, ModeDeclarationGroupRef)
+
+# --- Port Interface elements
 
 
 class PortInterface(ARElement):
@@ -3367,6 +3584,33 @@ class ClientServerInterface(PortInterface):
         possible_error = ApplicationError(name, error_code, **kwargs)
         self.append_possible_errors(possible_error)
         return possible_error
+
+
+class ModeSwitchInterface(PortInterface):
+    """
+    Complex type AR:MODE-SWITCH-INTERFACE
+    Tag variants: 'MODE-SWITCH-INTERFACE'
+    """
+
+    def __init__(self,
+                 name: str,
+                 mode_group: ModeDeclarationGroupPrototype | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.mode_group: ModeDeclarationGroupPrototype | None = None
+        self._assign_optional_strict("mode_group", mode_group, ModeDeclarationGroupPrototype)
+
+    def create_mode_group(self,
+                          name: str,
+                          type_ref: ModeDeclarationGroupRef | None = None,
+                          calibration_access: ar_enum.SwCalibrationAccess | None = None,
+                          **kwargs) -> ModeDeclarationGroupPrototype:
+        """
+        Convenience method for both creating and setting the mode_group property
+        """
+        self.mode_group = ModeDeclarationGroupPrototype(name, type_ref, calibration_access, **kwargs)
+        return self.mode_group
+
 
 # !!UNFINISHED!! Component Types
 

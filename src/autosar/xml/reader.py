@@ -5,7 +5,7 @@ import os
 import re
 import sys
 
-from typing import Iterable, Any, Union
+from typing import Iterable, Any
 import lxml.etree as ElementTree
 import autosar.base as ar_base
 import autosar.xml.document as ar_document
@@ -16,14 +16,6 @@ import autosar.xml.enumeration as ar_enum
 # Type aliases
 
 MultiLanguageOverviewParagraph = ar_element.MultiLanguageOverviewParagraph
-
-ValueSpeficationElement = Union[ar_element.TextValueSpecification,
-                                ar_element.NumericalValueSpecification,
-                                ar_element.NotAvailableValueSpecification,
-                                ar_element.ArrayValueSpecification,
-                                ar_element.RecordValueSpecification,
-                                ar_element.ApplicationValueSpecification,
-                                ar_element.ConstantReference]
 
 # Helper classes
 
@@ -128,12 +120,16 @@ class Reader:
             'PARAMETER-INTERFACE': self._read_parameter_interface,
             'SENDER-RECEIVER-INTERFACE': self._read_sender_receiver_interface,
             'CLIENT-SERVER-INTERFACE': self._read_client_server_interface,
+            'MODE-SWITCH-INTERFACE': self._read_mode_switch_interface,
 
             # Unit elements
             'UNIT': self._read_unit,
 
             # Constant elements
             'CONSTANT-SPECIFICATION': self._read_constant_specification,
+
+            # Mode declaration elements
+            'MODE-DECLARATION-GROUP': self._read_mode_declaration_group,
         }
         # Value specification elements
         self.switcher_value_specification = {
@@ -144,6 +140,7 @@ class Reader:
             'RECORD-VALUE-SPECIFICATION': self._read_record_value_specification,
             'APPLICATION-VALUE-SPECIFICATION': self._read_application_value_specification,
             'CONSTANT-REFERENCE': self._read_constant_reference,
+
         }
         self.switcher_non_collectable = {  # Non-collectable, used only for unit testing
             # Documentation elements
@@ -193,10 +190,16 @@ class Reader:
             'PHYSICAL-DIMENSION-REF': self._read_physical_dimension_ref,
             'APPLICATION-DATA-TYPE-REF': self._read_application_data_type_ref,
             'CONSTANT-REF': self._read_constant_ref,
-            # Port interface element
+            # Port interface elements
             'INVALIDATION-POLICY': self._read_invalidation_policy,
             'APPLICATION-ERROR': self._read_application_error,
             'CLIENT-SERVER-OPERATION': self._read_client_server_operation,
+            # ModeDeclaration elements
+            'MODE-DECLARATION': self._read_mode_declaration,
+            'MODE-MANAGER-ERROR-BEHAVIOR': self._read_mode_error_behavior,
+            'MODE-USER-ERROR-BEHAVIOR': self._read_mode_error_behavior,
+            'MODE-TRANSITION': self._read_mode_transition,
+            'MODE-DECLARATION-GROUP-PROTOTYPE': self._read_mode_declaration_group_prototype,
         }
         self.switcher_all = {}
         self.switcher_all.update(self.switcher_collectable)
@@ -964,7 +967,7 @@ class Reader:
             if xml_child_elem.tail:
                 elem.append(xml_element.text)
 
-    # CompuMethod elements
+    # --- CompuMethod elements
 
     def _read_compu_method(self, xml_element: ElementTree.Element) -> ar_element.CompuMethod:
         """
@@ -2182,6 +2185,34 @@ class Reader:
             raise ar_exception.ParseError(msg)
         return ar_element.ApplicationErrorRef(xml_elem.text)
 
+    def _read_mode_declaration_ref(
+            self,
+            xml_elem: ElementTree.Element) -> ar_element.ModeDeclarationRef:
+        """
+        Reads reference to ModeDeclaration
+        Type: Concrete
+        """
+        data = {}
+        self._read_base_ref_attributes(xml_elem.attrib, data)
+        if data['dest'] != 'MODE-DECLARATION':
+            msg = f"Invalid value for DEST. Expected 'MODE-DECLARATION', got '{data['dest']}'"
+            raise ar_exception.ParseError(msg)
+        return ar_element.ModeDeclarationRef(xml_elem.text)
+
+    def _read_mode_declaration_group_ref(
+            self,
+            xml_elem: ElementTree.Element) -> ar_element.ModeDeclarationGroupRef:
+        """
+        Reads reference to ModeDeclarationGroup
+        Type: Concrete
+        """
+        data = {}
+        self._read_base_ref_attributes(xml_elem.attrib, data)
+        if data['dest'] != 'MODE-DECLARATION-GROUP':
+            msg = f"Invalid value for DEST. Expected 'MODE-DECLARATION-GROUP', got '{data['dest']}'"
+            raise ar_exception.ParseError(msg)
+        return ar_element.ModeDeclarationGroupRef(xml_elem.text)
+
     def _read_base_ref_attributes(self, attr: dict, data: dict) -> None:
         """
         Reads DEST attribute
@@ -2190,7 +2221,7 @@ class Reader:
         if data['dest'] is None:
             raise ar_exception.ParseError("Missing required attribute 'DEST'")
 
-    # Constant and value specifications
+# --- Constant and value specifications
 
     def _read_text_value_specification(self,
                                        xml_element: ElementTree.Element) -> ar_element.TextValueSpecification:
@@ -2364,7 +2395,8 @@ class Reader:
             data["sw_value_cont"] = self._read_sw_value_cont(xml_child)
 
     def _read_value_specification_element(self,
-                                          xml_element: ElementTree.Element) -> ValueSpeficationElement:
+                                          xml_element: ElementTree.Element
+                                          ) -> ar_element.ValueSpeficationElement:
         """
         Reads any ValueSpecificationElement
         """
@@ -2548,7 +2580,145 @@ class Reader:
         if xml_child is not None:
             data["sw_values_phys"] = self._read_sw_values(xml_child)
 
-    # Port interface elements
+        # --- ModeDeclaration elements
+
+    def _read_mode_declaration(self, xml_element: ElementTree.Element) -> ar_element.ModeDeclaration:
+        """
+        Reads complex type AR:MODE-DECLARATION
+        Tag variants: 'MODE-DECLARATION'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_port_interface(child_elements, data)
+        xml_child = child_elements.get('VALUE')
+        if xml_child is not None:
+            data["value"] = ar_element.PositiveIntegerValue(xml_child.text).value
+        child_elements.skip("MODE-DECLARATION")  # Not supported
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ModeDeclaration(**data)
+
+    def _read_mode_error_behavior(self, xml_element: ElementTree.Element) -> ar_element.ModeErrorBehavior:
+        """
+        Reads complex type AR:MODE-ERROR-BEHAVIOR
+        Tag variants: 'MODE-ERROR-BEHAVIOR'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get('DEFAULT-MODE-REF')
+        if xml_child is not None:
+            data["default_mode_ref"] = self._read_mode_declaration_ref(xml_child)
+        xml_child = child_elements.get('ERROR-REACTION-POLICY')
+        if xml_child is not None:
+            data["error_reaction_policy"] = ar_enum.xml_to_enum("ModeErrorReactionPolicy", xml_child.text)
+        return ar_element.ModeErrorBehavior(**data)
+
+    def _read_mode_transition(self, xml_element: ElementTree.Element) -> ar_element.ModeTransition:
+        """
+        Reads complex type AR:MODE-TRANSITION
+        Tag variants: 'MODE-TRANSITION'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_mode_transition_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ModeTransition(**data)
+
+    def _read_mode_transition_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:MODE-TRANSITION
+        """
+        xml_child = child_elements.get('ENTERED-MODE-REF')
+        if xml_child is not None:
+            data["entered_mode_ref"] = self._read_mode_declaration_ref(xml_child)
+        xml_child = child_elements.get('EXITED-MODE-REF')
+        if xml_child is not None:
+            data["exited_mode_ref"] = self._read_mode_declaration_ref(xml_child)
+
+    def _read_mode_declaration_group(self, xml_element: ElementTree.Element) -> ar_element.ModeDeclarationGroup:
+        """
+        Reads Complex type AR:MODE-DECLARATION-GROUP
+        Type: Concrete
+        Tag variants: 'MODE-DECLARATION-GROUP'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_mode_declaration_group_data(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ModeDeclarationGroup(**data)
+
+    def _read_mode_declaration_group_data(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:MODE-DECLARATION-GROUP
+        """
+        xml_child = child_elements.get("INITIAL-MODE-REF")
+        if xml_child is not None:
+            data["initial_mode_ref"] = self._read_mode_declaration_ref(xml_child)
+        xml_child = child_elements.get("MODE-DECLARATIONS")
+        if xml_child is not None:
+            mode_declarations = []
+            data["mode_declarations"] = mode_declarations
+            for xml_grand_child in xml_child.findall('./*'):
+                if xml_grand_child.tag == 'MODE-DECLARATION':
+                    element = self._read_mode_declaration(xml_grand_child)
+                    mode_declarations.append(element)
+        xml_child = child_elements.get("MODE-MANAGER-ERROR-BEHAVIOR")
+        if xml_child is not None:
+            data["mode_manager_error_behavior"] = self._read_mode_error_behavior(xml_child)
+        xml_child = child_elements.get("MODE-TRANSITIONS")
+        if xml_child is not None:
+            mode_transitions = []
+            data["mode_transitions"] = mode_transitions
+            for xml_grand_child in xml_child.findall('./*'):
+                if xml_grand_child.tag == 'MODE-TRANSITION':
+                    element = self._read_mode_transition(xml_grand_child)
+                    mode_transitions.append(element)
+        xml_child = child_elements.get("MODE-USER-ERROR-BEHAVIOR")
+        if xml_child is not None:
+            data["mode_user_error_behavior"] = self._read_mode_error_behavior(xml_child)
+        xml_child = child_elements.get("ON-TRANSITION-VALUE")
+        if xml_child is not None:
+            data["on_transition_value"] = ar_element.PositiveIntegerValue(xml_child.text).value
+
+    def _read_mode_declaration_group_prototype(self,
+                                               xml_element: ElementTree.Element
+                                               ) -> ar_element.ModeDeclarationGroupPrototype:
+        """
+        Reads Complex type AR:MODE-DECLARATION-GROUP-PROTOTYPE
+        Tag variants: 'MODE-DECLARATION-GROUP-PROTOTYPE' | 'MODE-GROUP'
+                  | 'PROCESS-STATE-MACHINE' | 'STATE-MACHINE'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_mode_declaration_group_prototype_data(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ModeDeclarationGroupPrototype(**data)
+
+    def _read_mode_declaration_group_prototype_data(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:MODE-DECLARATION-GROUP-PROTOTYPE
+        """
+        xml_child = child_elements.get("SW-CALIBRATION-ACCESS")
+        if xml_child is not None:
+            data['calibration_access'] = ar_enum.xml_to_enum('SwCalibrationAccess',
+                                                             xml_child.text)
+        xml_child = child_elements.get("TYPE-TREF")
+        if xml_child is not None:
+            data['type_ref'] = self._read_mode_declaration_group_ref(xml_child)
+        child_elements.skip("VARIATION-POINT")  # not supported
+
+    # ---Port interface elements
 
     def _read_port_interface(self, xml_elements: ChildElementMap, data: dict) -> None:
         """
@@ -2773,3 +2943,20 @@ class Reader:
                 if xml_grand_child.tag == 'APPLICATION-ERROR':
                     element = self._read_application_error(xml_grand_child)
                     possible_errors.append(element)
+
+    def _read_mode_switch_interface(self, xml_element: ElementTree.Element) -> ar_element.ModeSwitchInterface:
+        """
+        Reads complex type AR:MODE-SWITCH-INTERFACE
+        Tag variants: 'MODE-SWITCH-INTERFACE'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_port_interface(child_elements, data)
+        xml_child = child_elements.get('MODE-GROUP')
+        if xml_child is not None:
+            data['mode_group'] = self._read_mode_declaration_group_prototype(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ModeSwitchInterface(**data)
