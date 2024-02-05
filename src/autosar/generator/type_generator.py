@@ -1,6 +1,6 @@
 """
 RTE type generator
-Requires cfile v0.3.1
+Requires cfile v0.3.2
 """
 import os
 from typing import Iterator
@@ -104,11 +104,11 @@ class TypeGenerator:
         code = C.sequence()
         for data_type in data_types:
             if isinstance(data_type, rte_element.BaseType):
-                code.append(C.statement(C.typedef(data_type.name, data_type.native_declaration)))
+                code.append(C.statement(C.declaration(C.typedef(data_type.name, data_type.native_declaration))))
             elif isinstance(data_type, rte_element.ScalarType):
-                code.append(C.statement(C.typedef(data_type.name, data_type.base_type.name)))
+                code.append(C.statement(C.declaration(C.typedef(data_type.name, data_type.base_type.name))))
             elif isinstance(data_type, rte_element.RefType):
-                code.append(C.statement(C.typedef(data_type.name, data_type.impl_type.name)))
+                code.append(C.statement(C.declaration(C.typedef(data_type.name, data_type.impl_type.name))))
             elif isinstance(data_type, rte_element.ArrayType):
                 code.append(self._gen_array_type_def(data_type))
             elif isinstance(data_type, rte_element.RecordType):
@@ -129,7 +129,7 @@ class TypeGenerator:
             target_type = C.type(last_element.data_type.impl_type.name)
         else:
             raise NotImplementedError(str(type(last_element.data_type)))
-        return C.statement(C.typedef(data_type.name, target_type, array=last_element.array_size))
+        return C.statement(C.declaration(C.typedef(data_type.name, target_type, array=last_element.array_size)))
 
     def _gen_record_type_def(self, data_type: rte_element.RecordType) -> cfile.core.Statement:
         members = []
@@ -147,6 +147,7 @@ class TypeGenerator:
             members.append(C.struct_member(element.name, target_type))
         struct_name = "Rte_struct_" + data_type.name
         code = C.sequence()
-        code.append(C.statement(C.struct(struct_name, members)))
-        code.append(C.statement(C.typedef(data_type.name, C.struct_ref(struct_name))))
+        struct = C.struct(struct_name, members)
+        code.append(C.statement(C.declaration(struct)))
+        code.append(C.statement(C.declaration(C.typedef(data_type.name, struct))))
         return code
