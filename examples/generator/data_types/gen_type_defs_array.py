@@ -1,6 +1,6 @@
 """
 Example generation of RTE type header - Array type
-Requires cfile v0.3.1
+Requires cfile v0.3.2
 """
 import autosar
 import autosar.xml.element as ar_element

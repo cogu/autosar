@@ -53,7 +53,7 @@ For currently supported XML elements, see the [CHANGELOG](CHANGELOG.md) file.
 
 * Python 3.10+
 * lxml
-* [cfile](https://github.com/cogu/cfile) v0.3.1+
+* [cfile](https://github.com/cogu/cfile) v0.3.2+
 
 ## Installation
 
@@ -73,7 +73,7 @@ python -m pip install --upgrade pip
 python -m pip install --upgrade setuptools
 git clone https://github.com/cogu/cfile.git cfile_0.3
 cd cfile_0.3
-git checkout v0.3.1
+git checkout v0.3.2
 cd ..
 python -m pip install cfile_0.3
 ```

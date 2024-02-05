@@ -25,7 +25,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         repository: cogu/cfile
-        ref: v0.3.1
+        ref: v0.3.2
         path: cfile_0.3
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
