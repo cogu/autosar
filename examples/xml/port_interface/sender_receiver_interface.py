@@ -43,7 +43,7 @@ def create_sender_receiver_interface_with_one_element(packages: dict[str, ar_ele
     """
     inactive_active_t = packages["ImplementationDataTypes"].find("InactiveActive_T")
     portinterface = ar_element.SenderReceiverInterface("HeadLightStatus_I")
-    portinterface.make_data_element("HeadLightStatus", type_ref=inactive_active_t.ref())
+    portinterface.create_data_element("HeadLightStatus", type_ref=inactive_active_t.ref())
     packages["PortInterfaces"].append(portinterface)
 
 
@@ -53,8 +53,8 @@ def create_sender_receiver_interface_with_two_elements(packages: dict[str, ar_el
     """
     inactive_active_t = packages["ImplementationDataTypes"].find("InactiveActive_T")
     portinterface = ar_element.SenderReceiverInterface("InterfaceName")
-    portinterface.make_data_element("Element1", type_ref=inactive_active_t.ref())
-    portinterface.make_data_element("Element2", type_ref=inactive_active_t.ref())
+    portinterface.create_data_element("Element1", type_ref=inactive_active_t.ref())
+    portinterface.create_data_element("Element2", type_ref=inactive_active_t.ref())
     packages["PortInterfaces"].append(portinterface)
 
 

@@ -33,10 +33,10 @@ def create_port_interfaces(packages: dict[str, ar_element.Package]):
     """
     uint32_impl_type = packages["PlatformImplementationDataTypes"].find("uint32")
     interface = ar_element.ClientServerInterface("FreeRunningTimer_I", is_service=True)
-    operation = interface.make_operation("GetTimeStamp")
-    operation.make_out_argument("value",
-                                ar_enum.ServerArgImplPolicy.USE_ARGUMENT_TYPE,
-                                type_ref=uint32_impl_type.ref())
+    operation = interface.create_operation("GetTimeStamp")
+    operation.create_out_argument("value",
+                                  ar_enum.ServerArgImplPolicy.USE_ARGUMENT_TYPE,
+                                  type_ref=uint32_impl_type.ref())
     packages["PortInterfaces"].append(interface)
 
 

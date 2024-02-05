@@ -129,7 +129,7 @@ class TestSenderReceiverInterface(unittest.TestCase):
         ref_to_uint8_type = ar_element.AutosarDataTypeRef("AUTOSAR_Platform/ImplementationDataTypes/uint8",
                                                           ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE)
         element = ar_element.SenderReceiverInterface("InterfaceName")
-        element.make_data_element("Element1", type_ref=ref_to_uint8_type)
+        element.create_data_element("Element1", type_ref=ref_to_uint8_type)
         writer = autosar.xml.Writer()
         xml = '''<SENDER-RECEIVER-INTERFACE>
   <SHORT-NAME>InterfaceName</SHORT-NAME>
@@ -156,8 +156,8 @@ class TestSenderReceiverInterface(unittest.TestCase):
         ref_to_uint16_type = ar_element.AutosarDataTypeRef("AUTOSAR_Platform/ImplementationDataTypes/uint16",
                                                            ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE)
         element = ar_element.SenderReceiverInterface("InterfaceName")
-        element.make_data_element("Element1", type_ref=ref_to_uint8_type)
-        element.make_data_element("Element2", type_ref=ref_to_uint16_type)
+        element.create_data_element("Element1", type_ref=ref_to_uint8_type)
+        element.create_data_element("Element2", type_ref=ref_to_uint16_type)
         writer = autosar.xml.Writer()
         xml = '''<SENDER-RECEIVER-INTERFACE>
   <SHORT-NAME>InterfaceName</SHORT-NAME>
@@ -189,9 +189,9 @@ class TestSenderReceiverInterface(unittest.TestCase):
         ref_to_uint8_type = ar_element.AutosarDataTypeRef("AUTOSAR_Platform/ImplementationDataTypes/uint8",
                                                           ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE)
         element = ar_element.SenderReceiverInterface("InterfaceName")
-        element.make_data_element("Element1", type_ref=ref_to_uint8_type)
-        element.make_invalidation_policy("/PortInterfaces/InterfaceName/Element1",
-                                         handle_invalid=ar_enum.HandleInvalid.REPLACE)
+        element.create_data_element("Element1", type_ref=ref_to_uint8_type)
+        element.create_invalidation_policy("/PortInterfaces/InterfaceName/Element1",
+                                           handle_invalid=ar_enum.HandleInvalid.REPLACE)
         writer = autosar.xml.Writer()
         xml = '''<SENDER-RECEIVER-INTERFACE>
   <SHORT-NAME>InterfaceName</SHORT-NAME>
@@ -225,9 +225,9 @@ class TestSenderReceiverInterface(unittest.TestCase):
         ref_to_impl_type = ar_element.AutosarDataTypeRef("DataTypes/OnOff_T",
                                                          ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE)
         element = ar_element.SenderReceiverInterface("InterfaceName")
-        element.make_data_element("Element1",
-                                  init_value=ar_element.ValueSpecification.make_value(3),
-                                  type_ref=ref_to_impl_type)
+        element.create_data_element("Element1",
+                                    init_value=ar_element.ValueSpecification.make_value(3),
+                                    type_ref=ref_to_impl_type)
         writer = autosar.xml.Writer()
         xml = '''<SENDER-RECEIVER-INTERFACE>
   <SHORT-NAME>InterfaceName</SHORT-NAME>
@@ -285,7 +285,7 @@ class TestSenderReceiverInterface(unittest.TestCase):
         ref_to_impl_type = ar_element.AutosarDataTypeRef("DataTypes/OnOff_T",
                                                          ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE)
         element = ar_element.SenderReceiverInterface("ServiceInterface", is_service=True)
-        element.make_data_element("Element1", type_ref=ref_to_impl_type)
+        element.create_data_element("Element1", type_ref=ref_to_impl_type)
         writer = autosar.xml.Writer()
         xml = '''<SENDER-RECEIVER-INTERFACE>
   <SHORT-NAME>ServiceInterface</SHORT-NAME>
@@ -384,7 +384,7 @@ class TestNvDataInterface(unittest.TestCase):
         ref_to_uint8_type = ar_element.AutosarDataTypeRef("AUTOSAR_Platform/ImplementationDataTypes/uint8",
                                                           ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE)
         element = ar_element.NvDataInterface("InterfaceName")
-        element.make_data_element("Data1", type_ref=ref_to_uint8_type)
+        element.create_data_element("Data1", type_ref=ref_to_uint8_type)
         writer = autosar.xml.Writer()
         xml = '''<NV-DATA-INTERFACE>
   <SHORT-NAME>InterfaceName</SHORT-NAME>
@@ -411,8 +411,8 @@ class TestNvDataInterface(unittest.TestCase):
         ref_to_uint16_type = ar_element.AutosarDataTypeRef("AUTOSAR_Platform/ImplementationDataTypes/uint16",
                                                            ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE)
         element = ar_element.NvDataInterface("InterfaceName")
-        element.make_data_element("Data1", type_ref=ref_to_uint8_type)
-        element.make_data_element("Data2", type_ref=ref_to_uint16_type)
+        element.create_data_element("Data1", type_ref=ref_to_uint8_type)
+        element.create_data_element("Data2", type_ref=ref_to_uint16_type)
 
         writer = autosar.xml.Writer()
         xml = '''<NV-DATA-INTERFACE>
@@ -521,7 +521,7 @@ class TestParameterInterface(unittest.TestCase):
         ref_to_uint8_type = ar_element.AutosarDataTypeRef("AUTOSAR_Platform/ImplementationDataTypes/uint8",
                                                           ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE)
         element = ar_element.ParameterInterface("InterfaceName")
-        element.make_parameter("Param1", type_ref=ref_to_uint8_type)
+        element.create_parameter("Param1", type_ref=ref_to_uint8_type)
         writer = autosar.xml.Writer()
         xml = '''<PARAMETER-INTERFACE>
   <SHORT-NAME>InterfaceName</SHORT-NAME>
@@ -548,8 +548,8 @@ class TestParameterInterface(unittest.TestCase):
         ref_to_uint16_type = ar_element.AutosarDataTypeRef("AUTOSAR_Platform/ImplementationDataTypes/uint16",
                                                            ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE)
         element = ar_element.ParameterInterface("InterfaceName")
-        element.make_parameter("Param1", type_ref=ref_to_uint8_type)
-        element.make_parameter("Param2", type_ref=ref_to_uint16_type)
+        element.create_parameter("Param1", type_ref=ref_to_uint8_type)
+        element.create_parameter("Param2", type_ref=ref_to_uint16_type)
 
         writer = autosar.xml.Writer()
         xml = '''<PARAMETER-INTERFACE>
@@ -624,8 +624,8 @@ class TestClientServerOperation(unittest.TestCase):
 
     def test_one_argument(self):
         element = ar_element.ClientServerOperation("OperationName")
-        element.make_in_argument("Arg1",
-                                 type_ref=ar_element.AutosarDataTypeRef("/DataTypes/uint8", IMPLEMENTATION_DATA_TYPE))
+        element.create_in_argument("Arg1",
+                                   type_ref=ar_element.AutosarDataTypeRef("/DataTypes/uint8", IMPLEMENTATION_DATA_TYPE))
         writer = autosar.xml.Writer()
         xml = '''<CLIENT-SERVER-OPERATION>
   <SHORT-NAME>OperationName</SHORT-NAME>
@@ -651,10 +651,10 @@ class TestClientServerOperation(unittest.TestCase):
 
     def test_two_arguments(self):
         element = ar_element.ClientServerOperation("OperationName")
-        element.make_in_argument("Arg1",
-                                 type_ref=ar_element.AutosarDataTypeRef("/DataTypes/uint8", IMPLEMENTATION_DATA_TYPE))
-        element.make_out_argument("Arg2",
-                                  type_ref=ar_element.AutosarDataTypeRef("/DataTypes/bool", IMPLEMENTATION_DATA_TYPE))
+        element.create_in_argument("Arg1",
+                                   type_ref=ar_element.AutosarDataTypeRef("/DataTypes/uint8", IMPLEMENTATION_DATA_TYPE))
+        element.create_out_argument("Arg2",
+                                    type_ref=ar_element.AutosarDataTypeRef("/DataTypes/bool", IMPLEMENTATION_DATA_TYPE))
         writer = autosar.xml.Writer()
         xml = '''<CLIENT-SERVER-OPERATION>
   <SHORT-NAME>OperationName</SHORT-NAME>
@@ -717,7 +717,7 @@ class TestClientServerOperation(unittest.TestCase):
 
     def test_single_possible_error(self):
         element = ar_element.ClientServerOperation("OperationName")
-        element.make_possible_error_ref("/PortInterfaces/OperationName/ErrorName1")
+        element.create_possible_error_ref("/PortInterfaces/OperationName/ErrorName1")
         writer = autosar.xml.Writer()
         xml = '''<CLIENT-SERVER-OPERATION>
   <SHORT-NAME>OperationName</SHORT-NAME>
@@ -737,8 +737,8 @@ class TestClientServerOperation(unittest.TestCase):
 
     def test_dual_possible_errors(self):
         element = ar_element.ClientServerOperation("OperationName")
-        element.make_possible_error_ref("/PortInterfaces/OperationName/ErrorName1")
-        element.make_possible_error_ref("/PortInterfaces/OperationName/ErrorName2")
+        element.create_possible_error_ref("/PortInterfaces/OperationName/ErrorName1")
+        element.create_possible_error_ref("/PortInterfaces/OperationName/ErrorName2")
         writer = autosar.xml.Writer()
         xml = '''<CLIENT-SERVER-OPERATION>
   <SHORT-NAME>OperationName</SHORT-NAME>
@@ -777,9 +777,10 @@ class TestClientServerInterface(unittest.TestCase):
 
     def test_operation(self):
         element = ar_element.ClientServerInterface("InterfaceName")
-        operation = element.make_operation("Operation1")
-        operation.make_in_argument("Arg1",
-                                   type_ref=ar_element.AutosarDataTypeRef("/DataTypes/uint8", IMPLEMENTATION_DATA_TYPE))
+        operation = element.create_operation("Operation1")
+        operation.create_in_argument("Arg1",
+                                     type_ref=ar_element.AutosarDataTypeRef("/DataTypes/uint8",
+                                                                            IMPLEMENTATION_DATA_TYPE))
         writer = autosar.xml.Writer()
         xml = '''<CLIENT-SERVER-INTERFACE>
   <SHORT-NAME>InterfaceName</SHORT-NAME>
@@ -808,11 +809,12 @@ class TestClientServerInterface(unittest.TestCase):
 
     def test_operation_with_possible_error(self):
         element = ar_element.ClientServerInterface("InterfaceName")
-        element.make_possible_error("E_NOT_OK")
-        operation = element.make_operation("Operation1")
-        operation.make_in_argument("Arg1",
-                                   type_ref=ar_element.AutosarDataTypeRef("/DataTypes/uint8", IMPLEMENTATION_DATA_TYPE))
-        operation.make_possible_error_ref("/Portinterfaces/InterfaceName/E_NOT_OK")
+        element.create_possible_error("E_NOT_OK")
+        operation = element.create_operation("Operation1")
+        operation.create_in_argument("Arg1",
+                                     type_ref=ar_element.AutosarDataTypeRef("/DataTypes/uint8",
+                                                                            IMPLEMENTATION_DATA_TYPE))
+        operation.create_possible_error_ref("/Portinterfaces/InterfaceName/E_NOT_OK")
         writer = autosar.xml.Writer()
         xml = '''<CLIENT-SERVER-INTERFACE>
   <SHORT-NAME>InterfaceName</SHORT-NAME>

@@ -32,7 +32,7 @@ def create_nv_data_interface_with_one_element(packages: dict[str, ar_element.Pac
     """
     uint8_type: ar_element.ImplementationDataType = packages["PlatformImplementationDataTypes"].find("uint8")
     portinterface = ar_element.NvDataInterface("DataInterface1")
-    portinterface.make_data_element("Data1", type_ref=uint8_type.ref())
+    portinterface.create_data_element("Data1", type_ref=uint8_type.ref())
     packages["PortInterfaces"].append(portinterface)
 
 
@@ -42,8 +42,8 @@ def create_nv_data_interface_with_two_elements(packages: dict[str, ar_element.Pa
     """
     uint8_type: ar_element.ImplementationDataType = packages["PlatformImplementationDataTypes"].find("uint8")
     portinterface = ar_element.NvDataInterface("DataInterface2")
-    portinterface.make_data_element("Data1", type_ref=uint8_type.ref())
-    portinterface.make_data_element("Data2", type_ref=uint8_type.ref())
+    portinterface.create_data_element("Data1", type_ref=uint8_type.ref())
+    portinterface.create_data_element("Data2", type_ref=uint8_type.ref())
     packages["PortInterfaces"].append(portinterface)
 
 

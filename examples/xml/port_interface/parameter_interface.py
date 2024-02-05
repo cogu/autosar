@@ -32,7 +32,7 @@ def create_parameter_interface_with_one_parameter(packages: dict[str, ar_element
     """
     uint8_type: ar_element.ImplementationDataType = packages["PlatformImplementationDataTypes"].find("uint8")
     portinterface = ar_element.ParameterInterface("ParameterInterface1")
-    portinterface.make_parameter("Param1", type_ref=uint8_type.ref())
+    portinterface.create_parameter("Param1", type_ref=uint8_type.ref())
     packages["PortInterfaces"].append(portinterface)
 
 
@@ -42,8 +42,8 @@ def create_parameter_interface_with_two_parameters(packages: dict[str, ar_elemen
     """
     uint8_type: ar_element.ImplementationDataType = packages["PlatformImplementationDataTypes"].find("uint8")
     portinterface = ar_element.ParameterInterface("ParameterInterface2")
-    portinterface.make_parameter("Param1", type_ref=uint8_type.ref())
-    portinterface.make_parameter("Param2", type_ref=uint8_type.ref())
+    portinterface.create_parameter("Param1", type_ref=uint8_type.ref())
+    portinterface.create_parameter("Param2", type_ref=uint8_type.ref())
     packages["PortInterfaces"].append(portinterface)
 
 
