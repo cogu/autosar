@@ -3057,9 +3057,9 @@ class ModeDeclarationGroup(ARElement):
                     if isinstance(mode_declaration, ModeDeclaration):
                         self.append_mode_declaratation(mode_declaration)
                     elif isinstance(mode_declaration, str):
-                        self.make_mode_declaration(mode_declaration)
+                        self.create_mode_declaration(mode_declaration)
                     elif isinstance(mode_declaration, tuple):
-                        self.make_mode_declaration(*mode_declaration)
+                        self.create_mode_declaration(*mode_declaration)
                     else:
                         err_msg = f"Invalid type '{str(type(mode_declaration))}'"
                         raise TypeError(err_msg + ". " + expected_types)
@@ -3100,10 +3100,10 @@ class ModeDeclarationGroup(ARElement):
             msg = f"mode_declaration: Invalid type '{str(type(mode_declaration))}'"
             raise TypeError(msg + ". Expected 'ModeDeclaration'")
 
-    def make_mode_declaration(self,
-                              name: str,
-                              value: int | None = None,
-                              **kwargs) -> ModeDeclaration:
+    def create_mode_declaration(self,
+                                name: str,
+                                value: int | None = None,
+                                **kwargs) -> ModeDeclaration:
         """
         Convenience method for creating a new mode declaration within this group
         """
@@ -3251,10 +3251,10 @@ class SenderReceiverInterface(DataInterface):
             msg = f"invalidation_policy: Invalid type '{str(type(invalidation_policy))}'"
             raise TypeError(msg + ". Expected 'InvalidationPolicy'")
 
-    def make_data_element(self,
-                          name: str,
-                          init_value: ValueSpeficationElement | None = None,
-                          **kwargs) -> VariableDataPrototype:
+    def create_data_element(self,
+                            name: str,
+                            init_value: ValueSpeficationElement | None = None,
+                            **kwargs) -> VariableDataPrototype:
         """
         Convenience method for adding a new data element to this port interface
         """
@@ -3262,9 +3262,9 @@ class SenderReceiverInterface(DataInterface):
         self.append_data_element(data_element)
         return data_element
 
-    def make_invalidation_policy(self,
-                                 data_element_ref: VariableDataPrototypeRef | str,
-                                 handle_invalid: ar_enum.HandleInvalid) -> InvalidationPolicy:
+    def create_invalidation_policy(self,
+                                   data_element_ref: VariableDataPrototypeRef | str,
+                                   handle_invalid: ar_enum.HandleInvalid) -> InvalidationPolicy:
         """
         Convenience method for adding a new invalidation policy to this port interface
         """
@@ -3314,10 +3314,10 @@ class NvDataInterface(DataInterface):
             msg = f"nv_data: Invalid type '{str(type(nv_data))}'"
             raise TypeError(msg + ". Expected 'VariableDataPrototype'")
 
-    def make_data_element(self,
-                          name: str,
-                          init_value: ValueSpeficationElement | None = None,
-                          **kwargs) -> VariableDataPrototype:
+    def create_data_element(self,
+                            name: str,
+                            init_value: ValueSpeficationElement | None = None,
+                            **kwargs) -> VariableDataPrototype:
         """
         Convenience method for adding a new data element to this port interface
         """
@@ -3359,10 +3359,10 @@ class ParameterInterface(DataInterface):
             msg = f"parameter: Invalid type '{str(type(parameter))}'"
             raise TypeError(msg + ". Expected 'ParameterDataPrototype'")
 
-    def make_parameter(self,
-                       name: str,
-                       init_value: ValueSpeficationElement | None = None,
-                       **kwargs) -> ParameterDataPrototype:
+    def create_parameter(self,
+                         name: str,
+                         init_value: ValueSpeficationElement | None = None,
+                         **kwargs) -> ParameterDataPrototype:
         """
         Convenience method for adding a new parameter to this port interface
         """
@@ -3440,11 +3440,11 @@ class ClientServerOperation(Identifiable):
             msg = f"argument: Invalid type '{str(type(argument))}'"
             raise TypeError(msg + ". Expected 'ArgumentDataPrototype'")
 
-    def make_argument(self,
-                      name: str,
-                      direction: ar_enum.ArgumentDirection | None = None,
-                      server_arg_impl_policy: ar_enum.ServerArgImplPolicy | None = None,
-                      **kwargs) -> ArgumentDataPrototype:
+    def create_argument(self,
+                        name: str,
+                        direction: ar_enum.ArgumentDirection | None = None,
+                        server_arg_impl_policy: ar_enum.ServerArgImplPolicy | None = None,
+                        **kwargs) -> ArgumentDataPrototype:
         """
         Convenience method for adding a new argument to this operation
         """
@@ -3452,10 +3452,10 @@ class ClientServerOperation(Identifiable):
         self.append_argument(argument)
         return argument
 
-    def make_in_argument(self,
-                         name: str,
-                         server_arg_impl_policy: ar_enum.ServerArgImplPolicy | None = None,
-                         **kwargs) -> ArgumentDataPrototype:
+    def create_in_argument(self,
+                           name: str,
+                           server_arg_impl_policy: ar_enum.ServerArgImplPolicy | None = None,
+                           **kwargs) -> ArgumentDataPrototype:
         """
         Convenience method for adding a new in-argument to this operation
         """
@@ -3463,10 +3463,10 @@ class ClientServerOperation(Identifiable):
         self.append_argument(argument)
         return argument
 
-    def make_inout_argument(self,
-                            name: str,
-                            server_arg_impl_policy: ar_enum.ServerArgImplPolicy | None = None,
-                            **kwargs) -> ArgumentDataPrototype:
+    def create_inout_argument(self,
+                              name: str,
+                              server_arg_impl_policy: ar_enum.ServerArgImplPolicy | None = None,
+                              **kwargs) -> ArgumentDataPrototype:
         """
         Convenience method for adding a new inout-argument to this operation
         """
@@ -3474,10 +3474,10 @@ class ClientServerOperation(Identifiable):
         self.append_argument(argument)
         return argument
 
-    def make_out_argument(self,
-                          name: str,
-                          server_arg_impl_policy: ar_enum.ServerArgImplPolicy | None = None,
-                          **kwargs) -> ArgumentDataPrototype:
+    def create_out_argument(self,
+                            name: str,
+                            server_arg_impl_policy: ar_enum.ServerArgImplPolicy | None = None,
+                            **kwargs) -> ArgumentDataPrototype:
         """
         Convenience method for adding a new out-argument to this operation
         """
@@ -3495,7 +3495,7 @@ class ClientServerOperation(Identifiable):
             msg = f"argument: Invalid type '{str(type(possible_error_ref))}'"
             raise TypeError(msg + ". Expected 'ApplicationErrorRef'")
 
-    def make_possible_error_ref(self, value: str) -> ApplicationErrorRef:
+    def create_possible_error_ref(self, value: str) -> ApplicationErrorRef:
         """
         Convenience method for creating and adding a new possible error reference to this operation
         """
@@ -3559,13 +3559,13 @@ class ClientServerInterface(PortInterface):
             msg = f"operation: Invalid type '{str(type(possible_error))}'"
             raise TypeError(msg + ". Expected 'ApplicationError'")
 
-    def make_operation(self,
-                       name: str,
-                       arguments: ArgumentDataPrototype | list[ArgumentDataPrototype] | None = None,
-                       diag_arg_integrity: bool | None = None,
-                       fire_and_forget: bool | None = None,
-                       possible_error_refs: ApplicationErrorRef | list[ApplicationErrorRef] | None = None,
-                       **kwargs) -> ClientServerOperation:
+    def create_operation(self,
+                         name: str,
+                         arguments: ArgumentDataPrototype | list[ArgumentDataPrototype] | None = None,
+                         diag_arg_integrity: bool | None = None,
+                         fire_and_forget: bool | None = None,
+                         possible_error_refs: ApplicationErrorRef | list[ApplicationErrorRef] | None = None,
+                         **kwargs) -> ClientServerOperation:
         """
         Convenience method for creating a new operation in this port interface
         """
@@ -3574,10 +3574,10 @@ class ClientServerInterface(PortInterface):
         self.append_operation(operation)
         return operation
 
-    def make_possible_error(self,
-                            name: str,
-                            error_code: int | None = None,
-                            **kwargs) -> ApplicationError:
+    def create_possible_error(self,
+                              name: str,
+                              error_code: int | None = None,
+                              **kwargs) -> ApplicationError:
         """
         Convenience-method for creating a new possible error in this port interface
         """
