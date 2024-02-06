@@ -528,7 +528,7 @@ class VersionedTextValue:
 # This keeps track of which enum values are valid in each AUTOSAR Schema version.
 ###
 
-xml_to_enum_map = {
+xml_to_enum_map: dict[str, dict] = {
     "ArgumentDirection": {
         "IN": ArgumentDirection.IN,
         "INOUT": ArgumentDirection.INOUT,
@@ -810,7 +810,7 @@ def xml_to_enum(enum_type_name: str, xml_text: str, schema_version: int = ar_bas
     """
     Converts XML string to Python-defined enumeration
     """
-    enum_mapping = xml_to_enum_map[enum_type_name]
+    enum_mapping: dict = xml_to_enum_map[enum_type_name]
     entry = enum_mapping[xml_text]
     if isinstance(entry, Enum):
         return entry
@@ -825,7 +825,7 @@ def xml_to_enum(enum_type_name: str, xml_text: str, schema_version: int = ar_bas
 # Mapping from enum back to XML string
 
 
-enum_to_xml_map = {
+enum_to_xml_map: dict[str, list] = {
     "ArgumentDirection": [
         "IN",  # 0
         "INOUT",  # 1
@@ -1129,7 +1129,7 @@ str_to_enum_map = {
         "IMPLEMENTATION_DATA_TYPE": PackageRole.IMPLEMENTATION_DATA_TYPE,
         "ImplementationDataType": PackageRole.IMPLEMENTATION_DATA_TYPE,
         "MODE_DECLARATION": PackageRole.MODE_DECLARATION,
-        "ModeDeclartion": PackageRole.MODE_DECLARATION,
+        "ModeDeclaration": PackageRole.MODE_DECLARATION,
         "PORT_INTERFACE": PackageRole.PORT_INTERFACE,
         "PortInterface": PackageRole.PORT_INTERFACE,
         "Unit": PackageRole.UNIT,

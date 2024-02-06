@@ -8,7 +8,7 @@ import autosar.xml.element as ar_element
 
 if __name__ == "__main__":
 
-    #Create document
+    # Create document
     package = ar_element.Package('SwAddrMethod')
     elem = ar_element.SwAddrMethod('DEFAULT')
     package.append(elem)
@@ -16,11 +16,11 @@ if __name__ == "__main__":
     document.append(package)
 
     file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data', 'sw_addr_method_example.arxml'))
-    #Write document to file system
+    # Write document to file system
     writer = autosar.xml.Writer()
     writer.write_file(document, file_path)
 
-    #Read document from file system
+    # Read document from file system
     reader = autosar.xml.Reader()
     document = reader.read_file(file_path)
     addr_method = document.find('/SwAddrMethod/DEFAULT')
