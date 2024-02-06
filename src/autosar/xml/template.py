@@ -25,7 +25,7 @@ class GenericTemplate(TemplateBase):
     """
 
     @abstractmethod
-    def apply(self, workslace: Workspace, **kwargs) -> Any:
+    def apply(self, workspace: Workspace, **kwargs) -> Any:
         """
         Apply this template to the workspace
         """
@@ -51,7 +51,7 @@ class ElementTemplate(TemplateBase):
         self.depends = depends
 
     @abstractmethod
-    def apply(self, workspace: Workspace, **kwargs) -> ar_element.ARElement:
+    def apply(self, package: Package, workspace: Workspace, **kwargs) -> ar_element.ARElement:
         """
         This apply method shall solely focus on creating the
         new element and return it. The workspace will handle the rest.
@@ -61,7 +61,9 @@ class ElementTemplate(TemplateBase):
         * Make sure any dependencies have been created (optional)
         * Make sure the necessary package has been created
         * Make sure the element doesn't already exists
-        * Adds the newly created element to the package
+
+        It's up to the implementer of the apply-method to call package.append to add the newly
+        created element
         """
 
     def ref(self, workspace: Workspace) -> str:

@@ -16,7 +16,7 @@ class Namespace:
     Namespace
     """
 
-    def __init__(self, name: str, package_map: dict[str, str], base_ref: str = None) -> None:
+    def __init__(self, name: str, package_map: dict[str, str], base_ref: str | None = None) -> None:
         self.name = name
         self.base_ref = "/" + name if base_ref is None else base_ref
         self.package_map: dict[ar_enum.PackageRole | str, str] = {}
@@ -35,13 +35,13 @@ class Workspace:
     Workspace
     """
 
-    def __init__(self, config_file_path: str = None) -> None:
+    def __init__(self, config_file_path: str | None = None) -> None:
         self.namespaces: dict[str, Namespace] = {}
         self.packages: list[ar_element.Package] = []
         self._package_map: dict[str, ar_element.Package] = {}
         self.documents: list[tuple(ar_document.Document, str)] = []
 
-    def create_namespace(self, name: str, package_map: dict[str, str], base_ref: str = None) -> None:
+    def create_namespace(self, name: str, package_map: dict[str, str], base_ref: str | None = None) -> None:
         """
         Creates new namespace
         """
@@ -71,7 +71,7 @@ class Workspace:
             raise ValueError(f"Role '{str(role)}'not in namespace map") from ex
         return posixpath.normpath(posixpath.join(base_ref, rel_path))
 
-    def make_packages(self, *refs: list[str]) -> list[ar_element.Package] | ar_element.Package:
+    def make_packages(self, *refs: list[str]) -> ar_element.Package | list[ar_element.Package]:
         """
         Recursively creates packages from reference(s)
         Returns a list of created packages.
@@ -145,10 +145,16 @@ class Workspace:
         """
         document = ar_document.Document()
         if isinstance(packages, str):
-            document.append(self.find(packages))
+            package = self.find(packages)
+            if package is None:
+                raise ValueError(f"Invalid package reference: '{packages}'")
+            document.append(package)
         else:
             for package_ref in packages:
-                document.append(self.find(package_ref))
+                package = self.find(package_ref)
+                if package is None:
+                    raise ValueError(f"Invalid package reference: '{package_ref}'")
+                document.append(package)
         self.documents.append((document, file_path))
         return document
 
@@ -161,7 +167,7 @@ class Workspace:
             document.schema_version = scehema_version
             writer.write_file(document, file_path)
 
-    def _apply_element_template(self, template: ar_template.ElementTemplate, kwargs: dict):
+    def _apply_element_template(self, template: ar_template.ElementTemplate, kwargs: dict) -> ar_element.ARElement:
         """
         Wrapper for element templates.
 
@@ -170,19 +176,19 @@ class Workspace:
         * Make sure the necessary package has been created
         * Make sure the element doesn't already exists in the package
 
-        After apply method returns:
-         * Adds the newly created element to the package
+        It's up to the implementer of the apply-method to call package.append to add the newly
+        created element
         """
-        dependencies = None
         if template.depends is not None:
-            dependencies = self._create_dependencies(template.depends)
+            self._create_dependencies(template.depends)
         package_ref = self.get_package_ref_by_role(template.namespace_name, template.package_role)
         package: ar_element.Package = self.make_packages(package_ref)
-        elem = package.find(template.element_name)  # pylint: disable=E1101
-        if elem is None:
-            elem = template.apply(self, depends=dependencies, **kwargs)
-            package.append(elem)
-        return elem
+        if isinstance(package, ar_element.Package):
+            elem = package.find(template.element_name)
+            if elem is None:
+                elem = template.apply(package, self, **kwargs)
+            return elem
+        raise TypeError(f"Expected Package, got {str(type(package))}")
 
     def _create_dependencies(self, dependencies: list[ar_template.TemplateBase]) -> list[Any]:
         items = []
