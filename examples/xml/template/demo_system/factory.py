@@ -1,9 +1,11 @@
 """
 Example template classes
 """
+from typing import Callable
 import autosar.xml.template as ar_template
 import autosar.xml.element as ar_element
 import autosar.xml.enumeration as ar_enum
+from autosar.xml.template import TemplateBase
 import autosar.xml.workspace as ar_workspace
 
 
@@ -24,7 +26,11 @@ class SwBaseTypeTemplate(ar_template.ElementTemplate):
         self.encoding = encoding
         self.native_declaration = native_declaration
 
-    def apply(self, package: ar_element.Package, workspace: ar_workspace.Workspace, **kwargs) -> ar_element.SwBaseType:
+    def create(self,
+               element_ref: str,
+               workspace: ar_workspace.Workspace,
+               dependencies: dict[str, ar_element.ARElement] | None,
+               **kwargs) -> ar_element.SwBaseType:
         """
         Factory method for SwBaseType
         """
@@ -33,7 +39,7 @@ class SwBaseTypeTemplate(ar_template.ElementTemplate):
                                      size=self.bit_size,
                                      encoding=self.encoding,
                                      native_declaration=self.native_declaration)
-        package.append(elem)
+
         return elem
 
 
@@ -51,15 +57,15 @@ class DataConstraintInternalTemplate(ar_template.ElementTemplate):
         self.lower_limit = lower_limit
         self.upper_limit = upper_limit
 
-    def apply(self,
-              package: ar_element.Package,
-              workspace: ar_workspace.Workspace,
-              **kwargs) -> ar_element.DataConstraint:
+    def create(self,
+               element_ref: str,
+               workspace: ar_workspace.Workspace,
+               dependencies: dict[str, ar_element.ARElement] | None,
+               **kwargs) -> ar_element.DataConstraint:
         """
         Factory method
         """
         elem = ar_element.DataConstraint.make_internal(self.element_name, self.lower_limit, self.upper_limit)
-        package.append(elem)
         return elem
 
 
@@ -80,10 +86,11 @@ class CompuMethodEnumTemplate(ar_template.ElementTemplate):
         self.auto_label = auto_label
         self.desc = desc
 
-    def apply(self,
-              package: ar_element.Package,
-              workspace: ar_workspace.Workspace,
-              **kwargs) -> ar_element.CompuMethod:
+    def create(self,
+               element_ref: str,
+               workspace: ar_workspace.Workspace,
+               dependencies: dict[str, ar_element.ARElement] | None,
+               **kwargs) -> ar_element.CompuMethod:
         """
         Factory method
         """
@@ -92,7 +99,6 @@ class CompuMethodEnumTemplate(ar_template.ElementTemplate):
                                       desc=self.desc,
                                       category=self.category,
                                       int_to_phys=computation)
-        package.append(elem)
         return elem
 
 
@@ -126,7 +132,11 @@ class ImplementationValueTypeTemplate(ar_template.ElementTemplate):
         self.calibration_access = calibration_access
         self.type_emitter = type_emitter
 
-    def apply(self, package: ar_element.Package, workspace: ar_workspace.Workspace, **kwargs) -> ar_element.SwBaseType:
+    def create(self,
+               element_ref: str,
+               workspace: ar_workspace.Workspace,
+               dependencies: dict[str, ar_element.ARElement] | None,
+               **kwargs) -> ar_element.ImplementationDataType:
         """
         Factory method
         """
@@ -143,7 +153,6 @@ class ImplementationValueTypeTemplate(ar_template.ElementTemplate):
                                                  category=self.category,
                                                  sw_data_def_props=sw_data_def_props,
                                                  type_emitter=self.type_emitter)
-        package.append(elem)
         return elem
 
 
@@ -195,8 +204,11 @@ class ImplementationEnumDataTypeTemplate(ar_template.ElementTemplate):
                              value_table: list[str]) -> ar_template.ElementTemplate:
         return CompuMethodEnumTemplate(element_name + suffix, namespace_name, value_table, auto_label=False)
 
-    def apply(self, package: ar_element.Package,
-              workspace: ar_workspace.Workspace, **kwargs) -> ar_element.ImplementationDataType:
+    def create(self,
+               element_ref: str,
+               workspace: ar_workspace.Workspace,
+               dependencies: dict[str, ar_element.ARElement] | None,
+               **kwargs) -> ar_element.ImplementationDataType:
         """
         Factory method
         """
@@ -212,7 +224,6 @@ class ImplementationEnumDataTypeTemplate(ar_template.ElementTemplate):
                                                  desc=self.desc,
                                                  category=self.category,
                                                  sw_data_def_props=sw_data_def_props)
-        package.append(elem)
         return elem
 
 
@@ -230,15 +241,20 @@ class ModeDeclarationGroupTemplate(ar_template.ElementTemplate):
         self.mode_declarations = list(mode_declarations)
         self.initial_mode_name = initial_mode_name
 
-    def apply(self, package: ar_element.Package, workspace: ar_workspace.Workspace, **kwargs) -> ar_element.SwBaseType:
+    def create(self,
+               element_ref: str,
+               workspace: ar_workspace.Workspace,
+               dependencies: dict[str, ar_element.ARElement] | None,
+               **kwargs) -> ar_element.ModeDeclarationGroup:
         """
         Factory method for SwBaseType
         """
-        elem = ar_element.ModeDeclarationGroup(name=self.element_name,
-                                               mode_declarations=self.mode_declarations)
-        package.append(elem)
+        initial_mode_ref = None
         if self.initial_mode_name is not None:
-            elem.initial_mode_ref = elem.find(self.initial_mode_name).ref()
+            initial_mode_ref = '/'.join([element_ref, self.initial_mode_name])
+        elem = ar_element.ModeDeclarationGroup(name=self.element_name,
+                                               mode_declarations=self.mode_declarations,
+                                               initial_mode_ref=initial_mode_ref)
         return elem
 
 
@@ -259,11 +275,43 @@ class ModeSwitchInterfaceTemplate(ar_template.ElementTemplate):
         self.mode_declaration_group = mode_declaration_group
         self.is_service = is_service
 
-    def apply(self, package: ar_element.Package, workspace: ar_workspace.Workspace, **kwargs) -> ar_element.SwBaseType:
+    def create(self,
+               element_ref: str,
+               workspace: ar_workspace.Workspace,
+               dependencies: dict[str, ar_element.ARElement] | None,
+               **kwargs) -> ar_element.ModeSwitchInterface:
         """
         Element creation method
         """
         elem = ar_element.ModeSwitchInterface(self.element_name, is_service=self.is_service)
         elem.create_mode_group(self.mode_group_name, self.mode_declaration_group.ref(workspace))
-        package.append(elem)
+        return elem
+
+
+CreateFuncType = Callable[[str, ar_workspace.Workspace, dict[str, ar_element.ARElement] | None],
+                          ar_element.PortInterface]
+
+
+class GenericPortInterfaceTemplate(ar_template.ElementTemplate):
+    """
+    Generic element template
+    """
+
+    def __init__(self,
+                 element_name: str,
+                 namespace_name: str,
+                 create_func: CreateFuncType,
+                 depends: list[TemplateBase] | None = None) -> None:
+        super().__init__(element_name, namespace_name, ar_enum.PackageRole.PORT_INTERFACE, depends)
+        self.create_func = create_func
+
+    def create(self,
+               element_ref: str,
+               workspace: ar_workspace.Workspace,
+               dependencies: dict[str, ar_element.ARElement] | None,
+               **kwargs) -> ar_element.PortInterface:
+        """
+        Create method
+        """
+        elem = self.create_func(element_ref, workspace, dependencies, **kwargs)
         return elem

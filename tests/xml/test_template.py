@@ -28,7 +28,11 @@ class MyBaseTypeTemplate(ar_template.ElementTemplate):
         self.encoding = encoding
         self.native_declaration = native_declaration
 
-    def apply(self, package: ar_element.Package, _: ar_workspace.Workspace, **kwargs) -> ar_element.SwBaseType:
+    def create(self,
+               _1: str,
+               _2: ar_workspace.Workspace,
+               _3: dict[str, ar_element.ARElement] | None,
+               **kwargs) -> ar_element.SwBaseType:
         """
         Template method
         """
@@ -37,7 +41,6 @@ class MyBaseTypeTemplate(ar_template.ElementTemplate):
                                      size=self.bit_size,
                                      encoding=self.encoding,
                                      native_declaration=self.native_declaration)
-        package.append(elem)
         return elem
 
 
@@ -55,12 +58,15 @@ class MyInternalDataConstraintTemplate(ar_template.ElementTemplate):
         self.lower_limit = lower_limit
         self.upper_limit = upper_limit
 
-    def apply(self, package: ar_element.Package, _: ar_workspace.Workspace, **kwargs) -> ar_element.DataConstraint:
+    def create(self,
+               _1: str,
+               _2: ar_workspace.Workspace,
+               _3: dict[str, ar_element.ARElement] | None,
+               **kwargs) -> ar_element.DataConstraint:
         """
         Create new internal data constraint
         """
         elem = ar_element.DataConstraint.make_internal(self.element_name, self.lower_limit, self.upper_limit)
-        package.append(elem)
         return elem
 
 
@@ -85,7 +91,11 @@ class MyImplementationValueDataTypeTemplate(ar_template.ElementTemplate):
         self.data_constraint = data_constraint
         self.calibration_access = calibration_access
 
-    def apply(self, package: ar_element.Package, workspace: ar_workspace.Workspace, **kwargs) -> ar_element.SwBaseType:
+    def create(self,
+               _1: str,
+               workspace: ar_workspace.Workspace,
+               _2: dict[str, ar_element.ARElement] | None,
+               **kwargs) -> ar_element.SwBaseType:
         """
         Template method
         """
@@ -99,7 +109,6 @@ class MyImplementationValueDataTypeTemplate(ar_template.ElementTemplate):
                                                  desc=self.desc,
                                                  category=self.category,
                                                  sw_data_def_props=sw_data_def_props)
-        package.append(elem)
         return elem
 
 

@@ -3386,6 +3386,9 @@ class ApplicationError(Identifiable):
         self._assign_optional_strict("error_code", error_code, int)
 
 
+PossibleErrorRefsTypes = ApplicationErrorRef | list[ApplicationErrorRef] | str | list[str]
+
+
 class ClientServerOperation(Identifiable):
     """
     Complex type AR:CLIENT-SERVER-OPERATION
@@ -3397,7 +3400,7 @@ class ClientServerOperation(Identifiable):
                  arguments: ArgumentDataPrototype | list[ArgumentDataPrototype] | None = None,
                  diag_arg_integrity: bool | None = None,
                  fire_and_forget: bool | None = None,
-                 possible_error_refs: ApplicationErrorRef | list[ApplicationErrorRef] | None = None,
+                 possible_error_refs: PossibleErrorRefsTypes | None = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
         self.arguments: list[ArgumentDataPrototype] = []  # .ARGUMENTS
@@ -3422,7 +3425,9 @@ class ClientServerOperation(Identifiable):
 
         if possible_error_refs is not None:
             if isinstance(possible_error_refs, ApplicationErrorRef):
-                self.append_argument(arguments)
+                self.append_possible_error_ref(possible_error_refs)
+            elif isinstance(possible_error_refs, str):
+                self.append_possible_error_ref(ApplicationErrorRef(possible_error_refs))
             elif isinstance(possible_error_refs, list):
                 for possible_error_ref in possible_error_refs:
                     self.append_possible_error_ref(possible_error_ref)

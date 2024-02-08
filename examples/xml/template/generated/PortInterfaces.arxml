@@ -41,6 +41,24 @@
             <TYPE-TREF DEST="MODE-DECLARATION-GROUP">/ModeDclrGroups/EcuM_Mode</TYPE-TREF>
           </MODE-GROUP>
         </MODE-SWITCH-INTERFACE>
+        <CLIENT-SERVER-INTERFACE>
+          <SHORT-NAME>NvMService_I</SHORT-NAME>
+          <IS-SERVICE>true</IS-SERVICE>
+          <OPERATIONS>
+            <CLIENT-SERVER-OPERATION>
+              <SHORT-NAME>EraseBlock</SHORT-NAME>
+              <POSSIBLE-ERROR-REFS>
+                <POSSIBLE-ERROR-REF DEST="APPLICATION-ERROR">/PortInterfaces/NvMService_I/E_NOT_OK</POSSIBLE-ERROR-REF>
+              </POSSIBLE-ERROR-REFS>
+            </CLIENT-SERVER-OPERATION>
+          </OPERATIONS>
+          <POSSIBLE-ERRORS>
+            <APPLICATION-ERROR>
+              <SHORT-NAME>E_NOT_OK</SHORT-NAME>
+              <ERROR-CODE>1</ERROR-CODE>
+            </APPLICATION-ERROR>
+          </POSSIBLE-ERRORS>
+        </CLIENT-SERVER-INTERFACE>
       </ELEMENTS>
     </AR-PACKAGE>
   </AR-PACKAGES>

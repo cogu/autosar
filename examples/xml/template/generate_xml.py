@@ -71,6 +71,7 @@ def apply_portinterfaces(workspace: ar_workspace.Workspace):
     Applies mode templates
     """
     workspace.apply(portinterface.EcuM_CurrentMode)
+    workspace.apply(portinterface.NvMService_I)
 
 
 def main():

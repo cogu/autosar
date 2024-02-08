@@ -51,19 +51,26 @@ class ElementTemplate(TemplateBase):
         self.depends = depends
 
     @abstractmethod
-    def apply(self, package: Package, workspace: Workspace, **kwargs) -> ar_element.ARElement:
+    def create(self,
+               element_ref: str,
+               workspace: Workspace,
+               dependencies: dict[str, ar_element.ARElement] | None,
+               **kwargs) -> ar_element.ARElement:
         """
-        This apply method shall solely focus on creating the
-        new element and return it. The workspace will handle the rest.
+        Element creation method.
 
         The workspace will automatically do the following:
 
-        * Make sure any dependencies have been created (optional)
+        Before call:
+
+        * Make sure any (optional) dependencies have been created
         * Make sure the necessary package has been created
         * Make sure the element doesn't already exists
 
-        It's up to the implementer of the apply-method to call package.append to add the newly
-        created element
+        After call:
+
+        * Appends the returned element to the package
+
         """
 
     def ref(self, workspace: Workspace) -> str:

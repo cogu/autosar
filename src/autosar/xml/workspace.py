@@ -180,18 +180,27 @@ class Workspace:
         created element
         """
         if template.depends is not None:
-            self._create_dependencies(template.depends)
+            depends_map = self._create_dependencies(template.depends)
+        else:
+            depends_map = None
         package_ref = self.get_package_ref_by_role(template.namespace_name, template.package_role)
         package: ar_element.Package = self.make_packages(package_ref)
         if isinstance(package, ar_element.Package):
             elem = package.find(template.element_name)
             if elem is None:
-                elem = template.apply(package, self, **kwargs)
+                element_ref = package_ref + "/" + template.element_name
+                elem = template.create(element_ref, self, depends_map, **kwargs)
+                assert isinstance(elem, ar_element.ARElement)
+                package.append(elem)
             return elem
         raise TypeError(f"Expected Package, got {str(type(package))}")
 
-    def _create_dependencies(self, dependencies: list[ar_template.TemplateBase]) -> list[Any]:
-        items = []
+    def _create_dependencies(self, dependencies: list[ar_template.TemplateBase]
+                             ) -> dict[str, ar_element.ARElement]:
+        item_map = {}
         for dependency in dependencies:
-            items.append(self.apply(dependency))
-        return items
+            elem = self.apply(dependency)
+            assert isinstance(elem, ar_element.ARElement)
+            assert hasattr(elem, "ref")
+            item_map[str(elem.ref())] = elem
+        return item_map
