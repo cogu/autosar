@@ -664,6 +664,10 @@ class InternalBehaviorCommon(Element):
         self.perInstanceMemories = []
         self.implicitVariables = []
         self.explicitVariables = []
+
+        # List of data type sets.
+        # Each data type set is an object containing data type references and an optional literal prefix
+        self.includedDataTypeSets = []
         self.swc = None
 
 
@@ -1877,3 +1881,12 @@ class WrittenReadNvData(AutosarVariableRef):
 
     def tag(self,version):
         return "WRITTEN-READ-NV-DATA"
+    
+class IncludedDataTypeSet(object):
+
+    def tag(self, version=None): return 'INCLUDED-DATA-TYPE-SET'
+
+    def __init__(self, dataTypeRefs = [], literalPrefix = None):
+
+        self.dataTypeRefs = dataTypeRefs
+        self.literalPrefix = literalPrefix
