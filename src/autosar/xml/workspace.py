@@ -2,6 +2,7 @@
 AUTOSAR XML Workspace
 """
 import posixpath
+import os
 from typing import Any
 import autosar.base as ar_base
 import autosar.xml.element as ar_element
@@ -9,6 +10,27 @@ import autosar.xml.enumeration as ar_enum
 import autosar.xml.template as ar_template
 import autosar.xml.document as ar_document
 from autosar.xml.writer import Writer
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
+
+
+class DocumentConfig:
+    """
+    Internal class used during document creation
+    """
+
+    def __init__(self, file_path: str, package_refs: list[str] | str | None = None) -> None:
+        self.document = ar_document.Document()
+        self.file_path = file_path
+        self.package_refs: list[str] = []
+        if isinstance(package_refs, str):
+            self.package_refs.append(package_refs)
+        else:
+            for package_ref in package_refs:
+                assert isinstance(package_ref, str)
+                self.package_refs.append(package_ref)
 
 
 class Namespace:
@@ -35,11 +57,14 @@ class Workspace:
     Workspace
     """
 
-    def __init__(self, config_file_path: str | None = None) -> None:
+    def __init__(self, config_file_path: str | None = None, document_root: str | None = None) -> None:
         self.namespaces: dict[str, Namespace] = {}
         self.packages: list[ar_element.Package] = []
         self._package_map: dict[str, ar_element.Package] = {}
-        self.documents: list[tuple(ar_document.Document, str)] = []
+        self.documents: list[DocumentConfig] = []
+        self.document_root = document_root
+        if config_file_path is not None:
+            self.load_config(config_file_path)
 
     def create_namespace(self, name: str, package_map: dict[str, str], base_ref: str | None = None) -> None:
         """
@@ -138,34 +163,67 @@ class Workspace:
         else:
             raise NotImplementedError(f"Unknown template type: {str(type(template))}")
 
-    def create_document(self, file_path: str, packages: str | list[str]) -> ar_document.Document:
+    def create_document(self, file_path: str, packages: str | list[str] | None = None) -> None:
         """
         Creates a new document object and appends one or more packages to it.
         Use the write_documents method to write documents to file system
         """
-        document = ar_document.Document()
-        if isinstance(packages, str):
-            package = self.find(packages)
-            if package is None:
-                raise ValueError(f"Invalid package reference: '{packages}'")
-            document.append(package)
-        else:
-            for package_ref in packages:
-                package = self.find(package_ref)
-                if package is None:
-                    raise ValueError(f"Invalid package reference: '{package_ref}'")
-                document.append(package)
-        self.documents.append((document, file_path))
-        return document
+        self.documents.append(DocumentConfig(file_path, packages))
+
+    def set_document_root(self, directory: str) -> None:
+        """
+        Sets root directory where documents are written
+        """
+        self.document_root = directory
 
     def write_documents(self, scehema_version=ar_base.DEFAULT_SCHEMA_VERSION) -> None:
         """
         Writes all documents to file system
         """
         writer = Writer()
-        for (document, file_path) in self.documents:
+        for document_config in self.documents:
+            document = document_config.document
+            file_path = document_config.file_path
+            package_refs = document_config.package_refs
             document.schema_version = scehema_version
+            for package_ref in package_refs:
+                package = self.find(package_ref)
+                if package is not None:
+                    if not isinstance(package, ar_element.Package):
+                        raise ValueError(f"'{package_ref}' does not reference a package element")
+                document.append(package)
+            if self.document_root is not None:
+                file_path = os.path.join(self.document_root, file_path)
             writer.write_file(document, file_path)
+
+    def load_config(self, file_path: str) -> None:
+        """
+        Loads (.toml) config file into workspace
+        """
+        with open(file_path, "rb") as fp:  # pylint: disable=C0103
+            config = tomllib.load(fp)
+            namespace = config.get("namespace", None)
+            if namespace is not None:
+                for name, ns_config in namespace.items():
+                    self._create_namespace_from_config(name, ns_config)
+            document = config.get("document", None)
+            if document is not None:
+                for name, doc_config in document.items():
+                    self._create_document_from_config(name, doc_config)
+
+    def _create_namespace_from_config(self, name: str, config: dict):
+        base_ref = None
+        package_map = {}
+        for key, value in config.items():
+            if key == "base_ref":
+                base_ref = value
+            else:
+                package_map[key] = value
+        self.create_namespace(name, package_map, base_ref)
+
+    def _create_document_from_config(self, name: str, config: str | list[str]):
+        file_name = f"{name}.arxml"
+        self.create_document(file_name, config.get("packages", None))
 
     def _apply_element_template(self, template: ar_template.ElementTemplate, kwargs: dict) -> ar_element.ARElement:
         """

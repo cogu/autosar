@@ -14,6 +14,7 @@ It also has some support for parsing AUTOSAR XML files.
 3. Currently, only the categories mentioned below are supported. If you want a full API, wait for v0.6.0:
     * Data Types
     * Constants
+    * Port Interfaces
 
 ## Major design changes
 
@@ -53,6 +54,7 @@ For currently supported XML elements, see the [CHANGELOG](CHANGELOG.md) file.
 
 * Python 3.10+
 * lxml
+* tomli (Python 3.10 only, tomli is built-in for Python 3.11)
 * [cfile](https://github.com/cogu/cfile) v0.3.2+
 
 ## Installation
@@ -237,7 +239,7 @@ None
 InactiveActive_T: <class 'autosar.xml.element.ImplementationDataType'>
 ```
 
-Here's a more fleshed out example, tt adds a `TEXTTABLE` CompuMethod and saves everything to an ARXML file. It also demonstrates how you control the XML schema version
+Here's a more fleshed out example, it adds a `TEXTTABLE` CompuMethod and saves everything to an ARXML file. It also demonstrates how you control the XML schema version
 when saving the file.
 
 ```python

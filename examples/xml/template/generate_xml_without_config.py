@@ -1,5 +1,6 @@
 """
-Generate ARXML from template classes
+Generate ARXML from template classes without using config file.
+Instead we programatically create namespaces and documents
 """
 
 import os

@@ -33,7 +33,7 @@ class Document(DocumentMeta):
         self.file_info_comment = None  # .FILE-INFO-COMMENT
         self.admin_data = None  # .ADMIN-DATA
         self.introduction = None  # .INTRODUCTION
-        self.packages = []  # .PACKAGES
+        self.packages: list[ar_element.Package] = []  # .PACKAGES
         self._package_map = {}  # internal package map
         if packages is not None:
             for package in packages:

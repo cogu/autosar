@@ -9,6 +9,11 @@ Non-collectable elements are various sub-elements to collectable elements.
 
 ### Added
 
+#### Workspace
+
+* Various improvements to template classes
+* Support project config files
+
 #### XML - Data type elements
 
 * ArgumentDataPrototype | ARGUMENT-DATA-PROTOTYPE
