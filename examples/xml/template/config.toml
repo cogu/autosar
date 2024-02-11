@@ -1,0 +1,27 @@
+
+[namespace.Default]
+    BaseType = "/DataTypes/BaseTypes"
+    ImplementationDataType = "DataTypes/ImplementationDataTypes"
+    CompuMethod = "DataTypes/CompuMethods"
+    DataConstraint = "DataTypes/DataConstrs"
+    ComponentType = "/ComponentTypes"
+    ModeDeclaration = "/ModeDclrGroups"
+    PortInterface = "/PortInterfaces"
+    base_ref = "/"
+
+[namespace.AUTOSAR_Platform]
+    BaseType = "BaseTypes"
+    CompuMethod = "CompuMethods"
+    DataConstraint = "DataConstrs"
+    ImplementationDataType = "ImplementationDataTypes"
+
+[document.AUTOSAR_Platform]
+    packages = "/AUTOSAR_Platform"
+
+[document.PortInterfaces]
+   packages=["/ModeDclrGroups", "/PortInterfaces"]
+
+[document.DataTypes]
+    packages = "/DataTypes"
+
+
