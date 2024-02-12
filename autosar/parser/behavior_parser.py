@@ -174,7 +174,7 @@ class BehaviorParser(ElementParser):
                         if xmlChildElem.tag == 'PARAMETER-DATA-PROTOTYPE':
                             tmp = self.parseParameterDataPrototype(xmlChildElem, internalBehavior)
                             if tmp is not None:
-                                internalBehavior.parameterDataPrototype.append(tmp)
+                                internalBehavior.sharedParameterDataPrototype.append(tmp)
                         else:
                             raise NotImplementedError(xmlChildElem.tag)
                 elif xmlElem.tag == 'EXCLUSIVE-AREAS':
@@ -185,7 +185,15 @@ class BehaviorParser(ElementParser):
                         else:
                             raise NotImplementedError(xmlChild.tag)
                 elif xmlElem.tag == 'PER-INSTANCE-PARAMETERS':
-                    pass #implement later
+                    for xmlChildElem in xmlElem.findall('./*'):
+                        if xmlChildElem.tag == 'PARAMETER-DATA-PROTOTYPE':
+                            tmp = self.parseParameterDataPrototype(
+                                xmlChildElem, internalBehavior)
+                            if tmp is not None:
+                                internalBehavior.perInstanceParameterDataPrototype.append(
+                                    tmp)
+                        else:
+                            raise NotImplementedError(xmlChildElem.tag)
                 elif xmlElem.tag == 'EXPLICIT-INTER-RUNNABLE-VARIABLES':
                     for xmlChild in xmlElem.findall('./*'):
                         if xmlChild.tag == 'VARIABLE-DATA-PROTOTYPE':

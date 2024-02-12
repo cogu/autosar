@@ -83,11 +83,16 @@ class XMLBehaviorWriter(ElementWriter):
             for serviceDependency in internalBehavior.serviceDependencies:
                 lines.extend(self.indent(self._writeServiceDependencyXML(ws, serviceDependency),2))
             lines.append(self.indent('</SERVICE-DEPENDENCYS>',1))
-        if isinstance(internalBehavior, autosar.behavior.SwcInternalBehavior) and len(internalBehavior.parameterDataPrototype)>0:
+        if isinstance(internalBehavior, autosar.behavior.SwcInternalBehavior) and len(internalBehavior.sharedParameterDataPrototype)>0:
             lines.append(self.indent('<SHARED-PARAMETERS>',1))
-            for elem in internalBehavior.parameterDataPrototype:
+            for elem in internalBehavior.sharedParameterDataPrototype:
                 lines.extend(self.indent(self._writeParameterDataPrototype(ws, elem),2))
             lines.append(self.indent('</SHARED-PARAMETERS>',1))
+        if isinstance(internalBehavior, autosar.behavior.SwcInternalBehavior) and len(internalBehavior.perInstanceParameterDataPrototype)>0:
+            lines.append(self.indent('<PER-INSTANCE-PARAMETERS>',1))
+            for elem in internalBehavior.perInstanceParameterDataPrototype:
+                lines.extend(self.indent(self._writeParameterDataPrototype(ws, elem),2))
+            lines.append(self.indent('</PER-INSTANCE-PARAMETERS>',1))
         elif isinstance(internalBehavior, autosar.behavior.InternalBehavior) and len(internalBehavior.sharedCalParams)>0:
             lines.append(self.indent('<SHARED-CALPRMS>',1))
             for elem in internalBehavior.sharedCalParams:
