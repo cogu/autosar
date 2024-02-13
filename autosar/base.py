@@ -245,8 +245,23 @@ def findUniqueNameInList(elementList, baseName):
 
 
 class SwDataDefPropsConditional:
-    def tag(self,version=None): return 'SW-DATA-DEF-PROPS-CONDITIONAL'
-    def __init__(self, baseTypeRef = None, implementationTypeRef = None, swAddressMethodRef = None, swCalibrationAccess = None, swImplPolicy = None, swPointerTargetProps = None, compuMethodRef = None, dataConstraintRef = None, unitRef = None, parent = None):
+    def tag(self, version=None): return 'SW-DATA-DEF-PROPS-CONDITIONAL'
+    def __init__(
+            self,
+            baseTypeRef = None,
+            implementationTypeRef = None,
+            swAddressMethodRef = None,
+            swCalibrationAccess = None,
+            swImplPolicy = None,
+            swPointerTargetProps = None,
+            compuMethodRef = None,
+            dataConstraintRef = None,
+            unitRef = None,
+            valueAxisDataTypeRef = None,
+            swRecordLayoutRef = None,
+            swCalprmAxisSet = [],
+            parent = None):
+
         self.baseTypeRef = baseTypeRef
         self.swCalibrationAccess = swCalibrationAccess
         self.swAddressMethodRef = swAddressMethodRef
@@ -256,6 +271,9 @@ class SwDataDefPropsConditional:
         self.swPointerTargetProps = swPointerTargetProps
         self.unitRef = unitRef
         self.swImplPolicy = swImplPolicy
+        self.valueAxisDataTypeRef = valueAxisDataTypeRef
+        self.swRecordLayoutRef = swRecordLayoutRef
+        self.swCalprmAxisSet = swCalprmAxisSet
         self.parent = parent
 
     @property
@@ -288,13 +306,90 @@ class SwDataDefPropsConditional:
                       'implementationTypeRef',
                       'swPointerTargetProps',
                       'unitRef',
-                      'swImplPolicy'
+                      'swImplPolicy',
+                      'valueAxisDataTypeRef',
+                      'swRecordLayoutRef'
                       ]
         for name in attr_names:
             if getattr(self, name) is not None:
                 retval = True
                 break
         return retval
+    
+class SwCalprmAxis:
+    """
+    (AUTOSAR 4)
+    Implements <SW-CALPRM-AXIS>
+    """
+
+    def tag(self, version=None): return 'SW-CALPRM-AXIS'
+
+    def __init__(
+            self,
+            swAxisIndex = None,
+            category = None,
+            swAxisIndividual = None,
+            swAxisGrouped = None,
+            swCalibrationAccess = None,
+            displayFormat = None,
+            baseTypeRef = None
+            ):
+        if swAxisIndividual is not None and swAxisGrouped is not None:
+            raise RuntimeError("Cannot have both SW-AXIS-INDIVIDUAL and SW-AXIS-GROUP tags")
+        
+        self.swAxisIndex = swAxisIndex
+        self.category = category
+        self.swAxisIndividual = swAxisIndividual
+        self.swAxisGrouped = swAxisGrouped
+        self.swCalibrationAccess = swCalibrationAccess
+        self.displayFormat = displayFormat
+        self.baseTypeRef = baseTypeRef
+
+class SwAxisIndividual:
+    """
+    (AUTOSAR 4)
+    Implements <SW-AXIS-INDIVIDUAL>
+    """
+
+    def tag(self, version=None): return 'SW-AXIS-INDIVIDUAL'
+
+    def __init__(
+            self,
+            inputVariableTypeRef = None,
+            swVariableRefs = None,
+            compuMethodRef = None,
+            unitRef = None,
+            swMaxAxisPoints = None,
+            swMinAxisPoints = None,
+            dataConstrRef = None,
+            swAxisGeneric = None
+            ):
+
+        self.inputVariableTypeRef = inputVariableTypeRef,
+        self.swVariableRefs = swVariableRefs,
+        self.compuMethodRef = compuMethodRef,
+        self.unitRef = unitRef,
+        self.swMaxAxisPoints = swMaxAxisPoints,
+        self.swMinAxisPoints = swMinAxisPoints,
+        self.dataConstrRef = dataConstrRef,
+        self.swAxisGeneric = swAxisGeneric
+
+class SwAxisGrouped:
+    """
+    (AUTOSAR 4)
+    Implements <SW-AXIS-GROUPED>
+    """
+
+    def tag(self, version=None): return 'SW-AXIS-GROUPED'
+
+    def __init__(
+            self,
+            sharedAxisTypeRef = None,
+            swAxisIndex = None
+            ):
+
+        self.sharedAxisTypeRef = sharedAxisTypeRef
+        self.swAxisIndex = swAxisIndex
 
 class SwPointerTargetProps:
     """

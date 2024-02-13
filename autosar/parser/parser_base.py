@@ -1,6 +1,9 @@
 import abc
 from collections import deque
-from autosar.base import (AdminData, SpecialDataGroup, SpecialData, SwDataDefPropsConditional, SwPointerTargetProps, SymbolProps)
+from autosar.base import (AdminData, SpecialDataGroup, SpecialData,
+                          SwDataDefPropsConditional, SwCalprmAxis,
+                          SwAxisIndividual, SwAxisGrouped,
+                          SwPointerTargetProps, SymbolProps)
 import autosar.element
 import xml
 from functools import wraps
@@ -240,8 +243,10 @@ class BaseParser:
 
     def parseSwDataDefPropsConditional(self, xmlRoot):
         assert (xmlRoot.tag == 'SW-DATA-DEF-PROPS-CONDITIONAL')
-        (baseTypeRef, implementationTypeRef, swCalibrationAccess, compuMethodRef, dataConstraintRef,
-         swPointerTargetPropsXML, swImplPolicy, swAddressMethodRef, unitRef) = (None, None, None, None, None, None, None, None, None)
+        (baseTypeRef, implementationTypeRef, swCalibrationAccess,
+         compuMethodRef, dataConstraintRef, swPointerTargetPropsXML,
+         swImplPolicy, swAddressMethodRef, unitRef, valueAxisDataTypeRef,
+         swRecordLayoutRef, swCalprmAxisSet) = (None,) * 12
         for xmlItem in xmlRoot.findall('./*'):
             if xmlItem.tag == 'BASE-TYPE-REF':
                 baseTypeRef = self.parseTextNode(xmlItem)
@@ -261,19 +266,15 @@ class BaseParser:
                 swAddressMethodRef = self.parseTextNode(xmlItem)
             elif xmlItem.tag == 'UNIT-REF':
                 unitRef = self.parseTextNode(xmlItem)
+            elif xmlItem.tag == 'VALUE-AXIS-DATA-TYPE-REF':
+                valueAxisDataTypeRef = self.parseTextNode(xmlItem)
+            elif xmlItem.tag == 'SW-RECORD-LAYOUT-REF':
+                swRecordLayoutRef = self.parseTextNode(xmlItem)
+            elif xmlItem.tag == 'SW-CALPRM-AXIS-SET':
+                swCalprmAxisSet = self.parseSwCalprmAxisSet(xmlItem)
             elif xmlItem.tag == 'ADDITIONAL-NATIVE-TYPE-QUALIFIER':
                 pass #implement later
-            elif xmlItem.tag == 'SW-CALPRM-AXIS-SET':
-                print("[BaseParser] unhandled: %s"%xmlItem.tag)
-                pass #implement later
-                print("[BaseParser] unhandled: %s"%xmlItem.tag)
-            elif xmlItem.tag == 'SW-RECORD-LAYOUT-REF':
-                print("[BaseParser] unhandled: %s"%xmlItem.tag)
-                pass #implement later
             elif xmlItem.tag == 'INVALID-VALUE':
-                print("[BaseParser] unhandled: %s"%xmlItem.tag)
-                pass #implement later
-            elif xmlItem.tag == 'VALUE-AXIS-DATA-TYPE-REF':
                 print("[BaseParser] unhandled: %s"%xmlItem.tag)
                 pass #implement later
             elif xmlItem.tag == 'DISPLAY-FORMAT':
@@ -281,10 +282,125 @@ class BaseParser:
                 pass #implement later
             else:
                 raise NotImplementedError(xmlItem.tag)
-        variant = SwDataDefPropsConditional(baseTypeRef, implementationTypeRef, swAddressMethodRef, swCalibrationAccess, swImplPolicy, None, compuMethodRef, dataConstraintRef, unitRef)
+
+        variant = SwDataDefPropsConditional(
+            baseTypeRef=baseTypeRef,
+            implementationTypeRef=implementationTypeRef,
+            swAddressMethodRef=swAddressMethodRef,
+            swCalibrationAccess=swCalibrationAccess,
+            swImplPolicy=swImplPolicy,
+            swPointerTargetProps=None,
+            compuMethodRef=compuMethodRef,
+            dataConstraintRef=dataConstraintRef,
+            unitRef=unitRef,
+            valueAxisDataTypeRef=valueAxisDataTypeRef,
+            swRecordLayoutRef=swRecordLayoutRef,
+            swCalprmAxisSet=swCalprmAxisSet
+        )
         if swPointerTargetPropsXML is not None:
             variant.swPointerTargetProps = self.parseSwPointerTargetProps(swPointerTargetPropsXML, variant)
         return variant
+
+    def parseSwCalprmAxisSet(self, rootXML, parent = None):
+        swCalprmAxisSet = []
+
+        for itemXML in rootXML.findall('./*'):
+            if itemXML.tag == 'SW-CALPRM-AXIS':
+                swCalprmAxisSet.append(self.parseSwCalprmAxis(itemXML))
+            else:
+                raise RuntimeError("SW-CALPRM-AXIS-SET tag cannot have children other than SW-CALPRM-AXIS")
+
+        return swCalprmAxisSet
+    
+    def parseSwCalprmAxis(self, rootXML, parent = None):
+        (swAxisIndex, category, swAxisIndividual, swAxisGrouped,
+         swCalibrationAccess, displayFormat, baseTypeRef) = (None,) * 7
+        
+        for itemXML in rootXML.findall("./*"):
+            tag = itemXML.tag
+
+            if tag == "SW-AXIS-INDEX":
+                swAxisIndex = self.parseTextNode(itemXML)
+            elif tag == "CATEGORY":
+                category = self.parseTextNode(itemXML)
+            elif tag == "SW-AXIS-INDIVIDUAL":
+                swAxisIndividual = self.parseSwAxisIndividual(itemXML)
+            elif tag == "SW-AXIS-GROUPED":
+                swAxisGrouped = self.parseSwAxisGrouped(itemXML)
+            elif tag == "SW-CALIBRATION-ACCESS":
+                swCalibrationAccess = self.parseTextNode(itemXML)
+            elif tag == "DISPLAY-FORMAT":
+                displayFormat = self.parseTextNode(itemXML)
+            elif tag == "BASE-TYPE-REF":
+                baseTypeRef = self.parseTextNode(itemXML)
+            else:
+                raise RuntimeError(f"ERROR: Tag {tag} not recognized")
+
+        return SwCalprmAxis(
+            swAxisIndex=swAxisIndex,
+            category=category,
+            swAxisIndividual=swAxisIndividual,
+            swAxisGrouped=swAxisGrouped,
+            swCalibrationAccess=swCalibrationAccess,
+            displayFormat=displayFormat,
+            baseTypeRef=baseTypeRef
+        )
+    
+    def parseSwAxisIndividual(self, rootXML, parent = None):
+        (inputVariableTypeRef, swVariableRefs, compuMethodRef,
+         unitRef, swMaxAxisPoints, swMinAxisPoints, dataConstrRef, swAxisGeneric) = (None,) * 8
+
+        for itemXML in rootXML.findall("./*"):
+            tag = itemXML.tag
+
+            if tag == "INPUT-VARIABLE-TYPE-REF":
+                inputVariableTypeRef = self.parseTextNode(itemXML)
+            elif tag == "SW-VARIABLE-REFS":
+                swVariableRefs = self.parseTextNode(itemXML)
+            elif tag == "COMPU-METHOD-REF":
+                compuMethodRef = self.parseTextNode(itemXML)
+            elif tag == "UNIT-REF":
+                unitRef = self.parseTextNode(itemXML)
+            elif tag == "SW-MAX-AXIS-POINTS":
+                swMaxAxisPoints = self.parseTextNode(itemXML)
+            elif tag == "SW-MIN-AXIS-POINTS":
+                swMinAxisPoints = self.parseTextNode(itemXML)
+            elif tag == "DATA-CONSTR-REF":
+                dataConstrRef = self.parseTextNode(itemXML)
+            elif tag == "SW-AXIS-GENERIC":
+                swAxisGeneric = self.parseTextNode(itemXML)
+            else:
+                raise RuntimeError(f"ERROR: Tag {tag} not recognized")
+
+        return SwAxisIndividual(
+            inputVariableTypeRef=inputVariableTypeRef,
+            swVariableRefs=swVariableRefs,
+            compuMethodRef=compuMethodRef,
+            unitRef=unitRef,
+            swMaxAxisPoints=swMaxAxisPoints,
+            swMinAxisPoints=swMinAxisPoints,
+            dataConstrRef=dataConstrRef,
+            swAxisGeneric=swAxisGeneric
+        )
+    
+    def parseSwAxisGrouped(self, rootXML, parent = None):
+        (sharedAxisTypeRef, swAxisIndex) = (None, None)
+
+        for itemXML in rootXML.findall("./*"):
+            tag = itemXML.tag
+
+            if tag == "SHARED-AXIS-TYPE-REF":
+                sharedAxisTypeRef = self.parseTextNode(itemXML)
+            elif tag == "SW-AXIS-INDEX":
+                swAxisIndex = self.parseTextNode(itemXML)
+            else:
+                raise RuntimeError(f"ERROR: Tag {tag} not recognized")
+
+        return SwAxisGrouped(
+            sharedAxisTypeRef=sharedAxisTypeRef,
+            swAxisIndex=swAxisIndex
+        )
+
 
     def parseSwPointerTargetProps(self, rootXML, parent = None):
         assert (rootXML.tag == 'SW-POINTER-TARGET-PROPS')
