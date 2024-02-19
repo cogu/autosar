@@ -501,7 +501,7 @@ class TestConstantReference(unittest.TestCase):
         elem: ar_element.ConstantReference = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.ConstantReference)
 
-    def test_read_write_constant_ref(self):
+    def test_read_write_constant_ref_from_object(self):
         element = ar_element.ConstantReference(constant_ref=ar_element.ConstantRef("/Constants/MyConstant"))
         writer = autosar.xml.Writer()
         xml = '''<CONSTANT-REFERENCE>
@@ -512,6 +512,30 @@ class TestConstantReference(unittest.TestCase):
         elem: ar_element.ConstantReference = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.ConstantReference)
         self.assertEqual(str(elem.constant_ref), "/Constants/MyConstant")
+
+    def test_read_write_constant_ref_from_str(self):
+        element = ar_element.ConstantReference(constant_ref="/Constants/MyConstant")
+        writer = autosar.xml.Writer()
+        xml = '''<CONSTANT-REFERENCE>
+  <CONSTANT-REF DEST="CONSTANT-SPECIFICATION">/Constants/MyConstant</CONSTANT-REF>
+</CONSTANT-REFERENCE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ConstantReference = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ConstantReference)
+        self.assertEqual(str(elem.constant_ref), "/Constants/MyConstant")
+
+    def test_read_write_label(self):
+        element = ar_element.ConstantReference(label="MyLabel")
+        writer = autosar.xml.Writer()
+        xml = '''<CONSTANT-REFERENCE>
+  <SHORT-LABEL>MyLabel</SHORT-LABEL>
+</CONSTANT-REFERENCE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ConstantReference = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ConstantReference)
+        self.assertEqual(elem.label, "MyLabel")
 
 
 if __name__ == '__main__':

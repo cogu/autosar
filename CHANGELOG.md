@@ -5,6 +5,39 @@ The first name in a bullet point below is the Python class name while the second
 Elements marked as `collectable` means that they can be added directly to a package.
 Non-collectable elements are various sub-elements to collectable elements.
 
+## Unreleased
+
+### Added
+
+#### XML - Common structure elements
+
+* DataFilter | DATA-FILTER
+
+#### XML - System template elements
+
+* E2EProfileCompatibilityProps | E-2-E-PROFILE-COMPATIBILITY-PROPS | `collectable`
+* EndToEndTransformationComSpecProps | END-TO-END-TRANSFORMATION-COM-SPEC-PROPS
+
+#### XML - Software component elements
+
+* ModeSwitchedAckRequest
+* ModeSwitchSenderComSpec
+* NonqueuedSenderComSpec
+* NvProvideComSpec
+* ParameterProvideComSpec
+* QueuedSenderComSpec
+* ServerComSpec
+* TransmissionAcknowledgementRequest
+* TransmissionComSpecProps
+
+#### XML - Reference elements
+
+* ParameterDataPrototypeRef
+* ModeDeclarationGroupPrototypeRef
+* AutosarDataPrototypeRef
+* E2EProfileCompatibilityPropsRef
+* ClientServerOperationRef
+
 ## [v0.5.2] - 2024-02-11
 
 ### Added
@@ -20,7 +53,7 @@ Non-collectable elements are various sub-elements to collectable elements.
 * ParameterDataPrototype | PARAMETER-DATA-PROTOTYPE
 * VariableDataPrototype | VARIABLE-DATA-PROTOTYPE
 
-#### Mode declaration elements
+#### XML -  Mode declaration elements
 
 * ModeDeclarationGroup | MODE-DECLARATION-GROUP | `collectable`
 * ModeDeclaration | MODE-DECLARATION
