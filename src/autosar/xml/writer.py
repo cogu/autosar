@@ -99,6 +99,7 @@ class _XMLWriter:
         self.fh.write(text)
 
     def _add_content(self, tag: str, content: str = '', attr: TupleList = None, inline: bool = False):
+        assert isinstance(content, str)
         if attr:
             if content:
                 text = f'<{tag} {self._attr_to_str(attr)}>{content}</{tag}>'
@@ -132,7 +133,8 @@ class _XMLWriter:
             return 'NaN'
         else:
             tmp = decimal.Decimal(str(value))
-            return tmp.quantize(decimal.Decimal(1)) if tmp == tmp.to_integral() else tmp.normalize()
+            result = tmp.quantize(decimal.Decimal(1)) if tmp == tmp.to_integral() else tmp.normalize()
+            return str(result)
 
     def _format_number(self, number: int | float | ar_element.NumericalValue) -> str:
         """
@@ -180,6 +182,8 @@ class Writer(_XMLWriter):
             'Package': self._write_package,
             # CompuMethod elements
             'CompuMethod': self._write_compu_method,
+            # Common structure elements
+            'DataFilter': self._write_data_filter,
             # Data type elements
             'ApplicationArrayDataType': self._write_application_array_data_type,
             'ApplicationRecordDataType': self._write_application_record_data_type,
@@ -202,6 +206,8 @@ class Writer(_XMLWriter):
             'ModeSwitchInterface': self._write_mode_switch_interface,
             # Mode declaration elements
             'ModeDeclarationGroup': self._write_mode_declaration_group,
+            # System template elements
+            'E2EProfileCompatibilityProps': self._write_e2e_profile_compatibility_props,
         }
         # Value specification elements
         self.switcher_value_specification = {
@@ -274,6 +280,18 @@ class Writer(_XMLWriter):
             'ModeErrorBehavior': self._write_mode_error_behavior,
             'ModeTransition': self._write_mode_transition,
             'ModeDeclarationGroupPrototype': self._write_mode_declaration_group_prototype,
+            # System template elements
+            'EndToEndTransformationComSpecProps': self._write_e2e_transformation_com_spec_props,
+            # Software component elements
+            'ModeSwitchedAckRequest': self._write_mode_switched_ack_request,
+            'ModeSwitchSenderComSpec': self._write_mode_switch_sender_com_spec,
+            'TransmissionAcknowledgementRequest': self._write_transmission_acknowledgement_request,
+            'TransmissionComSpecProps': self._write_tranmsission_com_spec_props,
+            'QueuedSenderComSpec': self._write_queued_sender_com_spec,
+            'NonqueuedSenderComSpec': self._write_non_queued_sender_com_spec,
+            'NvProvideComSpec': self._write_nv_provide_com_spec,
+            'ParameterProvideComSpec': self._write_parameter_provide_com_spec,
+            'ServerComSpec': self._write_server_com_spec,
 
         }
         self.switcher_all = {}  # All concrete elements (used for unit testing)
@@ -816,6 +834,20 @@ class Writer(_XMLWriter):
                 raise TypeError('Unsupported type: ' + str(type(part)))
         self._end_line(tag)
 
+    def _write_describable(self, elem: ar_element.Describable) -> None:
+        """
+        Writes group AR:DESCRIBABLE
+        """
+        assert isinstance(elem, ar_element.Describable)
+        if elem.desc is not None:
+            self._write_multi_language_overview_paragraph(elem.desc, "DESC")
+        if elem.category is not None:
+            self._add_content("CATEGORY", elem.category)
+        if elem.introduction is not None:
+            self._write_documentation_block(elem.introduction, "INTRODUCTION")
+        if elem.admin_data is not None:
+            self._write_admin_data(elem.admin_data)
+
     # CompuMethod elements
 
     def _write_compu_method(self, elem: ar_element.CompuMethod) -> None:
@@ -882,7 +914,7 @@ class Writer(_XMLWriter):
         if elem.desc is not None:
             self._write_multi_language_overview_paragraph(elem.desc, "DESC")
         if elem.mask is not None:
-            self._add_content("MASK", int(elem.mask))
+            self._add_content("MASK", str(elem.mask))
         if elem.lower_limit is not None:
             self._write_limit("LOWER-LIMIT", elem.lower_limit, elem.lower_limit_type)
         if elem.upper_limit is not None:
@@ -924,7 +956,7 @@ class Writer(_XMLWriter):
         elif isinstance(elem.value, float):
             self._add_content("V", self._format_float(elem.value))
         elif isinstance(elem.value, int):
-            self._add_content("V", elem.value)
+            self._add_content("V", str(elem.value))
         else:
             raise TypeError(f"Unsupported type: {str(type(elem.value))}")
         self._leave_child()
@@ -1122,6 +1154,40 @@ class Writer(_XMLWriter):
         if elem.physical_dimension_ref is not None:
             self._write_physical_dimension_ref(elem.physical_dimension_ref)
 
+    # Common structure elements
+
+    def _write_data_filter(self, elem: ar_element.DataFilter, tag: str) -> None:
+        """
+        Writes complex type AR:DATA-FILTER
+        Tag variants: 'FILTER', 'DATA-FILTER'
+        """
+        assert isinstance(elem, ar_element.DataFilter)
+        if elem.is_empty:
+            self._add_content(tag)
+            return
+        self._add_child(tag)
+        self._write_data_filter_group(elem)
+        self._leave_child()
+
+    def _write_data_filter_group(self, elem: ar_element.DataFilter) -> None:
+        """
+        Writes group AR:DATA-FILTER
+        """
+        if elem.data_filter_type is not None:
+            self._add_content("DATA-FILTER-TYPE", ar_enum.enum_to_xml(elem.data_filter_type))
+        if elem.mask is not None:
+            self._add_content("MASK", str(elem.mask))
+        if elem.max_val is not None:
+            self._add_content("MAX", str(elem.max_val))
+        if elem.min_val is not None:
+            self._add_content("MIN", str(elem.min_val))
+        if elem.offset is not None:
+            self._add_content("OFFSET", str(elem.offset))
+        if elem.period is not None:
+            self._add_content("PERIOD", str(elem.period))
+        if elem.x is not None:
+            self._add_content("X", str(elem.x))
+
     # Data type elements
 
     def _write_sw_addr_method(self, elem: ar_element.SwAddrMethod) -> None:
@@ -1174,13 +1240,13 @@ class Writer(_XMLWriter):
         Writes groups AR:BASE-TYPE and AR:BASE-TYPE-DIRECT-DEFINITION
         """
         if elem.size is not None:
-            self._add_content('BASE-TYPE-SIZE', int(elem.size))
+            self._add_content('BASE-TYPE-SIZE', str(elem.size))
         if elem.max_size is not None:
-            self._add_content('MAX-BASE-TYPE-SIZE', int(elem.max_size))
+            self._add_content('MAX-BASE-TYPE-SIZE', str(elem.max_size))
         if elem.encoding is not None:
             self._add_content('BASE-TYPE-ENCODING', str(elem.encoding))
         if elem.alignment is not None:
-            self._add_content('MEM-ALIGNMENT', int(elem.alignment))
+            self._add_content('MEM-ALIGNMENT', str(elem.alignment))
         if elem.byte_order is not None:
             self._add_content(
                 'BYTE-ORDER', ar_enum.enum_to_xml(elem.byte_order))
@@ -1236,7 +1302,7 @@ class Writer(_XMLWriter):
         if elem.sw_addr_method_ref is not None:
             self._write_sw_addr_method_ref(elem.sw_addr_method_ref)
         if elem.alignment is not None:
-            self._add_content('SW-ALIGNMENT', elem.alignment)
+            self._add_content('SW-ALIGNMENT', str(elem.alignment))
         if elem.base_type_ref is not None:
             self._write_sw_base_type_ref(elem.base_type_ref)
         if elem.bit_representation is not None:
@@ -1303,11 +1369,11 @@ class Writer(_XMLWriter):
             if elem.array_size_semantics is not None:
                 self._add_content('ARRAY-SIZE-SEMANTICS', ar_enum.enum_to_xml(elem.array_size_semantics))
             if elem.max_text_size is not None:
-                self._add_content('SW-MAX-TEXT-SIZE', int(elem.max_text_size))
+                self._add_content('SW-MAX-TEXT-SIZE', str(elem.max_text_size))
             if elem.base_type_ref is not None:
                 self._write_sw_base_type_ref(elem.base_type_ref)
             if elem.fill_char is not None:
-                self._add_content('SW-FILL-CHARACTER', int(elem.fill_char))
+                self._add_content('SW-FILL-CHARACTER', str(elem.fill_char))
             self._leave_child()
 
     def _write_sw_pointer_target_props(self, elem: ar_element.SwPointerTargetProps) -> None:
@@ -1490,7 +1556,7 @@ class Writer(_XMLWriter):
         if elem.index_data_type_ref is not None:
             self._write_index_data_type_ref(elem.index_data_type_ref)
         if elem.max_number_of_elements is not None:
-            self._add_content("MAX-NUMBER-OF-ELEMENTS", elem.max_number_of_elements)
+            self._add_content("MAX-NUMBER-OF-ELEMENTS", str(elem.max_number_of_elements))
 
     def _write_application_record_element(self, elem: ar_element.ApplicationRecordElement) -> None:
         """
@@ -1889,6 +1955,17 @@ class Writer(_XMLWriter):
         self._collect_base_ref_attr(elem, attr)
         self._add_content(tag, elem.value, attr)
 
+    def _write_parameter_data_prototype_ref(self, elem: ar_element.ParameterDataPrototypeRef, tag: str) -> None:
+        """
+        Write reference ParameterDataPrototype
+        Type: Concrete
+        Tag variants: Too many to list
+        """
+        assert isinstance(elem, ar_element.ParameterDataPrototypeRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content(tag, elem.value, attr)
+
     def _write_application_error_ref(self, elem: ar_element.ApplicationErrorRef, tag: str) -> None:
         """
         Writes reference to ApplicationError
@@ -1918,6 +1995,52 @@ class Writer(_XMLWriter):
         Tag variants: Too many to list
         """
         assert isinstance(elem, ar_element.ModeDeclarationGroupRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content(tag, elem.value, attr)
+
+    def _write_mode_declaration_group_prototype_ref(self,
+                                                    elem: ar_element.ModeDeclarationGroupPrototypeRef,
+                                                    tag: str) -> None:
+        """
+        Writes reference to ModeDeclarationGroupPrototype
+        Tag variants: Too many to list
+        """
+        assert isinstance(elem, ar_element.ModeDeclarationGroupPrototypeRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content(tag, elem.value, attr)
+
+    def _write_autosar_data_prototype_ref(self,
+                                          elem: ar_element.AutosarDataPrototypeRef,
+                                          tag: str) -> None:
+        """
+        Writes reference to elements that derives from AutosarDataPrototype
+        """
+        assert isinstance(elem, ar_element.AutosarDataPrototypeRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content(tag, elem.value, attr)
+
+    def _write_e2e_profile_compatibility_props_ref(self,
+                                                   elem: ar_element.E2EProfileCompatibilityPropsRef
+                                                   ) -> None:
+        """
+        Writes reference to E2EProfileCompatibilityProps
+        Tag variants: 'E-2-E-PROFILE-COMPATIBILITY-PROPS-REF'
+        """
+        assert isinstance(elem, ar_element.E2EProfileCompatibilityPropsRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content("E-2-E-PROFILE-COMPATIBILITY-PROPS-REF", elem.value, attr)
+
+    def _write_client_server_operation_ref(self,
+                                           elem: ar_element.ClientServerOperationRef,
+                                           tag: str) -> None:
+        """
+        Writes reference to ClientServerOperation
+        """
+        assert isinstance(elem, ar_element.ClientServerOperationRef)
         attr: TupleList = []
         self._collect_base_ref_attr(elem, attr)
         self._add_content(tag, elem.value, attr)
@@ -2550,3 +2673,278 @@ class Writer(_XMLWriter):
         if elem.mode_group is not None:
             self._write_mode_declaration_group_prototype(elem.mode_group, "MODE-GROUP")
         self._leave_child()
+
+    # --- System template elements
+
+    def _write_e2e_transformation_com_spec_props(self, elem: ar_element.EndToEndTransformationComSpecProps) -> None:
+        """
+        Writes complex type AR:END-TO-END-TRANSFORMATION-COM-SPEC-PROPS
+        Tag variants: 'END-TO-END-TRANSFORMATION-COM-SPEC-PROPS'
+        """
+        tag = "END-TO-END-TRANSFORMATION-COM-SPEC-PROPS"
+        assert isinstance(elem, ar_element.EndToEndTransformationComSpecProps)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_describable(elem)
+            self._write_e2e_transformation_com_spec_props_group(elem)
+            self._leave_child()
+
+    def _write_e2e_transformation_com_spec_props_group(self,
+                                                       elem: ar_element.EndToEndTransformationComSpecProps) -> None:
+        """
+        Writes group AR:END-TO-END-TRANSFORMATION-COM-SPEC-PROPS
+        """
+        if elem.clear_from_valid_to_invalid is not None:
+            self._add_content("CLEAR-FROM-VALID-TO-INVALID", self._format_boolean(elem.clear_from_valid_to_invalid))
+        if elem.disable_e2e_check is not None:
+            self._add_content("DISABLE-END-TO-END-CHECK", self._format_boolean(elem.disable_e2e_check))
+        if elem.disable_e2e_state_machine is not None:
+            self._add_content("DISABLE-END-TO-END-STATE-MACHINE", self._format_boolean(elem.disable_e2e_state_machine))
+        if elem.e2e_profile_compatibility_props_ref is not None:
+            self._write_e2e_profile_compatibility_props_ref(elem.e2e_profile_compatibility_props_ref)
+        if elem.max_delta_counter is not None:
+            self._add_content("MAX-DELTA-COUNTER", str(elem.max_delta_counter))
+        if elem.max_error_state_init is not None:
+            self._add_content("MAX-ERROR-STATE-INIT", str(elem.max_error_state_init))
+        if elem.max_error_state_invalid is not None:
+            self._add_content("MAX-ERROR-STATE-INVALID", str(elem.max_error_state_invalid))
+        if elem.max_error_state_valid is not None:
+            self._add_content("MAX-ERROR-STATE-VALID", str(elem.max_error_state_valid))
+        if elem.max_no_new_repeated_data is not None:
+            self._add_content("MAX-NO-NEW-OR-REPEATED-DATA", str(elem.max_no_new_repeated_data))
+        if elem.min_ok_state_init is not None:
+            self._add_content("MIN-OK-STATE-INIT", str(elem.min_ok_state_init))
+        if elem.min_ok_state_invalid is not None:
+            self._add_content("MIN-OK-STATE-INVALID", str(elem.min_ok_state_invalid))
+        if elem.min_ok_state_valid is not None:
+            self._add_content("MIN-OK-STATE-VALID", str(elem.min_ok_state_valid))
+        if elem.sync_counter_init is not None:
+            self._add_content("SYNC-COUNTER-INIT", str(elem.sync_counter_init))
+        if elem.window_size is not None:
+            self._add_content("WINDOW-SIZE", str(elem.window_size))
+        if elem.window_size_init is not None:
+            self._add_content("WINDOW-SIZE-INIT", str(elem.window_size_init))
+        if elem.window_size_invalid is not None:
+            self._add_content("WINDOW-SIZE-INVALID", str(elem.window_size_invalid))
+        if elem.window_size_valid is not None:
+            self._add_content("WINDOW-SIZE-VALID", str(elem.window_size_valid))
+
+    def _write_e2e_profile_compatibility_props(self, elem: ar_element.E2EProfileCompatibilityProps) -> None:
+        """
+        Reads complex type AR:E-2-E-PROFILE-COMPATIBILITY-PROPS
+        Tag variants: 'E-2-E-PROFILE-COMPATIBILITY-PROPS'
+        """
+        assert isinstance(elem, ar_element.E2EProfileCompatibilityProps)
+        self._add_child("E-2-E-PROFILE-COMPATIBILITY-PROPS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        if elem.transit_to_invalid_extended is not None:
+            self._add_content("TRANSIT-TO-INVALID-EXTENDED", self._format_boolean(elem.transit_to_invalid_extended))
+        self._leave_child()
+
+    # --- Software component elements
+
+    def _write_mode_switched_ack_request(self, elem: ar_element.ModeSwitchedAckRequest) -> None:
+        """
+        Writes complex type AR:MODE-SWITCHED-ACK-REQUEST
+        Tag variants: 'MODE-SWITCHED-ACK'
+        """
+        tag = "MODE-SWITCHED-ACK"
+        assert isinstance(elem, ar_element.ModeSwitchedAckRequest)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.timeout is not None:
+                self._add_content("TIMEOUT", self._format_float(elem.timeout))
+            self._leave_child()
+
+    def _write_mode_switch_sender_com_spec(self, elem: ar_element.ModeSwitchSenderComSpec) -> None:
+        """
+        Writes complex type AR:MODE-SWITCH-SENDER-COM-SPEC
+        Tag variants: 'MODE-SWITCH-SENDER-COM-SPEC'
+        """
+        tag = "MODE-SWITCH-SENDER-COM-SPEC"
+        assert isinstance(elem, ar_element.ModeSwitchSenderComSpec)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_mode_switch_sender_com_spec_group(elem)
+            self._leave_child()
+
+    def _write_mode_switch_sender_com_spec_group(self,
+                                                 elem: ar_element.ModeSwitchSenderComSpec
+                                                 ) -> None:
+        """
+        Writes group AR:MODE-SWITCH-SENDER-COM-SPEC
+        """
+        if elem.enhanced_mode_api is not None:
+            self._add_content("ENHANCED-MODE-API", self._format_boolean(elem.enhanced_mode_api))
+        if elem.mode_group_ref is not None:
+            self._write_mode_declaration_group_prototype_ref(elem.mode_group_ref, "MODE-GROUP-REF")
+        if elem.mode_switched_ack is not None:
+            self._write_mode_switched_ack_request(elem.mode_switched_ack)
+        if elem.queue_length is not None:
+            self._add_content("QUEUE-LENGTH", str(elem.queue_length))
+
+    def _write_transmission_acknowledgement_request(self, elem: ar_element.TransmissionAcknowledgementRequest) -> None:
+        """
+        Writes complex type AR:TRANSMISSION-ACKNOWLEDGEMENT-REQUEST
+        Tag variants: 'TRANSMISSION-ACKNOWLEDGE'
+        """
+        tag = "TRANSMISSION-ACKNOWLEDGE"
+        assert isinstance(elem, ar_element.TransmissionAcknowledgementRequest)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.timeout is not None:
+                self._add_content("TIMEOUT", self._format_float(elem.timeout))
+            self._leave_child()
+
+    def _write_tranmsission_com_spec_props(self, elem: ar_element.TransmissionComSpecProps) -> None:
+        """
+        Writes complex type AR:TRANSMISSION-COM-SPEC-PROPS
+        Tag variants: 'TRANSMISSION-PROPS'
+        """
+        tag = "TRANSMISSION-PROPS"
+        assert isinstance(elem, ar_element.TransmissionComSpecProps)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.data_update_period is not None:
+                self._add_content("DATA-UPDATE-PERIOD", self._format_float(elem.data_update_period))
+            if elem.minimum_send_interval is not None:
+                self._add_content("MINIMUM-SEND-INTERVAL", self._format_float(elem.minimum_send_interval))
+            if elem.transmission_mode is not None:
+                self._add_content("TRANSMISSION-MODE", ar_enum.enum_to_xml(elem.transmission_mode))
+            self._leave_child()
+
+    def _write_sender_com_spec_group(self, elem: ar_element.SenderComSpec) -> None:
+        """
+        Writes group AR:SENDER-COM-SPEC
+        """
+        assert isinstance(elem, ar_element.SenderComSpec)
+        if elem.data_element_ref is not None:
+            self._write_autosar_data_prototype_ref(elem.data_element_ref, "DATA-ELEMENT-REF")
+        if elem.data_update_period is not None:
+            self._add_content("DATA-UPDATE-PERIOD", self._format_float(elem.data_update_period))
+        if elem.handle_out_of_range is not None:
+            self._add_content("HANDLE-OUT-OF-RANGE", ar_enum.enum_to_xml(elem.handle_out_of_range))
+        if elem.network_representation is not None:
+            self._write_sw_data_def_props(elem.network_representation, "NETWORK-REPRESENTATION")
+        if elem.transmission_acknowledge is not None:
+            self._write_transmission_acknowledgement_request(elem.transmission_acknowledge)
+        if elem.tranmsission_props is not None:
+            self._write_tranmsission_com_spec_props(elem.tranmsission_props)
+        if elem.uses_end_to_end_protection is not None:
+            self._add_content("USES-END-TO-END-PROTECTION", self._format_boolean(elem.uses_end_to_end_protection))
+
+    def _write_queued_sender_com_spec(self, elem: ar_element.QueuedSenderComSpec) -> None:
+        """
+        Writes complex type AR:QUEUED-SENDER-COM-SPEC
+        Tag variants: 'QUEUED-SENDER-COM-SPEC'
+        """
+        tag = "QUEUED-SENDER-COM-SPEC"
+        assert isinstance(elem, ar_element.QueuedSenderComSpec)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_sender_com_spec_group(elem)
+            self._leave_child()
+
+    def _write_non_queued_sender_com_spec(self, elem: ar_element.NonqueuedSenderComSpec) -> None:
+        """
+        Writes complex type AR:NONQUEUED-SENDER-COM-SPEC
+        Tag variants: 'NONQUEUED-SENDER-COM-SPEC'
+        """
+        tag = "NONQUEUED-SENDER-COM-SPEC"
+        assert isinstance(elem, ar_element.NonqueuedSenderComSpec)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_sender_com_spec_group(elem)
+            self._write_non_queued_sender_com_spec_group(elem)
+            self._leave_child()
+
+    def _write_non_queued_sender_com_spec_group(self, elem: ar_element.NonqueuedSenderComSpec) -> None:
+        """
+        Writes group AR:NONQUEUED-SENDER-COM-SPEC
+        """
+        if elem.data_filter is not None:
+            self._write_data_filter(elem.data_filter, "DATA-FILTER")
+        if elem.init_value is not None:
+            self._add_child("INIT-VALUE")
+            self._write_value_specification_element(elem.init_value)
+            self._leave_child()
+
+    def _write_nv_provide_com_spec(self, elem: ar_element.NonqueuedSenderComSpec) -> None:
+        """
+        Writes complex type AR:NV-PROVIDE-COM-SPEC
+        Tag variants: 'NV-PROVIDE-COM-SPEC'
+        """
+        tag = "NV-PROVIDE-COM-SPEC"
+        assert isinstance(elem, ar_element.NvProvideComSpec)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.ram_block_init_value is not None:
+                self._add_child("RAM-BLOCK-INIT-VALUE")
+                self._write_value_specification_element(elem.ram_block_init_value)
+                self._leave_child()
+            if elem.rom_block_init_value is not None:
+                self._add_child("ROM-BLOCK-INIT-VALUE")
+                self._write_value_specification_element(elem.rom_block_init_value)
+                self._leave_child()
+            if elem.variable_ref is not None:
+                self._write_variable_data_prototype_ref(elem.variable_ref, "VARIABLE-REF")
+            self._leave_child()
+
+    def _write_parameter_provide_com_spec(self, elem: ar_element.ParameterProvideComSpec) -> None:
+        """
+        Writes complex type AR:PARAMETER-PROVIDE-COM-SPEC
+        Tag variants: 'PARAMETER-PROVIDE-COM-SPEC'
+        """
+        tag = "PARAMETER-PROVIDE-COM-SPEC"
+        assert isinstance(elem, ar_element.ParameterProvideComSpec)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.init_value is not None:
+                self._add_child("INIT-VALUE")
+                self._write_value_specification_element(elem.init_value)
+                self._leave_child()
+            if elem.parameter_ref is not None:
+                self._write_parameter_data_prototype_ref(elem.parameter_ref, "PARAMETER-REF")
+            self._leave_child()
+
+    def _write_server_com_spec(self, elem: ar_element.ServerComSpec) -> None:
+        """
+        Writes complex type AR:SERVER-COM-SPEC
+        Tag variants: 'SERVER-COM-SPEC'
+        """
+        tag = "SERVER-COM-SPEC"
+        assert isinstance(elem, ar_element.ServerComSpec)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.operation_ref is not None:
+                self._write_client_server_operation_ref(elem.operation_ref, "OPERATION-REF")
+            if elem.queue_length is not None:
+                self._add_content("QUEUE-LENGTH", str(elem.queue_length))
+            if elem.transformation_com_spec_props:
+                self._add_child("TRANSFORMATION-COM-SPEC-PROPSS")
+                for com_spec_props in elem.transformation_com_spec_props:
+                    self._write_e2e_transformation_com_spec_props(com_spec_props)
+                self._leave_child()
+            self._leave_child()

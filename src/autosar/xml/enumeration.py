@@ -89,16 +89,19 @@ class CompuScaleContent(Enum):
     RATIONAL = 2  # Content is COMPU-SCALE-RATIONAL-FORMULA
 
 
-# class CompuType(Enum):
-#     """
-#     Used internally to
-#     differentate what type a Computaion has
-#     """
+class DataFilterType(Enum):
+    """
+    DATA-FILTER-TYPE-ENUM--SIMPLE
+    """
 
-#     NONE = 0
-#     INT_TO_PHYS = 1
-#     PHYS_TO_INT = 2
-#     BOTH = 3
+    ALWAYS = 0
+    MASKED_NEW_DIFFERS_MASKED_OLD = 1
+    MASKED_NEW_DIFFERS_X = 2
+    MASKED_NEW_EQUALS_X = 3
+    NEVER = 4
+    NEW_IS_OUTSIDE = 5
+    NEW_IS_WITHIN = 6
+    ONE_EVERY_N = 7
 
 
 class DisplayPresentation(Enum):
@@ -148,6 +151,19 @@ class HandleInvalid(Enum):
     REPLACE = 3
 
 
+class HandleOutOfRange(Enum):
+    """
+    HANDLE-OUT-OF-RANGE-ENUM--SIMPLE
+    """
+
+    DEFAULT = 0
+    EXTERNAL_REPLACEMENT = 1
+    IGNORE = 2
+    INVALID = 3
+    NONE = 4
+    SATURATE = 5
+
+
 class IdentifiableSubTypes(Enum):
     """
     IDENTIFIABLE--SUBTYPES-ENUM
@@ -165,19 +181,24 @@ class IdentifiableSubTypes(Enum):
     APPLICATION_DEFERRED_DATA_TYPE = 6
     APPLICATION_PRIMITIVE_DATA_TYPE = 7
     APPLICATION_RECORD_DATA_TYPE = 8
-    AUTOSAR_DATA_TYPE = 9
-    BSW_MODULE_ENTRY = 10
-    COMPU_METHOD = 11
-    CONSTANT_SPECIFICATION = 12
-    DATA_CONSTR = 13
-    IMPLEMENTATION_DATA_TYPE = 14
-    MODE_DECLARATION = 15
-    MODE_DECLARATION_GROUP = 16
-    PHYSICAL_DIMENSION = 17
-    SW_ADDR_METHOD = 18
-    SW_BASE_TYPE = 19
-    UNIT = 20
-    VARIABLE_DATA_PROTOTYPE = 21
+    ARGUMENT_DATA_PROTOTYPE = 9
+    AUTOSAR_DATA_TYPE = 10
+    BSW_MODULE_ENTRY = 11
+    CLIENT_SERVER_OPERATION = 12
+    COMPU_METHOD = 13
+    CONSTANT_SPECIFICATION = 14
+    DATA_CONSTR = 15
+    E2E_PROFILE_COMPATIBILITY_PROPS = 16
+    IMPLEMENTATION_DATA_TYPE = 17
+    MODE_DECLARATION = 18
+    MODE_DECLARATION_GROUP = 19
+    MODE_DECLARATION_GROUP_PROTOTYPE = 20
+    PARAMETER_DATA_PROTOTYPE = 21
+    PHYSICAL_DIMENSION = 22
+    SW_ADDR_METHOD = 23
+    SW_BASE_TYPE = 24
+    UNIT = 25
+    VARIABLE_DATA_PROTOTYPE = 26
 
 
 class IntervalType(Enum):
@@ -477,6 +498,16 @@ class SwImplPolicy(Enum):
     STANDARD = 4
 
 
+class TransmissionMode(Enum):
+    """
+    AR:TRANSMISSION-MODE-DEFINITION-ENUM--SIMPLE
+    """
+
+    CYCLIC = 0
+    CYCLIC_AND_ON_CHANGE = 1
+    TRIGGERED = 2
+
+
 class ValueFormat(Enum):
     """
     Specifies the value format to use
@@ -564,6 +595,17 @@ xml_to_enum_map: dict[str, dict] = {
         "STD_AXIS": CalibrationAxisCategory.STD_AXIS,
         "STD-AXIS": CalibrationAxisCategory.STD_AXIS,
     },
+    "DataFilterType": {
+        "ALWAYS": DataFilterType.ALWAYS,
+        "MASKED-NEW-DIFFERS-MASKED-OLD": DataFilterType.MASKED_NEW_DIFFERS_MASKED_OLD,
+        "MASKED-NEW-DIFFERS-X": DataFilterType.MASKED_NEW_DIFFERS_X,
+        "MASKED-NEW-EQUALS-X": DataFilterType.MASKED_NEW_EQUALS_X,
+        "NEVER": DataFilterType.NEVER,
+        "NEW-IS-OUTSIDE": DataFilterType.NEW_IS_OUTSIDE,
+        "NEW-IS-WITHIN": DataFilterType.NEW_IS_WITHIN,
+        "ONE-EVERY-N": DataFilterType.ONE_EVERY_N
+
+    },
     "DisplayPresentation": {
         "PRESENTATION-CONTINUOUS": DisplayPresentation.CONTINUOUS,
         "PRESENTATION-DISCRETE": DisplayPresentation.DISCRETE
@@ -588,6 +630,14 @@ xml_to_enum_map: dict[str, dict] = {
         "KEEP": HandleInvalid.KEEP,
         "REPLACE": HandleInvalid.REPLACE,
     },
+    "HandleOutOfRange": {
+        "DEFAULT": HandleOutOfRange.DEFAULT,
+        "EXTERNAL-REPLACEMENT": HandleOutOfRange.EXTERNAL_REPLACEMENT,
+        "IGNORE": HandleOutOfRange.IGNORE,
+        "INVALID": HandleOutOfRange.INVALID,
+        "NONE": HandleOutOfRange.NONE,
+        "SATURATE": HandleOutOfRange.SATURATE
+    },
     "IdentifiableSubTypes": {
         "ABSTRACT-IMPLEMENTATION-DATA-TYPE": IdentifiableSubTypes.ABSTRACT_IMPLEMENTATION_DATA_TYPE,
         "APPLICATION-ARRAY-DATA-TYPE": IdentifiableSubTypes.APPLICATION_ARRAY_DATA_TYPE,
@@ -598,14 +648,19 @@ xml_to_enum_map: dict[str, dict] = {
         "APPLICATION-DEFERRED-DATA-TYPE": IdentifiableSubTypes.APPLICATION_DEFERRED_DATA_TYPE,
         "APPLICATION-PRIMITIVE-DATA-TYPE": IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE,
         "APPLICATION-RECORD-DATA-TYPE": IdentifiableSubTypes.APPLICATION_RECORD_DATA_TYPE,
+        "ARGUMENT-DATA-PROTOTYPE": IdentifiableSubTypes.ARGUMENT_DATA_PROTOTYPE,
         "AUTOSAR-DATA-TYPE": IdentifiableSubTypes.AUTOSAR_DATA_TYPE,
         "BSW-MODULE-ENTRY": IdentifiableSubTypes.BSW_MODULE_ENTRY,
+        "CLIENT-SERVER-OPERATION": IdentifiableSubTypes.CLIENT_SERVER_OPERATION,
         "COMPU-METHOD": IdentifiableSubTypes.COMPU_METHOD,
         "CONSTANT-SPECIFICATION": IdentifiableSubTypes.CONSTANT_SPECIFICATION,
         "DATA-CONSTR": IdentifiableSubTypes.DATA_CONSTR,
+        "E-2-E-PROFILE-COMPATIBILITY-PROPS": IdentifiableSubTypes.E2E_PROFILE_COMPATIBILITY_PROPS,
         "IMPLEMENTATION-DATA-TYPE": IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE,
         "MODE-DECLARATION": IdentifiableSubTypes.MODE_DECLARATION,
         "MODE-DECLARATION-GROUP": IdentifiableSubTypes.MODE_DECLARATION_GROUP,
+        "MODE-DECLARATION-GROUP-PROTOTYPE": IdentifiableSubTypes.MODE_DECLARATION_GROUP_PROTOTYPE,
+        "PARAMETER-DATA-PROTOTYPE": IdentifiableSubTypes.PARAMETER_DATA_PROTOTYPE,
         "PHYSICAL-DIMENSION": IdentifiableSubTypes.PHYSICAL_DIMENSION,
         "SW-ADDR-METHOD": IdentifiableSubTypes.SW_ADDR_METHOD,
         "SW-BASE-TYPE": IdentifiableSubTypes.SW_BASE_TYPE,
@@ -802,6 +857,11 @@ xml_to_enum_map: dict[str, dict] = {
         "MEASUREMENT-POINT": SwImplPolicy.MEASUREMENT_POINT,
         "QUEUED": SwImplPolicy.QUEUED,
         "STANDARD": SwImplPolicy.STANDARD
+    },
+    "TransmissionMode": {
+        "CYCLIC": TransmissionMode.CYCLIC,
+        "CYCLIC-AND-ON-CHANGE": TransmissionMode.CYCLIC_AND_ON_CHANGE,
+        "TRIGGERED": TransmissionMode.TRIGGERED
     }
 }
 
@@ -856,6 +916,16 @@ enum_to_xml_map: dict[str, list] = {
         "RES-AXIS",    # 3
         "STD-AXIS"     # 4
     ],
+    "DataFilterType": [
+        "ALWAYS",                         # 0
+        "MASKED-NEW-DIFFERS-MASKED-OLD",  # 1
+        "MASKED-NEW-DIFFERS-X",           # 2
+        "MASKED-NEW-EQUALS-X",            # 3
+        "NEVER",                          # 4
+        "NEW-IS-OUTSIDE",                 # 5
+        "NEW-IS-WITHIN",                  # 6
+        "ONE-EVERY-N"                     # 7
+    ],
     "DisplayPresentation": [
         "PRESENTATION-CONTINUOUS",  # 0
         "PRESENTATION-DISCRETE",    # 1
@@ -880,6 +950,14 @@ enum_to_xml_map: dict[str, list] = {
         "KEEP",                  # 2
         "REPLACE",               # 3
     ],
+    "HandleOutOfRange": [
+        "DEFAULT",
+        "EXTERNAL-REPLACEMENT",
+        "IGNORE",
+        "INVALID",
+        "NONE",
+        "SATURATE"
+    ],
     "IdentifiableSubTypes": [
         "ABSTRACT-IMPLEMENTATION-DATA-TYPE",  # 0
         "APPLICATION-ARRAY-DATA-TYPE",        # 1
@@ -890,19 +968,24 @@ enum_to_xml_map: dict[str, list] = {
         "APPLICATION-DEFERRED-DATA-TYPE",     # 6
         "APPLICATION-PRIMITIVE-DATA-TYPE",    # 7
         "APPLICATION-RECORD-DATA-TYPE",       # 8
-        "AUTOSAR-DATA-TYPE",                  # 9
-        "BSW-MODULE-ENTRY",                   # 10
-        "COMPU-METHOD",                       # 11
-        "CONSTANT-SPECIFICATION",             # 12
-        "DATA-CONSTR",                        # 13
-        "IMPLEMENTATION-DATA-TYPE",           # 14
-        "MODE-DECLARATION",                   # 15
-        "MODE-DECLARATION-GROUP",             # 16
-        "PHYSICAL-DIMENSION",                 # 17
-        "SW-ADDR-METHOD",                     # 18
-        "SW-BASE-TYPE",                       # 19
-        "UNIT",                               # 20
-        "VARIABLE-DATA-PROTOTYPE"             # 21
+        "ARGUMENT-DATA.PROTOTYPE",            # 9
+        "AUTOSAR-DATA-TYPE",                  # 10
+        "BSW-MODULE-ENTRY",                   # 11
+        "CLIENT-SERVER-OPERATION",            # 12
+        "COMPU-METHOD",                       # 13
+        "CONSTANT-SPECIFICATION",             # 14
+        "DATA-CONSTR",                        # 15
+        "E-2-E-PROFILE-COMPATIBILITY-PROPS",  # 16
+        "IMPLEMENTATION-DATA-TYPE",           # 17
+        "MODE-DECLARATION",                   # 18
+        "MODE-DECLARATION-GROUP",             # 19
+        "MODE-DECLARATION-GROUP-PROTOTYPE",   # 20
+        "PARAMETER-DATA-PROTOTYPE",           # 21
+        "PHYSICAL-DIMENSION",                 # 22
+        "SW-ADDR-METHOD",                     # 23
+        "SW-BASE-TYPE",                       # 24
+        "UNIT",                               # 25
+        "VARIABLE-DATA-PROTOTYPE"             # 26
     ],
     "IntervalType": [
         "CLOSED",  # 0
@@ -1079,9 +1162,9 @@ enum_to_xml_map: dict[str, list] = {
         "VALID"           # 3
     ],
     "ServerArgImplPolicy": [
-        "USE-ARGUMENT-TYPE",  # 0
+        "USE-ARGUMENT-TYPE",    # 0
         "USE-ARRAY-BASE-TYPE",  # 1
-        "USE-VOID",  # 2
+        "USE-VOID",             # 2
     ],
     "SwCalibrationAccess": [
         "NOT-ACCESSIBLE",  # 0
@@ -1094,7 +1177,12 @@ enum_to_xml_map: dict[str, list] = {
         "MEASUREMENT-POINT",  # 2
         "QUEUED",             # 3
         "STANDARD"            # 4
-    ]
+    ],
+    "TransmissionMode": [
+        "CYCLIC",                # 0
+        "CYCLIC-AND-ON-CHANGE",  # 1
+        "TRIGGERED"              # 2
+    ],
 }
 
 

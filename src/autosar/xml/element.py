@@ -9,6 +9,7 @@ from typing import Any, Union
 from enum import Enum
 import abc
 import autosar.xml.enumeration as ar_enum
+import autosar.xml.exception as ar_except
 
 
 alignment_type_re = re.compile(
@@ -294,7 +295,7 @@ class Identifiable(MultiLanguageReferrable):
 
     def __init__(self,
                  name: str,
-                 desc: Union["MultiLanguageOverviewParagraph", tuple, str, None] = None,
+                 desc: Union["MultiLanguageOverviewParagraph", tuple[ar_enum.Language, str], str, None] = None,
                  category: str | None = None,
                  uuid: str | None = None,
                  **kwargs) -> None:
@@ -357,7 +358,7 @@ class ARElement(CollectableElement):
     Type: Abstract
     """
 
-# AdminData
+# Common structure elements
 
 
 class AdminData(ARObject):
@@ -370,12 +371,45 @@ class AdminData(ARObject):
     def __init__(self, data: dict | None = None) -> None:
         self.data = data
 
+
+class DataFilter(ARObject):
+    """
+    Complex type AR:DATA-FILTER
+    Tag variants: 'FILTER' | 'DATA-FILTER'
+    """
+
+    def __init__(self,
+                 data_filter_type: ar_enum.DataFilterType | None = None,
+                 min_val: int | None = None,
+                 max_val: int | None = None,
+                 mask: int | None = None,
+                 offset: int | None = None,
+                 period: int | None = None,
+                 x: int | None = None,                # pylint: disable=C0103
+                 ) -> None:
+        super().__init__()
+        self.data_filter_type: ar_enum.DataFilterType | None = None
+        self.min_val: int | None = None
+        self.max_val: int | None = None
+        self.mask: int | None = None
+        self.offset: int | None = None
+        self.period: int | None = None
+        self.x: int | None = None                     # pylint: disable=C0103
+        self._assign_optional("data_filter_type", data_filter_type, ar_enum.DataFilterType)  # .DATA-FILTER-TYPE
+        self._assign_optional("mask", mask, int)  # .MASK
+        self._assign_optional("max_val", max_val, int)  # .MAX
+        self._assign_optional("min_val", min_val, int)  # .MIN
+        self._assign_optional("offset", offset, int)  # .OFFSET
+        self._assign_optional("period", period, int)  # .PERIOD
+        self._assign_optional("x", x, int)  # .X
+
+
 # --- Reference elements
 
 
 class BaseRef(ARObject, abc.ABC):
     """
-    Bas type for all references
+    Base type for all reference classes
     Complex type AR:REF
     Type: Abstract
     """
@@ -580,6 +614,19 @@ class VariableDataPrototypeRef(BaseRef):
         return {ar_enum.IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE}
 
 
+class ParameterDataPrototypeRef(BaseRef):
+    """
+    Reference to ParameterDataPrototype
+    """
+
+    def __init__(self, value: str) -> None:
+        super().__init__(value, ar_enum.IdentifiableSubTypes.PARAMETER_DATA_PROTOTYPE)
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.PARAMETER_DATA_PROTOTYPE}
+
+
 class ApplicationErrorRef(BaseRef):
     """
     Reference to ApplicationError
@@ -624,6 +671,60 @@ class ModeDeclarationGroupRef(BaseRef):
     def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
         """Acceptable values for dest"""
         return {ar_enum.IdentifiableSubTypes.MODE_DECLARATION_GROUP}
+
+
+class ModeDeclarationGroupPrototypeRef(BaseRef):
+    """
+    Reference to ModeDeclarationGroupPrototype
+    Tag variants: 'MODE-GROUP-REF' | 'REQUIRED-MODE-GROUP-REF' | 'FIRST-MODE-GROUP-REF' |
+                  'SECOND-MODE-GROUP-REF' | 'MODE-DECLARATION-GROUP-PROTOTYPE-REF'
+                  (and more)
+    """
+
+    def __init__(self, value: str) -> None:
+        super().__init__(value, ar_enum.IdentifiableSubTypes.MODE_DECLARATION_GROUP_PROTOTYPE)
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.MODE_DECLARATION_GROUP_PROTOTYPE}
+
+
+class AutosarDataPrototypeRef(BaseRef):
+    """
+    Reference to elements that derives from AutosarDataPrototype
+    """
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.ARGUMENT_DATA_PROTOTYPE,
+                ar_enum.IdentifiableSubTypes.PARAMETER_DATA_PROTOTYPE,
+                ar_enum.IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE}
+
+
+class E2EProfileCompatibilityPropsRef(BaseRef):
+    """
+    Reference to E2EProfileCompatibilityProps
+    """
+
+    def __init__(self, value: str) -> None:
+        super().__init__(value, ar_enum.IdentifiableSubTypes.E2E_PROFILE_COMPATIBILITY_PROPS)
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.E2E_PROFILE_COMPATIBILITY_PROPS}
+
+
+class ClientServerOperationRef(BaseRef):
+    """
+    Reference to ClientServerOperation
+    """
+
+    def __init__(self, value: str) -> None:
+        super().__init__(value, ar_enum.IdentifiableSubTypes.CLIENT_SERVER_OPERATION)
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.CLIENT_SERVER_OPERATION}
 
 # --- Documentation Elements
 
@@ -914,10 +1015,6 @@ class DocumentViewSelectable(ARObject):
     """
     Group AR:DOCUMENT-VIEW-SELECTABLE
     Type: Abstract
-
-    Experiment with named attributes for this class while keeping
-    Unknown parent attributes hidden in kwargs
-
     """
 
     def __init__(self,
@@ -1241,7 +1338,38 @@ class Annotation(GeneralAnnotation):
         super().__init__(label, origin, text)
 
 
-# ComputationMethods
+class Describable(ARObject):
+    """
+    Group AR:DESCRIBABLE
+    """
+
+    def __init__(self,
+                 desc: Union["MultiLanguageOverviewParagraph", tuple[ar_enum.Language, str], str, None] = None,
+                 category: str | None = None,
+                 introduction: DocumentationBlock | None = None,
+                 admin_data: AdminData | None = None
+                 ) -> None:
+        super().__init__()
+        self.desc: MultiLanguageOverviewParagraph | None = None  # .DESC
+        self.category: str | None = None  # .CATEGORY
+        self.introduction: DocumentationBlock | None = None  # .INTRODUCTION
+        self.admin_data: AdminData | None = None  # .ADMIN-DATA
+        if desc is not None:
+            if isinstance(desc, MultiLanguageOverviewParagraph):
+                self.desc = desc
+            elif isinstance(desc, str):
+                self.desc = MultiLanguageOverviewParagraph.make(ar_enum.Language.FOR_ALL, desc)
+            elif isinstance(desc, tuple) and len(desc) == 2:
+                self.desc = MultiLanguageOverviewParagraph.make(*desc)
+            else:
+                raise TypeError(f"Invalid type for argument 'desc': {str(type(desc))}")
+        self._assign_optional('category', category, str)
+        self._assign_optional_strict('introduction', introduction, DocumentationBlock)
+        self._assign_optional_strict('admin_data', admin_data, AdminData)
+
+
+# --- Computation method elements
+
 
 class CompuRational(ARObject):
     """
@@ -1942,8 +2070,9 @@ class SwDataDefPropsConditional(ARObject):
 
 class SwDataDefProps(ARObject):
     """
-    SW-DATA-DEF-PROPS
-    Type: Concrete
+    Complex type AR:SW-DATA-DEF-PROPS
+    Tag variants: 'SW-DATA-DEF-PROPS' | 'NETWORK-REPRESENTATION' |
+                  'NETWORK-REPRESENTATION-PROPS' | 'PHYSICAL-PROPS'
     """
 
     def __init__(self, variants: SwDataDefPropsConditional | list[SwDataDefPropsConditional] | None = None) -> None:
@@ -2635,6 +2764,26 @@ class ValueSpecification(ARObject):
     def make_value(cls, data: Any) -> ValueSpeficationElement:
         """
         Builds value specification based on Python data
+        Format 1 - data is not a tuple:
+          value = data
+        Format 2 - data is 2-tuple:
+          label = data[0]
+          value = data[1]
+        Format 3- data is a 3-tuple:
+          label = data[0]
+          value = None
+          default_pattern = data[2]
+          This format is used only when creating NotAvailableValueSpecification
+
+        The type of 'value' can be one of:
+
+        1. scalar value (int, float, str)
+        2. list: (used for array and record values)
+           When using list, the first list-element must contain a string containing a
+           marker indicating what kind of element you want to create.
+           - "A" or "ARRAY": Will use remaining list elements to create an ArrayValueSpecification
+           - "R" or "RECORD": Will use remaining list elements to create an RecordValueSpecification
+        3. None: used for creating NotAvailableValueSpecification
         """
         label = None
         default_pattern = None
@@ -2871,11 +3020,17 @@ class ConstantReference(ValueSpecification):
     """
 
     def __init__(self,
-                 label: str | None = None,
-                 constant_ref: ConstantRef | None = None) -> None:
+                 constant_ref: ConstantRef | str | None = None,
+                 label: str | None = None) -> None:
         self.constant_ref: ConstantRef = None
         super().__init__(label)
-        self._assign_optional_strict("constant_ref", constant_ref, ConstantRef)
+        if constant_ref is not None:
+            if isinstance(constant_ref, str):
+                self.constant_ref = ConstantRef(constant_ref)
+            elif isinstance(constant_ref, ConstantRef):
+                self.constant_ref = constant_ref
+            else:
+                raise ar_except.AssignmentTypeError("constant_ref", ("ConstantRef", "str"), constant_ref)
 
 
 # --- Package (Partly implemented)
@@ -3148,6 +3303,14 @@ class ModeDeclarationGroupPrototype(Identifiable):
         self.type_ref: ModeDeclarationGroupRef | None = None  # .TYPE-TREF
         self._assign_optional('calibration_access', calibration_access, ar_enum.SwCalibrationAccess)
         self._assign_optional('type_ref', type_ref, ModeDeclarationGroupRef)
+
+    def ref(self) -> ModeDeclarationGroupPrototypeRef:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        return None if ref_str is None else ModeDeclarationGroupPrototypeRef(ref_str)
 
 # --- Port Interface elements
 
@@ -3616,43 +3779,397 @@ class ModeSwitchInterface(PortInterface):
         self.mode_group = ModeDeclarationGroupPrototype(name, type_ref, calibration_access, **kwargs)
         return self.mode_group
 
+# --- System Template Elements
 
-# !!UNFINISHED!! Component Types
+
+class E2EProfileCompatibilityProps(ARElement):
+    """
+    Complex type AR:E-2-E-PROFILE-COMPATIBILITY-PROPS
+    Tag variants: 'E-2-E-PROFILE-COMPATIBILITY-PROPS'
+    """
+
+    def __init__(self,
+                 name: str,
+                 transit_to_invalid_extended: bool | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.transit_to_invalid_extended: bool | None = None  # .TRANSIT-TO-INVALID-EXTENDED
+        self._assign_optional_strict("transit_to_invalid_extended", transit_to_invalid_extended, bool)
+
+
+class EndToEndTransformationComSpecProps(Describable):
+    """
+    Complex type AR:END-TO-END-TRANSFORMATION-COM-SPEC-PROPS
+    Tag variants: 'END-TO-END-TRANSFORMATION-COM-SPEC-PROPS'
+    """
+
+    def __init__(self,
+                 clear_from_valid_to_invalid: bool | None = None,
+                 disable_e2e_check: bool | None = None,
+                 disable_e2e_state_machine: bool | None = None,
+                 e2e_profile_compatibility_props_ref: E2EProfileCompatibilityPropsRef | None = None,
+                 max_delta_counter: int | None = None,
+                 max_error_state_init: int | None = None,
+                 max_error_state_invalid: int | None = None,
+                 max_error_state_valid: int | None = None,
+                 max_no_new_repeated_data: int | None = None,
+                 min_ok_state_init: int | None = None,
+                 min_ok_state_invalid: int | None = None,
+                 min_ok_state_valid: int | None = None,
+                 sync_counter_init: int | None = None,
+                 window_size: int | None = None,
+                 window_size_init: int | None = None,
+                 window_size_invalid: int | None = None,
+                 window_size_valid: int | None = None,
+                 **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.clear_from_valid_to_invalid: bool | None = None  # .CLEAR-FROM-VALID-TO-INVALID
+        self.disable_e2e_check: bool | None = None  # .DISABLE-END-TO-END-CHECK
+        self.disable_e2e_state_machine: bool | None = None  # .DISABLE-END-TO-END-STATE-MACHINE
+        # .E-2-E-PROFILE-COMPATIBILITY-PROPS-REF
+        self.e2e_profile_compatibility_props_ref: E2EProfileCompatibilityPropsRef | None = None
+        self.max_delta_counter: int | None = None  # .MAX-DELTA-COUNTER
+        self.max_error_state_init: int | None = None  # .MAX-ERROR-STATE-INIT
+        self.max_error_state_invalid: int | None = None   # .MAX-ERROR-STATE-INVALID
+        self.max_error_state_valid: int | None = None   # .MAX-ERROR-STATE-VALID
+        self.max_no_new_repeated_data: int | None = None   # .MAX-NO-NEW-OR-REPEATED-DATA
+        self.min_ok_state_init: int | None = None   # .MIN-OK-STATE-INIT
+        self.min_ok_state_invalid: int | None = None   # .MIN-OK-STATE-INVALID
+        self.min_ok_state_valid: int | None = None   # .MIN-OK-STATE-VALID
+        self.sync_counter_init: int | None = None   # .SYNC-COUNTER-INIT
+        self.window_size: int | None = None   # .WINDOW-SIZE
+        self.window_size_init: int | None = None   # .WINDOW-SIZE-INIT
+        self.window_size_invalid: int | None = None   # .WINDOW-SIZE-INVALID
+        self.window_size_valid: int | None = None   # .WINDOW-SIZE-VALID
+        self._assign_optional_strict("clear_from_valid_to_invalid", clear_from_valid_to_invalid, bool)
+        self._assign_optional_strict("disable_e2e_check", disable_e2e_check, bool)
+        self._assign_optional_strict("disable_e2e_state_machine", disable_e2e_state_machine, bool)
+        self._assign_optional("e2e_profile_compatibility_props_ref",
+                              e2e_profile_compatibility_props_ref, E2EProfileCompatibilityPropsRef)
+        self._assign_optional_positive_int("max_delta_counter", max_delta_counter)
+        self._assign_optional_positive_int("max_error_state_init", max_error_state_init)
+        self._assign_optional_positive_int("max_error_state_invalid", max_error_state_invalid)
+        self._assign_optional_positive_int("max_error_state_valid", max_error_state_valid)
+        self._assign_optional_positive_int("max_no_new_repeated_data", max_no_new_repeated_data)
+        self._assign_optional_positive_int("min_ok_state_init", min_ok_state_init)
+        self._assign_optional_positive_int("min_ok_state_invalid", min_ok_state_invalid)
+        self._assign_optional_positive_int("min_ok_state_valid", min_ok_state_valid)
+        self._assign_optional_positive_int("sync_counter_init", sync_counter_init)
+        self._assign_optional_positive_int("window_size", window_size)
+        self._assign_optional_positive_int("window_size_init", window_size_init)
+        self._assign_optional_positive_int("window_size_invalid", window_size_invalid)
+        self._assign_optional_positive_int("window_size_valid", window_size_valid)
+
+
+# --- SoftwareComponent elements
+
+
+class ModeSwitchedAckRequest(ARObject):
+    """
+    Complex type AR:MODE-SWITCHED-ACK-REQUEST
+    Tag variants: 'MODE-SWITCHED-ACK'
+    """
+
+    def __init__(self, timeout: float | None = None) -> None:
+        super().__init__()
+        self.timeout: float | None = None
+        self._assign_optional("timeout", timeout, float)
+
+
+class TransmissionAcknowledgementRequest(ARObject):
+    """
+    Complex type AR:TRANSMISSION-ACKNOWLEDGEMENT-REQUEST
+    Tag variants: 'TRANSMISSION-ACKNOWLEDGE'
+    """
+
+    def __init__(self,
+                 timeout: float | int | None = None) -> None:
+        super().__init__()
+        self.timeout: float | None = None  # .TIMEOUT
+        self._assign_optional("timeout", timeout, float)
+
+
+class TransmissionComSpecProps(ARObject):
+    """
+    Complex type AR:TRANSMISSION-COM-SPEC-PROPS
+    Tag variants: 'TRANSMISSION-PROPS'
+
+    This only exists in AUTOSAR 4.6 or newer (schema version >= 49)
+    """
+
+    def __init__(self,
+                 data_update_period: float | int | None = None,
+                 minimum_send_interval: float | int | None = None,
+                 transmission_mode: ar_enum.TransmissionMode | None = None
+                 ) -> None:
+        super().__init__()
+        self.data_update_period: float | int | None = None  # .DATA-UPDATE-PERIOD
+        self.minimum_send_interval: float | int | None = None  # .MINIMUM-SEND-INTERVAL
+        self.transmission_mode: ar_enum.TransmissionMode | None = None  # .TRANSMISSION-MODE
+        self._assign_optional("data_update_period", data_update_period, float)
+        self._assign_optional("minimum_send_interval", minimum_send_interval, float)
+        self._assign_optional("transmission_mode", transmission_mode, ar_enum.TransmissionMode)
+
+
+class ProvidePortComSpec(ARObject):
+    """
+    Group AR:P-PORT-COM-SPEC
+    """
+
+
+class SenderComSpec(ProvidePortComSpec):
+    """
+    Group AR:SENDER-COM-SPEC
+    """
+
+    def __init__(self,
+                 data_element_ref: AutosarDataPrototypeRef | VariableDataPrototypeRef | None = None,
+                 data_update_period: float | int | None = None,
+                 handle_out_of_range: ar_enum.HandleOutOfRange | None = None,
+                 network_representation: SwDataDefProps | None = None,
+                 transmission_acknowledge: TransmissionAcknowledgementRequest | float | None = None,
+                 tranmsission_props: TransmissionComSpecProps | None = None,
+                 uses_end_to_end_protection: bool | None = None
+                 ) -> None:
+        super().__init__()
+        # .COMPOSITE-NETWORK-REPRESENTATIONS not supported
+        self.data_element_ref: AutosarDataPrototypeRef | None = None  # .DATA-ELEMENT-REF
+        self.data_update_period: float | None = None  # .DATA-UPDATE-PERIOD
+        self.handle_out_of_range: ar_enum.HandleOutOfRange | None = None  # .HANDLE-OUT-OF-RANGE
+        self.network_representation: SwDataDefProps | None = None  # .NETWORK-REPRESENTATION
+        # .SENDER-INTENT not supported (adaptive platform)
+        self.transmission_acknowledge: TransmissionAcknowledgementRequest | None = None  # .TRANSMISSION-ACKNOWLEDGE
+        self.tranmsission_props: TransmissionComSpecProps | None = None  # .TRANSMISSION-PROPS
+        self.uses_end_to_end_protection: bool | None = None  # .USES-END-TO-END-PROTECTION
+        if data_element_ref is not None:
+            if isinstance(data_element_ref, AutosarDataPrototypeRef):
+                self.data_element_ref = data_element_ref
+            elif isinstance(data_element_ref, VariableDataPrototypeRef):
+                self.data_element_ref = AutosarDataPrototypeRef(data_element_ref.value,
+                                                                ar_enum.IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE)
+            else:
+                raise ar_except.AssignmentTypeError("data_element_ref",
+                                                    ("AutosarDataPrototypeRef", "VariableDataPrototypeRef"),
+                                                    data_element_ref)
+        self._assign_optional("data_update_period", data_update_period, float)
+        self._assign_optional("handle_out_of_range", handle_out_of_range, ar_enum.HandleOutOfRange)
+        self._assign_optional_strict("network_representation", network_representation, SwDataDefProps)
+        self._assign_optional_strict("tranmsission_props", tranmsission_props, TransmissionComSpecProps)
+        self._assign_optional("uses_end_to_end_protection", uses_end_to_end_protection, bool)
+        if transmission_acknowledge is not None:
+            if isinstance(transmission_acknowledge, (int, float)):
+                self.transmission_acknowledge = TransmissionAcknowledgementRequest(transmission_acknowledge)
+            elif isinstance(transmission_acknowledge, TransmissionAcknowledgementRequest):
+                self.transmission_acknowledge = transmission_acknowledge
+            else:
+                msg_part1 = f"Invalid type '{str(type(transmission_acknowledge))}'"
+                msg_part2 = "Expected (TransmissionAcknowledgementRequest, float)"
+                raise TypeError(f"transmission_acknowledge: {msg_part1}. {msg_part2}.")
+
+
+class ModeSwitchSenderComSpec(ProvidePortComSpec):
+    """
+    Complex type AR:MODE-SWITCH-SENDER-COM-SPEC
+    Tag variants: 'MODE-SWITCH-SENDER-COM-SPEC'
+    """
+
+    def __init__(self,
+                 mode_group_ref: str | ModeDeclarationGroupPrototypeRef | None = None,
+                 enhanced_mode_api: bool | None = None,
+                 mode_switched_ack: ModeSwitchedAckRequest | float | None = None,
+                 queue_length: int | None = None
+                 ) -> None:
+        super().__init__()
+        self.mode_group_ref: ModeDeclarationGroupPrototypeRef | None = None  # .ENHANCED-MODE-API
+        self.enhanced_mode_api: bool | None = None  # .MODE-GROUP-REF
+        self.mode_switched_ack: ModeSwitchedAckRequest | None = None  # .MODE-SWITCHED-ACK
+        self.queue_length = None  # .QUEUE-LENGTH
+        self._assign_optional("mode_group_ref", mode_group_ref, ModeDeclarationGroupPrototypeRef)
+        self._assign_optional("enhanced_mode_api", enhanced_mode_api, bool)
+        if mode_switched_ack is not None:
+            if isinstance(mode_switched_ack, (int, float)):
+                self.mode_switched_ack = ModeSwitchedAckRequest(mode_switched_ack)
+            elif isinstance(mode_switched_ack, ModeSwitchedAckRequest):
+                self.mode_switched_ack = mode_switched_ack
+            else:
+                msg = f"Invalid type. Expected (ModeSwitchedAckRequest, str), got '{str(type(mode_switched_ack))}'"
+                raise TypeError("mode_switched_ack: " + msg)
+        self._assign_optional_positive_int("queue_length", queue_length)
+
+
+class QueuedSenderComSpec(SenderComSpec):
+    """
+    Complex type AR:QUEUED-SENDER-COM-SPEC
+    Tag variants: 'QUEUED-SENDER-COM-SPEC'
+
+    Doesn't need its own constuctor, we can use the one defined by base class
+    """
+
+
+class NonqueuedSenderComSpec(SenderComSpec):
+    """
+    Complex type AR:NONQUEUED-SENDER-COM-SPEC
+    Tag variants: 'NONQUEUED-SENDER-COM-SPEC'
+    """
+
+    def __init__(self,
+                 init_value: ValueSpeficationElement | None = None,
+                 data_filter: DataFilter | None = None,
+                 **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.data_filter: DataFilter | None = None  # .DATA-FILTER
+        self.init_value: ValueSpeficationElement | None = None  # .INIT-VALUE
+        self._assign_optional_strict("data_filter", data_filter, DataFilter)
+        self._assign_optional_strict("init_value", init_value, ValueSpecification)
+
+
+class NvProvideComSpec(ProvidePortComSpec):
+    """
+    Complex type AR:NV-PROVIDE-COM-SPEC
+    Tag variants: 'NV-PROVIDE-COM-SPEC'
+    """
+
+    def __init__(self,
+                 variable_ref: VariableDataPrototypeRef | None = None,
+                 ram_block_init_value: ValueSpeficationElement | None = None,
+                 rom_block_init_value: ValueSpeficationElement | None = None,
+                 ) -> None:
+        super().__init__()
+        self.ram_block_init_value: ValueSpeficationElement | None = None  # .RAM-BLOCK-INIT-VALUE
+        self.rom_block_init_value: ValueSpeficationElement | None = None  # .RAM-BLOCK-INIT-VALUE
+        self.variable_ref: VariableDataPrototypeRef | None = None         # .VARIABLE-REF
+        self._assign_optional_strict("ram_block_init_value", ram_block_init_value, ValueSpecification)
+        self._assign_optional_strict("rom_block_init_value", rom_block_init_value, ValueSpecification)
+        self._assign_optional("variable_ref", variable_ref, VariableDataPrototypeRef)
+
+
+class ParameterProvideComSpec(ProvidePortComSpec):
+    """
+    Complex type AR:PARAMETER-PROVIDE-COM-SPEC
+    Tag variants: 'PARAMETER-PROVIDE-COM-SPEC'
+    """
+
+    def __init__(self,
+                 parameter_ref: ParameterDataPrototypeRef | str | None = None,
+                 init_value: ValueSpeficationElement | None = None,
+                 ) -> None:
+        super().__init__()
+        self.init_value: ValueSpeficationElement | None = None  # .INIT-VALUE
+        self.parameter_ref: VariableDataPrototypeRef | None = None         # .PARAMETER-REF
+        self._assign_optional_strict("init_value", init_value, ValueSpecification)
+        self._assign_optional("parameter_ref", parameter_ref, ParameterDataPrototypeRef)
+
+
+EndToEndTransformationComSpecPropsArgTypes = Union[EndToEndTransformationComSpecProps,
+                                                   list[EndToEndTransformationComSpecProps]]
+
+
+class ServerComSpec(ProvidePortComSpec):
+    """
+    Complex type AR:SERVER-COM-SPEC
+    Tag variants: 'SERVER-COM-SPEC'
+    """
+
+    def __init__(self,
+                 operation_ref: ClientServerOperationRef | None = None,
+                 queue_length: int | None = None,
+                 transformation_com_spec_props: EndToEndTransformationComSpecPropsArgTypes | None = None
+                 ) -> None:
+        super().__init__()
+        # .GETTER-REF not supported (Adaptive Platform)
+        self.operation_ref: ClientServerOperationRef | None = None  # .OPERATION-REF
+        self.queue_length: int | None = None  # .QUEUE-LENGTH
+        # .SETTER-REF not supported (Adaptive Platform)
+        # .TRANSFORMATION-COM-SPEC-PROPSS
+        self.transformation_com_spec_props: list[EndToEndTransformationComSpecProps] = []
+        # USER-DEFINED-TRANSFORMATION-COM-SPEC-PROPS not yet supported under transformation_com_spec_props
+        self._assign_optional("operation_ref", operation_ref, ClientServerOperationRef)
+        self._assign_optional_positive_int("queue_length", queue_length)
+        if transformation_com_spec_props is not None:
+            if isinstance(transformation_com_spec_props, EndToEndTransformationComSpecProps):
+                self.append_transformation_com_spec_props(transformation_com_spec_props)
+            elif isinstance(transformation_com_spec_props, list):
+                for props in transformation_com_spec_props:
+                    self.append_transformation_com_spec_props(props)
+            else:
+                raise ar_except.AssignmentTypeError("transformation_com_spec_props",
+                                                    ("EndToEndTransformationComSpecProps",
+                                                     "list[EndToEndTransformationComSpecProps]"),
+                                                    transformation_com_spec_props)
+
+    def append_transformation_com_spec_props(self, props: EndToEndTransformationComSpecProps) -> None:
+        """
+        Appends EndToEndTransformationComSpecProps to internal list of transformations
+
+        Elements of type AR:USER-DEFINED-TRANSFORMATION-COM-SPEC-PROPS not yet implemented
+        """
+        if isinstance(props, EndToEndTransformationComSpecProps):
+            self.transformation_com_spec_props.append(props)
+        else:
+            raise TypeError("props must be of type EndToEndTransformationComSpecProps")
+
+
+class PortPrototype(Identifiable):
+    """
+    Group AR:PORT-PROTOTYPE
+    """
+    # .CLIENT-SERVER-ANNOTATIONS not supported
+    # .DELEGATED-PORT-ANNOTATION not supported
+    # .IO-HW-ABSTRACTION-SERVER-ANNOTATIONS not supported
+    # .MODE-PORT-ANNOTATIONS not supported
+    # .NV-DATA-PORT-ANNOTATIONS not supported
+    # .PARAMETER-PORT-ANNOTATIONS not supported
+    # .PORT-PROTOTYPE-PROPS not supported
+    # .SENDER-RECEIVER-ANNOTATIONS not supported
+    # .TRIGGER-PORT-ANNOTATIONS not supported
+    # .VARIATION-POINT not supported
+
+
+class AbstractProvidedPortPrototype(PortPrototype):
+    """
+    Group AR:ABSTRACT-PROVIDED-PORT-PROTOTYPE
+    """
+
+    def __init__(self, name: str,
+                 com_spec: ProvidePortComSpec | list[ProvidePortComSpec] | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .FIELD-SENDER-COM-SPEC not supported
 
 
 class SoftwareComponentType(ARElement):
     """
-    Implements AR:SW-COMPONENT-TYPE
-    Type: Abstract
+    Group AR:SW-COMPONENT-TYPE
     """
 
-    def __init__(self, name: str, kwargs: dict) -> None:
+    def __init__(self,
+                 name: str,
+                 **kwargs) -> None:
         super().__init__(name, **kwargs)
-        self.documentations = None  # AR:SW-COMPONENT-DOCUMENTATIONS
-        self.consistency_needs = None  # AR:CONSISTENCY-NEEDSS
-        self.ports = None  # AR:PORTS
-        self.port_groups = None  # AR:PORT_GROUPS
-        self.swc_mapping_constraint_refs = None  # AR:SWC-MAPPING-CONSTRAINT-REFS
-        self.unit_group_refs = None  # AR:UNIT-GROUP-REFS
+        # .SW-COMPONENT-DOCUMENTATIONS not supported
+        # .CONSISTENCY-NEEDSS not supported
+        self.ports = None  # .PORTS
+        # .PORT_GROUPS not yet supported
+        # .SWC-MAPPING-CONSTRAINT-REFS not yet supported
+        # .UNIT-GROUP-REFS not yet supported
 
 
 class AtomicSoftwareComponentType(SoftwareComponentType):
     """
-    Implements AR:ATOMIC-SW-COMPONENT-TYPE
-    Type: Abstract
+    Group AR:ATOMIC-SW-COMPONENT-TYPE
     """
 
     def __init__(self, name: str, kwargs: dict) -> None:
         super().__init__(name, **kwargs)
-        self.internal_behaviors = None  # AR:INTERNAL-BEHAVIORS
+        # .INTERNAL-BEHAVIORS not yet supported
         self.symbol_props = None  # AR:SYMBOL-PROPS
 
 
 class ApplicationSoftwareComponentType(AtomicSoftwareComponentType):
     """
-    Implements AR:APPLICATION-SW-COMPONENT-TYPE
-    Type: Concrete
+    Complex type AR:APPLICATION-SW-COMPONENT-TYPE
+    Tag variants:
     """
 
     def __init__(self, name: str, **kwargs) -> None:
-        super().__init__(name, kwargs)
+        super().__init__(name, **kwargs)
