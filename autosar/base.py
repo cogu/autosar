@@ -260,6 +260,8 @@ class SwDataDefPropsConditional:
             valueAxisDataTypeRef = None,
             swRecordLayoutRef = None,
             swCalprmAxisSet = [],
+            swValueBlockSize = None,
+            swValueBlockSizeMults = [],
             parent = None):
 
         self.baseTypeRef = baseTypeRef
@@ -274,6 +276,8 @@ class SwDataDefPropsConditional:
         self.valueAxisDataTypeRef = valueAxisDataTypeRef
         self.swRecordLayoutRef = swRecordLayoutRef
         self.swCalprmAxisSet = swCalprmAxisSet
+        self.swValueBlockSize = swValueBlockSize
+        self.swValueBlockSizeMults = swValueBlockSizeMults
         self.parent = parent
 
     @property
