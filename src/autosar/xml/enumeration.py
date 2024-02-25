@@ -164,6 +164,25 @@ class HandleOutOfRange(Enum):
     SATURATE = 5
 
 
+class HandleOutOfRangeStatus(Enum):
+    """
+    HANDLE-OUT-OF-RANGE-STATUS-ENUM--SIMPLE
+    """
+
+    INDICATE = 0
+    SILENT = 1
+
+
+class HandleTimeout(Enum):
+    """
+    HANDLE-TIMEOUT-ENUM--SIMPLE
+    """
+
+    NONE = 0
+    REPLACE = 1
+    REPLACE_BY_TIMEOUT_SUBSTITUTION_VALUE = 2
+
+
 class IdentifiableSubTypes(Enum):
     """
     IDENTIFIABLE--SUBTYPES-ENUM
@@ -173,32 +192,44 @@ class IdentifiableSubTypes(Enum):
     """
 
     ABSTRACT_IMPLEMENTATION_DATA_TYPE = 0
-    APPLICATION_ARRAY_DATA_TYPE = 1
-    APPLICATION_ASSOC_MAP_DATA_TYPE = 2
-    APPLICATION_COMPOSITE_DATA_TYPE = 3
-    APPLICATION_DATA_TYPE = 4
-    APPLICATION_ERROR = 5
-    APPLICATION_DEFERRED_DATA_TYPE = 6
-    APPLICATION_PRIMITIVE_DATA_TYPE = 7
-    APPLICATION_RECORD_DATA_TYPE = 8
-    ARGUMENT_DATA_PROTOTYPE = 9
-    AUTOSAR_DATA_TYPE = 10
-    BSW_MODULE_ENTRY = 11
-    CLIENT_SERVER_OPERATION = 12
-    COMPU_METHOD = 13
-    CONSTANT_SPECIFICATION = 14
-    DATA_CONSTR = 15
-    E2E_PROFILE_COMPATIBILITY_PROPS = 16
-    IMPLEMENTATION_DATA_TYPE = 17
-    MODE_DECLARATION = 18
-    MODE_DECLARATION_GROUP = 19
-    MODE_DECLARATION_GROUP_PROTOTYPE = 20
-    PARAMETER_DATA_PROTOTYPE = 21
-    PHYSICAL_DIMENSION = 22
-    SW_ADDR_METHOD = 23
-    SW_BASE_TYPE = 24
-    UNIT = 25
-    VARIABLE_DATA_PROTOTYPE = 26
+    ABSTRACT_IMPLEMENTATION_DATA_TYPE_ELEMENT = 1
+    ABSTRACT_PROVIDED_PORT_PROTOTYPE = 2
+    ABSTRACT_REQUIRED_PORT_PROTOTYPE = 3
+    APPLICATION_ARRAY_DATA_TYPE = 4
+    APPLICATION_ARRAY_ELEMENT = 5
+    APPLICATION_COMPOSITE_DATA_TYPE = 6
+    APPLICATION_COMPOSITE_ELEMENT_DATA_PROTOTYPE = 7
+    APPLICATION_DATA_TYPE = 8
+    APPLICATION_DEFERRED_DATA_TYPE = 9
+    APPLICATION_ERROR = 10
+    APPLICATION_PRIMITIVE_DATA_TYPE = 11
+    APPLICATION_RECORD_DATA_TYPE = 12
+    APPLICATION_RECORD_ELEMENT = 13
+    ARGUMENT_DATA_PROTOTYPE = 14
+    AUTOSAR_DATA_PROTOTYPE = 15
+    AUTOSAR_DATA_TYPE = 16
+    BSW_MODULE_ENTRY = 17
+    CLIENT_SERVER_OPERATION = 18
+    COMPU_METHOD = 19
+    CONSTANT_SPECIFICATION = 20
+    DATA_CONSTR = 21
+    DATA_PROTOTYPE = 22
+    E2E_PROFILE_COMPATIBILITY_PROPS = 23
+    IMPLEMENTATION_DATA_TYPE = 24
+    IMPLEMENTATION_DATA_TYPE_ELEMENT = 25
+    MODE_DECLARATION = 26
+    MODE_DECLARATION_GROUP = 27
+    MODE_DECLARATION_GROUP_PROTOTYPE = 28
+    P_PORT_PROTOTYPE = 29
+    PARAMETER_DATA_PROTOTYPE = 30
+    PHYSICAL_DIMENSION = 31
+    PORT_PROTOTYPE = 32
+    PR_PORT_PROTOTYPE = 33
+    R_PORT_PROTOTYPE = 34
+    SW_ADDR_METHOD = 35
+    SW_BASE_TYPE = 36
+    UNIT = 37
+    VARIABLE_DATA_PROTOTYPE = 38
 
 
 class IntervalType(Enum):
@@ -522,11 +553,14 @@ class ValueFormat(Enum):
     SCIENTIFIC = 4
 
 
-class VariableDataPrototype(Enum):
+class VariableAccessScope(Enum):
     """
-    AR:VARIABLE-DATA-PROTOTYPE--SUBTYPES-ENUM
+    VARIABLE-ACCESS-SCOPE-ENUM--SIMPLE
     """
 
+    COMMUNICATION_INTER_ECU = 0
+    COMMUNICATION_INTRA_PARTITION = 1
+    INTER_PARTITION_INTRA_ECU = 2
 
 ########################################
 
@@ -638,17 +672,32 @@ xml_to_enum_map: dict[str, dict] = {
         "NONE": HandleOutOfRange.NONE,
         "SATURATE": HandleOutOfRange.SATURATE
     },
+    "HandleOutOfRangeStatus": {
+        "INDICATE": HandleOutOfRangeStatus.INDICATE,
+        "SILENT": HandleOutOfRangeStatus.SILENT,
+    },
+    "HandleTimeout": {
+        "NONE": HandleTimeout.NONE,
+        "REPLACE": HandleTimeout.REPLACE,
+        "REPLACE-BY-TIMEOUT-SUBSTITUTION-VALUE": HandleTimeout.REPLACE_BY_TIMEOUT_SUBSTITUTION_VALUE,
+    },
     "IdentifiableSubTypes": {
         "ABSTRACT-IMPLEMENTATION-DATA-TYPE": IdentifiableSubTypes.ABSTRACT_IMPLEMENTATION_DATA_TYPE,
+        "ABSTRACT-IMPLEMENTATION-DATA-TYPE-ELEMENT": IdentifiableSubTypes.ABSTRACT_IMPLEMENTATION_DATA_TYPE_ELEMENT,
+        "ABSTRACT-PROVIDED-PORT-PROTOTYPE": IdentifiableSubTypes.ABSTRACT_PROVIDED_PORT_PROTOTYPE,
+        "ABSTRACT-REQUIRED-PORT-PROTOTYPE": IdentifiableSubTypes.ABSTRACT_REQUIRED_PORT_PROTOTYPE,
         "APPLICATION-ARRAY-DATA-TYPE": IdentifiableSubTypes.APPLICATION_ARRAY_DATA_TYPE,
-        "APPLICATION-ASSOC-MAP-DATA-TYPE": IdentifiableSubTypes.APPLICATION_ASSOC_MAP_DATA_TYPE,
+        "APPLICATION-ARRAY-ELEMENT": IdentifiableSubTypes.APPLICATION_ARRAY_ELEMENT,
         "APPLICATION-COMPOSITE-DATA-TYPE": IdentifiableSubTypes.APPLICATION_COMPOSITE_DATA_TYPE,
+        "APPLICATION-COMPOSITE-ELEMENT-DATA-PROTOTYPE": IdentifiableSubTypes.APPLICATION_COMPOSITE_ELEMENT_DATA_PROTOTYPE, # noqa E501 pylint: disable=C0301
         "APPLICATION-DATA-TYPE": IdentifiableSubTypes.APPLICATION_DATA_TYPE,
-        "APPLICATION-ERROR": IdentifiableSubTypes.APPLICATION_ERROR,
         "APPLICATION-DEFERRED-DATA-TYPE": IdentifiableSubTypes.APPLICATION_DEFERRED_DATA_TYPE,
+        "APPLICATION-ERROR": IdentifiableSubTypes.APPLICATION_ERROR,
         "APPLICATION-PRIMITIVE-DATA-TYPE": IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE,
         "APPLICATION-RECORD-DATA-TYPE": IdentifiableSubTypes.APPLICATION_RECORD_DATA_TYPE,
+        "APPLICATION-RECORD-ELEMENT": IdentifiableSubTypes.APPLICATION_RECORD_ELEMENT,
         "ARGUMENT-DATA-PROTOTYPE": IdentifiableSubTypes.ARGUMENT_DATA_PROTOTYPE,
+        "AUTOSAR-DATA-PROTOTYPE": IdentifiableSubTypes.AUTOSAR_DATA_PROTOTYPE,
         "AUTOSAR-DATA-TYPE": IdentifiableSubTypes.AUTOSAR_DATA_TYPE,
         "BSW-MODULE-ENTRY": IdentifiableSubTypes.BSW_MODULE_ENTRY,
         "CLIENT-SERVER-OPERATION": IdentifiableSubTypes.CLIENT_SERVER_OPERATION,
@@ -657,11 +706,16 @@ xml_to_enum_map: dict[str, dict] = {
         "DATA-CONSTR": IdentifiableSubTypes.DATA_CONSTR,
         "E-2-E-PROFILE-COMPATIBILITY-PROPS": IdentifiableSubTypes.E2E_PROFILE_COMPATIBILITY_PROPS,
         "IMPLEMENTATION-DATA-TYPE": IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE,
+        "IMPLEMENTATION-DATA-TYPE-ELEMENT": IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE_ELEMENT,
         "MODE-DECLARATION": IdentifiableSubTypes.MODE_DECLARATION,
         "MODE-DECLARATION-GROUP": IdentifiableSubTypes.MODE_DECLARATION_GROUP,
         "MODE-DECLARATION-GROUP-PROTOTYPE": IdentifiableSubTypes.MODE_DECLARATION_GROUP_PROTOTYPE,
+        "P-PORT-PROTOTYPE": IdentifiableSubTypes.P_PORT_PROTOTYPE,
         "PARAMETER-DATA-PROTOTYPE": IdentifiableSubTypes.PARAMETER_DATA_PROTOTYPE,
         "PHYSICAL-DIMENSION": IdentifiableSubTypes.PHYSICAL_DIMENSION,
+        "PORT-PROTOTYPE": IdentifiableSubTypes.PORT_PROTOTYPE,
+        "PR-PORT-PROTOTYPE": IdentifiableSubTypes.PR_PORT_PROTOTYPE,
+        "R-PORT-PROTOTYPE": IdentifiableSubTypes.R_PORT_PROTOTYPE,
         "SW-ADDR-METHOD": IdentifiableSubTypes.SW_ADDR_METHOD,
         "SW-BASE-TYPE": IdentifiableSubTypes.SW_BASE_TYPE,
         "UNIT": IdentifiableSubTypes.UNIT,
@@ -862,6 +916,11 @@ xml_to_enum_map: dict[str, dict] = {
         "CYCLIC": TransmissionMode.CYCLIC,
         "CYCLIC-AND-ON-CHANGE": TransmissionMode.CYCLIC_AND_ON_CHANGE,
         "TRIGGERED": TransmissionMode.TRIGGERED
+    },
+    "VariableAccessScope": {
+        "COMMUNICATION-INTER-ECU": VariableAccessScope.COMMUNICATION_INTER_ECU,
+        "COMMUNICATION-INTRA-PARTITION": VariableAccessScope.COMMUNICATION_INTRA_PARTITION,
+        "INTER-PARTITION-INTRA-ECU": VariableAccessScope.INTER_PARTITION_INTRA_ECU,
     }
 }
 
@@ -958,34 +1017,55 @@ enum_to_xml_map: dict[str, list] = {
         "NONE",
         "SATURATE"
     ],
+    "HandleOutOfRangeStatus": [
+        "INDICATE",            # 0
+        "SILENT"               # 1
+    ],
+    "HandleTimeout": [
+        "NONE",                                   # 0
+        "REPLACE",                                # 1
+        "REPLACE-BY-TIMEOUT-SUBSTITUTION-VALUE"   # 2
+    ],
     "IdentifiableSubTypes": [
-        "ABSTRACT-IMPLEMENTATION-DATA-TYPE",  # 0
-        "APPLICATION-ARRAY-DATA-TYPE",        # 1
-        "APPLICATION-ASSOC-MAP-DATA-TYPE",    # 2
-        "APPLICATION-COMPOSITE-DATA-TYPE",    # 3
-        "APPLICATION-DATA-TYPE",              # 4
-        "APPLICATION-ERROR",                  # 5
-        "APPLICATION-DEFERRED-DATA-TYPE",     # 6
-        "APPLICATION-PRIMITIVE-DATA-TYPE",    # 7
-        "APPLICATION-RECORD-DATA-TYPE",       # 8
-        "ARGUMENT-DATA.PROTOTYPE",            # 9
-        "AUTOSAR-DATA-TYPE",                  # 10
-        "BSW-MODULE-ENTRY",                   # 11
-        "CLIENT-SERVER-OPERATION",            # 12
-        "COMPU-METHOD",                       # 13
-        "CONSTANT-SPECIFICATION",             # 14
-        "DATA-CONSTR",                        # 15
-        "E-2-E-PROFILE-COMPATIBILITY-PROPS",  # 16
-        "IMPLEMENTATION-DATA-TYPE",           # 17
-        "MODE-DECLARATION",                   # 18
-        "MODE-DECLARATION-GROUP",             # 19
-        "MODE-DECLARATION-GROUP-PROTOTYPE",   # 20
-        "PARAMETER-DATA-PROTOTYPE",           # 21
-        "PHYSICAL-DIMENSION",                 # 22
-        "SW-ADDR-METHOD",                     # 23
-        "SW-BASE-TYPE",                       # 24
-        "UNIT",                               # 25
-        "VARIABLE-DATA-PROTOTYPE"             # 26
+        "ABSTRACT-IMPLEMENTATION-DATA-TYPE",             # 0
+        "ABSTRACT-IMPLEMENTATION-DATA-TYPE-ELEMENT",     # 1
+        "ABSTRACT-PROVIDED-PORT-PROTOTYPE",              # 2
+        "ABSTRACT-REQUIRED-PORT-PROTOTYPE",              # 3
+        "APPLICATION-ARRAY-DATA-TYPE",                   # 4
+        "APPLICATION-ARRAY-ELEMENT",                     # 5
+        "APPLICATION-COMPOSITE-DATA-TYPE",               # 6
+        "APPLICATION-COMPOSITE-ELEMENT-DATA-PROTOTYPE",  # 7
+        "APPLICATION-DATA-TYPE",                         # 8
+        "APPLICATION-DEFERRED-DATA-TYPE",                # 9
+        "APPLICATION-ERROR",                             # 10
+        "APPLICATION-PRIMITIVE-DATA-TYPE",               # 11
+        "APPLICATION-RECORD-DATA-TYPE",                  # 12
+        "APPLICATION-RECORD-ELEMENT",                    # 13
+        "ARGUMENT-DATA-PROTOTYPE",                       # 14
+        "AUTOSAR-DATA-PROTOTYPE",                        # 15
+        "AUTOSAR-DATA-TYPE",                             # 16
+        "BSW-MODULE-ENTRY",                              # 17
+        "CLIENT-SERVER-OPERATION",                       # 18
+        "COMPU-METHOD",                                  # 19
+        "CONSTANT-SPECIFICATION",                        # 20
+        "DATA-CONSTR",                                   # 21
+        "DATA-PROTOTYPE",                                # 22
+        "E-2-E-PROFILE-COMPATIBILITY-PROPS",             # 23
+        "IMPLEMENTATION-DATA-TYPE",                      # 24
+        "IMPLEMENTATION-DATA-TYPE-ELEMENT",              # 25
+        "MODE-DECLARATION",                              # 26
+        "MODE-DECLARATION-GROUP",                        # 27
+        "MODE-DECLARATION-GROUP-PROTOTYPE",              # 28
+        "P-PORT-PROTOTYPE",                              # 29
+        "PARAMETER-DATA-PROTOTYPE",                      # 30
+        "PHYSICAL-DIMENSION",                            # 31
+        "PORT-PROTOTYPE",                                # 32
+        "PR-PORT-PROTOTYPE",                             # 33
+        "R-PORT-PROTOTYPE",                              # 34
+        "SW-ADDR-METHOD",                                # 35
+        "SW-BASE-TYPE",                                  # 36
+        "UNIT",                                          # 37
+        "VARIABLE-DATA-PROTOTYPE",                       # 38
     ],
     "IntervalType": [
         "CLOSED",  # 0
@@ -1183,6 +1263,11 @@ enum_to_xml_map: dict[str, list] = {
         "CYCLIC-AND-ON-CHANGE",  # 1
         "TRIGGERED"              # 2
     ],
+    "VariableAccessScope": [
+        "COMMUNICATION-INTER-ECU",        # 0
+        "COMMUNICATION-INTRA-PARTITION",  # 1
+        "INTER-PARTITION-INTRA-ECU",      # 2
+    ]
 }
 
 

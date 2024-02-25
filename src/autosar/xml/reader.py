@@ -219,6 +219,18 @@ class Reader:
             'NV-PROVIDE-COM-SPEC': self._read_nv_provider_com_spec,
             'PARAMETER-PROVIDE-COM-SPEC': self._read_parameter_provide_com_spec,
             'SERVER-COM-SPEC': self._read_server_com_spec,
+            'RECEPTION-PROPS': self._read_reception_com_spec_props,
+            'QUEUED-RECEIVER-COM-SPEC': self._read_queued_receiver_com_spec,
+            'NONQUEUED-RECEIVER-COM-SPEC': self._read_nonqueued_receiver_com_spec,
+            'NV-REQUIRE-COM-SPEC': self._read_nv_require_com_spec,
+            'PARAMETER-REQUIRE-COM-SPEC': self._read_parameter_require_com_spec,
+            'MODE-SWITCH-RECEIVER-COM-SPEC': self._read_mode_switch_receiver_com_spec,
+            'CLIENT-COM-SPEC': self._read_client_com_spec,
+            # SWC internal behavior elements
+            'AUTOSAR-VARIABLE-IN-IMPL-DATATYPE': self._read_variable_in_impl_data_instance_ref,
+            'AUTOSAR-VARIABLE-IREF': self._read_variable_in_atomic_swc_type_instance_ref,
+            'ACCESSED-VARIABLE': self._read_autosar_variable_ref,
+            'VARIABLE-ACCESS': self._read_variable_access,
         }
         self.switcher_all = {}
         self.switcher_all.update(self.switcher_collectable)
@@ -2345,6 +2357,50 @@ class Reader:
             raise ar_exception.ParseError(msg)
         return ar_element.ClientServerOperationRef(xml_elem.text)
 
+    def _read_port_prototype_ref(self,
+                                 xml_elem: ElementTree.Element
+                                 ) -> ar_element.PortPrototypeRef:
+        """
+        Reads reference to ClientServerOperation
+        """
+        data = {}
+        self._read_base_ref_attributes(xml_elem.attrib, data)
+        dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', data['dest'], self.schema_version)
+        return ar_element.PortPrototypeRef(xml_elem.text, dest_enum)
+
+    def _read_abstract_impl_data_type_element_ref(self,
+                                                  xml_elem: ElementTree.Element
+                                                  ) -> ar_element.AbstractImplementationDataTypeElementRef:
+        """
+        Reads references to AR:VARIABLE-DATA-PROTOTYPE--SUBTYPES-ENUM
+        """
+        data = {}
+        self._read_base_ref_attributes(xml_elem.attrib, data)
+        dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', data['dest'], self.schema_version)
+        return ar_element.AbstractImplementationDataTypeElementRef(xml_elem.text, dest_enum)
+
+    def _read_appl_composite_element_data_proto_ref(self,
+                                                    xml_elem: ElementTree.Element
+                                                    ) -> ar_element.ApplicationCompositeElementDataPrototypeRef:
+        """
+        Reads references to APPLICATION-COMPOSITE-ELEMENT-DATA-PROTOTYPE--SUBTYPES-ENUM
+        """
+        data = {}
+        self._read_base_ref_attributes(xml_elem.attrib, data)
+        dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', data['dest'], self.schema_version)
+        return ar_element.ApplicationCompositeElementDataPrototypeRef(xml_elem.text, dest_enum)
+
+    def _read_data_prototype_ref(self,
+                                 xml_elem: ElementTree.Element
+                                 ) -> ar_element.DataPrototypeRef:
+        """
+        Reads references to References to DATA-PROTOTYPE--SUBTYPES-ENUM
+        """
+        data = {}
+        self._read_base_ref_attributes(xml_elem.attrib, data)
+        dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', data['dest'], self.schema_version)
+        return ar_element.DataPrototypeRef(xml_elem.text, dest_enum)
+
     def _read_base_ref_attributes(self, attr: dict, data: dict) -> None:
         """
         Reads DEST attribute
@@ -3270,9 +3326,7 @@ class Reader:
         xml_child = child_elements.get("DATA-ELEMENT-REF")
         if xml_child is not None:
             data["data_element_ref"] = self._read_autosar_data_prototype_ref(xml_child)
-        xml_child = child_elements.get("DATA-UPDATE-PERIOD")
-        if xml_child is not None:
-            data["data_update_period"] = self._read_number(xml_child.text)
+        child_elements.skip("DATA-UPDATE-PERIOD")
         xml_child = child_elements.get("HANDLE-OUT-OF-RANGE")
         if xml_child is not None:
             data["handle_out_of_range"] = ar_enum.xml_to_enum("HandleOutOfRange", xml_child.text)
@@ -3379,14 +3433,6 @@ class Reader:
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
-        self._read_parameter_provide_com_spec_group(child_elements, data)
-        self._report_unprocessed_elements(child_elements)
-        return ar_element.ParameterProvideComSpec(**data)
-
-    def _read_parameter_provide_com_spec_group(self, child_elements: ChildElementMap, data: dict) -> None:
-        """
-        Reads group AR:PARAMETER-PROVIDE-COM-SPEC
-        """
         xml_child = child_elements.get("INIT-VALUE")
         if xml_child is not None:
             try:
@@ -3398,6 +3444,8 @@ class Reader:
         xml_child = child_elements.get("PARAMETER-REF")
         if xml_child is not None:
             data["parameter_ref"] = self._read_parameter_data_prototype_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ParameterProvideComSpec(**data)
 
     def _read_server_com_spec(self,
                               xml_element: ElementTree.Element
@@ -3430,3 +3478,346 @@ class Reader:
             for xml_grand_child in xml_child.findall("./END-TO-END-TRANSFORMATION-COM-SPEC-PROPS"):
                 com_spec_props.append(self._read_e2e_transformation_com_spec_props(xml_grand_child))
             data["transformation_com_spec_props"] = com_spec_props
+
+    def _read_reception_com_spec_props(self, xml_element: ElementTree.Element) -> ar_element.ReceptionComSpecProps:
+        """
+        Reads Complex type AR:RECEPTION-COM-SPEC-PROPS
+        Tag variants: 'RECEPTION-PROPS'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_receiver_com_spec(child_elements, data)
+        xml_child = child_elements.get("DATA-UPDATE-PERIOD")
+        if xml_child is not None:
+            data["data_update_period"] = self._read_number(xml_child.text)
+        xml_child = child_elements.get("TIMEOUT")
+        if xml_child is not None:
+            data["timeout"] = self._read_number(xml_child.text)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ReceptionComSpecProps(**data)
+
+    def _read_receiver_com_spec(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:RECEIVER-COM-SPEC
+        """
+        child_elements.skip("COMPOSITE-NETWORK-REPRESENTATIONS")  # Not yet implemented
+        xml_child = child_elements.get("DATA-ELEMENT-REF")
+        if xml_child is not None:
+            data["data_element_ref"] = self._read_autosar_data_prototype_ref(xml_child)
+        child_elements.skip("DATA-UPDATE-PERIOD")  # Status removed
+        child_elements.skip("EXTERNAL-REPLACEMENT-REF")  # Status removed
+        xml_child = child_elements.get("HANDLE-OUT-OF-RANGE")
+        if xml_child is not None:
+            data["handle_out_of_range"] = ar_enum.xml_to_enum("HandleOutOfRange", xml_child.text)
+        xml_child = child_elements.get("HANDLE-OUT-OF-RANGE-STATUS")
+        if xml_child is not None:
+            data["handle_out_of_range_status"] = ar_enum.xml_to_enum("HandleOutOfRangeStatus", xml_child.text)
+        xml_child = child_elements.get("MAX-DELTA-COUNTER-INIT")
+        if xml_child is not None:
+            data["max_delta_counter_init"] = ar_element.PositiveIntegerValue(xml_child.text).value
+        xml_child = child_elements.get("MAX-NO-NEW-OR-REPEATED-DATA")
+        if xml_child is not None:
+            data["max_no_new_repeated_data"] = ar_element.PositiveIntegerValue(xml_child.text).value
+        xml_child = child_elements.get("NETWORK-REPRESENTATION")
+        if xml_child is not None:
+            data["network_representation"] = self._read_sw_data_def_props(xml_child)
+        child_elements.skip("RECEIVER-INTENT")  # Not supported (Adaptive Platform)
+        xml_child = child_elements.get("RECEPTION-PROPS")
+        if xml_child is not None:
+            data["reception_props"] = self._read_reception_com_spec_props(xml_child)
+        xml_child = child_elements.get("REPLACE-WITH")
+        if xml_child is not None:
+            data["replace_with"] = self._read_variable_access(xml_child)
+        xml_child = child_elements.get("SYNC-COUNTER-INIT")
+        if xml_child is not None:
+            data["sync_counter_init"] = ar_element.PositiveIntegerValue(xml_child.text).value
+        xml_child = child_elements.get("TRANSFORMATION-COM-SPEC-PROPSS")
+        if xml_child is not None:
+            com_spec_props = []
+            for xml_grand_child in xml_child.findall("./END-TO-END-TRANSFORMATION-COM-SPEC-PROPS"):
+                com_spec_props.append(self._read_e2e_transformation_com_spec_props(xml_grand_child))
+            data["transformation_com_spec_props"] = com_spec_props
+        xml_child = child_elements.get("USES-END-TO-END-PROTECTION")
+        if xml_child is not None:
+            data["uses_end_to_end_protection"] = self._read_boolean(xml_child.text)
+
+    def _read_queued_receiver_com_spec(self, xml_element: ElementTree.Element) -> ar_element.QueuedReceiverComSpec:
+        """
+        Reads complex type AR:QUEUED-RECEIVER-COM-SPEC
+        Tag variants: 'QUEUED-RECEIVER-COM-SPEC'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_receiver_com_spec(child_elements, data)
+        xml_child = child_elements.get("QUEUE-LENGTH")
+        if xml_child is not None:
+            data["operation_ref"] = ar_element.PositiveIntegerValue(xml_child.text).value
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.QueuedReceiverComSpec(**data)
+
+    def _read_nonqueued_receiver_com_spec(self,
+                                          xml_element: ElementTree.Element) -> ar_element.NonqueuedReceiverComSpec:
+        """
+        Reads complex type AR:NONQUEUED-RECEIVER-COM-SPEC
+        Tag variants: 'NONQUEUED-RECEIVER-COM-SPEC'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_receiver_com_spec(child_elements, data)
+        self._read_nonqueued_receiver_com_spec_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.NonqueuedReceiverComSpec(**data)
+
+    def _read_nonqueued_receiver_com_spec_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:NONQUEUED-RECEIVER-COM-SPEC
+        """
+        xml_child = child_elements.get("ALIVE-TIMEOUT")
+        if xml_child is not None:
+            data["alive_timeout"] = self._read_number(xml_child.text)
+        xml_child = child_elements.get("ENABLE-UPDATE")
+        if xml_child is not None:
+            data["enable_update"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("FILTER")
+        if xml_child is not None:
+            data["data_filter"] = self._read_data_filter(xml_child)
+        xml_child = child_elements.get("HANDLE-DATA-STATUS")
+        if xml_child is not None:
+            data["handle_data_status"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("HANDLE-NEVER-RECEIVED")
+        if xml_child is not None:
+            data["handle_never_received"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("HANDLE-TIMEOUT-TYPE")
+        if xml_child is not None:
+            data["handle_timeout_type"] = ar_enum.xml_to_enum("HandleTimeout", xml_child.text)
+        xml_child = child_elements.get("INIT-VALUE")
+        if xml_child is not None:
+            try:
+                xml_grand_child = xml_child.find("./*")
+                if xml_grand_child is not None:
+                    data["init_value"] = self._read_value_specification_element(xml_grand_child)
+            except KeyError:
+                pass
+        xml_child = child_elements.get("TIMEOUT-SUBSTITUTION-VALUE")
+        if xml_child is not None:
+            try:
+                xml_grand_child = xml_child.find("./*")
+                if xml_grand_child is not None:
+                    data["timeout_substitution_value"] = self._read_value_specification_element(xml_grand_child)
+            except KeyError:
+                pass
+
+    def _read_nv_require_com_spec(self, xml_element: ElementTree.Element) -> ar_element.NvRequireComSpec:
+        """
+        Reads complex type AR:NV-REQUIRE-COM-SPEC
+        Tag variants: 'NV-REQUIRE-COM-SPEC'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("INIT-VALUE")
+        if xml_child is not None:
+            try:
+                xml_grand_child = xml_child.find("./*")
+                if xml_grand_child is not None:
+                    data["init_value"] = self._read_value_specification_element(xml_grand_child)
+            except KeyError:
+                pass
+        xml_child = child_elements.get("VARIABLE-REF")
+        if xml_child is not None:
+            data["variable_ref"] = self._read_variable_data_prototype_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.NvRequireComSpec(**data)
+
+    def _read_parameter_require_com_spec(self,
+                                         xml_element: ElementTree.Element
+                                         ) -> ar_element.ParameterRequireComSpec:
+        """
+        Reads complex type AR:PARAMETER-REQUIRE-COM-SPEC
+        Tag variants: 'PARAMETER-REQUIRE-COM-SPEC'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("INIT-VALUE")
+        if xml_child is not None:
+            try:
+                xml_grand_child = xml_child.find("./*")
+                if xml_grand_child is not None:
+                    data["init_value"] = self._read_value_specification_element(xml_grand_child)
+            except KeyError:
+                pass
+        xml_child = child_elements.get("PARAMETER-REF")
+        if xml_child is not None:
+            data["parameter_ref"] = self._read_parameter_data_prototype_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ParameterRequireComSpec(**data)
+
+    def _read_mode_switch_receiver_com_spec(self,
+                                            xml_element: ElementTree.Element
+                                            ) -> ar_element.ModeSwitchReceiverComSpec:
+        """
+        Reads complex type AR:MODE-SWITCH-RECEIVER-COM-SPEC
+        Tag variants: 'MODE-SWITCH-RECEIVER-COM-SPEC'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("ENHANCED-MODE-API")
+        if xml_child is not None:
+            data["enhanced_mode_api"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("MODE-GROUP-REF")
+        if xml_child is not None:
+            data["mode_group_ref"] = self._read_mode_declaration_group_prototype_ref(xml_child)
+        xml_child = child_elements.get("SUPPORTS-ASYNCHRONOUS-MODE-SWITCH")
+        if xml_child is not None:
+            data["supports_async"] = self._read_boolean(xml_child.text)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ModeSwitchReceiverComSpec(**data)
+
+    def _read_client_com_spec(self,
+                              xml_element: ElementTree.Element
+                              ) -> ar_element.ClientComSpec:
+        """
+        Reads Complex type AR:CLIENT-COM-SPEC
+        Tag variants: 'CLIENT-COM-SPEC'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_client_com_spec_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ClientComSpec(**data)
+
+    def _read_client_com_spec_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:CLIENT-COM-SPEC
+        """
+        child_elements.skip("CLIENT-INTENT")
+        xml_child = child_elements.get("END-TO-END-CALL-RESPONSE-TIMEOUT")
+        if xml_child is not None:
+            data["e2e_call_respone_timeout"] = self._read_number(xml_child.text)
+        child_elements.skip("GETTER-REF")
+        xml_child = child_elements.get("OPERATION-REF")
+        if xml_child is not None:
+            data["operation_ref"] = self._read_client_server_operation_ref(xml_child)
+        child_elements.skip("SETTER-REF")
+        xml_child = child_elements.get("TRANSFORMATION-COM-SPEC-PROPSS")
+        if xml_child is not None:
+            com_spec_props = []
+            for xml_grand_child in xml_child.findall("./END-TO-END-TRANSFORMATION-COM-SPEC-PROPS"):
+                com_spec_props.append(self._read_e2e_transformation_com_spec_props(xml_grand_child))
+            data["transformation_com_spec_props"] = com_spec_props
+
+    # --- Internal Behavior elements
+
+    def _read_variable_in_impl_data_instance_ref(self,
+                                                 xml_element: ElementTree.Element
+                                                 ) -> ar_element.ArVariableInImplementationDataInstanceRef:
+        """
+        Reads complex type AR:AR-VARIABLE-IN-IMPLEMENTATION-DATA-INSTANCE-REF
+        Tag variants: 'AUTOSAR-VARIABLE-IN-IMPL-DATATYPE' | 'IMPLEMENTATION-DATA-TYPE-ELEMENT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_variable_in_impl_data_instance_ref_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ArVariableInImplementationDataInstanceRef(**data)
+
+    def _read_variable_in_impl_data_instance_ref_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:AR-VARIABLE-IN-IMPLEMENTATION-DATA-INSTANCE-REF
+        """
+        xml_child = child_elements.get("PORT-PROTOTYPE-REF")
+        if xml_child is not None:
+            data["port_prototype_ref"] = self._read_port_prototype_ref(xml_child)
+        xml_child = child_elements.get("ROOT-VARIABLE-DATA-PROTOTYPE-REF")
+        if xml_child is not None:
+            data["root_variable_data_prototype_ref"] = self._read_variable_data_prototype_ref(xml_child)
+        xml_child = child_elements.get("CONTEXT-DATA-PROTOTYPE-REFS")
+        if xml_child is not None:
+            data_prototype_refs = []
+            for xml_grand_child in xml_child.findall("./CONTEXT-DATA-PROTOTYPE-REF"):
+                data_prototype_refs.append(self._read_abstract_impl_data_type_element_ref(xml_grand_child))
+            data["context_data_prototype_refs"] = data_prototype_refs
+        xml_child = child_elements.get("TARGET-DATA-PROTOTYPE-REF")
+        if xml_child is not None:
+            data["target_data_prototype_ref"] = self._read_abstract_impl_data_type_element_ref(xml_child)
+
+    def _read_variable_in_atomic_swc_type_instance_ref(self,
+                                                       xml_element: ElementTree.Element
+                                                       ) -> ar_element.VariableInAtomicSWCTypeInstanceRef:
+        """
+        Reads Complex type AR:VARIABLE-IN-ATOMIC-SWC-TYPE-INSTANCE-REF
+        Tag variants: 'AUTOSAR-VARIABLE-IREF'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("PORT-PROTOTYPE-REF")
+        if xml_child is not None:
+            data["port_prototype_ref"] = self._read_port_prototype_ref(xml_child)
+        xml_child = child_elements.get("ROOT-VARIABLE-DATA-PROTOTYPE-REF")
+        if xml_child is not None:
+            data["root_variable_data_prototype_ref"] = self._read_variable_data_prototype_ref(xml_child)
+        # For some reason there can be an unbounded amount of CONTEXT-DATA-PROTOTYPE-REF directly in the
+        #  xml element. We need to call skip on child_elements then attempt to manually find the children.
+        child_elements.skip("CONTEXT-DATA-PROTOTYPE-REF")
+        data_prototype_refs = []
+        for xml_child in xml_element.findall("./CONTEXT-DATA-PROTOTYPE-REF"):
+            data_prototype_refs.append(self._read_appl_composite_element_data_proto_ref(xml_child))
+        if data_prototype_refs:
+            data["context_data_prototype_refs"] = data_prototype_refs
+        xml_child = child_elements.get("TARGET-DATA-PROTOTYPE-REF")
+        if xml_child is not None:
+            data["target_data_prototype_ref"] = self._read_data_prototype_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.VariableInAtomicSWCTypeInstanceRef(**data)
+
+    def _read_variable_access(self, xml_element: ElementTree.Element) -> ar_element.VariableAccess:
+        """
+        Reads complex type AR:VARIABLE-ACCESS
+        Tag variants: 'REPLACE-WITH' | 'VARIABLE-ACCESS'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_variable_access_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.VariableAccess(**data)
+
+    def _read_variable_access_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:VARIABLE-ACCESS
+        """
+        xml_child = child_elements.get("ACCESSED-VARIABLE")
+        if xml_child is not None:
+            data["accessed_variable"] = self._read_autosar_variable_ref(xml_child)
+        xml_child = child_elements.get("SCOPE")
+        if xml_child is not None:
+            data["scope"] = ar_enum.xml_to_enum("VariableAccessScope", xml_child.text)
+
+    def _read_autosar_variable_ref(self, xml_element: ElementTree.Element) -> ar_element.AutosarVariableRef:
+        """
+        Reads Complex type AR:AUTOSAR-VARIABLE-REF
+        Tag variants: 'VARIABLE-INSTANCE' | 'NV-RAM-BLOCK-ELEMENT' | 'READ-NV-DATA' |
+                      'WRITTEN-NV-DATA' | 'WRITTEN-READ-NV-DATA' | 'USED-DATA-ELEMENT' |
+                      'AUTOSAR-VARIABLE' | 'ACCESSED-VARIABLE'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_autosar_variable_ref_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.AutosarVariableRef(**data)
+
+    def _read_autosar_variable_ref_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:AUTOSAR-VARIABLE-REF
+        """
+        xml_child = child_elements.get("AUTOSAR-VARIABLE-IN-IMPL-DATATYPE")
+        if xml_child is not None:
+            elem = self._read_variable_in_impl_data_instance_ref(xml_child)
+            data["ar_variable_in_impl_datatype"] = elem
+        xml_child = child_elements.get("AUTOSAR-VARIABLE-IREF")
+        if xml_child is not None:
+            data["ar_variable_iref"] = self._read_variable_in_atomic_swc_type_instance_ref(xml_child)
+        xml_child = child_elements.get("LOCAL-VARIABLE-REF")
+        if xml_child is not None:
+            data["local_variable_ref"] = self._read_variable_data_prototype_ref(xml_child)

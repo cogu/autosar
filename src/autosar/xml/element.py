@@ -561,7 +561,6 @@ class ApplicationDataTypeRef(BaseRef):
     def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
         """Acceptable values for dest"""
         return {ar_enum.IdentifiableSubTypes.APPLICATION_ARRAY_DATA_TYPE,
-                ar_enum.IdentifiableSubTypes.APPLICATION_ASSOC_MAP_DATA_TYPE,
                 ar_enum.IdentifiableSubTypes.APPLICATION_COMPOSITE_DATA_TYPE,
                 ar_enum.IdentifiableSubTypes.APPLICATION_DATA_TYPE,
                 ar_enum.IdentifiableSubTypes.APPLICATION_DEFERRED_DATA_TYPE,
@@ -569,16 +568,28 @@ class ApplicationDataTypeRef(BaseRef):
                 ar_enum.IdentifiableSubTypes.APPLICATION_RECORD_DATA_TYPE}
 
 
+class ApplicationCompositeElementDataPrototypeRef(BaseRef):
+    """
+    References to APPLICATION-COMPOSITE-ELEMENT-DATA-PROTOTYPE--SUBTYPES-ENUM
+    """
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.APPLICATION_ARRAY_ELEMENT,
+                ar_enum.IdentifiableSubTypes.APPLICATION_COMPOSITE_ELEMENT_DATA_PROTOTYPE,
+                ar_enum.IdentifiableSubTypes.APPLICATION_RECORD_ELEMENT,
+                }
+
+
 class AutosarDataTypeRef(BaseRef):
     """
-    References to elements in AR:AUTOSAR-DATA-TYPE--SUBTYPES-ENUM
+    References to AR:AUTOSAR-DATA-TYPE--SUBTYPES-ENUM
     """
 
     def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
         """Acceptable values for dest"""
         return {ar_enum.IdentifiableSubTypes.ABSTRACT_IMPLEMENTATION_DATA_TYPE,
                 ar_enum.IdentifiableSubTypes.APPLICATION_ARRAY_DATA_TYPE,
-                ar_enum.IdentifiableSubTypes.APPLICATION_ASSOC_MAP_DATA_TYPE,
                 ar_enum.IdentifiableSubTypes.APPLICATION_COMPOSITE_DATA_TYPE,
                 ar_enum.IdentifiableSubTypes.APPLICATION_DATA_TYPE,
                 ar_enum.IdentifiableSubTypes.APPLICATION_DEFERRED_DATA_TYPE,
@@ -725,6 +736,51 @@ class ClientServerOperationRef(BaseRef):
     def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
         """Acceptable values for dest"""
         return {ar_enum.IdentifiableSubTypes.CLIENT_SERVER_OPERATION}
+
+
+class PortPrototypeRef(BaseRef):
+    """
+    Reference to port prototype elements
+    """
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.ABSTRACT_PROVIDED_PORT_PROTOTYPE,
+                ar_enum.IdentifiableSubTypes.ABSTRACT_REQUIRED_PORT_PROTOTYPE,
+                ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE,
+                ar_enum.IdentifiableSubTypes.PORT_PROTOTYPE,
+                ar_enum.IdentifiableSubTypes.PR_PORT_PROTOTYPE,
+                ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE,
+                }
+
+
+class AbstractImplementationDataTypeElementRef(BaseRef):
+    """
+    Reference to abstract or specific data-type elements
+    """
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.ABSTRACT_IMPLEMENTATION_DATA_TYPE_ELEMENT,
+                ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE_ELEMENT}
+
+
+class DataPrototypeRef(BaseRef):
+    """
+    References to DATA-PROTOTYPE--SUBTYPES-ENUM
+    """
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.APPLICATION_ARRAY_ELEMENT,
+                ar_enum.IdentifiableSubTypes.APPLICATION_COMPOSITE_ELEMENT_DATA_PROTOTYPE,
+                ar_enum.IdentifiableSubTypes.APPLICATION_RECORD_ELEMENT,
+                ar_enum.IdentifiableSubTypes.ARGUMENT_DATA_PROTOTYPE,
+                ar_enum.IdentifiableSubTypes.AUTOSAR_DATA_PROTOTYPE,
+                ar_enum.IdentifiableSubTypes.DATA_PROTOTYPE,
+                ar_enum.IdentifiableSubTypes.PARAMETER_DATA_PROTOTYPE,
+                ar_enum.IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE,
+                }
 
 # --- Documentation Elements
 
@@ -3924,7 +3980,6 @@ class SenderComSpec(ProvidePortComSpec):
 
     def __init__(self,
                  data_element_ref: AutosarDataPrototypeRef | VariableDataPrototypeRef | None = None,
-                 data_update_period: float | int | None = None,
                  handle_out_of_range: ar_enum.HandleOutOfRange | None = None,
                  network_representation: SwDataDefProps | None = None,
                  transmission_acknowledge: TransmissionAcknowledgementRequest | float | None = None,
@@ -3934,10 +3989,10 @@ class SenderComSpec(ProvidePortComSpec):
         super().__init__()
         # .COMPOSITE-NETWORK-REPRESENTATIONS not supported
         self.data_element_ref: AutosarDataPrototypeRef | None = None  # .DATA-ELEMENT-REF
-        self.data_update_period: float | None = None  # .DATA-UPDATE-PERIOD
+        # .DATA-UPDATE-PERIOD not supported (Status Removed)
         self.handle_out_of_range: ar_enum.HandleOutOfRange | None = None  # .HANDLE-OUT-OF-RANGE
         self.network_representation: SwDataDefProps | None = None  # .NETWORK-REPRESENTATION
-        # .SENDER-INTENT not supported (adaptive platform)
+        # .SENDER-INTENT not supported (Adaptive Platform)
         self.transmission_acknowledge: TransmissionAcknowledgementRequest | None = None  # .TRANSMISSION-ACKNOWLEDGE
         self.tranmsission_props: TransmissionComSpecProps | None = None  # .TRANSMISSION-PROPS
         self.uses_end_to_end_protection: bool | None = None  # .USES-END-TO-END-PROTECTION
@@ -3951,7 +4006,6 @@ class SenderComSpec(ProvidePortComSpec):
                 raise ar_except.AssignmentTypeError("data_element_ref",
                                                     ("AutosarDataPrototypeRef", "VariableDataPrototypeRef"),
                                                     data_element_ref)
-        self._assign_optional("data_update_period", data_update_period, float)
         self._assign_optional("handle_out_of_range", handle_out_of_range, ar_enum.HandleOutOfRange)
         self._assign_optional_strict("network_representation", network_representation, SwDataDefProps)
         self._assign_optional_strict("tranmsission_props", tranmsission_props, TransmissionComSpecProps)
@@ -4055,7 +4109,7 @@ class ParameterProvideComSpec(ProvidePortComSpec):
                  ) -> None:
         super().__init__()
         self.init_value: ValueSpeficationElement | None = None  # .INIT-VALUE
-        self.parameter_ref: VariableDataPrototypeRef | None = None         # .PARAMETER-REF
+        self.parameter_ref: VariableDataPrototypeRef | None = None  # .PARAMETER-REF
         self._assign_optional_strict("init_value", init_value, ValueSpecification)
         self._assign_optional("parameter_ref", parameter_ref, ParameterDataPrototypeRef)
 
@@ -4085,6 +4139,256 @@ class ServerComSpec(ProvidePortComSpec):
         # USER-DEFINED-TRANSFORMATION-COM-SPEC-PROPS not yet supported under transformation_com_spec_props
         self._assign_optional("operation_ref", operation_ref, ClientServerOperationRef)
         self._assign_optional_positive_int("queue_length", queue_length)
+        if transformation_com_spec_props is not None:
+            if isinstance(transformation_com_spec_props, EndToEndTransformationComSpecProps):
+                self.append_transformation_com_spec_props(transformation_com_spec_props)
+            elif isinstance(transformation_com_spec_props, list):
+                for props in transformation_com_spec_props:
+                    self.append_transformation_com_spec_props(props)
+            else:
+                raise ar_except.AssignmentTypeError("transformation_com_spec_props",
+                                                    ("EndToEndTransformationComSpecProps",
+                                                     "list[EndToEndTransformationComSpecProps]"),
+                                                    transformation_com_spec_props)
+
+    def append_transformation_com_spec_props(self, props: EndToEndTransformationComSpecProps) -> None:
+        """
+        Appends EndToEndTransformationComSpecProps to internal list of transformations
+
+        Elements of type AR:USER-DEFINED-TRANSFORMATION-COM-SPEC-PROPS not yet implemented
+        """
+        if isinstance(props, EndToEndTransformationComSpecProps):
+            self.transformation_com_spec_props.append(props)
+        else:
+            raise TypeError("props must be of type EndToEndTransformationComSpecProps")
+
+
+class ReceptionComSpecProps(ARObject):
+    """
+    Complex type AR:RECEPTION-COM-SPEC-PROPS
+    Tag variants: 'RECEPTION-PROPS'
+    """
+
+    def __init__(self,
+                 data_update_period: float | None = None,
+                 timeout: float | None = None,
+                 ) -> None:
+        super().__init__()
+        self.data_update_period: float | None = None  # .DATA-UPDATE-PERIOD
+        self.timeout: float | None = None  # .TIMEOUT
+        self._assign_optional("data_update_period", data_update_period, float)
+        self._assign_optional("timeout", timeout, float)
+
+
+class RequirePortComSpec(ARObject):
+    """
+    Group AR:R-PORT-COM-SPEC
+    """
+
+
+class ReceiverComSpec(RequirePortComSpec):
+    """
+    Group AR:RECEIVER-COM-SPEC
+    """
+
+    def __init__(self,
+                 data_element_ref: AutosarDataPrototypeRef | VariableDataPrototypeRef | None = None,
+                 handle_out_of_range: ar_enum.HandleOutOfRange | None = None,
+                 handle_out_of_range_status: ar_enum.HandleOutOfRangeStatus | None = None,
+                 max_delta_counter_init: int | None = None,
+                 max_no_new_repeated_data: int | None = None,
+                 network_representation: SwDataDefProps | None = None,
+                 reception_props: ReceptionComSpecProps | None = None,
+                 replace_with: Union["VariableAccess", None] = None,
+                 sync_counter_init: int | None = None,
+                 transformation_com_spec_props: EndToEndTransformationComSpecPropsArgTypes | None = None,
+                 uses_end_to_end_protection: bool | None = None
+                 ) -> None:
+        super().__init__()
+        # .COMPOSITE-NETWORK-REPRESENTATIONS not supported
+        self.data_element_ref: AutosarDataPrototypeRef | None = None  # .DATA-ELEMENT-REF
+        # .DATA-UPDATE-PERIOD not supported (Status Removed)
+        # .EXTERNAL-REPLACEMENT-REF not supported (Status Removed)
+        self.handle_out_of_range: ar_enum.HandleOutOfRange | None = None  # .HANDLE-OUT-OF-RANGE
+        self.handle_out_of_range_status: ar_enum.HandleOutOfRangeStatus | None = None  # .HANDLE-OUT-OF-RANGE-STATUS
+        self.max_delta_counter_init: int | None = None   # .MAX-DELTA-COUNTER-INIT
+        self.max_no_new_repeated_data: int | None = None   # .MAX-NO-NEW-OR-REPEATED-DATA
+        self.network_representation: SwDataDefProps | None = None  # .NETWORK-REPRESENTATION
+        # .RECEIVER-INTENT not supported (adaptive platform)
+        self.reception_props: ReceptionComSpecProps | None = None  # .RECEPTION-PROPS
+        self.replace_with: VariableAccess | None = None  # .REPLACE-WITH
+        self.sync_counter_init: int | None = None   # .SYNC-COUNTER-INIT
+        self.transformation_com_spec_props: list[EndToEndTransformationComSpecProps] = []
+        self.uses_end_to_end_protection: bool | None = None  # .USES-END-TO-END-PROTECTION
+        if data_element_ref is not None:
+            if isinstance(data_element_ref, AutosarDataPrototypeRef):
+                self.data_element_ref = data_element_ref
+            elif isinstance(data_element_ref, VariableDataPrototypeRef):
+                self.data_element_ref = AutosarDataPrototypeRef(data_element_ref.value,
+                                                                ar_enum.IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE)
+            else:
+                raise ar_except.AssignmentTypeError("data_element_ref",
+                                                    ("AutosarDataPrototypeRef", "VariableDataPrototypeRef"),
+                                                    data_element_ref)
+
+        self._assign_optional("handle_out_of_range", handle_out_of_range, ar_enum.HandleOutOfRange)
+        self._assign_optional("handle_out_of_range_status", handle_out_of_range_status, ar_enum.HandleOutOfRangeStatus)
+        self._assign_optional_positive_int("max_delta_counter_init", max_delta_counter_init)
+        self._assign_optional_positive_int("max_no_new_repeated_data", max_no_new_repeated_data)
+        self._assign_optional_strict("network_representation", network_representation, SwDataDefProps)
+        self._assign_optional_strict("reception_props", reception_props, ReceptionComSpecProps)
+        self._assign_optional_strict("replace_with", replace_with, VariableAccess)
+        self._assign_optional_positive_int("sync_counter_init", sync_counter_init)
+        self._assign_optional("uses_end_to_end_protection", uses_end_to_end_protection, bool)
+        if transformation_com_spec_props is not None:
+            if isinstance(transformation_com_spec_props, EndToEndTransformationComSpecProps):
+                self.append_transformation_com_spec_props(transformation_com_spec_props)
+            elif isinstance(transformation_com_spec_props, list):
+                for props in transformation_com_spec_props:
+                    self.append_transformation_com_spec_props(props)
+            else:
+                raise ar_except.AssignmentTypeError("transformation_com_spec_props",
+                                                    ("EndToEndTransformationComSpecProps",
+                                                     "list[EndToEndTransformationComSpecProps]"),
+                                                    transformation_com_spec_props)
+
+    def append_transformation_com_spec_props(self, com_spec_props: EndToEndTransformationComSpecProps) -> None:
+        """
+        Appends EndToEndTransformationComSpecProps to internal list of transformations
+
+        Elements of type AR:USER-DEFINED-TRANSFORMATION-COM-SPEC-PROPS not yet implemented
+        """
+        if isinstance(com_spec_props, EndToEndTransformationComSpecProps):
+            self.transformation_com_spec_props.append(com_spec_props)
+        else:
+            raise TypeError("com_spec_props must be of type EndToEndTransformationComSpecProps")
+
+
+class QueuedReceiverComSpec(ReceiverComSpec):
+    """
+    Complex type AR:QUEUED-RECEIVER-COM-SPEC
+    Tag variants: 'QUEUED-RECEIVER-COM-SPEC'
+    """
+
+    def __init__(self,
+                 queue_length: int | None = None,
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.queue_length: int | None = None  # .QUEUE-LENGTH
+        self._assign_optional_positive_int("queue_length", queue_length)
+
+
+class NonqueuedReceiverComSpec(ReceiverComSpec):
+    """
+    Complex type AR:NONQUEUED-RECEIVER-COM-SPEC
+    Tag variants: 'NONQUEUED-RECEIVER-COM-SPEC'
+    """
+
+    def __init__(self,
+                 alive_timeout: int | float | None = None,
+                 enable_update: bool | None = None,
+                 data_filter: DataFilter | None = None,
+                 handle_data_status: bool | None = None,
+                 handle_never_received: bool | None = None,
+                 handle_timeout_type: ar_enum.HandleTimeout | None = None,
+                 init_value: ValueSpeficationElement | None = None,
+                 timeout_substitution_value: ValueSpeficationElement | None = None,
+                 **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.alive_timeout: int | float | None = None  # .ALIVE-TIMEOUT
+        self.enable_update: bool | None = None  # .ENABLE-UPDATE
+        self.data_filter: DataFilter | None = None  # .FILTER
+        self.handle_data_status: bool | None = None  # .HANDLE-DATA-STATUS
+        self.handle_never_received: bool | None = None  # .HANDLE-NEVER-RECEIVED
+        self.handle_timeout_type: ar_enum.HandleTimeout | None = None  # .HANDLE-TIMEOUT-TYPE
+        self.init_value: ValueSpeficationElement | None = None  # .INIT-VALUE
+        self.timeout_substitution_value: ValueSpeficationElement | None = None  # .TIMEOUT-SUBSTITUTION-VALUE
+        self._assign_optional("alive_timeout", alive_timeout, float)
+        self._assign_optional("enable_update", enable_update, bool)
+        self._assign_optional_strict("data_filter", data_filter, DataFilter)
+        self._assign_optional("handle_data_status", handle_data_status, bool)
+        self._assign_optional("handle_never_received", handle_never_received, bool)
+        self._assign_optional("handle_timeout_type", handle_timeout_type, ar_enum.HandleTimeout)
+        self._assign_optional_strict("init_value", init_value, ValueSpecification)
+        self._assign_optional_strict("timeout_substitution_value", timeout_substitution_value, ValueSpecification)
+
+
+class NvRequireComSpec(RequirePortComSpec):
+    """
+    Complex type AR:NV-REQUIRE-COM-SPEC
+    Tag variants: 'NV-REQUIRE-COM-SPEC'
+    """
+
+    def __init__(self,
+                 variable_ref: VariableDataPrototypeRef | None = None,
+                 init_value: ValueSpeficationElement | None = None,
+                 ) -> None:
+        super().__init__()
+        self.init_value: ValueSpeficationElement | None = None  # .INIT-VALUE
+        self.variable_ref: VariableDataPrototypeRef | None = None  # .VARIABLE-REF
+        self._assign_optional_strict("init_value", init_value, ValueSpecification)
+        self._assign_optional("variable_ref", variable_ref, VariableDataPrototypeRef)
+
+
+class ParameterRequireComSpec(RequirePortComSpec):
+    """
+    Complex type AR:PARAMETER-REQUIRE-COM-SPEC
+    Tag variants: 'PARAMETER-REQUIRE-COM-SPEC'
+    """
+
+    def __init__(self,
+                 parameter_ref: ParameterDataPrototypeRef | str | None = None,
+                 init_value: ValueSpeficationElement | None = None,
+                 ) -> None:
+        super().__init__()
+        self.init_value: ValueSpeficationElement | None = None  # .INIT-VALUE
+        self.parameter_ref: VariableDataPrototypeRef | None = None  # .PARAMETER-REF
+        self._assign_optional_strict("init_value", init_value, ValueSpecification)
+        self._assign_optional("parameter_ref", parameter_ref, ParameterDataPrototypeRef)
+
+
+class ModeSwitchReceiverComSpec(RequirePortComSpec):
+    """
+    Complex type AR:MODE-SWITCH-RECEIVER-COM-SPEC
+    Tag variants: 'MODE-SWITCH-RECEIVER-COM-SPEC'
+    """
+
+    def __init__(self,
+                 mode_group_ref: str | ModeDeclarationGroupPrototypeRef | None = None,
+                 enhanced_mode_api: bool | None = None,
+                 supports_async: bool | None = None,
+                 ) -> None:
+        super().__init__()
+        self.mode_group_ref: ModeDeclarationGroupPrototypeRef | None = None  # .ENHANCED-MODE-API
+        self.enhanced_mode_api: bool | None = None  # .MODE-GROUP-REF
+        self.supports_async: bool | None = None  # .SUPPORTS-ASYNCHRONOUS-MODE-SWITCH
+        self._assign_optional("mode_group_ref", mode_group_ref, ModeDeclarationGroupPrototypeRef)
+        self._assign_optional("enhanced_mode_api", enhanced_mode_api, bool)
+        self._assign_optional("supports_async", supports_async, bool)
+
+
+class ClientComSpec(RequirePortComSpec):
+    """
+    Complex type AR:CLIENT-COM-SPEC
+    Tag variants: 'CLIENT-COM-SPEC'
+    """
+
+    def __init__(self,
+                 operation_ref: ClientServerOperationRef | None = None,
+                 e2e_call_respone_timeout: float | int | None = None,
+                 transformation_com_spec_props: EndToEndTransformationComSpecPropsArgTypes | None = None
+                 ) -> None:
+        super().__init__()
+        # .CLIENT-INTENT not supported (Adaptive Platform)
+        # .GETTER-REF not supported (Adaptive Platform)
+        self.operation_ref: ClientServerOperationRef | None = None  # .OPERATION-REF
+        self.e2e_call_respone_timeout: float | None = None  # .END-TO-END-CALL-RESPONSE-TIMEOUT
+        # .SETTER-REF not supported (Adaptive Platform)
+        # .TRANSFORMATION-COM-SPEC-PROPSS
+        self.transformation_com_spec_props: list[EndToEndTransformationComSpecProps] = []
+        # USER-DEFINED-TRANSFORMATION-COM-SPEC-PROPS not yet supported under transformation_com_spec_props
+        self._assign_optional("operation_ref", operation_ref, ClientServerOperationRef)
+        self._assign_optional("e2e_call_respone_timeout", e2e_call_respone_timeout, float)
         if transformation_com_spec_props is not None:
             if isinstance(transformation_com_spec_props, EndToEndTransformationComSpecProps):
                 self.append_transformation_com_spec_props(transformation_com_spec_props)
@@ -4173,3 +4477,149 @@ class ApplicationSoftwareComponentType(AtomicSoftwareComponentType):
 
     def __init__(self, name: str, **kwargs) -> None:
         super().__init__(name, **kwargs)
+
+# --- SWC internal behavior elements
+
+
+class ArVariableInImplementationDataInstanceRef(ARObject):
+    """
+    Complex type AR:AR-VARIABLE-IN-IMPLEMENTATION-DATA-INSTANCE-REF
+    Tag variants: 'AUTOSAR-VARIABLE-IN-IMPL-DATATYPE' | 'IMPLEMENTATION-DATA-TYPE-ELEMENT'
+    """
+
+    ContextDataPrototypeArgType = Union[AbstractImplementationDataTypeElementRef,
+                                        list[AbstractImplementationDataTypeElementRef]]
+
+    def __init__(self,
+                 port_prototype_ref: PortPrototypeRef | None = None,
+                 root_variable_data_prototype_ref: VariableDataPrototypeRef | None = None,
+                 context_data_prototype_refs: ContextDataPrototypeArgType | None = None,
+                 target_data_prototype_ref: AbstractImplementationDataTypeElementRef | None = None
+                 ) -> None:
+        super().__init__()
+        # .PORT-PROTOTYPE-REF
+        self.port_prototype_ref: PortPrototypeRef | None = None
+        # .ROOT-VARIABLE-DATA-PROTOTYPE-REF
+        self.root_variable_data_prototype_ref: VariableDataPrototypeRef | None = None
+        # .CONTEXT-DATA-PROTOTYPE-REFS
+        self.context_data_prototype_refs: list[AbstractImplementationDataTypeElementRef] = []
+        # .TARGET-DATA-PROTOTYPE-REF
+        self.target_data_prototype_ref: AbstractImplementationDataTypeElementRef | None = None
+
+        self._assign_optional_strict("port_prototype_ref", port_prototype_ref, PortPrototypeRef)
+        self._assign_optional_strict("root_variable_data_prototype_ref",
+                                     root_variable_data_prototype_ref,
+                                     VariableDataPrototypeRef)
+        self._assign_optional_strict("target_data_prototype_ref",
+                                     target_data_prototype_ref,
+                                     AbstractImplementationDataTypeElementRef)
+        if context_data_prototype_refs is not None:
+            if isinstance(context_data_prototype_refs, AbstractImplementationDataTypeElementRef):
+                self.append_context_data_protype_ref(context_data_prototype_refs)
+            elif isinstance(context_data_prototype_refs, list):
+                for context_data_prototype_ref in context_data_prototype_refs:
+                    self.append_context_data_protype_ref(context_data_prototype_ref)
+
+    def append_context_data_protype_ref(self, context_data_prototype_ref: AbstractImplementationDataTypeElementRef):
+        """
+        Appends datatype reference to internal list of context data type references
+        """
+        if isinstance(context_data_prototype_ref, AbstractImplementationDataTypeElementRef):
+            self.context_data_prototype_refs.append(context_data_prototype_ref)
+        else:
+            raise TypeError("context_data_prototype_ref must be of type AbstractImplementationDataTypeElementRef")
+
+
+class VariableInAtomicSWCTypeInstanceRef(ARObject):
+    """
+    Complex type AR:VARIABLE-IN-ATOMIC-SWC-TYPE-INSTANCE-REF
+    Tag variants: 'AUTOSAR-VARIABLE-IREF'
+    """
+
+    ContextDataPrototypeArgType = Union[ApplicationCompositeElementDataPrototypeRef,
+                                        list[ApplicationCompositeElementDataPrototypeRef]]
+
+    def __init__(self,
+                 port_prototype_ref: PortPrototypeRef | None = None,
+                 root_variable_data_prototype_ref: VariableDataPrototypeRef | None = None,
+                 context_data_prototype_refs: ContextDataPrototypeArgType | None = None,
+                 target_data_prototype_ref: DataPrototypeRef | None = None,
+                 ) -> None:
+        super().__init__()
+        # .PORT-PROTOTYPE-REF
+        self.port_prototype_ref: PortPrototypeRef | None = None
+        # .ROOT-VARIABLE-DATA-PROTOTYPE-REF
+        self.root_variable_data_prototype_ref: VariableDataPrototypeRef | None = None
+        # .CONTEXT-DATA-PROTOTYPE-REF
+        self.context_data_prototype_refs: list[ApplicationCompositeElementDataPrototypeRef] = []
+        # .TARGET-DATA-PROTOTYPE-REF
+        self.target_data_prototype_ref: DataPrototypeRef | None = None
+        self._assign_optional_strict("port_prototype_ref", port_prototype_ref, PortPrototypeRef)
+        self._assign_optional_strict("root_variable_data_prototype_ref",
+                                     root_variable_data_prototype_ref, VariableDataPrototypeRef)
+        self._assign_optional_strict("target_data_prototype_ref", target_data_prototype_ref, DataPrototypeRef)
+        if context_data_prototype_refs is not None:
+            if isinstance(context_data_prototype_refs, ApplicationCompositeElementDataPrototypeRef):
+                self.append_context_data_protype_ref(context_data_prototype_refs)
+            elif isinstance(context_data_prototype_refs, list):
+                for context_data_prototype_ref in context_data_prototype_refs:
+                    self.append_context_data_protype_ref(context_data_prototype_ref)
+
+    def append_context_data_protype_ref(self, context_data_prototype_ref: ApplicationCompositeElementDataPrototypeRef):
+        """
+        Appends datatype reference to internal list of context data type references
+        """
+        if isinstance(context_data_prototype_ref, ApplicationCompositeElementDataPrototypeRef):
+            self.context_data_prototype_refs.append(context_data_prototype_ref)
+        else:
+            raise TypeError("context_data_prototype_ref must be of type AbstractImplementationDataTypeElementRef")
+
+
+class AutosarVariableRef(ARObject):
+    """
+    Complex type AR:AUTOSAR-VARIABLE-REF
+    Tag variants: 'VARIABLE-INSTANCE' | 'NV-RAM-BLOCK-ELEMENT' | 'READ-NV-DATA' |
+                  'WRITTEN-NV-DATA' | 'WRITTEN-READ-NV-DATA' | 'USED-DATA-ELEMENT' |
+                  'AUTOSAR-VARIABLE' | 'ACCESSED-VARIABLE'
+    """
+
+    def __init__(self,
+                 ar_variable_in_impl_datatype: ArVariableInImplementationDataInstanceRef | None = None,
+                 ar_variable_iref: VariableInAtomicSWCTypeInstanceRef | None = None,
+                 local_variable_ref: VariableDataPrototypeRef | None = None
+                 ) -> None:
+        super().__init__()
+        # .AUTOSAR-VARIABLE-IN-IMPL-DATATYPE
+        self.ar_variable_in_impl_datatype: ArVariableInImplementationDataInstanceRef | None = None
+        # .AUTOSAR-VARIABLE-IREF
+        self.ar_variable_iref: VariableInAtomicSWCTypeInstanceRef | None = None
+        # .LOCAL-VARIABLE-REF
+        self.local_variable_ref: VariableDataPrototypeRef | None = None
+        self._assign_optional_strict("ar_variable_in_impl_datatype",
+                                     ar_variable_in_impl_datatype,
+                                     ArVariableInImplementationDataInstanceRef)
+        self._assign_optional_strict("ar_variable_iref",
+                                     ar_variable_iref,
+                                     VariableInAtomicSWCTypeInstanceRef)
+        self._assign_optional_strict("local_variable_ref",
+                                     local_variable_ref,
+                                     VariableDataPrototypeRef)
+
+
+class VariableAccess(Identifiable):
+    """
+    Complex type AR:VARIABLE-ACCESS
+    Tag variants: 'REPLACE-WITH' | 'VARIABLE-ACCESS'
+    """
+
+    def __init__(self,
+                 name: str,
+                 accessed_variable: AutosarVariableRef | None = None,
+                 scope: ar_enum.VariableAccessScope | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.accessed_variable: AutosarVariableRef | None = None  # .ACCESSED-VARIABLE
+        self.scope: ar_enum.VariableAccessScope | None = None  # .SCOPE
+        # .VARIATION-POINT not supported
+        self._assign_optional_strict("accessed_variable", accessed_variable, AutosarVariableRef)
+        self._assign_optional("scope", scope, ar_enum.VariableAccessScope)
