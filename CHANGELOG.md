@@ -20,23 +20,39 @@ Non-collectable elements are various sub-elements to collectable elements.
 
 #### XML - Software component elements
 
+* ClientComSpec
 * ModeSwitchedAckRequest
+* ModeSwitchReceiverComSpec
 * ModeSwitchSenderComSpec
+* NonqueuedReceiverComSpec
 * NonqueuedSenderComSpec
 * NvProvideComSpec
+* NvRequireComSpec
 * ParameterProvideComSpec
+* ParameterRequireComSpec
+* QueuedReceiverComSpec
 * QueuedSenderComSpec
+* ReceptionComSpecProps
 * ServerComSpec
 * TransmissionAcknowledgementRequest
 * TransmissionComSpecProps
 
+#### XML - SWC internal behavior elements
+
+* ArVariableInImplementationDataInstanceRef
+* AutosarVariableRef
+* VariableAccess
+* VariableInAtomicSWCTypeInstanceRef
+
 #### XML - Reference elements
 
-* ParameterDataPrototypeRef
-* ModeDeclarationGroupPrototypeRef
+* ApplicationCompositeElementDataPrototypeRef
 * AutosarDataPrototypeRef
-* E2EProfileCompatibilityPropsRef
 * ClientServerOperationRef
+* E2EProfileCompatibilityPropsRef
+* ModeDeclarationGroupPrototypeRef
+* ParameterDataPrototypeRef
+* PortPrototypeRef
 
 ## [v0.5.2] - 2024-02-11
 

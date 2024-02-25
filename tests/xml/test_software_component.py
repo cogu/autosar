@@ -199,18 +199,6 @@ class TestQueuedSenderComSpec(unittest.TestCase):
         self.assertEqual(str(elem.data_element_ref), "/PortInterfaces/InterfaceName/ElementName")
         self.assertEqual(elem.data_element_ref.dest, ar_enum.IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE)
 
-    def test_data_update_period(self):
-        element = ar_element.QueuedSenderComSpec(data_update_period=0.05)
-        writer = autosar.xml.Writer()
-        xml = '''<QUEUED-SENDER-COM-SPEC>
-  <DATA-UPDATE-PERIOD>0.05</DATA-UPDATE-PERIOD>
-</QUEUED-SENDER-COM-SPEC>'''
-        self.assertEqual(writer.write_str_elem(element), xml)
-        reader = autosar.xml.Reader()
-        elem: ar_element.QueuedSenderComSpec = reader.read_str_elem(xml)
-        self.assertIsInstance(elem, ar_element.QueuedSenderComSpec)
-        self.assertAlmostEqual(elem.data_update_period, 0.05)
-
     def test_handle_out_range(self):
         element = ar_element.QueuedSenderComSpec(handle_out_of_range=ar_enum.HandleOutOfRange.SATURATE)
         writer = autosar.xml.Writer()
@@ -448,7 +436,7 @@ class TestParameterProvideComSpec(unittest.TestCase):
         self.assertIsInstance(elem, ar_element.ParameterProvideComSpec)
         self.assertEqual(str(elem.parameter_ref), "/PortInterfaces/ParameterInterface/Value")
 
-    def test_rom_block_init_value(self):
+    def test_init_value(self):
         init_value = ar_element.NumericalValueSpecification(value=0)
         element = ar_element.ParameterProvideComSpec(init_value=init_value)
         writer = autosar.xml.Writer()
@@ -532,6 +520,612 @@ class TestServerComSpec(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.ServerComSpec = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.ServerComSpec)
+        self.assertEqual(len(elem.transformation_com_spec_props), 1)
+        props = elem.transformation_com_spec_props[0]
+        self.assertTrue(props.disable_e2e_check)
+
+
+class TestReceptionComSpecProps(unittest.TestCase):
+
+    def test_empty(self):
+        element = ar_element.ReceptionComSpecProps()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<RECEPTION-PROPS/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.ReceptionComSpecProps = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ReceptionComSpecProps)
+
+    def test_data_update_period(self):
+        element = ar_element.ReceptionComSpecProps(data_update_period=0.1)
+        writer = autosar.xml.Writer()
+        xml = '''<RECEPTION-PROPS>
+  <DATA-UPDATE-PERIOD>0.1</DATA-UPDATE-PERIOD>
+</RECEPTION-PROPS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ReceptionComSpecProps = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ReceptionComSpecProps)
+        self.assertAlmostEqual(elem.data_update_period, 0.1)
+
+    def test_timeout(self):
+        element = ar_element.ReceptionComSpecProps(timeout=1)
+        writer = autosar.xml.Writer()
+        xml = '''<RECEPTION-PROPS>
+  <TIMEOUT>1</TIMEOUT>
+</RECEPTION-PROPS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ReceptionComSpecProps = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ReceptionComSpecProps)
+        self.assertAlmostEqual(elem.timeout, 1)
+
+
+class TestVariableAccess(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.VariableAccess("ShortName")
+        writer = autosar.xml.Writer()
+        xml = '''<VARIABLE-ACCESS>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+</VARIABLE-ACCESS>'''
+        self.assertEqual(writer.write_str_elem(element, "VARIABLE-ACCESS"), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.VariableAccess = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.VariableAccess)
+        self.assertEqual(elem.name, "ShortName")
+
+    def test_accessed_variable(self):
+        ref_str = "/Components/SwcName/VariableName"
+        variable_ref = ar_element.VariableDataPrototypeRef(ref_str)
+        accessed_var = ar_element.AutosarVariableRef(local_variable_ref=variable_ref)
+        element = ar_element.VariableAccess("ShortName",
+                                            accessed_variable=accessed_var)
+        writer = autosar.xml.Writer()
+        xml = f'''<VARIABLE-ACCESS>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <ACCESSED-VARIABLE>
+    <LOCAL-VARIABLE-REF DEST="VARIABLE-DATA-PROTOTYPE">{ref_str}</LOCAL-VARIABLE-REF>
+  </ACCESSED-VARIABLE>
+</VARIABLE-ACCESS>'''
+        self.assertEqual(writer.write_str_elem(element, "VARIABLE-ACCESS"), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.VariableAccess = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.VariableAccess)
+        self.assertIsInstance(elem.accessed_variable, ar_element.AutosarVariableRef)
+
+    def test_scope(self):
+        element = ar_element.VariableAccess("ShortName",
+                                            scope=ar_enum.VariableAccessScope.INTER_PARTITION_INTRA_ECU)
+        writer = autosar.xml.Writer()
+        xml = '''<VARIABLE-ACCESS>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <SCOPE>INTER-PARTITION-INTRA-ECU</SCOPE>
+</VARIABLE-ACCESS>'''
+        self.assertEqual(writer.write_str_elem(element, "VARIABLE-ACCESS"), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.VariableAccess = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.VariableAccess)
+        self.assertEqual(elem.scope, ar_enum.VariableAccessScope.INTER_PARTITION_INTRA_ECU)
+
+
+class TestQueuedReceiverComSpec(unittest.TestCase):
+    """
+    This also tests elements in class ReceiverComSpec
+    """
+
+    def test_empty(self):
+        element = ar_element.QueuedReceiverComSpec()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<QUEUED-RECEIVER-COM-SPEC/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.QueuedReceiverComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.QueuedReceiverComSpec)
+
+    def test_data_element_ref(self):
+        data_element_ref = ar_element.AutosarDataPrototypeRef("/PortInterfaces/InterfaceName/ElementName",
+                                                              ar_enum.IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE)
+        element = ar_element.QueuedReceiverComSpec(data_element_ref=data_element_ref)
+        writer = autosar.xml.Writer()
+        xml = '''<QUEUED-RECEIVER-COM-SPEC>
+  <DATA-ELEMENT-REF DEST="VARIABLE-DATA-PROTOTYPE">/PortInterfaces/InterfaceName/ElementName</DATA-ELEMENT-REF>
+</QUEUED-RECEIVER-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.QueuedReceiverComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.QueuedReceiverComSpec)
+        self.assertIsInstance(elem.data_element_ref, ar_element.AutosarDataPrototypeRef)
+        self.assertEqual(str(elem.data_element_ref), "/PortInterfaces/InterfaceName/ElementName")
+        self.assertEqual(elem.data_element_ref.dest, ar_enum.IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE)
+
+    def test_handle_out_of_range(self):
+        element = ar_element.QueuedReceiverComSpec(handle_out_of_range=ar_enum.HandleOutOfRange.SATURATE)
+        writer = autosar.xml.Writer()
+        xml = '''<QUEUED-RECEIVER-COM-SPEC>
+  <HANDLE-OUT-OF-RANGE>SATURATE</HANDLE-OUT-OF-RANGE>
+</QUEUED-RECEIVER-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.QueuedReceiverComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.QueuedReceiverComSpec)
+        self.assertEqual(elem.handle_out_of_range, ar_enum.HandleOutOfRange.SATURATE)
+
+    def test_handle_out_of_range_status(self):
+        element = ar_element.QueuedReceiverComSpec(handle_out_of_range_status=ar_enum.HandleOutOfRangeStatus.SILENT)
+        writer = autosar.xml.Writer()
+        xml = '''<QUEUED-RECEIVER-COM-SPEC>
+  <HANDLE-OUT-OF-RANGE-STATUS>SILENT</HANDLE-OUT-OF-RANGE-STATUS>
+</QUEUED-RECEIVER-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.QueuedReceiverComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.QueuedReceiverComSpec)
+        self.assertEqual(elem.handle_out_of_range_status, ar_enum.HandleOutOfRangeStatus.SILENT)
+
+    def test_max_delta_counter_init(self):
+        element = ar_element.QueuedReceiverComSpec(max_delta_counter_init=10)
+        writer = autosar.xml.Writer()
+        xml = '''<QUEUED-RECEIVER-COM-SPEC>
+  <MAX-DELTA-COUNTER-INIT>10</MAX-DELTA-COUNTER-INIT>
+</QUEUED-RECEIVER-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.QueuedReceiverComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.QueuedReceiverComSpec)
+        self.assertEqual(elem.max_delta_counter_init, 10)
+
+    def test_max_no_new_repeated_data(self):
+        element = ar_element.QueuedReceiverComSpec(max_no_new_repeated_data=20)
+        writer = autosar.xml.Writer()
+        xml = '''<QUEUED-RECEIVER-COM-SPEC>
+  <MAX-NO-NEW-OR-REPEATED-DATA>20</MAX-NO-NEW-OR-REPEATED-DATA>
+</QUEUED-RECEIVER-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.QueuedReceiverComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.QueuedReceiverComSpec)
+        self.assertEqual(elem.max_no_new_repeated_data, 20)
+
+    def test_network_representation(self):
+        impl_type_ref = ar_element.ImplementationDataTypeRef("/DataTypes/TypeName")
+        network_props = ar_element.SwDataDefProps(
+            ar_element.SwDataDefPropsConditional(impl_data_type_ref=impl_type_ref))
+        element = ar_element.QueuedReceiverComSpec(network_representation=network_props)
+        writer = autosar.xml.Writer()
+        xml = '''<QUEUED-RECEIVER-COM-SPEC>
+  <NETWORK-REPRESENTATION>
+    <SW-DATA-DEF-PROPS-VARIANTS>
+      <SW-DATA-DEF-PROPS-CONDITIONAL>
+        <IMPLEMENTATION-DATA-TYPE-REF DEST="IMPLEMENTATION-DATA-TYPE">/DataTypes/TypeName</IMPLEMENTATION-DATA-TYPE-REF>
+      </SW-DATA-DEF-PROPS-CONDITIONAL>
+    </SW-DATA-DEF-PROPS-VARIANTS>
+  </NETWORK-REPRESENTATION>
+</QUEUED-RECEIVER-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.QueuedReceiverComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.QueuedReceiverComSpec)
+        self.assertEqual(str(elem.network_representation[0].impl_data_type_ref), "/DataTypes/TypeName")
+
+    def test_reception_props(self):
+        props = ar_element.ReceptionComSpecProps(data_update_period=0.1, timeout=0.8)
+        element = ar_element.QueuedReceiverComSpec(reception_props=props)
+        writer = autosar.xml.Writer()
+        xml = '''<QUEUED-RECEIVER-COM-SPEC>
+  <RECEPTION-PROPS>
+    <DATA-UPDATE-PERIOD>0.1</DATA-UPDATE-PERIOD>
+    <TIMEOUT>0.8</TIMEOUT>
+  </RECEPTION-PROPS>
+</QUEUED-RECEIVER-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.QueuedReceiverComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.QueuedReceiverComSpec)
+        self.assertAlmostEqual(elem.reception_props.data_update_period, 0.1)
+        self.assertAlmostEqual(elem.reception_props.timeout, 0.8)
+
+    def test_replace_with(self):
+        access = ar_element.VariableAccess("ShortName",
+                                           scope=ar_enum.VariableAccessScope.INTER_PARTITION_INTRA_ECU)
+        element = ar_element.QueuedReceiverComSpec(replace_with=access)
+        writer = autosar.xml.Writer()
+        xml = '''<QUEUED-RECEIVER-COM-SPEC>
+  <REPLACE-WITH>
+    <SHORT-NAME>ShortName</SHORT-NAME>
+    <SCOPE>INTER-PARTITION-INTRA-ECU</SCOPE>
+  </REPLACE-WITH>
+</QUEUED-RECEIVER-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.QueuedReceiverComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.QueuedReceiverComSpec)
+        self.assertIsInstance(elem.replace_with, ar_element.VariableAccess)
+
+    def test_sync_counter_init(self):
+        element = ar_element.QueuedReceiverComSpec(sync_counter_init=10)
+        writer = autosar.xml.Writer()
+        xml = '''<QUEUED-RECEIVER-COM-SPEC>
+  <SYNC-COUNTER-INIT>10</SYNC-COUNTER-INIT>
+</QUEUED-RECEIVER-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.QueuedReceiverComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.QueuedReceiverComSpec)
+        self.assertEqual(elem.sync_counter_init, 10)
+
+    def test_transformation_com_spec_props_single(self):
+        com_spec_props = ar_element.EndToEndTransformationComSpecProps(disable_e2e_check=True)
+        element = ar_element.QueuedReceiverComSpec(transformation_com_spec_props=com_spec_props)
+        writer = autosar.xml.Writer()
+        xml = '''<QUEUED-RECEIVER-COM-SPEC>
+  <TRANSFORMATION-COM-SPEC-PROPSS>
+    <END-TO-END-TRANSFORMATION-COM-SPEC-PROPS>
+      <DISABLE-END-TO-END-CHECK>true</DISABLE-END-TO-END-CHECK>
+    </END-TO-END-TRANSFORMATION-COM-SPEC-PROPS>
+  </TRANSFORMATION-COM-SPEC-PROPSS>
+</QUEUED-RECEIVER-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.QueuedReceiverComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.QueuedReceiverComSpec)
+        self.assertEqual(len(elem.transformation_com_spec_props), 1)
+        props = elem.transformation_com_spec_props[0]
+        self.assertTrue(props.disable_e2e_check)
+
+    def test_uses_end_to_end_protection(self):
+        element = ar_element.QueuedReceiverComSpec(uses_end_to_end_protection=False)
+        writer = autosar.xml.Writer()
+        xml = '''<QUEUED-RECEIVER-COM-SPEC>
+  <USES-END-TO-END-PROTECTION>false</USES-END-TO-END-PROTECTION>
+</QUEUED-RECEIVER-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.QueuedReceiverComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.QueuedReceiverComSpec)
+        self.assertFalse(elem.uses_end_to_end_protection)
+
+
+class TestNonqueuedReceiverComSpec(unittest.TestCase):
+
+    def test_empty(self):
+        element = ar_element.NonqueuedReceiverComSpec()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<NONQUEUED-RECEIVER-COM-SPEC/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.NonqueuedReceiverComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.NonqueuedReceiverComSpec)
+
+    def test_alive_timeout(self):
+        element = ar_element.NonqueuedReceiverComSpec(alive_timeout=2)
+        writer = autosar.xml.Writer()
+        xml = '''<NONQUEUED-RECEIVER-COM-SPEC>
+  <ALIVE-TIMEOUT>2</ALIVE-TIMEOUT>
+</NONQUEUED-RECEIVER-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.NonqueuedReceiverComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.NonqueuedReceiverComSpec)
+
+    def test_enable_update(self):
+        element = ar_element.NonqueuedReceiverComSpec(enable_update=True)
+        writer = autosar.xml.Writer()
+        xml = '''<NONQUEUED-RECEIVER-COM-SPEC>
+  <ENABLE-UPDATE>true</ENABLE-UPDATE>
+</NONQUEUED-RECEIVER-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.NonqueuedReceiverComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.NonqueuedReceiverComSpec)
+        self.assertTrue(elem.enable_update)
+
+    def test_data_filter(self):
+        data_filter = ar_element.DataFilter(min_val=0, max_val=10)
+        element = ar_element.NonqueuedReceiverComSpec(data_filter=data_filter)
+        writer = autosar.xml.Writer()
+        xml = '''<NONQUEUED-RECEIVER-COM-SPEC>
+  <FILTER>
+    <MAX>10</MAX>
+    <MIN>0</MIN>
+  </FILTER>
+</NONQUEUED-RECEIVER-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.NonqueuedReceiverComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.NonqueuedReceiverComSpec)
+        self.assertIsInstance(elem.data_filter, ar_element.DataFilter)
+        self.assertEqual(elem.data_filter.min_val, 0)
+        self.assertEqual(elem.data_filter.max_val, 10)
+
+    def test_handle_data_status(self):
+        element = ar_element.NonqueuedReceiverComSpec(handle_data_status=True)
+        writer = autosar.xml.Writer()
+        xml = '''<NONQUEUED-RECEIVER-COM-SPEC>
+  <HANDLE-DATA-STATUS>true</HANDLE-DATA-STATUS>
+</NONQUEUED-RECEIVER-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.NonqueuedReceiverComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.NonqueuedReceiverComSpec)
+        self.assertTrue(elem.handle_data_status)
+
+    def test_handle_never_received(self):
+        element = ar_element.NonqueuedReceiverComSpec(handle_never_received=True)
+        writer = autosar.xml.Writer()
+        xml = '''<NONQUEUED-RECEIVER-COM-SPEC>
+  <HANDLE-NEVER-RECEIVED>true</HANDLE-NEVER-RECEIVED>
+</NONQUEUED-RECEIVER-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.NonqueuedReceiverComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.NonqueuedReceiverComSpec)
+        self.assertTrue(elem.handle_never_received)
+
+    def test_handle_timeout_type(self):
+        timeout_handling = ar_enum.HandleTimeout.REPLACE_BY_TIMEOUT_SUBSTITUTION_VALUE
+        element = ar_element.NonqueuedReceiverComSpec(handle_timeout_type=timeout_handling)
+        writer = autosar.xml.Writer()
+        xml = '''<NONQUEUED-RECEIVER-COM-SPEC>
+  <HANDLE-TIMEOUT-TYPE>REPLACE-BY-TIMEOUT-SUBSTITUTION-VALUE</HANDLE-TIMEOUT-TYPE>
+</NONQUEUED-RECEIVER-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.NonqueuedReceiverComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.NonqueuedReceiverComSpec)
+        self.assertEqual(elem.handle_timeout_type, timeout_handling)
+
+    def test_init_value(self):
+        init_value = ar_element.NumericalValueSpecification(value=0)
+        element = ar_element.NonqueuedReceiverComSpec(init_value=init_value)
+        writer = autosar.xml.Writer()
+        xml = '''<NONQUEUED-RECEIVER-COM-SPEC>
+  <INIT-VALUE>
+    <NUMERICAL-VALUE-SPECIFICATION>
+      <VALUE>0</VALUE>
+    </NUMERICAL-VALUE-SPECIFICATION>
+  </INIT-VALUE>
+</NONQUEUED-RECEIVER-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.NonqueuedReceiverComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.NonqueuedReceiverComSpec)
+        self.assertIsInstance(elem.init_value, ar_element.NumericalValueSpecification)
+        self.assertEqual(elem.init_value.value, 0)
+
+    def test_timeout_substitution_value(self):
+        timeout_substitution_value = ar_element.NumericalValueSpecification(value=3)
+        element = ar_element.NonqueuedReceiverComSpec(timeout_substitution_value=timeout_substitution_value)
+        writer = autosar.xml.Writer()
+        xml = '''<NONQUEUED-RECEIVER-COM-SPEC>
+  <TIMEOUT-SUBSTITUTION-VALUE>
+    <NUMERICAL-VALUE-SPECIFICATION>
+      <VALUE>3</VALUE>
+    </NUMERICAL-VALUE-SPECIFICATION>
+  </TIMEOUT-SUBSTITUTION-VALUE>
+</NONQUEUED-RECEIVER-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.NonqueuedReceiverComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.NonqueuedReceiverComSpec)
+        self.assertIsInstance(elem.timeout_substitution_value, ar_element.NumericalValueSpecification)
+        self.assertEqual(elem.timeout_substitution_value.value, 3)
+
+
+class TestNvRequireComSpec(unittest.TestCase):
+
+    def test_empty(self):
+        element = ar_element.NvRequireComSpec()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<NV-REQUIRE-COM-SPEC/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.NvRequireComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.NvRequireComSpec)
+
+    def test_variable_ref_from_object(self):
+        variable_ref = ar_element.VariableDataPrototypeRef("/PortInterfaces/NvDataInterface/Data")
+        element = ar_element.NvRequireComSpec(variable_ref=variable_ref)
+        writer = autosar.xml.Writer()
+        xml = '''<NV-REQUIRE-COM-SPEC>
+  <VARIABLE-REF DEST="VARIABLE-DATA-PROTOTYPE">/PortInterfaces/NvDataInterface/Data</VARIABLE-REF>
+</NV-REQUIRE-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.NvRequireComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.NvRequireComSpec)
+        self.assertEqual(str(elem.variable_ref), "/PortInterfaces/NvDataInterface/Data")
+
+    def test_init_value(self):
+        init_value = ar_element.NumericalValueSpecification(value=255)
+        element = ar_element.NvRequireComSpec(init_value=init_value)
+        writer = autosar.xml.Writer()
+        xml = '''<NV-REQUIRE-COM-SPEC>
+  <INIT-VALUE>
+    <NUMERICAL-VALUE-SPECIFICATION>
+      <VALUE>255</VALUE>
+    </NUMERICAL-VALUE-SPECIFICATION>
+  </INIT-VALUE>
+</NV-REQUIRE-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.NvRequireComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.NvRequireComSpec)
+        self.assertIsInstance(elem.init_value, ar_element.NumericalValueSpecification)
+        self.assertEqual(elem.init_value.value, 255)
+
+
+class TestParameterRequireComSpec(unittest.TestCase):
+
+    def test_empty(self):
+        element = ar_element.ParameterRequireComSpec()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<PARAMETER-REQUIRE-COM-SPEC/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.ParameterRequireComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ParameterRequireComSpec)
+
+    def test_variable_ref_from_object(self):
+        parameter_ref = ar_element.ParameterDataPrototypeRef("/PortInterfaces/ParameterInterface/Value")
+        element = ar_element.ParameterRequireComSpec(parameter_ref=parameter_ref)
+        writer = autosar.xml.Writer()
+        xml = '''<PARAMETER-REQUIRE-COM-SPEC>
+  <PARAMETER-REF DEST="PARAMETER-DATA-PROTOTYPE">/PortInterfaces/ParameterInterface/Value</PARAMETER-REF>
+</PARAMETER-REQUIRE-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ParameterRequireComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ParameterRequireComSpec)
+        self.assertEqual(str(elem.parameter_ref), "/PortInterfaces/ParameterInterface/Value")
+
+    def test_init_value(self):
+        init_value = ar_element.NumericalValueSpecification(value=7)
+        element = ar_element.ParameterRequireComSpec(init_value=init_value)
+        writer = autosar.xml.Writer()
+        xml = '''<PARAMETER-REQUIRE-COM-SPEC>
+  <INIT-VALUE>
+    <NUMERICAL-VALUE-SPECIFICATION>
+      <VALUE>7</VALUE>
+    </NUMERICAL-VALUE-SPECIFICATION>
+  </INIT-VALUE>
+</PARAMETER-REQUIRE-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ParameterRequireComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ParameterRequireComSpec)
+        self.assertIsInstance(elem.init_value, ar_element.NumericalValueSpecification)
+        self.assertEqual(elem.init_value.value, 7)
+
+
+class TestModeSwitchReceiverComSpec(unittest.TestCase):
+
+    def test_empty(self):
+        element = ar_element.ModeSwitchReceiverComSpec()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<MODE-SWITCH-RECEIVER-COM-SPEC/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.ModeSwitchReceiverComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ModeSwitchReceiverComSpec)
+
+    def test_enhanced_mode_api(self):
+        element = ar_element.ModeSwitchReceiverComSpec(enhanced_mode_api=True)
+        writer = autosar.xml.Writer()
+        xml = '''<MODE-SWITCH-RECEIVER-COM-SPEC>
+  <ENHANCED-MODE-API>true</ENHANCED-MODE-API>
+</MODE-SWITCH-RECEIVER-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ModeSwitchReceiverComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ModeSwitchReceiverComSpec)
+        self.assertTrue(elem.enhanced_mode_api)
+
+    def test_mode_group_ref_from_str(self):
+        element = ar_element.ModeSwitchReceiverComSpec(mode_group_ref="/PortInterfaces/InterfaceName/ModeName")
+        writer = autosar.xml.Writer()
+        xml = '''<MODE-SWITCH-RECEIVER-COM-SPEC>
+  <MODE-GROUP-REF DEST="MODE-DECLARATION-GROUP-PROTOTYPE">/PortInterfaces/InterfaceName/ModeName</MODE-GROUP-REF>
+</MODE-SWITCH-RECEIVER-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ModeSwitchReceiverComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ModeSwitchReceiverComSpec)
+        self.assertIsInstance(elem.mode_group_ref, ar_element.ModeDeclarationGroupPrototypeRef)
+        self.assertEqual(str(elem.mode_group_ref), "/PortInterfaces/InterfaceName/ModeName")
+
+    def test_mode_group_ref_from_object(self):
+        mode_group_ref = ar_element.ModeDeclarationGroupPrototypeRef("/PortInterfaces/InterfaceName/ModeName")
+        element = ar_element.ModeSwitchReceiverComSpec(mode_group_ref=mode_group_ref)
+        writer = autosar.xml.Writer()
+        xml = '''<MODE-SWITCH-RECEIVER-COM-SPEC>
+  <MODE-GROUP-REF DEST="MODE-DECLARATION-GROUP-PROTOTYPE">/PortInterfaces/InterfaceName/ModeName</MODE-GROUP-REF>
+</MODE-SWITCH-RECEIVER-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ModeSwitchReceiverComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ModeSwitchReceiverComSpec)
+        self.assertIsInstance(elem.mode_group_ref, ar_element.ModeDeclarationGroupPrototypeRef)
+        self.assertEqual(str(elem.mode_group_ref), "/PortInterfaces/InterfaceName/ModeName")
+
+    def test_supports_async(self):
+        element = ar_element.ModeSwitchReceiverComSpec(supports_async=True)
+        writer = autosar.xml.Writer()
+        xml = '''<MODE-SWITCH-RECEIVER-COM-SPEC>
+  <SUPPORTS-ASYNCHRONOUS-MODE-SWITCH>true</SUPPORTS-ASYNCHRONOUS-MODE-SWITCH>
+</MODE-SWITCH-RECEIVER-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ModeSwitchReceiverComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ModeSwitchReceiverComSpec)
+        self.assertTrue(elem.supports_async)
+
+
+class TestClientComSpec(unittest.TestCase):
+
+    def test_empty(self):
+        element = ar_element.ClientComSpec()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<CLIENT-COM-SPEC/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.ClientComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ClientComSpec)
+
+    def test_operation_ref_from_object(self):
+        ref_str = "/PortInterfaces/ClientServerInterface1/Operation1"
+        operation_ref = ar_element.ClientServerOperationRef(ref_str)
+        element = ar_element.ClientComSpec(operation_ref=operation_ref)
+        writer = autosar.xml.Writer()
+        xml = f'''<CLIENT-COM-SPEC>
+  <OPERATION-REF DEST="CLIENT-SERVER-OPERATION">{ref_str}</OPERATION-REF>
+</CLIENT-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ClientComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ClientComSpec)
+        self.assertEqual(str(elem.operation_ref), ref_str)
+
+    def test_operation_ref_from_str(self):
+        ref_str = "/PortInterfaces/ClientServerInterface1/Operation1"
+        element = ar_element.ClientComSpec(operation_ref=ref_str)
+        writer = autosar.xml.Writer()
+        xml = f'''<CLIENT-COM-SPEC>
+  <OPERATION-REF DEST="CLIENT-SERVER-OPERATION">{ref_str}</OPERATION-REF>
+</CLIENT-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ClientComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ClientComSpec)
+        self.assertEqual(str(elem.operation_ref), ref_str)
+
+    def test_e2e_call_respone_timeout(self):
+        element = ar_element.ClientComSpec(e2e_call_respone_timeout=1)
+        writer = autosar.xml.Writer()
+        xml = '''<CLIENT-COM-SPEC>
+  <END-TO-END-CALL-RESPONSE-TIMEOUT>1</END-TO-END-CALL-RESPONSE-TIMEOUT>
+</CLIENT-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ClientComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ClientComSpec)
+        self.assertEqual(elem.e2e_call_respone_timeout, 1)
+
+    def test_transformation_com_spec_props_single(self):
+        com_spec_props = ar_element.EndToEndTransformationComSpecProps(disable_e2e_check=True)
+        element = ar_element.ClientComSpec(transformation_com_spec_props=com_spec_props)
+        writer = autosar.xml.Writer()
+        xml = '''<CLIENT-COM-SPEC>
+  <TRANSFORMATION-COM-SPEC-PROPSS>
+    <END-TO-END-TRANSFORMATION-COM-SPEC-PROPS>
+      <DISABLE-END-TO-END-CHECK>true</DISABLE-END-TO-END-CHECK>
+    </END-TO-END-TRANSFORMATION-COM-SPEC-PROPS>
+  </TRANSFORMATION-COM-SPEC-PROPSS>
+</CLIENT-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ClientComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ClientComSpec)
         self.assertEqual(len(elem.transformation_com_spec_props), 1)
         props = elem.transformation_com_spec_props[0]
         self.assertTrue(props.disable_e2e_check)

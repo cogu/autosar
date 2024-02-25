@@ -292,7 +292,18 @@ class Writer(_XMLWriter):
             'NvProvideComSpec': self._write_nv_provide_com_spec,
             'ParameterProvideComSpec': self._write_parameter_provide_com_spec,
             'ServerComSpec': self._write_server_com_spec,
-
+            'ReceptionComSpecProps': self._write_reception_com_spec_props,
+            'QueuedReceiverComSpec': self._write_queued_receiver_com_spec,
+            'NonqueuedReceiverComSpec': self._write_nonqueued_receiver_com_spec,
+            'NvRequireComSpec': self._write_nv_require_com_spec,
+            'ParameterRequireComSpec': self._write_parameter_require_com_spec,
+            'ModeSwitchReceiverComSpec': self._write_mode_switch_receiver_com_spec,
+            'ClientComSpec': self._write_client_com_spec,
+            # SWC internal behavior elements
+            'ArVariableInImplementationDataInstanceRef': self._write_variable_in_impl_data_instance_ref,
+            'VariableInAtomicSWCTypeInstanceRef': self._write_variable_in_atomic_swc_type_instance_ref,
+            'AutosarVariableRef': self._write_autosar_variable_ref,
+            'VariableAccess': self._write_variable_access,
         }
         self.switcher_all = {}  # All concrete elements (used for unit testing)
         self.switcher_all.update(self.switcher_collectable)
@@ -2045,6 +2056,50 @@ class Writer(_XMLWriter):
         self._collect_base_ref_attr(elem, attr)
         self._add_content(tag, elem.value, attr)
 
+    def _write_port_prototype_ref(self,
+                                  elem: ar_element.PortPrototypeRef,
+                                  tag: str) -> None:
+        """
+        Writes references to AR:PORT-PROTOTYPE--SUBTYPES-ENUM
+        """
+        assert isinstance(elem, ar_element.PortPrototypeRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content(tag, elem.value, attr)
+
+    def _write_abstract_impl_data_type_element_ref(self,
+                                                   elem: ar_element.AbstractImplementationDataTypeElementRef,
+                                                   tag: str) -> None:
+        """
+        Writes references to AR:VARIABLE-DATA-PROTOTYPE--SUBTYPES-ENUM
+        """
+        assert isinstance(elem, ar_element.AbstractImplementationDataTypeElementRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content(tag, elem.value, attr)
+
+    def _write_appl_composite_element_data_proto_ref(self,
+                                                     elem: ar_element.ApplicationCompositeElementDataPrototypeRef,
+                                                     tag: str) -> None:
+        """
+        Writes references to APPLICATION-COMPOSITE-ELEMENT-DATA-PROTOTYPE--SUBTYPES-ENUM
+        """
+        assert isinstance(elem, ar_element.ApplicationCompositeElementDataPrototypeRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content(tag, elem.value, attr)
+
+    def _write_data_prototype_ref(self,
+                                  elem: ar_element.DataPrototypeRef,
+                                  tag: str) -> None:
+        """
+        Writes references to DATA-PROTOTYPE--SUBTYPES-ENUM
+        """
+        assert isinstance(elem, ar_element.DataPrototypeRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content(tag, elem.value, attr)
+
 # -- Constant and value specifications
 
     def _write_text_value_specification(self, elem: ar_element.TextValueSpecification) -> None:
@@ -2832,8 +2887,6 @@ class Writer(_XMLWriter):
         assert isinstance(elem, ar_element.SenderComSpec)
         if elem.data_element_ref is not None:
             self._write_autosar_data_prototype_ref(elem.data_element_ref, "DATA-ELEMENT-REF")
-        if elem.data_update_period is not None:
-            self._add_content("DATA-UPDATE-PERIOD", self._format_float(elem.data_update_period))
         if elem.handle_out_of_range is not None:
             self._add_content("HANDLE-OUT-OF-RANGE", ar_enum.enum_to_xml(elem.handle_out_of_range))
         if elem.network_representation is not None:
@@ -2948,3 +3001,280 @@ class Writer(_XMLWriter):
                     self._write_e2e_transformation_com_spec_props(com_spec_props)
                 self._leave_child()
             self._leave_child()
+
+    def _write_reception_com_spec_props(self, elem: ar_element.ReceptionComSpecProps):
+        """
+        Writes complex type AR:RECEPTION-COM-SPEC-PROPS
+        Tag variants: 'RECEPTION-PROPS'
+        """
+        tag = "RECEPTION-PROPS"
+        assert isinstance(elem, ar_element.ReceptionComSpecProps)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.data_update_period is not None:
+                self._add_content("DATA-UPDATE-PERIOD", self._format_float(elem.data_update_period))
+            if elem.timeout is not None:
+                self._add_content("TIMEOUT", self._format_float(elem.timeout))
+            self._leave_child()
+
+    def _write_receiver_com_spec_group(self, elem: ar_element.ReceiverComSpec) -> None:
+        """
+        Writes group AR:RECEIVER-COM-SPEC
+        """
+        if elem.data_element_ref is not None:
+            self._write_autosar_data_prototype_ref(elem.data_element_ref, "DATA-ELEMENT-REF")
+        if elem.handle_out_of_range is not None:
+            self._add_content("HANDLE-OUT-OF-RANGE", ar_enum.enum_to_xml(elem.handle_out_of_range))
+        if elem.handle_out_of_range_status is not None:
+            self._add_content("HANDLE-OUT-OF-RANGE-STATUS", ar_enum.enum_to_xml(elem.handle_out_of_range_status))
+        if elem.max_delta_counter_init is not None:
+            self._add_content("MAX-DELTA-COUNTER-INIT", str(elem.max_delta_counter_init))
+        if elem.max_no_new_repeated_data is not None:
+            self._add_content("MAX-NO-NEW-OR-REPEATED-DATA", str(elem.max_no_new_repeated_data))
+        if elem.network_representation is not None:
+            self._write_sw_data_def_props(elem.network_representation, "NETWORK-REPRESENTATION")
+        if elem.reception_props is not None:
+            self._write_reception_com_spec_props(elem.reception_props)
+        if elem.replace_with is not None:
+            self._write_variable_access(elem.replace_with, "REPLACE-WITH")
+        if elem.sync_counter_init is not None:
+            self._add_content("SYNC-COUNTER-INIT", str(elem.sync_counter_init))
+        if elem.transformation_com_spec_props:
+            self._add_child("TRANSFORMATION-COM-SPEC-PROPSS")
+            for com_spec_props in elem.transformation_com_spec_props:
+                self._write_e2e_transformation_com_spec_props(com_spec_props)
+            self._leave_child()
+        if elem.uses_end_to_end_protection is not None:
+            self._add_content("USES-END-TO-END-PROTECTION", self._format_boolean(elem.uses_end_to_end_protection))
+
+    def _write_queued_receiver_com_spec(self, elem: ar_element.QueuedReceiverComSpec) -> None:
+        """
+        Writes complex type AR:QUEUED-RECEIVER-COM-SPEC
+        Tag variants: 'QUEUED-RECEIVER-COM-SPEC'
+        """
+        tag = "QUEUED-RECEIVER-COM-SPEC"
+        assert isinstance(elem, ar_element.QueuedReceiverComSpec)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_receiver_com_spec_group(elem)
+            if elem.queue_length is not None:
+                self._add_content("QUEUE-LENGTH", str(elem.queue_length))
+            self._leave_child()
+
+    def _write_nonqueued_receiver_com_spec(self, elem: ar_element.NonqueuedReceiverComSpec) -> None:
+        """
+        Writes complex type AR:NONQUEUED-RECEIVER-COM-SPEC
+        Tag variants: 'NONQUEUED-RECEIVER-COM-SPEC'
+        """
+        tag = "NONQUEUED-RECEIVER-COM-SPEC"
+        assert isinstance(elem, ar_element.NonqueuedReceiverComSpec)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_receiver_com_spec_group(elem)
+            self._write_nonqueued_receiver_com_spec_group(elem)
+            self._leave_child()
+
+    def _write_nonqueued_receiver_com_spec_group(self, elem: ar_element.NonqueuedReceiverComSpec) -> None:
+        """
+        Writes group AR:NONQUEUED-RECEIVER-COM-SPEC
+        """
+        if elem.alive_timeout is not None:
+            self._add_content("ALIVE-TIMEOUT", self._format_float(elem.alive_timeout))
+        if elem.enable_update is not None:
+            self._add_content("ENABLE-UPDATE", self._format_boolean(elem.enable_update))
+        if elem.data_filter is not None:
+            self._write_data_filter(elem.data_filter, "FILTER")
+        if elem.handle_data_status is not None:
+            self._add_content("HANDLE-DATA-STATUS", self._format_boolean(elem.handle_data_status))
+        if elem.handle_never_received is not None:
+            self._add_content("HANDLE-NEVER-RECEIVED", self._format_boolean(elem.handle_never_received))
+        if elem.handle_timeout_type is not None:
+            self._add_content("HANDLE-TIMEOUT-TYPE", ar_enum.enum_to_xml(elem.handle_timeout_type))
+        if elem.init_value is not None:
+            self._add_child("INIT-VALUE")
+            self._write_value_specification_element(elem.init_value)
+            self._leave_child()
+        if elem.timeout_substitution_value is not None:
+            self._add_child("TIMEOUT-SUBSTITUTION-VALUE")
+            self._write_value_specification_element(elem.timeout_substitution_value)
+            self._leave_child()
+
+    def _write_nv_require_com_spec(self, elem: ar_element.NvRequireComSpec) -> None:
+        """
+        Writes Complex type AR:NV-REQUIRE-COM-SPEC
+        Tag variants: 'NV-REQUIRE-COM-SPEC'
+        """
+        tag = "NV-REQUIRE-COM-SPEC"
+        assert isinstance(elem, ar_element.NvRequireComSpec)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.init_value is not None:
+                self._add_child("INIT-VALUE")
+                self._write_value_specification_element(elem.init_value)
+                self._leave_child()
+            if elem.variable_ref is not None:
+                self._write_variable_data_prototype_ref(elem.variable_ref, "VARIABLE-REF")
+            self._leave_child()
+
+    def _write_parameter_require_com_spec(self, elem: ar_element.ParameterRequireComSpec) -> None:
+        """
+        Writes complex type AR:PARAMETER-REQUIRE-COM-SPEC
+        Tag variants: 'PARAMETER-REQUIRE-COM-SPEC'
+        """
+        tag = "PARAMETER-REQUIRE-COM-SPEC"
+        assert isinstance(elem, ar_element.ParameterRequireComSpec)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.init_value is not None:
+                self._add_child("INIT-VALUE")
+                self._write_value_specification_element(elem.init_value)
+                self._leave_child()
+            if elem.parameter_ref is not None:
+                self._write_parameter_data_prototype_ref(elem.parameter_ref, "PARAMETER-REF")
+            self._leave_child()
+
+    def _write_mode_switch_receiver_com_spec(self, elem: ar_element.ModeSwitchReceiverComSpec) -> None:
+        """
+        Writes complex type AR:MODE-SWITCH-RECEIVER-COM-SPEC
+        Tag variants: 'MODE-SWITCH-RECEIVER-COM-SPEC'
+        """
+        tag = "MODE-SWITCH-RECEIVER-COM-SPEC"
+        assert isinstance(elem, ar_element.ModeSwitchReceiverComSpec)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.enhanced_mode_api is not None:
+                self._add_content("ENHANCED-MODE-API", self._format_boolean(elem.enhanced_mode_api))
+            if elem.mode_group_ref is not None:
+                self._write_mode_declaration_group_prototype_ref(elem.mode_group_ref, "MODE-GROUP-REF")
+            if elem.supports_async is not None:
+                self._add_content("SUPPORTS-ASYNCHRONOUS-MODE-SWITCH",
+                                  self._format_boolean(elem.supports_async))
+            self._leave_child()
+
+    def _write_client_com_spec(self, elem: ar_element.ClientComSpec) -> None:
+        """
+        Writes Complex type AR:CLIENT-COM-SPEC
+        Tag variants: 'CLIENT-COM-SPEC'
+        """
+        tag = "CLIENT-COM-SPEC"
+        assert isinstance(elem, ar_element.ClientComSpec)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.e2e_call_respone_timeout is not None:
+                self._add_content("END-TO-END-CALL-RESPONSE-TIMEOUT",
+                                  self._format_float(elem.e2e_call_respone_timeout))
+            if elem.operation_ref is not None:
+                self._write_client_server_operation_ref(elem.operation_ref, "OPERATION-REF")
+            if elem.transformation_com_spec_props:
+                self._add_child("TRANSFORMATION-COM-SPEC-PROPSS")
+                for com_spec_props in elem.transformation_com_spec_props:
+                    self._write_e2e_transformation_com_spec_props(com_spec_props)
+                self._leave_child()
+            self._leave_child()
+
+    # SWC Internal behavior elements
+
+    def _write_variable_in_impl_data_instance_ref(self,
+                                                  elem: ar_element.ArVariableInImplementationDataInstanceRef,
+                                                  tag: str) -> None:
+        """
+        Complex type AR:AR-VARIABLE-IN-IMPLEMENTATION-DATA-INSTANCE-REF
+        Tag variants: 'AUTOSAR-VARIABLE-IN-IMPL-DATATYPE' | 'IMPLEMENTATION-DATA-TYPE-ELEMENT'
+        """
+        assert isinstance(elem, ar_element.ArVariableInImplementationDataInstanceRef)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.port_prototype_ref is not None:
+                self._write_port_prototype_ref(elem.port_prototype_ref, "PORT-PROTOTYPE-REF")
+            if elem.root_variable_data_prototype_ref is not None:
+                self._write_variable_data_prototype_ref(elem.root_variable_data_prototype_ref,
+                                                        "ROOT-VARIABLE-DATA-PROTOTYPE-REF")
+            if elem.context_data_prototype_refs:
+                self._add_child("CONTEXT-DATA-PROTOTYPE-REFS")
+                for child_elem in elem.context_data_prototype_refs:
+                    self._write_abstract_impl_data_type_element_ref(child_elem, "CONTEXT-DATA-PROTOTYPE-REF")
+                self._leave_child()
+            if elem.target_data_prototype_ref is not None:
+                self._write_abstract_impl_data_type_element_ref(elem.target_data_prototype_ref,
+                                                                "TARGET-DATA-PROTOTYPE-REF")
+            self._leave_child()
+
+    def _write_variable_in_atomic_swc_type_instance_ref(self,
+                                                        elem: ar_element.VariableInAtomicSWCTypeInstanceRef
+                                                        ) -> None:
+        """
+        Complex type AR:VARIABLE-IN-ATOMIC-SWC-TYPE-INSTANCE-REF
+        Tag variants: 'AUTOSAR-VARIABLE-IREF'
+        """
+        assert isinstance(elem, ar_element.VariableInAtomicSWCTypeInstanceRef)
+        tag = "AUTOSAR-VARIABLE-IREF"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.port_prototype_ref is not None:
+                self._write_port_prototype_ref(elem.port_prototype_ref, "PORT-PROTOTYPE-REF")
+            if elem.root_variable_data_prototype_ref is not None:
+                self._write_variable_data_prototype_ref(elem.root_variable_data_prototype_ref,
+                                                        "ROOT-VARIABLE-DATA-PROTOTYPE-REF")
+            if elem.context_data_prototype_refs:
+                for child_elem in elem.context_data_prototype_refs:
+                    self._write_appl_composite_element_data_proto_ref(child_elem, "CONTEXT-DATA-PROTOTYPE-REF")
+            if elem.target_data_prototype_ref is not None:
+                self._write_data_prototype_ref(elem.target_data_prototype_ref, "TARGET-DATA-PROTOTYPE-REF")
+            self._leave_child()
+
+    def _write_autosar_variable_ref(self,
+                                    elem: ar_element.AutosarVariableRef,
+                                    tag: str) -> None:
+        """
+        Writes complex type AR:AUTOSAR-VARIABLE-REF
+        Tag variants: 'VARIABLE-INSTANCE' | 'NV-RAM-BLOCK-ELEMENT' | 'READ-NV-DATA' |
+                      'WRITTEN-NV-DATA' | 'WRITTEN-READ-NV-DATA' | 'USED-DATA-ELEMENT' |
+                      'AUTOSAR-VARIABLE' | 'ACCESSED-VARIABLE'
+        """
+        assert isinstance(elem, ar_element.AutosarVariableRef)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.ar_variable_in_impl_datatype is not None:
+                self._write_variable_in_impl_data_instance_ref(elem.ar_variable_in_impl_datatype,
+                                                               "AUTOSAR-VARIABLE-IN-IMPL-DATATYPE")
+            if elem.ar_variable_iref is not None:
+                self._write_variable_in_atomic_swc_type_instance_ref(elem.ar_variable_iref)
+            if elem.local_variable_ref is not None:
+                self._write_variable_data_prototype_ref(elem.local_variable_ref,
+                                                        "LOCAL-VARIABLE-REF")
+            self._leave_child()
+
+    def _write_variable_access(self, elem: ar_element.VariableAccess, tag: str) -> None:
+        """
+        Writes complex type AR:VARIABLE-ACCESS
+        Tag variants: 'REPLACE-WITH' | 'VARIABLE-ACCESS'
+        """
+        self._add_child(tag)
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        if elem.accessed_variable is not None:
+            self._write_autosar_variable_ref(elem.accessed_variable, "ACCESSED-VARIABLE")
+        if elem.scope is not None:
+            self._add_content("SCOPE", ar_enum.enum_to_xml(elem.scope))
+        self._leave_child()

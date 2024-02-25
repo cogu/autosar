@@ -1363,19 +1363,6 @@ class TestApplicationDataTypeRef(unittest.TestCase):
         self.assertEqual(elem.value, "/Package/ShortName")
         self.assertEqual(elem.dest, ar_enum.IdentifiableSubTypes.APPLICATION_ARRAY_DATA_TYPE)
 
-    def test_read_write_application_assoc_map_data_type(self):
-        writer = autosar.xml.Writer()
-        element = ar_element.ApplicationDataTypeRef(
-            "/Package/ShortName",
-            ar_enum.IdentifiableSubTypes.APPLICATION_ASSOC_MAP_DATA_TYPE)
-        xml = '''<APPLICATION-DATA-TYPE-REF DEST="APPLICATION-ASSOC-MAP-DATA-TYPE">/Package/ShortName</APPLICATION-DATA-TYPE-REF>'''  # noqa E501 pylint: disable=C0301
-        self.assertEqual(writer.write_str_elem(element, "APPLICATION-DATA-TYPE-REF"), xml)
-        reader = autosar.xml.Reader()
-        elem: ar_element.ApplicationDataTypeRef = reader.read_str_elem(xml)
-        self.assertIsInstance(elem, ar_element.ApplicationDataTypeRef)
-        self.assertEqual(elem.value, "/Package/ShortName")
-        self.assertEqual(elem.dest, ar_enum.IdentifiableSubTypes.APPLICATION_ASSOC_MAP_DATA_TYPE)
-
     def test_read_write_application_composite_data_type(self):
         writer = autosar.xml.Writer()
         element = ar_element.ApplicationDataTypeRef(
