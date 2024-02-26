@@ -5,7 +5,7 @@ import os
 import re
 import sys
 
-from typing import Iterable, Any
+from typing import Iterable, Union, Any
 import lxml.etree as ElementTree
 import autosar.base as ar_base
 import autosar.xml.document as ar_document
@@ -16,6 +16,18 @@ import autosar.xml.enumeration as ar_enum
 # Type aliases
 
 MultiLanguageOverviewParagraph = ar_element.MultiLanguageOverviewParagraph
+ProvidePortComSpecElement = Union[ar_element.SenderComSpec,
+                                  ar_element.ModeSwitchSenderComSpec,
+                                  ar_element.QueuedSenderComSpec,
+                                  ar_element.NonqueuedSenderComSpec,
+                                  ar_element.NvProvideComSpec,
+                                  ar_element.ParameterProvideComSpec]
+RequirePortComSpecElement = Union[ar_element.QueuedReceiverComSpec,
+                                  ar_element.NonqueuedReceiverComSpec,
+                                  ar_element.NvRequireComSpec,
+                                  ar_element.ParameterRequireComSpec,
+                                  ar_element.ModeSwitchReceiverComSpec,
+                                  ar_element.ClientComSpec]
 
 # Helper classes
 
@@ -149,6 +161,22 @@ class Reader:
             'CONSTANT-REFERENCE': self._read_constant_reference,
 
         }
+        self.switcher_provided_com_spec = {
+            'QUEUED-SENDER-COM-SPEC': self._read_queued_sender_com_spec,
+            'MODE-SWITCH-SENDER-COM-SPEC': self._read_mode_switch_sender_com_spec,
+            'NONQUEUED-SENDER-COM-SPEC': self._read_nonqueued_sender_com_spec,
+            'NV-PROVIDE-COM-SPEC': self._read_nv_provider_com_spec,
+            'PARAMETER-PROVIDE-COM-SPEC': self._read_parameter_provide_com_spec,
+            'SERVER-COM-SPEC': self._read_server_com_spec,
+        }
+        self.switcher_required_com_spec = {
+            'QUEUED-RECEIVER-COM-SPEC': self._read_queued_receiver_com_spec,
+            'NONQUEUED-RECEIVER-COM-SPEC': self._read_nonqueued_receiver_com_spec,
+            'NV-REQUIRE-COM-SPEC': self._read_nv_require_com_spec,
+            'PARAMETER-REQUIRE-COM-SPEC': self._read_parameter_require_com_spec,
+            'MODE-SWITCH-RECEIVER-COM-SPEC': self._read_mode_switch_receiver_com_spec,
+            'CLIENT-COM-SPEC': self._read_client_com_spec,
+        }
         self.switcher_non_collectable = {  # Non-collectable, used only for unit testing
             # Documentation elements
             'ANNOTATION': self._read_annotation,
@@ -212,20 +240,11 @@ class Reader:
             # Software component elements
             'MODE-SWITCHED-ACK': self._read_mode_switched_ack_request,
             'TRANSMISSION-PROPS': self._read_tranmsission_com_spec_props,
-            'QUEUED-SENDER-COM-SPEC': self._read_queued_sender_com_spec,
-            'MODE-SWITCH-SENDER-COM-SPEC': self._read_mode_switch_sender_com_spec,
             'TRANSMISSION-ACKNOWLEDGE': self._read_transmission_acknowledgement_request,
-            'NONQUEUED-SENDER-COM-SPEC': self._read_nonqueued_sender_com_spec,
-            'NV-PROVIDE-COM-SPEC': self._read_nv_provider_com_spec,
-            'PARAMETER-PROVIDE-COM-SPEC': self._read_parameter_provide_com_spec,
-            'SERVER-COM-SPEC': self._read_server_com_spec,
             'RECEPTION-PROPS': self._read_reception_com_spec_props,
-            'QUEUED-RECEIVER-COM-SPEC': self._read_queued_receiver_com_spec,
-            'NONQUEUED-RECEIVER-COM-SPEC': self._read_nonqueued_receiver_com_spec,
-            'NV-REQUIRE-COM-SPEC': self._read_nv_require_com_spec,
-            'PARAMETER-REQUIRE-COM-SPEC': self._read_parameter_require_com_spec,
-            'MODE-SWITCH-RECEIVER-COM-SPEC': self._read_mode_switch_receiver_com_spec,
-            'CLIENT-COM-SPEC': self._read_client_com_spec,
+            'P-PORT-PROTOTYPE': self._read_provide_port_prototype,
+            'R-PORT-PROTOTYPE': self._read_require_port_prototype,
+            'PR-PORT-PROTOTYPE': self._read_pr_port_prototype,
             # SWC internal behavior elements
             'AUTOSAR-VARIABLE-IN-IMPL-DATATYPE': self._read_variable_in_impl_data_instance_ref,
             'AUTOSAR-VARIABLE-IREF': self._read_variable_in_atomic_swc_type_instance_ref,
@@ -235,6 +254,8 @@ class Reader:
         self.switcher_all = {}
         self.switcher_all.update(self.switcher_collectable)
         self.switcher_all.update(self.switcher_value_specification)
+        self.switcher_all.update(self.switcher_provided_com_spec)
+        self.switcher_all.update(self.switcher_required_com_spec)
         self.switcher_all.update(self.switcher_non_collectable)
         self._switcher_type_name = {
             "ApplicationArrayElement": self._read_application_array_element,
@@ -2401,6 +2422,17 @@ class Reader:
         dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', data['dest'], self.schema_version)
         return ar_element.DataPrototypeRef(xml_elem.text, dest_enum)
 
+    def _read_port_interface_ref(self,
+                                 xml_elem: ElementTree.Element
+                                 ) -> ar_element.PortInterfaceRef:
+        """
+        Reads references to References to PORT-INTERFACE--SUBTYPES-ENUM
+        """
+        data = {}
+        self._read_base_ref_attributes(xml_elem.attrib, data)
+        dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', data['dest'], self.schema_version)
+        return ar_element.PortInterfaceRef(xml_elem.text, dest_enum)
+
     def _read_base_ref_attributes(self, attr: dict, data: dict) -> None:
         """
         Reads DEST attribute
@@ -3704,6 +3736,119 @@ class Reader:
             for xml_grand_child in xml_child.findall("./END-TO-END-TRANSFORMATION-COM-SPEC-PROPS"):
                 com_spec_props.append(self._read_e2e_transformation_com_spec_props(xml_grand_child))
             data["transformation_com_spec_props"] = com_spec_props
+
+    def _read_provided_com_spec(self, xml_element: ElementTree.Element) -> ProvidePortComSpecElement:
+        """
+        Reads com-spec element for p-port
+        """
+        read_method = self.switcher_provided_com_spec.get(xml_element.tag, None)
+        if read_method is not None:
+            return read_method(xml_element)
+        else:
+            raise KeyError(f"Found no reader for '{xml_element.tag}'")
+
+    def _read_required_com_spec(self, xml_element: ElementTree.Element) -> RequirePortComSpecElement:
+        """
+        Reads com-spec element for r-port
+        """
+        read_method = self.switcher_required_com_spec.get(xml_element.tag, None)
+        if read_method is not None:
+            return read_method(xml_element)
+        else:
+            raise KeyError(f"Found no reader for '{xml_element.tag}'")
+
+    def _read_provide_port_prototype(self, xml_element: ElementTree.Element) -> ar_element.ProvidePortPrototype:
+        """
+        Reads complex type AR:P-PORT-PROTOTYPE
+        Tag variants: 'P-PORT-PROTOTYPE'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_provide_port_prototype_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ProvidePortPrototype(**data)
+
+    def _read_provide_port_prototype_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:P-PORT-PROTOTYPE
+        """
+        xml_child = child_elements.get("PROVIDED-COM-SPECS")
+        if xml_child is not None:
+            com_spec_list = []
+            for xml_grand_child in xml_child.findall("./*"):
+                com_spec_list.append(self._read_provided_com_spec(xml_grand_child))
+            data["com_spec"] = com_spec_list
+        xml_child = child_elements.get("PROVIDED-INTERFACE-TREF")
+        if xml_child is not None:
+            data["port_interface_ref"] = self._read_port_interface_ref(xml_child)
+
+    def _read_require_port_prototype(self, xml_element: ElementTree.Element) -> ar_element.RequirePortPrototype:
+        """
+        Reads complex type AR:R-PORT-PROTOTYPE
+        Tag variants: 'R-PORT-PROTOTYPE'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_required_port_prototype_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.RequirePortPrototype(**data)
+
+    def _read_required_port_prototype_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:R-PORT-PROTOTYPE
+        """
+        xml_child = child_elements.get("REQUIRED-COM-SPECS")
+        if xml_child is not None:
+            com_spec_list = []
+            for xml_grand_child in xml_child.findall("./*"):
+                com_spec_list.append(self._read_required_com_spec(xml_grand_child))
+            data["com_spec"] = com_spec_list
+        xml_child = child_elements.get("MAY-BE-UNCONNECTED")
+        if xml_child is not None:
+            data["allow_unconnected"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("REQUIRED-INTERFACE-TREF")
+        if xml_child is not None:
+            data["port_interface_ref"] = self._read_port_interface_ref(xml_child)
+
+    def _read_pr_port_prototype(self, xml_element: ElementTree.Element) -> ar_element.PRPortPrototype:
+        """
+        Reads complex type AR:PR-PORT-PROTOTYPE
+        Tag variants: 'PR-PORT-PROTOTYPE'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_pr_port_prototype_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.PRPortPrototype(**data)
+
+    def _read_pr_port_prototype_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:PR-PORT-PROTOTYPE
+        """
+        xml_child = child_elements.get("PROVIDED-COM-SPECS")
+        if xml_child is not None:
+            com_spec_list = []
+            for xml_grand_child in xml_child.findall("./*"):
+                com_spec_list.append(self._read_provided_com_spec(xml_grand_child))
+            data["provided_com_spec"] = com_spec_list
+        xml_child = child_elements.get("REQUIRED-COM-SPECS")
+        if xml_child is not None:
+            com_spec_list = []
+            for xml_grand_child in xml_child.findall("./*"):
+                com_spec_list.append(self._read_required_com_spec(xml_grand_child))
+            data["required_com_spec"] = com_spec_list
+        xml_child = child_elements.get("PROVIDED-REQUIRED-INTERFACE-TREF")
+        if xml_child is not None:
+            data["port_interface_ref"] = self._read_port_interface_ref(xml_child)
 
     # --- Internal Behavior elements
 

@@ -782,6 +782,24 @@ class DataPrototypeRef(BaseRef):
                 ar_enum.IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE,
                 }
 
+
+class PortInterfaceRef(BaseRef):
+    """
+    References to PORT-INTERFACE--SUBTYPES-ENUM
+
+    Only a fraction of elements seen in the XML Schema are
+    actually supported.
+    """
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.CLIENT_SERVER_INTERFACE,
+                ar_enum.IdentifiableSubTypes.MODE_SWITCH_INTERFACE,
+                ar_enum.IdentifiableSubTypes.NV_DATA_INTERFACE,
+                ar_enum.IdentifiableSubTypes.PARAMETER_INTERFACE,
+                ar_enum.IdentifiableSubTypes.SENDER_RECEIVER_INTERFACE,
+                }
+
 # --- Documentation Elements
 
 
@@ -4429,16 +4447,127 @@ class PortPrototype(Identifiable):
     # .VARIATION-POINT not supported
 
 
-class AbstractProvidedPortPrototype(PortPrototype):
+class ProvidePortPrototype(PortPrototype):
     """
-    Group AR:ABSTRACT-PROVIDED-PORT-PROTOTYPE
+    Complex type AR:P-PORT-PROTOTYPE
+    Tag variants: 'P-PORT-PROTOTYPE'
+
+    Includes AR:ABSTRACT-PROVIDED-PORT-PROTOTYPE
     """
 
-    def __init__(self, name: str,
+    def __init__(self,
+                 name: str,
+                 port_interface_ref: PortInterfaceRef | None = None,
                  com_spec: ProvidePortComSpec | list[ProvidePortComSpec] | None = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
-        # .FIELD-SENDER-COM-SPEC not supported
+        self.com_spec: list[ProvidePortComSpec] = []  # .PROVIDED-COM-SPECS
+        self.port_interface_ref: PortInterfaceRef | None = None  # .PROVIDED-INTERFACE-TREF
+        self._assign_optional_strict("port_interface_ref", port_interface_ref, PortInterfaceRef)
+        if com_spec is not None:
+            if isinstance(com_spec, ProvidePortComSpec):
+                self.append_com_spec(com_spec)
+            elif isinstance(com_spec, (list, tuple)):
+                for com_spec_elem in com_spec:
+                    self.append_com_spec(com_spec_elem)
+            else:
+                raise TypeError("com_spec must be of a type derived from ProvidePortComSpec")
+
+    def append_com_spec(self, com_spec: ProvidePortComSpec) -> None:
+        """
+        Adds comspec to internal list of com-specs
+        """
+        if isinstance(com_spec, ProvidePortComSpec):
+            self.com_spec.append(com_spec)
+        else:
+            raise TypeError("com_spec must be of a type derived from ProvidePortComSpec")
+
+
+class RequirePortPrototype(PortPrototype):
+    """
+    Complex type AR:R-PORT-PROTOTYPE
+    Tag variants: 'R-PORT-PROTOTYPE'
+
+    Includes AR:ABSTRACT-REQUIRED-PORT-PROTOTYPE
+    """
+
+    def __init__(self,
+                 name: str,
+                 port_interface_ref: PortInterfaceRef | None = None,
+                 com_spec: RequirePortComSpec | list[RequirePortComSpec] | None = None,
+                 allow_unconnected: bool | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.com_spec: list[RequirePortComSpec] = []  # .REQUIRED-COM-SPECS
+        self.allow_unconnected: bool | None = None  # .MAY-BE-UNCONNECTED
+        self.port_interface_ref: PortInterfaceRef | None = None  # .REQUIRED-INTERFACE-TREF
+        self._assign_optional_strict("port_interface_ref", port_interface_ref, PortInterfaceRef)
+        self._assign_optional("allow_unconnected", allow_unconnected, bool)
+        if com_spec is not None:
+            if isinstance(com_spec, RequirePortComSpec):
+                self.append_com_spec(com_spec)
+            elif isinstance(com_spec, (list, tuple)):
+                for com_spec_elem in com_spec:
+                    self.append_com_spec(com_spec_elem)
+            else:
+                raise TypeError("com_spec must be of a type derived from RequirePortComSpec")
+
+    def append_com_spec(self, com_spec: RequirePortComSpec) -> None:
+        """
+        Adds comspec to internal list of com-specs
+        """
+        if isinstance(com_spec, RequirePortComSpec):
+            self.com_spec.append(com_spec)
+        else:
+            raise TypeError("com_spec must be of type RequirePortComSpec")
+
+
+class PRPortPrototype(PortPrototype):
+    """
+    Complex type AR:PR-PORT-PROTOTYPE
+    Tag variants: 'PR-PORT-PROTOTYPE'
+
+    Includes AR:ABSTRACT-PROVIDED-PORT-PROTOTYPE and AR:ABSTRACT-REQUIRED-PORT-PROTOTYPE
+    """
+
+    def __init__(self,
+                 name: str,
+                 port_interface_ref: PortInterfaceRef | None = None,
+                 provided_com_spec: ProvidePortComSpec | list[ProvidePortComSpec] | None = None,
+                 required_com_spec: RequirePortComSpec | list[RequirePortComSpec] | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.port_interface_ref: PortInterfaceRef | None = None
+        self.provided_com_spec: list[ProvidePortComSpec] = []
+        self.required_com_spec: list[RequirePortComSpec] = []
+        self._assign_optional_strict("port_interface_ref", port_interface_ref, PortInterfaceRef)
+        if provided_com_spec is not None:
+            if isinstance(provided_com_spec, ProvidePortComSpec):
+                self.append_com_spec(provided_com_spec)
+            elif isinstance(required_com_spec, (list, tuple)):
+                for com_spec_elem in provided_com_spec:
+                    self.append_com_spec(com_spec_elem)
+            else:
+                raise TypeError("provided_com_spec must be of a type derived from ProvidePortComSpec")
+        if required_com_spec is not None:
+            if isinstance(required_com_spec, RequirePortComSpec):
+                self.append_com_spec(required_com_spec)
+            elif isinstance(required_com_spec, (list, tuple)):
+                for com_spec_elem in required_com_spec:
+                    self.append_com_spec(com_spec_elem)
+            else:
+                raise TypeError("required_com_spec must be of a type derived from RequirePortComSpec")
+
+    def append_com_spec(self, com_spec: ProvidePortComSpec | RequirePortComSpec) -> None:
+        """
+        Append com-spec to internal list(s) of com-specs
+        """
+        if isinstance(com_spec, ProvidePortComSpec):
+            self.provided_com_spec.append(com_spec)
+        elif isinstance(com_spec, RequirePortComSpec):
+            self.required_com_spec.append(com_spec)
+        else:
+            raise TypeError("com_spec must be of either type ProvidePortComSpec, RequirePortComSpec")
 
 
 class SoftwareComponentType(ARElement):
