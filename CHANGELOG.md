@@ -20,29 +20,32 @@ Non-collectable elements are various sub-elements to collectable elements.
 
 #### XML - Software component elements
 
-* ClientComSpec
-* ModeSwitchedAckRequest
-* ModeSwitchReceiverComSpec
-* ModeSwitchSenderComSpec
-* NonqueuedReceiverComSpec
-* NonqueuedSenderComSpec
-* NvProvideComSpec
-* NvRequireComSpec
-* ParameterProvideComSpec
-* ParameterRequireComSpec
-* QueuedReceiverComSpec
-* QueuedSenderComSpec
-* ReceptionComSpecProps
-* ServerComSpec
-* TransmissionAcknowledgementRequest
-* TransmissionComSpecProps
+* ClientComSpec | CLIENT-COM-SPEC
+* ModeSwitchedAckRequest | MODE-SWITCHED-ACK-REQUEST
+* ModeSwitchReceiverComSpec | MODE-SWITCH-RECEIVER-COM-SPEC
+* ModeSwitchSenderComSpec | MODE-SWITCH-SENDER-COM-SPEC
+* NonqueuedReceiverComSpec | NONQUEUED-RECEIVER-COM-SPEC
+* NonqueuedSenderComSpec | NONQUEUED-SENDER-COM-SPEC
+* NvProvideComSpec | NV-PROVIDE-COM-SPEC
+* NvRequireComSpec | NV-REQUIRE-COM-SPEC
+* ParameterProvideComSpec | PARAMETER-PROVIDE-COM-SPEC
+* ParameterRequireComSpec | PARAMETER-REQUIRE-COM-SPEC
+* QueuedReceiverComSpec | QUEUED-RECEIVER-COM-SPEC
+* QueuedSenderComSpec | QUEUED-SENDER-COM-SPEC
+* ReceptionComSpecProps | RECEPTION-COM-SPEC-PROPS
+* ServerComSpec | SERVER-COM-SPEC
+* TransmissionAcknowledgementRequest | TRANSMISSION-ACKNOWLEDGEMENT-REQUEST
+* TransmissionComSpecProps | TRANSMISSION-COM-SPEC-PROPS
+* ProvidePortPrototype | P-PORT-PROTOTYPE
+* RequirePortPrototype | R-PORT-PROTOTYPE
+* PRPortPrototype | PR-PORT-PROTOTYPE
 
 #### XML - SWC internal behavior elements
 
-* ArVariableInImplementationDataInstanceRef
-* AutosarVariableRef
-* VariableAccess
-* VariableInAtomicSWCTypeInstanceRef
+* ArVariableInImplementationDataInstanceRef | AR-VARIABLE-IN-IMPLEMENTATION-DATA-INSTANCE-REF
+* AutosarVariableRef | AUTOSAR-VARIABLE-REF
+* VariableAccess | VARIABLE-ACCESS
+* VariableInAtomicSWCTypeInstanceRef | VARIABLE-IN-ATOMIC-SWC-TYPE-INSTANCE-REF
 
 #### XML - Reference elements
 

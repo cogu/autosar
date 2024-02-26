@@ -1131,5 +1131,194 @@ class TestClientComSpec(unittest.TestCase):
         self.assertTrue(props.disable_e2e_check)
 
 
+class TestProvidePortPrototype(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.ProvidePortPrototype("ShortName")
+        writer = autosar.xml.Writer()
+        xml = '''<P-PORT-PROTOTYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+</P-PORT-PROTOTYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ProvidePortPrototype = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ProvidePortPrototype)
+        self.assertEqual(elem.name, "ShortName")
+
+    def test_com_spec(self):
+        com_spec = ar_element.NonqueuedSenderComSpec(init_value=ar_element.ValueSpecification.make_value(7))
+        element = ar_element.ProvidePortPrototype("ShortName", com_spec=com_spec)
+        writer = autosar.xml.Writer()
+        xml = '''<P-PORT-PROTOTYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <PROVIDED-COM-SPECS>
+    <NONQUEUED-SENDER-COM-SPEC>
+      <INIT-VALUE>
+        <NUMERICAL-VALUE-SPECIFICATION>
+          <VALUE>7</VALUE>
+        </NUMERICAL-VALUE-SPECIFICATION>
+      </INIT-VALUE>
+    </NONQUEUED-SENDER-COM-SPEC>
+  </PROVIDED-COM-SPECS>
+</P-PORT-PROTOTYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ProvidePortPrototype = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ProvidePortPrototype)
+        self.assertIsInstance(elem.com_spec[0], ar_element.NonqueuedSenderComSpec)
+        self.assertEqual(elem.com_spec[0].init_value.value, 7)
+
+    def test_port_interface_ref(self):
+        ref_str = "/PortInterfaces/InterfaceName"
+        port_interface_ref = ar_element.PortInterfaceRef(ref_str,
+                                                         ar_enum.IdentifiableSubTypes.SENDER_RECEIVER_INTERFACE)
+        element = ar_element.ProvidePortPrototype("ShortName", port_interface_ref=port_interface_ref)
+        writer = autosar.xml.Writer()
+        xml = f'''<P-PORT-PROTOTYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <PROVIDED-INTERFACE-TREF DEST="SENDER-RECEIVER-INTERFACE">{ref_str}</PROVIDED-INTERFACE-TREF>
+</P-PORT-PROTOTYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ProvidePortPrototype = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ProvidePortPrototype)
+        self.assertEqual(str(elem.port_interface_ref), ref_str)
+
+
+class TestRequirePortPrototype(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.RequirePortPrototype("ShortName")
+        writer = autosar.xml.Writer()
+        xml = '''<R-PORT-PROTOTYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+</R-PORT-PROTOTYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RequirePortPrototype = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RequirePortPrototype)
+        self.assertEqual(elem.name, "ShortName")
+
+    def test_com_spec(self):
+        com_spec = ar_element.NonqueuedReceiverComSpec(init_value=ar_element.ValueSpecification.make_value(3))
+        element = ar_element.RequirePortPrototype("ShortName", com_spec=com_spec)
+        writer = autosar.xml.Writer()
+        xml = '''<R-PORT-PROTOTYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <REQUIRED-COM-SPECS>
+    <NONQUEUED-RECEIVER-COM-SPEC>
+      <INIT-VALUE>
+        <NUMERICAL-VALUE-SPECIFICATION>
+          <VALUE>3</VALUE>
+        </NUMERICAL-VALUE-SPECIFICATION>
+      </INIT-VALUE>
+    </NONQUEUED-RECEIVER-COM-SPEC>
+  </REQUIRED-COM-SPECS>
+</R-PORT-PROTOTYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RequirePortPrototype = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RequirePortPrototype)
+        self.assertIsInstance(elem.com_spec[0], ar_element.NonqueuedReceiverComSpec)
+        self.assertEqual(elem.com_spec[0].init_value.value, 3)
+
+    def test_port_interface_ref(self):
+        ref_str = "/PortInterfaces/InterfaceName"
+        port_interface_ref = ar_element.PortInterfaceRef(ref_str,
+                                                         ar_enum.IdentifiableSubTypes.SENDER_RECEIVER_INTERFACE)
+        element = ar_element.RequirePortPrototype("ShortName", port_interface_ref=port_interface_ref)
+        writer = autosar.xml.Writer()
+        xml = f'''<R-PORT-PROTOTYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <REQUIRED-INTERFACE-TREF DEST="SENDER-RECEIVER-INTERFACE">{ref_str}</REQUIRED-INTERFACE-TREF>
+</R-PORT-PROTOTYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RequirePortPrototype = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RequirePortPrototype)
+        self.assertEqual(str(elem.port_interface_ref), ref_str)
+
+    def test_allow_unconnected(self):
+        element = ar_element.RequirePortPrototype("ShortName", allow_unconnected=True)
+        writer = autosar.xml.Writer()
+        xml = '''<R-PORT-PROTOTYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <MAY-BE-UNCONNECTED>true</MAY-BE-UNCONNECTED>
+</R-PORT-PROTOTYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RequirePortPrototype = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RequirePortPrototype)
+        self.assertTrue(elem.allow_unconnected)
+
+
+class TestPRPortPrototype(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.PRPortPrototype("ShortName")
+        writer = autosar.xml.Writer()
+        xml = '''<PR-PORT-PROTOTYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+</PR-PORT-PROTOTYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.PRPortPrototype = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.PRPortPrototype)
+        self.assertEqual(elem.name, "ShortName")
+
+    def test_com_spec(self):
+        provided_com_spec = ar_element.NonqueuedSenderComSpec(init_value=ar_element.ValueSpecification.make_value(3))
+        required_com_spec = ar_element.NonqueuedReceiverComSpec(init_value=ar_element.ValueSpecification.make_value(3))
+        element = ar_element.PRPortPrototype("ShortName",
+                                             provided_com_spec=provided_com_spec,
+                                             required_com_spec=required_com_spec)
+        writer = autosar.xml.Writer()
+        xml = '''<PR-PORT-PROTOTYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <PROVIDED-COM-SPECS>
+    <NONQUEUED-SENDER-COM-SPEC>
+      <INIT-VALUE>
+        <NUMERICAL-VALUE-SPECIFICATION>
+          <VALUE>3</VALUE>
+        </NUMERICAL-VALUE-SPECIFICATION>
+      </INIT-VALUE>
+    </NONQUEUED-SENDER-COM-SPEC>
+  </PROVIDED-COM-SPECS>
+  <REQUIRED-COM-SPECS>
+    <NONQUEUED-RECEIVER-COM-SPEC>
+      <INIT-VALUE>
+        <NUMERICAL-VALUE-SPECIFICATION>
+          <VALUE>3</VALUE>
+        </NUMERICAL-VALUE-SPECIFICATION>
+      </INIT-VALUE>
+    </NONQUEUED-RECEIVER-COM-SPEC>
+  </REQUIRED-COM-SPECS>
+</PR-PORT-PROTOTYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.PRPortPrototype = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.PRPortPrototype)
+        self.assertIsInstance(elem.provided_com_spec[0], ar_element.NonqueuedSenderComSpec)
+        self.assertEqual(elem.provided_com_spec[0].init_value.value, 3)
+        self.assertIsInstance(elem.required_com_spec[0], ar_element.NonqueuedReceiverComSpec)
+        self.assertEqual(elem.required_com_spec[0].init_value.value, 3)
+
+    def test_port_interface_ref(self):
+        ref_str = "/PortInterfaces/InterfaceName"
+        port_interface_ref = ar_element.PortInterfaceRef(ref_str,
+                                                         ar_enum.IdentifiableSubTypes.SENDER_RECEIVER_INTERFACE)
+        element = ar_element.PRPortPrototype("ShortName", port_interface_ref=port_interface_ref)
+        writer = autosar.xml.Writer()
+        xml = f'''<PR-PORT-PROTOTYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <PROVIDED-REQUIRED-INTERFACE-TREF DEST="SENDER-RECEIVER-INTERFACE">{ref_str}</PROVIDED-REQUIRED-INTERFACE-TREF>
+</PR-PORT-PROTOTYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.PRPortPrototype = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.PRPortPrototype)
+        self.assertEqual(str(elem.port_interface_ref), ref_str)
+
+
 if __name__ == '__main__':
     unittest.main()

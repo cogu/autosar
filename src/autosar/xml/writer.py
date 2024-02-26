@@ -219,6 +219,22 @@ class Writer(_XMLWriter):
             'ApplicationValueSpecification': self._write_application_value_specification,
             'ConstantReference': self._write_constant_reference,
         }
+        # Com-spec elements
+        self.switcher_provided_com_spec = {
+            'ModeSwitchSenderComSpec': self._write_mode_switch_sender_com_spec,
+            'QueuedSenderComSpec': self._write_queued_sender_com_spec,
+            'NonqueuedSenderComSpec': self._write_non_queued_sender_com_spec,
+            'NvProvideComSpec': self._write_nv_provide_com_spec,
+            'ParameterProvideComSpec': self._write_parameter_provide_com_spec,
+            'ServerComSpec': self._write_server_com_spec,
+        }
+        self.switcher_required_com_spec = {
+            'QueuedReceiverComSpec': self._write_queued_receiver_com_spec,
+            'NonqueuedReceiverComSpec': self._write_nonqueued_receiver_com_spec,
+            'NvRequireComSpec': self._write_nv_require_com_spec,
+            'ParameterRequireComSpec': self._write_parameter_require_com_spec,
+            'ModeSwitchReceiverComSpec': self._write_mode_switch_receiver_com_spec,
+        }
         # Elements used only for unit test purposes
         self.switcher_non_collectable = {
             # Documentation elements
@@ -284,21 +300,13 @@ class Writer(_XMLWriter):
             'EndToEndTransformationComSpecProps': self._write_e2e_transformation_com_spec_props,
             # Software component elements
             'ModeSwitchedAckRequest': self._write_mode_switched_ack_request,
-            'ModeSwitchSenderComSpec': self._write_mode_switch_sender_com_spec,
             'TransmissionAcknowledgementRequest': self._write_transmission_acknowledgement_request,
             'TransmissionComSpecProps': self._write_tranmsission_com_spec_props,
-            'QueuedSenderComSpec': self._write_queued_sender_com_spec,
-            'NonqueuedSenderComSpec': self._write_non_queued_sender_com_spec,
-            'NvProvideComSpec': self._write_nv_provide_com_spec,
-            'ParameterProvideComSpec': self._write_parameter_provide_com_spec,
-            'ServerComSpec': self._write_server_com_spec,
             'ReceptionComSpecProps': self._write_reception_com_spec_props,
-            'QueuedReceiverComSpec': self._write_queued_receiver_com_spec,
-            'NonqueuedReceiverComSpec': self._write_nonqueued_receiver_com_spec,
-            'NvRequireComSpec': self._write_nv_require_com_spec,
-            'ParameterRequireComSpec': self._write_parameter_require_com_spec,
-            'ModeSwitchReceiverComSpec': self._write_mode_switch_receiver_com_spec,
             'ClientComSpec': self._write_client_com_spec,
+            'ProvidePortPrototype': self._write_provide_port_prototype,
+            'RequirePortPrototype': self._write_require_port_prototype,
+            'PRPortPrototype': self._write_pr_port_prototype,
             # SWC internal behavior elements
             'ArVariableInImplementationDataInstanceRef': self._write_variable_in_impl_data_instance_ref,
             'VariableInAtomicSWCTypeInstanceRef': self._write_variable_in_atomic_swc_type_instance_ref,
@@ -308,6 +316,8 @@ class Writer(_XMLWriter):
         self.switcher_all = {}  # All concrete elements (used for unit testing)
         self.switcher_all.update(self.switcher_collectable)
         self.switcher_all.update(self.switcher_value_specification)
+        self.switcher_all.update(self.switcher_provided_com_spec)
+        self.switcher_all.update(self.switcher_required_com_spec)
         self.switcher_all.update(self.switcher_non_collectable)
 
     def write_str(self, document: ar_document.Document, skip_root_attr: bool = True) -> str:
@@ -2100,6 +2110,17 @@ class Writer(_XMLWriter):
         self._collect_base_ref_attr(elem, attr)
         self._add_content(tag, elem.value, attr)
 
+    def _write_port_interface_ref(self,
+                                  elem: ar_element.PortInterfaceRef,
+                                  tag: str) -> None:
+        """
+        Writes references to PORT-INTERFACE--SUBTYPES-ENUM
+        """
+        assert isinstance(elem, ar_element.PortInterfaceRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content(tag, elem.value, attr)
+
 # -- Constant and value specifications
 
     def _write_text_value_specification(self, elem: ar_element.TextValueSpecification) -> None:
@@ -3185,6 +3206,110 @@ class Writer(_XMLWriter):
                     self._write_e2e_transformation_com_spec_props(com_spec_props)
                 self._leave_child()
             self._leave_child()
+
+    def _write_provided_com_spec(self, elem: ar_element.ProvidePortComSpec) -> None:
+        """
+        Writes COM-SPEC for P-PORT
+        """
+        class_name = elem.__class__.__name__
+        write_method = self.switcher_provided_com_spec.get(class_name, None)
+        if write_method is not None:
+            write_method(elem)
+        else:
+            raise NotImplementedError(f"Found no writer for class {class_name}")
+
+    def _write_required_com_spec(self, elem: ar_element.ProvidePortComSpec) -> None:
+        """
+        Writes COM-SPEC for R-PORT
+        """
+        class_name = elem.__class__.__name__
+        write_method = self.switcher_required_com_spec.get(class_name, None)
+        if write_method is not None:
+            write_method(elem)
+        else:
+            raise NotImplementedError(f"Found no writer for class {class_name}")
+
+    def _write_provide_port_prototype(self, elem: ar_element.ProvidePortPrototype) -> None:
+        """
+        Writes complex type AR:P-PORT-PROTOTYPE
+        Tag variants: 'P-PORT-PROTOTYPE'
+        """
+        assert isinstance(elem, ar_element.ProvidePortPrototype)
+        self._add_child("P-PORT-PROTOTYPE")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_provide_port_prototype_group(elem)
+        self._leave_child()
+
+    def _write_provide_port_prototype_group(self, elem: ar_element.ProvidePortPrototype) -> None:
+        """
+        Writes group AR:P-PORT-PROTOTYPE
+        """
+        if elem.com_spec:
+            self._add_child("PROVIDED-COM-SPECS")
+            for com_spec_elem in elem.com_spec:
+                self._write_provided_com_spec(com_spec_elem)
+            self._leave_child()
+        if elem.port_interface_ref is not None:
+            self._write_port_interface_ref(elem.port_interface_ref, "PROVIDED-INTERFACE-TREF")
+
+    def _write_require_port_prototype(self, elem: ar_element.RequirePortPrototype) -> None:
+        """
+        Writes complex type AR:R-PORT-PROTOTYPE
+        Tag variants: 'R-PORT-PROTOTYPE'
+        """
+        assert isinstance(elem, ar_element.RequirePortPrototype)
+        self._add_child("R-PORT-PROTOTYPE")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_require_port_prototype_group(elem)
+        self._leave_child()
+
+    def _write_require_port_prototype_group(self, elem: ar_element.RequirePortPrototype) -> None:
+        """
+        Writes group AR:R-PORT-PROTOTYPE
+        """
+        if elem.allow_unconnected is not None:
+            self._add_content("MAY-BE-UNCONNECTED", self._format_boolean(elem.allow_unconnected))
+        if elem.com_spec:
+            self._add_child("REQUIRED-COM-SPECS")
+            for com_spec_elem in elem.com_spec:
+                self._write_required_com_spec(com_spec_elem)
+            self._leave_child()
+        if elem.port_interface_ref is not None:
+            self._write_port_interface_ref(elem.port_interface_ref, "REQUIRED-INTERFACE-TREF")
+
+    def _write_pr_port_prototype(self, elem: ar_element.PRPortPrototype) -> None:
+        """
+        Writes complex type AR:PR-PORT-PROTOTYPE
+        Tag variants: 'PR-PORT-PROTOTYPE'
+        """
+        assert isinstance(elem, ar_element.PRPortPrototype)
+        self._add_child("PR-PORT-PROTOTYPE")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_pr_port_prototype_group(elem)
+        self._leave_child()
+
+    def _write_pr_port_prototype_group(self, elem: ar_element.PRPortPrototype) -> None:
+        """
+        Writes group AR:PR-PORT-PROTOTYPE
+        """
+        if elem.provided_com_spec:
+            self._add_child("PROVIDED-COM-SPECS")
+            for com_spec_elem in elem.provided_com_spec:
+                self._write_provided_com_spec(com_spec_elem)
+            self._leave_child()
+        if elem.required_com_spec:
+            self._add_child("REQUIRED-COM-SPECS")
+            for com_spec_elem in elem.required_com_spec:
+                self._write_required_com_spec(com_spec_elem)
+            self._leave_child()
+        if elem.port_interface_ref is not None:
+            self._write_port_interface_ref(elem.port_interface_ref, "PROVIDED-REQUIRED-INTERFACE-TREF")
 
     # SWC Internal behavior elements
 
