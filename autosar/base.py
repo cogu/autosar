@@ -389,11 +389,13 @@ class SwAxisGrouped:
     def __init__(
             self,
             sharedAxisTypeRef = None,
-            swAxisIndex = None
+            swAxisIndex = None,
+            accessedParameter = None
             ):
 
         self.sharedAxisTypeRef = sharedAxisTypeRef
         self.swAxisIndex = swAxisIndex
+        self.accessedParameter = accessedParameter
 
 class SwPointerTargetProps:
     """

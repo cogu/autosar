@@ -1539,9 +1539,11 @@ class ParameterInstanceRef:
     """
     Represents <AUTOSAR-PARAMETER-IREF> (AUTOSAR 4)
     """
-    def __init__(self, portRef, parameterDataRef):
+    def __init__(self, portRef = None, parameterDataRef = None, rootParameterDataRef = None, contextDataRef = None):
         self.portRef = portRef
         self.parameterDataRef = parameterDataRef
+        self.rootParameterDataRef = rootParameterDataRef
+        self.contextDataRef = contextDataRef
 
     def tag(self, version): return 'AUTOSAR-PARAMETER-IREF'
 

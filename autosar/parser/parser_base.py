@@ -393,7 +393,7 @@ class BaseParser:
         )
     
     def parseSwAxisGrouped(self, rootXML, parent = None):
-        (sharedAxisTypeRef, swAxisIndex) = (None, None)
+        (sharedAxisTypeRef, swAxisIndex, accessedParameter) = (None, None, None)
 
         for itemXML in rootXML.findall("./*"):
             tag = itemXML.tag
@@ -402,14 +402,25 @@ class BaseParser:
                 sharedAxisTypeRef = self.parseTextNode(itemXML)
             elif tag == "SW-AXIS-INDEX":
                 swAxisIndex = self.parseTextNode(itemXML)
+            elif tag == "AR-PARAMETER":
+                # TODO: from specification, the <AR-PARAMETER> tag should also be supported
+                #       for the <SW-DATA-DEPENDENCY-ARGS> element which is defined as a descendent
+                #       of <SW-DATA-DEF-PROPS>
+                for xmlChild in itemXML.findall('./*'):
+                    if xmlChild.tag == 'AUTOSAR-PARAMETER-IREF':
+                        accessedParameter = self.parseParameterInstanceRef(xmlChild)
+                    elif xmlChild.tag == 'LOCAL-PARAMETER-REF':
+                        accessedParameter = autosar.behavior.LocalParameterRef(self.parseTextNode(xmlChild))
+                    else:
+                        raise NotImplementedError(xmlChild.tag)
             else:
                 raise RuntimeError(f"ERROR: Tag {tag} not recognized")
 
         return SwAxisGrouped(
             sharedAxisTypeRef=sharedAxisTypeRef,
-            swAxisIndex=swAxisIndex
+            swAxisIndex=swAxisIndex,
+            accessedParameter=accessedParameter
         )
-
 
     def parseSwPointerTargetProps(self, rootXML, parent = None):
         assert (rootXML.tag == 'SW-POINTER-TARGET-PROPS')
