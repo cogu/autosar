@@ -141,6 +141,7 @@ class ComponentTypeParser(ElementParser):
                 portName = xmlPort.find('SHORT-NAME').text
                 portInterfaceRef = self.parseTextNode(xmlPort.find('REQUIRED-INTERFACE-TREF'))
                 port = autosar.port.RequirePort(portName, portInterfaceRef, autoCreateComSpec = False, parent=componentType)
+                port.uuid = xmlPort.attrib.get('UUID', '').lower()
                 if hasAdminData(xmlPort):
                     port.adminData=parseAdminDataNode(xmlPort.find('ADMIN-DATA'))
                 if xmlPort.findall('./REQUIRED-COM-SPECS') is not None:
@@ -185,6 +186,7 @@ class ComponentTypeParser(ElementParser):
                 portName = xmlPort.find('SHORT-NAME').text
                 portInterfaceRef = self.parseTextNode(xmlPort.find('PROVIDED-INTERFACE-TREF'))
                 port = autosar.port.ProvidePort(portName, portInterfaceRef, autoCreateComSpec = False, parent = componentType)
+                port.uuid = xmlPort.attrib.get('UUID', '').lower()
                 if hasAdminData(xmlPort):
                     port.adminData=parseAdminDataNode(xmlPort.find('ADMIN-DATA'))
                 if xmlPort.findall('./PROVIDED-COM-SPECS') is not None:
