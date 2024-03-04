@@ -4,7 +4,7 @@ Classes related to AUTOSAR Elements
 """
 
 import re
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from typing import Any, Union
 from enum import Enum
 import abc
@@ -27,6 +27,14 @@ ValueSpeficationElement = Union["TextValueSpecification",
                                 "RecordValueSpecification",
                                 "ApplicationValueSpecification",
                                 "ConstantReference"]
+
+PortPrototypeElement = Union["ProvidePortPrototype",
+                             "RequirePortPrototype",
+                             "PRPortPrototype"]
+
+SwConnectorElement = Union["AssemblySwConnector",
+                           "DelegationSwConnector",
+                           "PassThroughSwConnector"]
 
 # Helper classes
 
@@ -748,10 +756,29 @@ class PortPrototypeRef(BaseRef):
         return {ar_enum.IdentifiableSubTypes.ABSTRACT_PROVIDED_PORT_PROTOTYPE,
                 ar_enum.IdentifiableSubTypes.ABSTRACT_REQUIRED_PORT_PROTOTYPE,
                 ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE,
-                ar_enum.IdentifiableSubTypes.PORT_PROTOTYPE,
                 ar_enum.IdentifiableSubTypes.PR_PORT_PROTOTYPE,
                 ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE,
                 }
+
+    @property
+    def is_provide_port_ref(self) -> bool:
+        """
+        True if destination of port reference is a P-PORT
+        """
+        p_port_values = {ar_enum.IdentifiableSubTypes.ABSTRACT_PROVIDED_PORT_PROTOTYPE,
+                         ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE,
+                         ar_enum.IdentifiableSubTypes.PR_PORT_PROTOTYPE}
+        return self.dest in p_port_values
+
+    @property
+    def is_require_port_ref(self) -> bool:
+        """
+        True if destination of port reference is an R-PORT
+        """
+        r_port_values = {ar_enum.IdentifiableSubTypes.ABSTRACT_REQUIRED_PORT_PROTOTYPE,
+                         ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE,
+                         ar_enum.IdentifiableSubTypes.PR_PORT_PROTOTYPE}
+        return self.dest in r_port_values
 
 
 class AbstractImplementationDataTypeElementRef(BaseRef):
@@ -787,8 +814,7 @@ class PortInterfaceRef(BaseRef):
     """
     References to PORT-INTERFACE--SUBTYPES-ENUM
 
-    Only a fraction of elements seen in the XML Schema are
-    actually supported.
+    Only a small piece of the enum is currently implemented
     """
 
     def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
@@ -799,6 +825,33 @@ class PortInterfaceRef(BaseRef):
                 ar_enum.IdentifiableSubTypes.PARAMETER_INTERFACE,
                 ar_enum.IdentifiableSubTypes.SENDER_RECEIVER_INTERFACE,
                 }
+
+
+class SwComponentTypeRef(BaseRef):
+    """
+    References to SW-COMPONENT-TYPE--SUBTYPES-ENUM
+
+    Only a small piece of the enum is currently implemented
+    """
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.APPLICATION_SW_COMPONENT_TYPE,
+                ar_enum.IdentifiableSubTypes.COMPOSITION_SW_COMPONENT_TYPE,
+                }
+
+
+class SwComponentPrototypeRef(BaseRef):
+    """
+    Reference to SW-COMPONENT-PROTOTYPE--SUBTYPES-ENUM
+    """
+
+    def __init__(self, value: str) -> None:
+        super().__init__(value, ar_enum.IdentifiableSubTypes.SW_COMPONENT_PROTOTYPE)
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.SW_COMPONENT_PROTOTYPE}
 
 # --- Documentation Elements
 
@@ -4570,42 +4623,263 @@ class PRPortPrototype(PortPrototype):
             raise TypeError("com_spec must be of either type ProvidePortComSpec, RequirePortComSpec")
 
 
-class SoftwareComponentType(ARElement):
+class SwComponentType(ARElement):
     """
     Group AR:SW-COMPONENT-TYPE
     """
 
     def __init__(self,
                  name: str,
+                 ports: PortPrototypeElement | list[PortPrototypeElement] | None = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
         # .SW-COMPONENT-DOCUMENTATIONS not supported
         # .CONSISTENCY-NEEDSS not supported
-        self.ports = None  # .PORTS
+        self.ports: list[PortPrototypeElement] = []  # .PORTS
         # .PORT_GROUPS not yet supported
         # .SWC-MAPPING-CONSTRAINT-REFS not yet supported
         # .UNIT-GROUP-REFS not yet supported
+        if ports is not None:
+            if isinstance(ports, PortPrototype):
+                self.append_port(ports)
+            elif isinstance(ports, list):
+                for port in ports:
+                    self.append_port(port)
+            else:
+                msg_part_1 = "ports: Type must be ProvidePortPrototype, RequirePortPrototype, PRPortPrototype"
+                msg_part_2 = " or a list of those types."
+                raise TypeError(msg_part_1 + msg_part_2 + f" Got {str(type(ports))}")
+
+    def append_port(self, port: PortPrototypeElement):
+        """
+        Adds port to internal list of ports
+        """
+        if isinstance(port, PortPrototype):
+            self.ports.append(port)
+        else:
+            msg = "port type must be one of: ProvidePortPrototype, RequirePortPrototype, PRPortPrototype."
+            raise TypeError(msg + f" Got {str(type(port))}")
+
+    @property
+    def provide_ports(self) -> Iterator[ProvidePortPrototype]:
+        """
+        P-PORTS
+        """
+        for port in self.ports:
+            if isinstance(port, ProvidePortPrototype):
+                yield port
+
+    @property
+    def require_ports(self) -> Iterator[RequirePortPrototype]:
+        """
+        R-PORTS
+        """
+        for port in self.ports:
+            if isinstance(port, RequirePortPrototype):
+                yield port
+
+    @property
+    def pr_ports(self) -> Iterator[PRPortPrototype]:
+        """
+        PR-PORTS
+        """
+        for port in self.ports:
+            if isinstance(port, PRPortPrototype):
+                yield port
 
 
-class AtomicSoftwareComponentType(SoftwareComponentType):
+class AtomicSoftwareComponentType(SwComponentType):
     """
     Group AR:ATOMIC-SW-COMPONENT-TYPE
     """
 
-    def __init__(self, name: str, kwargs: dict) -> None:
+    def __init__(self,
+                 name: str,
+                 internal_behavior: Union["SwcInternalBehavior", None] = None,
+                 symbol_props: SymbolProps | None = None,
+                 **kwargs) -> None:
         super().__init__(name, **kwargs)
-        # .INTERNAL-BEHAVIORS not yet supported
+        self.internal_behavior: SwcInternalBehavior | None = None
         self.symbol_props = None  # AR:SYMBOL-PROPS
+        self._assign_optional_strict("internal_behavior", internal_behavior, SwcInternalBehavior)
+        self._assign_optional_strict("symbol_props", symbol_props, SymbolProps)
 
 
 class ApplicationSoftwareComponentType(AtomicSoftwareComponentType):
     """
     Complex type AR:APPLICATION-SW-COMPONENT-TYPE
-    Tag variants:
+    Tag variants: 'APPLICATION-SW-COMPONENT-TYPE'
+
+    Same constructor as parent class
     """
 
-    def __init__(self, name: str, **kwargs) -> None:
+
+class SwComponentPrototype(Identifiable):
+    """
+    Complex type AR:SW-COMPONENT-PROTOTYPE
+    Tag variants: 'SW-COMPONENT-PROTOTYPE'
+    """
+
+    def __init__(self,
+                 name: str,
+                 type_ref: SwComponentTypeRef | None = None,
+                 **kwargs) -> None:
         super().__init__(name, **kwargs)
+        self.type_ref: SwComponentTypeRef | None = None
+        self._assign_optional_strict("type_ref", type_ref, SwComponentTypeRef)
+
+
+class PortInCompositionTypeInstanceRef(ARObject):
+    """
+    Merge of complex types AR:P-PORT-IN-COMPOSITION-INSTANCE-REF
+    and R-PORT-IN-COMPOSITION-INSTANCE-REF
+    Tag variants: 'PROVIDER-IREF' | 'P-PORT-IN-COMPOSITION-INSTANCE-REF' |
+                  'REQUESTER-IREF'| 'R-PORT-IN-COMPOSITION-INSTANCE-REF'
+    """
+
+    def __init__(self,
+                 component_ref: SwComponentPrototypeRef | None = None,
+                 port_ref: PortPrototypeRef | None = None,
+                 ) -> None:
+        super().__init__()
+        self.component_ref: SwComponentPrototypeRef | None = None  # .CONTEXT-COMPONENT-REF
+        self.port_ref: PortPrototypeRef | None = None  # .TARGET-P-PORT-REF or .TARGET-R-PORT-REF
+        self._assign_optional_strict("component_ref", component_ref, SwComponentPrototypeRef)
+        self._assign_optional_strict("port_ref", port_ref, PortPrototypeRef)
+
+
+class SwConnector(Identifiable):
+    """
+    Group AR:SW-CONNECTOR
+    """
+
+    def __init__(self,
+                 name: str,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .MAPPING-REF not yet supported
+        # .VARIATION-POINT not supported
+
+
+class AssemblySwConnector(SwConnector):
+    """
+    Complex type AR:ASSEMBLY-SW-CONNECTOR
+    Tag variants: 'ASSEMBLY-SW-CONNECTOR'
+    """
+
+    def __init__(self,
+                 name: str,
+                 provide_port: PortInCompositionTypeInstanceRef | None = None,
+                 require_port: PortInCompositionTypeInstanceRef | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.provide_port: PortInCompositionTypeInstanceRef | None = None  # .PROVIDER-IREF
+        self.require_port: PortInCompositionTypeInstanceRef | None = None  # .REQUESTER-IREF
+        self._assign_optional_strict("provide_port", provide_port, PortInCompositionTypeInstanceRef)
+        self._assign_optional_strict("require_port", require_port, PortInCompositionTypeInstanceRef)
+
+
+class DelegationSwConnector(SwConnector):
+    """
+    Complex type AR:DELEGATION-SW-CONNECTOR
+    Tag variants: 'DELEGATION-SW-CONNECTOR'
+    """
+
+    def __init__(self,
+                 name: str,
+                 inner_port: PortInCompositionTypeInstanceRef | None = None,
+                 outer_port: PortPrototypeRef | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.inner_port: PortInCompositionTypeInstanceRef | None = None  # .INNER-PORT-IREF
+        self.outer_port: PortPrototypeRef | None = None  # .OUTER-PORT-REF"
+        self._assign_optional_strict("inner_port", inner_port, PortInCompositionTypeInstanceRef)
+        self._assign_optional_strict("outer_port", outer_port, PortPrototypeRef)
+
+    @property
+    def xml_tag(self) -> str | None:
+        """
+        Returns a suitable XML-tag for inner_port_ref based on port reference type.
+        Raises exception is port reference isn't set or if port-reference contains invalid value
+        """
+        if self.inner_port.port_ref is not None:
+            if self.inner_port.port_ref.is_provide_port_ref:
+                return "P-PORT-IN-COMPOSITION-INSTANCE-REF"
+            if self.inner_port.port_ref.is_require_port_ref:
+                return "R-PORT-IN-COMPOSITION-INSTANCE-REF"
+        return None
+
+
+class PassThroughSwConnector(SwConnector):
+    """
+    Complex type AR:PASS-THROUGH-SW-CONNECTOR
+    Tag variants: 'PASS-THROUGH-SW-CONNECTOR'
+    """
+
+    def __init__(self,
+                 name: str,
+                 provide_port: PortPrototypeRef | None = None,
+                 require_port: PortPrototypeRef | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.provide_port: PortPrototypeRef | None = None  # .PROVIDED-OUTER-PORT-REF
+        self.require_port: PortPrototypeRef | None = None  # .REQUIRED-OUTER-PORT-REF
+        # .SERVICE-INTERFACE-ELEMENT-MAPPING-REFS not yet supported
+        self._assign_optional_strict("provide_port", provide_port, PortPrototypeRef)
+        self._assign_optional_strict("require_port", require_port, PortPrototypeRef)
+
+
+class CompositionSwComponentType(SwComponentType):
+    """
+    Complex type AR:COMPOSITION-SW-COMPONENT-TYPE
+    Tag variants: 'COMPOSITION-SW-COMPONENT-TYPE'
+    """
+
+    def __init__(self,
+                 name: str,
+                 components: SwComponentPrototype | list[SwComponentPrototype] | None = None,
+                 connectors: SwConnectorElement | list[SwConnectorElement] = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.components: list[SwComponentPrototype] = []  # .COMPONENTS
+        self.connectors: list[SwConnectorElement] = []  # .CONNECTORS
+        # .CONSTANT-VALUE-MAPPING-REFS not yet supported
+        # .DATA-TYPE-MAPPING-REFS not yet supported
+        # .INSTANTIATION-RTE-EVENT-PROPSS not yet supported
+        if components is not None:
+            if isinstance(components, SwComponentPrototype):
+                self.append_component(components)
+            elif isinstance(components, list):
+                for component in components:
+                    self.append_component(component)
+            else:
+                raise TypeError(f"components: Invalid type '{str(type(components))}'")
+        if connectors is not None:
+            if isinstance(connectors, (AssemblySwConnector, DelegationSwConnector, PassThroughSwConnector)):
+                self.append_connector(connectors)
+            elif isinstance(connectors, list):
+                for connector in connectors:
+                    self.append_connector(connector)
+            else:
+                raise TypeError(f"components: Invalid type '{str(type(connectors))}'")
+
+    def append_component(self, component: SwComponentPrototype) -> None:
+        """
+        Appends components prototype to internal list
+        """
+        if isinstance(component, SwComponentPrototype):
+            self.components.append(component)
+        else:
+            raise TypeError(f"component: Invalid type {(str(type(component)))}")
+
+    def append_connector(self, connector: SwConnectorElement) -> None:
+        """
+        Appends components prototype to internal list
+        """
+        if isinstance(connector, (AssemblySwConnector, DelegationSwConnector, PassThroughSwConnector)):
+            self.connectors.append(connector)
+        else:
+            raise TypeError(f"connector: Invalid type {(str(type(connector)))}")
 
 # --- SWC internal behavior elements
 
@@ -4752,3 +5026,17 @@ class VariableAccess(Identifiable):
         # .VARIATION-POINT not supported
         self._assign_optional_strict("accessed_variable", accessed_variable, AutosarVariableRef)
         self._assign_optional("scope", scope, ar_enum.VariableAccessScope)
+
+
+class SwcInternalBehavior(Identifiable):
+    """
+    Complex type AR:SWC-INTERNAL-BEHAVIOR
+    Tag variants: 'SWC-INTERNAL-BEHAVIOR'
+
+    This is just a placeholder. Will be implemented later.
+    """
+
+    def __init__(self,
+                 name: str,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)

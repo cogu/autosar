@@ -147,7 +147,11 @@ class Reader:
             'MODE-DECLARATION-GROUP': self._read_mode_declaration_group,
 
             # System template elements
-            'E-2-E-PROFILE-COMPATIBILITY-PROPS': self._read_e2e_profile_compatibility_props
+            'E-2-E-PROFILE-COMPATIBILITY-PROPS': self._read_e2e_profile_compatibility_props,
+
+            # Software component elements
+            'APPLICATION-SW-COMPONENT-TYPE': self._read_application_sw_component_type,
+            'COMPOSITION-SW-COMPONENT-TYPE': self._read_composition_sw_component_type,
 
         }
         # Value specification elements
@@ -245,11 +249,18 @@ class Reader:
             'P-PORT-PROTOTYPE': self._read_provide_port_prototype,
             'R-PORT-PROTOTYPE': self._read_require_port_prototype,
             'PR-PORT-PROTOTYPE': self._read_pr_port_prototype,
+            'SW-COMPONENT-PROTOTYPE': self._read_sw_component_prototype,
+            'PROVIDER-IREF': self._read_port_in_composition_type_instance_ref,
+            'REQUESTER-IREF': self._read_port_in_composition_type_instance_ref,
+            'ASSEMBLY-SW-CONNECTOR': self._read_assembly_sw_connector,
+            'DELEGATION-SW-CONNECTOR': self._read_delegation_sw_connector,
+            'PASS-THROUGH-SW-CONNECTOR': self._read_pass_through_sw_connector,
             # SWC internal behavior elements
             'AUTOSAR-VARIABLE-IN-IMPL-DATATYPE': self._read_variable_in_impl_data_instance_ref,
             'AUTOSAR-VARIABLE-IREF': self._read_variable_in_atomic_swc_type_instance_ref,
             'ACCESSED-VARIABLE': self._read_autosar_variable_ref,
             'VARIABLE-ACCESS': self._read_variable_access,
+            'SWC-INTERNAL-BEHAVIOR': self._read_swc_internal_behavior,
         }
         self.switcher_all = {}
         self.switcher_all.update(self.switcher_collectable)
@@ -2096,6 +2107,14 @@ class Reader:
 
 # --- Reference elements
 
+    def _read_base_ref_attributes(self, attr: dict, data: dict) -> None:
+        """
+        Reads DEST attribute
+        """
+        data['dest'] = attr.get('DEST', None)
+        if data['dest'] is None:
+            raise ar_exception.ParseError("Missing required attribute 'DEST'")
+
     def _read_compu_method_ref(self, xml_elem: ElementTree.Element) -> ar_element.CompuMethodRef:
         """
         Reads AR:COMPU-METHOD-REF
@@ -2433,13 +2452,29 @@ class Reader:
         dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', data['dest'], self.schema_version)
         return ar_element.PortInterfaceRef(xml_elem.text, dest_enum)
 
-    def _read_base_ref_attributes(self, attr: dict, data: dict) -> None:
+    def _read_sw_component_type_ref(self,
+                                    xml_elem: ElementTree.Element
+                                    ) -> ar_element.SwComponentTypeRef:
         """
-        Reads DEST attribute
+        Reads references to References to SW-COMPONENT-TYPE--SUBTYPES-ENUM
         """
-        data['dest'] = attr.get('DEST', None)
-        if data['dest'] is None:
-            raise ar_exception.ParseError("Missing required attribute 'DEST'")
+        data = {}
+        self._read_base_ref_attributes(xml_elem.attrib, data)
+        dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', data['dest'], self.schema_version)
+        return ar_element.SwComponentTypeRef(xml_elem.text, dest_enum)
+
+    def _read_sw_component_prototype_ref(self,
+                                         xml_elem: ElementTree.Element
+                                         ) -> ar_element.SwComponentPrototypeRef:
+        """
+        Reads reference to references to SW-COMPONENT-PROTOTYPE--SUBTYPES-ENUM
+        """
+        data = {}
+        self._read_base_ref_attributes(xml_elem.attrib, data)
+        if data['dest'] != 'SW-COMPONENT-PROTOTYPE':
+            msg = f"Invalid value for DEST. Expected 'SW-COMPONENT-PROTOTYPE', got '{data['dest']}'"
+            raise ar_exception.ParseError(msg)
+        return ar_element.SwComponentPrototypeRef(xml_elem.text)
 
 # --- Constant and value specifications
 
@@ -3850,6 +3885,211 @@ class Reader:
         if xml_child is not None:
             data["port_interface_ref"] = self._read_port_interface_ref(xml_child)
 
+    def _read_sw_component_type(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:SW-COMPONENT-TYPE
+        """
+        child_elements.skip("SW-COMPONENT-DOCUMENTATIONS")
+        child_elements.skip("CONSISTENCY-NEEDSS")
+        xml_child = child_elements.get("PORTS")
+        if xml_child is not None:
+            ports = []
+            for xml_grand_child in xml_child.findall("./*"):
+                if xml_grand_child.tag == "P-PORT-PROTOTYPE":
+                    ports.append(self._read_provide_port_prototype(xml_grand_child))
+                elif xml_grand_child.tag == "R-PORT-PROTOTYPE":
+                    ports.append(self._read_require_port_prototype(xml_grand_child))
+                elif xml_grand_child.tag == "PR-PORT-PROTOTYPE":
+                    ports.append(self._read_pr_port_prototype(xml_grand_child))
+            data["ports"] = ports
+        child_elements.skip("PORT_GROUPS")
+        child_elements.skip("SWC-MAPPING-CONSTRAINT-REFS")
+        child_elements.skip("UNIT-GROUP-REFS")
+
+    def _read_atomic_sw_component_type(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:ATOMIC-SW-COMPONENT-TYPE
+        """
+        xml_child = child_elements.get("SWC-INTERNAL-BEHAVIOR")
+        if xml_child is not None:
+            data["internal_behavior"] = self._read_swc_internal_behavior(xml_child)
+        xml_child = child_elements.get("SYMBOL-PROPS")
+        if xml_child is not None:
+            data["symbol_props"] = self._read_symbol_props(xml_child)
+
+    def _read_application_sw_component_type(self,
+                                            xml_element: ElementTree.Element
+                                            ) -> ar_element.ApplicationSoftwareComponentType:
+        """
+        Reads complex type AR:APPLICATION-SW-COMPONENT-TYPE
+        Tag variants: 'APPLICATION-SW-COMPONENT-TYPE'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_sw_component_type(child_elements, data)
+        self._read_atomic_sw_component_type(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ApplicationSoftwareComponentType(**data)
+
+    def _read_sw_component_prototype(self, xml_element: ElementTree.Element) -> ar_element.SwComponentPrototype:
+        """
+        Complex type AR:SW-COMPONENT-PROTOTYPE
+        Tag variants: 'SW-COMPONENT-PROTOTYPE'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_sw_component_type(child_elements, data)
+        xml_child = child_elements.get("TYPE-TREF")
+        if xml_child is not None:
+            data["type_ref"] = self._read_sw_component_type_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.SwComponentPrototype(**data)
+
+    def _read_port_in_composition_type_instance_ref(self,
+                                                    xml_element: ElementTree.Element
+                                                    ) -> ar_element.PortInCompositionTypeInstanceRef:
+        """
+        Writes merge of complex types AR:P-PORT-IN-COMPOSITION-INSTANCE-REF
+        and R-PORT-IN-COMPOSITION-INSTANCE-REF
+        Tag variants: 'PROVIDER-IREF' | 'P-PORT-IN-COMPOSITION-INSTANCE-REF' |
+                      'REQUESTER-IREF'| 'R-PORT-IN-COMPOSITION-INSTANCE-REF'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("CONTEXT-COMPONENT-REF")
+        if xml_child is not None:
+            data["component_ref"] = self._read_sw_component_prototype_ref(xml_child)
+        if xml_element.tag in ("PROVIDER-IREF", "P-PORT-IN-COMPOSITION-INSTANCE-REF"):
+            port_ref_tag = "TARGET-P-PORT-REF"
+        elif xml_element.tag in ("REQUESTER-IREF", "R-PORT-IN-COMPOSITION-INSTANCE-REF"):
+            port_ref_tag = "TARGET-R-PORT-REF"
+        else:
+            raise ValueError(f"Unknown XML tag: '{xml_element.tag}'")
+        xml_child = child_elements.get(port_ref_tag)
+        if xml_child is not None:
+            data["port_ref"] = self._read_port_prototype_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.PortInCompositionTypeInstanceRef(**data)
+
+    def _read_assembly_sw_connector(self, xml_element: ElementTree.Element) -> ar_element.AssemblySwConnector:
+        """
+        Reads complex type AR:ASSEMBLY-SW-CONNECTOR
+        Tag variants: 'ASSEMBLY-SW-CONNECTOR'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_sw_connector(child_elements, data)
+        xml_child = child_elements.get("PROVIDER-IREF")
+        if xml_child is not None:
+            data["provide_port"] = self._read_port_in_composition_type_instance_ref(xml_child)
+        xml_child = child_elements.get("REQUESTER-IREF")
+        if xml_child is not None:
+            data["require_port"] = self._read_port_in_composition_type_instance_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.AssemblySwConnector(**data)
+
+    def _read_sw_connector(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:SW-CONNECTOR
+        """
+        child_elements.skip("MAPPING-REF")
+        child_elements.skip("VARIATION-POINT")
+
+    def _read_delegation_sw_connector(self, xml_element: ElementTree.Element) -> ar_element.DelegationSwConnector:
+        """
+        Reads complex type AR:DELEGATION-SW-CONNECTOR
+        Tag variants: 'DELEGATION-SW-CONNECTOR'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_sw_connector(child_elements, data)
+        xml_child = child_elements.get("INNER-PORT-IREF")
+        if xml_child is not None:
+            xml_grand_child = xml_child.find("./*")
+            if xml_grand_child.tag in ("P-PORT-IN-COMPOSITION-INSTANCE-REF",
+                                       "R-PORT-IN-COMPOSITION-INSTANCE-REF"):
+                data["inner_port"] = self._read_port_in_composition_type_instance_ref(xml_grand_child)
+        xml_child = child_elements.get("OUTER-PORT-REF")
+        if xml_child is not None:
+            data["outer_port"] = self._read_port_prototype_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.DelegationSwConnector(**data)
+
+    def _read_pass_through_sw_connector(self, xml_element: ElementTree.Element) -> ar_element.PassThroughSwConnector:
+        """
+        Complex type AR:PASS-THROUGH-SW-CONNECTOR
+        Tag variants: 'PASS-THROUGH-SW-CONNECTOR'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_sw_connector(child_elements, data)
+        xml_child = child_elements.get("PROVIDED-OUTER-PORT-REF")
+        if xml_child is not None:
+            data["provide_port"] = self._read_port_prototype_ref(xml_child)
+        xml_child = child_elements.get("REQUIRED-OUTER-PORT-REF")
+        if xml_child is not None:
+            data["require_port"] = self._read_port_prototype_ref(xml_child)
+        child_elements.skip("SERVICE-INTERFACE-ELEMENT-MAPPING-REFS")
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.PassThroughSwConnector(**data)
+
+    def _read_composition_sw_component_type(self,
+                                            xml_element: ElementTree.Element
+                                            ) -> ar_element.CompositionSwComponentType:
+        """
+        Reads complex type AR:COMPOSITION-SW-COMPONENT-TYPE
+        Tag variants: 'COMPOSITION-SW-COMPONENT-TYPE'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_sw_component_type(child_elements, data)
+        self._read_composition_sw_component_type_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.CompositionSwComponentType(**data)
+
+    def _read_composition_sw_component_type_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:COMPOSITION-SW-COMPONENT-TYPE
+        """
+        xml_child = child_elements.get("COMPONENTS")
+        if xml_child is not None:
+            component_list = []
+            for xml_grand_child in xml_child.findall("./*"):
+                component_list.append(self._read_sw_component_prototype(xml_grand_child))
+            data["components"] = component_list
+        xml_child = child_elements.get("CONNECTORS")
+        if xml_child is not None:
+            connector_list = []
+            for xml_grand_child in xml_child.findall("./*"):
+                if xml_grand_child.tag == "ASSEMBLY-SW-CONNECTOR":
+                    connector_list.append(self._read_assembly_sw_connector(xml_grand_child))
+                elif xml_grand_child.tag == "DELEGATION-SW-CONNECTOR":
+                    connector_list.append(self._read_delegation_sw_connector(xml_grand_child))
+                elif xml_grand_child.tag == "PASS-THROUGH-SW-CONNECTOR":
+                    connector_list.append(self._read_pass_through_sw_connector(xml_grand_child))
+            data["connectors"] = connector_list
+        child_elements.skip("CONSTANT-VALUE-MAPPING-REFS")
+        child_elements.skip("DATA-TYPE-MAPPING-REFS")
+        child_elements.skip("INSTANTIATION-RTE-EVENT-PROPSS")
+
     # --- Internal Behavior elements
 
     def _read_variable_in_impl_data_instance_ref(self,
@@ -3966,3 +4206,18 @@ class Reader:
         xml_child = child_elements.get("LOCAL-VARIABLE-REF")
         if xml_child is not None:
             data["local_variable_ref"] = self._read_variable_data_prototype_ref(xml_child)
+
+    def _read_swc_internal_behavior(self, xml_element: ElementTree.Element) -> ar_element.SwcInternalBehavior:
+        """
+        Reads complex type AR:SWC-INTERNAL-BEHAVIOR
+        Tag variants: 'SWC-INTERNAL-BEHAVIOR'
+
+        This is just a placeholder.
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.SwcInternalBehavior(**data)

@@ -4,6 +4,7 @@ ARXML writer module
 # pylint: disable=consider-using-with
 from io import StringIO
 from typing import TextIO
+import sys
 import math
 import decimal
 import autosar.xml.document as ar_document
@@ -168,6 +169,12 @@ class _XMLWriter:
         else:
             raise NotImplementedError
 
+    def _warn(self, msg: str):
+        """
+        Prints warning message to stderr
+        """
+        print(msg, file=sys.stderr)
+
 
 class Writer(_XMLWriter):
     """
@@ -208,6 +215,9 @@ class Writer(_XMLWriter):
             'ModeDeclarationGroup': self._write_mode_declaration_group,
             # System template elements
             'E2EProfileCompatibilityProps': self._write_e2e_profile_compatibility_props,
+            # Software component elements
+            'ApplicationSoftwareComponentType': self._write_application_software_component_type,
+            'CompositionSwComponentType': self._write_composition_sw_component_type,
         }
         # Value specification elements
         self.switcher_value_specification = {
@@ -307,11 +317,18 @@ class Writer(_XMLWriter):
             'ProvidePortPrototype': self._write_provide_port_prototype,
             'RequirePortPrototype': self._write_require_port_prototype,
             'PRPortPrototype': self._write_pr_port_prototype,
+            'SwComponentPrototype': self._write_sw_component_prototype,
+            'PortInCompositionTypeInstanceRef': self._write_port_in_composition_type_instance_ref,
+            'AssemblySwConnector': self._write_assembly_sw_connector,
+            'DelegationSwConnector': self._write_delegation_sw_connector,
+            'PassThroughSwConnector': self._write_passthrough_sw_connector,
             # SWC internal behavior elements
             'ArVariableInImplementationDataInstanceRef': self._write_variable_in_impl_data_instance_ref,
             'VariableInAtomicSWCTypeInstanceRef': self._write_variable_in_atomic_swc_type_instance_ref,
             'AutosarVariableRef': self._write_autosar_variable_ref,
             'VariableAccess': self._write_variable_access,
+            'SwcInternalBehavior': self._write_swc_internal_behavior,
+
         }
         self.switcher_all = {}  # All concrete elements (used for unit testing)
         self.switcher_all.update(self.switcher_collectable)
@@ -2121,6 +2138,28 @@ class Writer(_XMLWriter):
         self._collect_base_ref_attr(elem, attr)
         self._add_content(tag, elem.value, attr)
 
+    def _write_sw_component_type_ref(self,
+                                     elem: ar_element.SwComponentTypeRef,
+                                     tag: str) -> None:
+        """
+        Writes references to SW-COMPONENT-TYPE--SUBTYPES-ENUM
+        """
+        assert isinstance(elem, ar_element.SwComponentTypeRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content(tag, elem.value, attr)
+
+    def _write_sw_component_prototype_ref(self,
+                                          elem: ar_element.SwComponentPrototypeRef,
+                                          tag: str) -> None:
+        """
+        Writes references to SW-COMPONENT-PROTOTYPE--SUBTYPES-ENUM
+        """
+        assert isinstance(elem, ar_element.SwComponentPrototypeRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content(tag, elem.value, attr)
+
 # -- Constant and value specifications
 
     def _write_text_value_specification(self, elem: ar_element.TextValueSpecification) -> None:
@@ -3311,6 +3350,183 @@ class Writer(_XMLWriter):
         if elem.port_interface_ref is not None:
             self._write_port_interface_ref(elem.port_interface_ref, "PROVIDED-REQUIRED-INTERFACE-TREF")
 
+    def _write_port_prototype(self, elem: ar_element.PortPrototypeElement) -> None:
+        """
+        Writes port protype elements
+        """
+        if isinstance(elem, ar_element.ProvidePortPrototype):
+            self._write_provide_port_prototype(elem)
+        elif isinstance(elem, ar_element.RequirePortPrototype):
+            self._write_require_port_prototype(elem)
+        elif isinstance(elem, ar_element.PRPortPrototype):
+            self._write_pr_port_prototype(elem)
+        else:
+            raise NotImplementedError(str(type(elem)))
+
+    def _write_sw_component_type(self, elem: ar_element.SwComponentType) -> None:
+        """
+        Writes group AR:SW-COMPONENT-TYPE
+        """
+        if elem.ports:
+            self._add_child("PORTS")
+            for port in elem.ports:
+                self._write_port_prototype(port)
+            self._leave_child()
+
+    def _write_atomic_sw_component_type(self, elem: ar_element.AtomicSoftwareComponentType) -> None:
+        """
+        Writes  AR:ATOMIC-SW-COMPONENT-TYPE
+        """
+        if elem.internal_behavior is not None:
+            self._write_swc_internal_behavior(elem.internal_behavior)
+        if elem.symbol_props is not None:
+            self._write_symbol_props(elem.symbol_props, "SYMBOL-PROPS")
+
+    def _write_application_software_component_type(self, elem: ar_element.ApplicationSoftwareComponentType) -> None:
+        """
+        Writes complex type AR:APPLICATION-SW-COMPONENT-TYPE
+        Tag variants: 'APPLICATION-SW-COMPONENT-TYPE'
+        """
+        assert isinstance(elem, ar_element.ApplicationSoftwareComponentType)
+        self._add_child("APPLICATION-SW-COMPONENT-TYPE")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_sw_component_type(elem)
+        self._write_atomic_sw_component_type(elem)
+        self._leave_child()
+
+    def _write_sw_component_prototype(self, elem: ar_element.SwComponentPrototype) -> None:
+        """
+        Writes complex type AR:SW-COMPONENT-PROTOTYPE
+        Tag variants: 'SW-COMPONENT-PROTOTYPE'
+        """
+        assert isinstance(elem, ar_element.SwComponentPrototype)
+        self._add_child("SW-COMPONENT-PROTOTYPE")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        if elem.type_ref is not None:
+            self._write_sw_component_type_ref(elem.type_ref, "TYPE-TREF")
+        self._leave_child()
+
+    def _write_port_in_composition_type_instance_ref(self,
+                                                     elem: ar_element.PortInCompositionTypeInstanceRef,
+                                                     elem_tag: str) -> None:
+        """
+        Writes merge of complex types AR:P-PORT-IN-COMPOSITION-INSTANCE-REF
+        and R-PORT-IN-COMPOSITION-INSTANCE-REF
+        Tag variants: 'PROVIDER-IREF' | 'P-PORT-IN-COMPOSITION-INSTANCE-REF' |
+                      'REQUESTER-IREF'| 'R-PORT-IN-COMPOSITION-INSTANCE-REF'
+        """
+        assert isinstance(elem, ar_element.PortInCompositionTypeInstanceRef)
+        if elem.is_empty:
+            self._add_content(elem_tag)
+        else:
+            self._add_child(elem_tag)
+            if elem.component_ref is not None:
+                self._write_sw_component_prototype_ref(elem.component_ref, "CONTEXT-COMPONENT-REF")
+            if elem.port_ref is not None:
+                if elem_tag in ("PROVIDER-IREF", "P-PORT-IN-COMPOSITION-INSTANCE-REF"):
+                    port_ref_tag = "TARGET-P-PORT-REF"
+                    assert elem.port_ref.is_provide_port_ref
+                elif elem_tag in ("REQUESTER-IREF", "R-PORT-IN-COMPOSITION-INSTANCE-REF"):
+                    port_ref_tag = "TARGET-R-PORT-REF"
+                    assert elem.port_ref.is_require_port_ref
+                else:
+                    self._leave_child()
+                    return
+                self._write_port_prototype_ref(elem.port_ref, port_ref_tag)
+            self._leave_child()
+
+    def _write_assembly_sw_connector(self, elem: ar_element.AssemblySwConnector) -> None:
+        """
+        Writes complex type AR:ASSEMBLY-SW-CONNECTOR
+        Tag variants: 'ASSEMBLY-SW-CONNECTOR'
+        """
+        assert isinstance(elem, ar_element.AssemblySwConnector)
+        self._add_child("ASSEMBLY-SW-CONNECTOR")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        if elem.provide_port is not None:
+            self._write_port_in_composition_type_instance_ref(elem.provide_port, "PROVIDER-IREF")
+        if elem.require_port is not None:
+            self._write_port_in_composition_type_instance_ref(elem.require_port, "REQUESTER-IREF")
+        self._leave_child()
+
+    def _write_delegation_sw_connector(self, elem: ar_element.DelegationSwConnector) -> None:
+        """
+        Writes complex type AR:DELEGATION-SW-CONNECTOR
+        Tag variants: 'DELEGATION-SW-CONNECTOR'
+        """
+        assert isinstance(elem, ar_element.DelegationSwConnector)
+        self._add_child("DELEGATION-SW-CONNECTOR")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        if elem.inner_port is not None:
+            xml_tag = elem.xml_tag
+            if xml_tag is not None:
+                self._add_child("INNER-PORT-IREF")
+                self._write_port_in_composition_type_instance_ref(elem.inner_port, xml_tag)
+                self._leave_child()
+            else:
+                self._warn(f"Unable to determine direction of port reference for '{elem.name}', Skipping.")
+        if elem.outer_port is not None:
+            self._write_port_prototype_ref(elem.outer_port, "OUTER-PORT-REF")
+        self._leave_child()
+
+    def _write_passthrough_sw_connector(self, elem: ar_element.PassThroughSwConnector) -> None:
+        """
+        Writes complex type AR:PASS-THROUGH-SW-CONNECTOR
+        Tag variants: 'PASS-THROUGH-SW-CONNECTOR'
+        """
+        assert isinstance(elem, ar_element.PassThroughSwConnector)
+        self._add_child("PASS-THROUGH-SW-CONNECTOR")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        if elem.provide_port is not None:
+            self._write_port_prototype_ref(elem.provide_port, "PROVIDED-OUTER-PORT-REF")
+        if elem.require_port is not None:
+            self._write_port_prototype_ref(elem.require_port, "REQUIRED-OUTER-PORT-REF")
+        self._leave_child()
+
+    def _write_composition_sw_component_type(self, elem: ar_element.CompositionSwComponentType) -> None:
+        """
+        Writes complex type AR:COMPOSITION-SW-COMPONENT-TYPE
+        Tag variants: 'COMPOSITION-SW-COMPONENT-TYPE'
+        """
+        assert isinstance(elem, ar_element.CompositionSwComponentType)
+        self._add_child("COMPOSITION-SW-COMPONENT-TYPE")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_sw_component_type(elem)
+        self._write_composition_sw_component_type_group(elem)
+        self._leave_child()
+
+    def _write_composition_sw_component_type_group(self, elem: ar_element.CompositionSwComponentType) -> None:
+        """
+        Writes group AR:COMPOSITION-SW-COMPONENT-TYPE
+        """
+        if elem.components:
+            self._add_child("COMPONENTS")
+            for component in elem.components:
+                self._write_sw_component_prototype(component)
+            self._leave_child()
+        if elem.connectors:
+            self._add_child("CONNECTORS")
+            for connector in elem.connectors:
+                if isinstance(connector, ar_element.AssemblySwConnector):
+                    self._write_assembly_sw_connector(connector)
+                elif isinstance(connector, ar_element.DelegationSwConnector):
+                    self._write_delegation_sw_connector(connector)
+                elif isinstance(connector, ar_element.PassThroughSwConnector):
+                    self._write_passthrough_sw_connector(connector)
+            self._leave_child()
+
     # SWC Internal behavior elements
 
     def _write_variable_in_impl_data_instance_ref(self,
@@ -3402,4 +3618,17 @@ class Writer(_XMLWriter):
             self._write_autosar_variable_ref(elem.accessed_variable, "ACCESSED-VARIABLE")
         if elem.scope is not None:
             self._add_content("SCOPE", ar_enum.enum_to_xml(elem.scope))
+        self._leave_child()
+
+    def _write_swc_internal_behavior(self, elem: ar_element.SwcInternalBehavior) -> None:
+        """
+        Writes complex type AR:SWC-INTERNAL-BEHAVIOR
+        Tag variants: 'SWC-INTERNAL-BEHAVIOR'
+
+        This is just a placeholder. Will be implemented later
+        """
+        self._add_child("SWC-INTERNAL-BEHAVIOR")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
         self._leave_child()
