@@ -20,6 +20,13 @@ Non-collectable elements are various sub-elements to collectable elements.
 
 #### XML - Software component elements
 
+* ApplicationSoftwareComponentType | APPLICATION-SW-COMPONENT-TYPE | `collectable`
+* CompositionSwComponentType | COMPOSITION-SW-COMPONENT-TYPE | `collectable`
+* SwComponentPrototype | SW-COMPONENT-PROTOTYPE
+* PortInCompositionTypeInstanceRef | Merge of P-PORT-IN-COMPOSITION-INSTANCE-REF, R-PORT-IN-COMPOSITION-INSTANCE-REF
+* AssemblySwConnector | ASSEMBLY-SW-CONNECTOR
+* DelegationSwConnector | DELEGATION-SW-CONNECTOR
+* PassThroughSwConnector | PASS-THROUGH-SW-CONNECTOR
 * ClientComSpec | CLIENT-COM-SPEC
 * ModeSwitchedAckRequest | MODE-SWITCHED-ACK-REQUEST
 * ModeSwitchReceiverComSpec | MODE-SWITCH-RECEIVER-COM-SPEC
@@ -56,6 +63,8 @@ Non-collectable elements are various sub-elements to collectable elements.
 * ModeDeclarationGroupPrototypeRef
 * ParameterDataPrototypeRef
 * PortPrototypeRef
+* SwComponentTypeRef
+* SwComponentPrototypeRef
 
 ## [v0.5.2] - 2024-02-11
 

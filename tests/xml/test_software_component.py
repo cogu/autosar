@@ -1320,5 +1320,646 @@ class TestPRPortPrototype(unittest.TestCase):
         self.assertEqual(str(elem.port_interface_ref), ref_str)
 
 
+class TestApplicationSoftwareComponentType(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.ApplicationSoftwareComponentType("ShortName")
+        writer = autosar.xml.Writer()
+        xml = '''<APPLICATION-SW-COMPONENT-TYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+</APPLICATION-SW-COMPONENT-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationSoftwareComponentType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationSoftwareComponentType)
+        self.assertEqual(elem.name, "ShortName")
+
+    def test_internal_behavior(self):
+        internal_behavior = ar_element.SwcInternalBehavior("BehaviorName")
+        element = ar_element.ApplicationSoftwareComponentType("ShortName",
+                                                              internal_behavior=internal_behavior)
+        writer = autosar.xml.Writer()
+        xml = '''<APPLICATION-SW-COMPONENT-TYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <SWC-INTERNAL-BEHAVIOR>
+    <SHORT-NAME>BehaviorName</SHORT-NAME>
+  </SWC-INTERNAL-BEHAVIOR>
+</APPLICATION-SW-COMPONENT-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationSoftwareComponentType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationSoftwareComponentType)
+        self.assertIsInstance(elem.internal_behavior, ar_element.SwcInternalBehavior)
+        self.assertEqual(elem.internal_behavior.name, "BehaviorName")
+
+    def test_symbol_props(self):
+        symbol_props = ar_element.SymbolProps("PropsName", "Symbol")
+        element = ar_element.ApplicationSoftwareComponentType("ShortName",
+                                                              symbol_props=symbol_props)
+        writer = autosar.xml.Writer()
+        xml = '''<APPLICATION-SW-COMPONENT-TYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <SYMBOL-PROPS>
+    <SHORT-NAME>PropsName</SHORT-NAME>
+    <SYMBOL>Symbol</SYMBOL>
+  </SYMBOL-PROPS>
+</APPLICATION-SW-COMPONENT-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationSoftwareComponentType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationSoftwareComponentType)
+        self.assertIsInstance(elem.symbol_props, ar_element.SymbolProps)
+        self.assertEqual(elem.symbol_props.symbol, "Symbol")
+
+    def test_single_require_port(self):
+        ref_str = "/PortInterfaces/InterfaceName"
+        port_interface_ref = ar_element.PortInterfaceRef(ref_str,
+                                                         ar_enum.IdentifiableSubTypes.SENDER_RECEIVER_INTERFACE)
+        port = ar_element.RequirePortPrototype("PortName", port_interface_ref=port_interface_ref)
+        element = ar_element.ApplicationSoftwareComponentType("ShortName",
+                                                              ports=port)
+        writer = autosar.xml.Writer()
+        xml = f'''<APPLICATION-SW-COMPONENT-TYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <PORTS>
+    <R-PORT-PROTOTYPE>
+      <SHORT-NAME>PortName</SHORT-NAME>
+      <REQUIRED-INTERFACE-TREF DEST="SENDER-RECEIVER-INTERFACE">{ref_str}</REQUIRED-INTERFACE-TREF>
+    </R-PORT-PROTOTYPE>
+  </PORTS>
+</APPLICATION-SW-COMPONENT-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationSoftwareComponentType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationSoftwareComponentType)
+        self.assertIsInstance(elem.ports[0], ar_element.RequirePortPrototype)
+        self.assertEqual(elem.ports[0].name, "PortName")
+        self.assertEqual(str(elem.ports[0].port_interface_ref), ref_str)
+
+    def test_single_provide_port(self):
+        ref_str = "/PortInterfaces/InterfaceName"
+        port_interface_ref = ar_element.PortInterfaceRef(ref_str,
+                                                         ar_enum.IdentifiableSubTypes.SENDER_RECEIVER_INTERFACE)
+        port = ar_element.ProvidePortPrototype("PortName", port_interface_ref=port_interface_ref)
+        element = ar_element.ApplicationSoftwareComponentType("ShortName",
+                                                              ports=port)
+        writer = autosar.xml.Writer()
+        xml = f'''<APPLICATION-SW-COMPONENT-TYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <PORTS>
+    <P-PORT-PROTOTYPE>
+      <SHORT-NAME>PortName</SHORT-NAME>
+      <PROVIDED-INTERFACE-TREF DEST="SENDER-RECEIVER-INTERFACE">{ref_str}</PROVIDED-INTERFACE-TREF>
+    </P-PORT-PROTOTYPE>
+  </PORTS>
+</APPLICATION-SW-COMPONENT-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationSoftwareComponentType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationSoftwareComponentType)
+        self.assertIsInstance(elem.ports[0], ar_element.ProvidePortPrototype)
+        self.assertEqual(elem.ports[0].name, "PortName")
+        self.assertEqual(str(elem.ports[0].port_interface_ref), ref_str)
+
+    def test_single_pr_port(self):
+        ref_str = "/PortInterfaces/InterfaceName"
+        port_interface_ref = ar_element.PortInterfaceRef(ref_str,
+                                                         ar_enum.IdentifiableSubTypes.SENDER_RECEIVER_INTERFACE)
+        port = ar_element.PRPortPrototype("PortName", port_interface_ref=port_interface_ref)
+        element = ar_element.ApplicationSoftwareComponentType("ShortName",
+                                                              ports=port)
+        writer = autosar.xml.Writer()
+        xml = f'''<APPLICATION-SW-COMPONENT-TYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <PORTS>
+    <PR-PORT-PROTOTYPE>
+      <SHORT-NAME>PortName</SHORT-NAME>
+      <PROVIDED-REQUIRED-INTERFACE-TREF DEST="SENDER-RECEIVER-INTERFACE">{ref_str}</PROVIDED-REQUIRED-INTERFACE-TREF>
+    </PR-PORT-PROTOTYPE>
+  </PORTS>
+</APPLICATION-SW-COMPONENT-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationSoftwareComponentType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationSoftwareComponentType)
+        self.assertIsInstance(elem.ports[0], ar_element.PRPortPrototype)
+        self.assertEqual(elem.ports[0].name, "PortName")
+        self.assertEqual(str(elem.ports[0].port_interface_ref), ref_str)
+
+    def test_provide_port_iterator(self):
+        ref_str1 = "/PortInterfaces/InterfaceName1"
+        ref_str2 = "/PortInterfaces/InterfaceName2"
+        ref_str3 = "/PortInterfaces/InterfaceName3"
+        port_interface_ref1 = ar_element.PortInterfaceRef(ref_str1,
+                                                          ar_enum.IdentifiableSubTypes.SENDER_RECEIVER_INTERFACE)
+        port_interface_ref2 = ar_element.PortInterfaceRef(ref_str2,
+                                                          ar_enum.IdentifiableSubTypes.SENDER_RECEIVER_INTERFACE)
+        port_interface_ref3 = ar_element.PortInterfaceRef(ref_str3,
+                                                          ar_enum.IdentifiableSubTypes.SENDER_RECEIVER_INTERFACE)
+        port1 = ar_element.RequirePortPrototype("RequirePort", port_interface_ref=port_interface_ref1)
+        port2 = ar_element.ProvidePortPrototype("ProvidePort", port_interface_ref=port_interface_ref2)
+        port3 = ar_element.PRPortPrototype("PRPort", port_interface_ref=port_interface_ref3)
+        element = ar_element.ApplicationSoftwareComponentType("ShortName", ports=[port1, port2, port3])
+        ports = list(element.provide_ports)
+        self.assertEqual(len(ports), 1)
+        port = ports[0]
+        self.assertIsInstance(port, ar_element.ProvidePortPrototype)
+        self.assertEqual(port.name, "ProvidePort")
+
+    def test_require_port_iterator(self):
+        ref_str1 = "/PortInterfaces/InterfaceName1"
+        ref_str2 = "/PortInterfaces/InterfaceName2"
+        ref_str3 = "/PortInterfaces/InterfaceName3"
+        port_interface_ref1 = ar_element.PortInterfaceRef(ref_str1,
+                                                          ar_enum.IdentifiableSubTypes.SENDER_RECEIVER_INTERFACE)
+        port_interface_ref2 = ar_element.PortInterfaceRef(ref_str2,
+                                                          ar_enum.IdentifiableSubTypes.SENDER_RECEIVER_INTERFACE)
+        port_interface_ref3 = ar_element.PortInterfaceRef(ref_str3,
+                                                          ar_enum.IdentifiableSubTypes.SENDER_RECEIVER_INTERFACE)
+        port1 = ar_element.RequirePortPrototype("RequirePort", port_interface_ref=port_interface_ref1)
+        port2 = ar_element.ProvidePortPrototype("ProvidePort", port_interface_ref=port_interface_ref2)
+        port3 = ar_element.PRPortPrototype("PRPort", port_interface_ref=port_interface_ref3)
+        element = ar_element.ApplicationSoftwareComponentType("ShortName", ports=[port1, port2, port3])
+        ports = list(element.require_ports)
+        self.assertEqual(len(ports), 1)
+        port = ports[0]
+        self.assertIsInstance(port, ar_element.RequirePortPrototype)
+        self.assertEqual(port.name, "RequirePort")
+
+    def test_pr_port_iterator(self):
+        ref_str1 = "/PortInterfaces/InterfaceName1"
+        ref_str2 = "/PortInterfaces/InterfaceName2"
+        ref_str3 = "/PortInterfaces/InterfaceName3"
+        port_interface_ref1 = ar_element.PortInterfaceRef(ref_str1,
+                                                          ar_enum.IdentifiableSubTypes.SENDER_RECEIVER_INTERFACE)
+        port_interface_ref2 = ar_element.PortInterfaceRef(ref_str2,
+                                                          ar_enum.IdentifiableSubTypes.SENDER_RECEIVER_INTERFACE)
+        port_interface_ref3 = ar_element.PortInterfaceRef(ref_str3,
+                                                          ar_enum.IdentifiableSubTypes.SENDER_RECEIVER_INTERFACE)
+        port1 = ar_element.RequirePortPrototype("RequirePort", port_interface_ref=port_interface_ref1)
+        port2 = ar_element.ProvidePortPrototype("ProvidePort", port_interface_ref=port_interface_ref2)
+        port3 = ar_element.PRPortPrototype("PRPort", port_interface_ref=port_interface_ref3)
+        element = ar_element.ApplicationSoftwareComponentType("ShortName", ports=[port1, port2, port3])
+        ports = list(element.pr_ports)
+        self.assertEqual(len(ports), 1)
+        port = ports[0]
+        self.assertIsInstance(port, ar_element.PRPortPrototype)
+        self.assertEqual(port.name, "PRPort")
+
+
+class TestSwComponentPrototype(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.SwComponentPrototype("ShortName")
+        writer = autosar.xml.Writer()
+        xml = '''<SW-COMPONENT-PROTOTYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+</SW-COMPONENT-PROTOTYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwComponentPrototype = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwComponentPrototype)
+        self.assertEqual(elem.name, "ShortName")
+
+    def test_type_ref(self):
+        ref_str = "/ComponentTypes/ApplicationComponent"
+        type_ref = ar_element.SwComponentTypeRef(ref_str, ar_enum.IdentifiableSubTypes.APPLICATION_SW_COMPONENT_TYPE)
+        element = ar_element.SwComponentPrototype("ShortName", type_ref=type_ref)
+        writer = autosar.xml.Writer()
+        xml = f'''<SW-COMPONENT-PROTOTYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <TYPE-TREF DEST="APPLICATION-SW-COMPONENT-TYPE">{ref_str}</TYPE-TREF>
+</SW-COMPONENT-PROTOTYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwComponentPrototype = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwComponentPrototype)
+        self.assertEqual(str(elem.type_ref), ref_str)
+        self.assertEqual(elem.type_ref.dest, ar_enum.IdentifiableSubTypes.APPLICATION_SW_COMPONENT_TYPE)
+
+
+class TestPortInCompositionTypeInstanceRef(unittest.TestCase):
+
+    def test_empty_provider(self):
+        element = ar_element.PortInCompositionTypeInstanceRef()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element, "PROVIDER-IREF")
+        self.assertEqual(xml, '<PROVIDER-IREF/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.PortInCompositionTypeInstanceRef = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.PortInCompositionTypeInstanceRef)
+
+    def test_empty_requester(self):
+        element = ar_element.PortInCompositionTypeInstanceRef()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element, "REQUESTER-IREF")
+        self.assertEqual(xml, '<REQUESTER-IREF/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.PortInCompositionTypeInstanceRef = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.PortInCompositionTypeInstanceRef)
+
+    def test_component_ref(self):
+        ref_str = "ComponentTypes/Composition/ComponentName"
+        component_ref = ar_element.SwComponentPrototypeRef(ref_str)
+        element = ar_element.PortInCompositionTypeInstanceRef(component_ref=component_ref)
+        writer = autosar.xml.Writer()
+        xml = f'''<PROVIDER-IREF>
+  <CONTEXT-COMPONENT-REF DEST="SW-COMPONENT-PROTOTYPE">{ref_str}</CONTEXT-COMPONENT-REF>
+</PROVIDER-IREF>'''
+        self.assertEqual(writer.write_str_elem(element, "PROVIDER-IREF"), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.PortInCompositionTypeInstanceRef = reader.read_str_elem(xml)
+        self.assertIsInstance(elem.component_ref, ar_element.SwComponentPrototypeRef)
+        self.assertEqual(str(elem.component_ref), ref_str)
+
+    def test_provider_port_ref(self):
+        ref_str = "ComponentTypes/ComponentName/PortName"
+        port_ref = ar_element.PortPrototypeRef(ref_str, ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE)
+        element = ar_element.PortInCompositionTypeInstanceRef(port_ref=port_ref)
+        writer = autosar.xml.Writer()
+        xml = f'''<PROVIDER-IREF>
+  <TARGET-P-PORT-REF DEST="P-PORT-PROTOTYPE">{ref_str}</TARGET-P-PORT-REF>
+</PROVIDER-IREF>'''
+        self.assertEqual(writer.write_str_elem(element, "PROVIDER-IREF"), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.PortInCompositionTypeInstanceRef = reader.read_str_elem(xml)
+        self.assertIsInstance(elem.port_ref, ar_element.PortPrototypeRef)
+        self.assertEqual(str(elem.port_ref), ref_str)
+        self.assertEqual(elem.port_ref.dest, ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE)
+
+    def test_requester_port_ref(self):
+        ref_str = "ComponentTypes/ComponentName/PortName"
+        port_ref = ar_element.PortPrototypeRef(ref_str, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
+        element = ar_element.PortInCompositionTypeInstanceRef(port_ref=port_ref)
+        writer = autosar.xml.Writer()
+        xml = f'''<REQUESTER-IREF>
+  <TARGET-R-PORT-REF DEST="R-PORT-PROTOTYPE">{ref_str}</TARGET-R-PORT-REF>
+</REQUESTER-IREF>'''
+        self.assertEqual(writer.write_str_elem(element, "REQUESTER-IREF"), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.PortInCompositionTypeInstanceRef = reader.read_str_elem(xml)
+        self.assertIsInstance(elem.port_ref, ar_element.PortPrototypeRef)
+        self.assertEqual(str(elem.port_ref), ref_str)
+        self.assertEqual(elem.port_ref.dest, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
+
+    def test_requester_pr_port_ref(self):
+        ref_str = "ComponentTypes/ComponentName/PortName"
+        port_ref = ar_element.PortPrototypeRef(ref_str, ar_enum.IdentifiableSubTypes.PR_PORT_PROTOTYPE)
+        element = ar_element.PortInCompositionTypeInstanceRef(port_ref=port_ref)
+        writer = autosar.xml.Writer()
+        xml = f'''<REQUESTER-IREF>
+  <TARGET-R-PORT-REF DEST="PR-PORT-PROTOTYPE">{ref_str}</TARGET-R-PORT-REF>
+</REQUESTER-IREF>'''
+        self.assertEqual(writer.write_str_elem(element, "REQUESTER-IREF"), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.PortInCompositionTypeInstanceRef = reader.read_str_elem(xml)
+        self.assertIsInstance(elem.port_ref, ar_element.PortPrototypeRef)
+        self.assertEqual(str(elem.port_ref), ref_str)
+        self.assertEqual(elem.port_ref.dest, ar_enum.IdentifiableSubTypes.PR_PORT_PROTOTYPE)
+
+
+class TestAssemblySwConnector(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.AssemblySwConnector("ShortName")
+        writer = autosar.xml.Writer()
+        xml = '''<ASSEMBLY-SW-CONNECTOR>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+</ASSEMBLY-SW-CONNECTOR>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.AssemblySwConnector = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.AssemblySwConnector)
+        self.assertEqual(elem.name, "ShortName")
+
+    def test_provide_port(self):
+        component_ref_str = "ComponentTypes/Composition/ComponentName"
+        port_ref_str = "ComponentTypes/ComponentName/PortName"
+        component_ref = ar_element.SwComponentPrototypeRef(component_ref_str)
+        port_ref = ar_element.PortPrototypeRef(port_ref_str, ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE)
+        port_instance = ar_element.PortInCompositionTypeInstanceRef(component_ref=component_ref,
+                                                                    port_ref=port_ref)
+        element = ar_element.AssemblySwConnector("ShortName", provide_port=port_instance)
+        writer = autosar.xml.Writer()
+        xml = f'''<ASSEMBLY-SW-CONNECTOR>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <PROVIDER-IREF>
+    <CONTEXT-COMPONENT-REF DEST="SW-COMPONENT-PROTOTYPE">{component_ref_str}</CONTEXT-COMPONENT-REF>
+    <TARGET-P-PORT-REF DEST="P-PORT-PROTOTYPE">{port_ref_str}</TARGET-P-PORT-REF>
+  </PROVIDER-IREF>
+</ASSEMBLY-SW-CONNECTOR>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.AssemblySwConnector = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.AssemblySwConnector)
+        self.assertIsInstance(elem.provide_port, ar_element.PortInCompositionTypeInstanceRef)
+
+    def test_require_port(self):
+        component_ref_str = "ComponentTypes/Composition/ComponentName"
+        port_ref_str = "ComponentTypes/ComponentName/PortName"
+        component_ref = ar_element.SwComponentPrototypeRef(component_ref_str)
+        port_ref = ar_element.PortPrototypeRef(port_ref_str, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
+        port_instance = ar_element.PortInCompositionTypeInstanceRef(component_ref=component_ref,
+                                                                    port_ref=port_ref)
+        element = ar_element.AssemblySwConnector("ShortName", require_port=port_instance)
+        writer = autosar.xml.Writer()
+        xml = f'''<ASSEMBLY-SW-CONNECTOR>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <REQUESTER-IREF>
+    <CONTEXT-COMPONENT-REF DEST="SW-COMPONENT-PROTOTYPE">{component_ref_str}</CONTEXT-COMPONENT-REF>
+    <TARGET-R-PORT-REF DEST="R-PORT-PROTOTYPE">{port_ref_str}</TARGET-R-PORT-REF>
+  </REQUESTER-IREF>
+</ASSEMBLY-SW-CONNECTOR>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.AssemblySwConnector = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.AssemblySwConnector)
+        self.assertIsInstance(elem.require_port, ar_element.PortInCompositionTypeInstanceRef)
+
+
+class TestDelegationSwConnector(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.DelegationSwConnector("ShortName")
+        writer = autosar.xml.Writer()
+        xml = '''<DELEGATION-SW-CONNECTOR>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+</DELEGATION-SW-CONNECTOR>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DelegationSwConnector = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DelegationSwConnector)
+        self.assertEqual(elem.name, "ShortName")
+
+    def test_inner_port_with_provide_port(self):
+        component_ref_str = "ComponentTypes/Composition/ComponentName"
+        port_ref_str = "ComponentTypes/ComponentName/PortName"
+        component_ref = ar_element.SwComponentPrototypeRef(component_ref_str)
+        port_ref = ar_element.PortPrototypeRef(port_ref_str, ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE)
+        port_instance = ar_element.PortInCompositionTypeInstanceRef(component_ref=component_ref,
+                                                                    port_ref=port_ref)
+        element = ar_element.DelegationSwConnector("ShortName", inner_port=port_instance)
+        writer = autosar.xml.Writer()
+        xml = f'''<DELEGATION-SW-CONNECTOR>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <INNER-PORT-IREF>
+    <P-PORT-IN-COMPOSITION-INSTANCE-REF>
+      <CONTEXT-COMPONENT-REF DEST="SW-COMPONENT-PROTOTYPE">{component_ref_str}</CONTEXT-COMPONENT-REF>
+      <TARGET-P-PORT-REF DEST="P-PORT-PROTOTYPE">{port_ref_str}</TARGET-P-PORT-REF>
+    </P-PORT-IN-COMPOSITION-INSTANCE-REF>
+  </INNER-PORT-IREF>
+</DELEGATION-SW-CONNECTOR>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DelegationSwConnector = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DelegationSwConnector)
+        self.assertIsInstance(elem.inner_port, ar_element.PortInCompositionTypeInstanceRef)
+        self.assertEqual(str(elem.inner_port.port_ref), port_ref_str)
+
+    def test_inner_port_with_require_port(self):
+        component_ref_str = "ComponentTypes/Composition/ComponentName"
+        port_ref_str = "ComponentTypes/ComponentName/PortName"
+        component_ref = ar_element.SwComponentPrototypeRef(component_ref_str)
+        port_ref = ar_element.PortPrototypeRef(port_ref_str, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
+        port_instance = ar_element.PortInCompositionTypeInstanceRef(component_ref=component_ref,
+                                                                    port_ref=port_ref)
+        element = ar_element.DelegationSwConnector("ShortName", inner_port=port_instance)
+        writer = autosar.xml.Writer()
+        xml = f'''<DELEGATION-SW-CONNECTOR>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <INNER-PORT-IREF>
+    <R-PORT-IN-COMPOSITION-INSTANCE-REF>
+      <CONTEXT-COMPONENT-REF DEST="SW-COMPONENT-PROTOTYPE">{component_ref_str}</CONTEXT-COMPONENT-REF>
+      <TARGET-R-PORT-REF DEST="R-PORT-PROTOTYPE">{port_ref_str}</TARGET-R-PORT-REF>
+    </R-PORT-IN-COMPOSITION-INSTANCE-REF>
+  </INNER-PORT-IREF>
+</DELEGATION-SW-CONNECTOR>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DelegationSwConnector = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DelegationSwConnector)
+        self.assertIsInstance(elem.inner_port, ar_element.PortInCompositionTypeInstanceRef)
+        self.assertEqual(str(elem.inner_port.port_ref), port_ref_str)
+
+    def test_outer_port_with_provide_port(self):
+        port_ref_str = "ComponentTypes/ComponentName/PortName"
+        port_ref = ar_element.PortPrototypeRef(port_ref_str, ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE)
+        element = ar_element.DelegationSwConnector("ShortName", outer_port=port_ref)
+        writer = autosar.xml.Writer()
+        xml = f'''<DELEGATION-SW-CONNECTOR>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <OUTER-PORT-REF DEST="P-PORT-PROTOTYPE">{port_ref_str}</OUTER-PORT-REF>
+</DELEGATION-SW-CONNECTOR>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DelegationSwConnector = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DelegationSwConnector)
+        self.assertIsInstance(elem.outer_port, ar_element.PortPrototypeRef)
+        self.assertEqual(str(elem.outer_port), port_ref_str)
+
+    def test_outer_port_with_require_port(self):
+        port_ref_str = "ComponentTypes/ComponentName/PortName"
+        port_ref = ar_element.PortPrototypeRef(port_ref_str, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
+        element = ar_element.DelegationSwConnector("ShortName", outer_port=port_ref)
+        writer = autosar.xml.Writer()
+        xml = f'''<DELEGATION-SW-CONNECTOR>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <OUTER-PORT-REF DEST="R-PORT-PROTOTYPE">{port_ref_str}</OUTER-PORT-REF>
+</DELEGATION-SW-CONNECTOR>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DelegationSwConnector = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DelegationSwConnector)
+        self.assertIsInstance(elem.outer_port, ar_element.PortPrototypeRef)
+        self.assertEqual(str(elem.outer_port), port_ref_str)
+
+
+class TestPassThroughSwConnector(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.PassThroughSwConnector("ShortName")
+        writer = autosar.xml.Writer()
+        xml = '''<PASS-THROUGH-SW-CONNECTOR>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+</PASS-THROUGH-SW-CONNECTOR>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.PassThroughSwConnector = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.PassThroughSwConnector)
+        self.assertEqual(elem.name, "ShortName")
+
+    def test_provide_port(self):
+        port_ref_str = "ComponentTypes/ComponentName/PortName"
+        port_ref = ar_element.PortPrototypeRef(port_ref_str, ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE)
+        element = ar_element.PassThroughSwConnector("ShortName", provide_port=port_ref)
+        writer = autosar.xml.Writer()
+        xml = f'''<PASS-THROUGH-SW-CONNECTOR>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <PROVIDED-OUTER-PORT-REF DEST="P-PORT-PROTOTYPE">{port_ref_str}</PROVIDED-OUTER-PORT-REF>
+</PASS-THROUGH-SW-CONNECTOR>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.PassThroughSwConnector = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.PassThroughSwConnector)
+        self.assertIsInstance(elem.provide_port, ar_element.PortPrototypeRef)
+        self.assertEqual(elem.provide_port.dest, ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE)
+
+    def test_require_port(self):
+        port_ref_str = "ComponentTypes/ComponentName/PortName"
+        port_ref = ar_element.PortPrototypeRef(port_ref_str, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
+        element = ar_element.PassThroughSwConnector("ShortName", require_port=port_ref)
+        writer = autosar.xml.Writer()
+        xml = f'''<PASS-THROUGH-SW-CONNECTOR>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <REQUIRED-OUTER-PORT-REF DEST="R-PORT-PROTOTYPE">{port_ref_str}</REQUIRED-OUTER-PORT-REF>
+</PASS-THROUGH-SW-CONNECTOR>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.PassThroughSwConnector = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.PassThroughSwConnector)
+        self.assertIsInstance(elem.require_port, ar_element.PortPrototypeRef)
+        self.assertEqual(elem.require_port.dest, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
+
+
+class TestCompositionSwComponentType(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.CompositionSwComponentType("ShortName")
+        writer = autosar.xml.Writer()
+        xml = '''<COMPOSITION-SW-COMPONENT-TYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+</COMPOSITION-SW-COMPONENT-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.CompositionSwComponentType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.CompositionSwComponentType)
+        self.assertEqual(elem.name, "ShortName")
+
+    def test_component_single(self):
+        component = ar_element.SwComponentPrototype("ComponentName")
+        element = ar_element.CompositionSwComponentType("ShortName", components=component)
+        writer = autosar.xml.Writer()
+        xml = '''<COMPOSITION-SW-COMPONENT-TYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <COMPONENTS>
+    <SW-COMPONENT-PROTOTYPE>
+      <SHORT-NAME>ComponentName</SHORT-NAME>
+    </SW-COMPONENT-PROTOTYPE>
+  </COMPONENTS>
+</COMPOSITION-SW-COMPONENT-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.CompositionSwComponentType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.CompositionSwComponentType)
+        self.assertEqual(len(elem.components), 1)
+        self.assertEqual(elem.components[0].name, "ComponentName")
+
+    def test_assembly_connector(self):
+        component1_ref_str = "ComponentTypes/ShortName/Component1"
+        component2_ref_str = "ComponentTypes/ShortName/Component2"
+        port1_ref_str = "ComponentTypes/Component1/PortName"
+        port2_ref_str = "ComponentTypes/Component2/PortName"
+        component1_ref = ar_element.SwComponentPrototypeRef(component1_ref_str)
+        component2_ref = ar_element.SwComponentPrototypeRef(component2_ref_str)
+        port1_ref = ar_element.PortPrototypeRef(port1_ref_str, ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE)
+        port2_ref = ar_element.PortPrototypeRef(port2_ref_str, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
+        port_instance1 = ar_element.PortInCompositionTypeInstanceRef(component_ref=component1_ref,
+                                                                     port_ref=port1_ref)
+        port_instance2 = ar_element.PortInCompositionTypeInstanceRef(component_ref=component2_ref,
+                                                                     port_ref=port2_ref)
+        connector = ar_element.AssemblySwConnector("ConnectorName",
+                                                   provide_port=port_instance1,
+                                                   require_port=port_instance2)
+        element = ar_element.CompositionSwComponentType("ShortName", connectors=connector)
+        writer = autosar.xml.Writer()
+        xml = f'''<COMPOSITION-SW-COMPONENT-TYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <CONNECTORS>
+    <ASSEMBLY-SW-CONNECTOR>
+      <SHORT-NAME>ConnectorName</SHORT-NAME>
+      <PROVIDER-IREF>
+        <CONTEXT-COMPONENT-REF DEST="SW-COMPONENT-PROTOTYPE">{component1_ref_str}</CONTEXT-COMPONENT-REF>
+        <TARGET-P-PORT-REF DEST="P-PORT-PROTOTYPE">{port1_ref_str}</TARGET-P-PORT-REF>
+      </PROVIDER-IREF>
+      <REQUESTER-IREF>
+        <CONTEXT-COMPONENT-REF DEST="SW-COMPONENT-PROTOTYPE">{component2_ref_str}</CONTEXT-COMPONENT-REF>
+        <TARGET-R-PORT-REF DEST="R-PORT-PROTOTYPE">{port2_ref_str}</TARGET-R-PORT-REF>
+      </REQUESTER-IREF>
+    </ASSEMBLY-SW-CONNECTOR>
+  </CONNECTORS>
+</COMPOSITION-SW-COMPONENT-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.CompositionSwComponentType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.CompositionSwComponentType)
+        self.assertEqual(len(elem.connectors), 1)
+        self.assertIsInstance(elem.connectors[0], ar_element.AssemblySwConnector)
+
+    def test_delegation_connector(self):
+        component1_ref_str = "ComponentTypes/ShortName/Component1"
+        port1_ref_str = "ComponentTypes/Component1/PortName"
+        port2_ref_str = "ComponentTypes/ShortName/PortName"
+        component1_ref = ar_element.SwComponentPrototypeRef(component1_ref_str)
+        port1_ref = ar_element.PortPrototypeRef(port1_ref_str, ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE)
+        port2_ref = ar_element.PortPrototypeRef(port2_ref_str, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
+        port_instance1 = ar_element.PortInCompositionTypeInstanceRef(component_ref=component1_ref,
+                                                                     port_ref=port1_ref)
+        connector = ar_element.DelegationSwConnector("ConnectorName",
+                                                     inner_port=port_instance1,
+                                                     outer_port=port2_ref)
+        element = ar_element.CompositionSwComponentType("ShortName", connectors=connector)
+        writer = autosar.xml.Writer()
+        xml = f'''<COMPOSITION-SW-COMPONENT-TYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <CONNECTORS>
+    <DELEGATION-SW-CONNECTOR>
+      <SHORT-NAME>ConnectorName</SHORT-NAME>
+      <INNER-PORT-IREF>
+        <P-PORT-IN-COMPOSITION-INSTANCE-REF>
+          <CONTEXT-COMPONENT-REF DEST="SW-COMPONENT-PROTOTYPE">{component1_ref_str}</CONTEXT-COMPONENT-REF>
+          <TARGET-P-PORT-REF DEST="P-PORT-PROTOTYPE">{port1_ref_str}</TARGET-P-PORT-REF>
+        </P-PORT-IN-COMPOSITION-INSTANCE-REF>
+      </INNER-PORT-IREF>
+      <OUTER-PORT-REF DEST="R-PORT-PROTOTYPE">{port2_ref_str}</OUTER-PORT-REF>
+    </DELEGATION-SW-CONNECTOR>
+  </CONNECTORS>
+</COMPOSITION-SW-COMPONENT-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.CompositionSwComponentType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.CompositionSwComponentType)
+        self.assertEqual(len(elem.connectors), 1)
+        connector = elem.connectors[0]
+        self.assertIsInstance(elem.connectors[0], ar_element.DelegationSwConnector)
+
+    def test_pass_through_connector(self):
+        port1_ref_str = "ComponentTypes/Component1/PortName"
+        port2_ref_str = "ComponentTypes/ShortName/PortName"
+        port1_ref = ar_element.PortPrototypeRef(port1_ref_str, ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE)
+        port2_ref = ar_element.PortPrototypeRef(port2_ref_str, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
+        connector = ar_element.PassThroughSwConnector("ConnectorName",
+                                                      provide_port=port1_ref,
+                                                      require_port=port2_ref)
+        element = ar_element.CompositionSwComponentType("ShortName", connectors=connector)
+        writer = autosar.xml.Writer()
+        xml = f'''<COMPOSITION-SW-COMPONENT-TYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <CONNECTORS>
+    <PASS-THROUGH-SW-CONNECTOR>
+      <SHORT-NAME>ConnectorName</SHORT-NAME>
+      <PROVIDED-OUTER-PORT-REF DEST="P-PORT-PROTOTYPE">{port1_ref_str}</PROVIDED-OUTER-PORT-REF>
+      <REQUIRED-OUTER-PORT-REF DEST="R-PORT-PROTOTYPE">{port2_ref_str}</REQUIRED-OUTER-PORT-REF>
+    </PASS-THROUGH-SW-CONNECTOR>
+  </CONNECTORS>
+</COMPOSITION-SW-COMPONENT-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.CompositionSwComponentType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.CompositionSwComponentType)
+        self.assertEqual(len(elem.connectors), 1)
+        connector = elem.connectors[0]
+        self.assertIsInstance(elem.connectors[0], ar_element.PassThroughSwConnector)
+
+
 if __name__ == '__main__':
     unittest.main()
