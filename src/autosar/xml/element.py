@@ -1867,8 +1867,8 @@ class DataConstraint(ARElement):
 
     def ref(self) -> DataConstraintRef:
         """
-        Returns a reference to this element or
-        None if the element is not yet part of a package
+        Returns a reference to this element or None if the element
+        is not yet part of a package
         """
         ref_str = self._calc_ref_string()
         return None if ref_str is None else DataConstraintRef(ref_str)
@@ -1965,6 +1965,14 @@ class Unit(ARElement):
         self._assign_optional('factor', factor, float)
         self._assign_optional('offset', offset, float)
 
+    def ref(self) -> UnitRef:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        return None if ref_str is None else UnitRef(ref_str)
+
 
 # DataDictionary and DataType elements
 
@@ -2012,8 +2020,8 @@ class SwBaseType(BaseType):
 
     def ref(self) -> SwBaseTypeRef | None:
         """
-        Returns a reference to this element or
-        None if the element is not yet part of a package
+        Returns a reference to this element or None if the element
+        is not yet part of a package
         """
         ref_str = self._calc_ref_string()
         return None if ref_str is None else SwBaseTypeRef(ref_str)
@@ -2380,8 +2388,8 @@ class ImplementationDataType(AutosarDataType):
 
     def ref(self) -> ImplementationDataTypeRef | None:
         """
-        Returns a reference to this element or
-        None if the element is not yet part of a package
+        Returns a reference to this element or None if the element
+        is not yet part of a package
         """
         ref_str = self._calc_ref_string()
         return None if ref_str is None else ImplementationDataTypeRef(ref_str)
@@ -2454,15 +2462,38 @@ class VariableDataPrototype(AutosarDataPrototype):
         # .VARIATION-POINT not supported
         self._assign_optional_strict("init_value", init_value, ValueSpecification)
 
+    def ref(self) -> VariableDataPrototypeRef | None:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        return None if ref_str is None else VariableDataPrototypeRef(ref_str)
 
-class ParameterDataPrototype(VariableDataPrototype):
+
+class ParameterDataPrototype(AutosarDataPrototype):
     """
     Complex type AR:PARAMETER-DATA-PROTOTYPE
     Type: Concrete
     Tag variants: 'PARAMETER-DATA-PROTOTYPE' | 'ROM-BLOCK'
-
-    This is identical in behavior to VariableDataPrototype, hence the inheritance.
     """
+
+    def __init__(self,
+                 name: str,
+                 init_value: ValueSpeficationElement | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.init_value: ValueSpeficationElement | None = None  # .INIT-VALUE
+        # .VARIATION-POINT not supported
+        self._assign_optional_strict("init_value", init_value, ValueSpecification)
+
+    def ref(self) -> ParameterDataPrototypeRef | None:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        return None if ref_str is None else ParameterDataPrototypeRef(ref_str)
 
 
 class ArgumentDataPrototype(AutosarDataPrototype):
@@ -2754,8 +2785,8 @@ class SwAddrMethod(ARElement):
 
     def ref(self) -> SwAddrMethodRef | None:
         """
-        Returns a reference to this element or
-        None if the element is not yet part of a package
+        Returns a reference to this element or None if the element
+        is not yet part of a package
         """
         ref_str = self._calc_ref_string()
         return None if ref_str is None else SwAddrMethodRef(ref_str)
@@ -3118,8 +3149,8 @@ class ConstantSpecification(ARElement):
 
     def ref(self) -> ConstantRef | None:
         """
-        Returns a reference to this element or
-        None if the element is not yet part of a package
+        Returns a reference to this element or None if the element
+        is not yet part of a package
         """
         ref_str = self._calc_ref_string()
         return None if ref_str is None else ConstantRef(ref_str)
@@ -3406,8 +3437,8 @@ class ModeDeclarationGroup(ARElement):
 
     def ref(self) -> ModeDeclarationGroupRef | None:
         """
-        Returns a reference to this element or
-        None if the element is not yet part of a package
+        Returns a reference to this element or None if the element is
+        not yet part of a package
         """
         ref_str = self._calc_ref_string()
         return None if ref_str is None else ModeDeclarationGroupRef(ref_str)
@@ -3431,10 +3462,10 @@ class ModeDeclarationGroupPrototype(Identifiable):
         self._assign_optional('calibration_access', calibration_access, ar_enum.SwCalibrationAccess)
         self._assign_optional('type_ref', type_ref, ModeDeclarationGroupRef)
 
-    def ref(self) -> ModeDeclarationGroupPrototypeRef:
+    def ref(self) -> ModeDeclarationGroupPrototypeRef | None:
         """
-        Returns a reference to this element or
-        None if the element is not yet part of a package
+        Returns a reference to this element or None if the element
+        is not yet part of a package
         """
         ref_str = self._calc_ref_string()
         return None if ref_str is None else ModeDeclarationGroupPrototypeRef(ref_str)
@@ -3521,6 +3552,16 @@ class SenderReceiverInterface(DataInterface):
                 msg = f"data_elements: Invalid type '{str(type(invalidation_policies))}'"
                 raise TypeError(msg + ". Expected 'InvalidationPolicy' or list[InvalidationPolicy]")
 
+    def ref(self) -> PortInterfaceRef | None:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return PortInterfaceRef(ref_str, ar_enum.IdentifiableSubTypes.SENDER_RECEIVER_INTERFACE)
+
     def append_data_element(self, data_element: VariableDataPrototype):
         """
         Appends data element to internal list of elements
@@ -3594,6 +3635,16 @@ class NvDataInterface(DataInterface):
                 msg = f"nv_datas: Invalid type '{str(type(data_elements))}'"
                 raise TypeError(msg + ". Expected 'VariableDataPrototype' or list[VariableDataPrototype]")
 
+    def ref(self) -> PortInterfaceRef | None:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return PortInterfaceRef(ref_str, ar_enum.IdentifiableSubTypes.NV_DATA_INTERFACE)
+
     def append_data_element(self, nv_data: VariableDataPrototype):
         """
         Appends data element to internal list of data elements
@@ -3639,6 +3690,16 @@ class ParameterInterface(DataInterface):
                 msg = f"parameters: Invalid type '{str(type(parameters))}'"
                 raise TypeError(msg + ". Expected 'ParameterDataPrototype' or list[ParameterDataPrototype]")
 
+    def ref(self) -> PortInterfaceRef | None:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return PortInterfaceRef(ref_str, ar_enum.IdentifiableSubTypes.PARAMETER_INTERFACE)
+
     def append_parameter(self, parameter: ParameterDataPrototype):
         """
         Appends parameter to internal list of parameters
@@ -3674,6 +3735,16 @@ class ApplicationError(Identifiable):
         super().__init__(name, **kwargs)
         self.error_code: int | None = None
         self._assign_optional_strict("error_code", error_code, int)
+
+    def ref(self) -> ApplicationErrorRef | None:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return ApplicationErrorRef(ref_str)
 
 
 PossibleErrorRefsTypes = ApplicationErrorRef | list[ApplicationErrorRef] | str | list[str]
@@ -3724,6 +3795,16 @@ class ClientServerOperation(Identifiable):
             else:
                 msg = f"possible_error_refs: Invalid type '{str(type(possible_error_refs))}'"
                 raise TypeError(msg + ". Expected 'ApplicationErrorRef' or list[ApplicationErrorRef]")
+
+    def ref(self) -> ClientServerOperationRef | None:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return PortInterfaceRef(ref_str, ar_enum.IdentifiableSubTypes.CLIENT_SERVER_OPERATION)
 
     def append_argument(self, argument: ArgumentDataPrototype) -> None:
         """
@@ -3834,11 +3915,22 @@ class ClientServerInterface(PortInterface):
                 msg = f"possible_errors: Invalid type '{str(type(possible_errors))}'"
                 raise TypeError(msg + ". Expected 'ApplicationError' or list[ApplicationError]")
 
+    def ref(self) -> PortInterfaceRef | None:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return PortInterfaceRef(ref_str, ar_enum.IdentifiableSubTypes.CLIENT_SERVER_INTERFACE)
+
     def append_operation(self, operation: ClientServerOperation) -> None:
         """
         Appends operation to internal list of operations
         """
         if isinstance(operation, ClientServerOperation):
+            operation.parent = self
             self.operations.append(operation)
         else:
             msg = f"operation: Invalid type '{str(type(operation))}'"
@@ -3849,6 +3941,7 @@ class ClientServerInterface(PortInterface):
         Appends possible error to internal list of possible errors
         """
         if isinstance(possible_error, ApplicationError):
+            possible_error.parent = self
             self.possible_errors.append(possible_error)
         else:
             msg = f"operation: Invalid type '{str(type(possible_error))}'"
@@ -3895,6 +3988,16 @@ class ModeSwitchInterface(PortInterface):
         self.mode_group: ModeDeclarationGroupPrototype | None = None
         self._assign_optional_strict("mode_group", mode_group, ModeDeclarationGroupPrototype)
 
+    def ref(self) -> PortInterfaceRef | None:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return PortInterfaceRef(ref_str, ar_enum.IdentifiableSubTypes.MODE_SWITCH_INTERFACE)
+
     def create_mode_group(self,
                           name: str,
                           type_ref: ModeDeclarationGroupRef | None = None,
@@ -3922,6 +4025,16 @@ class E2EProfileCompatibilityProps(ARElement):
         super().__init__(name, **kwargs)
         self.transit_to_invalid_extended: bool | None = None  # .TRANSIT-TO-INVALID-EXTENDED
         self._assign_optional_strict("transit_to_invalid_extended", transit_to_invalid_extended, bool)
+
+    def ref(self) -> E2EProfileCompatibilityPropsRef | None:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return E2EProfileCompatibilityPropsRef(ref_str)
 
 
 class EndToEndTransformationComSpecProps(Describable):
@@ -4526,6 +4639,16 @@ class ProvidePortPrototype(PortPrototype):
             else:
                 raise TypeError("com_spec must be of a type derived from ProvidePortComSpec")
 
+    def ref(self) -> PortPrototypeRef | None:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return PortPrototypeRef(ref_str, ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE)
+
     def append_com_spec(self, com_spec: ProvidePortComSpec) -> None:
         """
         Adds comspec to internal list of com-specs
@@ -4564,6 +4687,16 @@ class RequirePortPrototype(PortPrototype):
                     self.append_com_spec(com_spec_elem)
             else:
                 raise TypeError("com_spec must be of a type derived from RequirePortComSpec")
+
+    def ref(self) -> PortPrototypeRef | None:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return PortPrototypeRef(ref_str, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
 
     def append_com_spec(self, com_spec: RequirePortComSpec) -> None:
         """
@@ -4610,6 +4743,16 @@ class PRPortPrototype(PortPrototype):
                     self.append_com_spec(com_spec_elem)
             else:
                 raise TypeError("required_com_spec must be of a type derived from RequirePortComSpec")
+
+    def ref(self) -> PortPrototypeRef | None:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return PortPrototypeRef(ref_str, ar_enum.IdentifiableSubTypes.PR_PORT_PROTOTYPE)
 
     def append_com_spec(self, com_spec: ProvidePortComSpec | RequirePortComSpec) -> None:
         """
@@ -4713,6 +4856,16 @@ class ApplicationSoftwareComponentType(AtomicSoftwareComponentType):
     Same constructor as parent class
     """
 
+    def ref(self) -> SwComponentTypeRef | None:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return SwComponentTypeRef(ref_str, ar_enum.IdentifiableSubTypes.APPLICATION_SW_COMPONENT_TYPE)
+
 
 class SwComponentPrototype(Identifiable):
     """
@@ -4727,6 +4880,14 @@ class SwComponentPrototype(Identifiable):
         super().__init__(name, **kwargs)
         self.type_ref: SwComponentTypeRef | None = None
         self._assign_optional_strict("type_ref", type_ref, SwComponentTypeRef)
+
+    def ref(self) -> SwComponentPrototypeRef | None:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        return None if ref_str is None else SwComponentPrototypeRef(ref_str)
 
 
 class PortInCompositionTypeInstanceRef(ARObject):
@@ -4862,6 +5023,16 @@ class CompositionSwComponentType(SwComponentType):
                     self.append_connector(connector)
             else:
                 raise TypeError(f"components: Invalid type '{str(type(connectors))}'")
+
+    def ref(self) -> SwComponentTypeRef | None:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return SwComponentTypeRef(ref_str, ar_enum.IdentifiableSubTypes.COMPOSITION_SW_COMPONENT_TYPE)
 
     def append_component(self, component: SwComponentPrototype) -> None:
         """
