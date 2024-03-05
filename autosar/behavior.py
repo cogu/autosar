@@ -1243,6 +1243,7 @@ class SwcInternalBehavior(InternalBehaviorCommon):
         self.sharedParameterDataPrototype = [] #list of ParameterDataPrototye objects
         self.perInstanceParameterDataPrototype = []  #list of ParameterDataPrototye objects
         self.dataTypeMappingRefs = [] #list of strings
+        self.constantMemories = [] #list of ParameterDataPrototye objects
 
     def tag(self, version): return "SWC-INTERNAL-BEHAVIOR"
 
@@ -1259,6 +1260,10 @@ class SwcInternalBehavior(InternalBehaviorCommon):
                     foundElem = elem
                     break
             for elem in self.perInstanceParameterDataPrototype:
+                if elem.name == name:
+                    foundElem = elem
+                    break
+            for elem in self.constantMemories:
                 if elem.name == name:
                     foundElem = elem
                     break
@@ -1311,6 +1316,19 @@ class SwcInternalBehavior(InternalBehaviorCommon):
             raise ValueError('invalid reference: '+implementationTypeRef)
         parameter = autosar.element.ParameterDataPrototype(name, dataType.ref, swAddressMethodRef = swAddressMethodRef, swCalibrationAccess=swCalibrationAccess, initValue=initValue, parent=self)
         self.perInstanceParameterDataPrototype.append(parameter)
+        return parameter
+
+    def createConstantMemory(self, name, implementationTypeRef, swAddressMethodRef = None, swCalibrationAccess = None, initValue = None):
+        """
+        AUTOSAR4: Creates a ParameterDataPrototype object and appends it to the internal constantMemories list
+        """
+        self._initSWC()
+        ws = self.rootWS()
+        dataType = ws.find(implementationTypeRef, role='DataType')
+        if dataType is None:
+            raise ValueError('invalid reference: '+implementationTypeRef)
+        parameter = autosar.element.ParameterDataPrototype(name, dataType.ref, swAddressMethodRef = swAddressMethodRef, swCalibrationAccess=swCalibrationAccess, initValue=initValue, parent=self)
+        self.constantMemories.append(parameter)
         return parameter
 
     def createNvmBlock(self, name, portName, perInstanceMemoryName, nvmBlockConfig = None, defaultValueName = None, perInstanceMemoryRole='ramBlock', defaultValueRole = 'defaultValue', blockAdminData = None):

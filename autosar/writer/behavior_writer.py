@@ -98,6 +98,11 @@ class XMLBehaviorWriter(ElementWriter):
             for elem in internalBehavior.sharedCalParams:
                 lines.extend(self.indent(self._writeSharedCalParamXML(ws, elem),2))
             lines.append(self.indent('</SHARED-CALPRMS>',1))
+        elif isinstance(internalBehavior, autosar.behavior.SwcInternalBehavior) and len(internalBehavior.constantMemories)>0:
+            lines.append(self.indent('<CONSTANT-MEMORYS>',1))
+            for elem in internalBehavior.constantMemories:
+                lines.extend(self.indent(self._writeParameterDataPrototype(ws, elem),2))
+            lines.append(self.indent('</CONSTANT-MEMORYS>',1))
         lines.append(self.indent('<SUPPORTS-MULTIPLE-INSTANTIATION>%s</SUPPORTS-MULTIPLE-INSTANTIATION>'%('true' if internalBehavior.multipleInstance else 'false'),1))
         lines.append('</%s>'%internalBehavior.tag(self.version))
         return lines

@@ -217,6 +217,14 @@ class BehaviorParser(ElementParser):
                         if xmlChild.tag == 'INCLUDED-DATA-TYPE-SET':
                             includedDataTypeSet = self.parseIncludedDataTypeSet(xmlChild)
                             internalBehavior.includedDataTypeSets.append(includedDataTypeSet)
+                elif xmlElem.tag == 'CONSTANT-MEMORYS':
+                    for xmlChild in xmlElem.findall('./*'):
+                        if xmlChild.tag == 'PARAMETER-DATA-PROTOTYPE':
+                            tmp = self.parseParameterDataPrototype(xmlChild, internalBehavior)
+                            if tmp is not None:
+                                internalBehavior.constantMemories.append(tmp)
+                        else:
+                            raise NotImplementedError(xmlChild.tag)
                 else:
                     raise NotImplementedError(xmlElem.tag)
             return internalBehavior
