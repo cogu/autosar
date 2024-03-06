@@ -1,9 +1,19 @@
+from enum import Enum
+from typing import Optional
 from autosar.element import Element
 import autosar.base
-import math
-import json
 import copy
 import collections
+
+class ArraySizeHandlingEnum(Enum):
+    """
+    This enumeration defines different ways to handle the sizes of variable size arrays
+
+    Refer to AUTOSAR_TPS_SoftwareComponentTemplate - Table 5.12 ArraySizeHandlingEnum
+    """
+    ALL_INDICES_DIFFERENT_ARRAY_SIZE = "ALL-INDICES-DIFFERENT-ARRAY-SIZE"
+    ALL_INDICES_SAME_ARRAY_SIZE = "ALL-INDICES-SAME-ARRAY-SIZE"
+    INHERITED_FROM_ARRAY_ELEMENT_TYPE_SIZE = "INHERITED-FROM-ARRAY-ELEMENT-TYPE-SIZE"
 
 class RecordTypeElement(Element):
     """
@@ -506,9 +516,10 @@ class SwBaseType(Element):
 class ImplementationDataTypeElement(ImplementationDataTypeBase):
     def tag(self, version=None): return 'IMPLEMENTATION-DATA-TYPE-ELEMENT'
 
-    def __init__(self, name, category = None, arraySize = None, arraySizeSemantics = None, variantProps = None, parent = None, adminData = None):
+    def __init__(self, name, category = None, arraySize = None, arraySizeSemantics = None, sizeHandling: Optional[ArraySizeHandlingEnum] = None, variantProps = None, parent = None, adminData = None):
         super().__init__(name, parent, adminData, category, variantProps)
         self.arraySize = arraySize
+        self.sizeHandling = sizeHandling
         self.subElements = []
         if arraySize is not None:
             if arraySizeSemantics is not None:
@@ -598,16 +609,16 @@ class ApplicationArrayElement(Element):
     name: <SHORT-NAME> (None or str)
     typeRef: <TYPE-TREF> (None or str)
     arraySize: <MAX-NUMBER-OF-ELEMENTS> (None or int)
-    sizeHandling: <ARRAY-SIZE-HANDLING> (None or str['ALL-INDICES-DIFFERENT-ARRAY-SIZE', 'ALL-INDICES-SAME-ARRAY-SIZE', 'INHERITED-FROM-ARRAY-ELEMENT-TYPE-SIZE', ])
+    sizeHandling: <ARRAY-SIZE-HANDLING> (None or ArraySizeHandlingEnum)
     sizeSemantics: <ARRAY-SIZE-SEMANTICS> (None or str['FIXED-SIZE', 'VARIABLE-SIZE']])
     """
     def tag(self, version=None): return 'ELEMENT'
 
-    def __init__(self, name = None, typeRef = None, arraySize = None, sizeHandling = None, sizeSemantics = 'FIXED-SIZE', category = 'VALUE', parent = None, adminData = None):
+    def __init__(self, name = None, typeRef = None, arraySize = None, sizeHandling: ArraySizeHandlingEnum = None, sizeSemantics = 'FIXED-SIZE', category = 'VALUE', parent = None, adminData = None):
         super().__init__(name, parent, adminData, category)
         self.typeRef = None if typeRef is None else str(typeRef)
         self.arraySize = None if arraySize is None else int(arraySize)
-        self.sizeHandling = None if sizeHandling is None else str(sizeHandling)
+        self.sizeHandling = sizeHandling
         self.sizeSemantics = None if sizeSemantics is None else str(sizeSemantics)
 
 class ApplicationRecordDataType(ApplicationDataType):

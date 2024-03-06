@@ -376,6 +376,8 @@ class XMLDataTypeWriter(ElementWriter):
             lines.append(self.indent('<ARRAY-SIZE>%s</ARRAY-SIZE>'%elem.arraySize,1))
         if elem.arraySizeSemantics is not None:
             lines.append(self.indent('<ARRAY-SIZE-SEMANTICS>%s</ARRAY-SIZE-SEMANTICS>'%elem.arraySizeSemantics,1))
+        if elem.sizeHandling is not None:
+            lines.append(self.indent('<ARRAY-SIZE-HANDLING>{}</ARRAY-SIZE-HANDLING>'.format(elem.sizeHandling.value),1))
         if len(elem.variantProps)>=0:
             lines.append(self.indent("<SW-DATA-DEF-PROPS>", 1))
             lines.extend(self.indent(self.writeSwDataDefPropsVariantsXML(ws, elem.variantProps),2))
@@ -494,7 +496,7 @@ class XMLDataTypeWriter(ElementWriter):
                 raise autosar.base.InvalidDataTypeRef(elem.typeRef)
             lines.append(self.indent('<TYPE-TREF DEST="{0}">{1}</TYPE-TREF>'.format(dataType.tag(ws.version), elem.typeRef),1))
         if elem.sizeHandling is not None:
-            lines.append(self.indent('<ARRAY-SIZE-HANDLING>{}</ARRAY-SIZE-HANDLING>'.format(elem.sizeHandling),1))
+            lines.append(self.indent('<ARRAY-SIZE-HANDLING>{}</ARRAY-SIZE-HANDLING>'.format(elem.sizeHandling.value),1))
         if elem.sizeSemantics is not None:
             lines.append(self.indent('<ARRAY-SIZE-SEMANTICS>{}</ARRAY-SIZE-SEMANTICS>'.format(elem.sizeSemantics),1))
         if elem.arraySize is not None:

@@ -206,20 +206,22 @@ class DataTypeParser(ElementParser):
     @parseElementUUID
     def parseImplementationDataTypeElement(self, xmlRoot, parent):
         assert (xmlRoot.tag == 'IMPLEMENTATION-DATA-TYPE-ELEMENT')
-        arraySize, arraySizeSemantics, variants, subElementsXML = None, None, None, None
+        arraySize, arraySizeSemantics, variants, subElementsXML, sizeHandling = None, None, None, None, None
         self.push()
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'SW-DATA-DEF-PROPS':
                 variants = self.parseSwDataDefProps(xmlElem)
             elif xmlElem.tag == 'ARRAY-SIZE':
                 arraySize = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'ARRAY-SIZE-HANDLING':
+                sizeHandling = self.parseArraySizeHandling(xmlElem)
             elif xmlElem.tag == 'ARRAY-SIZE-SEMANTICS':
                 arraySizeSemantics = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'SUB-ELEMENTS':
                 subElementsXML = xmlElem
             else:
                 self.defaultHandler(xmlElem)
-        elem = autosar.datatype.ImplementationDataTypeElement(self.name, self.category, arraySize, arraySizeSemantics, variants, parent, self.adminData)
+        elem = autosar.datatype.ImplementationDataTypeElement(self.name, self.category, arraySize, arraySizeSemantics, sizeHandling, variants, parent, self.adminData)
         if subElementsXML is not None:
             elem.subElements = self.parseImplementationDataTypeSubElements(
                 subElementsXML, elem)
@@ -330,7 +332,7 @@ class DataTypeParser(ElementParser):
             if xmlElem.tag == 'TYPE-TREF':
                 typeRef = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'ARRAY-SIZE-HANDLING':
-                sizeHandling = self.parseTextNode(xmlElem)
+                sizeHandling = self.parseArraySizeHandling(xmlElem)
             elif xmlElem.tag == 'ARRAY-SIZE-SEMANTICS':
                 sizeSemantics = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'MAX-NUMBER-OF-ELEMENTS':
@@ -403,6 +405,14 @@ class DataTypeParser(ElementParser):
             else:
                 raise NotImplementedError(xmlElem.tag)
         return autosar.datatype.ModeRequestTypeMap(modeDeclarationGroupRef, implementationDataTypeRef)
+
+    def parseArraySizeHandling(self, xmlRoot):
+        assert (xmlRoot.tag == 'ARRAY-SIZE-HANDLING')
+        text = self.parseTextNode(xmlRoot)
+        for literal in autosar.datatype.ArraySizeHandlingEnum:
+            if literal.value == text:
+                return literal
+        raise ValueError(f"Invalid value for ArraySizeHandling field: '{text}'")
 
 class DataTypeSemanticsParser(ElementParser):
     def __init__(self,version=3.0):
