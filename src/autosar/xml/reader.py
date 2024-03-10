@@ -2651,7 +2651,7 @@ class Reader:
 
     def _read_value_specification_element(self,
                                           xml_element: ElementTree.Element
-                                          ) -> ar_element.ValueSpeficationElement:
+                                          ) -> ar_element.ValueSpecificationElement:
         """
         Reads any ValueSpecificationElement
         """

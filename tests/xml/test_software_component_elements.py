@@ -1,4 +1,4 @@
-"""Unit tests for software components"""
+"""Unit tests for reading/writing software component elements"""
 
 # pylint: disable=missing-class-docstring, missing-function-docstring
 import os

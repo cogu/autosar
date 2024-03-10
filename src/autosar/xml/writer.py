@@ -2303,7 +2303,7 @@ class Writer(_XMLWriter):
         if elem.label is not None:
             self._add_content("SHORT-LABEL", str(elem.label))
 
-    def _write_value_specification_element(self, elem: ar_element.ValueSpeficationElement) -> None:
+    def _write_value_specification_element(self, elem: ar_element.ValueSpecificationElement) -> None:
         """
         Switched writer for value specification elements
         """
