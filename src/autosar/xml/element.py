@@ -20,13 +20,13 @@ display_format_str_re = re.compile(
 
 # Type aliases
 
-ValueSpeficationElement = Union["TextValueSpecification",
-                                "NumericalValueSpecification",
-                                "NotAvailableValueSpecification",
-                                "ArrayValueSpecification",
-                                "RecordValueSpecification",
-                                "ApplicationValueSpecification",
-                                "ConstantReference"]
+ValueSpecificationElement = Union["TextValueSpecification",
+                                  "NumericalValueSpecification",
+                                  "NotAvailableValueSpecification",
+                                  "ArrayValueSpecification",
+                                  "RecordValueSpecification",
+                                  "ApplicationValueSpecification",
+                                  "ConstantReference"]
 
 PortPrototypeElement = Union["ProvidePortPrototype",
                              "RequirePortPrototype",
@@ -449,8 +449,9 @@ class CompuMethodRef(BaseRef):
     CompuMethod reference
     """
 
-    def __init__(self, value: str) -> None:
-        super().__init__(value, ar_enum.IdentifiableSubTypes.COMPU_METHOD)
+    def __init__(self, value: str,
+                 dest: ar_enum.IdentifiableSubTypes = ar_enum.IdentifiableSubTypes.COMPU_METHOD) -> None:
+        super().__init__(value, dest)
 
     def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
         """Acceptable values for dest"""
@@ -2202,6 +2203,15 @@ class SwDataDefPropsConditional(ARObject):
         if ptr_target_props is not None:
             self._set_attr_with_strict_type('ptr_target_props', ptr_target_props, SwPointerTargetProps)
 
+    @property
+    def is_queued(self) -> bool:
+        """
+        Returns True if impl_policy is set to QUEUED
+        """
+        if self.impl_policy is not None and self.impl_policy == ar_enum.SwImplPolicy.QUEUED:
+            return True
+        return False
+
 
 class SwDataDefProps(ARObject):
     """
@@ -2455,10 +2465,10 @@ class VariableDataPrototype(AutosarDataPrototype):
 
     def __init__(self,
                  name: str,
-                 init_value: ValueSpeficationElement | None = None,
+                 init_value: ValueSpecificationElement | None = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
-        self.init_value: ValueSpeficationElement | None = None  # .INIT-VALUE
+        self.init_value: ValueSpecificationElement | None = None  # .INIT-VALUE
         # .VARIATION-POINT not supported
         self._assign_optional_strict("init_value", init_value, ValueSpecification)
 
@@ -2470,6 +2480,15 @@ class VariableDataPrototype(AutosarDataPrototype):
         ref_str = self._calc_ref_string()
         return None if ref_str is None else VariableDataPrototypeRef(ref_str)
 
+    @property
+    def is_queued(self) -> bool:
+        """
+        Returns True if internal sw_data_def_props has its impl_policy is set to QUEUED
+        """
+        if self.sw_data_def_props is not None and len(self.sw_data_def_props.variants) > 0:
+            return self.sw_data_def_props.variants[0].is_queued
+        return False
+
 
 class ParameterDataPrototype(AutosarDataPrototype):
     """
@@ -2480,10 +2499,10 @@ class ParameterDataPrototype(AutosarDataPrototype):
 
     def __init__(self,
                  name: str,
-                 init_value: ValueSpeficationElement | None = None,
+                 init_value: ValueSpecificationElement | None = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
-        self.init_value: ValueSpeficationElement | None = None  # .INIT-VALUE
+        self.init_value: ValueSpecificationElement | None = None  # .INIT-VALUE
         # .VARIATION-POINT not supported
         self._assign_optional_strict("init_value", init_value, ValueSpecification)
 
@@ -2919,7 +2938,31 @@ class ValueSpecification(ARObject):
         # .VARIATION-POINT not supported
 
     @classmethod
-    def make_value(cls, data: Any) -> ValueSpeficationElement:
+    def make_init_value(cls,
+                        init_value: int | float | str | tuple | ValueSpecificationElement | None = None,  # noqa E501 pylint: disable=C0301
+                        init_value_ref: Union[str, ConstantRef, "ConstantReference", None] = None
+                        ) -> ValueSpecificationElement:
+        """
+        Attempts to create an init value from either the init_value argument or init_value_ref.
+        Both cannot be set simultaneously
+        """
+        if init_value is not None:
+            if init_value_ref is not None:
+                msg = "init_value and init_value_ref cannot be set at the same time. One of them must be None"
+                raise ValueError(msg)
+            if isinstance(init_value, ValueSpecification):
+                return init_value
+            else:
+                return cls.make_value(init_value)
+        elif init_value_ref is not None:
+            if isinstance(init_value_ref, ConstantReference):
+                return init_value_ref
+            elif isinstance(init_value_ref, (str, ConstantRef)):
+                return ConstantReference(init_value_ref)
+        return None
+
+    @classmethod
+    def make_value(cls, data: Any) -> ValueSpecificationElement:
         """
         Builds value specification based on Python data
         Format 1 - data is not a tuple:
@@ -2961,7 +3004,7 @@ class ValueSpecification(ARObject):
     @classmethod
     def _make_from_args(cls, label: str | None,
                         value: Any,
-                        default_pattern: int | None = None) -> ValueSpeficationElement:
+                        default_pattern: int | None = None) -> ValueSpecificationElement:
         if isinstance(value, (int, float)):
             return NumericalValueSpecification(label, value)
         elif isinstance(value, str):
@@ -3047,10 +3090,10 @@ class ArrayValueSpecification(ValueSpecification):
 
     def __init__(self,
                  label: str | None = None,
-                 elements: list[ValueSpeficationElement] | None = None
+                 elements: list[ValueSpecificationElement] | None = None
                  ) -> None:
         super().__init__(label)
-        self.elements: list[ValueSpeficationElement] = []
+        self.elements: list[ValueSpecificationElement] = []
         if elements is not None:
             if isinstance(elements, ValueSpecification):
                 self.append(elements)
@@ -3058,7 +3101,7 @@ class ArrayValueSpecification(ValueSpecification):
                 for element in elements:
                     self.append(element)
 
-    def append(self, element: ValueSpeficationElement):
+    def append(self, element: ValueSpecificationElement):
         """
         Appends element to array specification
         """
@@ -3076,10 +3119,10 @@ class RecordValueSpecification(ValueSpecification):
 
     def __init__(self,
                  label: str | None = None,
-                 fields: list[ValueSpeficationElement] | None = None
+                 fields: list[ValueSpecificationElement] | None = None
                  ) -> None:
         super().__init__(label)
-        self.fields: list[ValueSpeficationElement] = []
+        self.fields: list[ValueSpecificationElement] = []
         if fields is not None:
             if isinstance(fields, ValueSpecification):
                 self.append(fields)
@@ -3087,7 +3130,7 @@ class RecordValueSpecification(ValueSpecification):
                 for field in fields:
                     self.append(field)
 
-    def append(self, field: ValueSpeficationElement):
+    def append(self, field: ValueSpecificationElement):
         """
         Appends field to record specification
         """
@@ -3137,9 +3180,9 @@ class ConstantSpecification(ARElement):
     Tag Variants: 'CONSTANT-SPECIFICATION'
     """
 
-    def __init__(self, name: str, value: ValueSpeficationElement | None = None, **kwargs) -> None:
+    def __init__(self, name: str, value: ValueSpecificationElement | None = None, **kwargs) -> None:
         super().__init__(name, **kwargs)
-        self.value: ValueSpeficationElement = None  # .VALUE-SPEC
+        self.value: ValueSpecificationElement = None  # .VALUE-SPEC
         if value is not None:
             if isinstance(value, ValueSpecification):
                 self.value = value
@@ -3567,6 +3610,7 @@ class SenderReceiverInterface(DataInterface):
         Appends data element to internal list of elements
         """
         if isinstance(data_element, VariableDataPrototype):
+            data_element.parent = self
             self.data_elements.append(data_element)
         else:
             msg = f"data_element: Invalid type '{str(type(data_element))}'"
@@ -3584,7 +3628,7 @@ class SenderReceiverInterface(DataInterface):
 
     def create_data_element(self,
                             name: str,
-                            init_value: ValueSpeficationElement | None = None,
+                            init_value: ValueSpecificationElement | None = None,
                             **kwargs) -> VariableDataPrototype:
         """
         Convenience method for adding a new data element to this port interface
@@ -3657,7 +3701,7 @@ class NvDataInterface(DataInterface):
 
     def create_data_element(self,
                             name: str,
-                            init_value: ValueSpeficationElement | None = None,
+                            init_value: ValueSpecificationElement | None = None,
                             **kwargs) -> VariableDataPrototype:
         """
         Convenience method for adding a new data element to this port interface
@@ -3712,7 +3756,7 @@ class ParameterInterface(DataInterface):
 
     def create_parameter(self,
                          name: str,
-                         init_value: ValueSpeficationElement | None = None,
+                         init_value: ValueSpecificationElement | None = None,
                          **kwargs) -> ParameterDataPrototype:
         """
         Convenience method for adding a new parameter to this port interface
@@ -4156,6 +4200,43 @@ class ProvidePortComSpec(ARObject):
     Group AR:P-PORT-COM-SPEC
     """
 
+    @classmethod
+    def make_from_port_interface(cls, port_interface: PortInterface, **kwargs) -> "ProvidePortComSpec":
+        """
+        Convenience method for creating require-port com-specs for port-interfaces
+        with one data element
+        Special keys for non-queued SenderReceiverInterface:
+        * init_value_ref: str | ConstantRef | ConstantReference
+        Remaining keys are the same as the constructor of NonqueuedSenderComSpec
+
+        Currently only supports SenderReceiverInterface
+        """
+        if isinstance(port_interface, SenderReceiverInterface):
+            if len(port_interface.data_elements) == 0:
+                raise ValueError(f"{port_interface.name}: Port interface must have at least one element")
+            if len(port_interface.data_elements) == 1:
+                data_element: VariableDataPrototype = port_interface.data_elements[0]
+                if data_element.is_queued:
+                    return QueuedSenderComSpec(data_element_ref=data_element.ref(), **kwargs)
+                else:
+                    return cls.make_non_queued_sender_com_spec(data_element_ref=data_element.ref(), **kwargs)
+            else:
+                raise NotImplementedError("Multiple data elements not yet supported")
+        else:
+            raise NotImplementedError(str(type(port_interface)))
+
+    @classmethod
+    def make_non_queued_sender_com_spec(cls,
+                                        init_value: int | float | str | tuple | ValueSpecificationElement | None = None,  # noqa E501 pylint: disable=C0301
+                                        init_value_ref: str | ConstantRef | ConstantReference | None = None,
+                                        **kwargs
+                                        ) -> "NonqueuedSenderComSpec":
+        """
+        Convenience method for creating NonqueuedSenderComSpec
+        """
+        init_value = ValueSpecification.make_init_value(init_value, init_value_ref)
+        return NonqueuedSenderComSpec(init_value=init_value, **kwargs)
+
 
 class SenderComSpec(ProvidePortComSpec):
     """
@@ -4251,12 +4332,12 @@ class NonqueuedSenderComSpec(SenderComSpec):
     """
 
     def __init__(self,
-                 init_value: ValueSpeficationElement | None = None,
+                 init_value: ValueSpecificationElement | None = None,
                  data_filter: DataFilter | None = None,
                  **kwargs) -> None:
         super().__init__(**kwargs)
         self.data_filter: DataFilter | None = None  # .DATA-FILTER
-        self.init_value: ValueSpeficationElement | None = None  # .INIT-VALUE
+        self.init_value: ValueSpecificationElement | None = None  # .INIT-VALUE
         self._assign_optional_strict("data_filter", data_filter, DataFilter)
         self._assign_optional_strict("init_value", init_value, ValueSpecification)
 
@@ -4269,12 +4350,12 @@ class NvProvideComSpec(ProvidePortComSpec):
 
     def __init__(self,
                  variable_ref: VariableDataPrototypeRef | None = None,
-                 ram_block_init_value: ValueSpeficationElement | None = None,
-                 rom_block_init_value: ValueSpeficationElement | None = None,
+                 ram_block_init_value: ValueSpecificationElement | None = None,
+                 rom_block_init_value: ValueSpecificationElement | None = None,
                  ) -> None:
         super().__init__()
-        self.ram_block_init_value: ValueSpeficationElement | None = None  # .RAM-BLOCK-INIT-VALUE
-        self.rom_block_init_value: ValueSpeficationElement | None = None  # .RAM-BLOCK-INIT-VALUE
+        self.ram_block_init_value: ValueSpecificationElement | None = None  # .RAM-BLOCK-INIT-VALUE
+        self.rom_block_init_value: ValueSpecificationElement | None = None  # .RAM-BLOCK-INIT-VALUE
         self.variable_ref: VariableDataPrototypeRef | None = None         # .VARIABLE-REF
         self._assign_optional_strict("ram_block_init_value", ram_block_init_value, ValueSpecification)
         self._assign_optional_strict("rom_block_init_value", rom_block_init_value, ValueSpecification)
@@ -4289,10 +4370,10 @@ class ParameterProvideComSpec(ProvidePortComSpec):
 
     def __init__(self,
                  parameter_ref: ParameterDataPrototypeRef | str | None = None,
-                 init_value: ValueSpeficationElement | None = None,
+                 init_value: ValueSpecificationElement | None = None,
                  ) -> None:
         super().__init__()
-        self.init_value: ValueSpeficationElement | None = None  # .INIT-VALUE
+        self.init_value: ValueSpecificationElement | None = None  # .INIT-VALUE
         self.parameter_ref: VariableDataPrototypeRef | None = None  # .PARAMETER-REF
         self._assign_optional_strict("init_value", init_value, ValueSpecification)
         self._assign_optional("parameter_ref", parameter_ref, ParameterDataPrototypeRef)
@@ -4368,6 +4449,43 @@ class RequirePortComSpec(ARObject):
     """
     Group AR:R-PORT-COM-SPEC
     """
+
+    @classmethod
+    def make_from_port_interface(cls, port_interface: PortInterface, **kwargs) -> "RequirePortComSpec":
+        """
+        Convenience method for creating require-port com-specs for port-interfaces
+        with one data element
+        Special keys for non-queued SenderReceiverInterface:
+        * init_value_ref: str | ConstantRef | ConstantReference
+        Remaining keys are the same as the constructor of NonqueuedReceiverComSpec
+
+        Currently only supports SenderReceiverInterface
+        """
+        if isinstance(port_interface, SenderReceiverInterface):
+            if len(port_interface.data_elements) == 0:
+                raise ValueError(f"{port_interface.name}: Port interface must have at least one element")
+            if len(port_interface.data_elements) == 1:
+                data_element: VariableDataPrototype = port_interface.data_elements[0]
+                if data_element.is_queued:
+                    return QueuedReceiverComSpec(data_element_ref=data_element.ref(), **kwargs)
+                else:
+                    return cls.make_non_queued_receiver_com_spec(data_element_ref=data_element.ref(), **kwargs)
+            else:
+                raise NotImplementedError("Multiple data elements not yet supported")
+        else:
+            raise NotImplementedError(str(type(port_interface)))
+
+    @classmethod
+    def make_non_queued_receiver_com_spec(cls,
+                                          init_value: int | float | str | tuple | ValueSpecificationElement | None = None,  # noqa E501 pylint: disable=C0301
+                                          init_value_ref: str | ConstantRef | ConstantReference | None = None,
+                                          **kwargs
+                                          ) -> "NonqueuedReceiverComSpec":
+        """
+        Convenience method for creating NonqueuedReceiverComSpec
+        """
+        init_value = ValueSpecification.make_init_value(init_value, init_value_ref)
+        return NonqueuedReceiverComSpec(init_value=init_value, **kwargs)
 
 
 class ReceiverComSpec(RequirePortComSpec):
@@ -4475,8 +4593,8 @@ class NonqueuedReceiverComSpec(ReceiverComSpec):
                  handle_data_status: bool | None = None,
                  handle_never_received: bool | None = None,
                  handle_timeout_type: ar_enum.HandleTimeout | None = None,
-                 init_value: ValueSpeficationElement | None = None,
-                 timeout_substitution_value: ValueSpeficationElement | None = None,
+                 init_value: ValueSpecificationElement | None = None,
+                 timeout_substitution_value: ValueSpecificationElement | None = None,
                  **kwargs) -> None:
         super().__init__(**kwargs)
         self.alive_timeout: int | float | None = None  # .ALIVE-TIMEOUT
@@ -4485,8 +4603,8 @@ class NonqueuedReceiverComSpec(ReceiverComSpec):
         self.handle_data_status: bool | None = None  # .HANDLE-DATA-STATUS
         self.handle_never_received: bool | None = None  # .HANDLE-NEVER-RECEIVED
         self.handle_timeout_type: ar_enum.HandleTimeout | None = None  # .HANDLE-TIMEOUT-TYPE
-        self.init_value: ValueSpeficationElement | None = None  # .INIT-VALUE
-        self.timeout_substitution_value: ValueSpeficationElement | None = None  # .TIMEOUT-SUBSTITUTION-VALUE
+        self.init_value: ValueSpecificationElement | None = None  # .INIT-VALUE
+        self.timeout_substitution_value: ValueSpecificationElement | None = None  # .TIMEOUT-SUBSTITUTION-VALUE
         self._assign_optional("alive_timeout", alive_timeout, float)
         self._assign_optional("enable_update", enable_update, bool)
         self._assign_optional_strict("data_filter", data_filter, DataFilter)
@@ -4505,10 +4623,10 @@ class NvRequireComSpec(RequirePortComSpec):
 
     def __init__(self,
                  variable_ref: VariableDataPrototypeRef | None = None,
-                 init_value: ValueSpeficationElement | None = None,
+                 init_value: ValueSpecificationElement | None = None,
                  ) -> None:
         super().__init__()
-        self.init_value: ValueSpeficationElement | None = None  # .INIT-VALUE
+        self.init_value: ValueSpecificationElement | None = None  # .INIT-VALUE
         self.variable_ref: VariableDataPrototypeRef | None = None  # .VARIABLE-REF
         self._assign_optional_strict("init_value", init_value, ValueSpecification)
         self._assign_optional("variable_ref", variable_ref, VariableDataPrototypeRef)
@@ -4522,10 +4640,10 @@ class ParameterRequireComSpec(RequirePortComSpec):
 
     def __init__(self,
                  parameter_ref: ParameterDataPrototypeRef | str | None = None,
-                 init_value: ValueSpeficationElement | None = None,
+                 init_value: ValueSpecificationElement | None = None,
                  ) -> None:
         super().__init__()
-        self.init_value: ValueSpeficationElement | None = None  # .INIT-VALUE
+        self.init_value: ValueSpecificationElement | None = None  # .INIT-VALUE
         self.parameter_ref: VariableDataPrototypeRef | None = None  # .PARAMETER-REF
         self._assign_optional_strict("init_value", init_value, ValueSpecification)
         self._assign_optional("parameter_ref", parameter_ref, ParameterDataPrototypeRef)
@@ -4686,7 +4804,8 @@ class RequirePortPrototype(PortPrototype):
                 for com_spec_elem in com_spec:
                     self.append_com_spec(com_spec_elem)
             else:
-                raise TypeError("com_spec must be of a type derived from RequirePortComSpec")
+                msg = "com_spec: Needs be of a type derived from RequirePortComSpec."
+                raise TypeError(msg + f" Got {str(type(com_spec))}")
 
     def ref(self) -> PortPrototypeRef | None:
         """
@@ -4798,6 +4917,7 @@ class SwComponentType(ARElement):
         Adds port to internal list of ports
         """
         if isinstance(port, PortPrototype):
+            port.parent = self
             self.ports.append(port)
         else:
             msg = "port type must be one of: ProvidePortPrototype, RequirePortPrototype, PRPortPrototype."
@@ -4865,6 +4985,51 @@ class ApplicationSoftwareComponentType(AtomicSoftwareComponentType):
         if ref_str is None:
             return None
         return SwComponentTypeRef(ref_str, ar_enum.IdentifiableSubTypes.APPLICATION_SW_COMPONENT_TYPE)
+
+    def create_require_port(self,
+                            name: str,
+                            port_interface: PortInterface,
+                            com_spec: dict | list[dict] | RequirePortComSpec | list[RequirePortComSpec] | None = None,
+                            allow_unconnected: bool | None = None,
+                            **kwargs) -> RequirePortPrototype:
+        """
+        Creates a new require port and adds it to the internal list of ports
+        """
+        if com_spec is not None:
+            if isinstance(com_spec, dict):
+                com_spec = RequirePortComSpec.make_from_port_interface(port_interface, **com_spec)
+                assert com_spec is not None
+        port = RequirePortPrototype(name, port_interface.ref(), com_spec, allow_unconnected, **kwargs)
+        self.append_port(port)
+        return port
+
+    def create_provide_port(self,
+                            name: str,
+                            port_interface: PortInterface | None = None,
+                            com_spec: dict | list[dict] | ProvidePortComSpec | list[ProvidePortComSpec] | None = None,
+                            **kwargs) -> ProvidePortPrototype:
+        """
+        Creates a new provide port and adds it to the internal list of ports
+        """
+        if com_spec is not None:
+            if isinstance(com_spec, dict):
+                com_spec = ProvidePortComSpec.make_from_port_interface(port_interface, **com_spec)
+                assert com_spec is not None
+        port = ProvidePortPrototype(name, port_interface.ref(), com_spec, **kwargs)
+        self.append_port(port)
+        return port
+
+    def create_pr_port(self,
+                       name: str,
+                       port_interface_ref: PortInterfaceRef | None = None,
+                       com_spec: RequirePortComSpec | list[RequirePortComSpec] | None = None,
+                       **kwargs) -> PRPortPrototype:
+        """
+        Creates a new pr-port and adds it to the internal list of ports
+        """
+        port = PRPortPrototype(name, port_interface_ref, com_spec, **kwargs)
+        self.append_port(port)
+        return port
 
 
 class SwComponentPrototype(Identifiable):

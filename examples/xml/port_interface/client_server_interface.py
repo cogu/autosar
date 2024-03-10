@@ -29,7 +29,7 @@ def create_platform_types(packages: dict[str, ar_element.Package]):
 
 def create_port_interfaces(packages: dict[str, ar_element.Package]):
     """
-    Creates interface with one element
+    Creates client-server interface with one operation
     """
     uint32_impl_type = packages["PlatformImplementationDataTypes"].find("uint32")
     interface = ar_element.ClientServerInterface("FreeRunningTimer_I", is_service=True)

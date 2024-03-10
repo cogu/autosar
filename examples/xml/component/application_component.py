@@ -4,7 +4,6 @@ Sender-receiver port interface examples
 import os
 import autosar
 import autosar.xml.element as ar_element
-import autosar.xml.enumeration as ar_enum
 
 
 def create_platform_types(packages: dict[str, ar_element.Package]):
@@ -50,17 +49,6 @@ def create_platform_types(packages: dict[str, ar_element.Package]):
     packages["PlatformImplementationDataTypes"].append(uint32_impl_type)
 
 
-# def create_implementation_data_types(packages: dict[str, ar_element.Package]):
-#     """
-#     Creates non-platform implementation data types
-#     """
-#     sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref="AUTOSAR_Platform/BaseTypes/uint8")
-#     inactive_active_t = ar_element.ImplementationDataType("InactiveActive_T",
-#                                                           category="VALUE",
-#                                                           sw_data_def_props=sw_data_def_props)
-#     packages["ImplementationDataTypes"].append(inactive_active_t)
-
-
 def create_sender_receiver_port_interfaces(packages: dict[str, ar_element.Package]):
     """
     Create sender-receiver port interfaces used in example
@@ -68,9 +56,6 @@ def create_sender_receiver_port_interfaces(packages: dict[str, ar_element.Packag
     uint16_impl_t = packages["PlatformImplementationDataTypes"].find("uint16")
     port_interface = ar_element.SenderReceiverInterface("VehicleSpeed_I")
     port_interface.create_data_element("VehicleSpeed", type_ref=uint16_impl_t.ref())
-    packages["PortInterfaces"].append(port_interface)
-    port_interface = ar_element.SenderReceiverInterface("EngineSpeed_I")
-    port_interface.create_data_element("EngineSpeed", type_ref=uint16_impl_t.ref())
     packages["PortInterfaces"].append(port_interface)
 
 
@@ -90,19 +75,37 @@ def create_client_server_interfaces(packages: dict[str, ar_element.Package]):
     packages["PortInterfaces"].append(interface)
 
 
+def create_application_component(packages: dict[str, ar_element.Package]):
+    """
+    Creates application component with one sender-receiver port and one
+    client-server port
+    """
+    timer_interface = packages["PortInterfaces"].find("FreeRunningTimer_I")
+    vehicle_speed_interface = packages["PortInterfaces"].find("VehicleSpeed_I")
+    swc = ar_element.ApplicationSoftwareComponentType("MyApplication")
+    swc.create_require_port("VehicleSpeed", vehicle_speed_interface, com_spec={"init_value": 65535,
+                                                                               'alive_timeout': 0,
+                                                                               'enable_update': False,
+                                                                               'uses_end_to_end_protection': False,
+                                                                               'handle_never_received': False
+                                                                               })
+    swc.create_require_port("FreeRunningTimer", timer_interface)
+    packages["ComponentTypes"].append(swc)
+
+
 def save_xml_files(workspace: autosar.xml.Workspace):
     """
     Saves workspace as XML documents
     """
     interface_document_path = os.path.abspath(os.path.join(os.path.dirname(
         __file__), 'data', 'portinterfaces.arxml'))
-    datatype_document_path = os.path.abspath(os.path.join(os.path.dirname(
-        __file__), 'data', 'datatypes.arxml'))
     platform_document_path = os.path.abspath(os.path.join(os.path.dirname(
         __file__), 'data', 'platform.arxml'))
+    component_document_path = os.path.abspath(os.path.join(os.path.dirname(
+        __file__), 'data', 'MyApplication.arxml'))
     workspace.create_document(interface_document_path, packages="/PortInterfaces")
-    workspace.create_document(datatype_document_path, packages="/DataTypes")
     workspace.create_document(platform_document_path, packages="/AUTOSAR_Platform")
+    workspace.create_document(component_document_path, packages="/ComponentTypes")
     workspace.write_documents()
 
 
@@ -116,16 +119,19 @@ def main():
                          "PlatformDataConstraints",
                          "PlatformCompuMethods",
                          "ImplementationDataTypes",
-                         "PortInterfaces"],
+                         "PortInterfaces",
+                         "ComponentTypes"],
                     workspace.make_packages("AUTOSAR_Platform/BaseTypes",
                                             "AUTOSAR_Platform/ImplementationDataTypes",
                                             "AUTOSAR_Platform/DataConstraints",
                                             "AUTOSAR_Platform/CompuMethods",
                                             "DataTypes/ImplementationDataTypes",
-                                            "PortInterfaces")))
+                                            "PortInterfaces",
+                                            "ComponentTypes")))
     create_platform_types(packages)
     create_sender_receiver_port_interfaces(packages)
     create_client_server_interfaces(packages)
+    create_application_component(packages)
     save_xml_files(workspace)
 
 
