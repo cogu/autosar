@@ -244,6 +244,7 @@ class Writer(_XMLWriter):
             'NvRequireComSpec': self._write_nv_require_com_spec,
             'ParameterRequireComSpec': self._write_parameter_require_com_spec,
             'ModeSwitchReceiverComSpec': self._write_mode_switch_receiver_com_spec,
+            'ClientComSpec': self._write_client_com_spec,
         }
         # Elements used only for unit test purposes
         self.switcher_non_collectable = {

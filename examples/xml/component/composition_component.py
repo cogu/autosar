@@ -1,5 +1,5 @@
 """
-Application component example
+Composition component example
 """
 import os
 import autosar
@@ -88,21 +88,58 @@ def create_client_server_interfaces(workspace: autosar.xml.Workspace):
     workspace.add_element("PortInterfaces", port_interface)
 
 
-def create_application_component(workspace: autosar.xml.Workspace):
+def create_receiver_component(workspace: autosar.xml.Workspace):
     """
-    Creates application SWC with two sender ports
+    Creates application SWC with two receiver ports and one client port
+    """
+    timer_interface = workspace.find_element("PortInterfaces", "FreeRunningTimer_I")
+    vehicle_speed_interface = workspace.find_element("PortInterfaces", "VehicleSpeed_I")
+    vehicle_speed_init = workspace.find_element("Constants", "VehicleSpeed_IV")
+    engine_speed_interface = workspace.find_element("PortInterfaces", "EngineSpeed_I")
+    engine_speed_init = workspace.find_element("Constants", "EngineSpeed_IV")
+    swc = ar_element.ApplicationSoftwareComponentType("ReceiverComponent")
+    swc.create_require_port("VehicleSpeed", vehicle_speed_interface, com_spec={"init_value": vehicle_speed_init.ref(),
+                                                                               "alive_timeout": 0,
+                                                                               "enable_update": False,
+                                                                               "uses_end_to_end_protection": False,
+                                                                               "handle_never_received": False
+                                                                               })
+    swc.create_require_port("EngineSpeed", engine_speed_interface, com_spec={"init_value": engine_speed_init.ref(),
+                                                                             "alive_timeout": 0,
+                                                                             "enable_update": False,
+                                                                             "uses_end_to_end_protection": False,
+                                                                             "handle_never_received": False
+                                                                             })
+    swc.create_require_port("FreeRunningTimer", timer_interface, com_spec={"GetTime": {}, "IsTimerElapsed": {}})
+    workspace.add_element("ComponentTypes", swc)
+
+
+def create_server_component(workspace: autosar.xml.Workspace):
+    """
+    Creates application SWC with one server port
+    """
+    timer_interface = workspace.find_element("PortInterfaces", "FreeRunningTimer_I")
+    swc = ar_element.ApplicationSoftwareComponentType("TimerComponent")
+    swc.create_provide_port("FreeRunningTimer", timer_interface, com_spec={"GetTime": {"queue_length": 1},
+                                                                           "IsTimerElapsed": {"queue_length": 1}
+                                                                           })
+    workspace.add_element("ComponentTypes", swc)
+
+
+def create_composition_component(workspace: autosar.xml.Workspace):
+    """
+    Creates composition component
     """
     vehicle_speed_interface = workspace.find_element("PortInterfaces", "VehicleSpeed_I")
     vehicle_speed_init = workspace.find_element("Constants", "VehicleSpeed_IV")
     engine_speed_interface = workspace.find_element("PortInterfaces", "EngineSpeed_I")
     engine_speed_init = workspace.find_element("Constants", "EngineSpeed_IV")
-    swc = ar_element.ApplicationSoftwareComponentType("SenderComponent")
-    swc.create_provide_port("VehicleSpeed", vehicle_speed_interface, com_spec={"init_value": vehicle_speed_init.ref(),
-                                                                               "uses_end_to_end_protection": False,
-                                                                               })
-    swc.create_provide_port("EngineSpeed", engine_speed_interface, com_spec={"init_value": engine_speed_init.ref(),
-                                                                             "uses_end_to_end_protection": False,
-                                                                             })
+    swc = ar_element.ApplicationSoftwareComponentType("CompositionComponent")
+    swc.create_require_port("VehicleSpeed", vehicle_speed_interface, com_spec={"init_value": vehicle_speed_init.ref(),
+                                                                               "uses_end_to_end_protection": False})
+    swc.create_require_port("EngineSpeed", engine_speed_interface, com_spec={"init_value": engine_speed_init.ref(),
+                                                                             "uses_end_to_end_protection": False})
+
     workspace.add_element("ComponentTypes", swc)
 
 
@@ -115,7 +152,7 @@ def save_xml_files(workspace: autosar.xml.Workspace):
     platform_document_path = os.path.abspath(os.path.join(os.path.dirname(
         __file__), 'data', 'platform.arxml'))
     component_document_path = os.path.abspath(os.path.join(os.path.dirname(
-        __file__), 'data', 'sender_component.arxml'))
+        __file__), 'data', 'composition.arxml'))
     constant_document_path = os.path.abspath(os.path.join(os.path.dirname(
         __file__), 'data', 'constants.arxml'))
     workspace.create_document(interface_document_path, packages="/PortInterfaces")
@@ -141,7 +178,9 @@ def main():
     create_sender_receiver_port_interfaces(workspace)
     create_client_server_interfaces(workspace)
     create_constants(workspace)
-    create_application_component(workspace)
+    create_receiver_component(workspace)
+    create_server_component(workspace)
+    create_composition_component(workspace)
     save_xml_files(workspace)
 
 

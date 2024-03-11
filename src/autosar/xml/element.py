@@ -36,6 +36,14 @@ SwConnectorElement = Union["AssemblySwConnector",
                            "DelegationSwConnector",
                            "PassThroughSwConnector"]
 
+InitValueArgType = Union["int",
+                         "float",
+                         "str",
+                         "list",
+                         "tuple",
+                         "ValueSpecificationElement",
+                         "ConstantRef"]
+
 # Helper classes
 
 
@@ -2938,27 +2946,21 @@ class ValueSpecification(ARObject):
         # .VARIATION-POINT not supported
 
     @classmethod
-    def make_init_value(cls,
-                        init_value: int | float | str | tuple | ValueSpecificationElement | None = None,  # noqa E501 pylint: disable=C0301
-                        init_value_ref: Union[str, ConstantRef, "ConstantReference", None] = None
-                        ) -> ValueSpecificationElement:
+    def make_value_with_check(cls,
+                              value: InitValueArgType | None = None,
+                              ) -> ValueSpecificationElement:
         """
-        Attempts to create an init value from either the init_value argument or init_value_ref.
-        Both cannot be set simultaneously
+        Wrapper for checking and creating init values based on different value types
         """
-        if init_value is not None:
-            if init_value_ref is not None:
-                msg = "init_value and init_value_ref cannot be set at the same time. One of them must be None"
-                raise ValueError(msg)
-            if isinstance(init_value, ValueSpecification):
-                return init_value
+        if value is not None:
+            if isinstance(value, ValueSpecification):
+                return value  # Already a proper init-value
+            elif isinstance(value, ConstantRef):
+                return ConstantReference(value)  # Wrap inside constant reference
+            elif isinstance(value, (int, float, str, list, tuple)):
+                return cls.make_value(value)  # Attempt to create a new value based on raw python data
             else:
-                return cls.make_value(init_value)
-        elif init_value_ref is not None:
-            if isinstance(init_value_ref, ConstantReference):
-                return init_value_ref
-            elif isinstance(init_value_ref, (str, ConstantRef)):
-                return ConstantReference(init_value_ref)
+                raise TypeError(f"Unsupported type: {str(type(value))}")
         return None
 
     @classmethod
@@ -3848,7 +3850,7 @@ class ClientServerOperation(Identifiable):
         ref_str = self._calc_ref_string()
         if ref_str is None:
             return None
-        return PortInterfaceRef(ref_str, ar_enum.IdentifiableSubTypes.CLIENT_SERVER_OPERATION)
+        return ClientServerOperationRef(ref_str)
 
     def append_argument(self, argument: ArgumentDataPrototype) -> None:
         """
@@ -4203,13 +4205,19 @@ class ProvidePortComSpec(ARObject):
     @classmethod
     def make_from_port_interface(cls, port_interface: PortInterface, **kwargs) -> "ProvidePortComSpec":
         """
-        Convenience method for creating require-port com-specs for port-interfaces
-        with one data element
-        Special keys for non-queued SenderReceiverInterface:
-        * init_value_ref: str | ConstantRef | ConstantReference
-        Remaining keys are the same as the constructor of NonqueuedSenderComSpec
+        Convenience method for creating P-PORT com-specs
 
-        Currently only supports SenderReceiverInterface
+        For SenderReceiverInterface:
+        If interface has a single element: kwargs is a dict with key-value pairs for one com-spec
+        If interface has multiple elements: kwargs is a dict of dict where
+                                            outer dict keys are element names and each value
+                                            is another dict containing key-value pairs for one com-spec
+
+        For ClientServerInterface:
+        If interface has a single operation: kwargs is a dict with key-value pairs for one com-spec
+        If interface has multiple operations: kwargs is a dict of dict where
+                                              outer dict keys are operation names and each value
+                                              is another dict containing key-value pairs for one com-spec
         """
         if isinstance(port_interface, SenderReceiverInterface):
             if len(port_interface.data_elements) == 0:
@@ -4221,20 +4229,62 @@ class ProvidePortComSpec(ARObject):
                 else:
                     return cls.make_non_queued_sender_com_spec(data_element_ref=data_element.ref(), **kwargs)
             else:
-                raise NotImplementedError("Multiple data elements not yet supported")
+                com_spec_list = []
+                unprocessed = set()
+                for element_name, value in kwargs.items():
+                    unprocessed.add(element_name)
+                    if not isinstance(value, dict):
+                        msg = f"{port_interface.name}.{element_name}: Expected dict type, got {str(type(value))}"
+                        raise TypeError(msg)
+                for data_element in port_interface.data_elements:
+                    if data_element.name in unprocessed:
+                        unprocessed.remove(data_element.name)
+                        com_spec_args = kwargs[data_element.name]
+                        if data_element.is_queued:
+                            com_spec = QueuedSenderComSpec(data_element_ref=data_element.ref(),
+                                                           **com_spec_args)
+                        else:
+                            com_spec = cls.make_non_queued_sender_com_spec(data_element_ref=data_element.ref(),
+                                                                           **com_spec_args)
+                        com_spec_list.append(com_spec)
+                if len(unprocessed) > 0:
+                    operations = ', '.join(list[unprocessed])
+                    raise ValueError(f"{port_interface.name}: Operation(s) not found in port interface: '{operations}'")
+                return com_spec_list
+        if isinstance(port_interface, ClientServerInterface):
+            if len(port_interface.operations) == 0:
+                raise ValueError(f"{port_interface.name}: Port interface must have at least one operation")
+            if len(port_interface.operations) == 1:
+                operation = port_interface.operations[0]
+                return ServerComSpec(operation_ref=operation.ref(), **kwargs)
+            else:
+                com_spec_list = []
+                unprocessed = set()
+                for operation_name in kwargs:
+                    unprocessed.add(operation_name)
+                for operation in port_interface.operations:
+                    if operation.name in unprocessed:
+                        unprocessed.remove(operation.name)
+                        com_spec_args = kwargs[operation.name]
+                        com_spec = ServerComSpec(operation_ref=operation.ref(), **com_spec_args)
+                        com_spec_list.append(com_spec)
+                if len(unprocessed) > 0:
+                    element_names = ', '.join(list[unprocessed])
+                    msg = f"{port_interface.name}: Data element(s) not found in port interface: '{element_names}'"
+                    raise ValueError(msg)
+                return com_spec_list
         else:
             raise NotImplementedError(str(type(port_interface)))
 
     @classmethod
     def make_non_queued_sender_com_spec(cls,
-                                        init_value: int | float | str | tuple | ValueSpecificationElement | None = None,  # noqa E501 pylint: disable=C0301
-                                        init_value_ref: str | ConstantRef | ConstantReference | None = None,
+                                        init_value: InitValueArgType | None = None,
                                         **kwargs
                                         ) -> "NonqueuedSenderComSpec":
         """
         Convenience method for creating NonqueuedSenderComSpec
         """
-        init_value = ValueSpecification.make_init_value(init_value, init_value_ref)
+        init_value = ValueSpecification.make_value_with_check(init_value)
         return NonqueuedSenderComSpec(init_value=init_value, **kwargs)
 
 
@@ -4453,13 +4503,19 @@ class RequirePortComSpec(ARObject):
     @classmethod
     def make_from_port_interface(cls, port_interface: PortInterface, **kwargs) -> "RequirePortComSpec":
         """
-        Convenience method for creating require-port com-specs for port-interfaces
-        with one data element
-        Special keys for non-queued SenderReceiverInterface:
-        * init_value_ref: str | ConstantRef | ConstantReference
-        Remaining keys are the same as the constructor of NonqueuedReceiverComSpec
+        Convenience method for creating R-PORT com-specs
 
-        Currently only supports SenderReceiverInterface
+        For SenderReceiverInterface:
+        If interface has a single element: kwargs is a dict with key-value pairs for one com-spec
+        If interface has multiple elements: kwargs is a dict of dict where
+                                            outer dict keys are element names and each value
+                                            is another dict containing key-value pairs for one com-spec
+
+        For ClientServerInterface:
+        If interface has a single operation: kwargs is a dict with key-value pairs for one com-spec
+        If interface has multiple operations: kwargs is a dict of dict where
+                                              outer dict keys are operation names and each value
+                                              is another dict containing key-value pairs for one com-spec
         """
         if isinstance(port_interface, SenderReceiverInterface):
             if len(port_interface.data_elements) == 0:
@@ -4471,20 +4527,62 @@ class RequirePortComSpec(ARObject):
                 else:
                     return cls.make_non_queued_receiver_com_spec(data_element_ref=data_element.ref(), **kwargs)
             else:
-                raise NotImplementedError("Multiple data elements not yet supported")
+                com_spec_list = []
+                unprocessed = set()
+                for element_name, value in kwargs.items():
+                    unprocessed.add(element_name)
+                    if not isinstance(value, dict):
+                        msg = f"{port_interface.name}.{element_name}: Expected dict type, got {str(type(value))}"
+                        raise TypeError(msg)
+                for data_element in port_interface.data_elements:
+                    if data_element.name in unprocessed:
+                        unprocessed.remove(data_element.name)
+                        com_spec_args = kwargs[data_element.name]
+                        if data_element.is_queued:
+                            com_spec = QueuedSenderComSpec(data_element_ref=data_element.ref(),
+                                                           **com_spec_args)
+                        else:
+                            com_spec = cls.make_non_queued_receiver_com_spec(data_element_ref=data_element.ref(),
+                                                                             **com_spec_args)
+                        com_spec_list.append(com_spec)
+                if len(unprocessed) > 0:
+                    element_names = ', '.join(list[unprocessed])
+                    msg = f"{port_interface.name}: Data element(s) not found in port interface: '{element_names}'"
+                    raise ValueError(msg)
+                return com_spec_list
+        if isinstance(port_interface, ClientServerInterface):
+            if len(port_interface.operations) == 0:
+                raise ValueError(f"{port_interface.name}: Port interface must have at least one operation")
+            if len(port_interface.operations) == 1:
+                operation = port_interface.operations[0]
+                return ClientComSpec(operation_ref=operation.ref(), **kwargs)
+            else:
+                com_spec_list = []
+                unprocessed = set()
+                for operation_name in kwargs:
+                    unprocessed.add(operation_name)
+                for operation in port_interface.operations:
+                    if operation.name in unprocessed:
+                        unprocessed.remove(operation.name)
+                        com_spec_args = kwargs[operation.name]
+                        com_spec = ClientComSpec(operation_ref=operation.ref(), **com_spec_args)
+                        com_spec_list.append(com_spec)
+                if len(unprocessed) > 0:
+                    operations = ', '.join(list[unprocessed])
+                    raise ValueError(f"{port_interface.name}: Operation(s) not found in port interface: '{operations}'")
+                return com_spec_list
         else:
             raise NotImplementedError(str(type(port_interface)))
 
     @classmethod
     def make_non_queued_receiver_com_spec(cls,
-                                          init_value: int | float | str | tuple | ValueSpecificationElement | None = None,  # noqa E501 pylint: disable=C0301
-                                          init_value_ref: str | ConstantRef | ConstantReference | None = None,
+                                          init_value: InitValueArgType | None = None,
                                           **kwargs
                                           ) -> "NonqueuedReceiverComSpec":
         """
         Convenience method for creating NonqueuedReceiverComSpec
         """
-        init_value = ValueSpecification.make_init_value(init_value, init_value_ref)
+        init_value = ValueSpecification.make_value_with_check(init_value)
         return NonqueuedReceiverComSpec(init_value=init_value, **kwargs)
 
 
