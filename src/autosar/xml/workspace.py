@@ -60,9 +60,10 @@ class Workspace:
     def __init__(self, config_file_path: str | None = None, document_root: str | None = None) -> None:
         self.namespaces: dict[str, Namespace] = {}
         self.packages: list[ar_element.Package] = []
-        self._package_map: dict[str, ar_element.Package] = {}
+        self._package_dict: dict[str, ar_element.Package] = {}  # Each key is the name of an actual package
         self.documents: list[DocumentConfig] = []
         self.document_root = document_root
+        self.package_map: dict[str, ar_element.Package] = {}  # Each key is user-defined
         if config_file_path is not None:
             self.load_config(config_file_path)
 
@@ -96,6 +97,16 @@ class Workspace:
             raise ValueError(f"Role '{str(role)}'not in namespace map") from ex
         return posixpath.normpath(posixpath.join(base_ref, rel_path))
 
+    def create_package(self, name: str, **kwargs) -> ar_element.Package:
+        """
+        Creates new package in workspace
+        """
+        if name in self._package_dict:
+            return ValueError(f"Package with name '{name}' already exists")
+        package = ar_element.Package(name, **kwargs)
+        self.append(package)
+        return package
+
     def make_packages(self, *refs: list[str]) -> ar_element.Package | list[ar_element.Package]:
         """
         Recursively creates packages from reference(s)
@@ -107,7 +118,7 @@ class Workspace:
             if ref.startswith('/'):
                 ref = ref[1:]
             parts = ref.partition('/')
-            package = self._package_map.get(parts[0], None)
+            package = self._package_dict.get(parts[0], None)
             if package is None:
                 package = self.create_package(parts[0])
             if len(parts[2]) > 0:
@@ -115,33 +126,58 @@ class Workspace:
             result.append(package)
         return result[0] if len(result) == 1 else result
 
-    def create_package(self, name: str, **kwargs) -> ar_element.Package:
+    def init_package_map(self, mapping: dict[str, str]) -> None:
         """
-        Creates new package in workspace
+        Initializes an internally stored package map using key-value pairs.
+        The key can be any (unique) name while each value must be a package reference.
+        This function internally creates packages from dict-values using the methd
+        make_packages.
+
+        Use in conjunction with the add_element function.
+
+        Avoid manually calling make_packages if using this method.
         """
-        if name in self._package_map:
-            return ValueError(f"Package with name '{name}' already exists")
-        package = ar_element.Package(name, **kwargs)
-        self.append(package)
-        return package
+        self.package_map.clear()
+        for package_key, package_ref in mapping.items():
+            self.package_map[package_key] = self.make_packages(package_ref)
+
+    def add_element(self, package_key: str, element: ar_element.ARObject):
+        """
+        Adds element to package specified by package_key
+
+        The method init_package_map must be called before using this method.
+        """
+        if len(self.package_map) == 0:
+            raise RuntimeError("Internal package map not initialized")
+        self.package_map[package_key].append(element)
+
+    def find_element(self, package_key: str, element_name: str) -> ar_element.Identifiable | None:
+        """
+        Finds element in package referenced by package_key.
+
+        Ony use together with init_package_map and add_element.
+        """
+        if len(self.package_map) == 0:
+            raise RuntimeError("Internal package map not initialized")
+        return self.package_map[package_key].find(element_name)
 
     def append(self, package: ar_element.Package):
         """
         Appends package to this worksapace
         """
         assert isinstance(package, ar_element.Package)
-        self._package_map[package.name] = package
+        self._package_dict[package.name] = package
         self.packages.append(package)
         package.parent = self
 
-    def find(self, ref: str) -> Any:
+    def find(self, ref: str) -> ar_element.Identifiable | None:
         """
         Finds item by reference
         """
         if ref.startswith('/'):
             ref = ref[1:]
         parts = ref.partition('/')
-        package = self._package_map.get(parts[0], None)
+        package = self._package_dict.get(parts[0], None)
         if (package is not None) and (len(parts[2]) > 0):
             return package.find(parts[2])
         return package

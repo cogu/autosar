@@ -13,6 +13,15 @@
             </VARIABLE-DATA-PROTOTYPE>
           </DATA-ELEMENTS>
         </SENDER-RECEIVER-INTERFACE>
+        <SENDER-RECEIVER-INTERFACE>
+          <SHORT-NAME>EngineSpeed_I</SHORT-NAME>
+          <DATA-ELEMENTS>
+            <VARIABLE-DATA-PROTOTYPE>
+              <SHORT-NAME>EngineSpeed</SHORT-NAME>
+              <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">/AUTOSAR_Platform/ImplementationDataTypes/uint16</TYPE-TREF>
+            </VARIABLE-DATA-PROTOTYPE>
+          </DATA-ELEMENTS>
+        </SENDER-RECEIVER-INTERFACE>
         <CLIENT-SERVER-INTERFACE>
           <SHORT-NAME>FreeRunningTimer_I</SHORT-NAME>
           <OPERATIONS>

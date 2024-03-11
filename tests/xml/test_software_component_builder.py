@@ -112,7 +112,7 @@ class TestSenderPort(unittest.TestCase):
         port_interface = create_vehicle_speed_interface(packages)
         init_value = create_init_value(packages, "VehicleSpeed_IV", 65535)
         swc = create_application_swc(packages)
-        port = swc.create_provide_port("VehicleSpeed", port_interface, com_spec={'init_value_ref': init_value.ref()})
+        port = swc.create_provide_port("VehicleSpeed", port_interface, com_spec={'init_value': init_value.ref()})
         self.assertIsInstance(port, ar_element.ProvidePortPrototype)
         com_spec: ar_element.NonqueuedSenderComSpec = port.com_spec[0]
         self.assertIsInstance(com_spec, ar_element.NonqueuedSenderComSpec)
@@ -142,7 +142,7 @@ class TestReceiverPort(unittest.TestCase):
         port_interface = create_vehicle_speed_interface(packages)
         init_value = create_init_value(packages, "VehicleSpeed_IV", 65535)
         swc = create_application_swc(packages)
-        port = swc.create_require_port("VehicleSpeed", port_interface, com_spec={'init_value_ref': init_value.ref()})
+        port = swc.create_require_port("VehicleSpeed", port_interface, com_spec={'init_value': init_value.ref()})
         self.assertIsInstance(port, ar_element.RequirePortPrototype)
         com_spec: ar_element.NonqueuedReceiverComSpec = port.com_spec[0]
         self.assertIsInstance(com_spec, ar_element.NonqueuedReceiverComSpec)
