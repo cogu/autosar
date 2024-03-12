@@ -134,13 +134,19 @@ def create_composition_component(workspace: autosar.xml.Workspace):
     vehicle_speed_init = workspace.find_element("Constants", "VehicleSpeed_IV")
     engine_speed_interface = workspace.find_element("PortInterfaces", "EngineSpeed_I")
     engine_speed_init = workspace.find_element("Constants", "EngineSpeed_IV")
-    swc = ar_element.ApplicationSoftwareComponentType("CompositionComponent")
+    swc = ar_element.CompositionSwComponentType("CompositionComponent")
     swc.create_require_port("VehicleSpeed", vehicle_speed_interface, com_spec={"init_value": vehicle_speed_init.ref(),
                                                                                "uses_end_to_end_protection": False})
     swc.create_require_port("EngineSpeed", engine_speed_interface, com_spec={"init_value": engine_speed_init.ref(),
                                                                              "uses_end_to_end_protection": False})
 
+    swc.create_component_prototype(workspace.find_element("ComponentTypes", "ReceiverComponent"))
+    swc.create_component_prototype(workspace.find_element("ComponentTypes", "TimerComponent"))
+    # Element must be added to workspace before connectors can be created
     workspace.add_element("ComponentTypes", swc)
+    swc.create_connector("TimerComponent/FreeRunningTimer", "ReceiverComponent/FreeRunningTimer", workspace)
+    swc.create_connector("VehicleSpeed", "ReceiverComponent/VehicleSpeed", workspace)
+    swc.create_connector("EngineSpeed", "ReceiverComponent/EngineSpeed", workspace)
 
 
 def save_xml_files(workspace: autosar.xml.Workspace):
