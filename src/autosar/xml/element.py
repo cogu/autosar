@@ -3258,11 +3258,11 @@ class Package(CollectableElement):
 
     def __init__(self, name: str, **kwargs: dict) -> None:
         super().__init__(name, **kwargs)
-        self.elements = []
-        self.packages = []
+        self.elements: list[ARElement] = []
+        self.packages: list[Package] = []
         self._collection_map = {}
 
-    def append(self, item: Any):
+    def append(self, item: CollectableElement):
         """
         Append element or sub-package
         """
@@ -3326,6 +3326,30 @@ class Package(CollectableElement):
             if len(parts[2]) > 0:
                 return item.find(parts[2])
         return item
+
+    def filter(self, *names: str) -> Iterator[ARElement]:
+        """
+        Yields all elements whose short-name matches any of the names in
+        argument list
+        """
+        for elem in self.elements:
+            if elem.name in names:
+                yield elem
+
+    def filter_regex(self, pattern: str | re.Pattern) -> Iterator[ARElement]:
+        """
+        Yields all elements whose short-name matches the given regex pattern
+        """
+        regex: re.Pattern = None
+        if isinstance(pattern, str):
+            regex = re.compile(pattern)
+        elif isinstance(pattern, re.Pattern):
+            regex = pattern
+        else:
+            raise TypeError(f"pattern: Invalid type '{str(type(pattern))}'")
+        for elem in self.elements:
+            if regex.match(elem.name):
+                yield elem
 
 # --- ModeDeclaration elements
 
