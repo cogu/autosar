@@ -130,10 +130,10 @@ class Workspace:
         """
         Initializes an internally stored package map using key-value pairs.
         The key can be any (unique) name while each value must be a package reference.
-        This function internally creates packages from dict-values using the methd
+        This function internally creates packages from dict-values calling the method
         make_packages.
 
-        Use in conjunction with the add_element function.
+        Use in conjunction with the add_element and find_element methods.
 
         Avoid manually calling make_packages if using this method.
         """
@@ -145,21 +145,31 @@ class Workspace:
         """
         Adds element to package specified by package_key
 
-        The method init_package_map must be called before using this method.
+        Only use after calling init_package_map.
         """
         if len(self.package_map) == 0:
             raise RuntimeError("Internal package map not initialized")
         self.package_map[package_key].append(element)
 
-    def find_element(self, package_key: str, element_name: str) -> ar_element.Identifiable | None:
+    def find_element(self, package_key: str, element_name: str) -> ar_element.ARElement | None:
         """
-        Finds element in package referenced by package_key.
+        Finds an element in the package referenced by package_key.
 
-        Ony use together with init_package_map and add_element.
+        Only use after calling init_package_map.
         """
         if len(self.package_map) == 0:
             raise RuntimeError("Internal package map not initialized")
         return self.package_map[package_key].find(element_name)
+
+    def get_package(self, package_key: str) -> ar_element.Package:
+        """
+        Returns the package referenced by package_key.
+
+        Only use after calling init_package_map.
+        """
+        if len(self.package_map) == 0:
+            raise RuntimeError("Internal package map not initialized")
+        return self.package_map[package_key]
 
     def append(self, package: ar_element.Package):
         """
