@@ -559,6 +559,19 @@ class BaseRef(ARObject, abc.ABC):
         return self.value
 
 
+class PackageRef(BaseRef):
+    """
+    References to AR-PACKAGE--SUBTYPES-ENUM
+    """
+
+    def __init__(self, value: str) -> None:
+        super().__init__(value, ar_enum.IdentifiableSubTypes.AR_PACKAGE)
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.AR_PACKAGE}
+
+
 class CompuMethodRef(BaseRef):
     """
     CompuMethod reference
@@ -3362,7 +3375,7 @@ class ConstantReference(ValueSpecification):
 
 class Package(CollectableElement):
     """
-    AR:PACKAGE
+    AR:AR-PACKAGE
     """
 
     def __init__(self, name: str, **kwargs: dict) -> None:
@@ -3459,6 +3472,88 @@ class Package(CollectableElement):
         for elem in self.elements:
             if regex.match(elem.name):
                 yield elem
+
+    def ref(self) -> PackageRef:
+        """
+        Returns a reference to this package or
+        None if the package is not a sub-package or a root package
+        in a document/workspace
+        """
+        ref_str = self._calc_ref_string()
+        return None if ref_str is None else PackageRef(ref_str)
+
+
+class PackageCollection:
+    """
+    Base class that maintains a collection of AUTOSAR packages
+    """
+
+    def __init__(self, packages: list[Package] | None = None) -> None:
+        self.packages: list[Package] = []  # .PACKAGES
+        self._package_dict = {}  # internal package map
+        if packages is not None:
+            for package in packages:
+                self.append(package)
+
+    def append(self, package: Package):
+        """
+        Appends package to this document and
+        appropriately updates reference links
+        """
+        if isinstance(package, Package):
+            if package.name in self._package_dict:
+                raise ValueError(
+                    f"Package with SHORT-NAME '{package.name}' already exists")
+            package.parent = self
+            self.packages.append(package)
+            self._package_dict[package.name] = package
+
+    def find(self, ref: str) -> Any:
+        """
+        Finds item by reference
+        """
+        if ref.startswith('/'):
+            ref = ref[1:]
+        parts = ref.partition('/')
+        package = self._package_dict.get(parts[0], None)
+        if (package is not None) and (len(parts[2]) > 0):
+            return package.find(parts[2])
+        return package
+
+    def update_ref_parts(self, ref_parts: list[str]):
+        """
+        Utility method used generating XML references
+        """
+        ref_parts.append('')
+
+    def create_package(self, name: str, **kwargs) -> Package:
+        """
+        Creates new package in collection
+        """
+        if name in self._package_dict:
+            return ValueError(f"Package with name '{name}' already exists")
+        package = Package(name, **kwargs)
+        self.append(package)
+        return package
+
+    def make_packages(self, *refs: list[str]) -> Package | list[Package]:
+        """
+        Recursively creates packages from reference(s)
+        Returns a list of created packages.
+        If only one argument is given it will return that package (not a list).
+        """
+        result = []
+        for ref in refs:
+            if ref.startswith('/'):
+                ref = ref[1:]
+            parts = ref.partition('/')
+            package = self._package_dict.get(parts[0], None)
+            if package is None:
+                package = self.create_package(parts[0])
+            if len(parts[2]) > 0:
+                package = package.make_packages(parts[2])
+            result.append(package)
+        return result[0] if len(result) == 1 else result
 
 # --- ModeDeclaration elements
 
@@ -5263,10 +5358,37 @@ class AtomicSoftwareComponentType(SwComponentType):
                  symbol_props: SymbolProps | None = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
-        self.internal_behavior: SwcInternalBehavior | None = None
+        self._internal_behavior: SwcInternalBehavior | None = None
         self.symbol_props = None  # AR:SYMBOL-PROPS
-        self._assign_optional_strict("internal_behavior", internal_behavior, SwcInternalBehavior)
+        self._assign_optional_strict("_internal_behavior", internal_behavior, SwcInternalBehavior)
         self._assign_optional_strict("symbol_props", symbol_props, SymbolProps)
+
+    @property
+    def internal_behavior(self) -> Union["SwcInternalBehavior", None]:
+        """
+        Internal behavior getter
+        """
+        return self._internal_behavior
+
+    @internal_behavior.setter
+    def internal_behavior(self, value: Union["SwcInternalBehavior", None]):
+        """
+        Internal behavior setter
+        """
+        self._internal_behavior = value
+        if value is not None:
+            value.parent = self
+
+    def create_internal_behavior(self, name: str = None, **kwargs) -> "SwcInternalBehavior":
+        """
+        Creates an empty internal behavior object and adds it to the component.
+        If the name argument is left as None, a default name will be created based on the name of
+        the software component
+        """
+        if name is None:
+            name = self.name + "_InternalBehavior"
+        self.internal_behavior = SwcInternalBehavior(name, **kwargs)
+        return self.internal_behavior
 
 
 class ApplicationSoftwareComponentType(AtomicSoftwareComponentType):
@@ -5792,6 +5914,14 @@ class SwcInternalBehavior(Identifiable):
                  name: str,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
+
+    def ref(self) -> SwcInternalBehaviorRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        return None if ref_str is None else SwcInternalBehaviorRef(ref_str)
 
 
 class SwcImplementation(Implementation):

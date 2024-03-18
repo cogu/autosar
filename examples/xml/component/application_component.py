@@ -103,25 +103,23 @@ def create_application_component(workspace: autosar.xml.Workspace):
     swc.create_provide_port("EngineSpeed", engine_speed_interface, com_spec={"init_value": engine_speed_init.ref(),
                                                                              "uses_end_to_end_protection": False,
                                                                              })
+    swc.create_internal_behavior()
     workspace.add_element("ComponentTypes", swc)
+    impl = ar_element.SwcImplementation("SenderComponent_Implementation", behavior_ref=swc.internal_behavior.ref())
+    workspace.add_element("ComponentTypes", impl)
 
 
 def save_xml_files(workspace: autosar.xml.Workspace):
     """
     Saves workspace as XML documents
     """
-    interface_document_path = os.path.abspath(os.path.join(os.path.dirname(
-        __file__), 'data', 'portinterfaces.arxml'))
-    platform_document_path = os.path.abspath(os.path.join(os.path.dirname(
-        __file__), 'data', 'platform.arxml'))
-    component_document_path = os.path.abspath(os.path.join(os.path.dirname(
-        __file__), 'data', 'sender_component.arxml'))
-    constant_document_path = os.path.abspath(os.path.join(os.path.dirname(
-        __file__), 'data', 'constants.arxml'))
-    workspace.create_document(interface_document_path, packages="/PortInterfaces")
-    workspace.create_document(constant_document_path, packages="/Constants")
-    workspace.create_document(platform_document_path, packages="/AUTOSAR_Platform")
-    workspace.create_document(component_document_path, packages="/ComponentTypes")
+    workspace.set_document_root(os.path.abspath(os.path.join(os.path.dirname(__file__), "data")))
+    workspace.create_document("portinterfaces.arxml", packages="/PortInterfaces")
+    workspace.create_document("constants.arxml", packages="/Constants")
+    workspace.create_document("platform.arxml", packages="/AUTOSAR_Platform")
+    workspace.create_document_mapping(package_ref="/ComponentTypes",
+                                      element_types=ar_element.SwComponentType,
+                                      suffix_filters=["_Implementation"])
     workspace.write_documents()
 
 

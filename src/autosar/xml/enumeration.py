@@ -206,39 +206,40 @@ class IdentifiableSubTypes(Enum):
     APPLICATION_RECORD_DATA_TYPE = 12
     APPLICATION_RECORD_ELEMENT = 13
     APPLICATION_SW_COMPONENT_TYPE = 14
-    ARGUMENT_DATA_PROTOTYPE = 15
-    AUTOSAR_DATA_PROTOTYPE = 16
-    AUTOSAR_DATA_TYPE = 17
-    BSW_MODULE_ENTRY = 18
-    CLIENT_SERVER_INTERFACE = 19
-    CLIENT_SERVER_OPERATION = 20
-    COMPOSITION_SW_COMPONENT_TYPE = 21
-    COMPU_METHOD = 22
-    CONSTANT_SPECIFICATION = 23
-    DATA_CONSTR = 24
-    DATA_PROTOTYPE = 25
-    E2E_PROFILE_COMPATIBILITY_PROPS = 26
-    IMPLEMENTATION_DATA_TYPE = 27
-    IMPLEMENTATION_DATA_TYPE_ELEMENT = 28
-    MODE_DECLARATION = 29
-    MODE_DECLARATION_GROUP = 30
-    MODE_DECLARATION_GROUP_PROTOTYPE = 31
-    MODE_SWITCH_INTERFACE = 32
-    NV_DATA_INTERFACE = 33
-    P_PORT_PROTOTYPE = 34
-    PARAMETER_INTERFACE = 35
-    PARAMETER_DATA_PROTOTYPE = 36
-    PHYSICAL_DIMENSION = 37
-    PORT_PROTOTYPE = 38
-    PR_PORT_PROTOTYPE = 39
-    R_PORT_PROTOTYPE = 40
-    SENDER_RECEIVER_INTERFACE = 41
-    SW_ADDR_METHOD = 42
-    SW_BASE_TYPE = 43
-    SW_COMPONENT_PROTOTYPE = 44
-    SWC_INTERNAL_BEHAVIOR = 45
-    UNIT = 46
-    VARIABLE_DATA_PROTOTYPE = 47
+    AR_PACKAGE = 15
+    ARGUMENT_DATA_PROTOTYPE = 16
+    AUTOSAR_DATA_PROTOTYPE = 17
+    AUTOSAR_DATA_TYPE = 18
+    BSW_MODULE_ENTRY = 19
+    CLIENT_SERVER_INTERFACE = 20
+    CLIENT_SERVER_OPERATION = 21
+    COMPOSITION_SW_COMPONENT_TYPE = 22
+    COMPU_METHOD = 23
+    CONSTANT_SPECIFICATION = 24
+    DATA_CONSTR = 25
+    DATA_PROTOTYPE = 26
+    E2E_PROFILE_COMPATIBILITY_PROPS = 27
+    IMPLEMENTATION_DATA_TYPE = 28
+    IMPLEMENTATION_DATA_TYPE_ELEMENT = 29
+    MODE_DECLARATION = 30
+    MODE_DECLARATION_GROUP = 31
+    MODE_DECLARATION_GROUP_PROTOTYPE = 32
+    MODE_SWITCH_INTERFACE = 33
+    NV_DATA_INTERFACE = 34
+    P_PORT_PROTOTYPE = 35
+    PARAMETER_INTERFACE = 36
+    PARAMETER_DATA_PROTOTYPE = 37
+    PHYSICAL_DIMENSION = 38
+    PORT_PROTOTYPE = 39
+    PR_PORT_PROTOTYPE = 40
+    R_PORT_PROTOTYPE = 41
+    SENDER_RECEIVER_INTERFACE = 42
+    SW_ADDR_METHOD = 43
+    SW_BASE_TYPE = 44
+    SW_COMPONENT_PROTOTYPE = 45
+    SWC_INTERNAL_BEHAVIOR = 46
+    UNIT = 47
+    VARIABLE_DATA_PROTOTYPE = 48
 
 
 class IntervalType(Enum):
@@ -706,6 +707,7 @@ xml_to_enum_map: dict[str, dict] = {
         "APPLICATION-RECORD-DATA-TYPE": IdentifiableSubTypes.APPLICATION_RECORD_DATA_TYPE,
         "APPLICATION-RECORD-ELEMENT": IdentifiableSubTypes.APPLICATION_RECORD_ELEMENT,
         "APPLICATION-SW-COMPONENT-TYPE": IdentifiableSubTypes.APPLICATION_SW_COMPONENT_TYPE,
+        "AR-PACKAGE": IdentifiableSubTypes.AR_PACKAGE,
         "ARGUMENT-DATA-PROTOTYPE": IdentifiableSubTypes.ARGUMENT_DATA_PROTOTYPE,
         "AUTOSAR-DATA-PROTOTYPE": IdentifiableSubTypes.AUTOSAR_DATA_PROTOTYPE,
         "AUTOSAR-DATA-TYPE": IdentifiableSubTypes.AUTOSAR_DATA_TYPE,
@@ -1061,38 +1063,39 @@ enum_to_xml_map: dict[str, list] = {
         "APPLICATION-RECORD-ELEMENT",                    # 13
         "APPLICATION-SW-COMPONENT-TYPE",                 # 14
         "ARGUMENT-DATA-PROTOTYPE",                       # 15
-        "AUTOSAR-DATA-PROTOTYPE",                        # 16
-        "AUTOSAR-DATA-TYPE",                             # 17
-        "BSW-MODULE-ENTRY",                              # 18
-        "CLIENT-SERVER-INTERFACE",                       # 19
-        "CLIENT-SERVER-OPERATION",                       # 20
-        "COMPOSITION-SW-COMPONENT-TYPE",                 # 21
-        "COMPU-METHOD",                                  # 22
-        "CONSTANT-SPECIFICATION",                        # 23
-        "DATA-CONSTR",                                   # 24
-        "DATA-PROTOTYPE",                                # 25
-        "E-2-E-PROFILE-COMPATIBILITY-PROPS",             # 26
-        "IMPLEMENTATION-DATA-TYPE",                      # 27
-        "IMPLEMENTATION-DATA-TYPE-ELEMENT",              # 28
-        "MODE-DECLARATION",                              # 29
-        "MODE-DECLARATION-GROUP",                        # 30
-        "MODE-DECLARATION-GROUP-PROTOTYPE",              # 31
-        "MODE-SWITCH-INTERFACE",                         # 32
-        "NV-DATA-INTERFACE",                             # 33
-        "P-PORT-PROTOTYPE",                              # 34
-        "PARAMETER-INTERFACE",                           # 35
-        "PARAMETER-DATA-PROTOTYPE",                      # 36
-        "PHYSICAL-DIMENSION",                            # 37
-        "PORT-PROTOTYPE",                                # 38
-        "PR-PORT-PROTOTYPE",                             # 39
-        "R-PORT-PROTOTYPE",                              # 40
-        "SENDER-RECEIVER-INTERFACE",                     # 41
-        "SW-ADDR-METHOD",                                # 42
-        "SW-BASE-TYPE",                                  # 43
-        "SW-COMPONENT-PROTOTYPE",                        # 44
-        "SWC-INTERNAL-BEHAVIOR",                         # 45
-        "UNIT",                                          # 46
-        "VARIABLE-DATA-PROTOTYPE",                       # 47
+        "AR-PACKAGE",                                    # 16
+        "AUTOSAR-DATA-PROTOTYPE",                        # 17
+        "AUTOSAR-DATA-TYPE",                             # 18
+        "BSW-MODULE-ENTRY",                              # 19
+        "CLIENT-SERVER-INTERFACE",                       # 20
+        "CLIENT-SERVER-OPERATION",                       # 21
+        "COMPOSITION-SW-COMPONENT-TYPE",                 # 22
+        "COMPU-METHOD",                                  # 23
+        "CONSTANT-SPECIFICATION",                        # 24
+        "DATA-CONSTR",                                   # 25
+        "DATA-PROTOTYPE",                                # 26
+        "E-2-E-PROFILE-COMPATIBILITY-PROPS",             # 27
+        "IMPLEMENTATION-DATA-TYPE",                      # 28
+        "IMPLEMENTATION-DATA-TYPE-ELEMENT",              # 29
+        "MODE-DECLARATION",                              # 30
+        "MODE-DECLARATION-GROUP",                        # 31
+        "MODE-DECLARATION-GROUP-PROTOTYPE",              # 32
+        "MODE-SWITCH-INTERFACE",                         # 33
+        "NV-DATA-INTERFACE",                             # 34
+        "P-PORT-PROTOTYPE",                              # 35
+        "PARAMETER-INTERFACE",                           # 36
+        "PARAMETER-DATA-PROTOTYPE",                      # 37
+        "PHYSICAL-DIMENSION",                            # 38
+        "PORT-PROTOTYPE",                                # 39
+        "PR-PORT-PROTOTYPE",                             # 40
+        "R-PORT-PROTOTYPE",                              # 41
+        "SENDER-RECEIVER-INTERFACE",                     # 42
+        "SW-ADDR-METHOD",                                # 43
+        "SW-BASE-TYPE",                                  # 44
+        "SW-COMPONENT-PROTOTYPE",                        # 45
+        "SWC-INTERNAL-BEHAVIOR",                         # 46
+        "UNIT",                                          # 47
+        "VARIABLE-DATA-PROTOTYPE",                       # 48
     ],
     "IntervalType": [
         "CLOSED",  # 0

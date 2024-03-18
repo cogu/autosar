@@ -111,7 +111,10 @@ def create_receiver_component(workspace: autosar.xml.Workspace):
                                                                              "handle_never_received": False
                                                                              })
     swc.create_require_port("FreeRunningTimer", timer_interface, com_spec={"GetTime": {}, "IsTimerElapsed": {}})
+    swc.create_internal_behavior()
     workspace.add_element("ComponentTypes", swc)
+    impl = ar_element.SwcImplementation("ReceiverComponent_Implementation", behavior_ref=swc.internal_behavior.ref())
+    workspace.add_element("ComponentTypes", impl)
 
 
 def create_server_component(workspace: autosar.xml.Workspace):
@@ -123,7 +126,10 @@ def create_server_component(workspace: autosar.xml.Workspace):
     swc.create_provide_port("FreeRunningTimer", timer_interface, com_spec={"GetTime": {"queue_length": 1},
                                                                            "IsTimerElapsed": {"queue_length": 1}
                                                                            })
+    swc.create_internal_behavior()
     workspace.add_element("ComponentTypes", swc)
+    impl = ar_element.SwcImplementation("TimerComponent_Implementation", behavior_ref=swc.internal_behavior.ref())
+    workspace.add_element("ComponentTypes", impl)
 
 
 def create_composition_component(workspace: autosar.xml.Workspace):
@@ -153,18 +159,13 @@ def save_xml_files(workspace: autosar.xml.Workspace):
     """
     Saves workspace as XML documents
     """
-    interface_document_path = os.path.abspath(os.path.join(os.path.dirname(
-        __file__), 'data', 'portinterfaces.arxml'))
-    platform_document_path = os.path.abspath(os.path.join(os.path.dirname(
-        __file__), 'data', 'platform.arxml'))
-    component_document_path = os.path.abspath(os.path.join(os.path.dirname(
-        __file__), 'data', 'composition.arxml'))
-    constant_document_path = os.path.abspath(os.path.join(os.path.dirname(
-        __file__), 'data', 'constants.arxml'))
-    workspace.create_document(interface_document_path, packages="/PortInterfaces")
-    workspace.create_document(constant_document_path, packages="/Constants")
-    workspace.create_document(platform_document_path, packages="/AUTOSAR_Platform")
-    workspace.create_document(component_document_path, packages="/ComponentTypes")
+    workspace.set_document_root(os.path.abspath(os.path.join(os.path.dirname(__file__), "data")))
+    workspace.create_document("portinterfaces.arxml", packages="/PortInterfaces")
+    workspace.create_document("constants.arxml", packages="/Constants")
+    workspace.create_document("platform.arxml", packages="/AUTOSAR_Platform")
+    workspace.create_document_mapping(package_ref="/ComponentTypes",
+                                      element_types=ar_element.SwComponentType,
+                                      suffix_filters=["_Implementation"])
     workspace.write_documents()
 
 
