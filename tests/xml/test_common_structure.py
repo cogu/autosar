@@ -106,5 +106,69 @@ class TestDataFilter(unittest.TestCase):
         self.assertEqual(elem.x, 2)
 
 
+class TestAutosarEngineeringObject(unittest.TestCase):
+    """
+    Also tests parent class EngineeringObject
+    """
+
+    def test_empty(self):
+        element = ar_element.AutosarEngineeringObject()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element, "AUTOSAR-ENGINEERING-OBJECT")
+        self.assertEqual(xml, '<AUTOSAR-ENGINEERING-OBJECT/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.AutosarEngineeringObject = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.AutosarEngineeringObject)
+
+    def test_data_filter_type(self):
+        element = ar_element.AutosarEngineeringObject(label="MyLabel")
+        writer = autosar.xml.Writer()
+        xml = '''<AUTOSAR-ENGINEERING-OBJECT>
+  <SHORT-LABEL>MyLabel</SHORT-LABEL>
+</AUTOSAR-ENGINEERING-OBJECT>'''
+        self.assertEqual(writer.write_str_elem(element, "AUTOSAR-ENGINEERING-OBJECT"), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.AutosarEngineeringObject = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.AutosarEngineeringObject)
+        self.assertEqual(elem.label, "MyLabel")
+
+
+class TestCode(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.Code("Default")
+        writer = autosar.xml.Writer()
+        xml = '''<CODE>
+  <SHORT-NAME>Default</SHORT-NAME>
+</CODE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.Code = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.Code)
+        self.assertEqual(elem.name, "Default")
+
+    def test_artifact_descriptor(self):
+        descriptor = ar_element.AutosarEngineeringObject(label="Default", category="SWSRC")
+        element = ar_element.Code("Default", artifact_descriptors=descriptor)
+        writer = autosar.xml.Writer()
+        xml = '''<CODE>
+  <SHORT-NAME>Default</SHORT-NAME>
+  <ARTIFACT-DESCRIPTORS>
+    <AUTOSAR-ENGINEERING-OBJECT>
+      <SHORT-LABEL>Default</SHORT-LABEL>
+      <CATEGORY>SWSRC</CATEGORY>
+    </AUTOSAR-ENGINEERING-OBJECT>
+  </ARTIFACT-DESCRIPTORS>
+</CODE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.Code = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.Code)
+        self.assertEqual(len(elem.artifact_descriptors), 1)
+        artifact_descriptor = elem.artifact_descriptors[0]
+        self.assertEqual(artifact_descriptor.label, "Default")
+        self.assertEqual(artifact_descriptor.category, "SWSRC")
+
+
 if __name__ == '__main__':
     unittest.main()

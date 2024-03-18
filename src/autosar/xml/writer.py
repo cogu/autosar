@@ -189,8 +189,10 @@ class Writer(_XMLWriter):
             'Package': self._write_package,
             # CompuMethod elements
             'CompuMethod': self._write_compu_method,
-            # Common structure elements
+            # Common structure and general template elements
             'DataFilter': self._write_data_filter,
+            'AutosarEngineeringObject': self._write_autosar_engineering_object,
+            'Code': self._write_code,
             # Data type elements
             'ApplicationArrayDataType': self._write_application_array_data_type,
             'ApplicationRecordDataType': self._write_application_record_data_type,
@@ -218,6 +220,7 @@ class Writer(_XMLWriter):
             # Software component elements
             'ApplicationSoftwareComponentType': self._write_application_software_component_type,
             'CompositionSwComponentType': self._write_composition_sw_component_type,
+            'SwcImplementation': self._write_swc_implementation,
         }
         # Value specification elements
         self.switcher_value_specification = {
@@ -1227,6 +1230,72 @@ class Writer(_XMLWriter):
         if elem.x is not None:
             self._add_content("X", str(elem.x))
 
+    def _write_engineering_object(self, elem: ar_element.EngineeringObject) -> None:
+        """
+        Writes group AR:ENGINEERING-OBJECT
+        """
+        if elem.label is not None:
+            self._add_content("SHORT-LABEL", str(elem.label))
+        if elem.category is not None:
+            self._add_content("CATEGORY", str(elem.category))
+
+    def _write_autosar_engineering_object(self, elem: ar_element.AutosarEngineeringObject, tag: str) -> None:
+        """
+        Writes complex type AR:AUTOSAR-ENGINEERING-OBJECT
+        Tag variants: 'AUTOSAR-ENGINEERING-OBJECT' | 'ARTIFACT-DESCRIPTOR'
+        """
+        assert isinstance(elem, ar_element.AutosarEngineeringObject)
+        if elem.is_empty:
+            self._add_content(tag)
+            return
+        self._add_child(tag)
+        self._write_engineering_object(elem)
+        self._leave_child()
+
+    def _write_code(self, elem: ar_element.Code) -> None:
+        """
+        Writes complex type AR:CODE
+        Tag variants: 'CODE'
+        """
+        assert isinstance(elem, ar_element.Code)
+        attr: TupleList = []
+        self._collect_identifiable_attributes(elem, attr)
+        self._add_child('CODE', attr)
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        if elem.artifact_descriptors:
+            self._add_child('ARTIFACT-DESCRIPTORS')
+            for artifact_descriptor in elem.artifact_descriptors:
+                self._write_autosar_engineering_object(artifact_descriptor, "AUTOSAR-ENGINEERING-OBJECT")
+            self._leave_child()
+        self._leave_child()
+        # .CALLBACK-HEADER-REFS not yet implemented
+
+    def _write_implementtion(self, elem: ar_element.Implementation) -> None:
+        """
+        Writes Group AR:IMPLEMENTATION
+        """
+        # .BUILD-ACTION-MANIFESTS not yet supported
+        if elem.code_descriptors:
+            self._add_child("CODE-DESCRIPTORS")
+            for code_descriptor in elem.code_descriptors:
+                self._write_code(code_descriptor)
+            self._leave_child()
+        # .COMPILERS not yet supported
+        # .GENERATED-ARTIFACTS not yet supported
+        # .HW-ELEMENT-REFS not yet supported
+        # .LINKERS not yet supported
+        # .MC-SUPPORT not yet supported
+        # .PROGRAMMING-LANGUAGE not yet supported
+        # .REQUIRED-ARTIFACTS not yet supported
+        # .REQUIRED-GENERATOR-TOOLS not yet supported
+        # .RESOURCE-CONSUMPTION not yet supported
+        # .SW-VERSION not yet supported
+        # .SWC-BSW-MAPPING-REF not yet supported
+        # .USED-CODE-GENERATOR not yet supported
+        # .VENDOR-ID not yet supported
+
     # Data type elements
 
     def _write_sw_addr_method(self, elem: ar_element.SwAddrMethod) -> None:
@@ -2157,6 +2226,17 @@ class Writer(_XMLWriter):
         Writes references to SW-COMPONENT-PROTOTYPE--SUBTYPES-ENUM
         """
         assert isinstance(elem, ar_element.SwComponentPrototypeRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content(tag, elem.value, attr)
+
+    def _write_swc_internal_behavior_ref(self,
+                                         elem: ar_element.SwcInternalBehaviorRef,
+                                         tag: str) -> None:
+        """
+        Writes references to SWC-INTERNAL-BEHAVIOR--SUBTYPES-ENUM
+        """
+        assert isinstance(elem, ar_element.SwcInternalBehaviorRef)
         attr: TupleList = []
         self._collect_base_ref_attr(elem, attr)
         self._add_content(tag, elem.value, attr)
@@ -3376,7 +3456,7 @@ class Writer(_XMLWriter):
 
     def _write_atomic_sw_component_type(self, elem: ar_element.AtomicSoftwareComponentType) -> None:
         """
-        Writes  AR:ATOMIC-SW-COMPONENT-TYPE
+        Writes AR:ATOMIC-SW-COMPONENT-TYPE
         """
         if elem.internal_behavior is not None:
             self._write_swc_internal_behavior(elem.internal_behavior)
@@ -3527,6 +3607,30 @@ class Writer(_XMLWriter):
                 elif isinstance(connector, ar_element.PassThroughSwConnector):
                     self._write_passthrough_sw_connector(connector)
             self._leave_child()
+
+    def _write_swc_implementation(self, elem: ar_element.SwcImplementation) -> None:
+        """
+        Writes complex type AR:SWC-IMPLEMENTATION
+        Tag variants: 'SWC-IMPLEMENTATION'
+        """
+        assert isinstance(elem, ar_element.SwcImplementation)
+        self._add_child("SWC-IMPLEMENTATION")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_implementtion(elem)
+        self._write_swc_implementation_group(elem)
+        self._leave_child()
+
+    def _write_swc_implementation_group(self, elem: ar_element.SwcImplementation) -> None:
+        """
+        Writes group AR:SWC-IMPLEMENTATION
+        """
+        if elem.behavior_ref is not None:
+            self._write_swc_internal_behavior_ref(elem.behavior_ref, "BEHAVIOR-REF")
+        # .PER-INSTANCE-MEMORY-SIZES not yet supported
+        if elem.required_rte_vendor is not None:
+            self._add_content("REQUIRED-RTE-VENDOR", elem.required_rte_vendor)
 
     # SWC Internal behavior elements
 

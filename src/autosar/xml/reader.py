@@ -114,8 +114,10 @@ class Reader:
             # CompuMethod
             'COMPU-METHOD': self._read_compu_method,
 
-            # Common structure elements
+            # Common structure and general template elements
             'DATA-FILTER': self._read_data_filter,
+            'AUTOSAR-ENGINEERING-OBJECT': self._read_autosar_engineering_object,
+            'CODE': self._read_code,
 
             # DataType and DataDictionary elements
             'APPLICATION-ARRAY-DATA-TYPE': self._read_application_array_data_type,
@@ -152,6 +154,7 @@ class Reader:
             # Software component elements
             'APPLICATION-SW-COMPONENT-TYPE': self._read_application_sw_component_type,
             'COMPOSITION-SW-COMPONENT-TYPE': self._read_composition_sw_component_type,
+            'SWC-IMPLEMENTATION': self._read_swc_implementation,
 
         }
         # Value specification elements
@@ -1422,6 +1425,73 @@ class Reader:
         self._report_unprocessed_elements(child_elements)
         return ar_element.DataFilter(**data)
 
+    def _read_engineering_object(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:ENGINEERING-OBJECT
+        """
+        xml_child = child_elements.get("SHORT-LABEL")
+        if xml_child is not None:
+            data["label"] = xml_child.text
+        xml_child = child_elements.get("CATEGORY")
+        if xml_child is not None:
+            data["category"] = xml_child.text
+
+    def _read_autosar_engineering_object(self, xml_element: ElementTree.Element) -> ar_element.AutosarEngineeringObject:
+        """
+        Complex type AR:AUTOSAR-ENGINEERING-OBJECT
+        Tag variants: 'AUTOSAR-ENGINEERING-OBJECT' | 'ARTIFACT-DESCRIPTOR'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_engineering_object(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.AutosarEngineeringObject(**data)
+
+    def _read_code(self, xml_element: ElementTree.Element) -> ar_element.Code:
+        """
+        Reads complex type AR:CODE
+        Tag variants: 'CODE'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        xml_child = child_elements.get('ARTIFACT-DESCRIPTORS')
+        if xml_child is not None:
+            elements = []
+            for xml_grand_child in xml_child.findall("./AUTOSAR-ENGINEERING-OBJECT"):
+                elements.append(self._read_autosar_engineering_object(xml_grand_child))
+            data["artifact_descriptors"] = elements
+        child_elements.skip('CALLBACK-HEADER-REFS')  # Not yet supported
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.Code(**data)
+
+    def _read_implementation(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:IMPLEMENTATION
+        """
+        child_elements.skip("BUILD-ACTION-MANIFESTS")
+        xml_child = child_elements.get("CODE-DESCRIPTORS")
+        if xml_child is not None:
+            elements = []
+            for xml_grand_child in xml_child.findall("./CODE"):
+                elements.append(self._read_code(xml_grand_child))
+            data["code_descriptors"] = elements
+        child_elements.skip("COMPILERS")
+        child_elements.skip("GENERATED-ARTIFACTS")
+        child_elements.skip("HW-ELEMENT-REFS")
+        child_elements.skip("LINKERS")
+        child_elements.skip("MC-SUPPORT")
+        child_elements.skip("PROGRAMMING-LANGUAGE")
+        child_elements.skip("REQUIRED-ARTIFACTS")
+        child_elements.skip("REQUIRED-GENERATOR-TOOLS")
+        child_elements.skip("RESOURCE-CONSUMPTION")
+        child_elements.skip("SW-VERSION")
+        child_elements.skip("SWC-BSW-MAPPING-REF")
+        child_elements.skip("USED-CODE-GENERATOR")
+        child_elements.skip("VENDOR-ID")
+
     # Data type elements
 
     def _read_sw_addr_method(self, xml_element: ElementTree.Element) -> ar_element.SwAddrMethod:
@@ -2475,6 +2545,19 @@ class Reader:
             msg = f"Invalid value for DEST. Expected 'SW-COMPONENT-PROTOTYPE', got '{data['dest']}'"
             raise ar_exception.ParseError(msg)
         return ar_element.SwComponentPrototypeRef(xml_elem.text)
+
+    def _read_swc_internal_behavior_ref(self,
+                                        xml_elem: ElementTree.Element
+                                        ) -> ar_element.SwcInternalBehaviorRef:
+        """
+        Reads reference to references to SWC-INTERNAL-BEHAVIOR--SUBTYPES-ENUM
+        """
+        data = {}
+        self._read_base_ref_attributes(xml_elem.attrib, data)
+        if data['dest'] != 'SWC-INTERNAL-BEHAVIOR':
+            msg = f"Invalid value for DEST. Expected 'SWC-INTERNAL-BEHAVIOR', got '{data['dest']}'"
+            raise ar_exception.ParseError(msg)
+        return ar_element.SwcInternalBehaviorRef(xml_elem.text)
 
 # --- Constant and value specifications
 
@@ -4089,6 +4172,35 @@ class Reader:
         child_elements.skip("CONSTANT-VALUE-MAPPING-REFS")
         child_elements.skip("DATA-TYPE-MAPPING-REFS")
         child_elements.skip("INSTANTIATION-RTE-EVENT-PROPSS")
+
+    def _read_swc_implementation(self,
+                                 xml_element: ElementTree.Element
+                                 ) -> ar_element.SwcImplementation:
+        """
+        Reads complex type AR:SWC-IMPLEMENTATION
+        Tag variants: 'SWC-IMPLEMENTATION'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_implementation(child_elements, data)
+        self._read_swc_implementation_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.SwcImplementation(**data)
+
+    def _read_swc_implementation_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:COMPOSITION-SW-COMPONENT-TYPE
+        """
+        xml_child = child_elements.get("BEHAVIOR-REF")
+        if xml_child is not None:
+            data["behavior_ref"] = self._read_swc_internal_behavior_ref(xml_child)
+        child_elements.skip("PER-INSTANCE-MEMORY-SIZES")  # Not yet supported
+        xml_child = child_elements.get("REQUIRED-RTE-VENDOR")
+        if xml_child is not None:
+            data["required_rte_vendor"] = xml_child.text
 
     # --- Internal Behavior elements
 
