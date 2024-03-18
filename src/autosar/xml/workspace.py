@@ -18,7 +18,7 @@ except ModuleNotFoundError:
 
 class DocumentConfig:
     """
-    Internal class used during document creation
+    Used to store settings about a document creation action
     """
 
     def __init__(self, file_path: str, package_refs: list[str] | str | None = None) -> None:
@@ -31,6 +31,27 @@ class DocumentConfig:
             for package_ref in package_refs:
                 assert isinstance(package_ref, str)
                 self.package_refs.append(package_ref)
+
+
+class PackageToDocumentMapping:
+    """
+    Used to store settings for a package-to-document-mapping action.
+    This is used to split a package into multiple documents based on element types
+    """
+
+    def __init__(self,
+                 package_ref: str,
+                 element_types: type | tuple[type],
+                 suffix_filters: str | list[str]):
+        self.package_ref: str = package_ref
+        self.element_types: type | tuple[type] = element_types
+        self.suffix_filters: list[str] = []
+        if isinstance(suffix_filters, str):
+            self.element_types.append(suffix_filters)
+        else:
+            for suffix_filter in suffix_filters:
+                assert isinstance(package_ref, str)
+                self.suffix_filters.append(suffix_filter)
 
 
 class Namespace:
@@ -52,18 +73,18 @@ class Namespace:
             self.package_map[package_role] = abs_path
 
 
-class Workspace:
+class Workspace(ar_element.PackageCollection):
     """
     Workspace
     """
 
     def __init__(self, config_file_path: str | None = None, document_root: str | None = None) -> None:
         self.namespaces: dict[str, Namespace] = {}
-        self.packages: list[ar_element.Package] = []
-        self._package_dict: dict[str, ar_element.Package] = {}  # Each key is the name of an actual package
         self.documents: list[DocumentConfig] = []
+        self.document_mappings: list[PackageToDocumentMapping] = []
         self.document_root = document_root
         self.package_map: dict[str, ar_element.Package] = {}  # Each key is user-defined
+        super().__init__()
         if config_file_path is not None:
             self.load_config(config_file_path)
 
@@ -96,35 +117,6 @@ class Workspace:
         except KeyError as ex:
             raise ValueError(f"Role '{str(role)}'not in namespace map") from ex
         return posixpath.normpath(posixpath.join(base_ref, rel_path))
-
-    def create_package(self, name: str, **kwargs) -> ar_element.Package:
-        """
-        Creates new package in workspace
-        """
-        if name in self._package_dict:
-            return ValueError(f"Package with name '{name}' already exists")
-        package = ar_element.Package(name, **kwargs)
-        self.append(package)
-        return package
-
-    def make_packages(self, *refs: list[str]) -> ar_element.Package | list[ar_element.Package]:
-        """
-        Recursively creates packages from reference(s)
-        Returns a list of created packages.
-        If only one argument is given it will return that package (not a list).
-        """
-        result = []
-        for ref in refs:
-            if ref.startswith('/'):
-                ref = ref[1:]
-            parts = ref.partition('/')
-            package = self._package_dict.get(parts[0], None)
-            if package is None:
-                package = self.create_package(parts[0])
-            if len(parts[2]) > 0:
-                package = package.make_packages(parts[2])
-            result.append(package)
-        return result[0] if len(result) == 1 else result
 
     def init_package_map(self, mapping: dict[str, str]) -> None:
         """
@@ -161,7 +153,7 @@ class Workspace:
             raise RuntimeError("Internal package map not initialized")
         return self.package_map[package_key].find(element_name)
 
-    def get_package(self, package_key: str) -> ar_element.Package:
+    def get_package_by_key(self, package_key: str) -> ar_element.Package:
         """
         Returns the package referenced by package_key.
 
@@ -170,33 +162,6 @@ class Workspace:
         if len(self.package_map) == 0:
             raise RuntimeError("Internal package map not initialized")
         return self.package_map[package_key]
-
-    def append(self, package: ar_element.Package):
-        """
-        Appends package to this worksapace
-        """
-        assert isinstance(package, ar_element.Package)
-        self._package_dict[package.name] = package
-        self.packages.append(package)
-        package.parent = self
-
-    def find(self, ref: str) -> ar_element.Identifiable | None:
-        """
-        Finds item by reference
-        """
-        if ref.startswith('/'):
-            ref = ref[1:]
-        parts = ref.partition('/')
-        package = self._package_dict.get(parts[0], None)
-        if (package is not None) and (len(parts[2]) > 0):
-            return package.find(parts[2])
-        return package
-
-    def update_ref_parts(self, ref_parts: list[str]):
-        """
-        Utility method used generating XML references
-        """
-        ref_parts.append('')
 
     def apply(self, template: Any, **kwargs) -> Any:
         """
@@ -216,31 +181,30 @@ class Workspace:
         """
         self.documents.append(DocumentConfig(file_path, packages))
 
+    def create_document_mapping(self,
+                                package_ref: str,
+                                element_types: type | tuple[type],
+                                suffix_filters: str | list[str]):
+        """
+        Splits a package into multiple documents. The document name(s) equal the short-name of the found element(s)
+        """
+        self.document_mappings.append(PackageToDocumentMapping(package_ref, element_types, suffix_filters))
+
     def set_document_root(self, directory: str) -> None:
         """
         Sets root directory where documents are written
         """
         self.document_root = directory
 
-    def write_documents(self, scehema_version=ar_base.DEFAULT_SCHEMA_VERSION) -> None:
+    def write_documents(self, schema_version=ar_base.DEFAULT_SCHEMA_VERSION) -> None:
         """
         Writes all documents to file system
         """
         writer = Writer()
         for document_config in self.documents:
-            document = document_config.document
-            file_path = document_config.file_path
-            package_refs = document_config.package_refs
-            document.schema_version = scehema_version
-            for package_ref in package_refs:
-                package = self.find(package_ref)
-                if package is not None:
-                    if not isinstance(package, ar_element.Package):
-                        raise ValueError(f"'{package_ref}' does not reference a package element")
-                document.append(package)
-            if self.document_root is not None:
-                file_path = os.path.join(self.document_root, file_path)
-            writer.write_file(document, file_path)
+            self._write_document_from_config(writer, schema_version, document_config)
+        for package_document_mapping in self.document_mappings:
+            self._gen_package_to_document_mapping(writer, schema_version, package_document_mapping)
 
     def load_config(self, file_path: str) -> None:
         """
@@ -256,6 +220,58 @@ class Workspace:
             if document is not None:
                 for name, doc_config in document.items():
                     self._create_document_from_config(name, doc_config)
+
+    def _write_document_from_config(self,
+                                    writer: Writer,
+                                    schema_version: int,
+                                    document_config: DocumentConfig) -> None:
+        document = document_config.document
+        file_path = document_config.file_path
+        package_refs = document_config.package_refs
+        document.schema_version = schema_version
+        for package_ref in package_refs:
+            package = self.find(package_ref)
+            if package is not None:
+                if not isinstance(package, ar_element.Package):
+                    raise ValueError(f"'{package_ref}' does not reference a package element")
+            document.append(package)
+        if self.document_root is not None:
+            file_path = os.path.join(self.document_root, file_path)
+        writer.write_file(document, file_path)
+
+    def _gen_package_to_document_mapping(self,
+                                         writer: Writer,
+                                         schema_version: int,
+                                         mapping: PackageToDocumentMapping) -> None:
+        package = self.find(mapping.package_ref)
+        if package is not None:
+            if not isinstance(package, ar_element.Package):
+                raise ValueError(f"'{mapping.package_ref}' does not reference a package element")
+            element_map = {}
+            type_matched_elements = {}
+            for element in package.elements:
+                element_map[element.name] = element
+                if isinstance(element, mapping.element_types):
+                    type_matched_elements[element.name] = element
+            for matched_element in type_matched_elements.values():
+                document_name = matched_element.name + ".arxml"
+                element_list = [matched_element]
+                if mapping.suffix_filters:
+                    for suffix in mapping.suffix_filters:
+                        if len(suffix) > 0:
+                            name = matched_element.name + suffix
+                            extra_element = element_map.get(name, None)
+                            if extra_element is not None:
+                                element_list.append(extra_element)
+                document = ar_document.Document(schema_version=schema_version)
+                new_package = document.make_packages(str(package.ref()))
+                for element in sorted(element_list, key=lambda x: x.name):
+                    new_package.append(element)
+                if self.document_root is not None:
+                    file_path = os.path.join(self.document_root, document_name)
+                else:
+                    file_path = document_name
+                writer.write_file(document, file_path)
 
     def _create_namespace_from_config(self, name: str, config: dict):
         base_ref = None

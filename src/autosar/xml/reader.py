@@ -3993,9 +3993,12 @@ class Reader:
         """
         Reads group AR:ATOMIC-SW-COMPONENT-TYPE
         """
-        xml_child = child_elements.get("SWC-INTERNAL-BEHAVIOR")
+        xml_child = child_elements.get("INTERNAL-BEHAVIORS")
         if xml_child is not None:
-            data["internal_behavior"] = self._read_swc_internal_behavior(xml_child)
+            # We only support max 1 internal behavior element
+            xml_grand_child = xml_child.find("./SWC-INTERNAL-BEHAVIOR")
+            if xml_grand_child is not None:
+                data["internal_behavior"] = self._read_swc_internal_behavior(xml_grand_child)
         xml_child = child_elements.get("SYMBOL-PROPS")
         if xml_child is not None:
             data["symbol_props"] = self._read_symbol_props(xml_child)

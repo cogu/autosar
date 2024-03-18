@@ -3459,7 +3459,9 @@ class Writer(_XMLWriter):
         Writes AR:ATOMIC-SW-COMPONENT-TYPE
         """
         if elem.internal_behavior is not None:
+            self._add_child("INTERNAL-BEHAVIORS")
             self._write_swc_internal_behavior(elem.internal_behavior)
+            self._leave_child()
         if elem.symbol_props is not None:
             self._write_symbol_props(elem.symbol_props, "SYMBOL-PROPS")
 

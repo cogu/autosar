@@ -1341,9 +1341,11 @@ class TestApplicationSoftwareComponentType(unittest.TestCase):
         writer = autosar.xml.Writer()
         xml = '''<APPLICATION-SW-COMPONENT-TYPE>
   <SHORT-NAME>ShortName</SHORT-NAME>
-  <SWC-INTERNAL-BEHAVIOR>
-    <SHORT-NAME>BehaviorName</SHORT-NAME>
-  </SWC-INTERNAL-BEHAVIOR>
+  <INTERNAL-BEHAVIORS>
+    <SWC-INTERNAL-BEHAVIOR>
+      <SHORT-NAME>BehaviorName</SHORT-NAME>
+    </SWC-INTERNAL-BEHAVIOR>
+  </INTERNAL-BEHAVIORS>
 </APPLICATION-SW-COMPONENT-TYPE>'''
         self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
