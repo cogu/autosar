@@ -432,6 +432,101 @@ class DataFilter(ARObject):
         self._assign_optional("x", x, int)  # .X
 
 
+class EngineeringObject(ARObject):
+    """
+    Group AR:ENGINEERING-OBJECT
+    """
+
+    def __init__(self,
+                 label: str | None = None,
+                 category: str | None = None) -> None:
+        super().__init__()
+        self.label: str | None = None  # .SHORT-LABEL
+        self.category: str | None = None  # .CATEGORY
+        self._assign_optional_strict("label", label, str)
+        self._assign_optional_strict("category", category, str)
+
+
+class AutosarEngineeringObject(EngineeringObject):
+    """
+    Complex type AR:AUTOSAR-ENGINEERING-OBJECT
+    Tag variants: 'AUTOSAR-ENGINEERING-OBJECT' | 'ARTIFACT-DESCRIPTOR'
+
+    Same constructor as parent class
+    """
+
+
+class Code(Identifiable):
+    """
+    Complex type AR:CODE
+    Tag variants: 'CODE'
+    """
+
+    def __init__(self,
+                 name: str,
+                 artifact_descriptors: AutosarEngineeringObject | list[AutosarEngineeringObject] | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.artifact_descriptors: list[AutosarEngineeringObject] = []  # .
+        # .CALLBACK-HEADER-REFS not yet supported
+        if artifact_descriptors is not None:
+            if isinstance(artifact_descriptors, AutosarEngineeringObject):
+                self.append_artifact_descriptor(artifact_descriptors)
+            else:
+                for artifact_descriptor in artifact_descriptors:
+                    self.append_artifact_descriptor(artifact_descriptor)
+
+    def append_artifact_descriptor(self, artifact_descriptor: AutosarEngineeringObject) -> None:
+        """
+        Appends artifact_descriptor to internal list of descriptors
+        """
+        if isinstance(artifact_descriptor, AutosarEngineeringObject):
+            self.artifact_descriptors.append(artifact_descriptor)
+        else:
+            raise TypeError("artifact_descriptor must be of type AutosarEngineeringObject")
+
+
+class Implementation(ARElement):
+    """
+    Group AR:IMPLEMENTATION
+    """
+
+    def __init__(self,
+                 name: str,
+                 code_descriptors: Code | list[Code] | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .BUILD-ACTION-MANIFEST-REF-CONDITIONAL not yet supported
+        self.code_descriptors: list[Code] = []  # .CODE-DESCRIPTORS
+        # .COMPILERS not yet supported
+        # .GENERATED-ARTIFACTS not yet supported
+        # .HW-ELEMENT-REFS not yet supported
+        # .LINKERS not yet supported
+        # .MC-SUPPORT not yet supported
+        # .PROGRAMMING-LANGUAGE not yet supported
+        # .REQUIRED-ARTIFACTS not yet supported
+        # .REQUIRED-GENERATOR-TOOLS not yet supported
+        # .RESOURCE-CONSUMPTION not yet supported
+        # .SW-VERSION not yet supported
+        # .SWC-BSW-MAPPING-REF not yet supported
+        # .USED-CODE-GENERATOR not yet supported
+        # .VENDOR-ID not yet supported
+        if code_descriptors is not None:
+            if isinstance(code_descriptors, Code):
+                self.append_code_descriptor(code_descriptors)
+            else:
+                for code_descriptor in code_descriptors:
+                    self.append_code_descriptor(code_descriptor)
+
+    def append_code_descriptor(self, code_descriptors: Code) -> None:
+        """
+        Appends code descriptor to internal list of descriptors
+        """
+        if isinstance(code_descriptors, Code):
+            self.code_descriptors.append(code_descriptors)
+        else:
+            raise TypeError("code_descriptors must be of type Code")
+
 # --- Reference elements
 
 
@@ -873,6 +968,20 @@ class SwComponentPrototypeRef(BaseRef):
     def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
         """Acceptable values for dest"""
         return {ar_enum.IdentifiableSubTypes.SW_COMPONENT_PROTOTYPE}
+
+
+class SwcInternalBehaviorRef(BaseRef):
+    """
+    Reference to AR:SWC-INTERNAL-BEHAVIOR--SUBTYPES-ENUM
+    """
+
+    def __init__(self, value: str) -> None:
+        super().__init__(value, ar_enum.IdentifiableSubTypes.SWC_INTERNAL_BEHAVIOR)
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.SWC_INTERNAL_BEHAVIOR}
+
 
 # --- Documentation Elements
 
@@ -5683,3 +5792,23 @@ class SwcInternalBehavior(Identifiable):
                  name: str,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
+
+
+class SwcImplementation(Implementation):
+    """
+    Complex type AR:SWC-IMPLEMENTATION
+    Tag variants: 'SWC-IMPLEMENTATION'
+    """
+
+    def __init__(self,
+                 name: str,
+                 behavior_ref: SwcInternalBehaviorRef | None = None,
+                 code_descriptors: Code | list[Code] | None = None,
+                 required_rte_vendor: str | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, code_descriptors, **kwargs)
+        self.behavior_ref: SwcInternalBehaviorRef | None = None
+        # .PER-INSTANCE-MEMORY-SIZES not yet supported
+        self.required_rte_vendor: str | None = None
+        self._assign_optional("behavior_ref", behavior_ref, SwcInternalBehaviorRef)
+        self._assign_optional_strict("required_rte_vendor", required_rte_vendor, str)

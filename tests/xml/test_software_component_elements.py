@@ -1961,5 +1961,81 @@ class TestCompositionSwComponentType(unittest.TestCase):
         self.assertIsInstance(elem.connectors[0], ar_element.PassThroughSwConnector)
 
 
+class TestSwcImplementation(unittest.TestCase):
+    """
+    Also tests group AR:IMPLEMENTATION
+    """
+
+    def test_name_only(self):
+        element = ar_element.SwcImplementation("ShortName")
+        writer = autosar.xml.Writer()
+        xml = '''<SWC-IMPLEMENTATION>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+</SWC-IMPLEMENTATION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcImplementation = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcImplementation)
+        self.assertEqual(elem.name, "ShortName")
+
+    def test_code_descriptor(self):
+        descriptor = ar_element.AutosarEngineeringObject(label="Default", category="SWSRC")
+        code = ar_element.Code("Default", artifact_descriptors=descriptor)
+        element = ar_element.SwcImplementation("ShortName", code_descriptors=code)
+        writer = autosar.xml.Writer()
+        xml = '''<SWC-IMPLEMENTATION>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <CODE-DESCRIPTORS>
+    <CODE>
+      <SHORT-NAME>Default</SHORT-NAME>
+      <ARTIFACT-DESCRIPTORS>
+        <AUTOSAR-ENGINEERING-OBJECT>
+          <SHORT-LABEL>Default</SHORT-LABEL>
+          <CATEGORY>SWSRC</CATEGORY>
+        </AUTOSAR-ENGINEERING-OBJECT>
+      </ARTIFACT-DESCRIPTORS>
+    </CODE>
+  </CODE-DESCRIPTORS>
+</SWC-IMPLEMENTATION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcImplementation = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcImplementation)
+        self.assertEqual(len(elem.code_descriptors), 1)
+        code_descriptor = elem.code_descriptors[0]
+        self.assertEqual(len(code_descriptor.artifact_descriptors), 1)
+        artifact_descriptor = code_descriptor.artifact_descriptors[0]
+        self.assertEqual(artifact_descriptor.label, "Default")
+        self.assertEqual(artifact_descriptor.category, "SWSRC")
+
+    def test_behavior_ref(self):
+        ref_str = "/ComponentTypes/Component/Behavior"
+        element = ar_element.SwcImplementation("ShortName", behavior_ref=ref_str)
+        writer = autosar.xml.Writer()
+        xml = f'''<SWC-IMPLEMENTATION>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <BEHAVIOR-REF DEST="SWC-INTERNAL-BEHAVIOR">{ref_str}</BEHAVIOR-REF>
+</SWC-IMPLEMENTATION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcImplementation = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcImplementation)
+        self.assertEqual(str(elem.behavior_ref), ref_str)
+
+    def test_required_rte_vendor(self):
+        vendor_name = "VendorName"
+        element = ar_element.SwcImplementation("ShortName", required_rte_vendor=vendor_name)
+        writer = autosar.xml.Writer()
+        xml = f'''<SWC-IMPLEMENTATION>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <REQUIRED-RTE-VENDOR>{vendor_name}</REQUIRED-RTE-VENDOR>
+</SWC-IMPLEMENTATION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcImplementation = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcImplementation)
+        self.assertEqual(str(elem.required_rte_vendor), vendor_name)
+
+
 if __name__ == '__main__':
     unittest.main()
