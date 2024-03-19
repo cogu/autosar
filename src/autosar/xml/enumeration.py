@@ -443,7 +443,7 @@ class PackageRole(Enum):
     MODE_DECLARATION = 6
     PORT_INTERFACE = 7
     UNIT = 8
-    VALUE_SPECIFICATION = 9
+    CONSTANT = 9
 
 
 class PageBreak(Enum):
@@ -1337,8 +1337,8 @@ str_to_enum_map = {
         "PortInterface": PackageRole.PORT_INTERFACE,
         "Unit": PackageRole.UNIT,
         "UNIT": PackageRole.UNIT,
-        "VALUE_SPECIFICATION": PackageRole.VALUE_SPECIFICATION,
-        "ValueSpefication": PackageRole.VALUE_SPECIFICATION,
+        "CONSTANT": PackageRole.CONSTANT,
+        "Constant": PackageRole.CONSTANT,
     }
 }
 

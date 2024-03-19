@@ -7,6 +7,7 @@
     ComponentType = "/ComponentTypes"
     ModeDeclaration = "/ModeDclrGroups"
     PortInterface = "/PortInterfaces"
+    Constant = "/Constants"
     base_ref = "/"
 
 [namespace.AUTOSAR_Platform]
@@ -24,4 +25,11 @@
 [document.DataTypes]
     packages = "/DataTypes"
 
+[document.Constants]
+    packages = "/Constants"
+
+[document_mapping.ComponentType]
+    package_ref = "/ComponentTypes"
+    element_types = "SwComponentType"
+    suffix_filters = ["_Implementation"]
 

@@ -4,7 +4,8 @@ Instead we programatically create namespaces and documents
 """
 
 import os
-from demo_system import platform, datatype, portinterface
+from demo_system import platform, component
+import autosar.xml.element as ar_element
 import autosar.xml.workspace as ar_workspace
 
 
@@ -25,7 +26,9 @@ def create_namespaces(workspace: ar_workspace.Workspace):
         "CompuMethod": "/DataTypes/CompuMethods",
         "DataConstraint": "/DataTypes/DataConstrs",
         "ModeDeclaration": "/ModeDclrGroups",
-        "PortInterface": "/PortInterfaces"},
+        "PortInterface": "/PortInterfaces",
+        "Constant": "/Constants",
+        "ComponentType": "/ComponentTypes"},
         base_ref="/")
 
 
@@ -40,13 +43,13 @@ def create_documents(workspace: ar_workspace.Workspace) -> None:
     """
     Creates documents
     """
-    sub_directory = "generated"
-    platform_document_path = create_abs_path(sub_directory, "AUTOSAR_Platform.arxml")
-    datatype_document_path = create_abs_path(sub_directory, "DataTypes.arxml")
-    portinterface_document_path = create_abs_path(sub_directory, "PortInterfaces.arxml")
-    workspace.create_document(platform_document_path, packages="/AUTOSAR_Platform")
-    workspace.create_document(datatype_document_path, packages="/DataTypes")
-    workspace.create_document(portinterface_document_path, packages=["/ModeDclrGroups", "/PortInterfaces"])
+    workspace.create_document("AUTOSAR_Platform.arxml", packages="/AUTOSAR_Platform")
+    workspace.create_document("DataTypes.arxml", packages="/DataTypes")
+    workspace.create_document("Constants.arxml", packages="/Constants")
+    workspace.create_document("PortInterfaces.arxml", packages=["/ModeDclrGroups", "/PortInterfaces"])
+    workspace.create_document_mapping(package_ref="/ComponentTypes",
+                                      element_types=ar_element.SwComponentType,
+                                      suffix_filters=["_Implementation"])
 
 
 def apply_platform_types(workspace: ar_workspace.Workspace):
@@ -60,29 +63,20 @@ def apply_platform_types(workspace: ar_workspace.Workspace):
     workspace.apply(platform.ImplementationTypes.uint64)
 
 
-def apply_data_types(workspace: ar_workspace.Workspace):
+def apply_component_types(workspace: ar_workspace.Workspace):
     """
-    Applies data type templates
+    Applies component type templates
     """
-    workspace.apply(datatype.InactiveActive_T)
-
-
-def apply_portinterfaces(workspace: ar_workspace.Workspace):
-    """
-    Applies mode templates
-    """
-    workspace.apply(portinterface.EcuM_CurrentMode)
-    workspace.apply(portinterface.NvMService_I)
+    workspace.apply(component.ReceiverComponent_Implementation)
 
 
 def main():
     """Main"""
-    workspace = ar_workspace.Workspace()
+    workspace = ar_workspace.Workspace(document_root="generated")
     create_namespaces(workspace)
-    apply_platform_types(workspace)
-    apply_data_types(workspace)
-    apply_portinterfaces(workspace)
     create_documents(workspace)
+    apply_platform_types(workspace)
+    apply_component_types(workspace)
     workspace.write_documents()
     print("Done")
 

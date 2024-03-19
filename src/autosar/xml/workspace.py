@@ -50,7 +50,7 @@ class PackageToDocumentMapping:
             self.element_types.append(suffix_filters)
         else:
             for suffix_filter in suffix_filters:
-                assert isinstance(package_ref, str)
+                assert isinstance(suffix_filter, str)
                 self.suffix_filters.append(suffix_filter)
 
 
@@ -220,6 +220,10 @@ class Workspace(ar_element.PackageCollection):
             if document is not None:
                 for name, doc_config in document.items():
                     self._create_document_from_config(name, doc_config)
+            document_mapping = config.get("document_mapping", None)
+            if document_mapping is not None:
+                for mapping in document_mapping.values():
+                    self._create_document_mapping_from_config(mapping)
 
     def _write_document_from_config(self,
                                     writer: Writer,
@@ -287,17 +291,57 @@ class Workspace(ar_element.PackageCollection):
         file_name = f"{name}.arxml"
         self.create_document(file_name, config.get("packages", None))
 
+    def _create_document_mapping_from_config(self, mapping: dict):
+        """
+        Creates a document object mapping object from config object
+        """
+        package_ref: str = mapping.get("package_ref", None)
+        element_types: list[type] = []
+        suffix_filters: list[str] = []
+        elem_names: list[str] = []
+        if package_ref is None:
+            raise KeyError("A document mapping must define 'package_ref'")
+        value = mapping.get("element_types")
+        if value is None:
+            raise KeyError("A document mapping must define 'element_types'")
+        if isinstance(value, str):
+            elem_names.append(value)
+        elif isinstance(value, list):
+            for item in value:
+                assert isinstance(item, str)
+                elem_names.append(item)
+        else:
+            raise ValueError(f"element_types: Invalid type '{str(type(value))}'")
+        for elem_name in elem_names:
+            try:
+                element_types.append(getattr(ar_element, elem_name))
+            except AttributeError as exc:
+                raise ValueError(f"element_types: '{elem_name}' is not a valid element name") from exc
+        if len(element_types) == 0:
+            raise ValueError("element_types: At least one element type must be given")
+        value = mapping.get("suffix_filters")
+        if value is not None:
+            if isinstance(value, str):
+                suffix_filters.append(value)
+            elif isinstance(value, list):
+                for item in value:
+                    assert isinstance(item, str)
+                    suffix_filters.append(item)
+            else:
+                raise ValueError(f"suffix_filters: Invalid type '{str(type(value))}'")
+        self.create_document_mapping(package_ref, tuple(element_types), suffix_filters)
+
     def _apply_element_template(self, template: ar_template.ElementTemplate, kwargs: dict) -> ar_element.ARElement:
         """
         Wrapper for element templates.
 
-        Before apply method is called:
+        Before create-method is called:
         * Make sure dependencies have been created
         * Make sure the necessary package has been created
         * Make sure the element doesn't already exists in the package
 
-        It's up to the implementer of the apply-method to call package.append to add the newly
-        created element
+        After create-method is called:
+        * Adds the created element to the given package
         """
         if template.depends is not None:
             depends_map = self._create_dependencies(template.depends)
