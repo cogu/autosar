@@ -1,7 +1,7 @@
 """
 Example template classes
 """
-from typing import Callable
+from typing import Any, Callable
 import autosar.xml.template as ar_template
 import autosar.xml.element as ar_element
 import autosar.xml.enumeration as ar_enum
@@ -294,7 +294,7 @@ CreateFuncType = Callable[[str, ar_workspace.Workspace, dict[str, ar_element.ARE
 
 class GenericPortInterfaceTemplate(ar_template.ElementTemplate):
     """
-    Generic element template
+    Generic port interface element template
     """
 
     def __init__(self,
@@ -315,3 +315,113 @@ class GenericPortInterfaceTemplate(ar_template.ElementTemplate):
         """
         elem = self.create_func(element_ref, workspace, dependencies, **kwargs)
         return elem
+
+
+class SenderReceiverInterfaceTemplate(ar_template.ElementTemplate):
+    """
+    Sender receiver port interface template restricted to a single data element
+    It is assumed that the element name ends with "_I"
+    """
+
+    def __init__(self,
+                 element_name: str,
+                 namespace_name: str,
+                 data_element_template: ar_template.ElementTemplate,
+                 data_element_name: str | None = None) -> None:
+        super().__init__(element_name, namespace_name, ar_enum.PackageRole.PORT_INTERFACE, [data_element_template])
+        self.data_element_template = data_element_template
+        self.data_element_name = data_element_name
+
+    def create(self,
+               element_ref: str,
+               workspace: ar_workspace.Workspace,
+               dependencies: dict[str, ar_element.ARElement] | None,
+               **kwargs) -> ar_element.SenderReceiverInterface:
+        """
+        Create method
+        """
+        elem_type = dependencies[self.data_element_template.ref(workspace)]
+        port_interface = ar_element.SenderReceiverInterface(self.element_name)
+        elem_name = self.data_element_name
+        if elem_name is None:
+            if self.element_name.endswith("_I"):
+                elem_name = self.element_name[:-2]
+            else:
+                elem_name = self.element_name
+        port_interface.create_data_element(elem_name, type_ref=elem_type.ref())
+        return port_interface
+
+
+class GenericComponentTypeTemplate(ar_template.ElementTemplate):
+    """
+    Generic component type element template
+    """
+
+    def __init__(self,
+                 element_name: str,
+                 namespace_name: str,
+                 create_func: CreateFuncType,
+                 depends: list[TemplateBase] | None = None) -> None:
+        super().__init__(element_name, namespace_name, ar_enum.PackageRole.COMPONENT_TYPE, depends)
+        self.create_func = create_func
+
+    def create(self,
+               element_ref: str,
+               workspace: ar_workspace.Workspace,
+               dependencies: dict[str, ar_element.ARElement] | None,
+               **kwargs) -> ar_element.PortInterface:
+        """
+        Create method
+        """
+        elem = self.create_func(element_ref, workspace, dependencies, **kwargs)
+        return elem
+
+
+class SwcImplementationTemplate(ar_template.ElementTemplate):
+    """
+    SwcImplementation template
+    """
+
+    def __init__(self,
+                 element_name: str,
+                 namespace_name: str,
+                 component_type: ar_template.ElementTemplate) -> None:
+        super().__init__(element_name, namespace_name, ar_enum.PackageRole.COMPONENT_TYPE, [component_type])
+        self.component_type = component_type
+
+    def create(self,
+               _0: str,
+               workspace: ar_workspace.Workspace,
+               dependencies: dict[str, ar_element.ARElement] | None,
+               **kwargs) -> ar_element.SwBaseType:
+        """
+        Factory method for creating a new SwcImplementation
+        """
+        swc_type = dependencies[self.component_type.ref(workspace)]
+        elem = ar_element.SwcImplementation(self.element_name,
+                                            behavior_ref=swc_type.internal_behavior.ref())
+
+        return elem
+
+
+class ConstantTemplate(ar_template.ElementTemplate):
+    """
+    Constant template
+    """
+
+    def __init__(self,
+                 element_name: str,
+                 namespace_name: str,
+                 value: Any) -> None:
+        super().__init__(element_name, namespace_name, ar_enum.PackageRole.CONSTANT)
+        self.value = value
+
+    def create(self,
+               _0: str,
+               _1: ar_workspace.Workspace,
+               _2: dict[str, ar_element.ARElement] | None,
+               **_3) -> ar_element.SwBaseType:
+        """
+        Factory method for creating a new SwcImplementation
+        """
+        return ar_element.ConstantSpecification.make_constant(self.element_name, self.value)

@@ -2,62 +2,60 @@
 <AUTOSAR xsi:schemaLocation="http://autosar.org/schema/r4.0 AUTOSAR_00051.xsd" xmlns="http://autosar.org/schema/r4.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <AR-PACKAGES>
     <AR-PACKAGE>
-      <SHORT-NAME>ModeDclrGroups</SHORT-NAME>
-      <ELEMENTS>
-        <MODE-DECLARATION-GROUP>
-          <SHORT-NAME>EcuM_Mode</SHORT-NAME>
-          <INITIAL-MODE-REF DEST="MODE-DECLARATION">/ModeDclrGroups/EcuM_Mode/STARTUP</INITIAL-MODE-REF>
-          <MODE-DECLARATIONS>
-            <MODE-DECLARATION>
-              <SHORT-NAME>STARTUP</SHORT-NAME>
-            </MODE-DECLARATION>
-            <MODE-DECLARATION>
-              <SHORT-NAME>RUN</SHORT-NAME>
-            </MODE-DECLARATION>
-            <MODE-DECLARATION>
-              <SHORT-NAME>POST_RUN</SHORT-NAME>
-            </MODE-DECLARATION>
-            <MODE-DECLARATION>
-              <SHORT-NAME>SLEEP</SHORT-NAME>
-            </MODE-DECLARATION>
-            <MODE-DECLARATION>
-              <SHORT-NAME>WAKEUP</SHORT-NAME>
-            </MODE-DECLARATION>
-            <MODE-DECLARATION>
-              <SHORT-NAME>SHUTDOWN</SHORT-NAME>
-            </MODE-DECLARATION>
-          </MODE-DECLARATIONS>
-        </MODE-DECLARATION-GROUP>
-      </ELEMENTS>
-    </AR-PACKAGE>
-    <AR-PACKAGE>
       <SHORT-NAME>PortInterfaces</SHORT-NAME>
       <ELEMENTS>
-        <MODE-SWITCH-INTERFACE>
-          <SHORT-NAME>EcuM_CurrentMode</SHORT-NAME>
-          <IS-SERVICE>true</IS-SERVICE>
-          <MODE-GROUP>
-            <SHORT-NAME>currentMode</SHORT-NAME>
-            <TYPE-TREF DEST="MODE-DECLARATION-GROUP">/ModeDclrGroups/EcuM_Mode</TYPE-TREF>
-          </MODE-GROUP>
-        </MODE-SWITCH-INTERFACE>
+        <SENDER-RECEIVER-INTERFACE>
+          <SHORT-NAME>EngineSpeed_I</SHORT-NAME>
+          <DATA-ELEMENTS>
+            <VARIABLE-DATA-PROTOTYPE>
+              <SHORT-NAME>EngineSpeed</SHORT-NAME>
+              <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">/AUTOSAR_Platform/ImplementationDataTypes/uint16</TYPE-TREF>
+            </VARIABLE-DATA-PROTOTYPE>
+          </DATA-ELEMENTS>
+        </SENDER-RECEIVER-INTERFACE>
+        <SENDER-RECEIVER-INTERFACE>
+          <SHORT-NAME>VehicleSpeed_I</SHORT-NAME>
+          <DATA-ELEMENTS>
+            <VARIABLE-DATA-PROTOTYPE>
+              <SHORT-NAME>VehicleSpeed</SHORT-NAME>
+              <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">/AUTOSAR_Platform/ImplementationDataTypes/uint16</TYPE-TREF>
+            </VARIABLE-DATA-PROTOTYPE>
+          </DATA-ELEMENTS>
+        </SENDER-RECEIVER-INTERFACE>
         <CLIENT-SERVER-INTERFACE>
-          <SHORT-NAME>NvMService_I</SHORT-NAME>
-          <IS-SERVICE>true</IS-SERVICE>
+          <SHORT-NAME>FreeRunningTimer_I</SHORT-NAME>
           <OPERATIONS>
             <CLIENT-SERVER-OPERATION>
-              <SHORT-NAME>EraseBlock</SHORT-NAME>
-              <POSSIBLE-ERROR-REFS>
-                <POSSIBLE-ERROR-REF DEST="APPLICATION-ERROR">/PortInterfaces/NvMService_I/E_NOT_OK</POSSIBLE-ERROR-REF>
-              </POSSIBLE-ERROR-REFS>
+              <SHORT-NAME>GetTime</SHORT-NAME>
+              <ARGUMENTS>
+                <ARGUMENT-DATA-PROTOTYPE>
+                  <SHORT-NAME>value</SHORT-NAME>
+                  <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">/AUTOSAR_Platform/ImplementationDataTypes/uint32</TYPE-TREF>
+                  <DIRECTION>OUT</DIRECTION>
+                </ARGUMENT-DATA-PROTOTYPE>
+              </ARGUMENTS>
+            </CLIENT-SERVER-OPERATION>
+            <CLIENT-SERVER-OPERATION>
+              <SHORT-NAME>IsTimerElapsed</SHORT-NAME>
+              <ARGUMENTS>
+                <ARGUMENT-DATA-PROTOTYPE>
+                  <SHORT-NAME>startTime</SHORT-NAME>
+                  <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">/AUTOSAR_Platform/ImplementationDataTypes/uint32</TYPE-TREF>
+                  <DIRECTION>IN</DIRECTION>
+                </ARGUMENT-DATA-PROTOTYPE>
+                <ARGUMENT-DATA-PROTOTYPE>
+                  <SHORT-NAME>duration</SHORT-NAME>
+                  <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">/AUTOSAR_Platform/ImplementationDataTypes/uint32</TYPE-TREF>
+                  <DIRECTION>IN</DIRECTION>
+                </ARGUMENT-DATA-PROTOTYPE>
+                <ARGUMENT-DATA-PROTOTYPE>
+                  <SHORT-NAME>result</SHORT-NAME>
+                  <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">/AUTOSAR_Platform/ImplementationDataTypes/boolean</TYPE-TREF>
+                  <DIRECTION>OUT</DIRECTION>
+                </ARGUMENT-DATA-PROTOTYPE>
+              </ARGUMENTS>
             </CLIENT-SERVER-OPERATION>
           </OPERATIONS>
-          <POSSIBLE-ERRORS>
-            <APPLICATION-ERROR>
-              <SHORT-NAME>E_NOT_OK</SHORT-NAME>
-              <ERROR-CODE>1</ERROR-CODE>
-            </APPLICATION-ERROR>
-          </POSSIBLE-ERRORS>
         </CLIENT-SERVER-INTERFACE>
       </ELEMENTS>
     </AR-PACKAGE>
