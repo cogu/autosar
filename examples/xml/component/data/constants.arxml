@@ -5,7 +5,7 @@
       <SHORT-NAME>Constants</SHORT-NAME>
       <ELEMENTS>
         <CONSTANT-SPECIFICATION>
-          <SHORT-NAME>VehicleSpeed_IV</SHORT-NAME>
+          <SHORT-NAME>EngineSpeed_IV</SHORT-NAME>
           <VALUE-SPEC>
             <NUMERICAL-VALUE-SPECIFICATION>
               <VALUE>65535</VALUE>
@@ -13,7 +13,7 @@
           </VALUE-SPEC>
         </CONSTANT-SPECIFICATION>
         <CONSTANT-SPECIFICATION>
-          <SHORT-NAME>EngineSpeed_IV</SHORT-NAME>
+          <SHORT-NAME>VehicleSpeed_IV</SHORT-NAME>
           <VALUE-SPEC>
             <NUMERICAL-VALUE-SPECIFICATION>
               <VALUE>65535</VALUE>

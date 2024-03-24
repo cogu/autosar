@@ -44,15 +44,17 @@ class ElementTemplate(TemplateBase):
                  element_name: str,
                  namespace_name: str,
                  package_role: ar_enum.PackageRole,
-                 depends: list[TemplateBase] | None = None) -> None:
+                 depends: list[TemplateBase] | None = None,
+                 append_to_package: bool = True) -> None:
         self.element_name = element_name
         self.namespace_name = namespace_name
         self.package_role = package_role
         self.depends = depends
+        self.append_to_package = append_to_package
 
     @abstractmethod
     def create(self,
-               element_ref: str,
+               package: ar_element.Package,
                workspace: Workspace,
                dependencies: dict[str, ar_element.ARElement] | None,
                **kwargs) -> ar_element.ARElement:

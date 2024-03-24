@@ -996,6 +996,18 @@ class SwcInternalBehaviorRef(BaseRef):
         return {ar_enum.IdentifiableSubTypes.SWC_INTERNAL_BEHAVIOR}
 
 
+class SwcImplementationRef(BaseRef):
+    """
+    Reference to SwcImplementation
+    """
+
+    def __init__(self, value: str) -> None:
+        super().__init__(value, ar_enum.IdentifiableSubTypes.SWC_IMPLEMENTATION)
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.SWC_IMPLEMENTATION}
+
 # --- Documentation Elements
 
 
@@ -5942,3 +5954,13 @@ class SwcImplementation(Implementation):
         self.required_rte_vendor: str | None = None
         self._assign_optional("behavior_ref", behavior_ref, SwcInternalBehaviorRef)
         self._assign_optional_strict("required_rte_vendor", required_rte_vendor, str)
+
+    def ref(self) -> SwcImplementationRef | None:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return SwcImplementationRef(ref_str)
