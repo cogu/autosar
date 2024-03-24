@@ -66,9 +66,9 @@ def create_constants(workspace: autosar.xml.Workspace):
     """
     Creates init values in Constants package
     """
-    constant = ar_element.ConstantSpecification.make_constant("VehicleSpeed_IV", 65535)
-    workspace.add_element("Constants", constant)
     constant = ar_element.ConstantSpecification.make_constant("EngineSpeed_IV", 65535)
+    workspace.add_element("Constants", constant)
+    constant = ar_element.ConstantSpecification.make_constant("VehicleSpeed_IV", 65535)
     workspace.add_element("Constants", constant)
 
 
@@ -93,23 +93,23 @@ def create_receiver_component(workspace: autosar.xml.Workspace):
     Creates application SWC with two receiver ports and one client port
     """
     timer_interface = workspace.find_element("PortInterfaces", "FreeRunningTimer_I")
-    vehicle_speed_interface = workspace.find_element("PortInterfaces", "VehicleSpeed_I")
-    vehicle_speed_init = workspace.find_element("Constants", "VehicleSpeed_IV")
     engine_speed_interface = workspace.find_element("PortInterfaces", "EngineSpeed_I")
     engine_speed_init = workspace.find_element("Constants", "EngineSpeed_IV")
+    vehicle_speed_interface = workspace.find_element("PortInterfaces", "VehicleSpeed_I")
+    vehicle_speed_init = workspace.find_element("Constants", "VehicleSpeed_IV")
     swc = ar_element.ApplicationSoftwareComponentType("ReceiverComponent")
-    swc.create_require_port("VehicleSpeed", vehicle_speed_interface, com_spec={"init_value": vehicle_speed_init.ref(),
-                                                                               "alive_timeout": 0,
-                                                                               "enable_update": False,
-                                                                               "uses_end_to_end_protection": False,
-                                                                               "handle_never_received": False
-                                                                               })
     swc.create_require_port("EngineSpeed", engine_speed_interface, com_spec={"init_value": engine_speed_init.ref(),
                                                                              "alive_timeout": 0,
                                                                              "enable_update": False,
                                                                              "uses_end_to_end_protection": False,
                                                                              "handle_never_received": False
                                                                              })
+    swc.create_require_port("VehicleSpeed", vehicle_speed_interface, com_spec={"init_value": vehicle_speed_init.ref(),
+                                                                               "alive_timeout": 0,
+                                                                               "enable_update": False,
+                                                                               "uses_end_to_end_protection": False,
+                                                                               "handle_never_received": False
+                                                                               })
     swc.create_require_port("FreeRunningTimer", timer_interface, com_spec={"GetTime": {}, "IsTimerElapsed": {}})
     swc.create_internal_behavior()
     workspace.add_element("ComponentTypes", swc)
@@ -136,16 +136,15 @@ def create_composition_component(workspace: autosar.xml.Workspace):
     """
     Creates composition component
     """
-    vehicle_speed_interface = workspace.find_element("PortInterfaces", "VehicleSpeed_I")
-    vehicle_speed_init = workspace.find_element("Constants", "VehicleSpeed_IV")
     engine_speed_interface = workspace.find_element("PortInterfaces", "EngineSpeed_I")
     engine_speed_init = workspace.find_element("Constants", "EngineSpeed_IV")
+    vehicle_speed_interface = workspace.find_element("PortInterfaces", "VehicleSpeed_I")
+    vehicle_speed_init = workspace.find_element("Constants", "VehicleSpeed_IV")
     swc = ar_element.CompositionSwComponentType("CompositionComponent")
-    swc.create_require_port("VehicleSpeed", vehicle_speed_interface, com_spec={"init_value": vehicle_speed_init.ref(),
-                                                                               "uses_end_to_end_protection": False})
     swc.create_require_port("EngineSpeed", engine_speed_interface, com_spec={"init_value": engine_speed_init.ref(),
                                                                              "uses_end_to_end_protection": False})
-
+    swc.create_require_port("VehicleSpeed", vehicle_speed_interface, com_spec={"init_value": vehicle_speed_init.ref(),
+                                                                               "uses_end_to_end_protection": False})
     swc.create_component_prototype(workspace.find_element("ComponentTypes", "ReceiverComponent"))
     swc.create_component_prototype(workspace.find_element("ComponentTypes", "TimerComponent"))
     # Element must be added to workspace before connectors can be created
@@ -174,13 +173,13 @@ def main():
     Main
     """
     workspace = autosar.xml.Workspace()
-    workspace.init_package_map({"PlatformBaseTypes": "AUTOSAR_Platform/BaseTypes",
-                                "PlatformImplementationDataTypes": "AUTOSAR_Platform/ImplementationDataTypes",
-                                "PlatformDataConstraints": "AUTOSAR_Platform/DataConstraints",
-                                "PlatformCompuMethods": "AUTOSAR_Platform/CompuMethods",
-                                "Constants": "Constants",
-                                "PortInterfaces": "PortInterfaces",
-                                "ComponentTypes": "ComponentTypes"})
+    workspace.create_package_map({"PlatformBaseTypes": "AUTOSAR_Platform/BaseTypes",
+                                  "PlatformImplementationDataTypes": "AUTOSAR_Platform/ImplementationDataTypes",
+                                  "PlatformDataConstraints": "AUTOSAR_Platform/DataConstraints",
+                                  "PlatformCompuMethods": "AUTOSAR_Platform/CompuMethods",
+                                  "Constants": "Constants",
+                                  "PortInterfaces": "PortInterfaces",
+                                  "ComponentTypes": "ComponentTypes"})
     create_platform_types(workspace)
     create_sender_receiver_port_interfaces(workspace)
     create_client_server_interfaces(workspace)

@@ -96,7 +96,7 @@ class Workspace(ar_element.PackageCollection):
 
     def get_namespace(self, name: str) -> Namespace:
         """
-        Selects previously created namespace
+        Returns previously created namespace
         """
         if name in self.namespaces:
             return self.namespaces[name]
@@ -105,8 +105,7 @@ class Workspace(ar_element.PackageCollection):
 
     def get_package_ref_by_role(self, namespace_name: str, role: ar_enum.PackageRole | str):
         """
-        Returns package reference based on role in
-        currently selected namespace
+        Returns package reference based on role in given namespace
         """
         if not isinstance(role, (ar_enum.PackageRole, str)):
             raise TypeError(f"role must be of type PackageRole or str. Got {str(type(role))}")
@@ -118,16 +117,12 @@ class Workspace(ar_element.PackageCollection):
             raise ValueError(f"Role '{str(role)}'not in namespace map") from ex
         return posixpath.normpath(posixpath.join(base_ref, rel_path))
 
-    def init_package_map(self, mapping: dict[str, str]) -> None:
+    def create_package_map(self, mapping: dict[str, str]) -> None:
         """
-        Initializes an internally stored package map using key-value pairs.
-        The key can be any (unique) name while each value must be a package reference.
-        This function internally creates packages from dict-values calling the method
-        make_packages.
+        Creates a basic package map without a namespace.
 
         Use in conjunction with the add_element and find_element methods.
 
-        Avoid manually calling make_packages if using this method.
         """
         self.package_map.clear()
         for package_key, package_ref in mapping.items():
@@ -137,7 +132,7 @@ class Workspace(ar_element.PackageCollection):
         """
         Adds element to package specified by package_key
 
-        Only use after calling init_package_map.
+        Only use after calling create_package_map.
         """
         if len(self.package_map) == 0:
             raise RuntimeError("Internal package map not initialized")
@@ -147,17 +142,17 @@ class Workspace(ar_element.PackageCollection):
         """
         Finds an element in the package referenced by package_key.
 
-        Only use after calling init_package_map.
+        Only use after calling create_package_map.
         """
         if len(self.package_map) == 0:
             raise RuntimeError("Internal package map not initialized")
         return self.package_map[package_key].find(element_name)
 
-    def get_package_by_key(self, package_key: str) -> ar_element.Package:
+    def get_package(self, package_key: str) -> ar_element.Package:
         """
         Returns the package referenced by package_key.
 
-        Only use after calling init_package_map.
+        Only use after calling create_package_map.
         """
         if len(self.package_map) == 0:
             raise RuntimeError("Internal package map not initialized")
@@ -341,7 +336,8 @@ class Workspace(ar_element.PackageCollection):
         * Make sure the element doesn't already exists in the package
 
         After create-method is called:
-        * Adds the created element to the given package
+          if template.append_to_package is True (default):
+            Adds the created element to the given package
         """
         if template.depends is not None:
             depends_map = self._create_dependencies(template.depends)
@@ -352,19 +348,25 @@ class Workspace(ar_element.PackageCollection):
         if isinstance(package, ar_element.Package):
             elem = package.find(template.element_name)
             if elem is None:
-                element_ref = package_ref + "/" + template.element_name
-                elem = template.create(element_ref, self, depends_map, **kwargs)
-                assert isinstance(elem, ar_element.ARElement)
-                package.append(elem)
+                elem = template.create(package, self, depends_map, **kwargs)
+                if elem is None:
+                    raise TypeError(f"{template.element_name}: Create-method did not return an element")
+                if not isinstance(elem, ar_element.ARElement):
+                    raise TypeError(f"{str(type(elem))}: Class is not an ARElement")
+                if template.append_to_package:
+                    package.append(elem)
             return elem
-        raise TypeError(f"Expected Package, got {str(type(package))}")
+        else:
+            raise TypeError(f"Expected Package, got {str(type(package))}")
 
     def _create_dependencies(self, dependencies: list[ar_template.TemplateBase]
                              ) -> dict[str, ar_element.ARElement]:
         item_map = {}
         for dependency in dependencies:
             elem = self.apply(dependency)
-            assert isinstance(elem, ar_element.ARElement)
-            assert hasattr(elem, "ref")
+            if not isinstance(elem, ar_element.ARElement):
+                raise TypeError(f"{str(type(elem))}: Class is not an ARElement")
+            if not hasattr(elem, "ref"):
+                raise NotImplementedError(f"{str(type(elem))}: Class is missing its ref method")
             item_map[str(elem.ref())] = elem
         return item_map

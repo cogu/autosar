@@ -237,9 +237,10 @@ class IdentifiableSubTypes(Enum):
     SW_ADDR_METHOD = 43
     SW_BASE_TYPE = 44
     SW_COMPONENT_PROTOTYPE = 45
-    SWC_INTERNAL_BEHAVIOR = 46
-    UNIT = 47
-    VARIABLE_DATA_PROTOTYPE = 48
+    SWC_IMPLEMENTATION = 46
+    SWC_INTERNAL_BEHAVIOR = 47
+    UNIT = 48
+    VARIABLE_DATA_PROTOTYPE = 49
 
 
 class IntervalType(Enum):
@@ -737,6 +738,7 @@ xml_to_enum_map: dict[str, dict] = {
         "SW-ADDR-METHOD": IdentifiableSubTypes.SW_ADDR_METHOD,
         "SW-BASE-TYPE": IdentifiableSubTypes.SW_BASE_TYPE,
         "SW-COMPONENT-PROTOTYPE": IdentifiableSubTypes.SW_COMPONENT_PROTOTYPE,
+        "SWC-IMPLEMENTATION": IdentifiableSubTypes.SWC_IMPLEMENTATION,
         "SWC-INTERNAL-BEHAVIOR": IdentifiableSubTypes.SWC_INTERNAL_BEHAVIOR,
         "UNIT": IdentifiableSubTypes.UNIT,
         "VARIABLE-DATA-PROTOTYPE": IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE,
@@ -1093,9 +1095,10 @@ enum_to_xml_map: dict[str, list] = {
         "SW-ADDR-METHOD",                                # 43
         "SW-BASE-TYPE",                                  # 44
         "SW-COMPONENT-PROTOTYPE",                        # 45
-        "SWC-INTERNAL-BEHAVIOR",                         # 46
-        "UNIT",                                          # 47
-        "VARIABLE-DATA-PROTOTYPE",                       # 48
+        "SWC-IMPLEMENTATION",                            # 46
+        "SWC-INTERNAL-BEHAVIOR",                         # 47
+        "UNIT",                                          # 48
+        "VARIABLE-DATA-PROTOTYPE",                       # 49
     ],
     "IntervalType": [
         "CLOSED",  # 0

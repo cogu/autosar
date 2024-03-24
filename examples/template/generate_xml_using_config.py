@@ -22,7 +22,7 @@ def apply_component_types(workspace: ar_workspace.Workspace):
     """
     Applies component type templates
     """
-    workspace.apply(component.ReceiverComponent_Implementation)
+    workspace.apply(component.CompositionComponent)
 
 
 def main():

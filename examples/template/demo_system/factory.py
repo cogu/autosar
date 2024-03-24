@@ -27,7 +27,7 @@ class SwBaseTypeTemplate(ar_template.ElementTemplate):
         self.native_declaration = native_declaration
 
     def create(self,
-               element_ref: str,
+               package: ar_element.Package,
                workspace: ar_workspace.Workspace,
                dependencies: dict[str, ar_element.ARElement] | None,
                **kwargs) -> ar_element.SwBaseType:
@@ -58,7 +58,7 @@ class DataConstraintInternalTemplate(ar_template.ElementTemplate):
         self.upper_limit = upper_limit
 
     def create(self,
-               element_ref: str,
+               package: ar_element.Package,
                workspace: ar_workspace.Workspace,
                dependencies: dict[str, ar_element.ARElement] | None,
                **kwargs) -> ar_element.DataConstraint:
@@ -87,7 +87,7 @@ class CompuMethodEnumTemplate(ar_template.ElementTemplate):
         self.desc = desc
 
     def create(self,
-               element_ref: str,
+               package: ar_element.Package,
                workspace: ar_workspace.Workspace,
                dependencies: dict[str, ar_element.ARElement] | None,
                **kwargs) -> ar_element.CompuMethod:
@@ -133,7 +133,7 @@ class ImplementationValueTypeTemplate(ar_template.ElementTemplate):
         self.type_emitter = type_emitter
 
     def create(self,
-               element_ref: str,
+               package: ar_element.Package,
                workspace: ar_workspace.Workspace,
                dependencies: dict[str, ar_element.ARElement] | None,
                **kwargs) -> ar_element.ImplementationDataType:
@@ -205,7 +205,7 @@ class ImplementationEnumDataTypeTemplate(ar_template.ElementTemplate):
         return CompuMethodEnumTemplate(element_name + suffix, namespace_name, value_table, auto_label=False)
 
     def create(self,
-               element_ref: str,
+               package: ar_element.Package,
                workspace: ar_workspace.Workspace,
                dependencies: dict[str, ar_element.ARElement] | None,
                **kwargs) -> ar_element.ImplementationDataType:
@@ -242,7 +242,7 @@ class ModeDeclarationGroupTemplate(ar_template.ElementTemplate):
         self.initial_mode_name = initial_mode_name
 
     def create(self,
-               element_ref: str,
+               package: ar_element.Package,
                workspace: ar_workspace.Workspace,
                dependencies: dict[str, ar_element.ARElement] | None,
                **kwargs) -> ar_element.ModeDeclarationGroup:
@@ -251,7 +251,7 @@ class ModeDeclarationGroupTemplate(ar_template.ElementTemplate):
         """
         initial_mode_ref = None
         if self.initial_mode_name is not None:
-            initial_mode_ref = '/'.join([element_ref, self.initial_mode_name])
+            initial_mode_ref = '/'.join([str(package.ref()), self.element_name, self.initial_mode_name])
         elem = ar_element.ModeDeclarationGroup(name=self.element_name,
                                                mode_declarations=self.mode_declarations,
                                                initial_mode_ref=initial_mode_ref)
@@ -276,7 +276,7 @@ class ModeSwitchInterfaceTemplate(ar_template.ElementTemplate):
         self.is_service = is_service
 
     def create(self,
-               element_ref: str,
+               package: ar_element.Package,
                workspace: ar_workspace.Workspace,
                dependencies: dict[str, ar_element.ARElement] | None,
                **kwargs) -> ar_element.ModeSwitchInterface:
@@ -288,8 +288,8 @@ class ModeSwitchInterfaceTemplate(ar_template.ElementTemplate):
         return elem
 
 
-CreateFuncType = Callable[[str, ar_workspace.Workspace, dict[str, ar_element.ARElement] | None],
-                          ar_element.PortInterface]
+CreateFuncType = Callable[[ar_element.Package, ar_workspace.Workspace, dict[str, ar_element.ARElement] | None],
+                          ar_element.ARElement]
 
 
 class GenericPortInterfaceTemplate(ar_template.ElementTemplate):
@@ -306,14 +306,14 @@ class GenericPortInterfaceTemplate(ar_template.ElementTemplate):
         self.create_func = create_func
 
     def create(self,
-               element_ref: str,
+               package: ar_element.Package,
                workspace: ar_workspace.Workspace,
                dependencies: dict[str, ar_element.ARElement] | None,
                **kwargs) -> ar_element.PortInterface:
         """
         Create method
         """
-        elem = self.create_func(element_ref, workspace, dependencies, **kwargs)
+        elem = self.create_func(package, workspace, dependencies, **kwargs)
         return elem
 
 
@@ -333,7 +333,7 @@ class SenderReceiverInterfaceTemplate(ar_template.ElementTemplate):
         self.data_element_name = data_element_name
 
     def create(self,
-               element_ref: str,
+               package: ar_element.Package,
                workspace: ar_workspace.Workspace,
                dependencies: dict[str, ar_element.ARElement] | None,
                **kwargs) -> ar_element.SenderReceiverInterface:
@@ -361,19 +361,20 @@ class GenericComponentTypeTemplate(ar_template.ElementTemplate):
                  element_name: str,
                  namespace_name: str,
                  create_func: CreateFuncType,
-                 depends: list[TemplateBase] | None = None) -> None:
-        super().__init__(element_name, namespace_name, ar_enum.PackageRole.COMPONENT_TYPE, depends)
+                 depends: list[TemplateBase] | None = None,
+                 append_to_package: bool = True) -> None:
+        super().__init__(element_name, namespace_name, ar_enum.PackageRole.COMPONENT_TYPE, depends, append_to_package)
         self.create_func = create_func
 
     def create(self,
-               element_ref: str,
+               package: ar_element.Package,
                workspace: ar_workspace.Workspace,
                dependencies: dict[str, ar_element.ARElement] | None,
                **kwargs) -> ar_element.PortInterface:
         """
         Create method
         """
-        elem = self.create_func(element_ref, workspace, dependencies, **kwargs)
+        elem = self.create_func(package, workspace, dependencies, **kwargs)
         return elem
 
 
@@ -390,7 +391,7 @@ class SwcImplementationTemplate(ar_template.ElementTemplate):
         self.component_type = component_type
 
     def create(self,
-               _0: str,
+               _0: ar_element.Package,
                workspace: ar_workspace.Workspace,
                dependencies: dict[str, ar_element.ARElement] | None,
                **kwargs) -> ar_element.SwBaseType:
@@ -417,7 +418,7 @@ class ConstantTemplate(ar_template.ElementTemplate):
         self.value = value
 
     def create(self,
-               _0: str,
+               _0: ar_element.Package,
                _1: ar_workspace.Workspace,
                _2: dict[str, ar_element.ARElement] | None,
                **_3) -> ar_element.SwBaseType:
