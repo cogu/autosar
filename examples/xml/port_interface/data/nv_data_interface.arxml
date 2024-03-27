@@ -22,7 +22,7 @@
             </VARIABLE-DATA-PROTOTYPE>
             <VARIABLE-DATA-PROTOTYPE>
               <SHORT-NAME>Data2</SHORT-NAME>
-              <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">/AUTOSAR_Platform/ImplementationDataTypes/uint8</TYPE-TREF>
+              <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">/AUTOSAR_Platform/ImplementationDataTypes/uint32</TYPE-TREF>
             </VARIABLE-DATA-PROTOTYPE>
           </NV-DATAS>
         </NV-DATA-INTERFACE>

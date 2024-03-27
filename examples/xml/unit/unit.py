@@ -17,7 +17,7 @@ if __name__ == "__main__":
     document.append(package)
 
     # Write document to file system
-    base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
+    base_path = os.path.join(os.path.dirname(__file__), 'data')
     file_path = os.path.join(base_path, "unit_example.arxml")
     writer = autosar.xml.Writer()
     writer.write_file(document, file_path)

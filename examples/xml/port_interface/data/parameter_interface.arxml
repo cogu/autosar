@@ -22,7 +22,7 @@
             </PARAMETER-DATA-PROTOTYPE>
             <PARAMETER-DATA-PROTOTYPE>
               <SHORT-NAME>Param2</SHORT-NAME>
-              <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">/AUTOSAR_Platform/ImplementationDataTypes/uint8</TYPE-TREF>
+              <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">/AUTOSAR_Platform/ImplementationDataTypes/uint32</TYPE-TREF>
             </PARAMETER-DATA-PROTOTYPE>
           </PARAMETERS>
         </PARAMETER-INTERFACE>

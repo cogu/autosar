@@ -11,10 +11,7 @@ It also has some support for parsing AUTOSAR XML files.
 
 1. Python AUTOSAR v0.5+ uses a new API and is incompatible with earlier versions.
 2. For Python AUTOSAR v0.4, see the [v0.4 maintenance branch](https://github.com/cogu/autosar/tree/maintenance/0.4).
-3. Currently, only the categories mentioned below are supported. If you want a full API, wait for v0.6.0:
-    * Data Types
-    * Constants
-    * Port Interfaces
+3. At this point most elements are supported except for SwcInternalBehavior. Due to its massive size, that element won't have proper support until v0.5.5.
 
 ## Major design changes
 
@@ -27,7 +24,7 @@ AUTOSAR v0.5 has been rewritten and modernized.
 * Snake-case naming of variables and methods (Follow PEP8 standard).
 * Modern type hinting (this unfortunately requires Python 3.10 or later).
 * Python Enum classes for enumeration types.
-* Improved XML reading and writing with lxml.
+* Improved XML reading and writing using lxml.
 * Linting support
   * Source code is checked with both Pylint and flake8.
 * New unit test suite
@@ -99,272 +96,78 @@ pip install flake8
 
 ## Usage
 
-Below is a short introduction. A more comprehensive documentation for v0.5 will be written later.
-
-### Workspace
-
-Create a new workspace object.
-
 ```python
 import autosar.xml
-
-workspace = autosar.xml.Workspace()
-```
-
-### Creating packages
-
-Packages are created using the `make_packages` method. It can recursively create packages as if they are directories.
-
-If you give it a single argument it will return the package created. If you give it multiple arguments it will return a list of packages created.
-
-```python
-import autosar.xml
-
-workspace = autosar.xml.Workspace()
-packages = workspace.make_packages("DataTypes/BaseTypes",
-                                   "DataTypes/ImplementationDataTypes")
-print(packages[0].name)
-print(packages[1].name)
-```
-
-Output
-
-```text
-BaseTypes
-ImplementationDataTypes
-```
-
-Using the builtin `zip`-method you can easily convert the returned list to a dictionary.
-
-```python
-import autosar.xml
-
-workspace = autosar.xml.Workspace()
-packages = dict(zip(["BaseTypes", "ImplementationDataTypes"],
-                    workspace.make_packages("DataTypes/BaseTypes",
-                                            "DataTypes/ImplementationDataTypes")))
-print(packages["BaseTypes"].name)
-print(packages["ImplementationDataTypes"].name)
-```
-
-Output
-
-```text
-BaseTypes
-ImplementationDataTypes
-```
-
-### Saving XML documents
-
-Use the Writer class to save XML documents.
-
-```python
-import os
-from autosar.xml import Document, Writer
 import autosar.xml.element as ar_element
 
-# Create new document object with an empty package
-document = Document()
-package = ar_element.Package("MyPackage")
-document.append(package)
-# Create a new file "document.arxml" in directory "data"
-base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "data"))
-writer = Writer()
-writer.write_file(document, os.path.join(base_path, "document.arxml"))
-```
 
-If you want to avoid creating the Document object(s) manually, the Workspace class offers several convenience methods related to saving XML.
-
-```python
-import os
-from autosar.xml import Workspace
-
-workspace = Workspace()
-# Create three packages in workspace
-workspace.make_packages("DataTypes", "PortInterfaces", "ComponentTypes")
-# Save each package to a separate file inside the "data" directory
-base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "data"))
-workspace.create_document(os.path.join(base_path, "datatypes.arxml"),
-                          packages="/DataTypes")
-workspace.create_document(os.path.join(base_path, "port_interfaces.arxml"),
-                          packages="/PortInterfaces")
-workspace.create_document(os.path.join(base_path, "component_types.arxml"),
-                          packages="/ComponentTypes")
+workspace = autosar.xml.Workspace()
+workspace.create_package_map({"ApplicationDataTypes": "DataTypes/ApplicationDataTypes",
+                              "DataConstrs": "DataTypes/DataConstrs"})
+data_constraint = ar_element.DataConstraint.make_internal("uint8_ADT_DataConstr", 0, 255)
+workspace.add_element("DataConstrs", data_constraint)
+sw_data_def_props = ar_element.SwDataDefPropsConditional(data_constraint_ref=data_constraint.ref())
+data_type = ar_element.ApplicationPrimitiveDataType("uint8_ADT",
+                                                    category="VALUE",
+                                                    sw_data_def_props=sw_data_def_props)
+workspace.add_element("ApplicationDataTypes", data_type)
+workspace.create_document("datatypes.arxml", packages="/DataTypes")
 workspace.write_documents()
 ```
 
-### Creating elements
+### XML Workspace API
 
-The module `autosar.xml.element` contains all supported elements that you can add to a package. Just call the constructor for an object you want to create and then append it to a package.
+The `autosar.xml.Workspace` class offers two slightly different APIs for creating packages and elements. The main difference between them is the usage of namespaces.
 
-Some classes, such as `Computation` has static helper methods starting with `make_`. They act like factory-methods for commonly used creation-patterns and returns a constructed object.
+#### Simple API methods
 
-Here's an example where we create both a base type and a simple implementation data type. Newly created elements must be added to a package before they can be referenced by other elements.
+For small projects, use the simple API.
 
-```python
-import autosar.xml
-import autosar.xml.element as ar_element
+Methods in the simple API:
 
-workspace = autosar.xml.Workspace()
-packages = dict(zip(["BaseTypes", "ImplementationDataTypes"],
-                    workspace.make_packages("DataTypes/BaseTypes",
-                                            "DataTypes/ImplementationDataTypes")))
+* Workspace.create_package_map
+* Workspace.add_element
+* Workspace.find_element
+* Workspace.get_package
 
-#Create new base type
-uint8_base_type = ar_element.SwBaseType("uint8")
-# Taking a reference before the element is added to a package returns None
-print(uint8_base_type.ref())
-# Add base type to package
-packages["BaseTypes"].append(uint8_base_type)
-# Taking a reference after the element is added to package returns a SwBaseTypeRef object
-print(uint8_base_type.ref()) # SwBaseTypeRef has built-in string conversion
+For for more information, see the `Simple API - User Guide` that demonstrates the use of this API.
 
-# Create new implementation data type
-sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref=uint8_base_type.ref())
-inactive_active_t = ar_element.ImplementationDataType("InactiveActive_T",
-                                                      category="VALUE",
-                                                      sw_data_def_props=sw_data_def_props)
-# Add implementation data type to package
-packages["ImplementationDataTypes"].append(inactive_active_t)
-# Find newly added element by its reference
-element = workspace.find("/DataTypes/ImplementationDataTypes/InactiveActive_T")
-print(f"{element.name}: {str(type(element))}")
-```
+#### Advanced API - Requires namespaces
 
-Output
+The advanced API is recomended for larger projects. It requires you to write custom template classes in addition to creating namespaces.
 
-```text
-None
-/DataTypes/BaseTypes/uint8
-InactiveActive_T: <class 'autosar.xml.element.ImplementationDataType'>
-```
+Methods in the advanced API:
 
-Here's a more fleshed out example, it adds a `TEXTTABLE` CompuMethod and saves everything to an ARXML file. It also demonstrates how you control the XML schema version
-when saving the file.
+* Workspace.create_namespace
+* Workspace.get_package_ref_by_role
+* Workspace.apply
+* Workspace.load_config
 
-```python
-import os
-import autosar.xml
-import autosar.xml.element as ar_element
+It can be quite powerful when used the right way but requires some setting up.
 
-workspace = autosar.xml.Workspace()
-packages = dict(zip(["BaseTypes", "ImplementationDataTypes", "CompuMethods"],
-                    workspace.make_packages("DataTypes/BaseTypes",
-                                            "DataTypes/ImplementationDataTypes",
-                                            "DataTypes/CompuMethods")))
-uint8_base_type = ar_element.SwBaseType("uint8")
-packages["BaseTypes"].append(uint8_base_type)
+There's no user guide yet. See the files under `examples/template` for reference.
 
-# Create CompuMethod
-computation = ar_element.Computation.make_value_table(["Inactive",
-                                                       "Active",
-                                                       "Error",
-                                                       "NotAvailable"])
-compu_method = ar_element.CompuMethod(name='InactiveActive_T',
-                                      int_to_phys=computation,
-                                      category="TEXTTABLE")
-#Add new CompuMethod to CompuMethods package
-packages["CompuMethods"].append(compu_method)
-# Create ImplementantationDataType, referencing the CompuMethod from different package
-sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref=uint8_base_type.ref(),
-                                                         compu_method_ref=compu_method.ref())
-inactive_active_t = ar_element.ImplementationDataType("InactiveActive_T",
-                                                      category="VALUE",
-                                                      sw_data_def_props=sw_data_def_props)
-packages["ImplementationDataTypes"].append(inactive_active_t)
-# Save DataType package and all its sub-packages into data/datatypes.arxml
-# Before saving documents, set schema-version to 48 (R19-11) (Default is 51 or R22-11)
-base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "data"))
-workspace.create_document(os.path.join(base_path, "datatypes.arxml"), packages="/DataTypes")
-workspace.write_documents(scehema_version=48)
-```
+#### Common methods
 
-### Reading XML files
+A number of methods are common for both APIs. For the advanced API you can skip most of them and instead use config files (.toml) to let the
+`Workspace` class handle both package and document creation automatically.
 
-Use the Reader class to read ARXML from files or strings. The read-methods produce `Document` objects.
+Common methods:
 
-```python
-import os
-from autosar.xml import Reader
+* Workspace.set_document_root
+* Workspace.create_document
+* Workspace.create_document_mapping
+* Workspace.write_documents
 
-# Read document from file "data/datatypes.arxml"
-base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "data"))
-file_path = os.path.join(base_path, "datatypes.arxml")
-reader = Reader()
-document = reader.read_file(file_path)
-# Find element by reference and then print name and type
-data_type = document.find("/DataTypes/ImplementationDataTypes/InactiveActive_T")
-print(f"{data_type.name}: {str(type(data_type))}")
-```
+### Creating XML elements
 
-Output
+The module `autosar.xml.element` contains all supported elements that you can add to a package. Most often you simply call the constructor for an object you want to create and then add it to a package.
 
-```text
-InactiveActive_T: <class 'autosar.xml.element.ImplementationDataType'>
-```
+Some elements are quite complicated to create manually. Instead of using the constructor these classes offers one or several convenience-methods in the form of static methods with names beginning with `make_` or `create_`. These methods returns an object much the same way as calling a constructor.
 
-### RTE generator
+List of convenience-methods:
 
-RTE generation is in prototype stage and can't do very much at this point.
-Here's a simple example how to generate the `Rte_Type.h` header file containing a single type definition.
-
-It uses the latest version of [cfile](https://github.com/cogu/cfile) which has been completely rewritten to better handle complex code generation scenarios.
-
-```python
-import os
-import autosar.xml
-import autosar.xml.element as ar_element
-from autosar.generator import TypeGenerator
-from autosar.model import ImplementationModel
-
-workspace = autosar.xml.Workspace()
-packages = dict(zip(["BaseTypes", "ImplementationDataTypes"],
-                    workspace.make_packages("DataTypes/BaseTypes",
-                                            "DataTypes/ImplementationDataTypes")))
-uint8_base_type = ar_element.SwBaseType("uint8")
-packages["BaseTypes"].append(uint8_base_type)
-sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref=uint8_base_type.ref())
-inactive_active_t = ar_element.ImplementationDataType("InactiveActive_T",
-                                                      category="VALUE",
-                                                      sw_data_def_props=sw_data_def_props)
-packages["ImplementationDataTypes"].append(inactive_active_t)
-# Create ImplementationModel from XML workspace
-implementation = ImplementationModel(workspace)
-# Create data-type instance inside ImplementationModel
-implementation.create_from_element(inactive_active_t)
-# Generate RTE Types header in "data" folder
-type_generator = TypeGenerator(implementation)
-base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "data"))
-type_generator.write_type_header(base_path)
-```
-
-Content of Rte_Type.h
-
-```c
-#ifndef RTE_TYPE_H_
-#define RTE_TYPE_H_
-
-#ifndef __cplusplus
-extern "C"
-{
-#endif
-
-/***********************************
-*             INCLUDES             *
-************************************/
-#include "Rte.h"
-
-/***********************************
-*     CONSTANTS AND DATA TYPES     *
-************************************/
-
-typedef uint8 InactiveActive_T;
-
-#ifndef __cplusplus
-}
-#endif // __cplusplus
-#endif // RTE_TYPE_H_
-```
+* TBD
 
 ## Python Module Hierachy
 
@@ -393,10 +196,29 @@ Below is a rough roadmap of planned releases.
 
 **v0.5.3:** Components and ports
 
-**v0.5.4:** Component (internal) behavior
+**v0.5.4:** SwcInternalBehavior - basics
 
-(There will probably be some intermediate versions here since behavior is a huge area.)
+* Runnables
+* Basic event support (Init, Periodic, ModeSwitch)
 
-**v0.5.?:** System description
+**v0.5.5** SwcInternalBehavior - ports
 
-**v0.6.0:** First stable release. Publish to PyPI.
+* Port-access
+* Port-API options
+
+**v0.5.6** Add some missing elements and functions that wasn't prioritized before.
+
+**v0.6.0:** Stable version, publish to PyPI.
+
+**v0.7.0:** RTE-generator and system description
+
+* Contract-phase RTE generator
+* System description support
+
+**v0.8.0:** Stable version, publish to PyPI.
+
+**v0.9.0:** Documentation
+
+* Update documentation project on readthedocs site.
+
+**v1.0.0:** Stable version, publish to PyPI.
