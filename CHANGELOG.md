@@ -66,6 +66,20 @@ Non-collectable elements are various sub-elements to collectable elements.
 * SwComponentTypeRef
 * SwComponentPrototypeRef
 
+#### Workspace class
+
+New methods:
+
+* create_package_map
+* add_element
+* find_element
+* get_package
+* create_document_mapping
+
+### Changed
+
+* The method `Workspace.make_packages` should not be called directly anymore. Use `Workspace.create_package_map` instead.
+
 ## [v0.5.2] - 2024-02-11
 
 ### Added

@@ -3,7 +3,7 @@ CompuMethod examples
 """
 
 import os
-import autosar
+import autosar.xml
 import autosar.xml.element as ar_element
 
 if __name__ == "__main__":
@@ -20,9 +20,7 @@ if __name__ == "__main__":
     document.append(package)
 
     # Write document to file system
-    file_path = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                             'data',
-                                             'compu_method_value_table_example.arxml'))
+    file_path = os.path.join(os.path.dirname(__file__), 'data', 'compu_method_value_table_example.arxml')
     writer = autosar.xml.Writer()
     writer.write_file(document, file_path)
 

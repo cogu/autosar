@@ -158,7 +158,7 @@ def save_xml_files(workspace: autosar.xml.Workspace):
     """
     Saves workspace as XML documents
     """
-    workspace.set_document_root(os.path.abspath(os.path.join(os.path.dirname(__file__), "data")))
+    workspace.set_document_root(os.path.join(os.path.dirname(__file__), "data"))
     workspace.create_document("portinterfaces.arxml", packages="/PortInterfaces")
     workspace.create_document("constants.arxml", packages="/Constants")
     workspace.create_document("platform.arxml", packages="/AUTOSAR_Platform")

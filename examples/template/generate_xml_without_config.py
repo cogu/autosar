@@ -32,13 +32,6 @@ def create_namespaces(workspace: ar_workspace.Workspace):
         base_ref="/")
 
 
-def create_abs_path(sub_directory, file_name) -> str:
-    """
-    Returns absolute path to a file in a sub_directory relative to this python script
-    """
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), sub_directory, file_name))
-
-
 def create_documents(workspace: ar_workspace.Workspace) -> None:
     """
     Creates documents
@@ -77,6 +70,7 @@ def main():
     create_documents(workspace)
     apply_platform_types(workspace)
     apply_component_types(workspace)
+    workspace.set_document_root(os.path.join(os.path.dirname(__file__), "generated"))
     workspace.write_documents()
     print("Done")
 
