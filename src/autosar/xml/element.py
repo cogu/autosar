@@ -45,17 +45,6 @@ InitValueArgType = Union["int",
                          "ValueSpecificationElement",
                          "ConstantRef"]
 
-# Decorators
-
-
-def convenience_method(func):
-    """
-    Tags the function as a convenience method
-    """
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-    return wrapper
-
 # Helper classes
 
 
@@ -1288,7 +1277,9 @@ class MultiLanguageOverviewParagraph(ARObject):
     @classmethod
     def make(cls, language: ar_enum.Language, paragraph: str):
         """
-        Convenience method for creating instances from text string
+        #convenience-method
+
+        Simplified creation method that uses a simple string as paragraph text
         """
         return cls(LanguageOverviewParagraph(language, paragraph))
 
@@ -1764,10 +1755,13 @@ class Computation(ARObject):
                          default_value: CompuConst | int | float | str | None = None,
                          auto_label: bool = True):
         """
-        Creates new const-based computation from values in list
+        #convenience-method
+
+        Creates new CompuConst-based computation using values from a list.
 
         When elements is a list of strings:
-            Creates one CompuScale per list item and automatically calculates lower and upper limits
+            Creates one CompuScale per list item and automatically calculates lower and upper limits.
+            Enumeration starts counting from zero and increments by one until the end of the list.
 
         When elements is a list of tuples:
             If 2-tuple: First element is both lower_limit and upper_limit, second element is text value.
@@ -1805,6 +1799,8 @@ class Computation(ARObject):
                       lower_limit_type: ar_enum.IntervalType = ar_enum.IntervalType.CLOSED,
                       upper_limit_type: ar_enum.IntervalType = ar_enum.IntervalType.CLOSED) -> None:
         """
+        #convenience-method
+
         Creates a new Computation instance with one COMPU-SCALE containing numerator
         and denominator.
 
@@ -2042,8 +2038,9 @@ class DataConstraint(ARElement):
                       upper_limit_type: ar_enum.IntervalType = ar_enum.IntervalType.CLOSED,
                       **kwargs) -> "DataConstraint":
         """
-        Convenience method for creating a DataConstraint
-        that contains a single physical constraint.
+        #convenience-method
+
+        Creates a DataConstraint which contains a single physical constraint.
         """
         rule = DataConstraintRule(physical=PhysicalConstraint(lower_limit,
                                                               upper_limit,
@@ -2069,8 +2066,9 @@ class DataConstraint(ARElement):
                       upper_limit_type: ar_enum.IntervalType = ar_enum.IntervalType.CLOSED,
                       **kwargs) -> "DataConstraint":
         """
-        Convenience method for creating a DataConstraint
-        that contains a single internal constraint.
+        #convenience-method
+
+        Creates a DataConstraint that contains a single internal constraint.
         """
         rule = DataConstraintRule(internal=InternalConstraint(lower_limit,
                                                               upper_limit,
@@ -3096,7 +3094,13 @@ class ValueSpecification(ARObject):
                               value: InitValueArgType | None = None,
                               ) -> ValueSpecificationElement:
         """
+        #convenience-method
+
         Wrapper for checking and creating init values based on different value types
+
+        The main differences compared to make_value are:
+        * Returns None if input value is None.
+        * Can create ConstantReference objects if given ConstantRef input.
         """
         if value is not None:
             if isinstance(value, ValueSpecification):
@@ -3112,13 +3116,15 @@ class ValueSpecification(ARObject):
     @classmethod
     def make_value(cls, data: Any) -> ValueSpecificationElement:
         """
+        #convenience-method
+
         Builds value specification based on Python data
         Format 1 - data is not a tuple:
           value = data
         Format 2 - data is 2-tuple:
           label = data[0]
           value = data[1]
-        Format 3- data is a 3-tuple:
+        Format 3 - data is a 3-tuple:
           label = data[0]
           value = None
           default_pattern = data[2]
@@ -3128,7 +3134,7 @@ class ValueSpecification(ARObject):
 
         1. scalar value (int, float, str)
         2. list: (used for array and record values)
-           When using list, the first list-element must contain a string containing a
+           When using list, the first list-element must contain a string which acts as a
            marker indicating what kind of element you want to create.
            - "A" or "ARRAY": Will use remaining list elements to create an ArrayValueSpecification
            - "R" or "RECORD": Will use remaining list elements to create an RecordValueSpecification
@@ -3352,6 +3358,8 @@ class ConstantSpecification(ARElement):
                       value: tuple[str, Any] | Any,
                       **kwargs) -> "ConstantSpecification":
         """
+        #convenience-method
+
         Creates a new constant object and populates it from Python data.
         """
         value = ValueSpecification.make_value(value)
@@ -3715,7 +3723,9 @@ class ModeDeclarationGroup(ARElement):
                                 value: int | None = None,
                                 **kwargs) -> ModeDeclaration:
         """
-        Convenience method for creating a new mode declaration within this group
+        #convenience-method
+
+        Adds a new mode declaration to this group
         """
         mode_declaration = ModeDeclaration(name, value, **kwargs)
         self.append_mode_declaratation(mode_declaration)
@@ -3885,7 +3895,9 @@ class SenderReceiverInterface(DataInterface):
                             init_value: ValueSpecificationElement | None = None,
                             **kwargs) -> VariableDataPrototype:
         """
-        Convenience method for adding a new data element to this port interface
+        #convenience-method
+
+        Adds a new data element to this port interface
         """
         data_element = VariableDataPrototype(name, init_value, **kwargs)
         self.append_data_element(data_element)
@@ -3895,7 +3907,9 @@ class SenderReceiverInterface(DataInterface):
                                    data_element_ref: VariableDataPrototypeRef | str,
                                    handle_invalid: ar_enum.HandleInvalid) -> InvalidationPolicy:
         """
-        Convenience method for adding a new invalidation policy to this port interface
+        #convenience-method
+
+        Adds a new invalidation policy to this port interface
         """
         if isinstance(data_element_ref, str):
             data_element_ref = VariableDataPrototypeRef(data_element_ref)
@@ -3958,7 +3972,9 @@ class NvDataInterface(DataInterface):
                             init_value: ValueSpecificationElement | None = None,
                             **kwargs) -> VariableDataPrototype:
         """
-        Convenience method for adding a new data element to this port interface
+        #convenience-method
+
+        Adds a new data element to this port interface
         """
         data_element = VariableDataPrototype(name, init_value, **kwargs)
         self.append_data_element(data_element)
@@ -4013,7 +4029,9 @@ class ParameterInterface(DataInterface):
                          init_value: ValueSpecificationElement | None = None,
                          **kwargs) -> ParameterDataPrototype:
         """
-        Convenience method for adding a new parameter to this port interface
+        #convenience-method
+
+        Adds a new parameter to this port interface
         """
         data_element = ParameterDataPrototype(name, init_value, **kwargs)
         self.append_parameter(data_element)
@@ -4120,7 +4138,9 @@ class ClientServerOperation(Identifiable):
                         server_arg_impl_policy: ar_enum.ServerArgImplPolicy | None = None,
                         **kwargs) -> ArgumentDataPrototype:
         """
-        Convenience method for adding a new argument to this operation
+        #convenience-method
+
+        Adds a new argument to this operation
         """
         argument = ArgumentDataPrototype(name, direction, server_arg_impl_policy, **kwargs)
         self.append_argument(argument)
@@ -4131,7 +4151,9 @@ class ClientServerOperation(Identifiable):
                            server_arg_impl_policy: ar_enum.ServerArgImplPolicy | None = None,
                            **kwargs) -> ArgumentDataPrototype:
         """
-        Convenience method for adding a new in-argument to this operation
+        #convenience-method
+
+        Adds a new in-argument to this operation
         """
         argument = ArgumentDataPrototype(name, ar_enum.ArgumentDirection.IN, server_arg_impl_policy, **kwargs)
         self.append_argument(argument)
@@ -4142,7 +4164,9 @@ class ClientServerOperation(Identifiable):
                               server_arg_impl_policy: ar_enum.ServerArgImplPolicy | None = None,
                               **kwargs) -> ArgumentDataPrototype:
         """
-        Convenience method for adding a new inout-argument to this operation
+        #convenience-method
+
+        Adds a new inout-argument to this operation
         """
         argument = ArgumentDataPrototype(name, ar_enum.ArgumentDirection.INOUT, server_arg_impl_policy, **kwargs)
         self.append_argument(argument)
@@ -4153,7 +4177,9 @@ class ClientServerOperation(Identifiable):
                             server_arg_impl_policy: ar_enum.ServerArgImplPolicy | None = None,
                             **kwargs) -> ArgumentDataPrototype:
         """
-        Convenience method for adding a new out-argument to this operation
+        #convenience-method
+
+        Adds a new out-argument to this operation
         """
         argument = ArgumentDataPrototype(name, ar_enum.ArgumentDirection.OUT, server_arg_impl_policy, **kwargs)
         self.append_argument(argument)
@@ -4171,7 +4197,9 @@ class ClientServerOperation(Identifiable):
 
     def create_possible_error_ref(self, value: str) -> ApplicationErrorRef:
         """
-        Convenience method for creating and adding a new possible error reference to this operation
+        #convenience-method
+
+        Adds a new possible error reference to this operation
         """
         possible_error_ref = ApplicationErrorRef(value)
         self.append_possible_error_ref(possible_error_ref)
@@ -4253,7 +4281,9 @@ class ClientServerInterface(PortInterface):
                          possible_error_refs: ApplicationErrorRef | list[ApplicationErrorRef] | None = None,
                          **kwargs) -> ClientServerOperation:
         """
-        Convenience method for creating a new operation in this port interface
+        #convenience-method
+
+        Adds a new operation to this port interface
         """
         operation = ClientServerOperation(name, arguments, diag_arg_integrity, fire_and_forget, possible_error_refs,
                                           **kwargs)
@@ -4265,7 +4295,9 @@ class ClientServerInterface(PortInterface):
                               error_code: int | None = None,
                               **kwargs) -> ApplicationError:
         """
-        Convenience-method for creating a new possible error in this port interface
+        #convenience-method
+
+        Adds a new possible error in this port interface
         """
         possible_error = ApplicationError(name, error_code, **kwargs)
         self.append_possible_errors(possible_error)
@@ -4302,7 +4334,12 @@ class ModeSwitchInterface(PortInterface):
                           calibration_access: ar_enum.SwCalibrationAccess | None = None,
                           **kwargs) -> ModeDeclarationGroupPrototype:
         """
-        Convenience method for both creating and setting the mode_group property
+        #convenience-method
+
+        Adds a new mode declaration group to this port interface
+
+        Note that this class only supports up to one mode group. Calling this method a second time
+        will overwrite the previous value.
         """
         self.mode_group = ModeDeclarationGroupPrototype(name, type_ref, calibration_access, **kwargs)
         return self.mode_group
@@ -4457,7 +4494,9 @@ class ProvidePortComSpec(ARObject):
     @classmethod
     def make_from_port_interface(cls, port_interface: PortInterface, **kwargs) -> "ProvidePortComSpec":
         """
-        Convenience method for creating P-PORT com-specs
+        #convenience-method
+
+        Creates P-PORT com-spec from port interface
 
         For SenderReceiverInterface:
         If interface has a single element: kwargs is a dict with key-value pairs for one com-spec
@@ -4534,6 +4573,8 @@ class ProvidePortComSpec(ARObject):
                                         **kwargs
                                         ) -> "NonqueuedSenderComSpec":
         """
+        #convenience-method
+
         Convenience method for creating NonqueuedSenderComSpec
         """
         init_value = ValueSpecification.make_value_with_check(init_value)
@@ -4755,7 +4796,9 @@ class RequirePortComSpec(ARObject):
     @classmethod
     def make_from_port_interface(cls, port_interface: PortInterface, **kwargs) -> "RequirePortComSpec":
         """
-        Convenience method for creating R-PORT com-specs
+        #convenience-method
+
+        Creates R-PORT com-spec from port-interface
 
         For SenderReceiverInterface:
         If interface has a single element: kwargs is a dict with key-value pairs for one com-spec
@@ -4832,6 +4875,8 @@ class RequirePortComSpec(ARObject):
                                           **kwargs
                                           ) -> "NonqueuedReceiverComSpec":
         """
+        #convenience-method
+
         Convenience method for creating NonqueuedReceiverComSpec
         """
         init_value = ValueSpecification.make_value_with_check(init_value)
@@ -5310,13 +5355,14 @@ class SwComponentType(ARElement, Searchable):
                 return elem
         return None
 
-    @convenience_method
     def create_provide_port(self,
                             name: str,
                             port_interface: PortInterface | None = None,
                             com_spec: dict | list[dict] | ProvidePortComSpec | list[ProvidePortComSpec] | None = None,
                             **kwargs) -> ProvidePortPrototype:
         """
+        #convenience-method
+
         Creates a new provide port and adds it to the internal list of ports
         """
         if com_spec is not None:
@@ -5327,7 +5373,6 @@ class SwComponentType(ARElement, Searchable):
         self.append_port(port)
         return port
 
-    @convenience_method
     def create_require_port(self,
                             name: str,
                             port_interface: PortInterface,
@@ -5335,6 +5380,8 @@ class SwComponentType(ARElement, Searchable):
                             allow_unconnected: bool | None = None,
                             **kwargs) -> RequirePortPrototype:
         """
+        #convenience-method
+
         Creates a new require port and adds it to the internal list of ports
         """
         if com_spec is not None:
@@ -5345,13 +5392,14 @@ class SwComponentType(ARElement, Searchable):
         self.append_port(port)
         return port
 
-    @convenience_method
     def create_pr_port(self,
                        name: str,
                        port_interface_ref: PortInterfaceRef | None = None,
                        com_spec: RequirePortComSpec | list[RequirePortComSpec] | None = None,
                        **kwargs) -> PRPortPrototype:
         """
+        #convenience-method
+
         Creates a new pr-port and adds it to the internal list of ports
         """
         port = PRPortPrototype(name, port_interface_ref, com_spec, **kwargs)
@@ -5622,12 +5670,13 @@ class CompositionSwComponentType(SwComponentType, Searchable):
                 return elem
         return super().find(ref)
 
-    @convenience_method
     def create_component_prototype(self,
                                    component_type: SwComponentType,
                                    name: str = None,
                                    **kwargs) -> SwComponentPrototype:
         """
+        #convenience-method
+
         Creates a new SwComponentPrototype object from the source SwComponentType and adds it
         to the internal list of components.
         By default the created SwComponentPrototype will have the same name as the source
@@ -5639,12 +5688,13 @@ class CompositionSwComponentType(SwComponentType, Searchable):
         self.append_component(component_prototype)
         return component_prototype
 
-    @convenience_method
     def create_connector(self,
                          port_ref1: str,
                          port_ref2: str,
                          workspace: Searchable) -> None:
         """
+        #convenience-method
+
         Creates a connector between two ports in the composition
         port_ref1 and port_ref2 can be of any of these formats:
         * 'component_name/port_name' - references a port of an inner component
