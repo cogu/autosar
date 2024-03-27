@@ -130,7 +130,7 @@ Methods in the simple API:
 * Workspace.find_element
 * Workspace.get_package
 
-For for more information, see the `Simple API - User Guide` that demonstrates the use of this API.
+For for more information, see the [Simple API - User Guide](doc/markdown/simple_api_user_guide.md) that demonstrates the use of this API.
 
 #### Advanced API - Requires namespaces
 
@@ -145,7 +145,7 @@ Methods in the advanced API:
 
 It can be quite powerful when used the right way but requires some setting up.
 
-There's no user guide yet. See the files under `examples/template` for reference.
+There's no user guide yet. See the files under [examples/template](examples/template/) for reference.
 
 #### Common methods
 
@@ -163,11 +163,41 @@ Common methods:
 
 The module `autosar.xml.element` contains all supported elements that you can add to a package. Most often you simply call the constructor for an object you want to create and then add it to a package.
 
-Some elements are quite complicated to create manually. Instead of using the constructor these classes offers one or several convenience-methods in the form of static methods with names beginning with `make_` or `create_`. These methods returns an object much the same way as calling a constructor.
+Some elements are quite complicated to create manually. Instead of using the constructor method, some classes offers one or several convenience-methods with names
+beginning with either `make_` or `create_`. Exploring these methods is highly recomended.
 
 List of convenience-methods:
 
-* TBD
+* `MultiLanguageOverviewParagraph.make`
+* `Computation.make_value_table`
+* `Computation.make_rational`
+* `DataConstraint.make_physical`
+* `DataConstraint.make_internal`
+* `ValueSpecification.make_value_with_check`
+* `ValueSpecification.make_value`
+* `ConstantSpecification.make_constant`
+* `ModeDeclarationGroup.create_mode_declaration`
+* `SenderReceiverInterface.create_data_element`
+* `SenderReceiverInterface.create_invalidation_policy`
+* `NvDataInterface.create_data_element`
+* `ParameterInterface.create_parameter`
+* `ClientServerOperation.create_argument`
+* `ClientServerOperation.create_in_argument`
+* `ClientServerOperation.create_inout_argument`
+* `ClientServerOperation.create_out_argument`
+* `ClientServerOperation.create_possible_error_ref`
+* `ClientServerInterface.create_operation`
+* `ClientServerInterface.create_possible_error`
+* `ModeSwitchInterface.create_mode_group`
+* `ProvidePortComSpec.make_from_port_interface`
+* `ProvidePortComSpec.make_non_queued_sender_com_spec`
+* `ProvidePortComSpec.make_from_port_interface`
+* `RequirePortComSpec.make_non_queued_receiver_com_spec`
+* `SwComponentType.create_provide_port`
+* `SwComponentType.create_require_port`
+* `SwComponentType.create_pr_port`
+* `CompositionSwComponentType.create_component_prototype`
+* `CompositionSwComponentType.create_connector`
 
 ## Python Module Hierachy
 
