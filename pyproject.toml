@@ -1,12 +1,13 @@
 [project]
 name = "autosar"
-version = "0.5.2"
+version = "0.5.3a1"
 description = "A set of Python modules for working with AUTOSAR XML files"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "lxml",
-    'tomli >= 1.1.0; python_version < "3.11"'
+    'tomli >= 1.1.0; python_version < "3.11"',
+    "cfile >=0.4.0"
 ]
 
 [build-system]
@@ -15,3 +16,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[project.urls]
+Homepage = "https://github.com/cogu/autosar"
+Issues = "https://github.com/cogu/autosar/issues"
