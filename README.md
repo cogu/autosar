@@ -47,53 +47,6 @@ Only Clasic AUTOSAR will be supported.
 
 For currently supported XML elements, see the [CHANGELOG](CHANGELOG.md) file.
 
-## Requirements
-
-* Python 3.10+
-* lxml
-* tomli (Python 3.10 only, tomli is built-in for Python 3.11)
-* [cfile](https://github.com/cogu/cfile) v0.3.2+
-
-## Installation
-
-Manual install required as this version is not available on PyPI (until v0.6).
-
-1. Make sure you have the latest version of `pip` and `setuptools` installed.
-2. Download source or clone this repo.
-3. Download source or clone the cfile repo (instruction below).
-4. Install locally using one of the below methods.
-
-### Preparation
-
-Run in either venv or local.
-
-```bash
-python -m pip install --upgrade pip
-python -m pip install --upgrade setuptools
-git clone https://github.com/cogu/cfile.git cfile_0.3
-cd cfile_0.3
-git checkout v0.3.2
-cd ..
-python -m pip install cfile_0.3
-```
-
-You can delete the directory `cfile_0.3` after preparation step.
-
-### Standard install
-
-```bash
-pip install  .
-```
-
-### Editable install (Development mode)
-
-```bash
-python -m venv .venv
-# Activate your venv environment
-pip install --editable .
-pip install flake8
-```
-
 ## Usage
 
 ```python
@@ -113,6 +66,71 @@ data_type = ar_element.ApplicationPrimitiveDataType("uint8_ADT",
 workspace.add_element("ApplicationDataTypes", data_type)
 workspace.create_document("datatypes.arxml", packages="/DataTypes")
 workspace.write_documents()
+```
+
+## Requirements
+
+* Python 3.10+
+* lxml
+* tomli (Python 3.10 only, tomli is built-in for Python 3.11)
+* [cfile](https://github.com/cogu/cfile) v0.4.0+
+
+## Installation
+
+Manual install required as this version is not available on PyPI (until v0.6).
+
+### Preparation
+
+Download a compressed source package from GitHub or clone this repo to a local directory.
+
+### Installation steps for virtual environment
+
+Start bash (Linux) or Powershell (Windows).
+
+#### Create virtual environment
+
+```bash
+python -m venv .venv
+```
+
+#### Activate virtual environment
+
+On Windows run:
+
+```bash
+.\.venv\Scripts\activate
+```
+
+On Linux run:
+
+```bash
+source .venv/bin/activate
+```
+
+#### Upgrade toolchain
+
+Once virtual environment is active run:
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install --upgrade setuptools
+```
+
+#### Installing the Python module
+
+Your current directory must be either where you unzipped the source package
+or your where you cloned the git repo (See preparation step above).
+
+For standard install, run:
+
+```bash
+pip install  .
+```
+
+For editable install, run:
+
+```bash
+pip install --editable .
 ```
 
 ### XML Workspace API
