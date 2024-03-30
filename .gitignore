@@ -1,5 +1,5 @@
-#Komodo project files
-*.komodoproject
+#Virtual Environment
+*.venv
 
 # Compiled python modules.
 *.pyc

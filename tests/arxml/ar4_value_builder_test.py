@@ -65,6 +65,7 @@ class ARXML4ValueBuilderTest(ARXMLTestClass):
         package = ws.createPackage('Constants', role='Constant')
         c1 = package.createConstant('Result_IV', None, {'Status': 0, 'ID': 22, 'Message': 'OK'})
         self.assertIsInstance(c1, autosar.constant.Constant)
+        self.assertIsInstance(c1.value, autosar.constant.RecordValueAR4)
 
         file_name = 'record_constant.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
@@ -75,6 +76,7 @@ class ARXML4ValueBuilderTest(ARXMLTestClass):
         ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
         c2 = ws2.find(c1.ref)
         self.assertIsInstance(c2, autosar.constant.Constant)
+        self.assertIsInstance(c2.value, autosar.constant.RecordValueAR4)
 
     def test_create_array(self):
         ws = autosar.workspace(version="4.2.2")
