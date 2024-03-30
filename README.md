@@ -5,7 +5,7 @@ A set of Python modules for working with [AUTOSAR](https://www.autosar.org/) XML
 The primary use case is to enable Python to generate ARXML files for further importing into other (commercial) AUTOSAR toolchains.
 It has some support for parsing ARXML files.
 
-This is the maintenance branch for v0.4. Latest release is [v0.4.1](https://github.com/cogu/autosar/releases/tag/v0.4.1).
+This is the maintenance branch for v0.4. Latest release is [v0.4.2](https://github.com/cogu/autosar/releases/tag/v0.4.2).
 
 ## Documentation
 

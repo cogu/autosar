@@ -6,7 +6,7 @@ def readme():
         return f.read()
 
 setup(name='autosar',
-      version='0.4.1',
+      version='0.4.2',
       description='A set of Python modules for working with AUTOSAR XML files',
       long_description=readme(),
       long_description_content_type='text/x-rst',
@@ -24,7 +24,7 @@ setup(name='autosar',
       author_email='congus8@gmail.com',
       license='MIT',
 	  install_requires=[
-          'cfile>=0.1.4',
+          'cfile==0.2.0',
       ],
       packages=['autosar','autosar.parser','autosar.writer','autosar.rte', 'autosar.bsw', 'autosar.util'],
 	  zip_safe=False,
