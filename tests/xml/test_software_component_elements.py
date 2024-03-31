@@ -785,6 +785,18 @@ class TestQueuedReceiverComSpec(unittest.TestCase):
         self.assertIsInstance(elem, ar_element.QueuedReceiverComSpec)
         self.assertFalse(elem.uses_end_to_end_protection)
 
+    def test_queue_length(self):
+        element = ar_element.QueuedReceiverComSpec(queue_length=1)
+        writer = autosar.xml.Writer()
+        xml = '''<QUEUED-RECEIVER-COM-SPEC>
+  <QUEUE-LENGTH>1</QUEUE-LENGTH>
+</QUEUED-RECEIVER-COM-SPEC>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.QueuedReceiverComSpec = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.QueuedReceiverComSpec)
+        self.assertEqual(elem.queue_length, 1)
+
 
 class TestNonqueuedReceiverComSpec(unittest.TestCase):
 

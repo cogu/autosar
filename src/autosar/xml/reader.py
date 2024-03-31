@@ -3701,7 +3701,7 @@ class Reader:
         self._read_receiver_com_spec(child_elements, data)
         xml_child = child_elements.get("QUEUE-LENGTH")
         if xml_child is not None:
-            data["operation_ref"] = ar_element.PositiveIntegerValue(xml_child.text).value
+            data["queue_length"] = ar_element.PositiveIntegerValue(xml_child.text).value
         self._report_unprocessed_elements(child_elements)
         return ar_element.QueuedReceiverComSpec(**data)
 
