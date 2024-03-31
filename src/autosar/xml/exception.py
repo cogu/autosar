@@ -11,6 +11,12 @@ class ParseError(RuntimeError):
     """
 
 
+class DuplicateElement(ValueError):
+    """
+    Element with this name already in exist in current context
+    """
+
+
 class VersionError(ValueError):
     """
     Invalid/Unsupported XML version

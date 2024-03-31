@@ -5,6 +5,13 @@ The first name in a bullet point below is the Python class name while the second
 Elements marked as `collectable` means that they can be added directly to a package.
 Non-collectable elements are various sub-elements to collectable elements.
 
+## [Unreleased]
+
+### Changed
+
+* Reader class attempts to resume parsing at next element if an error occurs.
+  * To stop parsing on first error, give the option `stop_on_error=True` to method `Reader.read_file`.
+
 ## [v0.5.3] - 2024-03-31
 
 ### Fixed

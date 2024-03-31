@@ -110,6 +110,7 @@ class Reader:
         self.schema_file: str = ''
         self.schema_version = schema_version
         self.document: ar_document.Document = None
+        self.stop_on_error = False
         self.switcher_collectable = {  # Collectable elements
             # CompuMethod
             'COMPU-METHOD': self._read_compu_method,
@@ -277,7 +278,7 @@ class Reader:
             "VariableDataPrototype": self._read_variable_data_prototype,
         }
 
-    def read_file(self, file_path: str) -> ar_document.Document:
+    def read_file(self, file_path: str, stop_on_error: bool = False) -> ar_document.Document:
         """
         Reads ARXML document file
         """
@@ -286,12 +287,13 @@ class Reader:
         self.file_path = file_path
         self.file_base_name = os.path.basename(file_path)
         self.observed_unsupported_elements = set()
+        self.stop_on_error = stop_on_error
         self._clean_namespace('http://autosar.org/schema/r4.0')
         self._read_root_element()
         self._read_packages()
         return self.document
 
-    def read_str(self, xml: str) -> None | ar_document.Document:
+    def read_str(self, xml: str, stop_on_error: bool = False) -> None | ar_document.Document:
         """
         Reads ARXML document from string.
         """
@@ -300,6 +302,7 @@ class Reader:
         self.xml_root = ElementTree.fromstring(bytes(xml, encoding="utf-8"))
         self.file_path = ""
         self.file_base_name = ""
+        self.stop_on_error = stop_on_error
         self._clean_namespace('http://autosar.org/schema/r4.0')
         self._read_root_element()
         self._read_packages()
@@ -344,13 +347,19 @@ class Reader:
                 else:
                     print(f"Unprocessed element <{xml_elem.tag}>", file=sys.stderr)
 
+    def _element_error_message(self, element: ElementTree.Element, message: str) -> str:
+        """
+        Generates an error message with file-name and source-line
+        """
+        file = self.file_path if self.use_full_path_on_warning else self.file_base_name
+        header = f"{file}({element.sourceline}): "
+        return header + message
+
     def _raise_parse_error(self, element: ElementTree.Element, message: str):
         """
         Raises an ARXML parse error with message
         """
-        file = self.file_path if self.use_full_path_on_warning else self.file_base_name
-        header = f"{file}({element.sourceline}): "
-        raise ar_exception.ParseError(header + message)
+        raise ar_exception.ParseError(self._element_error_message(element, message))
 
     def _clean_namespace(self, namespace: str) -> None:
         """
@@ -574,9 +583,23 @@ class Reader:
             read_method = self.switcher_collectable.get(
                 xml_child_elem.tag, None)
             if read_method is not None:
-                element = read_method(xml_child_elem)
-                assert isinstance(element, ar_element.ARElement)
-                package.append(element)
+                try:
+                    element = read_method(xml_child_elem)
+                    assert isinstance(element, ar_element.ARElement)
+                    package.append(element)
+                except ar_exception.ParseError as exc:
+                    msg = "Parse error encountered while reading element starting on this line"
+                    message = self._element_error_message(xml_child_elem, msg)
+                    if self.stop_on_error:
+                        raise ar_exception.ParseError(message) from exc
+                    print(message + ":")
+                    print("    " + str(exc))
+                except ar_exception.DuplicateElement as exc:
+                    message = self._element_error_message(xml_child_elem,
+                                                          str(exc))
+                    if self.stop_on_error:
+                        raise ar_exception.DuplicateElement(message) from exc
+                    print(message)
             else:
                 self._report_unprocessed_element(xml_child_elem)
 
@@ -2608,7 +2631,7 @@ class Reader:
         """
         xml_child = child_elements.get("VALUE")
         if xml_child is not None:
-            data["value"] = ar_element.NumericalValue(xml_child.text).value
+            data["value"] = self._read_number(xml_child.text)
 
     def _read_not_available_value_specification(self,
                                                 xml_element: ElementTree.Element

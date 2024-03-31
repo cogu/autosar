@@ -13,6 +13,7 @@ python examples\xml\port_interface\client_server_interface.py
 python examples\xml\port_interface\mode_switch_interface.py
 python examples\xml\component\application_component.py
 python examples\xml\component\composition_component.py
+python examples\xml\reader\print_errors.py
 python examples\template\generate_xml_using_config.py
 python examples\template\generate_xml_without_config.py
 python examples\generator\data_types\gen_type_defs_scalar.py

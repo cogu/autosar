@@ -3411,7 +3411,7 @@ class Package(CollectableElement):
         if isinstance(item, Package):
             package: Package = item
             if package.name in self._collection_map:
-                raise ValueError(
+                raise ar_except.DuplicateElement(
                     f"Package with SHORT-NAME '{package.name}' already exists in package '{self.name}")
             package.parent = self
             self.packages.append(package)
@@ -3419,7 +3419,7 @@ class Package(CollectableElement):
         elif isinstance(item, ARElement):
             elem: ARElement = item
             if elem.name in self._collection_map:
-                raise ValueError(
+                raise ar_except.DuplicateElement(
                     f"Element with SHORT-NAME '{elem.name}' already exists in package '{self.name}'")
             elem.parent = self
             self.elements.append(elem)

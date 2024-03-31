@@ -28,7 +28,7 @@ class DocumentTests(unittest.TestCase):
         writer = autosar.xml.Writer()
         xml = writer.write_str(document1, False)
         reader = autosar.xml.Reader()
-        document2 = reader.read_str(xml)
+        document2 = reader.read_str(xml, stop_on_error=True)
         self.assertEqual(len(document2.packages), 1)
         datatype_package: ar_element.Package = document2.find("/DataTypes")
         self.assertEqual(len(datatype_package.packages), 2)
