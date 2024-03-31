@@ -5,13 +5,11 @@ The first name in a bullet point below is the Python class name while the second
 Elements marked as `collectable` means that they can be added directly to a package.
 Non-collectable elements are various sub-elements to collectable elements.
 
-## [Unreleased]
+## [v0.5.3] - 2024-03-31
 
 ### Fixed
 
 * Fixed bug in Reader class for property `QUEUED-RECEIVER-COM-SPEC/QUEUE-LENGTH`
-
-## [v0.5.3] - 2024-03-29
 
 ### Added
 
