@@ -104,6 +104,11 @@ class XMLBehaviorWriter(ElementWriter):
                 lines.extend(self.indent(self._writeParameterDataPrototype(ws, elem),2))
             lines.append(self.indent('</CONSTANT-MEMORYS>',1))
         lines.append(self.indent('<SUPPORTS-MULTIPLE-INSTANTIATION>%s</SUPPORTS-MULTIPLE-INSTANTIATION>'%('true' if internalBehavior.multipleInstance else 'false'),1))
+        if isinstance(internalBehavior, autosar.behavior.SwcInternalBehavior) and len(internalBehavior.variationPointProxies)>0:
+            lines.append(self.indent('<VARIATION-POINT-PROXYS>',1))
+            for variationPointProxy in internalBehavior.variationPointProxies:
+                lines.extend(self.indent(self._writeVariationPointProxyXML(ws, variationPointProxy),2))
+            lines.append(self.indent('</VARIATION-POINT-PROXYS>',1))
         lines.append('</%s>'%internalBehavior.tag(self.version))
         return lines
 
@@ -1061,4 +1066,18 @@ class CodeBehaviorWriter(ElementWriter):
                 lines.append("'serviceCallPorts': %s"%(params[0]))
             else:
                 lines.append("'serviceCallPorts': [%s]"%(', '.join(params)))
+        return lines
+
+    def _writeVariationPointProxyXML(self, ws, variationPointProxy):
+        lines = []
+        lines.append('<%s>'%variationPointProxy.tag(self.version))
+        lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%variationPointProxy.name,1))
+        binding_time = f" BINDING-TIME=\"{variationPointProxy.binding_time}\"" if variationPointProxy.binding_time is not None else ""    
+        if variationPointProxy.adminData is not None:
+            lines.extend(self.indent(self.writeAdminDataXML(variationPointProxy.adminData),1))
+        if variationPointProxy.category is not None:
+            lines.append(self.indent(f'<CATEGORY>{variationPointProxy.category}</CATEGORY>',1))
+        if variationPointProxy.condition_access is not None:
+            lines.append(self.indent(f"<CONDITION-ACCESS{binding_time}>{variationPointProxy.condition_access}</CONDITION-ACCESS>",1))
+        lines.append('</%s>'%variationPointProxy.tag(self.version))
         return lines

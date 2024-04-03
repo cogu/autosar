@@ -225,6 +225,13 @@ class BehaviorParser(ElementParser):
                                 internalBehavior.constantMemories.append(tmp)
                         else:
                             raise NotImplementedError(xmlChild.tag)
+                elif xmlElem.tag == 'VARIATION-POINT-PROXYS':
+                    for xmlChild in xmlElem.findall('./*'):
+                        if xmlChild.tag == 'VARIATION-POINT-PROXY':
+                            variationPointProxy = self.parseVariationPointProxy(xmlChild, internalBehavior)
+                            internalBehavior.variationPointProxies.append(variationPointProxy)
+                        else:
+                            raise NotImplementedError(xmlChild.tag)
                 else:
                     raise NotImplementedError(xmlElem.tag)
             return internalBehavior
@@ -1181,3 +1188,54 @@ class BehaviorParser(ElementParser):
                 raise RuntimeError(f"Tag '{tag}' is not present in the AUTOSAR specification for the INCLUDED-DATA-TYPE-SET element")
 
         return autosar.behavior.IncludedDataTypeSet(dataTypeRefs=dataTypeRefs, literalPrefix=literalPrefix)
+
+    @parseElementUUID
+    def parseVariationPointProxy(self, xmlRoot, parent):
+        """parses <VARIATION-POINT-PROXY>"""
+
+        assert xmlRoot.tag == 'VARIATION-POINT-PROXY'
+        (name, category, binding_time, condition_access) = (None, None, None, None)
+
+        category_items = xmlRoot.findall("./CATEGORY")
+        assert len(category_items) == 1, "Only one CATEGORY element is allowed in the VARIATION-POINT-PROXY element"
+
+        category = self.parseTextNode(category_items[0])
+
+        for item in xmlRoot.findall("./*"):
+            tag = item.tag
+            
+            if tag == "SHORT-NAME":
+                name = self.parseTextNode(item)
+            elif tag == "CATEGORY":
+                continue # Already evaluated
+            elif tag == "CONDITION-ACCESS":
+                if category != "CONDITION":
+                    raise RuntimeError("CONDITION-ACCESS is only allowed when the category is 'CONDITION'")
+                binding_time = item.get("BINDING-TIME")
+                # TODO: Implement condition by formula parsing
+                condition_access = ''.join(item.itertext())
+            elif tag == "VALUE-ACCESS":
+                if category != "VALUE":
+                    raise RuntimeError("VALUE-ACCESS is only allowed when the category is 'VALUE'")
+                binding_time = item.get("BINDING-TIME")
+                # TODO: Implement
+                raise NotImplementedError(tag)
+            elif tag == "IMPLEMENTATION-DATA-TYPE-REF":
+                if category != "VALUE":
+                    raise RuntimeError("IMPLEMENTATION-DATA-TYPE-REF is only allowed when the category is 'VALUE'")
+                # TODO: Implement
+                raise NotImplementedError(tag)
+            elif tag == "POST-BUILD-VALUE-ACCESS-REF":
+                if category != "VALUE":
+                    raise RuntimeError("POST-BUILD-VALUE-ACCESS-REF is only allowed when the category is 'VALUE'")
+                # TODO: Implement
+                raise NotImplementedError(tag)
+            elif tag == "POST-BUILD-VARIANT-CONDITIONS":
+                if category != "CONDITION":
+                    raise RuntimeError("POST-BUILD-VARIANT-CONDITIONS is only allowed when the category is 'CONDITION'")
+                # TODO: Implement
+                raise NotImplementedError(tag)
+            else:
+                raise RuntimeError(f"Tag '{tag}' is not present in the AUTOSAR specification for the VARIATION-POINT-PROXY element")
+
+        return autosar.behavior.VariationPointProxy(name=name, category=category, binding_time=binding_time, condition_access=condition_access, parent=parent)

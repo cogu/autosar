@@ -1237,13 +1237,14 @@ class SwcInternalBehavior(InternalBehaviorCommon):
     """
     AUTOSAR 4 Internal Behavior
     """
-    def __init__(self,name, componentRef, multipleInstance=False,parent=None):
+    def __init__(self,name, componentRef, multipleInstance=False, parent=None):
         super().__init__(name, componentRef, multipleInstance, parent)
         self.serviceDependencies = [] #list of SwcServiceDependency objects
         self.sharedParameterDataPrototype = [] #list of ParameterDataPrototye objects
         self.perInstanceParameterDataPrototype = []  #list of ParameterDataPrototye objects
         self.dataTypeMappingRefs = [] #list of strings
         self.constantMemories = [] #list of ParameterDataPrototye objects
+        self.variationPointProxies = [] #list of VariationPointProxy objects
 
     def tag(self, version): return "SWC-INTERNAL-BEHAVIOR"
 
@@ -1255,15 +1256,12 @@ class SwcInternalBehavior(InternalBehaviorCommon):
             ref=ref.partition('/')
             name=ref[0]
             foundElem = None
-            for elem in self.sharedParameterDataPrototype:
-                if elem.name == name:
-                    foundElem = elem
-                    break
-            for elem in self.perInstanceParameterDataPrototype:
-                if elem.name == name:
-                    foundElem = elem
-                    break
-            for elem in self.constantMemories:
+            for elem in itertools.chain(
+                self.serviceDependencies,
+                self.sharedParameterDataPrototype,
+                self.perInstanceParameterDataPrototype,
+                self.constantMemories,
+                self.variationPointProxies):
                 if elem.name == name:
                     foundElem = elem
                     break
@@ -1449,6 +1447,17 @@ class SwcInternalBehavior(InternalBehaviorCommon):
             self._processModeDependency(event, modeDependency, ws.version)
         self.events.append(event)
         return event
+
+    def createVariationPointProxy(self, name, category, binding_time, condition_access=None, adminData=None):
+        """
+        Creates a new VariationPointProxy object and appends it to the internal variationPointProxies list
+        """
+        self._initSWC()
+        if category == 'CONDITION' and condition_access is None:
+            raise ValueError('condition_access must be provided for category "CONDITION"')
+        variationPointProxy = VariationPointProxy(name, category, binding_time, condition_access, self, adminData)
+        self.variationPointProxies.append(variationPointProxy)
+        return variationPointProxy
 
     def appendDataTypeMappingRef(self, dataTypeMappingRef):
         """
@@ -1929,3 +1938,17 @@ class IncludedDataTypeSet(object):
 
         self.dataTypeRefs = dataTypeRefs
         self.literalPrefix = literalPrefix
+
+class VariationPointProxy(Element):
+    """
+    Represents <VARIATION-POINT-PROXY> (AUTOSAR 4)
+    """
+    def __init__(self, name, category, binding_time, condition_access, parent=None, adminData=None):
+        super().__init__(name, parent, adminData)
+        self.category = category
+        if category in ['VALUE', 'CONDITION'] and binding_time is None:
+            raise ValueError(f'For the variation point {name}, a "BINDING-TIME" must be provided')
+        self.binding_time = binding_time
+        self.condition_access = condition_access
+
+    def tag(self, version): return 'VARIATION-POINT-PROXY'
