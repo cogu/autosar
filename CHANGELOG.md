@@ -7,6 +7,10 @@ Non-collectable elements are various sub-elements to collectable elements.
 
 ## [Unreleased]
 
+### Fixed
+
+* Fixed parsing error on elements containing `ADMIN-DATA`.
+
 ### Changed
 
 * Reader class attempts to resume parsing at next element if an error occurs.

@@ -315,6 +315,7 @@ class Identifiable(MultiLanguageReferrable):
                  desc: Union["MultiLanguageOverviewParagraph", tuple[ar_enum.Language, str], str, None] = None,
                  category: str | None = None,
                  uuid: str | None = None,
+                 admin_data: Union["AdminData", None] = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
         self.desc: MultiLanguageOverviewParagraph | None = None
@@ -323,6 +324,7 @@ class Identifiable(MultiLanguageReferrable):
         self.introduction = None
         self.annotations = None
         self.uuid = None
+        self.admin_data: Union["AdminData", None] = None
         if desc is not None:
             if isinstance(desc, MultiLanguageOverviewParagraph):
                 self.desc = desc

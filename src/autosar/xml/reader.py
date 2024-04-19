@@ -476,7 +476,7 @@ class Reader:
         element_map.skip('USED-LANGUAGES')  # Implement later
         element_map.skip('DOC-REVISIONS')  # Implement later
         xml_sdgs = element_map.get('SDGS')
-        if xml_sdgs:
+        if len(xml_sdgs):
             data['data'] = self._read_admin_data_sdgs(xml_sdgs)
         return ar_element.AdminData(**data)
 
