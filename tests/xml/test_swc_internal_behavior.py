@@ -226,5 +226,490 @@ class TestAutosarVariableRef(unittest.TestCase):
         self.assertIsInstance(elem.local_variable_ref, ar_element.VariableDataPrototypeRef)
 
 
+class TestExecutableEntityActivationReason(unittest.TestCase):
+
+    def test_read_write_name_only(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ExecutableEntityActivationReason('MyName')
+        xml = '''<EXECUTABLE-ENTITY-ACTIVATION-REASON>
+  <SHORT-NAME>MyName</SHORT-NAME>
+</EXECUTABLE-ENTITY-ACTIVATION-REASON>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ExecutableEntityActivationReason = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ExecutableEntityActivationReason)
+        self.assertEqual(elem.name, 'MyName')
+        self.assertEqual(elem.short_name, 'MyName')
+
+    def test_read_write_bit_position(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ExecutableEntityActivationReason('MyName', bit_position=0)
+        xml = '''<EXECUTABLE-ENTITY-ACTIVATION-REASON>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <BIT-POSITION>0</BIT-POSITION>
+</EXECUTABLE-ENTITY-ACTIVATION-REASON>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ExecutableEntityActivationReason = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ExecutableEntityActivationReason)
+        self.assertEqual(elem.name, 'MyName')
+        self.assertEqual(elem.bit_position, 0)
+
+
+class TestExclusiveAreaRefConditional(unittest.TestCase):
+
+    def test_empty(self):
+        element = ar_element.ExclusiveAreaRefConditional()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<EXCLUSIVE-AREA-REF-CONDITIONAL/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.ExclusiveAreaRefConditional = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ExclusiveAreaRefConditional)
+
+    def test_exclusive_area_ref_from_str(self):
+        ref_str = "/ExclusiveAreas/AreaName"
+        element = ar_element.ExclusiveAreaRefConditional(ref_str)
+        writer = autosar.xml.Writer()
+        xml = f'''<EXCLUSIVE-AREA-REF-CONDITIONAL>
+  <EXCLUSIVE-AREA-REF DEST="EXCLUSIVE-AREA">{ref_str}</EXCLUSIVE-AREA-REF>
+</EXCLUSIVE-AREA-REF-CONDITIONAL>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ExclusiveAreaRefConditional = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ExclusiveAreaRefConditional)
+        self.assertEqual(str(elem.exclusive_area_ref), ref_str)
+
+
+class TestExecutableEntity(unittest.TestCase):
+    """
+    ExecutableEntity is a base class. Use RunnableEntity
+    for unit testing.
+    """
+
+    def test_name_only(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.RunnableEntity('MyName')
+        xml = '''<RUNNABLE-ENTITY>
+  <SHORT-NAME>MyName</SHORT-NAME>
+</RUNNABLE-ENTITY>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RunnableEntity = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RunnableEntity)
+        self.assertEqual(elem.name, 'MyName')
+        self.assertEqual(elem.short_name, 'MyName')
+
+    def test_activation_reasons_from_element(self):
+        writer = autosar.xml.Writer()
+        reason = ar_element.ExecutableEntityActivationReason("MyReason", 1, symbol="MySymbol")
+        element = ar_element.RunnableEntity('MyName', activation_reasons=reason)
+        xml = '''<RUNNABLE-ENTITY>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <ACTIVATION-REASONS>
+    <EXECUTABLE-ENTITY-ACTIVATION-REASON>
+      <SHORT-NAME>MyReason</SHORT-NAME>
+      <SYMBOL>MySymbol</SYMBOL>
+      <BIT-POSITION>1</BIT-POSITION>
+    </EXECUTABLE-ENTITY-ACTIVATION-REASON>
+  </ACTIVATION-REASONS>
+</RUNNABLE-ENTITY>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RunnableEntity = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RunnableEntity)
+        self.assertEqual(len(elem.activation_reasons), 1)
+        activation_reason = elem.activation_reasons[0]
+        self.assertIsInstance(activation_reason, ar_element.ExecutableEntityActivationReason)
+        self.assertEqual(activation_reason.name, 'MyReason')
+
+    def test_activation_reasons_from_list(self):
+        writer = autosar.xml.Writer()
+        reasons = [ar_element.ExecutableEntityActivationReason("MyReason1", 0, symbol="MySymbol1"),
+                   ar_element.ExecutableEntityActivationReason("MyReason2", 1, symbol="MySymbol2")]
+        element = ar_element.RunnableEntity('MyName', activation_reasons=reasons)
+        xml = '''<RUNNABLE-ENTITY>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <ACTIVATION-REASONS>
+    <EXECUTABLE-ENTITY-ACTIVATION-REASON>
+      <SHORT-NAME>MyReason1</SHORT-NAME>
+      <SYMBOL>MySymbol1</SYMBOL>
+      <BIT-POSITION>0</BIT-POSITION>
+    </EXECUTABLE-ENTITY-ACTIVATION-REASON>
+    <EXECUTABLE-ENTITY-ACTIVATION-REASON>
+      <SHORT-NAME>MyReason2</SHORT-NAME>
+      <SYMBOL>MySymbol2</SYMBOL>
+      <BIT-POSITION>1</BIT-POSITION>
+    </EXECUTABLE-ENTITY-ACTIVATION-REASON>
+  </ACTIVATION-REASONS>
+</RUNNABLE-ENTITY>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RunnableEntity = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RunnableEntity)
+        self.assertEqual(len(elem.activation_reasons), 2)
+        activation_reason = elem.activation_reasons[0]
+        self.assertIsInstance(activation_reason, ar_element.ExecutableEntityActivationReason)
+        self.assertEqual(activation_reason.name, 'MyReason1')
+        activation_reason = elem.activation_reasons[1]
+        self.assertIsInstance(activation_reason, ar_element.ExecutableEntityActivationReason)
+        self.assertEqual(activation_reason.name, 'MyReason2')
+
+    def test_can_enters_from_element(self):
+        """
+        CAN-ENTERS is used for XML schema version >= 50
+        """
+        ref_str = "/MyPackage/MySwc/MyExclusiveArea"
+        writer = autosar.xml.Writer()
+        exclusive_area_cond = ar_element.ExclusiveAreaRefConditional(ref_str)
+        element = ar_element.RunnableEntity('MyName', can_enter_leave=exclusive_area_cond)
+        xml = f'''<RUNNABLE-ENTITY>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <CAN-ENTERS>
+    <EXCLUSIVE-AREA-REF-CONDITIONAL>
+      <EXCLUSIVE-AREA-REF DEST="EXCLUSIVE-AREA">{ref_str}</EXCLUSIVE-AREA-REF>
+    </EXCLUSIVE-AREA-REF-CONDITIONAL>
+  </CAN-ENTERS>
+</RUNNABLE-ENTITY>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RunnableEntity = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RunnableEntity)
+        self.assertEqual(len(elem.can_enter_leave), 1)
+        conditional: ar_element.ExclusiveAreaRefConditional = elem.can_enter_leave[0]
+        self.assertIsInstance(conditional, ar_element.ExclusiveAreaRefConditional)
+        self.assertEqual(str(conditional.exclusive_area_ref), ref_str)
+
+    def test_can_enters_from_list(self):
+        ref_str1 = "/MyPackage/MySwc/MyExclusiveArea1"
+        ref_str2 = "/MyPackage/MySwc/MyExclusiveArea2"
+        writer = autosar.xml.Writer()
+        exclusive_area_cond = [ar_element.ExclusiveAreaRefConditional(ref_str1),
+                               ar_element.ExclusiveAreaRefConditional(ref_str2)]
+        element = ar_element.RunnableEntity('MyName', can_enter_leave=exclusive_area_cond)
+        xml = f'''<RUNNABLE-ENTITY>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <CAN-ENTERS>
+    <EXCLUSIVE-AREA-REF-CONDITIONAL>
+      <EXCLUSIVE-AREA-REF DEST="EXCLUSIVE-AREA">{ref_str1}</EXCLUSIVE-AREA-REF>
+    </EXCLUSIVE-AREA-REF-CONDITIONAL>
+    <EXCLUSIVE-AREA-REF-CONDITIONAL>
+      <EXCLUSIVE-AREA-REF DEST="EXCLUSIVE-AREA">{ref_str2}</EXCLUSIVE-AREA-REF>
+    </EXCLUSIVE-AREA-REF-CONDITIONAL>
+  </CAN-ENTERS>
+</RUNNABLE-ENTITY>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RunnableEntity = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RunnableEntity)
+        self.assertEqual(len(elem.can_enter_leave), 2)
+        conditional: ar_element.ExclusiveAreaRefConditional = elem.can_enter_leave[0]
+        self.assertIsInstance(conditional, ar_element.ExclusiveAreaRefConditional)
+        self.assertEqual(str(conditional.exclusive_area_ref), ref_str1)
+        conditional: ar_element.ExclusiveAreaRefConditional = elem.can_enter_leave[1]
+        self.assertIsInstance(conditional, ar_element.ExclusiveAreaRefConditional)
+        self.assertEqual(str(conditional.exclusive_area_ref), ref_str2)
+
+    def test_can_enter_exclusive_area_from_element(self):
+        """
+        CAN-ENTER-EXCLUSIVE-AREA-REFS is used for XML schema version < 50
+        """
+        ref_str = "/MyPackage/MySwc/MyExclusiveArea"
+        writer = autosar.xml.Writer(schema_version=49)
+        exclusive_area_cond = ar_element.ExclusiveAreaRefConditional(ref_str)
+        element = ar_element.RunnableEntity('MyName', can_enter_leave=exclusive_area_cond)
+        xml = f'''<RUNNABLE-ENTITY>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <CAN-ENTER-EXCLUSIVE-AREA-REFS>
+    <CAN-ENTER-EXCLUSIVE-AREA-REF DEST="EXCLUSIVE-AREA">{ref_str}</CAN-ENTER-EXCLUSIVE-AREA-REF>
+  </CAN-ENTER-EXCLUSIVE-AREA-REFS>
+</RUNNABLE-ENTITY>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader(schema_version=49)
+        elem: ar_element.RunnableEntity = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RunnableEntity)
+        self.assertEqual(len(elem.can_enter_leave), 1)
+        conditional: ar_element.ExclusiveAreaRefConditional = elem.can_enter_leave[0]
+        self.assertIsInstance(conditional, ar_element.ExclusiveAreaRefConditional)
+        self.assertEqual(str(conditional.exclusive_area_ref), ref_str)
+
+    def test_can_enter_exclusive_area_from_list(self):
+        ref_str1 = "/MyPackage/MySwc/MyExclusiveArea1"
+        ref_str2 = "/MyPackage/MySwc/MyExclusiveArea2"
+        writer = autosar.xml.Writer(schema_version=49)
+        exclusive_area_cond = [ar_element.ExclusiveAreaRefConditional(ref_str1),
+                               ar_element.ExclusiveAreaRefConditional(ref_str2)]
+        element = ar_element.RunnableEntity('MyName', can_enter_leave=exclusive_area_cond)
+        xml = f'''<RUNNABLE-ENTITY>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <CAN-ENTER-EXCLUSIVE-AREA-REFS>
+    <CAN-ENTER-EXCLUSIVE-AREA-REF DEST="EXCLUSIVE-AREA">{ref_str1}</CAN-ENTER-EXCLUSIVE-AREA-REF>
+    <CAN-ENTER-EXCLUSIVE-AREA-REF DEST="EXCLUSIVE-AREA">{ref_str2}</CAN-ENTER-EXCLUSIVE-AREA-REF>
+  </CAN-ENTER-EXCLUSIVE-AREA-REFS>
+</RUNNABLE-ENTITY>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader(schema_version=49)
+        # During XML reading, elements of type ExclusiveAreaRef are automatically wrapped
+        # inside the newer ExclusiveAreaRefConditional element
+        elem: ar_element.RunnableEntity = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RunnableEntity)
+        self.assertEqual(len(elem.can_enter_leave), 2)
+        conditional: ar_element.ExclusiveAreaRefConditional = elem.can_enter_leave[0]
+        self.assertIsInstance(conditional, ar_element.ExclusiveAreaRefConditional)
+        self.assertEqual(str(conditional.exclusive_area_ref), ref_str1)
+        conditional: ar_element.ExclusiveAreaRefConditional = elem.can_enter_leave[1]
+        self.assertIsInstance(conditional, ar_element.ExclusiveAreaRefConditional)
+        self.assertEqual(str(conditional.exclusive_area_ref), ref_str2)
+
+    def test_can_enter_create_directly_from_reference_string(self):
+        ref_str = "/MyPackage/MySwc/MyExclusiveArea"
+        writer = autosar.xml.Writer()
+        exclusive_area_cond = ar_element.ExclusiveAreaRefConditional(ref_str)
+        element = ar_element.RunnableEntity('MyName', can_enter_leave=exclusive_area_cond)
+        xml = f'''<RUNNABLE-ENTITY>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <CAN-ENTERS>
+    <EXCLUSIVE-AREA-REF-CONDITIONAL>
+      <EXCLUSIVE-AREA-REF DEST="EXCLUSIVE-AREA">{ref_str}</EXCLUSIVE-AREA-REF>
+    </EXCLUSIVE-AREA-REF-CONDITIONAL>
+  </CAN-ENTERS>
+</RUNNABLE-ENTITY>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+
+    def test_can_enter_create_from_list_of_reference_strings(self):
+        ref_str1 = "/MyPackage/MySwc/MyExclusiveArea1"
+        ref_str2 = "/MyPackage/MySwc/MyExclusiveArea2"
+        writer = autosar.xml.Writer()
+        element = ar_element.RunnableEntity('MyName', can_enter_leave=[ref_str1, ref_str2])
+        xml = f'''<RUNNABLE-ENTITY>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <CAN-ENTERS>
+    <EXCLUSIVE-AREA-REF-CONDITIONAL>
+      <EXCLUSIVE-AREA-REF DEST="EXCLUSIVE-AREA">{ref_str1}</EXCLUSIVE-AREA-REF>
+    </EXCLUSIVE-AREA-REF-CONDITIONAL>
+    <EXCLUSIVE-AREA-REF-CONDITIONAL>
+      <EXCLUSIVE-AREA-REF DEST="EXCLUSIVE-AREA">{ref_str2}</EXCLUSIVE-AREA-REF>
+    </EXCLUSIVE-AREA-REF-CONDITIONAL>
+  </CAN-ENTERS>
+</RUNNABLE-ENTITY>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+
+    def test_exclusive_area_nesting_order_refs_from_element(self):
+        ref_str = "/MyPackage/MySwc/MyExclusiveAreaNestingOrder"
+        writer = autosar.xml.Writer()
+        exclusive_area_nesting_order = ar_element.ExclusiveAreaNestingOrderRef(ref_str)
+        element = ar_element.RunnableEntity('MyName', exclusive_area_nesting_order=exclusive_area_nesting_order)
+        xml = f'''<RUNNABLE-ENTITY>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <EXCLUSIVE-AREA-NESTING-ORDER-REFS>
+    <EXCLUSIVE-AREA-NESTING-ORDER-REF DEST="EXCLUSIVE-AREA-NESTING-ORDER">{ref_str}</EXCLUSIVE-AREA-NESTING-ORDER-REF>
+  </EXCLUSIVE-AREA-NESTING-ORDER-REFS>
+</RUNNABLE-ENTITY>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RunnableEntity = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RunnableEntity)
+        self.assertEqual(len(elem.exclusive_area_nesting_order), 1)
+        nesting_order: ar_element.ExclusiveAreaNestingOrderRef = elem.exclusive_area_nesting_order[0]
+        self.assertIsInstance(nesting_order, ar_element.ExclusiveAreaNestingOrderRef)
+        self.assertEqual(str(nesting_order), ref_str)
+
+    def test_exclusive_area_nesting_order_refs_from_list(self):
+        ref_str1 = "/MyPackage/MySwc/MyExclusiveAreaNestingOrder1"
+        ref_str2 = "/MyPackage/MySwc/MyExclusiveAreaNestingOrder1"
+        writer = autosar.xml.Writer()
+        exclusive_area_nesting_order = [ar_element.ExclusiveAreaNestingOrderRef(ref_str1),
+                                        ar_element.ExclusiveAreaNestingOrderRef(ref_str1)]
+        element = ar_element.RunnableEntity('MyName', exclusive_area_nesting_order=exclusive_area_nesting_order)
+        xml = f'''<RUNNABLE-ENTITY>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <EXCLUSIVE-AREA-NESTING-ORDER-REFS>
+    <EXCLUSIVE-AREA-NESTING-ORDER-REF DEST="EXCLUSIVE-AREA-NESTING-ORDER">{ref_str1}</EXCLUSIVE-AREA-NESTING-ORDER-REF>
+    <EXCLUSIVE-AREA-NESTING-ORDER-REF DEST="EXCLUSIVE-AREA-NESTING-ORDER">{ref_str2}</EXCLUSIVE-AREA-NESTING-ORDER-REF>
+  </EXCLUSIVE-AREA-NESTING-ORDER-REFS>
+</RUNNABLE-ENTITY>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RunnableEntity = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RunnableEntity)
+        self.assertEqual(len(elem.exclusive_area_nesting_order), 2)
+        nesting_order: ar_element.ExclusiveAreaNestingOrderRef = elem.exclusive_area_nesting_order[0]
+        self.assertIsInstance(nesting_order, ar_element.ExclusiveAreaNestingOrderRef)
+        self.assertEqual(str(nesting_order), ref_str1)
+        nesting_order = elem.exclusive_area_nesting_order[1]
+        self.assertIsInstance(nesting_order, ar_element.ExclusiveAreaNestingOrderRef)
+        self.assertEqual(str(nesting_order), ref_str2)
+
+    def test_minimum_start_interval_100ms(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.RunnableEntity('MyName', minimum_start_interval=0.1)
+        xml = '''<RUNNABLE-ENTITY>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <MINIMUM-START-INTERVAL>0.1</MINIMUM-START-INTERVAL>
+</RUNNABLE-ENTITY>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RunnableEntity = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RunnableEntity)
+        self.assertAlmostEqual(elem.minimum_start_interval, 0.1)
+
+    def test_minimum_start_interval_2s(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.RunnableEntity('MyName', minimum_start_interval=2)
+        xml = '''<RUNNABLE-ENTITY>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <MINIMUM-START-INTERVAL>2</MINIMUM-START-INTERVAL>
+</RUNNABLE-ENTITY>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RunnableEntity = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RunnableEntity)
+        self.assertEqual(elem.minimum_start_interval, 2)
+
+    def test_reentrancy_level(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.RunnableEntity('MyName',
+                                            reentrancy_level=ar_enum.ReentrancyLevel.SINGLE_CORE_REENTRANT)
+        xml = '''<RUNNABLE-ENTITY>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <REENTRANCY-LEVEL>SINGLE-CORE-REENTRANT</REENTRANCY-LEVEL>
+</RUNNABLE-ENTITY>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RunnableEntity = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RunnableEntity)
+        self.assertEqual(elem.reentrancy_level, ar_enum.ReentrancyLevel.SINGLE_CORE_REENTRANT)
+
+    def test_runs_insides_from_element(self):
+        """
+        RUNS-INSIDES is used for XML schema version >= 50
+        """
+        ref_str = "/MyPackage/MySwc/MyExclusiveArea"
+        writer = autosar.xml.Writer()
+        exclusive_area_cond = ar_element.ExclusiveAreaRefConditional(ref_str)
+        element = ar_element.RunnableEntity('MyName', runs_insides=exclusive_area_cond)
+        xml = f'''<RUNNABLE-ENTITY>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <RUNS-INSIDES>
+    <EXCLUSIVE-AREA-REF-CONDITIONAL>
+      <EXCLUSIVE-AREA-REF DEST="EXCLUSIVE-AREA">{ref_str}</EXCLUSIVE-AREA-REF>
+    </EXCLUSIVE-AREA-REF-CONDITIONAL>
+  </RUNS-INSIDES>
+</RUNNABLE-ENTITY>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RunnableEntity = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RunnableEntity)
+        self.assertEqual(len(elem.runs_insides), 1)
+        conditional: ar_element.ExclusiveAreaRefConditional = elem.runs_insides[0]
+        self.assertIsInstance(conditional, ar_element.ExclusiveAreaRefConditional)
+        self.assertEqual(str(conditional.exclusive_area_ref), ref_str)
+
+    def test_runs_insides_from_list(self):
+        ref_str1 = "/MyPackage/MySwc/MyExclusiveArea1"
+        ref_str2 = "/MyPackage/MySwc/MyExclusiveArea2"
+        writer = autosar.xml.Writer()
+        exclusive_area_cond = [ar_element.ExclusiveAreaRefConditional(ref_str1),
+                               ar_element.ExclusiveAreaRefConditional(ref_str2)]
+        element = ar_element.RunnableEntity('MyName', runs_insides=exclusive_area_cond)
+        xml = f'''<RUNNABLE-ENTITY>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <RUNS-INSIDES>
+    <EXCLUSIVE-AREA-REF-CONDITIONAL>
+      <EXCLUSIVE-AREA-REF DEST="EXCLUSIVE-AREA">{ref_str1}</EXCLUSIVE-AREA-REF>
+    </EXCLUSIVE-AREA-REF-CONDITIONAL>
+    <EXCLUSIVE-AREA-REF-CONDITIONAL>
+      <EXCLUSIVE-AREA-REF DEST="EXCLUSIVE-AREA">{ref_str2}</EXCLUSIVE-AREA-REF>
+    </EXCLUSIVE-AREA-REF-CONDITIONAL>
+  </RUNS-INSIDES>
+</RUNNABLE-ENTITY>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RunnableEntity = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RunnableEntity)
+        self.assertEqual(len(elem.runs_insides), 2)
+        conditional: ar_element.ExclusiveAreaRefConditional = elem.runs_insides[0]
+        self.assertIsInstance(conditional, ar_element.ExclusiveAreaRefConditional)
+        self.assertEqual(str(conditional.exclusive_area_ref), ref_str1)
+        conditional: ar_element.ExclusiveAreaRefConditional = elem.runs_insides[1]
+        self.assertIsInstance(conditional, ar_element.ExclusiveAreaRefConditional)
+        self.assertEqual(str(conditional.exclusive_area_ref), ref_str2)
+
+    def test_runs_inside_exclusive_area_from_element(self):
+        """
+        RUNS-INSIDE-EXCLUSIVE-AREA-REFS is used for XML schema version < 50
+        """
+        ref_str = "/MyPackage/MySwc/MyExclusiveArea"
+        writer = autosar.xml.Writer(schema_version=49)
+        exclusive_area_cond = ar_element.ExclusiveAreaRefConditional(ref_str)
+        element = ar_element.RunnableEntity('MyName', runs_insides=exclusive_area_cond)
+        xml = f'''<RUNNABLE-ENTITY>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <RUNS-INSIDE-EXCLUSIVE-AREA-REFS>
+    <RUNS-INSIDE-EXCLUSIVE-AREA-REF DEST="EXCLUSIVE-AREA">{ref_str}</RUNS-INSIDE-EXCLUSIVE-AREA-REF>
+  </RUNS-INSIDE-EXCLUSIVE-AREA-REFS>
+</RUNNABLE-ENTITY>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader(schema_version=49)
+        elem: ar_element.RunnableEntity = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RunnableEntity)
+        self.assertEqual(len(elem.runs_insides), 1)
+        conditional: ar_element.ExclusiveAreaRefConditional = elem.runs_insides[0]
+        self.assertIsInstance(conditional, ar_element.ExclusiveAreaRefConditional)
+        self.assertEqual(str(conditional.exclusive_area_ref), ref_str)
+
+    def test_run_insides_exclusive_area_from_list(self):
+        ref_str1 = "/MyPackage/MySwc/MyExclusiveArea1"
+        ref_str2 = "/MyPackage/MySwc/MyExclusiveArea2"
+        writer = autosar.xml.Writer(schema_version=49)
+        exclusive_area_cond = [ar_element.ExclusiveAreaRefConditional(ref_str1),
+                               ar_element.ExclusiveAreaRefConditional(ref_str2)]
+        element = ar_element.RunnableEntity('MyName', runs_insides=exclusive_area_cond)
+        xml = f'''<RUNNABLE-ENTITY>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <RUNS-INSIDE-EXCLUSIVE-AREA-REFS>
+    <RUNS-INSIDE-EXCLUSIVE-AREA-REF DEST="EXCLUSIVE-AREA">{ref_str1}</RUNS-INSIDE-EXCLUSIVE-AREA-REF>
+    <RUNS-INSIDE-EXCLUSIVE-AREA-REF DEST="EXCLUSIVE-AREA">{ref_str2}</RUNS-INSIDE-EXCLUSIVE-AREA-REF>
+  </RUNS-INSIDE-EXCLUSIVE-AREA-REFS>
+</RUNNABLE-ENTITY>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader(schema_version=49)
+        # During XML reading, elements of type ExclusiveAreaRef are automatically wrapped
+        # inside the newer ExclusiveAreaRefConditional element
+        elem: ar_element.RunnableEntity = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RunnableEntity)
+        self.assertEqual(len(elem.runs_insides), 2)
+        conditional: ar_element.ExclusiveAreaRefConditional = elem.runs_insides[0]
+        self.assertIsInstance(conditional, ar_element.ExclusiveAreaRefConditional)
+        self.assertEqual(str(conditional.exclusive_area_ref), ref_str1)
+        conditional: ar_element.ExclusiveAreaRefConditional = elem.runs_insides[1]
+        self.assertIsInstance(conditional, ar_element.ExclusiveAreaRefConditional)
+        self.assertEqual(str(conditional.exclusive_area_ref), ref_str2)
+
+    def test_sw_addr_method_from_element(self):
+        ref_str = '/SwAddrMethods/DEFAULT'
+        writer = autosar.xml.Writer()
+        element = ar_element.RunnableEntity('MyName',
+                                            sw_addr_method=ar_element.SwAddrMethodRef(ref_str))
+        xml = f'''<RUNNABLE-ENTITY>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <SW-ADDR-METHOD-REF DEST="SW-ADDR-METHOD">{ref_str}</SW-ADDR-METHOD-REF>
+</RUNNABLE-ENTITY>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RunnableEntity = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RunnableEntity)
+        ref = elem.sw_addr_method
+        self.assertEqual(ref.value, '/SwAddrMethods/DEFAULT')
+        self.assertEqual(ref.dest, ar_enum.IdentifiableSubTypes.SW_ADDR_METHOD)
+
+    def test_create_sw_addr_method_from_string(self):
+        ref_str = '/SwAddrMethods/DEFAULT'
+        element = ar_element.RunnableEntity('MyName', sw_addr_method=ref_str)
+        ref = element.sw_addr_method
+        self.assertEqual(ref.value, '/SwAddrMethods/DEFAULT')
+        self.assertEqual(ref.dest, ar_enum.IdentifiableSubTypes.SW_ADDR_METHOD)
+
+
 if __name__ == '__main__':
     unittest.main()
