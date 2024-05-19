@@ -530,9 +530,16 @@ class BaseRef(ARObject, abc.ABC):
 
     def __init__(self,
                  value: str,
-                 dest: ar_enum.IdentifiableSubTypes) -> None:
+                 dest: ar_enum.IdentifiableSubTypes = None) -> None:
         self.value = value
         self.dest: ar_enum.IdentifiableSubTypes = None
+        if dest is None:
+            if len(self._accepted_subtypes()) == 1:
+                dest = list(self._accepted_subtypes())[0]
+            else:
+                msg_part1 = "Value of dest cannot be None. Accepted values are: "
+                msg_part2 = ",".join([str(x) for x in sorted(list(self._accepted_subtypes()))])
+                raise ValueError(msg_part1 + msg_part2)
         if dest in self._accepted_subtypes():
             self.dest = dest
         else:
@@ -998,6 +1005,26 @@ class SwcImplementationRef(BaseRef):
     def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
         """Acceptable values for dest"""
         return {ar_enum.IdentifiableSubTypes.SWC_IMPLEMENTATION}
+
+
+class ExclusiveAreaRef(BaseRef):
+    """
+    EXCLUSIVE-AREA--SUBTYPES-ENUM
+    """
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.EXCLUSIVE_AREA}
+
+
+class ExclusiveAreaNestingOrderRef(BaseRef):
+    """
+    AR:EXCLUSIVE-AREA-NESTING-ORDER--SUBTYPES-ENUM
+    """
+
+    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.EXCLUSIVE_AREA_NESTING_ORDER}
 
 # --- Documentation Elements
 
@@ -2437,8 +2464,7 @@ class AutosarDataType(ARElement):
 
 class ImplementationProps(Referrable):
     """
-    Complex type AR:IMPLEMENTATION-PROPS
-    Type: Abstract
+    Group AR:IMPLEMENTATION-PROPS
     """
 
     def __init__(self,
@@ -6016,3 +6042,173 @@ class SwcImplementation(Implementation):
         if ref_str is None:
             return None
         return SwcImplementationRef(ref_str)
+
+
+class ExecutableEntityActivationReason(ImplementationProps):
+    """
+    Complex type AR:EXECUTABLE-ENTITY-ACTIVATION-REASON
+    Tag variants: 'EXECUTABLE-ENTITY-ACTIVATION-REASON'
+    """
+
+    def __init__(self,
+                 name: str,
+                 bit_position: int | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.bit_position: int | None = None
+        self._assign_optional_positive_int("bit_position", bit_position)
+
+
+class ExclusiveAreaRefConditional(ARObject):
+    """
+    Complex type AR:EXCLUSIVE-AREA-REF-CONDITIONAL
+    Tag variants: 'EXCLUSIVE-AREA-REF-CONDITIONAL'
+    """
+
+    def __init__(self,
+                 exclusive_area_ref: ExclusiveAreaRef | str | None = None) -> None:
+        self.exclusive_area_ref: ExclusiveAreaRef | None = None  # .EXCLUSIVE-AREA-REF
+        self._assign_optional("exclusive_area_ref", exclusive_area_ref, ExclusiveAreaRef)
+
+
+ActivationReasonArgumentType = ExecutableEntityActivationReason | list[ExecutableEntityActivationReason] | None
+CanEnterLeaveArgumentType = Union[ExclusiveAreaRefConditional,
+                                  list[ExclusiveAreaRefConditional],
+                                  ExclusiveAreaRef,
+                                  list[ExclusiveAreaRef],
+                                  str,
+                                  None]
+
+ExclusiveAreaNestingOrderArgumentType = ExclusiveAreaNestingOrderRef | list[ExclusiveAreaNestingOrderRef] | None
+RunsInsidesArgumentType = Union[ExclusiveAreaRefConditional,
+                                list[ExclusiveAreaRefConditional],
+                                ExclusiveAreaRef,
+                                list[ExclusiveAreaRef],
+                                str,
+                                None]
+
+ExclusiveAreaElementArgumentType = ExclusiveAreaRefConditional | ExclusiveAreaRef | str
+
+
+class ExecutableEntity(Identifiable):
+    """
+    Group AR:EXECUTABLE-ENTITY
+    """
+
+    def __init__(self,
+                 name: str,
+                 activation_reasons: ActivationReasonArgumentType = None,
+                 can_enter_leave: CanEnterLeaveArgumentType = None,
+                 exclusive_area_nesting_order: ExclusiveAreaNestingOrderArgumentType = None,
+                 minimum_start_interval: float | None = None,
+                 reentrancy_level: ar_enum.ReentrancyLevel | None = None,
+                 runs_insides: RunsInsidesArgumentType = None,
+                 sw_addr_method: str | SwAddrMethodRef | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.activation_reasons: list[ExecutableEntityActivationReason] = []  # .ACTIVATION-REASONS
+        # .CAN-ENTERS or CAN-ENTER-EXCLUSIVE-AREA-REFS depending on schema version
+        self.can_enter_leave: list[ExclusiveAreaRefConditional] = []
+        self.exclusive_area_nesting_order: list[ExclusiveAreaNestingOrderRef] = []  # .EXCLUSIVE-AREA-NESTING-ORDER-REFS
+        self.minimum_start_interval: float | None = None  # .MINIMUM-START-INTERVAL
+        self.reentrancy_level: ar_enum.ReentrancyLevel | None = None  # .REENTRANCY-LEVEL
+        # .RUNS-INSIDES or .RUNS-INSIDE-EXCLUSIVE-AREA-REFS depending on schema version
+        self.runs_insides: list[ExclusiveAreaRefConditional] = []
+        self.sw_addr_method: str | SwAddrMethodRef | None = None  # .SW-ADDR-METHOD-REF
+
+        if activation_reasons is not None:
+            if isinstance(activation_reasons, list):
+                for activation_reason in activation_reasons:
+                    self.append_activation_reason(activation_reason)
+            else:
+                self.append_activation_reason(activation_reasons)
+        if can_enter_leave is not None:
+            if isinstance(can_enter_leave, list):
+                for elem in can_enter_leave:
+                    self.append_can_enter_leave(elem)
+            else:
+                self.append_can_enter_leave(can_enter_leave)
+        if exclusive_area_nesting_order is not None:
+            if isinstance(exclusive_area_nesting_order, ExclusiveAreaNestingOrderRef):
+                self.append_exclusive_area_nesting_order(exclusive_area_nesting_order)
+            elif isinstance(exclusive_area_nesting_order, list):
+                for elem in exclusive_area_nesting_order:
+                    self.append_exclusive_area_nesting_order(elem)
+        self._assign_optional("minimum_start_interval", minimum_start_interval, float)
+        self._assign_optional("reentrancy_level", reentrancy_level, ar_enum.ReentrancyLevel)
+        if runs_insides is not None:
+            if isinstance(runs_insides, list):
+                for elem in runs_insides:
+                    self.append_runs_insides(elem)
+            else:
+                self.append_runs_insides(runs_insides)
+        self._assign_optional('sw_addr_method', sw_addr_method, SwAddrMethodRef)
+
+    def append_activation_reason(self, activation_reason: ExecutableEntityActivationReason) -> None:
+        """
+        Appends activation_reason to internal list of activation reasons
+        """
+        if isinstance(activation_reason, ExecutableEntityActivationReason):
+            self.activation_reasons.append(activation_reason)
+        else:
+            raise TypeError("activation_reason must be of type ExecutableEntityActivationReason")
+
+    def append_can_enter_leave(self, value: ExclusiveAreaElementArgumentType) -> None:
+        """
+        Tthe executable entity can enter/leave the referenced exclusive area through explicit API calls
+        """
+        if isinstance(value, ExclusiveAreaRefConditional):
+            self.can_enter_leave.append(value)
+        elif isinstance(value, (ExclusiveAreaRef, str)):
+            self.can_enter_leave.append(ExclusiveAreaRefConditional(value))
+        else:
+            raise TypeError("value: Invalid type. Expected one of ExclusiveAreaRefConditional, ExclusiveAreaRef, str.")
+
+    def append_exclusive_area_nesting_order(self, exclusive_area_nesting_order: ExclusiveAreaNestingOrderRef) -> None:
+        """
+        Appends exclusive area reference to internal can_enter_leave list
+        """
+        if isinstance(exclusive_area_nesting_order, ExclusiveAreaNestingOrderRef):
+            self.exclusive_area_nesting_order.append(exclusive_area_nesting_order)
+        else:
+            raise TypeError("exclusive_area_nesting_order must be of type ExclusiveAreaRefConditional")
+
+    def append_runs_insides(self, value: ExclusiveAreaElementArgumentType) -> None:
+        """
+        The executable entity runs completely inside the referenced exclusive area
+        """
+        if isinstance(value, ExclusiveAreaRefConditional):
+            self.runs_insides.append(value)
+        elif isinstance(value, (ExclusiveAreaRef, str)):
+            self.runs_insides.append(ExclusiveAreaRefConditional(value))
+        else:
+            raise TypeError("value: Invalid type. Expected one of ExclusiveAreaRefConditional, ExclusiveAreaRef, str.")
+
+
+class RunnableEntity(ExecutableEntity):
+    """
+    Complex type AR:RUNNABLE-ENTITY
+    Tag variants: 'RUNNABLE-ENTITY'
+    Only implements base class features for now.
+    """
+
+    def __init__(self,
+                 name: str,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+
+
+# --- Future stuff
+
+
+class RModeInAtomicSwcInstanceRef(ARObject):
+    """
+    Complex type AR:R-MODE-IN-ATOMIC-SWC-INSTANCE-REF
+    Tag variants: 'DISABLED-MODE-IREF' | 'MODE-IREF'
+    """
+
+
+class RTEEvent(Identifiable):
+    """
+    Group AR:RTE-EVENT
+    """

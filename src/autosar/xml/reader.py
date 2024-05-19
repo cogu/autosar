@@ -264,7 +264,10 @@ class Reader:
             'AUTOSAR-VARIABLE-IREF': self._read_variable_in_atomic_swc_type_instance_ref,
             'ACCESSED-VARIABLE': self._read_autosar_variable_ref,
             'VARIABLE-ACCESS': self._read_variable_access,
+            'EXECUTABLE-ENTITY-ACTIVATION-REASON': self._read_executable_entity_activation_reason,
+            'EXCLUSIVE-AREA-REF-CONDITIONAL': self._read_exclusive_area_ref_conditional,
             'SWC-INTERNAL-BEHAVIOR': self._read_swc_internal_behavior,
+            'RUNNABLE-ENTITY': self._read_runnable_entity,
         }
         self.switcher_all = {}
         self.switcher_all.update(self.switcher_collectable)
@@ -1657,8 +1660,7 @@ class Reader:
             data['annotations'] = self._read_annotations(xml_child)
         xml_child = child_elements.get('SW-ADDR-METHOD-REF')
         if xml_child is not None:
-            data['sw_addr_method_ref'] = self._read_sw_addr_method_ref(
-                xml_child)
+            data['sw_addr_method_ref'] = self._read_sw_addr_method_ref(xml_child)
         xml_child = child_elements.get('SW-ALIGNMENT')
         if xml_child is not None:
             try:
@@ -2527,7 +2529,7 @@ class Reader:
                                  xml_elem: ElementTree.Element
                                  ) -> ar_element.DataPrototypeRef:
         """
-        Reads references to References to DATA-PROTOTYPE--SUBTYPES-ENUM
+        Reads references to DATA-PROTOTYPE--SUBTYPES-ENUM
         """
         data = {}
         self._read_base_ref_attributes(xml_elem.attrib, data)
@@ -2538,7 +2540,7 @@ class Reader:
                                  xml_elem: ElementTree.Element
                                  ) -> ar_element.PortInterfaceRef:
         """
-        Reads references to References to PORT-INTERFACE--SUBTYPES-ENUM
+        Reads references to PORT-INTERFACE--SUBTYPES-ENUM
         """
         data = {}
         self._read_base_ref_attributes(xml_elem.attrib, data)
@@ -2549,7 +2551,7 @@ class Reader:
                                     xml_elem: ElementTree.Element
                                     ) -> ar_element.SwComponentTypeRef:
         """
-        Reads references to References to SW-COMPONENT-TYPE--SUBTYPES-ENUM
+        Reads references to SW-COMPONENT-TYPE--SUBTYPES-ENUM
         """
         data = {}
         self._read_base_ref_attributes(xml_elem.attrib, data)
@@ -2560,7 +2562,7 @@ class Reader:
                                          xml_elem: ElementTree.Element
                                          ) -> ar_element.SwComponentPrototypeRef:
         """
-        Reads reference to references to SW-COMPONENT-PROTOTYPE--SUBTYPES-ENUM
+        Reads reference to SW-COMPONENT-PROTOTYPE--SUBTYPES-ENUM
         """
         data = {}
         self._read_base_ref_attributes(xml_elem.attrib, data)
@@ -2573,7 +2575,7 @@ class Reader:
                                         xml_elem: ElementTree.Element
                                         ) -> ar_element.SwcInternalBehaviorRef:
         """
-        Reads reference to references to SWC-INTERNAL-BEHAVIOR--SUBTYPES-ENUM
+        Reads reference to SWC-INTERNAL-BEHAVIOR--SUBTYPES-ENUM
         """
         data = {}
         self._read_base_ref_attributes(xml_elem.attrib, data)
@@ -2581,6 +2583,28 @@ class Reader:
             msg = f"Invalid value for DEST. Expected 'SWC-INTERNAL-BEHAVIOR', got '{data['dest']}'"
             raise ar_exception.ParseError(msg)
         return ar_element.SwcInternalBehaviorRef(xml_elem.text)
+
+    def _read_exclusive_area_ref(self,
+                                 xml_elem: ElementTree.Element
+                                 ) -> ar_element.ExclusiveAreaRef:
+        """
+        Reads references to AR:EXCLUSIVE-AREA--SUBTYPES-ENUM
+        """
+        data = {}
+        self._read_base_ref_attributes(xml_elem.attrib, data)
+        dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', data['dest'], self.schema_version)
+        return ar_element.ExclusiveAreaRef(xml_elem.text, dest_enum)
+
+    def _read_exclusive_area_nesting_order_ref(self,
+                                               xml_elem: ElementTree.Element
+                                               ) -> ar_element.ExclusiveAreaNestingOrderRef:
+        """
+        Reads references to AR:EXCLUSIVE-AREA-NESTING-ORDER--SUBTYPES-ENUM
+        """
+        data = {}
+        self._read_base_ref_attributes(xml_elem.attrib, data)
+        dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', data['dest'], self.schema_version)
+        return ar_element.ExclusiveAreaNestingOrderRef(xml_elem.text, dest_enum)
 
 # --- Constant and value specifications
 
@@ -4344,6 +4368,139 @@ class Reader:
         xml_child = child_elements.get("LOCAL-VARIABLE-REF")
         if xml_child is not None:
             data["local_variable_ref"] = self._read_variable_data_prototype_ref(xml_child)
+
+    def _read_executable_entity_activation_reason(self,
+                                                  xml_element: ElementTree.Element
+                                                  ) -> ar_element.ExecutableEntityActivationReason:
+        """
+        Reads complex type AR:EXECUTABLE-ENTITY-ACTIVATION-REASON
+        Tag variants: 'EXECUTABLE-ENTITY-ACTIVATION-REASON'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_implementation_props(child_elements, data)
+        xml_child = child_elements.get("BIT-POSITION")
+        if xml_child is not None:
+            data["bit_position"] = ar_element.PositiveIntegerValue(xml_child.text).value
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ExecutableEntityActivationReason(**data)
+
+    def _read_exclusive_area_ref_conditional(self,
+                                             xml_element: ElementTree.Element
+                                             ) -> ar_element.ExclusiveAreaRefConditional:
+        """
+        Reads complex type AR:EXCLUSIVE-AREA-REF-CONDITIONAL
+        Tag variants: 'EXCLUSIVE-AREA-REF-CONDITIONAL'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("EXCLUSIVE-AREA-REF")
+        if xml_child is not None:
+            data["exclusive_area_ref"] = self._read_exclusive_area_ref(xml_child)
+        child_elements.skip("VARIATION-POINT")  # Not supported
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ExclusiveAreaRefConditional(**data)
+
+    def _read_executable_entity(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:EXECUTABLE-ENTITY
+        """
+        xml_child = child_elements.get("ACTIVATION-REASONS")
+        if xml_child is not None:
+            activation_reasons = []
+            for xml_grand_child in xml_child.findall("./EXECUTABLE-ENTITY-ACTIVATION-REASON"):
+                activation_reasons.append(self._read_executable_entity_activation_reason(xml_grand_child))
+            data["activation_reasons"] = activation_reasons
+        if not isinstance(self.schema_version, int):
+            raise RuntimeError("Schema version is not set, unable to proceed")
+        if self.schema_version < 50:
+            xml_child = child_elements.get("CAN-ENTER-EXCLUSIVE-AREA-REFS")
+            if xml_child is not None:
+                can_enter_leave = []
+                for xml_grand_child in xml_child.findall("./CAN-ENTER-EXCLUSIVE-AREA-REF"):
+                    # The class constructor will automatically upgrade these references to
+                    # ExclusiveAreaRefConditional elements.
+                    can_enter_leave.append(self._read_exclusive_area_ref(xml_grand_child))
+                data["can_enter_leave"] = can_enter_leave
+        else:
+            xml_child = child_elements.get("CAN-ENTERS")
+            if xml_child is not None:
+                can_enter_leave = []
+                for xml_grand_child in xml_child.findall("./EXCLUSIVE-AREA-REF-CONDITIONAL"):
+                    can_enter_leave.append(self._read_exclusive_area_ref_conditional(xml_grand_child))
+                data["can_enter_leave"] = can_enter_leave
+        xml_child = child_elements.get("EXCLUSIVE-AREA-NESTING-ORDER-REFS")
+        if xml_child is not None:
+            exclusive_area_nesting_order = []
+            for xml_grand_child in xml_child.findall("./EXCLUSIVE-AREA-NESTING-ORDER-REF"):
+                exclusive_area_nesting_order.append(self._read_exclusive_area_nesting_order_ref(xml_grand_child))
+            data["exclusive_area_nesting_order"] = exclusive_area_nesting_order
+        xml_child = child_elements.get("MINIMUM-START-INTERVAL")
+        if xml_child is not None:
+            data["minimum_start_interval"] = self._read_number(xml_child.text)
+        xml_child = child_elements.get("REENTRANCY-LEVEL")
+        if xml_child is not None:
+            data["reentrancy_level"] = ar_enum.xml_to_enum("ReentrancyLevel", xml_child.text)
+        if self.schema_version < 50:
+            xml_child = child_elements.get("RUNS-INSIDE-EXCLUSIVE-AREA-REFS")
+            if xml_child is not None:
+                runs_insides = []
+                for xml_grand_child in xml_child.findall("./RUNS-INSIDE-EXCLUSIVE-AREA-REF"):
+                    # The class constructor will automatically upgrade these references to
+                    # ExclusiveAreaRefConditional elements.
+                    runs_insides.append(self._read_exclusive_area_ref(xml_grand_child))
+                data["runs_insides"] = runs_insides
+        else:
+            xml_child = child_elements.get("RUNS-INSIDES")
+            if xml_child is not None:
+                runs_insides = []
+                for xml_grand_child in xml_child.findall("./EXCLUSIVE-AREA-REF-CONDITIONAL"):
+                    runs_insides.append(self._read_exclusive_area_ref_conditional(xml_grand_child))
+                data["runs_insides"] = runs_insides
+        xml_child = child_elements.get('SW-ADDR-METHOD-REF')
+        if xml_child is not None:
+            data['sw_addr_method'] = self._read_sw_addr_method_ref(xml_child)
+
+    def _read_runnable_entity(self, xml_element: ElementTree.Element) -> ar_element.RunnableEntity:
+        """
+        Reads complex type AR:RUNNABLE-ENTITY
+        Tag variants: 'RUNNABLE-ENTITY'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_executable_entity(child_elements, data)
+        self._read_runnable_entity_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.RunnableEntity(**data)
+
+    def _read_runnable_entity_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:RUNNABLE-ENTITY
+        These elements will be implemented in the next releae
+        """
+        child_elements.skip("ARGUMENTS")
+        child_elements.skip("ASYNCHRONOUS-SERVER-CALL-RESULT-POINTS")
+        child_elements.skip("CAN-BE-INVOKED-CONCURRENTLY")
+        child_elements.skip("DATA-READ-ACCESSS")
+        child_elements.skip("DATA-RECEIVE-POINT-BY-ARGUMENTS")
+        child_elements.skip("DATA-RECEIVE-POINT-BY-VALUES")
+        child_elements.skip("DATA-SEND-POINTS")
+        child_elements.skip("DATA-WRITE-ACCESSS")
+        child_elements.skip("EXTERNAL-TRIGGERING-POINTS")
+        child_elements.skip("INTERNAL-TRIGGERING-POINTS")
+        child_elements.skip("MODE-ACCESS-POINTS")
+        child_elements.skip("MODE-SWITCH-POINTS")
+        child_elements.skip("PARAMETER-ACCESSS")
+        child_elements.skip("READ-LOCAL-VARIABLES")
+        child_elements.skip("SERVER-CALL-POINTS")
+        child_elements.skip("SYMBOL")
+        child_elements.skip("WAIT-POINTS")
+        child_elements.skip("WRITTEN-LOCAL-VARIABLES")
+        child_elements.skip("VARIATION-POINT")
 
     def _read_swc_internal_behavior(self, xml_element: ElementTree.Element) -> ar_element.SwcInternalBehavior:
         """

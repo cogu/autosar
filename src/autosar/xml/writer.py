@@ -7,6 +7,7 @@ from typing import TextIO
 import sys
 import math
 import decimal
+import autosar.base as ar_base
 import autosar.xml.document as ar_document
 import autosar.xml.element as ar_element
 import autosar.xml.enumeration as ar_enum
@@ -181,8 +182,11 @@ class Writer(_XMLWriter):
     ARXML writer class
     """
 
-    def __init__(self) -> None:
+    def __init__(self,
+                 schema_version: int = ar_base.DEFAULT_SCHEMA_VERSION) -> None:
         super().__init__(indentation_step=2)
+        self.schema_version = schema_version
+
         # Elements found in AR:PACKAGE
         self.switcher_collectable = {
             # Package
@@ -332,6 +336,9 @@ class Writer(_XMLWriter):
             'AutosarVariableRef': self._write_autosar_variable_ref,
             'VariableAccess': self._write_variable_access,
             'SwcInternalBehavior': self._write_swc_internal_behavior,
+            'ExecutableEntityActivationReason': self._write_executable_entity_activation_reason,
+            'ExclusiveAreaRefConditional': self._write_exclusive_area_ref_conditional,
+            'RunnableEntity': self._write_runnable_entity,
 
         }
         self.switcher_all = {}  # All concrete elements (used for unit testing)
@@ -439,6 +446,7 @@ class Writer(_XMLWriter):
     # AUTOSAR Document
 
     def _write_document(self, document: ar_document.Document, skip_root_attr: bool = False):
+        self.schema_version = document.schema_version
         self._add_line('<?xml version="1.0" encoding="utf-8"?>')
         if skip_root_attr:
             self._add_child("AUTOSAR")
@@ -1971,8 +1979,7 @@ class Writer(_XMLWriter):
 
     def _write_sw_addr_method_ref(self, elem: ar_element.SwAddrMethodRef) -> None:
         """
-        Writes complex type AR:SW-ADDR-METHOD-REF
-        Type: Concrete
+        Writes references to AR:SW-ADDR-METHOD--SUBTYPES-ENUM
         Tag variants: 'SW-ADDR-METHOD-REF'
         """
         assert isinstance(elem, ar_element.SwAddrMethodRef)
@@ -2226,6 +2233,28 @@ class Writer(_XMLWriter):
         Writes references to SW-COMPONENT-PROTOTYPE--SUBTYPES-ENUM
         """
         assert isinstance(elem, ar_element.SwComponentPrototypeRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content(tag, elem.value, attr)
+
+    def _write_exclusive_area_ref(self,
+                                  elem: ar_element.ExclusiveAreaRef,
+                                  tag: str) -> None:
+        """
+        Writes references to EXCLUSIVE-AREA--SUBTYPES-ENUM
+        """
+        assert isinstance(elem, ar_element.ExclusiveAreaRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content(tag, elem.value, attr)
+
+    def _write_exclusive_area_nesting_order_ref(self,
+                                                elem: ar_element.ExclusiveAreaNestingOrderRef,
+                                                tag: str) -> None:
+        """
+        Writes references to EXCLUSIVE-AREA-NESTING-ORDER--SUBTYPES-ENUM
+        """
+        assert isinstance(elem, ar_element.ExclusiveAreaNestingOrderRef)
         attr: TupleList = []
         self._collect_base_ref_attr(elem, attr)
         self._add_content(tag, elem.value, attr)
@@ -3717,6 +3746,7 @@ class Writer(_XMLWriter):
         Writes complex type AR:VARIABLE-ACCESS
         Tag variants: 'REPLACE-WITH' | 'VARIABLE-ACCESS'
         """
+        assert isinstance(elem, ar_element.VariableAccess)
         self._add_child(tag)
         self._write_referrable(elem)
         self._write_multilanguage_referrable(elem)
@@ -3726,6 +3756,107 @@ class Writer(_XMLWriter):
         if elem.scope is not None:
             self._add_content("SCOPE", ar_enum.enum_to_xml(elem.scope))
         self._leave_child()
+
+    def _write_executable_entity_activation_reason(self,
+                                                   elem: ar_element.ExecutableEntityActivationReason) -> None:
+        """
+        Writes complex type AR:EXECUTABLE-ENTITY-ACTIVATION-REASON
+        Tag variants: 'EXECUTABLE-ENTITY-ACTIVATION-REASON'
+        """
+        assert isinstance(elem, ar_element.ExecutableEntityActivationReason)
+        self._add_child("EXECUTABLE-ENTITY-ACTIVATION-REASON")
+        self._write_referrable(elem)
+        self._write_implementation_props(elem)
+        if elem.bit_position is not None:
+            self._add_content("BIT-POSITION", str(elem.bit_position))
+        self._leave_child()
+
+    def _write_exclusive_area_ref_conditional(self,
+                                              elem: ar_element.ExclusiveAreaRefConditional) -> None:
+        """
+        Writes complex type AR:EXCLUSIVE-AREA-REF-CONDITIONAL
+        Tag variants: 'EXCLUSIVE-AREA-REF-CONDITIONAL'
+        """
+        assert isinstance(elem, ar_element.ExclusiveAreaRefConditional)
+        tag = "EXCLUSIVE-AREA-REF-CONDITIONAL"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.exclusive_area_ref is not None:
+                self._write_exclusive_area_ref(elem.exclusive_area_ref, "EXCLUSIVE-AREA-REF")
+            self._leave_child()
+
+    def _write_executable_entity(self, elem: ar_element.ExecutableEntity) -> None:
+        """
+        Writes group AR:EXECUTABLE-ENTITY
+        """
+        if elem.activation_reasons:
+            self._add_child("ACTIVATION-REASONS")
+            for activation_reason in elem.activation_reasons:
+                self._write_executable_entity_activation_reason(activation_reason)
+            self._leave_child()
+        if elem.can_enter_leave:
+            if not isinstance(self.schema_version, int):
+                raise RuntimeError("Schema version is not set, unable to proceed")
+            if self.schema_version < 50:
+                self._add_child("CAN-ENTER-EXCLUSIVE-AREA-REFS")
+                for child_elem in elem.can_enter_leave:
+                    self._write_exclusive_area_ref(child_elem.exclusive_area_ref,
+                                                   "CAN-ENTER-EXCLUSIVE-AREA-REF")
+                self._leave_child()
+            else:
+                self._add_child("CAN-ENTERS")
+                for child_elem in elem.can_enter_leave:
+                    self._write_exclusive_area_ref_conditional(child_elem)
+                self._leave_child()
+        if elem.exclusive_area_nesting_order:
+            self._add_child("EXCLUSIVE-AREA-NESTING-ORDER-REFS")
+            for nesting_order_ref in elem.exclusive_area_nesting_order:
+                self._write_exclusive_area_nesting_order_ref(nesting_order_ref,
+                                                             "EXCLUSIVE-AREA-NESTING-ORDER-REF")
+            self._leave_child()
+        if elem.minimum_start_interval is not None:
+            self._add_content("MINIMUM-START-INTERVAL", self._format_number(elem.minimum_start_interval))
+        if elem.reentrancy_level is not None:
+            self._add_content("REENTRANCY-LEVEL", ar_enum.enum_to_xml(elem.reentrancy_level))
+        if elem.runs_insides:
+            if not isinstance(self.schema_version, int):
+                raise RuntimeError("Schema version is not set, unable to proceed")
+            if self.schema_version < 50:
+                self._add_child("RUNS-INSIDE-EXCLUSIVE-AREA-REFS")
+                for child_elem in elem.runs_insides:
+                    self._write_exclusive_area_ref(child_elem.exclusive_area_ref,
+                                                   "RUNS-INSIDE-EXCLUSIVE-AREA-REF")
+                self._leave_child()
+            else:
+                self._add_child("RUNS-INSIDES")
+                for child_elem in elem.runs_insides:
+                    self._write_exclusive_area_ref_conditional(child_elem)
+                self._leave_child()
+        if elem.sw_addr_method is not None:
+            self._write_sw_addr_method_ref(elem.sw_addr_method)
+
+    def _write_runnable_entity(self, elem: ar_element.RunnableEntity) -> None:
+        """
+        Writes complex type AR:RUNNABLE-ENTITY
+        Tag variants: 'RUNNABLE-ENTITY'
+
+        This is in early stage, most will be implemented later
+        """
+        self._add_child("RUNNABLE-ENTITY")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_executable_entity(elem)
+        self._leave_child()
+
+    def _write_runnable_entity_group(self, elem: ar_element.RunnableEntity) -> None:
+        """
+        Writes group type AR:RUNNABLE-ENTITY
+
+        This is just a placeholder. Will be implemented later
+        """
 
     def _write_swc_internal_behavior(self, elem: ar_element.SwcInternalBehavior) -> None:
         """

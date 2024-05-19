@@ -219,28 +219,31 @@ class IdentifiableSubTypes(Enum):
     DATA_CONSTR = 25
     DATA_PROTOTYPE = 26
     E2E_PROFILE_COMPATIBILITY_PROPS = 27
-    IMPLEMENTATION_DATA_TYPE = 28
-    IMPLEMENTATION_DATA_TYPE_ELEMENT = 29
-    MODE_DECLARATION = 30
-    MODE_DECLARATION_GROUP = 31
-    MODE_DECLARATION_GROUP_PROTOTYPE = 32
-    MODE_SWITCH_INTERFACE = 33
-    NV_DATA_INTERFACE = 34
-    P_PORT_PROTOTYPE = 35
-    PARAMETER_INTERFACE = 36
-    PARAMETER_DATA_PROTOTYPE = 37
-    PHYSICAL_DIMENSION = 38
-    PORT_PROTOTYPE = 39
-    PR_PORT_PROTOTYPE = 40
-    R_PORT_PROTOTYPE = 41
-    SENDER_RECEIVER_INTERFACE = 42
-    SW_ADDR_METHOD = 43
-    SW_BASE_TYPE = 44
-    SW_COMPONENT_PROTOTYPE = 45
-    SWC_IMPLEMENTATION = 46
-    SWC_INTERNAL_BEHAVIOR = 47
-    UNIT = 48
-    VARIABLE_DATA_PROTOTYPE = 49
+    EXCLUSIVE_AREA = 28
+    EXCLUSIVE_AREA_NESTING_ORDER = 29
+    IMPLEMENTATION_DATA_TYPE = 30
+    IMPLEMENTATION_DATA_TYPE_ELEMENT = 31
+    MODE_DECLARATION = 32
+    MODE_DECLARATION_GROUP = 33
+    MODE_DECLARATION_GROUP_PROTOTYPE = 34
+    MODE_SWITCH_INTERFACE = 35
+    NV_DATA_INTERFACE = 36
+    P_PORT_PROTOTYPE = 37
+    PARAMETER_INTERFACE = 38
+    PARAMETER_DATA_PROTOTYPE = 39
+    PHYSICAL_DIMENSION = 40
+    PORT_PROTOTYPE = 41
+    PR_PORT_PROTOTYPE = 42
+    R_PORT_PROTOTYPE = 43
+    RUNNABLE_ENTITY = 44
+    SENDER_RECEIVER_INTERFACE = 45
+    SW_ADDR_METHOD = 46
+    SW_BASE_TYPE = 47
+    SW_COMPONENT_PROTOTYPE = 48
+    SWC_IMPLEMENTATION = 49
+    SWC_INTERNAL_BEHAVIOR = 50
+    UNIT = 51
+    VARIABLE_DATA_PROTOTYPE = 52
 
 
 class IntervalType(Enum):
@@ -463,6 +466,16 @@ class PageWide(Enum):
 
     NO_PGWIDE = 0
     PGWIDE = 1
+
+
+class ReentrancyLevel(Enum):
+    """
+    AR:REENTRANCY-LEVEL-ENUM--SIMPLE
+    """
+
+    MULTICORE_REENTRANT = 0
+    NON_REENTRANT = 1
+    SINGLE_CORE_REENTRANT = 2
 
 
 class ScaleConstraintValidity(Enum):
@@ -720,6 +733,8 @@ xml_to_enum_map: dict[str, dict] = {
         "CONSTANT-SPECIFICATION": IdentifiableSubTypes.CONSTANT_SPECIFICATION,
         "DATA-CONSTR": IdentifiableSubTypes.DATA_CONSTR,
         "E-2-E-PROFILE-COMPATIBILITY-PROPS": IdentifiableSubTypes.E2E_PROFILE_COMPATIBILITY_PROPS,
+        "EXCLUSIVE-AREA": IdentifiableSubTypes.EXCLUSIVE_AREA,
+        "EXCLUSIVE-AREA-NESTING-ORDER": IdentifiableSubTypes.EXCLUSIVE_AREA_NESTING_ORDER,
         "IMPLEMENTATION-DATA-TYPE": IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE,
         "IMPLEMENTATION-DATA-TYPE-ELEMENT": IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE_ELEMENT,
         "MODE-DECLARATION": IdentifiableSubTypes.MODE_DECLARATION,
@@ -734,6 +749,7 @@ xml_to_enum_map: dict[str, dict] = {
         "PORT-PROTOTYPE": IdentifiableSubTypes.PORT_PROTOTYPE,
         "PR-PORT-PROTOTYPE": IdentifiableSubTypes.PR_PORT_PROTOTYPE,
         "R-PORT-PROTOTYPE": IdentifiableSubTypes.R_PORT_PROTOTYPE,
+        "RUNNABLE-ENTITY": IdentifiableSubTypes.RUNNABLE_ENTITY,
         "SENDER-RECEIVER-INTERFACE": IdentifiableSubTypes.SENDER_RECEIVER_INTERFACE,
         "SW-ADDR-METHOD": IdentifiableSubTypes.SW_ADDR_METHOD,
         "SW-BASE-TYPE": IdentifiableSubTypes.SW_BASE_TYPE,
@@ -911,6 +927,11 @@ xml_to_enum_map: dict[str, dict] = {
         "NO-PGWIDE": PageWide.NO_PGWIDE,
         "PGWIDE": PageWide.PGWIDE,
     },
+    "ReentrancyLevel": {
+        "MULTICORE-REENTRANT": ReentrancyLevel.MULTICORE_REENTRANT,
+        "NON-REENTRANT": ReentrancyLevel.NON_REENTRANT,
+        "SINGLE-CORE-REENTRANT": ReentrancyLevel.SINGLE_CORE_REENTRANT
+    },
     "ScaleConstraintValidity": {
         "NOT-AVAILABLE": ScaleConstraintValidity.NOT_AVAILABLE,
         "NOT-DEFINED": ScaleConstraintValidity.NOT_DEFINED,
@@ -1077,28 +1098,31 @@ enum_to_xml_map: dict[str, list] = {
         "DATA-CONSTR",                                   # 25
         "DATA-PROTOTYPE",                                # 26
         "E-2-E-PROFILE-COMPATIBILITY-PROPS",             # 27
-        "IMPLEMENTATION-DATA-TYPE",                      # 28
-        "IMPLEMENTATION-DATA-TYPE-ELEMENT",              # 29
-        "MODE-DECLARATION",                              # 30
-        "MODE-DECLARATION-GROUP",                        # 31
-        "MODE-DECLARATION-GROUP-PROTOTYPE",              # 32
-        "MODE-SWITCH-INTERFACE",                         # 33
-        "NV-DATA-INTERFACE",                             # 34
-        "P-PORT-PROTOTYPE",                              # 35
-        "PARAMETER-INTERFACE",                           # 36
-        "PARAMETER-DATA-PROTOTYPE",                      # 37
-        "PHYSICAL-DIMENSION",                            # 38
-        "PORT-PROTOTYPE",                                # 39
-        "PR-PORT-PROTOTYPE",                             # 40
-        "R-PORT-PROTOTYPE",                              # 41
-        "SENDER-RECEIVER-INTERFACE",                     # 42
-        "SW-ADDR-METHOD",                                # 43
-        "SW-BASE-TYPE",                                  # 44
-        "SW-COMPONENT-PROTOTYPE",                        # 45
-        "SWC-IMPLEMENTATION",                            # 46
-        "SWC-INTERNAL-BEHAVIOR",                         # 47
-        "UNIT",                                          # 48
-        "VARIABLE-DATA-PROTOTYPE",                       # 49
+        "EXCLUSIVE-AREA",                                # 28
+        "EXCLUSIVE-AREA-NESTING-ORDER",                  # 29
+        "IMPLEMENTATION-DATA-TYPE",                      # 30
+        "IMPLEMENTATION-DATA-TYPE-ELEMENT",              # 31
+        "MODE-DECLARATION",                              # 32
+        "MODE-DECLARATION-GROUP",                        # 33
+        "MODE-DECLARATION-GROUP-PROTOTYPE",              # 34
+        "MODE-SWITCH-INTERFACE",                         # 35
+        "NV-DATA-INTERFACE",                             # 36
+        "P-PORT-PROTOTYPE",                              # 37
+        "PARAMETER-INTERFACE",                           # 38
+        "PARAMETER-DATA-PROTOTYPE",                      # 39
+        "PHYSICAL-DIMENSION",                            # 40
+        "PORT-PROTOTYPE",                                # 41
+        "PR-PORT-PROTOTYPE",                             # 42
+        "R-PORT-PROTOTYPE",                              # 43
+        "RUNNABLE-ENTITY",                               # 44
+        "SENDER-RECEIVER-INTERFACE",                     # 45
+        "SW-ADDR-METHOD",                                # 46
+        "SW-BASE-TYPE",                                  # 47
+        "SW-COMPONENT-PROTOTYPE",                        # 48
+        "SWC-IMPLEMENTATION",                            # 49
+        "SWC-INTERNAL-BEHAVIOR",                         # 50
+        "UNIT",                                          # 51
+        "VARIABLE-DATA-PROTOTYPE",                       # 52
     ],
     "IntervalType": [
         "CLOSED",  # 0
@@ -1267,6 +1291,11 @@ enum_to_xml_map: dict[str, list] = {
     "PageWide": [
         "NO-PGWIDE",  # 0
         "PGWIDE",     # 1
+    ],
+    "ReentrancyLevel": [
+        "MULTICORE-REENTRANT",   # 0
+        "NON-REENTRANT",         # 1
+        "SINGLE-CORE-REENTRANT"  # 2
     ],
     "ScaleConstraintValidity": [
         "NOT-AVAILABLE",  # 0
