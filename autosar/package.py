@@ -38,7 +38,7 @@ class Package(object):
         if self.parent is not None:
             return self.parent.ref+'/%s'%self.name
         else:
-            return None
+            return ''
 
     def find(self,ref):
         if ref.startswith('/'): return self.parent.find(ref)
