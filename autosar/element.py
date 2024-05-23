@@ -18,7 +18,7 @@ class Element:
         if self.parent is not None:
             return self.parent.ref+'/%s'%self.name
         else:
-            return None
+            return ''
 
     def rootWS(self):
         if self.parent is None:
@@ -48,7 +48,7 @@ class LabelElement:
         if self.parent is not None:
             return self.parent.ref+'/%s'%self.label
         else:
-            return None
+            return ''
 
     def rootWS(self):
         if self.parent is None:

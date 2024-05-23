@@ -323,7 +323,7 @@ class RunnableEntity(Element):
         if self.parent is not None:
             return self.parent.ref+'/%s'%self.name
         else:
-            return None
+            return ''
 
 class DataElementInstanceRef(object):
     """
