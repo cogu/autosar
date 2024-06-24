@@ -5992,28 +5992,6 @@ class VariableAccess(Identifiable):
         self._assign_optional("scope", scope, ar_enum.VariableAccessScope)
 
 
-class SwcInternalBehavior(Identifiable):
-    """
-    Complex type AR:SWC-INTERNAL-BEHAVIOR
-    Tag variants: 'SWC-INTERNAL-BEHAVIOR'
-
-    This is just a placeholder. Will be implemented later.
-    """
-
-    def __init__(self,
-                 name: str,
-                 **kwargs) -> None:
-        super().__init__(name, **kwargs)
-
-    def ref(self) -> SwcInternalBehaviorRef | None:
-        """
-        Returns a reference to this element or
-        None if the element is not yet part of a package
-        """
-        ref_str = self._calc_ref_string()
-        return None if ref_str is None else SwcInternalBehaviorRef(ref_str)
-
-
 class SwcImplementation(Implementation):
     """
     Complex type AR:SWC-IMPLEMENTATION
@@ -6212,3 +6190,51 @@ class RTEEvent(Identifiable):
     """
     Group AR:RTE-EVENT
     """
+
+
+class InternalBehavior(Identifiable):
+    """
+    Group AR:INTERNAL-BEHAVIOR
+    This is just a placeholder. Will be implemented later.
+    """
+
+
+class SwcInternalBehavior(InternalBehavior):
+    """
+    Complex type AR:SWC-INTERNAL-BEHAVIOR
+    Tag variants: 'SWC-INTERNAL-BEHAVIOR'
+
+    Implementation is very limited for now
+    """
+
+    def __init__(self,
+                 name: str,
+                 runnables: RunnableEntity | list[RunnableEntity] | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+
+        self.runnables: list[RunnableEntity] = []  # .RUNNABLES
+
+        if runnables is not None:
+            if isinstance(runnables, list):
+                for runnable in runnables:
+                    self.append_runnable(runnable)
+            else:
+                self.append_runnable(runnables)
+
+    def ref(self) -> SwcInternalBehaviorRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        return None if ref_str is None else SwcInternalBehaviorRef(ref_str)
+
+    def append_runnable(self, runnable: RunnableEntity) -> None:
+        """
+        Appends runnable to internal list of runnables
+        """
+        if isinstance(runnable, RunnableEntity):
+            self.runnables.append(runnable)
+        else:
+            raise TypeError(f"runnable must be of type RunnableEntity. Got {str(type(runnable))}")
