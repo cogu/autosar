@@ -1,16 +1,50 @@
 """
-Classes related to AUTOSAR Elements
-
+Classes related to AUTOSAR XML Elements
 """
 
 import re
 from collections.abc import Iterable, Iterator
 from typing import Any, Union
-from enum import Enum
-import abc
+
+
 from autosar.base import split_ref, Searchable
+from autosar.xml.base import ARObject, BaseRef
 import autosar.xml.enumeration as ar_enum
 import autosar.xml.exception as ar_except
+from autosar.xml.reference import (SwBaseTypeRef,
+                                   PackageRef,
+                                   CompuMethodRef,
+                                   FunctionPtrSignatureRef,
+                                   ImplementationDataTypeRef,
+                                   SwAddrMethodRef,
+                                   DataConstraintRef,
+                                   PhysicalDimensionRef,
+                                   UnitRef,
+                                   IndexDataTypeRef,
+                                   ApplicationDataTypeRef,
+                                   ApplicationCompositeElementDataPrototypeRef,
+                                   AutosarDataTypeRef,
+                                   ConstantRef,
+                                   VariableDataPrototypeRef,
+                                   ParameterDataPrototypeRef,
+                                   ApplicationErrorRef,
+                                   ModeDeclarationRef,
+                                   ModeDeclarationGroupRef,
+                                   ModeDeclarationGroupPrototypeRef,
+                                   AutosarDataPrototypeRef,
+                                   E2EProfileCompatibilityPropsRef,
+                                   ClientServerOperationRef,
+                                   PortPrototypeRef,
+                                   AbstractImplementationDataTypeElementRef,
+                                   DataPrototypeRef,
+                                   PortInterfaceRef,
+                                   SwComponentTypeRef,
+                                   SwComponentPrototypeRef,
+                                   SwcInternalBehaviorRef,
+                                   SwcImplementationRef,
+                                   ExclusiveAreaRef,
+                                   ExclusiveAreaNestingOrderRef,
+                                   )
 
 
 alignment_type_re = re.compile(
@@ -20,6 +54,8 @@ display_format_str_re = re.compile(
     r"%[ \-+#]?[0-9]*(\.[0-9]+)?[diouxXfeEgGcs]")
 
 # Type aliases
+
+BaseReference = BaseRef  # This line is simply here to suppress an unused import warning
 
 ValueSpecificationElement = Union["TextValueSpecification",
                                   "NumericalValueSpecification",
@@ -121,150 +157,6 @@ class PositiveIntegerValue:
             raise TypeError(f"Unexpected type for value {str(type(value))}")
 
 # Base classes
-
-
-class ARObject:
-    """
-    Base class for all AUTOSAR objects
-    """
-
-    @property
-    def is_empty(self) -> bool:
-        """
-        True if no value has been set (everything is None)
-        """
-        for value in vars(self).values():
-            if isinstance(value, list):
-                if len(value) > 0:
-                    return False
-            else:
-                if value is not None:
-                    return False
-        return True
-
-    def is_empty_with_ignore(self, ignore_set: set) -> bool:
-        """
-        Same as is_empty but the caller can give
-        a list of property names to ignore during
-        check
-        """
-        for key in vars(self).keys():
-            if key not in ignore_set:
-                value = getattr(self, key)
-                if isinstance(value, list):
-                    if len(value) > 0:
-                        return False
-                else:
-                    if value is not None:
-                        return False
-        return True
-
-    def _assign_optional(self, attr_name: str, value: Any, type_name: type) -> None:
-        """
-        Same as _assign but with a None-check
-        """
-        if value is not None:
-            self._assign(attr_name, value, type_name)
-
-    def _assign(self, attr_name: str, value: Any, type_name: type) -> None:
-        """
-        Assign single value to attribute with type check.
-        """
-        if issubclass(type_name, Enum):
-            self._set_attr_with_strict_type(attr_name, value, type_name)
-        elif issubclass(type_name, BaseRef):
-            self._set_attr_from_str_or_direct(attr_name, value, type_name)
-        else:
-            self._set_attr_with_type_cast(attr_name, value, type_name)
-
-    def _assign_int_or_str_pattern_optional(self, attr_name: str, value: int | str | None, pattern: re.Pattern) -> None:
-        """
-        Same as _assign_int_or_str_pattern but with a None-check
-        """
-        if value is not None:
-            self._assign_int_or_str_pattern(attr_name, value, pattern)
-
-    def _assign_int_or_str_pattern(self, attr_name: str, value: int | str, pattern: re.Pattern) -> None:
-        """
-        Special assignment-function for values that can be either int or conforms
-        to a specific regular expression
-        """
-        if isinstance(value, int):
-            pass
-        elif isinstance(value, str):
-            match = pattern.match(value)
-            if match is None:
-                raise ValueError(f"Invalid parameter '{value}' for '{attr_name}'")
-        else:
-            raise TypeError(f"{attr_name}: Invalid type. Expected (int, str), got '{str(type(value))}'")
-        setattr(self, attr_name, value)
-
-    def _assign_optional_strict(self, attr_name: str, value: Any, type_name: type) -> None:
-        """
-        Sets object attribute with strict type check
-        """
-        if value is not None:
-            self._set_attr_with_strict_type(attr_name, value, type_name)
-
-    def _assign_optional_positive_int(self, attr_name, value: int) -> None:
-        """
-        Checks that the optional value is a positive integer before assignment
-        """
-        if value is not None:
-            self._set_attr_positive_int(attr_name, value)
-
-    def _set_attr_with_strict_type(self, attr_name: str, value: Any, type_class: type) -> None:
-        """
-        Sets object attribute only if the value is matches given type-class
-        """
-        if isinstance(value, type_class):
-            setattr(self, attr_name, value)
-        else:
-            raise TypeError(
-                f"Invalid type for parameter '{attr_name}'. Expected type {str(type_class)}, got {str(type(value))}")
-
-    def _set_attr_from_str_or_direct(self, attr_name: str, value: Any, type_name: type):
-        """
-        Can create new objects from str if necessary
-        """
-        if isinstance(value, str):
-            new_value = type_name(value)
-        elif isinstance(value, type_name):
-            new_value = value
-        else:
-            raise TypeError(f"Invalid type  for '{attr_name}'"
-                            f". Expected one of (str, {type_name}), got '{str(type(value))}'")
-        setattr(self, attr_name, new_value)
-
-    def _set_attr_with_type_cast(self, attr_name: str, value: Any, type_class: type) -> None:
-        """
-        Sets object attribute only if it can be converted to given type.
-        """
-        if type_class in {bool, int, str, float}:
-            new_value = type_class(value)
-        else:
-            raise NotImplementedError(type_class)
-        setattr(self, attr_name, new_value)
-
-    def _set_attr_positive_int(self, attr_name: str, value: int) -> None:
-        """
-        Checks that value is non-negative before updating attribute
-        """
-        if not isinstance(value, int):
-            raise TypeError(f"Invalid type for '{attr_name}'. Expected int, got '{str(type(value))}'")
-        if value < 0:
-            raise ValueError(f"Positive integer expected: {value}")
-        setattr(self, attr_name, value)
-
-    def _find_by_name(self, elements: list, name: str):
-        """
-        Iterates through list of elements and return the first whose
-        name matches the name argument
-        """
-        for elem in elements:
-            if elem.name == name:
-                return elem
-        return None
 
 
 class Referrable(ARObject):
@@ -518,513 +410,6 @@ class Implementation(ARElement):
         else:
             raise TypeError("code_descriptors must be of type Code")
 
-# --- Reference elements
-
-
-class BaseRef(ARObject, abc.ABC):
-    """
-    Base type for all reference classes
-    Complex type AR:REF
-    Type: Abstract
-    """
-
-    def __init__(self,
-                 value: str,
-                 dest: ar_enum.IdentifiableSubTypes = None) -> None:
-        self.value = value
-        self.dest: ar_enum.IdentifiableSubTypes = None
-        if dest is None:
-            if len(self._accepted_subtypes()) == 1:
-                dest = list(self._accepted_subtypes())[0]
-            else:
-                msg_part1 = "Value of dest cannot be None. Accepted values are: "
-                msg_part2 = ",".join([str(x) for x in sorted(list(self._accepted_subtypes()))])
-                raise ValueError(msg_part1 + msg_part2)
-        if dest in self._accepted_subtypes():
-            self.dest = dest
-        else:
-            raise ValueError(f"{str(dest)} is not a valid sub-type for {str(type(self))}")
-
-    @abc.abstractmethod
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """
-        Subset of ar_enum.IdentifiableSubTypes defining
-        which enum values are acceptable for dest
-        """
-
-    def __str__(self) -> str:
-        """Returns reference as string"""
-        return self.value
-
-
-class PackageRef(BaseRef):
-    """
-    References to AR-PACKAGE--SUBTYPES-ENUM
-    """
-
-    def __init__(self, value: str) -> None:
-        super().__init__(value, ar_enum.IdentifiableSubTypes.AR_PACKAGE)
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.AR_PACKAGE}
-
-
-class CompuMethodRef(BaseRef):
-    """
-    CompuMethod reference
-    """
-
-    def __init__(self, value: str,
-                 dest: ar_enum.IdentifiableSubTypes = ar_enum.IdentifiableSubTypes.COMPU_METHOD) -> None:
-        super().__init__(value, dest)
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.COMPU_METHOD}
-
-
-class FunctionPtrSignatureRef(BaseRef):
-    """
-    Function pointer signature reference
-    """
-
-    def __init__(self, value: str) -> None:
-        super().__init__(value, ar_enum.IdentifiableSubTypes.BSW_MODULE_ENTRY)
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.BSW_MODULE_ENTRY}
-
-
-class ImplementationDataTypeRef(BaseRef):
-    """
-    ImplementationDataType reference
-    """
-
-    def __init__(self, value: str) -> None:
-        super().__init__(value, ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE)
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE}
-
-
-class SwAddrMethodRef(BaseRef):
-    """
-    SwAddrMethod reference
-    """
-
-    def __init__(self, value: str) -> None:
-        super().__init__(value, ar_enum.IdentifiableSubTypes.SW_ADDR_METHOD)
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.SW_ADDR_METHOD}
-
-
-class SwBaseTypeRef(BaseRef):
-    """
-    SwBaseType reference
-    """
-
-    def __init__(self, value: str) -> None:
-        super().__init__(value, ar_enum.IdentifiableSubTypes.SW_BASE_TYPE)
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.SW_BASE_TYPE}
-
-
-class DataConstraintRef(BaseRef):
-    """
-    DataConstraint reference
-    """
-
-    def __init__(self, value: str) -> None:
-        super().__init__(value, ar_enum.IdentifiableSubTypes.DATA_CONSTR)
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.DATA_CONSTR}
-
-
-class PhysicalDimensionRef(BaseRef):
-    """
-    PhysicalDimension reference
-    """
-
-    def __init__(self, value: str) -> None:
-        super().__init__(value, ar_enum.IdentifiableSubTypes.PHYSICAL_DIMENSION)
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.PHYSICAL_DIMENSION}
-
-
-class UnitRef(BaseRef):
-    """
-    DataConstraint reference
-    """
-
-    def __init__(self, value: str) -> None:
-        super().__init__(value, ar_enum.IdentifiableSubTypes.UNIT)
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.UNIT}
-
-
-class IndexDataTypeRef(BaseRef):
-    """
-    IndexDataType reference
-    """
-
-    def __init__(self, value: str) -> None:
-        super().__init__(value, ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE)
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE}
-
-
-class ApplicationDataTypeRef(BaseRef):
-    """
-    Application data type reference
-    """
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.APPLICATION_ARRAY_DATA_TYPE,
-                ar_enum.IdentifiableSubTypes.APPLICATION_COMPOSITE_DATA_TYPE,
-                ar_enum.IdentifiableSubTypes.APPLICATION_DATA_TYPE,
-                ar_enum.IdentifiableSubTypes.APPLICATION_DEFERRED_DATA_TYPE,
-                ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE,
-                ar_enum.IdentifiableSubTypes.APPLICATION_RECORD_DATA_TYPE}
-
-
-class ApplicationCompositeElementDataPrototypeRef(BaseRef):
-    """
-    References to APPLICATION-COMPOSITE-ELEMENT-DATA-PROTOTYPE--SUBTYPES-ENUM
-    """
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.APPLICATION_ARRAY_ELEMENT,
-                ar_enum.IdentifiableSubTypes.APPLICATION_COMPOSITE_ELEMENT_DATA_PROTOTYPE,
-                ar_enum.IdentifiableSubTypes.APPLICATION_RECORD_ELEMENT,
-                }
-
-
-class AutosarDataTypeRef(BaseRef):
-    """
-    References to AR:AUTOSAR-DATA-TYPE--SUBTYPES-ENUM
-    """
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.ABSTRACT_IMPLEMENTATION_DATA_TYPE,
-                ar_enum.IdentifiableSubTypes.APPLICATION_ARRAY_DATA_TYPE,
-                ar_enum.IdentifiableSubTypes.APPLICATION_COMPOSITE_DATA_TYPE,
-                ar_enum.IdentifiableSubTypes.APPLICATION_DATA_TYPE,
-                ar_enum.IdentifiableSubTypes.APPLICATION_DEFERRED_DATA_TYPE,
-                ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE,
-                ar_enum.IdentifiableSubTypes.APPLICATION_RECORD_DATA_TYPE,
-                ar_enum.IdentifiableSubTypes.AUTOSAR_DATA_TYPE,
-                ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE}
-
-
-class ConstantRef(BaseRef):
-    """
-    Reference to ConstantSpecification
-    """
-
-    def __init__(self, value: str) -> None:
-        super().__init__(value, ar_enum.IdentifiableSubTypes.CONSTANT_SPECIFICATION)
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.CONSTANT_SPECIFICATION}
-
-
-class VariableDataPrototypeRef(BaseRef):
-    """
-    Reference to VariableDataPrototype
-    """
-
-    def __init__(self, value: str) -> None:
-        super().__init__(value, ar_enum.IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE)
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE}
-
-
-class ParameterDataPrototypeRef(BaseRef):
-    """
-    Reference to ParameterDataPrototype
-    """
-
-    def __init__(self, value: str) -> None:
-        super().__init__(value, ar_enum.IdentifiableSubTypes.PARAMETER_DATA_PROTOTYPE)
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.PARAMETER_DATA_PROTOTYPE}
-
-
-class ApplicationErrorRef(BaseRef):
-    """
-    Reference to ApplicationError
-    tag variants: 'POSSIBLE-ERROR-REF'
-    """
-
-    def __init__(self, value: str) -> None:
-        super().__init__(value, ar_enum.IdentifiableSubTypes.APPLICATION_ERROR)
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.APPLICATION_ERROR}
-
-
-class ModeDeclarationRef(BaseRef):
-    """
-    Reference to ModeDeclaration
-    tag variants: 'TARGET-MODE-DECLARATION-REF' | 'INITIAL-MODE-REF' |
-                  'FIRST-MODE-REF' | 'SECOND-MODE-REF' | 'MODE-DECLARATION-REF' |
-                  'DEFAULT-MODE-REF' | 'TARGET-MODE-REF' | 'ENTERED-MODE-REF' |
-                  'EXITED-MODE-REF' | 'ENTRY-MODE-DECLARATION-REF' | 'EXIT-MODE-DECLARATION-REF'
-
-    """
-
-    def __init__(self, value: str) -> None:
-        super().__init__(value, ar_enum.IdentifiableSubTypes.MODE_DECLARATION)
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.MODE_DECLARATION}
-
-
-class ModeDeclarationGroupRef(BaseRef):
-    """
-    Reference to ModeDeclarationGroup
-    Tag variants: 'MODE-DECLARATION-GROUP-REF' | 'TYPE-TREF' | 'MODE-GROUP-REF'
-    """
-
-    def __init__(self, value: str) -> None:
-        super().__init__(value, ar_enum.IdentifiableSubTypes.MODE_DECLARATION_GROUP)
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.MODE_DECLARATION_GROUP}
-
-
-class ModeDeclarationGroupPrototypeRef(BaseRef):
-    """
-    Reference to ModeDeclarationGroupPrototype
-    Tag variants: 'MODE-GROUP-REF' | 'REQUIRED-MODE-GROUP-REF' | 'FIRST-MODE-GROUP-REF' |
-                  'SECOND-MODE-GROUP-REF' | 'MODE-DECLARATION-GROUP-PROTOTYPE-REF'
-                  (and more)
-    """
-
-    def __init__(self, value: str) -> None:
-        super().__init__(value, ar_enum.IdentifiableSubTypes.MODE_DECLARATION_GROUP_PROTOTYPE)
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.MODE_DECLARATION_GROUP_PROTOTYPE}
-
-
-class AutosarDataPrototypeRef(BaseRef):
-    """
-    Reference to elements that derives from AutosarDataPrototype
-    """
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.ARGUMENT_DATA_PROTOTYPE,
-                ar_enum.IdentifiableSubTypes.PARAMETER_DATA_PROTOTYPE,
-                ar_enum.IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE}
-
-
-class E2EProfileCompatibilityPropsRef(BaseRef):
-    """
-    Reference to E2EProfileCompatibilityProps
-    """
-
-    def __init__(self, value: str) -> None:
-        super().__init__(value, ar_enum.IdentifiableSubTypes.E2E_PROFILE_COMPATIBILITY_PROPS)
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.E2E_PROFILE_COMPATIBILITY_PROPS}
-
-
-class ClientServerOperationRef(BaseRef):
-    """
-    Reference to ClientServerOperation
-    """
-
-    def __init__(self, value: str) -> None:
-        super().__init__(value, ar_enum.IdentifiableSubTypes.CLIENT_SERVER_OPERATION)
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.CLIENT_SERVER_OPERATION}
-
-
-class PortPrototypeRef(BaseRef):
-    """
-    Reference to port prototype elements
-    """
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.ABSTRACT_PROVIDED_PORT_PROTOTYPE,
-                ar_enum.IdentifiableSubTypes.ABSTRACT_REQUIRED_PORT_PROTOTYPE,
-                ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE,
-                ar_enum.IdentifiableSubTypes.PR_PORT_PROTOTYPE,
-                ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE,
-                }
-
-    @property
-    def is_provide_port_ref(self) -> bool:
-        """
-        True if destination of port reference is a P-PORT
-        """
-        p_port_values = {ar_enum.IdentifiableSubTypes.ABSTRACT_PROVIDED_PORT_PROTOTYPE,
-                         ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE,
-                         ar_enum.IdentifiableSubTypes.PR_PORT_PROTOTYPE}
-        return self.dest in p_port_values
-
-    @property
-    def is_require_port_ref(self) -> bool:
-        """
-        True if destination of port reference is an R-PORT
-        """
-        r_port_values = {ar_enum.IdentifiableSubTypes.ABSTRACT_REQUIRED_PORT_PROTOTYPE,
-                         ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE,
-                         ar_enum.IdentifiableSubTypes.PR_PORT_PROTOTYPE}
-        return self.dest in r_port_values
-
-
-class AbstractImplementationDataTypeElementRef(BaseRef):
-    """
-    Reference to abstract or specific data-type elements
-    """
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.ABSTRACT_IMPLEMENTATION_DATA_TYPE_ELEMENT,
-                ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE_ELEMENT}
-
-
-class DataPrototypeRef(BaseRef):
-    """
-    References to DATA-PROTOTYPE--SUBTYPES-ENUM
-    """
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.APPLICATION_ARRAY_ELEMENT,
-                ar_enum.IdentifiableSubTypes.APPLICATION_COMPOSITE_ELEMENT_DATA_PROTOTYPE,
-                ar_enum.IdentifiableSubTypes.APPLICATION_RECORD_ELEMENT,
-                ar_enum.IdentifiableSubTypes.ARGUMENT_DATA_PROTOTYPE,
-                ar_enum.IdentifiableSubTypes.AUTOSAR_DATA_PROTOTYPE,
-                ar_enum.IdentifiableSubTypes.DATA_PROTOTYPE,
-                ar_enum.IdentifiableSubTypes.PARAMETER_DATA_PROTOTYPE,
-                ar_enum.IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE,
-                }
-
-
-class PortInterfaceRef(BaseRef):
-    """
-    References to PORT-INTERFACE--SUBTYPES-ENUM
-
-    Only a small piece of the enum is currently implemented
-    """
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.CLIENT_SERVER_INTERFACE,
-                ar_enum.IdentifiableSubTypes.MODE_SWITCH_INTERFACE,
-                ar_enum.IdentifiableSubTypes.NV_DATA_INTERFACE,
-                ar_enum.IdentifiableSubTypes.PARAMETER_INTERFACE,
-                ar_enum.IdentifiableSubTypes.SENDER_RECEIVER_INTERFACE,
-                }
-
-
-class SwComponentTypeRef(BaseRef):
-    """
-    References to SW-COMPONENT-TYPE--SUBTYPES-ENUM
-
-    Only a small piece of the enum is currently implemented
-    """
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.APPLICATION_SW_COMPONENT_TYPE,
-                ar_enum.IdentifiableSubTypes.COMPOSITION_SW_COMPONENT_TYPE,
-                }
-
-
-class SwComponentPrototypeRef(BaseRef):
-    """
-    Reference to SW-COMPONENT-PROTOTYPE--SUBTYPES-ENUM
-    """
-
-    def __init__(self, value: str) -> None:
-        super().__init__(value, ar_enum.IdentifiableSubTypes.SW_COMPONENT_PROTOTYPE)
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.SW_COMPONENT_PROTOTYPE}
-
-
-class SwcInternalBehaviorRef(BaseRef):
-    """
-    Reference to AR:SWC-INTERNAL-BEHAVIOR--SUBTYPES-ENUM
-    """
-
-    def __init__(self, value: str) -> None:
-        super().__init__(value, ar_enum.IdentifiableSubTypes.SWC_INTERNAL_BEHAVIOR)
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.SWC_INTERNAL_BEHAVIOR}
-
-
-class SwcImplementationRef(BaseRef):
-    """
-    Reference to SwcImplementation
-    """
-
-    def __init__(self, value: str) -> None:
-        super().__init__(value, ar_enum.IdentifiableSubTypes.SWC_IMPLEMENTATION)
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.SWC_IMPLEMENTATION}
-
-
-class ExclusiveAreaRef(BaseRef):
-    """
-    EXCLUSIVE-AREA--SUBTYPES-ENUM
-    """
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.EXCLUSIVE_AREA}
-
-
-class ExclusiveAreaNestingOrderRef(BaseRef):
-    """
-    AR:EXCLUSIVE-AREA-NESTING-ORDER--SUBTYPES-ENUM
-    """
-
-    def _accepted_subtypes(self) -> set[ar_enum.IdentifiableSubTypes]:
-        """Acceptable values for dest"""
-        return {ar_enum.IdentifiableSubTypes.EXCLUSIVE_AREA_NESTING_ORDER}
 
 # --- Documentation Elements
 
@@ -2621,19 +2006,12 @@ class AutosarDataPrototype(DataPrototype):
 
     def __init__(self,
                  name: str,
-                 type_ref: AutosarDataTypeRef | ImplementationDataTypeRef | None = None,
+                 type_ref: AutosarDataTypeRef | None = None,
                  **kwargs: dict) -> None:
         super().__init__(name, **kwargs)
         self.type_ref: AutosarDataTypeRef | None = None  # .TYPE-TREF
         if type_ref is not None:
-            if isinstance(type_ref, AutosarDataTypeRef):
-                pass
-            elif isinstance(type_ref, ImplementationDataTypeRef):
-                type_ref = AutosarDataTypeRef(type_ref.value, ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE)
-            else:
-                msg = f"type_ref: Invalid type '{str(type(type_ref))}'."
-                raise TypeError(msg + " Expected type 'AutosarDataTypeRef' or 'ImplementationDataTypeRef'")
-            self._set_attr_with_strict_type("type_ref", type_ref, AutosarDataTypeRef)
+            self._assign_optional("type_ref", type_ref, AutosarDataTypeRef)
 
 
 class VariableDataPrototype(AutosarDataPrototype):
