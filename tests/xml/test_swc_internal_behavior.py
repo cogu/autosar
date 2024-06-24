@@ -711,5 +711,109 @@ class TestExecutableEntity(unittest.TestCase):
         self.assertEqual(ref.dest, ar_enum.IdentifiableSubTypes.SW_ADDR_METHOD)
 
 
+class TestSwcInternalBehavior(unittest.TestCase):
+    """
+    Most elements are not implemented yet
+    """
+
+    def test_name_only(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.SwcInternalBehavior('MyName')
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+</SWC-INTERNAL-BEHAVIOR>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(elem.name, 'MyName')
+        self.assertEqual(elem.short_name, 'MyName')
+
+    # Base class elements
+    # IMPLEMENT LATER: CONSTANT-MEMORYS
+    # IMPLEMENT LATER: CONSTANT-VALUE-MAPPING-REFS
+    # IMPLEMENT LATER: DATA-TYPE-MAPPING-REFS
+    # IMPLEMENT LATER: EXCLUSIVE-AREAS
+    # IMPLEMENT LATER: EXCLUSIVE-AREA-NESTING-ORDERS
+    # IMPLEMENT LATER: STATIC-MEMORYS
+    # Class elements
+    # IMPLEMENT LATER: AR-TYPED-PER-INSTANCE-MEMORYS
+    # IMPLEMENT LATER: EVENTS
+    # IMPLEMENT LATER: EXCLUSIVE-AREA-POLICYS
+    # IMPLEMENT LATER: EXPLICIT-INTER-RUNNABLE-VARIABLES
+    # IMPLEMENT LATER: HANDLE-TERMINATION-AND-RESTART
+    # IMPLEMENT LATER: IMPLICIT-INTER-RUNNABLE-VARIABLES
+    # IMPLEMENT LATER: INCLUDED-DATA-TYPE-SETS
+    # IMPLEMENT LATER: INCLUDED-MODE-DECLARATION-GROUP-SETS
+    # IMPLEMENT LATER: INSTANTIATION-DATA-DEF-PROPSS
+    # IMPLEMENT LATER: PER-INSTANCE-MEMORYS
+    # IMPLEMENT LATER: PER-INSTANCE-PARAMETERS
+    # IMPLEMENT LATER: PORT-API-OPTIONS
+
+    # RUNNABLES
+
+    def test_runnables_from_element(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.SwcInternalBehavior('MyName', runnables=ar_element.RunnableEntity("MyRunnable"))
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <RUNNABLES>
+    <RUNNABLE-ENTITY>
+      <SHORT-NAME>MyRunnable</SHORT-NAME>
+    </RUNNABLE-ENTITY>
+  </RUNNABLES>
+</SWC-INTERNAL-BEHAVIOR>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.runnables), 1)
+        runnable = elem.runnables[0]
+        self.assertIsInstance(runnable, ar_element.RunnableEntity)
+
+    def test_runnables_from_list(self):
+        writer = autosar.xml.Writer()
+        runnable1 = ar_element.RunnableEntity("MyRunnable1")
+        runnable2 = ar_element.RunnableEntity("MyRunnable2")
+        runnable3 = ar_element.RunnableEntity("MyRunnable3")
+        element = ar_element.SwcInternalBehavior('MyName', runnables=[runnable1,
+                                                                      runnable2,
+                                                                      runnable3])
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <RUNNABLES>
+    <RUNNABLE-ENTITY>
+      <SHORT-NAME>MyRunnable1</SHORT-NAME>
+    </RUNNABLE-ENTITY>
+    <RUNNABLE-ENTITY>
+      <SHORT-NAME>MyRunnable2</SHORT-NAME>
+    </RUNNABLE-ENTITY>
+    <RUNNABLE-ENTITY>
+      <SHORT-NAME>MyRunnable3</SHORT-NAME>
+    </RUNNABLE-ENTITY>
+  </RUNNABLES>
+</SWC-INTERNAL-BEHAVIOR>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.runnables), 3)
+        runnable = elem.runnables[0]
+        self.assertIsInstance(runnable, ar_element.RunnableEntity)
+        self.assertEqual(runnable.name, "MyRunnable1")
+        runnable = elem.runnables[1]
+        self.assertIsInstance(runnable, ar_element.RunnableEntity)
+        self.assertEqual(runnable.name, "MyRunnable2")
+        runnable = elem.runnables[2]
+        self.assertIsInstance(runnable, ar_element.RunnableEntity)
+        self.assertEqual(runnable.name, "MyRunnable3")
+
+    # IMPLEMENT LATER: SERVICE-DEPENDENCYS"
+    # IMPLEMENT LATER: SHARED-PARAMETERS
+    # IMPLEMENT LATER: SUPPORTS-MULTIPLE-INSTANTIATION
+    # NOT SUPPORTED: VARIATION-POINT-PROXYS
+    # NOT SUPPORTED:  VARIATION-POINT
+
+
 if __name__ == '__main__':
     unittest.main()

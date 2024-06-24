@@ -4514,5 +4514,47 @@ class Reader:
         self._read_referrable(child_elements, data)
         self._read_multi_language_referrable(child_elements, data)
         self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_internal_behavior_group(child_elements, data)
+        self._read_swc_internal_behavior_group(child_elements, data)
         self._report_unprocessed_elements(child_elements)
         return ar_element.SwcInternalBehavior(**data)
+
+    def _read_internal_behavior_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:INTERNAL-BEHAVIOR
+        Will be implemented in a future version
+        """
+        child_elements.skip("CONSTANT-MEMORYS")
+        child_elements.skip("CONSTANT-VALUE-MAPPING-REFS")
+        child_elements.skip("DATA-TYPE-MAPPING-REFS")
+        child_elements.skip("EXCLUSIVE-AREAS")
+        child_elements.skip("EXCLUSIVE-AREA-NESTING-ORDERS")
+        child_elements.skip("STATIC-MEMORYS")
+
+    def _read_swc_internal_behavior_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:SWC-INTERNAL-BEHAVIOR
+        Most of it will be implemented in a future version
+        """
+        child_elements.skip("AR-TYPED-PER-INSTANCE-MEMORYS")
+        child_elements.skip("EVENTS")
+        child_elements.skip("EXCLUSIVE-AREA-POLICYS")
+        child_elements.skip("EXPLICIT-INTER-RUNNABLE-VARIABLES")
+        child_elements.skip("HANDLE-TERMINATION-AND-RESTART")
+        child_elements.skip("INCLUDED-DATA-TYPE-SETS")
+        child_elements.skip("INCLUDED-MODE-DECLARATION-GROUP-SETS")
+        child_elements.skip("INSTANTIATION-DATA-DEF-PROPSS")
+        child_elements.skip("PER-INSTANCE-MEMORYS")
+        child_elements.skip("PER-INSTANCE-PARAMETERS")
+        child_elements.skip("PORT-API-OPTIONS")
+        xml_child = child_elements.get("RUNNABLES")
+        if xml_child is not None:
+            runnables = []
+            for xml_grand_child in xml_child.findall("./RUNNABLE-ENTITY"):
+                runnables.append(self._read_runnable_entity(xml_grand_child))
+            data["runnables"] = runnables
+        child_elements.skip("SERVICE-DEPENDENCYS")
+        child_elements.skip("SHARED-PARAMETERS")
+        child_elements.skip("SUPPORTS-MULTIPLE-INSTANTIATION")
+        child_elements.skip("VARIATION-POINT-PROXYS")
+        child_elements.skip("VARIATION-POINT")

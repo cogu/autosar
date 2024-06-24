@@ -3869,4 +3869,23 @@ class Writer(_XMLWriter):
         self._write_referrable(elem)
         self._write_multilanguage_referrable(elem)
         self._write_identifiable(elem)
+        self._write_internal_behavior_group(elem)
+        self._write_swc_internal_behavior_group(elem)
         self._leave_child()
+
+    def _write_internal_behavior_group(self, elem: ar_element.InternalBehavior) -> None:
+        """
+        Writes group AR:INTERNAL-BEHAVIOR
+        This is just a placeholder. Will be implemented later.
+        """
+
+    def _write_swc_internal_behavior_group(self, elem: ar_element.SwcInternalBehavior) -> None:
+        """
+        Writes group AR:SWC-INTERNAL-BEHAVIOR
+        Most of it will be implemented in a future version
+        """
+        if elem.runnables:
+            self._add_child("RUNNABLES")
+            for runnable in elem.runnables:
+                self._write_runnable_entity(runnable)
+            self._leave_child()
