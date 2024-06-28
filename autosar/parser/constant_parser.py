@@ -51,6 +51,33 @@ class ConstantParser(ElementParser):
         return retval
 
     @parseElementUUID
+    def parsePortDefinedArgumentValue(self, xmlElem, parent=None):
+        assert(xmlElem.tag == 'PORT-DEFINED-ARGUMENT-VALUE')
+        (value, valueTypeRef) = (None, None)
+        self.push()
+
+        for xmlElem in xmlElem.findall('./*'):
+            if xmlElem.tag == 'VALUE':
+                if value is not None:
+                    raise ValueError('PortDefinedArgumentValue must not contain more than one <VALUE> element')
+                values = self.parseValueV4(xmlElem, parent)
+                if len(values) != 1:
+                    raise ValueError('A value specification must contain exactly one element')
+                value = values[0]
+            elif xmlElem.tag == 'VALUE-TYPE-TREF':
+                if valueTypeRef is not None:
+                    raise ValueError('PortDefinedArgumentValue must not contain more than one <VALUE-TYPE-TREF> element')
+                valueTypeRef = self.parseTextNode(xmlElem)
+            else:
+                self.defaultHandler(xmlElem)
+        
+        retval = None
+        if value is not None and valueTypeRef is not None:
+            retval = autosar.constant.PortDefinedArgumentValue(value, valueTypeRef)
+        self.pop(retval)
+        return retval
+
+    @parseElementUUID
     def _parseValueV3(self, xmlValue, parent):
         constantValue = None
         xmlName = xmlValue.find('SHORT-NAME')

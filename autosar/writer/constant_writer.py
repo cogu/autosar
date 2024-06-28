@@ -247,3 +247,17 @@ class CodeConstantWriter(ElementWriter):
             else:
                 return text
         return None
+
+    def _writePortDefinedArgumentValue(self, ws, value):
+        assert(isinstance(value, autosar.constant.PortDefinedArgumentValue))
+        lines = []
+        lines.append('<%s>'%value.tag(self.version))
+        lines.append(self.indent('<VALUE>', 1))
+        lines.append(self.indent(self.writeValueSpecificationXML(value.value), 2))
+        lines.append(self.indent('</VALUE>', 1))
+        dataType = ws.find(value.typeRef, role='DataType')
+        if dataType is None:
+            raise ValueError('invalid reference: '+value.typeRef)
+        lines.append(self.indent('<VALUE-TYPE-TREF DEST="%s">%s</TYPE-TREF>'%(dataType.tag(self.version), value.typeRef), 1))
+        lines.append('</%s>'%value.tag(self.version))
+        return lines

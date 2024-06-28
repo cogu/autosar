@@ -1,3 +1,4 @@
+from autosar.writer.constant_writer import XMLConstantWriter
 from autosar.writer.writer_base import ElementWriter
 import autosar.behavior
 import autosar.base
@@ -365,6 +366,12 @@ class XMLBehaviorWriter(ElementWriter):
         if port is None:
             raise ValueError('invalid reference: '+option.portRef)
         lines.append(self.indent('<PORT-REF DEST="%s">%s</PORT-REF>'%(port.tag(self.version),port.ref),1))
+        if option.portArgValues is not None:
+            lines.append(self.indent('<PORT-ARG-VALUES>',1))
+            constantWriter = XMLConstantWriter(self.version, self.patch)
+            for arg in option.portArgValues:
+                lines.extend(self.indent(constantWriter._writePortDefinedArgumentValue(ws,arg),2))
+            lines.append(self.indent('</PORT-ARG-VALUES>',1))
         lines.append('</%s>'%option.tag(self.version))
         return lines
 

@@ -64,6 +64,7 @@ class BehaviorParser(ElementParser):
                 elif xmlNode.tag == 'PORT-API-OPTIONS':
                     for xmlOption in xmlNode.findall('./PORT-API-OPTION'):
                         portAPIOption = autosar.behavior.PortAPIOption(self.parseTextNode(xmlOption.find('PORT-REF')),self.parseBooleanNode(xmlOption.find('ENABLE-TAKE-ADDRESS')),self.parseBooleanNode(xmlOption.find('INDIRECT-API')))
+                        # TODO: Backport PortArgValues support from Autosar 4
                         if portAPIOption is not None: internalBehavior.portAPIOptions.append(portAPIOption)
                 elif xmlNode.tag == 'RUNNABLES':
                     for xmRunnable in xmlNode.findall('./RUNNABLE-ENTITY'):
@@ -148,7 +149,16 @@ class BehaviorParser(ElementParser):
                             internalBehavior.events.append(event)
                 elif xmlElem.tag == 'PORT-API-OPTIONS':
                     for xmlOption in xmlElem.findall('./PORT-API-OPTION'):
-                        portAPIOption = autosar.behavior.PortAPIOption(self.parseTextNode(xmlOption.find('PORT-REF')),self.parseBooleanNode(xmlOption.find('ENABLE-TAKE-ADDRESS')),self.parseBooleanNode(xmlOption.find('INDIRECT-API')))
+                        enableTakeAddress = self.parseBooleanNode(xmlOption.find('ENABLE-TAKE-ADDRESS'))
+                        indirectApi = self.parseBooleanNode(xmlOption.find('INDIRECT-API'))
+                        portRef = self.parseTextNode(xmlOption.find('PORT-REF'))
+                        
+                        portArgValues = []
+                        for xmlPortDefinedArgumentValue in xmlOption.findall('./PORT-ARG-VALUES/PORT-DEFINED-ARGUMENT-VALUE'):
+                            portArgValues.append(self.constantParser.parsePortDefinedArgumentValue(xmlPortDefinedArgumentValue))
+
+                        portAPIOption = autosar.behavior.PortAPIOption(portRef, enableTakeAddress, indirectApi, portArgValues)
+                        
                         if portAPIOption is not None: internalBehavior.portAPIOptions.append(portAPIOption)
                 elif xmlElem.tag == 'RUNNABLES':
                     for xmRunnable in xmlElem.findall('./RUNNABLE-ENTITY'):

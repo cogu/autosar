@@ -25,6 +25,16 @@ class ValueAR4(LabelElement):
     def __init__(self, label, parent=None, adminData = None, category = None):
         super().__init__(label, parent, adminData, category)
 
+    def asdict(self):
+        data = {}
+        data['type'] = self.__class__.__name__
+        data['label'] = self.label
+        if self.adminData is not None:
+            data['adminData'] = self.adminData.asdict()
+        if self.category is not None:
+            data['category'] = self.category
+        return data
+
 #AUTOSAR 3 constant values
 class IntegerValue(Value):
 
@@ -147,6 +157,10 @@ class TextValue(ValueAR4):
         else:
             self._value=None
 
+    def asdict(self):
+        data = super().asdict()
+        data['value'] = self.value
+        return data
 
 class NumericalValue(ValueAR4):
 
@@ -169,6 +183,10 @@ class NumericalValue(ValueAR4):
         else:
             self._value = None
 
+    def asdict(self):
+        data = super().asdict()
+        data['value'] = self.value
+        return data
 
 class ApplicationValue(ValueAR4):
     """
@@ -186,6 +204,14 @@ class ApplicationValue(ValueAR4):
         self.swAxisCont = swAxisCont
         self.swValueCont = swValueCont
 
+    def asdict(self):
+        data = super().asdict()
+        if self.swAxisCont is not None:
+            data['swAxisCont'] = self.swAxisCont.asdict()
+        if self.swValueCont is not None:
+            data['swValueCont'] = self.swValueCont.asdict()
+        return data
+
 
 class ConstantReference(ValueAR4):
     """
@@ -198,6 +224,11 @@ class ConstantReference(ValueAR4):
         super().__init__(label, parent, adminData, category)
         self.value = value
 
+    def asdict(self):
+        data = super().asdict()
+        data['value'] = self.value
+        return data
+
 class RecordValueAR4(ValueAR4):
     def tag(self,version=None): return "RECORD-VALUE-SPECIFICATION"
 
@@ -208,6 +239,12 @@ class RecordValueAR4(ValueAR4):
             self.elements=[]
         else:
             self.elements = list(elements)
+
+    def asdict(self):
+        data = super().asdict()
+        data['typeRef'] = self.typeRef
+        data['elements'] = [elem.asdict() for elem in self.elements]
+        return data
 
 
 class ArrayValueAR4(ValueAR4):
@@ -220,6 +257,12 @@ class ArrayValueAR4(ValueAR4):
             self.elements=[]
         else:
             self.elements = list(elements)
+
+    def asdict(self):
+        data = super().asdict()
+        data['typeRef'] = self.typeRef
+        data['elements'] = [elem.asdict() for elem in self.elements]
+        return data
 
 #Common classes
 class Constant(Element):
@@ -264,6 +307,19 @@ class SwValueCont:
         self.unitDisplayName = unitDisplayName
         self.swArraySize = swArraySize
 
+    def asdict(self):
+        data = {}
+        data['type'] = self.__class__.__name__
+        if self.values is not None:
+            data['values'] = [elem.asdict() for elem in self.values]
+        if self.unitRef is not None:
+            data['unitRef'] = self.unitRef
+        if self.unitDisplayName is not None:
+            data['unitDisplayName'] = self.unitDisplayName
+        if self.swArraySize is not None:
+            data['swArraySize'] = self.swArraySize
+        return data
+
 
 class SwAxisCont:
     """
@@ -292,3 +348,32 @@ class SwAxisCont:
                 self.values = list(values)
             else:
                 self.values = values
+
+    def asdict(self):
+        data = {}
+        data['type'] = self.__class__.__name__
+        if self.values is not None:
+            data['values'] = [elem.asdict() for elem in self.values]
+        if self.unitRef is not None:
+            data['unitRef'] = self.unitRef
+        if self.unitDisplayName is not None:
+            data['unitDisplayName'] = self.unitDisplayName
+        if self.swAxisIndex is not None:
+            data['swAxisIndex'] = self.swAxisIndex
+        if self.swArraySize is not None:
+            data['swArraySize'] = self.swArraySize
+        if self.category is not None:
+            data['category'] = self.category
+        return data
+
+class PortDefinedArgumentValue:
+    def tag(self, version): return 'PORT-DEFINED-ARGUMENT-VALUE'
+
+    def __init__(self, value, valueTypeRef):
+        self.value = value
+        if value is not None:
+            value.parent = self
+        self.valueTypeRef = valueTypeRef
+
+    def asdict(self):
+        return {'type': self.__class__.__name__, 'value':self.value.asdict(), 'valueTypeRef':self.valueTypeRef}
