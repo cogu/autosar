@@ -266,8 +266,10 @@ class Reader:
             'VARIABLE-ACCESS': self._read_variable_access,
             'EXECUTABLE-ENTITY-ACTIVATION-REASON': self._read_executable_entity_activation_reason,
             'EXCLUSIVE-AREA-REF-CONDITIONAL': self._read_exclusive_area_ref_conditional,
+            'DISABLED-MODE-IREF': self._read_rmode_in_atomic_swc_instance_ref,
             'SWC-INTERNAL-BEHAVIOR': self._read_swc_internal_behavior,
             'RUNNABLE-ENTITY': self._read_runnable_entity,
+            'INIT-EVENT': self._read_init_event,
         }
         self.switcher_all = {}
         self.switcher_all.update(self.switcher_collectable)
@@ -2606,6 +2608,28 @@ class Reader:
         dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', data['dest'], self.schema_version)
         return ar_element.ExclusiveAreaNestingOrderRef(xml_elem.text, dest_enum)
 
+    def _read_abstract_required_port_prototype_ref(self,
+                                                   xml_elem: ElementTree.Element
+                                                   ) -> ar_element.AbstractRequiredPortPrototypeRef:
+        """
+        Reads references to AR:ABSTRACT-REQUIRED-PORT-PROTOTYPE--SUBTYPES-ENUM
+        """
+        data = {}
+        self._read_base_ref_attributes(xml_elem.attrib, data)
+        dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', data['dest'], self.schema_version)
+        return ar_element.AbstractRequiredPortPrototypeRef(xml_elem.text, dest_enum)
+
+    def _read_runnable_entity_ref(self,
+                                  xml_elem: ElementTree.Element
+                                  ) -> ar_element.RunnableEntityRef:
+        """
+        Reads references to RUNNABLE-ENTITY--SUBTYPES-ENUM
+        """
+        data = {}
+        self._read_base_ref_attributes(xml_elem.attrib, data)
+        dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', data['dest'], self.schema_version)
+        return ar_element.RunnableEntityRef(xml_elem.text, dest_enum)
+
 # --- Constant and value specifications
 
     def _read_text_value_specification(self,
@@ -4252,6 +4276,28 @@ class Reader:
         if xml_child is not None:
             data["required_rte_vendor"] = xml_child.text
 
+    def _read_rmode_in_atomic_swc_instance_ref(self,
+                                               xml_element: ElementTree.Element
+                                               ) -> ar_element.RModeInAtomicSwcInstanceRef:
+        """
+        Reads complex type AR:R-MODE-IN-ATOMIC-SWC-INSTANCE-REF
+        Tag variants: 'DISABLED-MODE-IREF' | 'MODE-IREF'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("CONTEXT-PORT-REF")
+        if xml_child is not None:
+            data["context_port_ref"] = self._read_abstract_required_port_prototype_ref(xml_child)
+        xml_child = child_elements.get("CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF")
+        if xml_child is not None:
+            child_element = self._read_mode_declaration_group_prototype_ref(xml_child)
+            data["context_mode_declaration_group_prototype_ref"] = child_element
+        xml_child = child_elements.get("TARGET-MODE-DECLARATION-REF")
+        if xml_child is not None:
+            data["target_mode_declaration_ref"] = self._read_mode_declaration_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.RModeInAtomicSwcInstanceRef(**data)
+
     # --- Internal Behavior elements
 
     def _read_variable_in_impl_data_instance_ref(self,
@@ -4501,6 +4547,37 @@ class Reader:
         child_elements.skip("WAIT-POINTS")
         child_elements.skip("WRITTEN-LOCAL-VARIABLES")
         child_elements.skip("VARIATION-POINT")
+
+    def _read_rte_event(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:RTE-EVENT
+        """
+        xml_child = child_elements.get("DISABLED-MODE-IREFS")
+        if xml_child is not None:
+            disabled_modes = []
+            for xml_grand_child in xml_child.findall("./DISABLED-MODE-IREF"):
+                disabled_modes.append(self._read_rmode_in_atomic_swc_instance_ref(xml_grand_child))
+            data["disabled_modes"] = disabled_modes
+        xml_child = child_elements.get("START-ON-EVENT-REF")
+        if xml_child is not None:
+            data["start_on_event"] = self._read_runnable_entity_ref(xml_child)
+        child_elements.skip("VARIATION-POINT")  # Not supported
+
+    def _read_init_event(self,
+                         xml_element: ElementTree.Element
+                         ) -> ar_element.InitEvent:
+        """
+        Reads complex Type AR:INIT-EVENT
+        Tag variants: 'INIT-EVENT''
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_rte_event(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.InitEvent(**data)
 
     def _read_swc_internal_behavior(self, xml_element: ElementTree.Element) -> ar_element.SwcInternalBehavior:
         """

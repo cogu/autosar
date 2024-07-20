@@ -568,3 +568,19 @@ class AbstractRequiredPortPrototypeRef(BaseRef):
         return {ar_enum.IdentifiableSubTypes.ABSTRACT_REQUIRED_PORT_PROTOTYPE,
                 ar_enum.IdentifiableSubTypes.PR_PORT_PROTOTYPE,
                 ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE}
+
+
+class RunnableEntityRef(BaseRef):
+    """
+    RUNNABLE-ENTITY--SUBTYPES-ENUM
+    """
+
+    def __init__(self, value: str,
+                 dest: ar_enum.IdentifiableSubTypes = ar_enum.IdentifiableSubTypes.RUNNABLE_ENTITY
+                 ) -> None:
+        super().__init__(value, dest)
+
+    @classmethod
+    def accepted_sub_types(cls) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.RUNNABLE_ENTITY}

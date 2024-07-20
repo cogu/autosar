@@ -711,6 +711,134 @@ class TestExecutableEntity(unittest.TestCase):
         self.assertEqual(ref.dest, ar_enum.IdentifiableSubTypes.SW_ADDR_METHOD)
 
 
+class TestInitEvent(unittest.TestCase):
+    """
+    Tests elements from RTEEvent base class.
+    InitEvent doesn't have any additional elements except those inherited
+    from RTEEvent.
+    """
+
+    def test_name_only(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.InitEvent('MyName')
+        xml = '''<INIT-EVENT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+</INIT-EVENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.InitEvent = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.InitEvent)
+        self.assertEqual(elem.name, 'MyName')
+        self.assertEqual(elem.short_name, 'MyName')
+
+    def test_disabled_modes_from_element(self):
+        context_port_ref_str = "/ComponentTypes/MyComponent/BswM_Mode"
+        context_mode_decl_group_ref_str = "/PortInterfaces/BswM_ModeSwitchInterface/BswM_Mode"
+        target_mode_decl_ref_str = "/ModeDclrGroups/BswM_Mode/POSTRUN"
+        context_port = ar_element.PortPrototypeRef(context_port_ref_str, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
+        context_mode_decl_group = ar_element.ModeDeclarationGroupPrototypeRef(context_mode_decl_group_ref_str)
+        target_mode_decl = ar_element.ModeDeclarationRef(target_mode_decl_ref_str)
+        disabled_mode = ar_element.RModeInAtomicSwcInstanceRef(
+            context_port_ref=context_port,
+            context_mode_declaration_group_prototype_ref=context_mode_decl_group,
+            target_mode_declaration_ref=target_mode_decl)
+        element = ar_element.InitEvent('MyName',
+                                       disabled_modes=disabled_mode)
+        writer = autosar.xml.Writer()
+        xml = f'''<INIT-EVENT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <DISABLED-MODE-IREFS>
+    <DISABLED-MODE-IREF>
+      <CONTEXT-PORT-REF DEST="R-PORT-PROTOTYPE">{context_port_ref_str}</CONTEXT-PORT-REF>
+      <CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF DEST="MODE-DECLARATION-GROUP-PROTOTYPE">\
+{context_mode_decl_group_ref_str}</CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF>
+      <TARGET-MODE-DECLARATION-REF DEST="MODE-DECLARATION">{target_mode_decl_ref_str}</TARGET-MODE-DECLARATION-REF>
+    </DISABLED-MODE-IREF>
+  </DISABLED-MODE-IREFS>
+</INIT-EVENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.InitEvent = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.InitEvent)
+        self.assertEqual(len(elem.disabled_modes), 1)
+        child = elem.disabled_modes[0]
+        self.assertIsInstance(child, ar_element.RModeInAtomicSwcInstanceRef)
+        self.assertEqual(str(child.target_mode_declaration_ref), target_mode_decl_ref_str)
+
+    def test_disabled_modes_from_list(self):
+        context_port_ref_str = "/ComponentTypes/MyComponent/BswM_Mode"
+        context_mode_decl_group_ref_str = "/PortInterfaces/BswM_ModeSwitchInterface/BswM_Mode"
+        target_mode_decl_refs = ["/ModeDclrGroups/BswM_Mode/POSTRUN",
+                                 "/ModeDclrGroups/BswM_Mode/STARTUP",
+                                 "/ModeDclrGroups/BswM_Mode/SHUTDOWN",
+                                 ]
+        disabled_modes = []
+        for target_mode_decl_ref in target_mode_decl_refs:
+            context_port = ar_element.PortPrototypeRef(context_port_ref_str,
+                                                       ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
+            context_mode_decl_group = ar_element.ModeDeclarationGroupPrototypeRef(context_mode_decl_group_ref_str)
+            target_mode_decl = ar_element.ModeDeclarationRef(target_mode_decl_ref)
+            disabled_modes.append(ar_element.RModeInAtomicSwcInstanceRef(
+                context_port_ref=context_port,
+                context_mode_declaration_group_prototype_ref=context_mode_decl_group,
+                target_mode_declaration_ref=target_mode_decl))
+        element = ar_element.InitEvent('MyName',
+                                       disabled_modes=disabled_modes)
+        writer = autosar.xml.Writer()
+        xml = f'''<INIT-EVENT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <DISABLED-MODE-IREFS>
+    <DISABLED-MODE-IREF>
+      <CONTEXT-PORT-REF DEST="R-PORT-PROTOTYPE">{context_port_ref_str}</CONTEXT-PORT-REF>
+      <CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF DEST="MODE-DECLARATION-GROUP-PROTOTYPE">\
+{context_mode_decl_group_ref_str}</CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF>
+      <TARGET-MODE-DECLARATION-REF DEST="MODE-DECLARATION">{target_mode_decl_refs[0]}</TARGET-MODE-DECLARATION-REF>
+    </DISABLED-MODE-IREF>
+    <DISABLED-MODE-IREF>
+      <CONTEXT-PORT-REF DEST="R-PORT-PROTOTYPE">{context_port_ref_str}</CONTEXT-PORT-REF>
+      <CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF DEST="MODE-DECLARATION-GROUP-PROTOTYPE">\
+{context_mode_decl_group_ref_str}</CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF>
+      <TARGET-MODE-DECLARATION-REF DEST="MODE-DECLARATION">{target_mode_decl_refs[1]}</TARGET-MODE-DECLARATION-REF>
+    </DISABLED-MODE-IREF>
+    <DISABLED-MODE-IREF>
+      <CONTEXT-PORT-REF DEST="R-PORT-PROTOTYPE">{context_port_ref_str}</CONTEXT-PORT-REF>
+      <CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF DEST="MODE-DECLARATION-GROUP-PROTOTYPE">\
+{context_mode_decl_group_ref_str}</CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF>
+      <TARGET-MODE-DECLARATION-REF DEST="MODE-DECLARATION">{target_mode_decl_refs[2]}</TARGET-MODE-DECLARATION-REF>
+    </DISABLED-MODE-IREF>
+  </DISABLED-MODE-IREFS>
+</INIT-EVENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.InitEvent = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.InitEvent)
+        self.assertEqual(len(elem.disabled_modes), 3)
+        child = elem.disabled_modes[0]
+        self.assertIsInstance(child, ar_element.RModeInAtomicSwcInstanceRef)
+        self.assertEqual(str(child.target_mode_declaration_ref), target_mode_decl_refs[0])
+        child = elem.disabled_modes[1]
+        self.assertIsInstance(child, ar_element.RModeInAtomicSwcInstanceRef)
+        self.assertEqual(str(child.target_mode_declaration_ref), target_mode_decl_refs[1])
+        child = elem.disabled_modes[2]
+        self.assertIsInstance(child, ar_element.RModeInAtomicSwcInstanceRef)
+        self.assertEqual(str(child.target_mode_declaration_ref), target_mode_decl_refs[2])
+
+    def test_start_on_event(self):
+        ref_str = '/ComponentTypes/MyComponent/MyComponent_InternalBehavior/MyComponent_Init'
+        element = ar_element.InitEvent('MyName',
+                                       start_on_event=ar_element.RunnableEntityRef(ref_str))
+        writer = autosar.xml.Writer()
+        xml = f'''<INIT-EVENT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <START-ON-EVENT-REF DEST="RUNNABLE-ENTITY">{ref_str}</START-ON-EVENT-REF>
+</INIT-EVENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.InitEvent = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.InitEvent)
+        self.assertEqual(str(elem.start_on_event), ref_str)
+
+
 class TestSwcInternalBehavior(unittest.TestCase):
     """
     Most elements are not implemented yet

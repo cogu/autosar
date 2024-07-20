@@ -330,6 +330,7 @@ class Writer(_XMLWriter):
             'AssemblySwConnector': self._write_assembly_sw_connector,
             'DelegationSwConnector': self._write_delegation_sw_connector,
             'PassThroughSwConnector': self._write_passthrough_sw_connector,
+            'RModeInAtomicSwcInstanceRef': self._write_rmode_in_atomic_swc_instance_ref,
             # SWC internal behavior elements
             'ArVariableInImplementationDataInstanceRef': self._write_variable_in_impl_data_instance_ref,
             'VariableInAtomicSWCTypeInstanceRef': self._write_variable_in_atomic_swc_type_instance_ref,
@@ -339,6 +340,7 @@ class Writer(_XMLWriter):
             'ExecutableEntityActivationReason': self._write_executable_entity_activation_reason,
             'ExclusiveAreaRefConditional': self._write_exclusive_area_ref_conditional,
             'RunnableEntity': self._write_runnable_entity,
+            'InitEvent': self._write_init_event,
 
         }
         self.switcher_all = {}  # All concrete elements (used for unit testing)
@@ -1907,6 +1909,11 @@ class Writer(_XMLWriter):
                                attr: TupleList) -> None:
         attr.append(('DEST', ar_enum.enum_to_xml(elem.dest)))
 
+    def _write_ref_content(self, elem: ar_element.BaseRef, tag: str):
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content(tag, elem.value, attr)
+
     def _write_compu_method_ref(self, elem: ar_element.CompuMethodRef) -> None:
         """
         Writes complex type AR:COMPU-METHOD-REF
@@ -2259,6 +2266,17 @@ class Writer(_XMLWriter):
         self._collect_base_ref_attr(elem, attr)
         self._add_content(tag, elem.value, attr)
 
+    def _write_abstract_required_port_prototype_ref(self,
+                                                    elem: ar_element.AbstractRequiredPortPrototypeRef,
+                                                    tag: str) -> None:
+        """
+        Writes references to ABSTRACT-REQUIRED-PORT-PROTOTYPE--SUBTYPES-ENUM
+        """
+        assert isinstance(elem, ar_element.AbstractRequiredPortPrototypeRef)
+        attr: TupleList = []
+        self._collect_base_ref_attr(elem, attr)
+        self._add_content(tag, elem.value, attr)
+
     def _write_swc_internal_behavior_ref(self,
                                          elem: ar_element.SwcInternalBehaviorRef,
                                          tag: str) -> None:
@@ -2269,6 +2287,15 @@ class Writer(_XMLWriter):
         attr: TupleList = []
         self._collect_base_ref_attr(elem, attr)
         self._add_content(tag, elem.value, attr)
+
+    def _write_runnable_entity_ref(self,
+                                   elem: ar_element.RunnableEntityRef,
+                                   tag: str) -> None:
+        """
+        Writes references to RUNNABLE-ENTITY--SUBTYPES-ENUM
+        """
+        assert isinstance(elem, ar_element.RunnableEntityRef)
+        self._write_ref_content(elem, tag)
 
 # -- Constant and value specifications
 
@@ -3663,6 +3690,25 @@ class Writer(_XMLWriter):
         if elem.required_rte_vendor is not None:
             self._add_content("REQUIRED-RTE-VENDOR", elem.required_rte_vendor)
 
+    def _write_rmode_in_atomic_swc_instance_ref(self, elem: ar_element.RModeInAtomicSwcInstanceRef, tag: str) -> None:
+        """
+        Complex type AR:R-MODE-IN-ATOMIC-SWC-INSTANCE-REF
+        Tag variants: 'DISABLED-MODE-IREF' | 'MODE-IREF'
+        """
+        assert isinstance(elem, ar_element.RModeInAtomicSwcInstanceRef)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.context_port_ref is not None:
+                self._write_abstract_required_port_prototype_ref(elem.context_port_ref, "CONTEXT-PORT-REF")
+            if elem.context_mode_declaration_group_prototype_ref is not None:
+                self._write_mode_declaration_group_prototype_ref(elem.context_mode_declaration_group_prototype_ref,
+                                                                 "CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF")
+            if elem.target_mode_declaration_ref is not None:
+                self._write_mode_declaration_ref(elem.target_mode_declaration_ref, "TARGET-MODE-DECLARATION-REF")
+            self._leave_child()
+
     # SWC Internal behavior elements
 
     def _write_variable_in_impl_data_instance_ref(self,
@@ -3844,6 +3890,7 @@ class Writer(_XMLWriter):
 
         This is in early stage, most will be implemented later
         """
+        assert isinstance(elem, ar_element.RunnableEntity)
         self._add_child("RUNNABLE-ENTITY")
         self._write_referrable(elem)
         self._write_multilanguage_referrable(elem)
@@ -3857,6 +3904,31 @@ class Writer(_XMLWriter):
 
         This is just a placeholder. Will be implemented later
         """
+
+    def _write_rte_event(self, elem: ar_element.RteEvent) -> None:
+        """
+        Writes group AR:RTE-EVENT
+        """
+        if elem.disabled_modes:
+            self._add_child("DISABLED-MODE-IREFS")
+            for disabled_mode in elem.disabled_modes:
+                self._write_rmode_in_atomic_swc_instance_ref(disabled_mode, "DISABLED-MODE-IREF")
+            self._leave_child()
+        if elem.start_on_event is not None:
+            self._write_runnable_entity_ref(elem.start_on_event, "START-ON-EVENT-REF")
+
+    def _write_init_event(self, elem: ar_element.InitEvent) -> None:
+        """
+        Writes complex type AR:INIT-EVENT
+        Tag variants: 'INIT-EVENT'
+        """
+        assert isinstance(elem, ar_element.InitEvent)
+        self._add_child("INIT-EVENT")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_rte_event(elem)
+        self._leave_child()
 
     def _write_swc_internal_behavior(self, elem: ar_element.SwcInternalBehavior) -> None:
         """
