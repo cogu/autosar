@@ -7,6 +7,18 @@ Non-collectable elements are various sub-elements to collectable elements.
 
 ## [Unreleased]
 
+### Added
+
+#### XML - Software component elements
+
+* RModeInAtomicSwcInstanceRef | R-MODE-IN-ATOMIC-SWC-INSTANCE-REF
+
+#### XML - SWC internal behavior elements
+
+* InitEvent | INIT-EVENT
+* InternalBehavior | SWC-INTERNAL-BEHAVIOR (Partly implemented)
+* RunnableEntity | RUNNABLE-ENTITY
+
 ### Fixed
 
 * Fixed parsing error on elements containing `ADMIN-DATA`.

@@ -127,7 +127,7 @@ class ARObject:
                 new_value = ref_type(value.value, value.dest)
             else:
                 raise TypeError(f"'{attr_name}': Reference type {str(type(value))}"
-                                f"isn't combatible with {str(ref_type)}")
+                                f"is incombatible with {str(ref_type)}")
         else:
             raise TypeError(f"'{attr_name}': Invalid type. "
                             f"Expected one of (str, {str(ref_type)}), got '{str(type(value))}'")

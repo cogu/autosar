@@ -11,7 +11,7 @@ from autosar.base import split_ref, Searchable
 from autosar.xml.base import ARObject, BaseRef
 import autosar.xml.enumeration as ar_enum
 import autosar.xml.exception as ar_except
-from autosar.xml.reference import (SwBaseTypeRef,
+from autosar.xml.reference import (SwBaseTypeRef,  # noqa F401
                                    PackageRef,
                                    CompuMethodRef,
                                    FunctionPtrSignatureRef,
@@ -44,6 +44,8 @@ from autosar.xml.reference import (SwBaseTypeRef,
                                    SwcImplementationRef,
                                    ExclusiveAreaRef,
                                    ExclusiveAreaNestingOrderRef,
+                                   AbstractRequiredPortPrototypeRef,
+                                   RunnableEntityRef,
                                    )
 
 
@@ -5223,6 +5225,28 @@ class CompositionSwComponentType(SwComponentType, Searchable):
         self.connectors.append(connector)
         return connector
 
+
+class RModeInAtomicSwcInstanceRef(ARObject):
+    """
+    Complex type AR:R-MODE-IN-ATOMIC-SWC-INSTANCE-REF
+    Tag variants: 'DISABLED-MODE-IREF' | 'MODE-IREF'
+    """
+
+    def __init__(self,
+                 context_port_ref: AbstractRequiredPortPrototypeRef | None = None,
+                 context_mode_declaration_group_prototype_ref: ModeDeclarationGroupPrototypeRef | None = None,
+                 target_mode_declaration_ref: ModeDeclarationRef | None = None,
+                 ) -> None:
+        self.context_port_ref: AbstractRequiredPortPrototypeRef | None = None  # .CONTEXT-PORT-REF
+        # .CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF
+        self.context_mode_declaration_group_prototype_ref: ModeDeclarationGroupPrototypeRef | None = None
+        self.target_mode_declaration_ref: ModeDeclarationRef | None = None  # .TARGET-MODE-DECLARATION-REF
+        self._assign_optional("context_port_ref", context_port_ref, AbstractRequiredPortPrototypeRef)
+        self._assign_optional("context_mode_declaration_group_prototype_ref",
+                              context_mode_declaration_group_prototype_ref,
+                              ModeDeclarationGroupPrototypeRef)
+        self._assign_optional("target_mode_declaration_ref", target_mode_declaration_ref, ModeDeclarationRef)
+
 # --- SWC internal behavior elements
 
 
@@ -5511,7 +5535,7 @@ class ExecutableEntity(Identifiable):
 
     def append_can_enter_leave(self, value: ExclusiveAreaElementArgumentType) -> None:
         """
-        Tthe executable entity can enter/leave the referenced exclusive area through explicit API calls
+        The executable entity can enter/leave the referenced exclusive area through explicit API calls
         """
         if isinstance(value, ExclusiveAreaRefConditional):
             self.can_enter_leave.append(value)
@@ -5522,7 +5546,7 @@ class ExecutableEntity(Identifiable):
 
     def append_exclusive_area_nesting_order(self, exclusive_area_nesting_order: ExclusiveAreaNestingOrderRef) -> None:
         """
-        Appends exclusive area reference to internal can_enter_leave list
+        Appends exclusive area reference to internal list of nesting orders
         """
         if isinstance(exclusive_area_nesting_order, ExclusiveAreaNestingOrderRef):
             self.exclusive_area_nesting_order.append(exclusive_area_nesting_order)
@@ -5554,19 +5578,42 @@ class RunnableEntity(ExecutableEntity):
         super().__init__(name, **kwargs)
 
 
-# --- Future stuff
-
-
-class RModeInAtomicSwcInstanceRef(ARObject):
-    """
-    Complex type AR:R-MODE-IN-ATOMIC-SWC-INSTANCE-REF
-    Tag variants: 'DISABLED-MODE-IREF' | 'MODE-IREF'
-    """
-
-
-class RTEEvent(Identifiable):
+class RteEvent(Identifiable):
     """
     Group AR:RTE-EVENT
+    """
+
+    def __init__(self,
+                 name: str,
+                 disabled_modes: RModeInAtomicSwcInstanceRef | list[RModeInAtomicSwcInstanceRef] | None = None,
+                 start_on_event: RunnableEntityRef | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.disabled_modes: list[RModeInAtomicSwcInstanceRef] = []  # .DISABLED-MODE-IREFS
+        self.start_on_event: RunnableEntityRef | None = None  # .START-ON-EVENT-REF
+        if disabled_modes is not None:
+            if isinstance(disabled_modes, RModeInAtomicSwcInstanceRef):
+                self.append_disabled_mode(disabled_modes)
+            elif isinstance(disabled_modes, list):
+                for disabled_mode in disabled_modes:
+                    self.append_disabled_mode(disabled_mode)
+        self._assign_optional("start_on_event", start_on_event, RunnableEntityRef)
+
+    def append_disabled_mode(self, disabled_mode: RModeInAtomicSwcInstanceRef) -> None:
+        """
+        Adds reference to the modes that disable the event
+        """
+        if isinstance(disabled_mode, RModeInAtomicSwcInstanceRef):
+            self.disabled_modes.append(disabled_mode)
+        else:
+            raise TypeError("disabled_mode must be of type RModeInAtomicSwcInstanceRef")
+
+
+class InitEvent(RteEvent):
+    """
+    Complex Type AR:INIT-EVENT
+    Tag variants: 'INIT-EVENT'
+    Reuses constructor from base-class
     """
 
 
