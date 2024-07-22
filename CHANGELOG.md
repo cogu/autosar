@@ -12,9 +12,11 @@ Non-collectable elements are various sub-elements to collectable elements.
 #### XML - Software component elements
 
 * RModeInAtomicSwcInstanceRef | R-MODE-IN-ATOMIC-SWC-INSTANCE-REF
+* RVariableInAtomicSwcInstanceRef | R-VARIABLE-IN-ATOMIC-SWC-INSTANCE-REF
 
 #### XML - SWC internal behavior elements
 
+* DataReceivedEvent | DATA-RECEIVED-EVENT
 * InitEvent | INIT-EVENT
 * InternalBehavior | SWC-INTERNAL-BEHAVIOR (Partly implemented)
 * RunnableEntity | RUNNABLE-ENTITY
