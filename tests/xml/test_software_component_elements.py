@@ -2066,10 +2066,10 @@ class TestRModeInAtomicSwcInstanceRef(unittest.TestCase):
         elem: ar_element.RModeInAtomicSwcInstanceRef = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.RModeInAtomicSwcInstanceRef)
 
-    def test_context_port_ref(self):
+    def test_context_port(self):
         ref_str = "/Components/ComponentName/RequirePortName"
         port_ref = ar_element.PortPrototypeRef(ref_str, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
-        element = ar_element.RModeInAtomicSwcInstanceRef(context_port_ref=port_ref)
+        element = ar_element.RModeInAtomicSwcInstanceRef(context_port=port_ref)
         writer = autosar.xml.Writer()
         xml = f'''<DISABLED-MODE-IREF>
   <CONTEXT-PORT-REF DEST="R-PORT-PROTOTYPE">{ref_str}</CONTEXT-PORT-REF>
@@ -2078,13 +2078,13 @@ class TestRModeInAtomicSwcInstanceRef(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.RModeInAtomicSwcInstanceRef = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.RModeInAtomicSwcInstanceRef)
-        self.assertEqual(str(elem.context_port_ref), ref_str)
-        self.assertEqual(elem.context_port_ref.dest, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
+        self.assertEqual(str(elem.context_port), ref_str)
+        self.assertEqual(elem.context_port.dest, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
 
-    def test_context_mode_declaration_group_prototype_ref(self):
+    def test_context_mode_declaration_group_prototype(self):
         ref_str = "/ModeDeclarationGroups/ModeDeclarationGroupName"
         mode_decl_ref = ar_element.ModeDeclarationGroupPrototypeRef(ref_str)
-        element = ar_element.RModeInAtomicSwcInstanceRef(context_mode_declaration_group_prototype_ref=mode_decl_ref)
+        element = ar_element.RModeInAtomicSwcInstanceRef(context_mode_declaration_group_prototype=mode_decl_ref)
         writer = autosar.xml.Writer()
         tag = "CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF"
         xml = f'''<DISABLED-MODE-IREF>
@@ -2094,12 +2094,12 @@ class TestRModeInAtomicSwcInstanceRef(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.RModeInAtomicSwcInstanceRef = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.RModeInAtomicSwcInstanceRef)
-        self.assertEqual(str(elem.context_mode_declaration_group_prototype_ref), ref_str)
+        self.assertEqual(str(elem.context_mode_declaration_group_prototype), ref_str)
 
-    def test_target_mode_declaration_ref(self):
+    def test_target_mode_declaration(self):
         ref_str = "/ModeDeclarationGroups/ModeDeclarationGroupName/ModeName"
         mode_ref = ar_element.ModeDeclarationRef(ref_str)
-        element = ar_element.RModeInAtomicSwcInstanceRef(target_mode_declaration_ref=mode_ref)
+        element = ar_element.RModeInAtomicSwcInstanceRef(target_mode_declaration=mode_ref)
         writer = autosar.xml.Writer()
         xml = f'''<DISABLED-MODE-IREF>
   <TARGET-MODE-DECLARATION-REF DEST="MODE-DECLARATION">{ref_str}</TARGET-MODE-DECLARATION-REF>
@@ -2108,7 +2108,7 @@ class TestRModeInAtomicSwcInstanceRef(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.RModeInAtomicSwcInstanceRef = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.RModeInAtomicSwcInstanceRef)
-        self.assertEqual(str(elem.target_mode_declaration_ref), ref_str)
+        self.assertEqual(str(elem.target_mode_declaration), ref_str)
 
 
 if __name__ == '__main__':

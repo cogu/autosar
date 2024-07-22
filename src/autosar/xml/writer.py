@@ -340,6 +340,7 @@ class Writer(_XMLWriter):
             'ExecutableEntityActivationReason': self._write_executable_entity_activation_reason,
             'ExclusiveAreaRefConditional': self._write_exclusive_area_ref_conditional,
             'RunnableEntity': self._write_runnable_entity,
+            'DataReceivedEvent': self._write_data_received_event,
             'InitEvent': self._write_init_event,
 
         }
@@ -3692,7 +3693,7 @@ class Writer(_XMLWriter):
 
     def _write_rmode_in_atomic_swc_instance_ref(self, elem: ar_element.RModeInAtomicSwcInstanceRef, tag: str) -> None:
         """
-        Complex type AR:R-MODE-IN-ATOMIC-SWC-INSTANCE-REF
+        Writes complex type AR:R-MODE-IN-ATOMIC-SWC-INSTANCE-REF
         Tag variants: 'DISABLED-MODE-IREF' | 'MODE-IREF'
         """
         assert isinstance(elem, ar_element.RModeInAtomicSwcInstanceRef)
@@ -3700,16 +3701,35 @@ class Writer(_XMLWriter):
             self._add_content(tag)
         else:
             self._add_child(tag)
-            if elem.context_port_ref is not None:
-                self._write_abstract_required_port_prototype_ref(elem.context_port_ref, "CONTEXT-PORT-REF")
-            if elem.context_mode_declaration_group_prototype_ref is not None:
-                self._write_mode_declaration_group_prototype_ref(elem.context_mode_declaration_group_prototype_ref,
+            if elem.context_port is not None:
+                self._write_abstract_required_port_prototype_ref(elem.context_port, "CONTEXT-PORT-REF")
+            if elem.context_mode_declaration_group_prototype is not None:
+                self._write_mode_declaration_group_prototype_ref(elem.context_mode_declaration_group_prototype,
                                                                  "CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF")
-            if elem.target_mode_declaration_ref is not None:
-                self._write_mode_declaration_ref(elem.target_mode_declaration_ref, "TARGET-MODE-DECLARATION-REF")
+            if elem.target_mode_declaration is not None:
+                self._write_mode_declaration_ref(elem.target_mode_declaration, "TARGET-MODE-DECLARATION-REF")
             self._leave_child()
 
-    # SWC Internal behavior elements
+    def _write_rvariable_in_atomic_swc_instance_ref(self,
+                                                    elem: ar_element.RVariableInAtomicSwcInstanceRef
+                                                    ) -> None:
+        """
+        Writes complex type AR:R-VARIABLE-IN-ATOMIC-SWC-INSTANCE-REF
+        Tag variants: 'DATA-IREF'
+        """
+        assert isinstance(elem, ar_element.RVariableInAtomicSwcInstanceRef)
+        tag = "DATA-IREF"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.context_port is not None:
+                self._write_abstract_required_port_prototype_ref(elem.context_port, "CONTEXT-R-PORT-REF")
+            if elem.target_data_element is not None:
+                self._write_variable_data_prototype_ref(elem.target_data_element, "TARGET-DATA-ELEMENT-REF")
+            self._leave_child()
+
+    # --- SWC Internal behavior elements
 
     def _write_variable_in_impl_data_instance_ref(self,
                                                   elem: ar_element.ArVariableInImplementationDataInstanceRef,
@@ -3916,6 +3936,21 @@ class Writer(_XMLWriter):
             self._leave_child()
         if elem.start_on_event is not None:
             self._write_runnable_entity_ref(elem.start_on_event, "START-ON-EVENT-REF")
+
+    def _write_data_received_event(self, elem: ar_element.DataReceivedEvent) -> None:
+        """
+        Writes complex Type AR:DATA-RECEIVED-EVENT
+        Tag variants: 'DATA-RECEIVED-EVENT'
+        """
+        assert isinstance(elem, ar_element.DataReceivedEvent)
+        self._add_child("DATA-RECEIVED-EVENT")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_rte_event(elem)
+        if elem.data is not None:
+            self._write_rvariable_in_atomic_swc_instance_ref(elem.data)
+        self._leave_child()
 
     def _write_init_event(self, elem: ar_element.InitEvent) -> None:
         """

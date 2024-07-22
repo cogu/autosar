@@ -5233,19 +5233,40 @@ class RModeInAtomicSwcInstanceRef(ARObject):
     """
 
     def __init__(self,
-                 context_port_ref: AbstractRequiredPortPrototypeRef | None = None,
-                 context_mode_declaration_group_prototype_ref: ModeDeclarationGroupPrototypeRef | None = None,
-                 target_mode_declaration_ref: ModeDeclarationRef | None = None,
+                 context_port: AbstractRequiredPortPrototypeRef | None = None,
+                 context_mode_declaration_group_prototype: ModeDeclarationGroupPrototypeRef | None = None,
+                 target_mode_declaration: ModeDeclarationRef | None = None,
                  ) -> None:
-        self.context_port_ref: AbstractRequiredPortPrototypeRef | None = None  # .CONTEXT-PORT-REF
+        # .CONTEXT-PORT-REF
+        self.context_port: AbstractRequiredPortPrototypeRef | None = None
         # .CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF
-        self.context_mode_declaration_group_prototype_ref: ModeDeclarationGroupPrototypeRef | None = None
-        self.target_mode_declaration_ref: ModeDeclarationRef | None = None  # .TARGET-MODE-DECLARATION-REF
-        self._assign_optional("context_port_ref", context_port_ref, AbstractRequiredPortPrototypeRef)
-        self._assign_optional("context_mode_declaration_group_prototype_ref",
-                              context_mode_declaration_group_prototype_ref,
+        self.context_mode_declaration_group_prototype: ModeDeclarationGroupPrototypeRef | None = None
+        # .TARGET-MODE-DECLARATION-REF
+        self.target_mode_declaration: ModeDeclarationRef | None = None
+        self._assign_optional("context_port", context_port, AbstractRequiredPortPrototypeRef)
+        self._assign_optional("context_mode_declaration_group_prototype",
+                              context_mode_declaration_group_prototype,
                               ModeDeclarationGroupPrototypeRef)
-        self._assign_optional("target_mode_declaration_ref", target_mode_declaration_ref, ModeDeclarationRef)
+        self._assign_optional("target_mode_declaration", target_mode_declaration, ModeDeclarationRef)
+
+
+class RVariableInAtomicSwcInstanceRef(ARObject):
+    """
+    Complex type AR:R-VARIABLE-IN-ATOMIC-SWC-INSTANCE-REF
+    Tag variants: 'DATA-IREF'
+    """
+
+    def __init__(self,
+                 context_port: AbstractRequiredPortPrototypeRef | None = None,
+                 target_data_element: VariableDataPrototypeRef | str | None = None,
+                 ) -> None:
+        # .CONTEXT-R-PORT-REF (Use same name as in RModeInAtomicSwcInstanceRef for consistency)
+        self.context_port: AbstractRequiredPortPrototypeRef | None = None
+        # .TARGET-DATA-ELEMENT-REF
+        self.target_data_element: VariableDataPrototypeRef | None = None
+        self._assign_optional("context_port", context_port, AbstractRequiredPortPrototypeRef)
+        self._assign_optional("target_data_element", target_data_element, VariableDataPrototypeRef)
+
 
 # --- SWC internal behavior elements
 
@@ -5585,12 +5606,14 @@ class RteEvent(Identifiable):
 
     def __init__(self,
                  name: str,
-                 disabled_modes: RModeInAtomicSwcInstanceRef | list[RModeInAtomicSwcInstanceRef] | None = None,
                  start_on_event: RunnableEntityRef | None = None,
+                 disabled_modes: RModeInAtomicSwcInstanceRef | list[RModeInAtomicSwcInstanceRef] | None = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
-        self.disabled_modes: list[RModeInAtomicSwcInstanceRef] = []  # .DISABLED-MODE-IREFS
-        self.start_on_event: RunnableEntityRef | None = None  # .START-ON-EVENT-REF
+        # .DISABLED-MODE-IREFS
+        self.disabled_modes: list[RModeInAtomicSwcInstanceRef] = []
+        # .START-ON-EVENT-REF
+        self.start_on_event: RunnableEntityRef | None = None
         if disabled_modes is not None:
             if isinstance(disabled_modes, RModeInAtomicSwcInstanceRef):
                 self.append_disabled_mode(disabled_modes)
@@ -5607,6 +5630,39 @@ class RteEvent(Identifiable):
             self.disabled_modes.append(disabled_mode)
         else:
             raise TypeError("disabled_mode must be of type RModeInAtomicSwcInstanceRef")
+
+
+class DataReceivedEvent(RteEvent):
+    """
+    Complex Type AR:DATA-RECEIVED-EVENT
+    Tag variants: 'DATA-RECEIVED-EVENT'
+    """
+
+    def __init__(self,
+                 name: str,
+                 start_on_event: RunnableEntityRef | str | None = None,
+                 data: RVariableInAtomicSwcInstanceRef | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, start_on_event, **kwargs)
+        # .DATA-IREF
+        self.data: RVariableInAtomicSwcInstanceRef | None = None
+        self._assign_optional_strict("data", data, RVariableInAtomicSwcInstanceRef)
+
+    @classmethod
+    def make(cls,
+             name: str,
+             start_on_event: RunnableEntityRef | str | None = None,
+             context_port: AbstractRequiredPortPrototypeRef | None = None,
+             target_data_element: VariableDataPrototypeRef | str | None = None,
+             **kwargs) -> "DataReceivedEvent":
+        """
+        #convenience-method
+
+        Simplified creation method that automatically creates
+        and uses the necessary RVariableInAtomicSwcInstanceRef object
+        """
+        data = RVariableInAtomicSwcInstanceRef(context_port, target_data_element)
+        return cls(name, start_on_event, data, **kwargs)
 
 
 class InitEvent(RteEvent):

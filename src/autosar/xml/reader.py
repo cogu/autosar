@@ -269,7 +269,9 @@ class Reader:
             'DISABLED-MODE-IREF': self._read_rmode_in_atomic_swc_instance_ref,
             'SWC-INTERNAL-BEHAVIOR': self._read_swc_internal_behavior,
             'RUNNABLE-ENTITY': self._read_runnable_entity,
+            'DATA-RECEIVED-EVENT': self._read_data_received_event,
             'INIT-EVENT': self._read_init_event,
+
         }
         self.switcher_all = {}
         self.switcher_all.update(self.switcher_collectable)
@@ -4287,16 +4289,34 @@ class Reader:
         child_elements = ChildElementMap(xml_element)
         xml_child = child_elements.get("CONTEXT-PORT-REF")
         if xml_child is not None:
-            data["context_port_ref"] = self._read_abstract_required_port_prototype_ref(xml_child)
+            data["context_port"] = self._read_abstract_required_port_prototype_ref(xml_child)
         xml_child = child_elements.get("CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF")
         if xml_child is not None:
             child_element = self._read_mode_declaration_group_prototype_ref(xml_child)
-            data["context_mode_declaration_group_prototype_ref"] = child_element
+            data["context_mode_declaration_group_prototype"] = child_element
         xml_child = child_elements.get("TARGET-MODE-DECLARATION-REF")
         if xml_child is not None:
-            data["target_mode_declaration_ref"] = self._read_mode_declaration_ref(xml_child)
+            data["target_mode_declaration"] = self._read_mode_declaration_ref(xml_child)
         self._report_unprocessed_elements(child_elements)
         return ar_element.RModeInAtomicSwcInstanceRef(**data)
+
+    def _read_rvariable_in_atomic_swc_instance_ref(self,
+                                                   xml_element: ElementTree.Element
+                                                   ) -> ar_element.RVariableInAtomicSwcInstanceRef:
+        """
+        Reads complex type AR:R-VARIABLE-IN-ATOMIC-SWC-INSTANCE-REF
+        Tag variants: 'DATA-IREF'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("CONTEXT-R-PORT-REF")
+        if xml_child is not None:
+            data["context_port"] = self._read_abstract_required_port_prototype_ref(xml_child)
+        xml_child = child_elements.get("TARGET-DATA-ELEMENT-REF")
+        if xml_child is not None:
+            data["target_data_element"] = self._read_variable_data_prototype_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.RVariableInAtomicSwcInstanceRef(**data)
 
     # --- Internal Behavior elements
 
@@ -4562,6 +4582,25 @@ class Reader:
         if xml_child is not None:
             data["start_on_event"] = self._read_runnable_entity_ref(xml_child)
         child_elements.skip("VARIATION-POINT")  # Not supported
+
+    def _read_data_received_event(self,
+                                  xml_element: ElementTree.Element
+                                  ) -> ar_element.DataReceivedEvent:
+        """
+        Reads complex Type AR:DATA-RECEIVED-EVENT
+        Tag variants: 'DATA-RECEIVED-EVENT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_rte_event(child_elements, data)
+        xml_child = child_elements.get("DATA-IREF")
+        if xml_child is not None:
+            data["data"] = self._read_rvariable_in_atomic_swc_instance_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.DataReceivedEvent(**data)
 
     def _read_init_event(self,
                          xml_element: ElementTree.Element
