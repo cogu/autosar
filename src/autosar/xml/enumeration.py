@@ -227,23 +227,25 @@ class IdentifiableSubTypes(Enum):
     MODE_DECLARATION_GROUP = 33
     MODE_DECLARATION_GROUP_PROTOTYPE = 34
     MODE_SWITCH_INTERFACE = 35
-    NV_DATA_INTERFACE = 36
-    P_PORT_PROTOTYPE = 37
-    PARAMETER_INTERFACE = 38
-    PARAMETER_DATA_PROTOTYPE = 39
-    PHYSICAL_DIMENSION = 40
-    PORT_PROTOTYPE = 41
-    PR_PORT_PROTOTYPE = 42
-    R_PORT_PROTOTYPE = 43
-    RUNNABLE_ENTITY = 44
-    SENDER_RECEIVER_INTERFACE = 45
-    SW_ADDR_METHOD = 46
-    SW_BASE_TYPE = 47
-    SW_COMPONENT_PROTOTYPE = 48
-    SWC_IMPLEMENTATION = 49
-    SWC_INTERNAL_BEHAVIOR = 50
-    UNIT = 51
-    VARIABLE_DATA_PROTOTYPE = 52
+    MODE_SWITCH_POINT = 36
+    NV_DATA_INTERFACE = 37
+    P_PORT_PROTOTYPE = 38
+    PARAMETER_INTERFACE = 39
+    PARAMETER_DATA_PROTOTYPE = 40
+    PHYSICAL_DIMENSION = 41
+    PORT_PROTOTYPE = 42
+    PR_PORT_PROTOTYPE = 43
+    R_PORT_PROTOTYPE = 44
+    RUNNABLE_ENTITY = 45
+    SENDER_RECEIVER_INTERFACE = 46
+    SW_ADDR_METHOD = 47
+    SW_BASE_TYPE = 48
+    SW_COMPONENT_PROTOTYPE = 49
+    SWC_IMPLEMENTATION = 50
+    SWC_INTERNAL_BEHAVIOR = 51
+    UNIT = 52
+    VARIABLE_ACCESS = 53
+    VARIABLE_DATA_PROTOTYPE = 54
 
 
 class IntervalType(Enum):
@@ -408,6 +410,16 @@ class Language(Enum):
     YO = 134  # Yoruba
     ZH = 135  # Chinese
     ZU = 136  # Zulu
+
+
+class ModeActivationKind(Enum):
+    """
+    AR:MODE-ACTIVATION-KIND--SIMPLE
+    """
+
+    ON_ENTRY = 0
+    ON_EXIT = 1
+    ON_TRANSITION = 2
 
 
 class ModeErrorReactionPolicy(Enum):
@@ -741,6 +753,7 @@ xml_to_enum_map: dict[str, dict] = {
         "MODE-DECLARATION-GROUP": IdentifiableSubTypes.MODE_DECLARATION_GROUP,
         "MODE-DECLARATION-GROUP-PROTOTYPE": IdentifiableSubTypes.MODE_DECLARATION_GROUP_PROTOTYPE,
         "MODE-SWITCH-INTERFACE": IdentifiableSubTypes.MODE_SWITCH_INTERFACE,
+        "MODE-SWITCH-POINT": IdentifiableSubTypes.MODE_SWITCH_POINT,
         "NV-DATA-INTERFACE": IdentifiableSubTypes.NV_DATA_INTERFACE,
         "P-PORT-PROTOTYPE": IdentifiableSubTypes.P_PORT_PROTOTYPE,
         "PARAMETER-DATA-PROTOTYPE": IdentifiableSubTypes.PARAMETER_DATA_PROTOTYPE,
@@ -757,6 +770,7 @@ xml_to_enum_map: dict[str, dict] = {
         "SWC-IMPLEMENTATION": IdentifiableSubTypes.SWC_IMPLEMENTATION,
         "SWC-INTERNAL-BEHAVIOR": IdentifiableSubTypes.SWC_INTERNAL_BEHAVIOR,
         "UNIT": IdentifiableSubTypes.UNIT,
+        "VARIABLE-ACCESS": IdentifiableSubTypes.VARIABLE_ACCESS,
         "VARIABLE-DATA-PROTOTYPE": IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE,
     },
     "IntervalType": {
@@ -905,6 +919,11 @@ xml_to_enum_map: dict[str, dict] = {
         "YO": Language.YO,
         "ZH": Language.ZH,
         "ZU": Language.ZU,
+    },
+    "ModeActivationKind": {
+        "ON-ENTRY": ModeActivationKind.ON_ENTRY,
+        "ON-EXIT": ModeActivationKind.ON_EXIT,
+        "ON-TRANSITION": ModeActivationKind.ON_TRANSITION,
     },
     "ModeErrorReactionPolicy": {
         "DEFAULT-MODE": ModeErrorReactionPolicy.DEFAULT_MODE,
@@ -1106,23 +1125,25 @@ enum_to_xml_map: dict[str, list] = {
         "MODE-DECLARATION-GROUP",                        # 33
         "MODE-DECLARATION-GROUP-PROTOTYPE",              # 34
         "MODE-SWITCH-INTERFACE",                         # 35
-        "NV-DATA-INTERFACE",                             # 36
-        "P-PORT-PROTOTYPE",                              # 37
-        "PARAMETER-INTERFACE",                           # 38
-        "PARAMETER-DATA-PROTOTYPE",                      # 39
-        "PHYSICAL-DIMENSION",                            # 40
-        "PORT-PROTOTYPE",                                # 41
-        "PR-PORT-PROTOTYPE",                             # 42
-        "R-PORT-PROTOTYPE",                              # 43
-        "RUNNABLE-ENTITY",                               # 44
-        "SENDER-RECEIVER-INTERFACE",                     # 45
-        "SW-ADDR-METHOD",                                # 46
-        "SW-BASE-TYPE",                                  # 47
-        "SW-COMPONENT-PROTOTYPE",                        # 48
-        "SWC-IMPLEMENTATION",                            # 49
-        "SWC-INTERNAL-BEHAVIOR",                         # 50
-        "UNIT",                                          # 51
-        "VARIABLE-DATA-PROTOTYPE",                       # 52
+        "MODE-SWITCH-POINT",                             # 36
+        "NV-DATA-INTERFACE",                             # 37
+        "P-PORT-PROTOTYPE",                              # 38
+        "PARAMETER-INTERFACE",                           # 39
+        "PARAMETER-DATA-PROTOTYPE",                      # 40
+        "PHYSICAL-DIMENSION",                            # 41
+        "PORT-PROTOTYPE",                                # 42
+        "PR-PORT-PROTOTYPE",                             # 43
+        "R-PORT-PROTOTYPE",                              # 44
+        "RUNNABLE-ENTITY",                               # 45
+        "SENDER-RECEIVER-INTERFACE",                     # 46
+        "SW-ADDR-METHOD",                                # 47
+        "SW-BASE-TYPE",                                  # 48
+        "SW-COMPONENT-PROTOTYPE",                        # 49
+        "SWC-IMPLEMENTATION",                            # 50
+        "SWC-INTERNAL-BEHAVIOR",                         # 51
+        "UNIT",                                          # 52
+        "VARIABLE-ACCESS",                               # 53
+        "VARIABLE-DATA-PROTOTYPE",                       # 54
     ],
     "IntervalType": [
         "CLOSED",  # 0
@@ -1270,6 +1291,11 @@ enum_to_xml_map: dict[str, list] = {
         "YO",  # 134
         "ZH",  # 135
         "ZU",  # 136
+    ],
+    "ModeActivationKind": [
+        "ON-ENTRY",           # 0
+        "ON-EXIT",            # 1
+        "ON-TRANSITION",      # 2
     ],
     "ModeErrorReactionPolicy": [
         "DEFAULT-MODE",  # 0

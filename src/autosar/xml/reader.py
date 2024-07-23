@@ -266,11 +266,18 @@ class Reader:
             'VARIABLE-ACCESS': self._read_variable_access,
             'EXECUTABLE-ENTITY-ACTIVATION-REASON': self._read_executable_entity_activation_reason,
             'EXCLUSIVE-AREA-REF-CONDITIONAL': self._read_exclusive_area_ref_conditional,
-            'DISABLED-MODE-IREF': self._read_rmode_in_atomic_swc_instance_ref,
+            'DISABLED-MODE-IREF': self._read_r_mode_in_atomic_swc_instance_ref,
             'SWC-INTERNAL-BEHAVIOR': self._read_swc_internal_behavior,
             'RUNNABLE-ENTITY': self._read_runnable_entity,
+            'DATA-RECEIVE-ERROR-EVENT': self._read_data_receive_error_event,
             'DATA-RECEIVED-EVENT': self._read_data_received_event,
+            'DATA-SEND-COMPLETED-EVENT': self._read_send_completed_event,
+            'DATA-WRITE-COMPLETED-EVENT': self._read_data_write_completed_event,
             'INIT-EVENT': self._read_init_event,
+            'MODE-SWITCHED-ACK-EVENT': self._read_mode_switched_ack_event,
+            'OPERATION-INVOKED-EVENT': self._read_operation_invoked_event,
+            'SWC-MODE-SWITCH-EVENT': self._read_swc_mode_switch_event,
+            'TIMING-EVENT': self._read_timing_event,
 
         }
         self.switcher_all = {}
@@ -331,7 +338,7 @@ class Reader:
         else:
             raise NotImplementedError(f"Found no reader for '{elem.tag}'")
 
-    # Utility methods
+    # --- Utility methods
 
     def _report_unprocessed_elements(self, xml_elements: ChildElementMap):
         """
@@ -412,7 +419,7 @@ class Reader:
             raise ar_exception.ParseError(f"Failed to parse integer: {text}") from exc
         return value
 
-    # Abstract base classes
+    # --- Abstract base classes
 
     def _read_referrable(self, element_map: ChildElementMap, data: dict) -> None:
         """
@@ -514,7 +521,7 @@ class Reader:
         value = xml_element.text
         return {key: value}
 
-    # AUTOSAR Document
+    # --- AUTOSAR Document
 
     def _read_root_element(self) -> None:
         self._read_schema_version()
@@ -620,7 +627,7 @@ class Reader:
             assert isinstance(child_package, ar_element.Package)
             package.append(child_package)
 
-    # Documentation elements
+    # --- Documentation elements
 
     def _read_annotation(self, xml_elem: ElementTree.Element) -> ar_element.Annotation:
         """
@@ -1247,7 +1254,7 @@ class Reader:
             values.append(num_val.value)
         return tuple(values)
 
-    # Constraint elements
+    # --- Constraint elements
 
     def _read_data_constraint(self, xml_element: ElementTree.Element) -> ar_element.DataConstraint:
         """
@@ -1387,7 +1394,7 @@ class Reader:
             data["upper_limit_type"] = interval_type
         return ar_element.ScaleConstraint(**data)
 
-    # Unit elements
+    # --- Unit elements
 
     def _read_unit(self, xml_element: ElementTree.Element) -> ar_element.Unit:
         """
@@ -1422,7 +1429,7 @@ class Reader:
         if xml_child is not None:
             data["physical_dimension_ref"] = self._read_physical_dimension_ref(xml_child)
 
-    # Common structure elements
+    # --- Common structure elements
 
     def _read_data_filter(self, xml_element: ElementTree.Element) -> ar_element.DataFilter:
         """
@@ -1522,7 +1529,7 @@ class Reader:
         child_elements.skip("USED-CODE-GENERATOR")
         child_elements.skip("VENDOR-ID")
 
-    # Data type elements
+    # --- Data type elements
 
     def _read_sw_addr_method(self, xml_element: ElementTree.Element) -> ar_element.SwAddrMethod:
         """
@@ -2204,7 +2211,7 @@ class Reader:
         child_elements.skip("TYPE-BLUEPRINTS")  # Not supported
         child_elements.skip("VARIATION-POINT")  # Not supported
 
-# --- Reference elements
+    # --- Reference elements
 
     def _read_base_ref_attributes(self, attr: dict, data: dict) -> None:
         """
@@ -2214,13 +2221,15 @@ class Reader:
         if data['dest'] is None:
             raise ar_exception.ParseError("Missing required attribute 'DEST'")
 
+    def _read_ref_dest(self, xml_elem: ElementTree.Element) -> ar_enum.IdentifiableSubTypes:
+        data = {}
+        self._read_base_ref_attributes(xml_elem.attrib, data)
+        return ar_enum.xml_to_enum('IdentifiableSubTypes', data['dest'], self.schema_version)
+
     def _read_compu_method_ref(self, xml_elem: ElementTree.Element) -> ar_element.CompuMethodRef:
         """
         Reads AR:COMPU-METHOD-REF
-        Type: Concrete
         Tag Variants: 'COMPU-METHOD-REF'
-
-        Note: the name of this complex type is anonymous in the XML achema
         """
         data = {}
         self._read_base_ref_attributes(xml_elem.attrib, data)
@@ -2616,10 +2625,17 @@ class Reader:
         """
         Reads references to AR:ABSTRACT-REQUIRED-PORT-PROTOTYPE--SUBTYPES-ENUM
         """
-        data = {}
-        self._read_base_ref_attributes(xml_elem.attrib, data)
-        dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', data['dest'], self.schema_version)
+        dest_enum = self._read_ref_dest(xml_elem)
         return ar_element.AbstractRequiredPortPrototypeRef(xml_elem.text, dest_enum)
+
+    def _read_abstract_provided_port_prototype_ref(self,
+                                                   xml_elem: ElementTree.Element
+                                                   ) -> ar_element.AbstractProvidedPortPrototypeRef:
+        """
+        Reads references to AR:ABSTRACT-PROVIDED-PORT-PROTOTYPE--SUBTYPES-ENUM
+        """
+        dest_enum = self._read_ref_dest(xml_elem)
+        return ar_element.AbstractProvidedPortPrototypeRef(xml_elem.text, dest_enum)
 
     def _read_runnable_entity_ref(self,
                                   xml_elem: ElementTree.Element
@@ -2627,12 +2643,30 @@ class Reader:
         """
         Reads references to RUNNABLE-ENTITY--SUBTYPES-ENUM
         """
-        data = {}
-        self._read_base_ref_attributes(xml_elem.attrib, data)
-        dest_enum = ar_enum.xml_to_enum('IdentifiableSubTypes', data['dest'], self.schema_version)
+        dest_enum = self._read_ref_dest(xml_elem)
         return ar_element.RunnableEntityRef(xml_elem.text, dest_enum)
 
-# --- Constant and value specifications
+    def _read_variable_access_ref(self,
+                                  xml_elem: ElementTree.Element
+                                  ) -> ar_element.VariableAccessRef:
+        """
+        Reads references to AR:VARIABLE-ACCESS--SUBTYPES-ENUM
+        Tag variants: 'EVENT-SOURCE-REF' | 'VARIABLE-ACCESS-REF' | 'TARGET-VARIABLE-ACCESS-REF'
+        """
+        dest_enum = self._read_ref_dest(xml_elem)
+        return ar_element.VariableAccessRef(xml_elem.text, dest_enum)
+
+    def _read_mode_switch_point_ref(self,
+                                    xml_elem: ElementTree.Element
+                                    ) -> ar_element.ModeSwitchPointRef:
+        """
+        Reads references to AR:MODE-SWITCH-POINT--SUBTYPES-ENUM
+        Tag variants: 'EVENT-SOURCE-REF'
+        """
+        dest_enum = self._read_ref_dest(xml_elem)
+        return ar_element.ModeSwitchPointRef(xml_elem.text, dest_enum)
+
+    # --- Constant and value specifications
 
     def _read_text_value_specification(self,
                                        xml_element: ElementTree.Element) -> ar_element.TextValueSpecification:
@@ -4278,9 +4312,9 @@ class Reader:
         if xml_child is not None:
             data["required_rte_vendor"] = xml_child.text
 
-    def _read_rmode_in_atomic_swc_instance_ref(self,
-                                               xml_element: ElementTree.Element
-                                               ) -> ar_element.RModeInAtomicSwcInstanceRef:
+    def _read_r_mode_in_atomic_swc_instance_ref(self,
+                                                xml_element: ElementTree.Element
+                                                ) -> ar_element.RModeInAtomicSwcInstanceRef:
         """
         Reads complex type AR:R-MODE-IN-ATOMIC-SWC-INSTANCE-REF
         Tag variants: 'DISABLED-MODE-IREF' | 'MODE-IREF'
@@ -4300,9 +4334,9 @@ class Reader:
         self._report_unprocessed_elements(child_elements)
         return ar_element.RModeInAtomicSwcInstanceRef(**data)
 
-    def _read_rvariable_in_atomic_swc_instance_ref(self,
-                                                   xml_element: ElementTree.Element
-                                                   ) -> ar_element.RVariableInAtomicSwcInstanceRef:
+    def _read_r_variable_in_atomic_swc_instance_ref(self,
+                                                    xml_element: ElementTree.Element
+                                                    ) -> ar_element.RVariableInAtomicSwcInstanceRef:
         """
         Reads complex type AR:R-VARIABLE-IN-ATOMIC-SWC-INSTANCE-REF
         Tag variants: 'DATA-IREF'
@@ -4317,6 +4351,24 @@ class Reader:
             data["target_data_element"] = self._read_variable_data_prototype_ref(xml_child)
         self._report_unprocessed_elements(child_elements)
         return ar_element.RVariableInAtomicSwcInstanceRef(**data)
+
+    def _read_p_operation_in_atomic_swc_instance_ref(self,
+                                                     xml_element: ElementTree.Element
+                                                     ) -> ar_element.POperationInAtomicSwcInstanceRef:
+        """
+        Complex type AR:P-OPERATION-IN-ATOMIC-SWC-INSTANCE-REF
+        Tag variants: 'OPERATION-IREF'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("CONTEXT-P-PORT-REF")
+        if xml_child is not None:
+            data["context_port"] = self._read_abstract_provided_port_prototype_ref(xml_child)
+        xml_child = child_elements.get("TARGET-PROVIDED-OPERATION-REF")
+        if xml_child is not None:
+            data["target_provided_operation"] = self._read_client_server_operation_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.POperationInAtomicSwcInstanceRef(**data)
 
     # --- Internal Behavior elements
 
@@ -4576,12 +4628,31 @@ class Reader:
         if xml_child is not None:
             disabled_modes = []
             for xml_grand_child in xml_child.findall("./DISABLED-MODE-IREF"):
-                disabled_modes.append(self._read_rmode_in_atomic_swc_instance_ref(xml_grand_child))
+                disabled_modes.append(self._read_r_mode_in_atomic_swc_instance_ref(xml_grand_child))
             data["disabled_modes"] = disabled_modes
         xml_child = child_elements.get("START-ON-EVENT-REF")
         if xml_child is not None:
             data["start_on_event"] = self._read_runnable_entity_ref(xml_child)
         child_elements.skip("VARIATION-POINT")  # Not supported
+
+    def _read_data_receive_error_event(self,
+                                       xml_element: ElementTree.Element
+                                       ) -> ar_element.DataReceiveErrorEvent:
+        """
+        Reads complex Type AR:DATA-RECEIVE-ERROR-EVENT
+        Tag variants: 'DATA-RECEIVE-ERROR-EVENT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_rte_event(child_elements, data)
+        xml_child = child_elements.get("DATA-IREF")
+        if xml_child is not None:
+            data["data"] = self._read_r_variable_in_atomic_swc_instance_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.DataReceiveErrorEvent(**data)
 
     def _read_data_received_event(self,
                                   xml_element: ElementTree.Element
@@ -4598,9 +4669,47 @@ class Reader:
         self._read_rte_event(child_elements, data)
         xml_child = child_elements.get("DATA-IREF")
         if xml_child is not None:
-            data["data"] = self._read_rvariable_in_atomic_swc_instance_ref(xml_child)
+            data["data"] = self._read_r_variable_in_atomic_swc_instance_ref(xml_child)
         self._report_unprocessed_elements(child_elements)
         return ar_element.DataReceivedEvent(**data)
+
+    def _read_send_completed_event(self,
+                                   xml_element: ElementTree.Element
+                                   ) -> ar_element.DataSendCompletedEvent:
+        """
+        Reads complex Type AR:DATA-SEND-COMPLETED-EVENT
+        Tag variants: 'DATA-SEND-COMPLETED-EVENT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_rte_event(child_elements, data)
+        xml_child = child_elements.get("EVENT-SOURCE-REF")
+        if xml_child is not None:
+            data["event_source"] = self._read_variable_access_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.DataSendCompletedEvent(**data)
+
+    def _read_data_write_completed_event(self,
+                                         xml_element: ElementTree.Element
+                                         ) -> ar_element.DataWriteCompletedEvent:
+        """
+        Reads complex type AR:DATA-WRITE-COMPLETED-EVENT
+        Tag variants: 'DATA-WRITE-COMPLETED-EVENT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_rte_event(child_elements, data)
+        xml_child = child_elements.get("EVENT-SOURCE-REF")
+        if xml_child is not None:
+            data["event_source"] = self._read_variable_access_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.DataWriteCompletedEvent(**data)
 
     def _read_init_event(self,
                          xml_element: ElementTree.Element
@@ -4617,6 +4726,104 @@ class Reader:
         self._read_rte_event(child_elements, data)
         self._report_unprocessed_elements(child_elements)
         return ar_element.InitEvent(**data)
+
+    def _read_mode_switched_ack_event(self,
+                                      xml_element: ElementTree.Element
+                                      ) -> ar_element.ModeSwitchedAckEvent:
+        """
+        Reads Complex type MODE-SWITCHED-ACK-EVENT
+        Tag variants: 'MODE-SWITCHED-ACK-EVENT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_rte_event(child_elements, data)
+        xml_child = child_elements.get("EVENT-SOURCE-REF")
+        if xml_child is not None:
+            data["event_source"] = self._read_mode_switch_point_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ModeSwitchedAckEvent(**data)
+
+    def _read_operation_invoked_event(self,
+                                      xml_element: ElementTree.Element
+                                      ) -> ar_element.OperationInvokedEvent:
+        """
+        Complex type AR:OPERATION-INVOKED-EVENT
+        Tag variants: 'OPERATION-INVOKED-EVENT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_rte_event(child_elements, data)
+        xml_child = child_elements.get("OPERATION-IREF")
+        if xml_child is not None:
+            data["operation"] = self._read_p_operation_in_atomic_swc_instance_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.OperationInvokedEvent(**data)
+
+    def _read_swc_mode_switch_event(self,
+                                    xml_element: ElementTree.Element
+                                    ) -> ar_element.SwcModeSwitchEvent:
+        """
+        Reads complex type AR:SWC-MODE-SWITCH-EVENT
+        Tag variants: 'SWC-MODE-SWITCH-EVENT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_rte_event(child_elements, data)
+        self._read_swc_mode_switch_event_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.SwcModeSwitchEvent(**data)
+
+    def _read_swc_mode_switch_event_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:SWC-MODE-SWITCH-EVENT
+        """
+        xml_child = child_elements.get("ACTIVATION")
+        if xml_child is not None:
+            data["activation"] = ar_enum.xml_to_enum("ModeActivationKind", xml_child.text)
+        xml_child = child_elements.get("MODE-IREFS")
+        if xml_child is not None:
+            modes = []
+            for xml_grand_child in xml_child.findall("./MODE-IREF"):
+                modes.append(self._read_r_mode_in_atomic_swc_instance_ref(xml_grand_child))
+            if len(modes) == 0:
+                pass
+            elif len(modes) == 1:
+                data["mode"] = modes[0]
+            elif len(modes) == 2:
+                data["mode"] = (modes[0], modes[1])
+            else:
+                self._raise_parse_error(xml_child, "Max two mode references are allowed")
+
+    def _read_timing_event(self,
+                           xml_element: ElementTree.Element
+                           ) -> ar_element.TimingEvent:
+        """
+        Reads complex type AR:TIMING-EVENT
+        Tag variants: 'TIMING-EVENT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_rte_event(child_elements, data)
+        xml_child = child_elements.get("OFFSET")
+        if xml_child is not None:
+            data["offset"] = self._read_number(xml_child.text)
+        xml_child = child_elements.get("PERIOD")
+        if xml_child is not None:
+            data["period"] = self._read_number(xml_child.text)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.TimingEvent(**data)
 
     def _read_swc_internal_behavior(self, xml_element: ElementTree.Element) -> ar_element.SwcInternalBehavior:
         """
