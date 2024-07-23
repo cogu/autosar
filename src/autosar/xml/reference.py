@@ -570,9 +570,22 @@ class AbstractRequiredPortPrototypeRef(BaseRef):
                 ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE}
 
 
+class AbstractProvidedPortPrototypeRef(BaseRef):
+    """
+    AR:ABSTRACT-PROVIDED-PORT-PROTOTYPE--SUBTYPES-ENUM
+    """
+
+    @classmethod
+    def accepted_sub_types(cls) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.ABSTRACT_PROVIDED_PORT_PROTOTYPE,
+                ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE,
+                ar_enum.IdentifiableSubTypes.PR_PORT_PROTOTYPE}
+
+
 class RunnableEntityRef(BaseRef):
     """
-    RUNNABLE-ENTITY--SUBTYPES-ENUM
+    AR:RUNNABLE-ENTITY--SUBTYPES-ENUM
     """
 
     def __init__(self, value: str,
@@ -584,3 +597,35 @@ class RunnableEntityRef(BaseRef):
     def accepted_sub_types(cls) -> set[ar_enum.IdentifiableSubTypes]:
         """Acceptable values for dest"""
         return {ar_enum.IdentifiableSubTypes.RUNNABLE_ENTITY}
+
+
+class VariableAccessRef(BaseRef):
+    """
+    VARIABLE-ACCESS--SUBTYPES-ENUM
+    """
+
+    def __init__(self, value: str,
+                 dest: ar_enum.IdentifiableSubTypes = ar_enum.IdentifiableSubTypes.VARIABLE_ACCESS
+                 ) -> None:
+        super().__init__(value, dest)
+
+    @classmethod
+    def accepted_sub_types(cls) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.VARIABLE_ACCESS}
+
+
+class ModeSwitchPointRef(BaseRef):
+    """
+    AR:MODE-SWITCH-POINT--SUBTYPES-ENUM
+    """
+
+    def __init__(self, value: str,
+                 dest: ar_enum.IdentifiableSubTypes = ar_enum.IdentifiableSubTypes.MODE_SWITCH_POINT
+                 ) -> None:
+        super().__init__(value, dest)
+
+    @classmethod
+    def accepted_sub_types(cls) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.MODE_SWITCH_POINT}

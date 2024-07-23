@@ -45,7 +45,10 @@ from autosar.xml.reference import (SwBaseTypeRef,  # noqa F401
                                    ExclusiveAreaRef,
                                    ExclusiveAreaNestingOrderRef,
                                    AbstractRequiredPortPrototypeRef,
+                                   AbstractProvidedPortPrototypeRef,
                                    RunnableEntityRef,
+                                   VariableAccessRef,
+                                   ModeSwitchPointRef,
                                    )
 
 
@@ -5260,13 +5263,30 @@ class RVariableInAtomicSwcInstanceRef(ARObject):
                  context_port: AbstractRequiredPortPrototypeRef | None = None,
                  target_data_element: VariableDataPrototypeRef | str | None = None,
                  ) -> None:
-        # .CONTEXT-R-PORT-REF (Use same name as in RModeInAtomicSwcInstanceRef for consistency)
+        # .CONTEXT-R-PORT-REF (Keep name consistent in similar classes)
         self.context_port: AbstractRequiredPortPrototypeRef | None = None
         # .TARGET-DATA-ELEMENT-REF
         self.target_data_element: VariableDataPrototypeRef | None = None
         self._assign_optional("context_port", context_port, AbstractRequiredPortPrototypeRef)
         self._assign_optional("target_data_element", target_data_element, VariableDataPrototypeRef)
 
+
+class POperationInAtomicSwcInstanceRef(ARObject):
+    """
+    Complex type AR:P-OPERATION-IN-ATOMIC-SWC-INSTANCE-REF
+    Tag variants: 'OPERATION-IREF'
+    """
+
+    def __init__(self,
+                 context_port: AbstractProvidedPortPrototypeRef | None = None,
+                 target_provided_operation: ClientServerOperationRef | str | None = None,
+                 ) -> None:
+        # .CONTEXT-P-PORT-REF (Keep name consistent in similar classes)
+        self.context_port: AbstractProvidedPortPrototypeRef | None = None
+        # .TARGET-PROVIDED-OPERATION-REF
+        self.target_provided_operation: ClientServerOperationRef | None = None
+        self._assign_optional("context_port", context_port, AbstractProvidedPortPrototypeRef)
+        self._assign_optional("target_provided_operation", target_provided_operation, ClientServerOperationRef)
 
 # --- SWC internal behavior elements
 
@@ -5501,7 +5521,7 @@ class ExecutableEntity(Identifiable):
                  activation_reasons: ActivationReasonArgumentType = None,
                  can_enter_leave: CanEnterLeaveArgumentType = None,
                  exclusive_area_nesting_order: ExclusiveAreaNestingOrderArgumentType = None,
-                 minimum_start_interval: float | None = None,
+                 minimum_start_interval: int | float | None = None,
                  reentrancy_level: ar_enum.ReentrancyLevel | None = None,
                  runs_insides: RunsInsidesArgumentType = None,
                  sw_addr_method: str | SwAddrMethodRef | None = None,
@@ -5632,6 +5652,39 @@ class RteEvent(Identifiable):
             raise TypeError("disabled_mode must be of type RModeInAtomicSwcInstanceRef")
 
 
+class DataReceiveErrorEvent(RteEvent):
+    """
+    Complex Type AR:DATA-RECEIVE-ERROR-EVENT
+    Tag variants: 'DATA-RECEIVE-ERROR-EVENT'
+    """
+
+    def __init__(self,
+                 name: str,
+                 start_on_event: RunnableEntityRef | str | None = None,
+                 data: RVariableInAtomicSwcInstanceRef | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, start_on_event, **kwargs)
+        # .DATA-IREF
+        self.data: RVariableInAtomicSwcInstanceRef | None = None
+        self._assign_optional_strict("data", data, RVariableInAtomicSwcInstanceRef)
+
+    @classmethod
+    def make(cls,
+             name: str,
+             start_on_event: RunnableEntityRef | str | None = None,
+             context_port: AbstractRequiredPortPrototypeRef | None = None,
+             target_data_element: VariableDataPrototypeRef | str | None = None,
+             **kwargs) -> "DataReceiveErrorEvent":
+        """
+        #convenience-method
+
+        Simplified creation method that automatically creates
+        and uses the necessary RVariableInAtomicSwcInstanceRef object
+        """
+        data = RVariableInAtomicSwcInstanceRef(context_port, target_data_element)
+        return cls(name, start_on_event, data, **kwargs)
+
+
 class DataReceivedEvent(RteEvent):
     """
     Complex Type AR:DATA-RECEIVED-EVENT
@@ -5665,12 +5718,179 @@ class DataReceivedEvent(RteEvent):
         return cls(name, start_on_event, data, **kwargs)
 
 
+class DataSendCompletedEvent(RteEvent):
+    """
+    Complex Type AR:DATA-SEND-COMPLETED-EVENT
+    Tag variants: 'DATA-SEND-COMPLETED-EVENT'
+    """
+
+    def __init__(self,
+                 name: str,
+                 start_on_event: RunnableEntityRef | str | None = None,
+                 event_source: VariableAccessRef | str | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, start_on_event, **kwargs)
+        # .EVENT-SOURCE-REF
+        self.event_source: VariableAccessRef | None = None
+        self._assign_optional("event_source", event_source, VariableAccessRef)
+
+
+class DataWriteCompletedEvent(RteEvent):
+    """
+    Complex Type AR:DATA-WRITE-COMPLETED-EVENT
+    Tag variants: 'DATA-WRITE-COMPLETED-EVENT'
+    """
+
+    def __init__(self,
+                 name: str,
+                 start_on_event: RunnableEntityRef | str | None = None,
+                 event_source: VariableAccessRef | str | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, start_on_event, **kwargs)
+        # .EVENT-SOURCE-REF
+        self.event_source: VariableAccessRef | None = None
+        self._assign_optional("event_source", event_source, VariableAccessRef)
+
+
 class InitEvent(RteEvent):
     """
     Complex Type AR:INIT-EVENT
     Tag variants: 'INIT-EVENT'
     Reuses constructor from base-class
     """
+
+
+class ModeSwitchedAckEvent(RteEvent):
+    """
+    Complex type AR:MODE-SWITCHED-ACK-EVENT
+    Tag variants: 'MODE-SWITCHED-ACK-EVENT'
+    """
+
+    def __init__(self,
+                 name: str,
+                 start_on_event: RunnableEntityRef | str | None = None,
+                 event_source: ModeSwitchPointRef | str | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, start_on_event, **kwargs)
+        # .EVENT-SOURCE-REF
+        self.event_source: ModeSwitchPointRef | None = None
+        self._assign_optional("event_source", event_source, ModeSwitchPointRef)
+
+
+class OperationInvokedEvent(RteEvent):
+    """
+    Complex type AR:OPERATION-INVOKED-EVENT
+    Tag variants: 'OPERATION-INVOKED-EVENT'
+    """
+
+    def __init__(self,
+                 name: str,
+                 start_on_event: RunnableEntityRef | str | None = None,
+                 operation: POperationInAtomicSwcInstanceRef | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, start_on_event, **kwargs)
+        # .OPERATION-IREF
+        self.operation: POperationInAtomicSwcInstanceRef | None = None
+        self._assign_optional_strict("operation", operation, POperationInAtomicSwcInstanceRef)
+
+    @classmethod
+    def make(cls,
+             name: str,
+             start_on_event: RunnableEntityRef | str | None = None,
+             context_port: AbstractProvidedPortPrototypeRef | None = None,
+             target_provided_operation: ClientServerOperationRef | str | None = None,
+             **kwargs) -> "OperationInvokedEvent":
+        """
+        #convenience-method
+
+        Simplified creation method that automatically creates
+        and uses the necessary POperationInAtomicSwcInstanceRef object
+        """
+        operation = POperationInAtomicSwcInstanceRef(context_port, target_provided_operation)
+        return cls(name, start_on_event, operation, **kwargs)
+
+
+SwcModeSwitchEventModeType = Union[RModeInAtomicSwcInstanceRef,
+                                   tuple[RModeInAtomicSwcInstanceRef, RModeInAtomicSwcInstanceRef],
+                                   None]
+
+
+class SwcModeSwitchEvent(RteEvent):
+    """
+    Complex type AR:SWC-MODE-SWITCH-EVENT
+    Tag variants: 'SWC-MODE-SWITCH-EVENT'
+    """
+
+    def __init__(self,
+                 name: str,
+                 start_on_event: RunnableEntityRef | str | None = None,
+                 activation: ar_enum.ModeActivationKind | None = None,
+                 mode: SwcModeSwitchEventModeType = None,
+                 **kwargs) -> None:
+        super().__init__(name, start_on_event, **kwargs)
+        # .ACTIVATION
+        self.activation: ar_enum.ModeActivationKind | None = None
+        # .MODE-IREFS
+        self.mode: SwcModeSwitchEventModeType = None
+
+        self._assign_optional("activation", activation, ar_enum.ModeActivationKind)
+        if mode is not None:
+            if isinstance(mode, RModeInAtomicSwcInstanceRef):
+                self.mode = mode
+            elif isinstance(mode, tuple):
+                if (isinstance(mode[0], RModeInAtomicSwcInstanceRef) and  # noqa W504
+                        isinstance(mode[1], RModeInAtomicSwcInstanceRef)):
+                    self.mode = mode
+                else:
+                    raise TypeError("Both values of mode tuple must be of type RModeInAtomicSwcInstanceRef")
+            else:
+                msg_part1 = "Invalid type for parameter 'mode'. "
+                msg_part2 = "Expected types are RModeInAtomicSwcInstanceRef or tuple of same type."
+                msg_part3 = f"Got {str(type(mode))}"
+                raise TypeError(msg_part1 + msg_part2 + msg_part3)
+
+    @classmethod
+    def make(cls,
+             name: str,
+             start_on_event: RunnableEntityRef | str | None = None,
+             activation: ar_enum.ModeActivationKind | None = None,
+             context_port: AbstractRequiredPortPrototypeRef | None = None,
+             context_mode_declaration_group_prototype: ModeDeclarationGroupPrototypeRef | None = None,
+             target_mode_declaration: ModeDeclarationRef | None = None,
+             **kwargs) -> "SwcModeSwitchEvent":
+        """
+        #convenience-method
+
+        Only suitable for ON-ENTRY and ON-EXIT activation types.
+        For ON-TRANSITION activation, use the class constructor instead.
+
+        """
+        mode = RModeInAtomicSwcInstanceRef(context_port,
+                                           context_mode_declaration_group_prototype,
+                                           target_mode_declaration)
+        return cls(name, start_on_event, activation, mode, **kwargs)
+
+
+class TimingEvent(RteEvent):
+    """
+    Complex type AR:TIMING-EVENT
+    Tag variants: 'TIMING-EVENT'
+    """
+
+    def __init__(self,
+                 name: str,
+                 start_on_event: RunnableEntityRef | str | None = None,
+                 offset: int | float | None = None,
+                 period: int | float | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, start_on_event, **kwargs)
+        # .OFFSET
+        self.offset: int | float | None = None
+        # .PERIOD
+        self.period: int | float | None = None
+
+        self._assign_optional("offset", offset, float)
+        self._assign_optional("period", period, float)
 
 
 class InternalBehavior(Identifiable):

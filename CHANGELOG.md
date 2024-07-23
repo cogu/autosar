@@ -16,8 +16,15 @@ Non-collectable elements are various sub-elements to collectable elements.
 
 #### XML - SWC internal behavior elements
 
+* DataReceiveErrorEvent | DATA-RECEIVE-ERROR-EVENT
 * DataReceivedEvent | DATA-RECEIVED-EVENT
+* DataSendCompletedEvent | DATA-SEND-COMPLETED-EVENT
+* DataWriteCompletedEvent | DATA-WRITE-COMPLETED-EVENT
 * InitEvent | INIT-EVENT
+* ModeSwitchedAckEvent | MODE-SWITCHED-ACK-EVENT
+* OperationInvokedEvent | OPERATION-INVOKED-EVENT
+* SwcModeSwitchEvent | SWC-MODE-SWITCH-EVENT
+* TimingEvent | TIMING-EVENT
 * InternalBehavior | SWC-INTERNAL-BEHAVIOR (Partly implemented)
 * RunnableEntity | RUNNABLE-ENTITY
 
