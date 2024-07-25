@@ -1207,7 +1207,7 @@ class BehaviorParser(ElementParser):
         (name, category, binding_time, condition_access) = (None, None, None, None)
 
         category_items = xmlRoot.findall("./CATEGORY")
-        assert len(category_items) == 1, "Only one CATEGORY element is allowed in the VARIATION-POINT-PROXY element"
+        assert len(category_items) == 1, f"Exactly one CATEGORY element is required in the VARIATION-POINT-PROXY element (see '{parent.ref}')"
 
         category = self.parseTextNode(category_items[0])
 
