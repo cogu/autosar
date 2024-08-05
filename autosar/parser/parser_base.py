@@ -1,4 +1,4 @@
-import abc
+fimport abc
 from collections import deque
 from autosar.base import (AdminData, SpecialDataGroup, SpecialData, SwDataDefPropsConditional, SwPointerTargetProps, SymbolProps)
 import autosar.element
@@ -62,6 +62,8 @@ class BaseParser:
             self.common[-1].desc, self.common[-1].desc_attr = self.parseDescDirect(xmlElem)
         elif xmlElem.tag == 'LONG-NAME':
             self.common[-1].longName, self.common[-1].longName_attr = self.parseLongNameDirect(xmlElem)
+        elif xmlElem.tag == 'INTRODUCTION':
+            pass
         else:
             raise NotImplementedError(xmlElem.tag)
     
