@@ -1,4 +1,4 @@
-fimport abc
+import abc
 from collections import deque
 from autosar.base import (AdminData, SpecialDataGroup, SpecialData, SwDataDefPropsConditional, SwPointerTargetProps, SymbolProps)
 import autosar.element
