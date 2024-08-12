@@ -11,22 +11,33 @@ Non-collectable elements are various sub-elements to collectable elements.
 
 #### XML - Software component elements
 
+* PModeGroupInAtomicSwcInstanceRef | P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF
+* POperationInAtomicSwcInstanceRef | P-OPERATION-IN-ATOMIC-SWC-INSTANCE-REF
+* PTriggerInAtomicSwcTypeInstanceRef | P-TRIGGER-IN-ATOMIC-SWC-TYPE-INSTANCE-REF
 * RModeInAtomicSwcInstanceRef | R-MODE-IN-ATOMIC-SWC-INSTANCE-REF
+* RTriggerInAtomicSwcInstanceRef | R-TRIGGER-IN-ATOMIC-SWC-INSTANCE-REF
 * RVariableInAtomicSwcInstanceRef | R-VARIABLE-IN-ATOMIC-SWC-INSTANCE-REF
 
 #### XML - SWC internal behavior elements
 
-* DataReceiveErrorEvent | DATA-RECEIVE-ERROR-EVENT
+* AsynchronousServerCallReturnsEvent | ASYNCHRONOUS-SERVER-CALL-RETURNS-EVENT
+* BackgroundEvent | BACKGROUND-EVENT
 * DataReceivedEvent | DATA-RECEIVED-EVENT
+* DataReceiveErrorEvent | DATA-RECEIVE-ERROR-EVENT
 * DataSendCompletedEvent | DATA-SEND-COMPLETED-EVENT
 * DataWriteCompletedEvent | DATA-WRITE-COMPLETED-EVENT
+* ExternalTriggerOccurredEvent | EXTERNAL-TRIGGER-OCCURRED-EVENT
 * InitEvent | INIT-EVENT
+* InternalBehavior | SWC-INTERNAL-BEHAVIOR (Partly implemented)
+  * runnables
+* InternalTriggerOccurredEvent | INTERNAL-TRIGGER-OCCURRED-EVENT
 * ModeSwitchedAckEvent | MODE-SWITCHED-ACK-EVENT
 * OperationInvokedEvent | OPERATION-INVOKED-EVENT
+* RunnableEntity | RUNNABLE-ENTITY
+* SwcModeManagerErrorEvent | SWC-MODE-MANAGER-ERROR-EVENT
 * SwcModeSwitchEvent | SWC-MODE-SWITCH-EVENT
 * TimingEvent | TIMING-EVENT
-* InternalBehavior | SWC-INTERNAL-BEHAVIOR (Partly implemented)
-* RunnableEntity | RUNNABLE-ENTITY
+* TransformerHardErrorEvent | TRANSFORMER-HARD-ERROR-EVENT
 
 ### Fixed
 

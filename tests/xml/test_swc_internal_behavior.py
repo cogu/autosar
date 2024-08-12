@@ -1357,6 +1357,313 @@ class TestTimingEvent(unittest.TestCase):
         self.assertAlmostEqual(elem.period, period)
 
 
+class TestAsynchronousServerCallReturnsEvent(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.AsynchronousServerCallReturnsEvent('MyName')
+        writer = autosar.xml.Writer()
+        xml = '''<ASYNCHRONOUS-SERVER-CALL-RETURNS-EVENT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+</ASYNCHRONOUS-SERVER-CALL-RETURNS-EVENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.AsynchronousServerCallReturnsEvent = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.AsynchronousServerCallReturnsEvent)
+        self.assertEqual(elem.name, 'MyName')
+
+    def test_event_source(self):
+        srv_call_result_point_ref_str = "/ComponentTypes/MyComponent/MyComponent_InternalBehavior/SRV_ResultPoint"
+        srv_call_result_point_ref = ar_element.AsynchronousServerCallResultPointRef(srv_call_result_point_ref_str)
+        element = ar_element.AsynchronousServerCallReturnsEvent('MyName', event_source=srv_call_result_point_ref)
+        dest_str = "ASYNCHRONOUS-SERVER-CALL-RESULT-POINT"
+        xml = f'''<ASYNCHRONOUS-SERVER-CALL-RETURNS-EVENT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <EVENT-SOURCE-REF DEST="{dest_str}">{srv_call_result_point_ref_str}</EVENT-SOURCE-REF>
+</ASYNCHRONOUS-SERVER-CALL-RETURNS-EVENT>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.AsynchronousServerCallReturnsEvent = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.AsynchronousServerCallReturnsEvent)
+        self.assertEqual(str(elem.event_source), srv_call_result_point_ref_str)
+
+
+class TestBackgroundEvent(unittest.TestCase):
+    """
+    This event doesn't have any additional elements outside its base class.
+    """
+
+    def test_name_only(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.BackgroundEvent('MyName')
+        xml = '''<BACKGROUND-EVENT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+</BACKGROUND-EVENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.BackgroundEvent = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.BackgroundEvent)
+        self.assertEqual(elem.name, 'MyName')
+        self.assertEqual(elem.short_name, 'MyName')
+
+
+class TestExternalTriggerOccurredEvent(unittest.TestCase):
+
+    def test_name_only(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ExternalTriggerOccurredEvent('MyName')
+        xml = '''<EXTERNAL-TRIGGER-OCCURRED-EVENT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+</EXTERNAL-TRIGGER-OCCURRED-EVENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ExternalTriggerOccurredEvent = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ExternalTriggerOccurredEvent)
+        self.assertEqual(elem.name, 'MyName')
+        self.assertEqual(elem.short_name, 'MyName')
+
+    def test_data_from_element(self):
+        context_port_ref_str = "/ComponentTypes/MyComponent/MyPort"
+        target_trigger_ref_str = "/Triggers/MyTrigger"
+        context_port = ar_element.PortPrototypeRef(context_port_ref_str, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
+        target_trigger = ar_element.TriggerRef(target_trigger_ref_str)
+        trigger = ar_element.RTriggerInAtomicSwcInstanceRef(context_port=context_port,
+                                                            target_trigger=target_trigger)
+        element = ar_element.ExternalTriggerOccurredEvent('MyName',
+                                                          trigger=trigger)
+        xml = f'''<EXTERNAL-TRIGGER-OCCURRED-EVENT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <TRIGGER-IREF>
+    <CONTEXT-R-PORT-REF DEST="R-PORT-PROTOTYPE">{context_port_ref_str}</CONTEXT-R-PORT-REF>
+    <TARGET-TRIGGER-REF DEST="TRIGGER">{target_trigger_ref_str}</TARGET-TRIGGER-REF>
+  </TRIGGER-IREF>
+</EXTERNAL-TRIGGER-OCCURRED-EVENT>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ExternalTriggerOccurredEvent = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ExternalTriggerOccurredEvent)
+        inner: ar_element.RTriggerInAtomicSwcInstanceRef = elem.trigger
+        self.assertEqual(str(inner.context_port), context_port_ref_str)
+        self.assertEqual(str(inner.target_trigger), target_trigger_ref_str)
+
+    def test_create_using_conveneince_method(self):
+        context_port_ref_str = "/ComponentTypes/MyComponent/MyPort"
+        target_trigger_ref_str = "/Triggers/MyTrigger"
+        context_port = ar_element.PortPrototypeRef(context_port_ref_str, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
+        element = ar_element.ExternalTriggerOccurredEvent.make('MyName',
+                                                               context_port=context_port,
+                                                               target_trigger=target_trigger_ref_str)
+        xml = f'''<EXTERNAL-TRIGGER-OCCURRED-EVENT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <TRIGGER-IREF>
+    <CONTEXT-R-PORT-REF DEST="R-PORT-PROTOTYPE">{context_port_ref_str}</CONTEXT-R-PORT-REF>
+    <TARGET-TRIGGER-REF DEST="TRIGGER">{target_trigger_ref_str}</TARGET-TRIGGER-REF>
+  </TRIGGER-IREF>
+</EXTERNAL-TRIGGER-OCCURRED-EVENT>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ExternalTriggerOccurredEvent = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ExternalTriggerOccurredEvent)
+        inner: ar_element.RTriggerInAtomicSwcInstanceRef = elem.trigger
+        self.assertEqual(str(inner.context_port), context_port_ref_str)
+        self.assertEqual(str(inner.target_trigger), target_trigger_ref_str)
+
+
+class TestInternalTriggerOccurredEvent(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.InternalTriggerOccurredEvent('MyName')
+        writer = autosar.xml.Writer()
+        xml = '''<INTERNAL-TRIGGER-OCCURRED-EVENT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+</INTERNAL-TRIGGER-OCCURRED-EVENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.InternalTriggerOccurredEvent = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.InternalTriggerOccurredEvent)
+        self.assertEqual(elem.name, 'MyName')
+        self.assertEqual(elem.short_name, 'MyName')
+
+    def test_event_source(self):
+        target_trigger_ref_str = "/Triggers/MyTrigger"
+        writer = autosar.xml.Writer()
+        element = ar_element.InternalTriggerOccurredEvent('MyName',
+                                                          event_source=target_trigger_ref_str)
+        xml = f'''<INTERNAL-TRIGGER-OCCURRED-EVENT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <EVENT-SOURCE-REF DEST="INTERNAL-TRIGGERING-POINT">{target_trigger_ref_str}</EVENT-SOURCE-REF>
+</INTERNAL-TRIGGER-OCCURRED-EVENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.InternalTriggerOccurredEvent = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.InternalTriggerOccurredEvent)
+        self.assertEqual(elem.name, 'MyName')
+        self.assertEqual(elem.short_name, 'MyName')
+
+
+class TestSwcModeManagerErrorEvent(unittest.TestCase):
+
+    def test_name_only(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.SwcModeManagerErrorEvent('MyName')
+        xml = '''<SWC-MODE-MANAGER-ERROR-EVENT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+</SWC-MODE-MANAGER-ERROR-EVENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcModeManagerErrorEvent = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcModeManagerErrorEvent)
+        self.assertEqual(elem.name, 'MyName')
+        self.assertEqual(elem.short_name, 'MyName')
+
+    def test_mode_group_from_element(self):
+        context_port_ref_str = "/ComponentTypes/MyComponent/BswM_Mode"
+        context_mode_decl_group_ref_str = "/PortInterfaces/BswM_ModeSwitchInterface/BswM_Mode"
+        context_port = ar_element.PortPrototypeRef(context_port_ref_str, ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE)
+        mode_instance = ar_element.PModeGroupInAtomicSwcInstanceRef(
+            context_port=context_port,
+            context_mode_declaration_group_prototype=context_mode_decl_group_ref_str)
+        element = ar_element.SwcModeManagerErrorEvent('MyName',
+                                                      mode_group=mode_instance)
+        tag = "CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF"
+        xml = f'''<SWC-MODE-MANAGER-ERROR-EVENT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <MODE-GROUP-IREF>
+    <CONTEXT-P-PORT-REF DEST="P-PORT-PROTOTYPE">{context_port_ref_str}</CONTEXT-P-PORT-REF>
+    <{tag} DEST="MODE-DECLARATION-GROUP-PROTOTYPE">{context_mode_decl_group_ref_str}</{tag}>
+  </MODE-GROUP-IREF>
+</SWC-MODE-MANAGER-ERROR-EVENT>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcModeManagerErrorEvent = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcModeManagerErrorEvent)
+        mode_group: ar_element.PModeGroupInAtomicSwcInstanceRef = elem.mode_group
+        self.assertEqual(str(mode_group.context_port), context_port_ref_str)
+        self.assertEqual(str(mode_group.context_mode_declaration_group_prototype), context_mode_decl_group_ref_str)
+
+    def test_mode_group_using_convenience_method(self):
+        start_on_event_ref_str = "/ComponentTypes/MyComponent/InternalBehavior/MyRunnable"
+        context_port_ref_str = "/ComponentTypes/MyComponent/BswM_Mode"
+        context_mode_decl_group_ref_str = "/PortInterfaces/BswM_ModeSwitchInterface/BswM_Mode"
+        context_port = ar_element.PortPrototypeRef(context_port_ref_str, ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE)
+        element = ar_element.SwcModeManagerErrorEvent.make('MyName',
+                                                           start_on_event_ref_str,
+                                                           context_port,
+                                                           context_mode_decl_group_ref_str)
+        tag = "CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF"
+        xml = f'''<SWC-MODE-MANAGER-ERROR-EVENT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <START-ON-EVENT-REF DEST="RUNNABLE-ENTITY">{start_on_event_ref_str}</START-ON-EVENT-REF>
+  <MODE-GROUP-IREF>
+    <CONTEXT-P-PORT-REF DEST="P-PORT-PROTOTYPE">{context_port_ref_str}</CONTEXT-P-PORT-REF>
+    <{tag} DEST="MODE-DECLARATION-GROUP-PROTOTYPE">{context_mode_decl_group_ref_str}</{tag}>
+  </MODE-GROUP-IREF>
+</SWC-MODE-MANAGER-ERROR-EVENT>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcModeManagerErrorEvent = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcModeManagerErrorEvent)
+        self.assertEqual(str(elem.start_on_event), start_on_event_ref_str)
+        mode_group: ar_element.PModeGroupInAtomicSwcInstanceRef = elem.mode_group
+        self.assertEqual(str(mode_group.context_port), context_port_ref_str)
+        self.assertEqual(str(mode_group.context_mode_declaration_group_prototype), context_mode_decl_group_ref_str)
+
+
+class TestTransformerHardErrorEvent(unittest.TestCase):
+    def test_name_only(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.TransformerHardErrorEvent('MyName')
+        xml = '''<TRANSFORMER-HARD-ERROR-EVENT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+</TRANSFORMER-HARD-ERROR-EVENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.TransformerHardErrorEvent = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.TransformerHardErrorEvent)
+        self.assertEqual(elem.name, 'MyName')
+        self.assertEqual(elem.short_name, 'MyName')
+
+    def test_operation(self):
+        context_port_ref_str = "/ComponentTypes/MyComponent/StoredData"
+        target_operation_ref_str = "/PortInterfaces/PortInterfaceName/OperationName"
+        context_port = ar_element.PortPrototypeRef(context_port_ref_str, ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE)
+        target_operation = ar_element.ClientServerOperationRef(target_operation_ref_str)
+        operation = ar_element.POperationInAtomicSwcInstanceRef(context_port=context_port,
+                                                                target_provided_operation=target_operation)
+        element = ar_element.TransformerHardErrorEvent('MyName',
+                                                       operation=operation)
+        dest_str = "CLIENT-SERVER-OPERATION"
+        xml = f'''<TRANSFORMER-HARD-ERROR-EVENT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <OPERATION-IREF>
+    <CONTEXT-P-PORT-REF DEST="P-PORT-PROTOTYPE">{context_port_ref_str}</CONTEXT-P-PORT-REF>
+    <TARGET-PROVIDED-OPERATION-REF DEST="{dest_str}">{target_operation_ref_str}</TARGET-PROVIDED-OPERATION-REF>
+  </OPERATION-IREF>
+</TRANSFORMER-HARD-ERROR-EVENT>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.TransformerHardErrorEvent = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.TransformerHardErrorEvent)
+        inner: ar_element.POperationInAtomicSwcInstanceRef = elem.operation
+        self.assertEqual(str(inner.context_port), context_port_ref_str)
+        self.assertEqual(str(inner.target_provided_operation), target_operation_ref_str)
+
+    def test_required_trigger(self):
+        context_port_ref_str = "/ComponentTypes/MyComponent/MyPort"
+        target_trigger_ref_str = "/Triggers/MyTrigger"
+        context_port = ar_element.PortPrototypeRef(context_port_ref_str, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
+        target_trigger = ar_element.TriggerRef(target_trigger_ref_str)
+        trigger = ar_element.RTriggerInAtomicSwcInstanceRef(context_port=context_port,
+                                                            target_trigger=target_trigger)
+        element = ar_element.TransformerHardErrorEvent('MyName',
+                                                       required_trigger=trigger)
+        xml = f'''<TRANSFORMER-HARD-ERROR-EVENT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <REQUIRED-TRIGGER-IREF>
+    <CONTEXT-R-PORT-REF DEST="R-PORT-PROTOTYPE">{context_port_ref_str}</CONTEXT-R-PORT-REF>
+    <TARGET-TRIGGER-REF DEST="TRIGGER">{target_trigger_ref_str}</TARGET-TRIGGER-REF>
+  </REQUIRED-TRIGGER-IREF>
+</TRANSFORMER-HARD-ERROR-EVENT>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.TransformerHardErrorEvent = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.TransformerHardErrorEvent)
+        inner: ar_element.RTriggerInAtomicSwcInstanceRef = elem.required_trigger
+        self.assertEqual(str(inner.context_port), context_port_ref_str)
+        self.assertEqual(str(inner.target_trigger), target_trigger_ref_str)
+
+    def test_trigger(self):
+        context_port_ref_str = "/ComponentTypes/MyComponent/MyPort"
+        target_trigger_ref_str = "/Triggers/MyTrigger"
+        context_port = ar_element.PortPrototypeRef(context_port_ref_str, ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE)
+        target_trigger = ar_element.TriggerRef(target_trigger_ref_str)
+        trigger = ar_element.PTriggerInAtomicSwcTypeInstanceRef(context_port=context_port,
+                                                                target_trigger=target_trigger)
+        element = ar_element.TransformerHardErrorEvent('MyName',
+                                                       trigger=trigger)
+        xml = f'''<TRANSFORMER-HARD-ERROR-EVENT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <TRIGGER-IREF>
+    <CONTEXT-P-PORT-REF DEST="P-PORT-PROTOTYPE">{context_port_ref_str}</CONTEXT-P-PORT-REF>
+    <TARGET-TRIGGER-REF DEST="TRIGGER">{target_trigger_ref_str}</TARGET-TRIGGER-REF>
+  </TRIGGER-IREF>
+</TRANSFORMER-HARD-ERROR-EVENT>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.TransformerHardErrorEvent = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.TransformerHardErrorEvent)
+        inner: ar_element.PTriggerInAtomicSwcTypeInstanceRef = elem.trigger
+        self.assertEqual(str(inner.context_port), context_port_ref_str)
+        self.assertEqual(str(inner.target_trigger), target_trigger_ref_str)
+
+
 class TestSwcInternalBehavior(unittest.TestCase):
     """
     Most elements are not implemented yet

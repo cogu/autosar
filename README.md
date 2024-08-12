@@ -254,7 +254,14 @@ Below is a rough roadmap of planned releases.
 * Port-access
 * Port-API options
 
-**v0.5.6** Add some missing elements and functions that wasn't prioritized before.
+**v0.5.6** Fixes and refactoring
+
+* Fix some early design mistakes
+* Harmonize some member names to better match "qualified name" from XSD (BREAKING CHANGE)
+  * This mostly means that lot of class member names ending with "_ref" will have its suffix removed
+* Attempt to break apart large Python files into smaller ones.
+
+**v0.5.7** Add some missing elements and functions that wasn't prioritized before.
 
 **v0.6.0:** Stable version, publish to PyPI.
 
