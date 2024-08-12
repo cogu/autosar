@@ -340,15 +340,21 @@ class Writer(_XMLWriter):
             'ExecutableEntityActivationReason': self._write_executable_entity_activation_reason,
             'ExclusiveAreaRefConditional': self._write_exclusive_area_ref_conditional,
             'RunnableEntity': self._write_runnable_entity,
+            'AsynchronousServerCallReturnsEvent': self._write_async_server_call_returns_event,
+            'BackgroundEvent': self._write_background_event,
             'DataReceiveErrorEvent': self._write_data_receive_error_event,
             'DataReceivedEvent': self._write_data_received_event,
             'DataSendCompletedEvent': self._write_data_send_completed_event,
             'DataWriteCompletedEvent': self._write_data_write_completed_event,
+            'ExternalTriggerOccurredEvent': self._write_external_trigger_occured_event,
             'InitEvent': self._write_init_event,
+            'InternalTriggerOccurredEvent': self._write_internal_trigger_occured_event,
             'ModeSwitchedAckEvent': self._write_mode_switched_ack_event,
             'OperationInvokedEvent': self._write_operation_invoked_event,
+            'SwcModeManagerErrorEvent': self._write_swc_mode_manager_error_event,
             'SwcModeSwitchEvent': self._write_swc_mode_switch_event,
             'TimingEvent': self._write_timing_event,
+            'TransformerHardErrorEvent': self._write_transformer_hard_error_event,
         }
         self.switcher_all = {}  # All concrete elements (used for unit testing)
         self.switcher_all.update(self.switcher_collectable)
@@ -2334,6 +2340,38 @@ class Writer(_XMLWriter):
         assert isinstance(elem, ar_element.ModeSwitchPointRef)
         self._write_ref_content(elem, "EVENT-SOURCE-REF")
 
+    def _write_async_server_call_result_point_ref(self,
+                                                  elem: ar_element.AsynchronousServerCallResultPointRef
+                                                  ) -> None:
+        """
+        Writes references to AR:ASYNCHRONOUS-SERVER-CALL-RESULT-POINT--SUBTYPES-ENUM
+        Tag variants: 'EVENT-SOURCE-REF'
+        """
+        assert isinstance(elem, ar_element.AsynchronousServerCallResultPointRef)
+        self._write_ref_content(elem, "EVENT-SOURCE-REF")
+
+    def _write_trigger_ref(self,
+                           elem: ar_element.TriggerRef,
+                           tag: str) -> None:
+        """
+        Writes references to AR:TRIGGER--SUBTYPES-ENUM
+        Tag variants: 'TRIGGER-REF' | 'RELEASED-TRIGGER-REF' | 'MASTERED-TRIGGER-REF' |
+                      'TARGET-TRIGGER-REF' | 'SOURCE-TRIGGER-REF' | 'BSW-TRIGGER-REF' |
+                      'FIRST-TRIGGER-REF' | 'SECOND-TRIGGER-REF'
+        """
+        assert isinstance(elem, ar_element.TriggerRef)
+        self._write_ref_content(elem, tag)
+
+    def _write_internal_triggering_point_ref(self,
+                                             elem: ar_element.InternalTriggeringPointRef
+                                             ) -> None:
+        """
+        Writes references to AR:INTERNAL-TRIGGERING-POINT--SUBTYPES-ENUM
+        Tag variants: 'EVENT-SOURCE-REF'
+        """
+        assert isinstance(elem, ar_element.InternalTriggeringPointRef)
+        self._write_ref_content(elem, "EVENT-SOURCE-REF")
+
 # -- Constant and value specifications
 
     def _write_text_value_specification(self, elem: ar_element.TextValueSpecification) -> None:
@@ -3727,6 +3765,66 @@ class Writer(_XMLWriter):
         if elem.required_rte_vendor is not None:
             self._add_content("REQUIRED-RTE-VENDOR", elem.required_rte_vendor)
 
+    def _write_p_mode_group_in_atomic_swc_instance_ref(self,
+                                                       elem: ar_element.PModeGroupInAtomicSwcInstanceRef,
+                                                       tag: str) -> None:
+        """
+        Writes complex type AR:P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF
+        Tag variants: 'P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF' | 'MODE-GROUP-IREF' |
+                      'SWC-MODE-GROUP-IREF'
+        """
+        assert isinstance(elem, ar_element.PModeGroupInAtomicSwcInstanceRef)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.context_port is not None:
+                self._write_abstract_provided_port_prototype_ref(elem.context_port, "CONTEXT-P-PORT-REF")
+            if elem.context_mode_declaration_group_prototype is not None:
+                self._write_mode_declaration_group_prototype_ref(elem.context_mode_declaration_group_prototype,
+                                                                 "CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF")
+            self._leave_child()
+
+    def _write_p_operation_in_atomic_swc_instance_ref(self,
+                                                      elem: ar_element.POperationInAtomicSwcInstanceRef
+                                                      ) -> None:
+        """
+        Writes complex type AR:P-OPERATION-IN-ATOMIC-SWC-INSTANCE-REF
+        Tag variants: 'OPERATION-IREF'
+        """
+        assert isinstance(elem, ar_element.POperationInAtomicSwcInstanceRef)
+        tag = "OPERATION-IREF"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.context_port is not None:
+                self._write_abstract_provided_port_prototype_ref(elem.context_port, "CONTEXT-P-PORT-REF")
+            if elem.target_provided_operation is not None:
+                self._write_client_server_operation_ref(elem.target_provided_operation,
+                                                        "TARGET-PROVIDED-OPERATION-REF")
+            self._leave_child()
+
+    def _write_p_trigger_in_atomic_swc_instance_ref(self,
+                                                    elem: ar_element.PTriggerInAtomicSwcTypeInstanceRef,
+                                                    tag: str
+                                                    ) -> None:
+        """
+        Writes complex type AR:P-TRIGGER-IN-ATOMIC-SWC-TYPE-INSTANCE-REF
+        Tag variants: 'P-TRIGGER-IN-ATOMIC-SWC-TYPE-INSTANCE-REF' | 'SWC-TRIGGER-IREF' |
+                  'TRIGGER-IREF'
+        """
+        assert isinstance(elem, ar_element.PTriggerInAtomicSwcTypeInstanceRef)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.context_port is not None:
+                self._write_abstract_provided_port_prototype_ref(elem.context_port, "CONTEXT-P-PORT-REF")
+            if elem.target_trigger is not None:
+                self._write_trigger_ref(elem.target_trigger, "TARGET-TRIGGER-REF")
+            self._leave_child()
+
     def _write_r_mode_in_atomic_swc_instance_ref(self, elem: ar_element.RModeInAtomicSwcInstanceRef, tag: str) -> None:
         """
         Writes complex type AR:R-MODE-IN-ATOMIC-SWC-INSTANCE-REF
@@ -3765,24 +3863,23 @@ class Writer(_XMLWriter):
                 self._write_variable_data_prototype_ref(elem.target_data_element, "TARGET-DATA-ELEMENT-REF")
             self._leave_child()
 
-    def _write_p_operation_in_atomic_swc_instance_ref(self,
-                                                      elem: ar_element.POperationInAtomicSwcInstanceRef
-                                                      ) -> None:
+    def _write_r_trigger_in_atomic_swc_instance_ref(self,
+                                                    elem: ar_element.RTriggerInAtomicSwcInstanceRef,
+                                                    tag: str
+                                                    ) -> None:
         """
-        Writes complex type AR:P-OPERATION-IN-ATOMIC-SWC-INSTANCE-REF
-        Tag variants: 'OPERATION-IREF'
+        Write complex type AR:R-TRIGGER-IN-ATOMIC-SWC-INSTANCE-REF
+        Tag variants: 'TRIGGER-IREF' | 'REQUIRED-TRIGGER-IREF'
         """
-        assert isinstance(elem, ar_element.POperationInAtomicSwcInstanceRef)
-        tag = "OPERATION-IREF"
+        assert isinstance(elem, ar_element.RTriggerInAtomicSwcInstanceRef)
         if elem.is_empty:
             self._add_content(tag)
         else:
             self._add_child(tag)
             if elem.context_port is not None:
-                self._write_abstract_provided_port_prototype_ref(elem.context_port, "CONTEXT-P-PORT-REF")
-            if elem.target_provided_operation is not None:
-                self._write_client_server_operation_ref(elem.target_provided_operation,
-                                                        "TARGET-PROVIDED-OPERATION-REF")
+                self._write_abstract_required_port_prototype_ref(elem.context_port, "CONTEXT-R-PORT-REF")
+            if elem.target_trigger is not None:
+                self._write_trigger_ref(elem.target_trigger, "TARGET-TRIGGER-REF")
             self._leave_child()
 
     # --- SWC Internal behavior elements
@@ -3993,6 +4090,34 @@ class Writer(_XMLWriter):
         if elem.start_on_event is not None:
             self._write_runnable_entity_ref(elem.start_on_event, "START-ON-EVENT-REF")
 
+    def _write_async_server_call_returns_event(self, elem: ar_element.AsynchronousServerCallReturnsEvent) -> None:
+        """
+        Writes complex type AR:ASYNCHRONOUS-SERVER-CALL-RETURNS-EVENT
+        Tag variants: 'ASYNCHRONOUS-SERVER-CALL-RETURNS-EVENT'
+        """
+        assert isinstance(elem, ar_element.AsynchronousServerCallReturnsEvent)
+        self._add_child("ASYNCHRONOUS-SERVER-CALL-RETURNS-EVENT")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_rte_event(elem)
+        if elem.event_source is not None:
+            self._write_async_server_call_result_point_ref(elem.event_source)
+        self._leave_child()
+
+    def _write_background_event(self, elem: ar_element.BackgroundEvent) -> None:
+        """
+        Writes complex Type AR:BACKGROUND-EVENT
+        Tag variants: 'BACKGROUND-EVENT'
+        """
+        assert isinstance(elem, ar_element.BackgroundEvent)
+        self._add_child("BACKGROUND-EVENT")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_rte_event(elem)
+        self._leave_child()
+
     def _write_data_receive_error_event(self, elem: ar_element.DataReceiveErrorEvent) -> None:
         """
         Writes complex Type AR:DATA-RECEIVE-ERROR-EVENT
@@ -4053,6 +4178,21 @@ class Writer(_XMLWriter):
             self._write_variable_access_ref(elem.event_source, "EVENT-SOURCE-REF")
         self._leave_child()
 
+    def _write_external_trigger_occured_event(self, elem: ar_element.ExternalTriggerOccurredEvent) -> None:
+        """
+        Writes complex Type AR:EXTERNAL-TRIGGER-OCCURRED-EVENT
+        Tag variants: 'EXTERNAL-TRIGGER-OCCURRED-EVENT'
+        """
+        assert isinstance(elem, ar_element.ExternalTriggerOccurredEvent)
+        self._add_child("EXTERNAL-TRIGGER-OCCURRED-EVENT")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_rte_event(elem)
+        if elem.trigger is not None:
+            self._write_r_trigger_in_atomic_swc_instance_ref(elem.trigger, "TRIGGER-IREF")
+        self._leave_child()
+
     def _write_init_event(self, elem: ar_element.InitEvent) -> None:
         """
         Writes complex type AR:INIT-EVENT
@@ -4064,6 +4204,21 @@ class Writer(_XMLWriter):
         self._write_multilanguage_referrable(elem)
         self._write_identifiable(elem)
         self._write_rte_event(elem)
+        self._leave_child()
+
+    def _write_internal_trigger_occured_event(self, elem: ar_element.InternalTriggerOccurredEvent) -> None:
+        """
+        Writes complex type AR:INTERNAL-TRIGGER-OCCURRED-EVENT
+        Tag variants: 'INTERNAL-TRIGGER-OCCURRED-EVENT'
+        """
+        assert isinstance(elem, ar_element.InternalTriggerOccurredEvent)
+        self._add_child("INTERNAL-TRIGGER-OCCURRED-EVENT")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_rte_event(elem)
+        if elem.event_source is not None:
+            self._write_internal_triggering_point_ref(elem.event_source)
         self._leave_child()
 
     def _write_mode_switched_ack_event(self, elem: ar_element.ModeSwitchedAckEvent) -> None:
@@ -4094,6 +4249,21 @@ class Writer(_XMLWriter):
         self._write_rte_event(elem)
         if elem.operation is not None:
             self._write_p_operation_in_atomic_swc_instance_ref(elem.operation)
+        self._leave_child()
+
+    def _write_swc_mode_manager_error_event(self, elem: ar_element.SwcModeManagerErrorEvent) -> None:
+        """
+        Writes complex type AR:SWC-MODE-MANAGER-ERROR-EVENT
+        Tag variants: 'SWC-MODE-MANAGER-ERROR-EVENT'
+        """
+        assert isinstance(elem, ar_element.SwcModeManagerErrorEvent)
+        self._add_child("SWC-MODE-MANAGER-ERROR-EVENT")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_rte_event(elem)
+        if elem.mode_group is not None:
+            self._write_p_mode_group_in_atomic_swc_instance_ref(elem.mode_group, "MODE-GROUP-IREF")
         self._leave_child()
 
     def _write_swc_mode_switch_event(self, elem: ar_element.SwcModeSwitchEvent) -> None:
@@ -4141,6 +4311,28 @@ class Writer(_XMLWriter):
         if elem.period is not None:
             self._add_content("PERIOD", self._format_number(elem.period))
         self._leave_child()
+
+    def _write_transformer_hard_error_event(self, elem: ar_element.TransformerHardErrorEvent) -> None:
+        """
+        Writes complex type AR:TRANSFORMER-HARD-ERROR-EVENT
+        Tag variants: 'TRANSFORMER-HARD-ERROR-EVENT'
+        """
+        assert isinstance(elem, ar_element.TransformerHardErrorEvent)
+        self._add_child("TRANSFORMER-HARD-ERROR-EVENT")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_rte_event(elem)
+        self._write_transformer_hard_error_event_group(elem)
+        self._leave_child()
+
+    def _write_transformer_hard_error_event_group(self, elem: ar_element.TransformerHardErrorEvent) -> None:
+        if elem.operation is not None:
+            self._write_p_operation_in_atomic_swc_instance_ref(elem.operation)
+        if elem.required_trigger is not None:
+            self._write_r_trigger_in_atomic_swc_instance_ref(elem.required_trigger, "REQUIRED-TRIGGER-IREF")
+        if elem.trigger is not None:
+            self._write_p_trigger_in_atomic_swc_instance_ref(elem.trigger, "TRIGGER-IREF")
 
     def _write_swc_internal_behavior(self, elem: ar_element.SwcInternalBehavior) -> None:
         """

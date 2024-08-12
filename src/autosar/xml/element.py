@@ -49,6 +49,9 @@ from autosar.xml.reference import (SwBaseTypeRef,  # noqa F401
                                    RunnableEntityRef,
                                    VariableAccessRef,
                                    ModeSwitchPointRef,
+                                   AsynchronousServerCallResultPointRef,
+                                   TriggerRef,
+                                   InternalTriggeringPointRef,
                                    )
 
 
@@ -5229,6 +5232,65 @@ class CompositionSwComponentType(SwComponentType, Searchable):
         return connector
 
 
+class POperationInAtomicSwcInstanceRef(ARObject):
+    """
+    Complex type AR:P-OPERATION-IN-ATOMIC-SWC-INSTANCE-REF
+    Tag variants: 'OPERATION-IREF'
+    """
+
+    def __init__(self,
+                 context_port: AbstractProvidedPortPrototypeRef | None = None,
+                 target_provided_operation: ClientServerOperationRef | str | None = None,
+                 ) -> None:
+        # .CONTEXT-P-PORT-REF (Keep name consistent in similar classes)
+        self.context_port: AbstractProvidedPortPrototypeRef | None = None
+        # .TARGET-PROVIDED-OPERATION-REF
+        self.target_provided_operation: ClientServerOperationRef | None = None
+        self._assign_optional("context_port", context_port, AbstractProvidedPortPrototypeRef)
+        self._assign_optional("target_provided_operation", target_provided_operation, ClientServerOperationRef)
+
+
+class PModeGroupInAtomicSwcInstanceRef(ARObject):
+    """
+    Complex type AR:P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF
+    Tag variants: 'P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF' | 'MODE-GROUP-IREF' |
+                  'SWC-MODE-GROUP-IREF'
+    """
+
+    def __init__(self,
+                 context_port: AbstractProvidedPortPrototypeRef | None = None,
+                 context_mode_declaration_group_prototype: ModeDeclarationGroupPrototypeRef | str | None = None,
+                 ) -> None:
+        # .CONTEXT-P-PORT-REF
+        self.context_port: AbstractProvidedPortPrototypeRef | None = None
+        # .CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF
+        self.context_mode_declaration_group_prototype: ModeDeclarationGroupPrototypeRef | None = None
+
+        self._assign_optional("context_port", context_port, AbstractProvidedPortPrototypeRef)
+        self._assign_optional("context_mode_declaration_group_prototype",
+                              context_mode_declaration_group_prototype,
+                              ModeDeclarationGroupPrototypeRef)
+
+
+class PTriggerInAtomicSwcTypeInstanceRef(ARObject):
+    """
+    Complex type AR:P-TRIGGER-IN-ATOMIC-SWC-TYPE-INSTANCE-REF
+    Tag variants: 'P-TRIGGER-IN-ATOMIC-SWC-TYPE-INSTANCE-REF' | 'SWC-TRIGGER-IREF' |
+                  'TRIGGER-IREF'
+    """
+
+    def __init__(self,
+                 context_port: AbstractProvidedPortPrototypeRef | None = None,
+                 target_trigger: TriggerRef | str | None = None,
+                 ) -> None:
+        # .CONTEXT-P-PORT-REF (Keep name consistent in similar classes)
+        self.context_port: AbstractProvidedPortPrototypeRef | None = None
+        # .TARGET-TRIGGER-REF
+        self.target_trigger: TriggerRef | None = None
+        self._assign_optional("context_port", context_port, AbstractProvidedPortPrototypeRef)
+        self._assign_optional("target_trigger", target_trigger, TriggerRef)
+
+
 class RModeInAtomicSwcInstanceRef(ARObject):
     """
     Complex type AR:R-MODE-IN-ATOMIC-SWC-INSTANCE-REF
@@ -5267,26 +5329,28 @@ class RVariableInAtomicSwcInstanceRef(ARObject):
         self.context_port: AbstractRequiredPortPrototypeRef | None = None
         # .TARGET-DATA-ELEMENT-REF
         self.target_data_element: VariableDataPrototypeRef | None = None
+
         self._assign_optional("context_port", context_port, AbstractRequiredPortPrototypeRef)
         self._assign_optional("target_data_element", target_data_element, VariableDataPrototypeRef)
 
 
-class POperationInAtomicSwcInstanceRef(ARObject):
+class RTriggerInAtomicSwcInstanceRef(ARObject):
     """
-    Complex type AR:P-OPERATION-IN-ATOMIC-SWC-INSTANCE-REF
-    Tag variants: 'OPERATION-IREF'
+    Complex type AR:R-TRIGGER-IN-ATOMIC-SWC-INSTANCE-REF
+    Tag variants: 'TRIGGER-IREF' | 'REQUIRED-TRIGGER-IREF'
     """
 
     def __init__(self,
-                 context_port: AbstractProvidedPortPrototypeRef | None = None,
-                 target_provided_operation: ClientServerOperationRef | str | None = None,
+                 context_port: AbstractRequiredPortPrototypeRef | None = None,
+                 target_trigger: TriggerRef | str | None = None,
                  ) -> None:
-        # .CONTEXT-P-PORT-REF (Keep name consistent in similar classes)
-        self.context_port: AbstractProvidedPortPrototypeRef | None = None
-        # .TARGET-PROVIDED-OPERATION-REF
-        self.target_provided_operation: ClientServerOperationRef | None = None
-        self._assign_optional("context_port", context_port, AbstractProvidedPortPrototypeRef)
-        self._assign_optional("target_provided_operation", target_provided_operation, ClientServerOperationRef)
+        # .CONTEXT-R-PORT-REF (Keep name consistent in similar classes)
+        self.context_port: AbstractRequiredPortPrototypeRef | None = None
+        # .TARGET-TRIGGER-REF
+        self.target_trigger: TriggerRef | None = None
+
+        self._assign_optional("context_port", context_port, AbstractRequiredPortPrototypeRef)
+        self._assign_optional("target_trigger", target_trigger, TriggerRef)
 
 # --- SWC internal behavior elements
 
@@ -5652,6 +5716,31 @@ class RteEvent(Identifiable):
             raise TypeError("disabled_mode must be of type RModeInAtomicSwcInstanceRef")
 
 
+class AsynchronousServerCallReturnsEvent(RteEvent):
+    """
+    Complex type AR:ASYNCHRONOUS-SERVER-CALL-RETURNS-EVENT
+    Tag variants: 'ASYNCHRONOUS-SERVER-CALL-RETURNS-EVENT'
+    """
+
+    def __init__(self,
+                 name: str,
+                 start_on_event: RunnableEntityRef | str | None = None,
+                 event_source: AsynchronousServerCallResultPointRef | str | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, start_on_event, **kwargs)
+        # .EVENT-SOURCE-REF
+        self.event_source: AsynchronousServerCallResultPointRef | None = None
+        self._assign_optional("event_source", event_source, AsynchronousServerCallResultPointRef)
+
+
+class BackgroundEvent(RteEvent):
+    """
+    Complex Type AR:BACKGROUND-EVENT
+    Tag variants: 'BACKGROUND-EVENT'
+    Inherits constructor from base-class
+    """
+
+
 class DataReceiveErrorEvent(RteEvent):
     """
     Complex Type AR:DATA-RECEIVE-ERROR-EVENT
@@ -5752,12 +5841,59 @@ class DataWriteCompletedEvent(RteEvent):
         self._assign_optional("event_source", event_source, VariableAccessRef)
 
 
+class ExternalTriggerOccurredEvent(RteEvent):
+    """
+    Complex Type AR:EXTERNAL-TRIGGER-OCCURRED-EVENT
+    Tag variants: 'EXTERNAL-TRIGGER-OCCURRED-EVENT'
+    """
+
+    def __init__(self,
+                 name: str,
+                 start_on_event: RunnableEntityRef | str | None = None,
+                 trigger: RTriggerInAtomicSwcInstanceRef | str | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, start_on_event, **kwargs)
+        # .TRIGGER-IREF
+        self.trigger: RTriggerInAtomicSwcInstanceRef | None = None
+        self._assign_optional_strict("trigger", trigger, RTriggerInAtomicSwcInstanceRef)
+
+    @classmethod
+    def make(cls,
+             name: str,
+             start_on_event: RunnableEntityRef | str | None = None,
+             context_port: AbstractRequiredPortPrototypeRef | None = None,
+             target_trigger: TriggerRef | str | None = None,
+             **kwargs) -> "ExternalTriggerOccurredEvent":
+        """
+        #convenience-method
+        """
+        trigger = RTriggerInAtomicSwcInstanceRef(context_port, target_trigger)
+        return cls(name, start_on_event, trigger, **kwargs)
+
+
 class InitEvent(RteEvent):
     """
     Complex Type AR:INIT-EVENT
     Tag variants: 'INIT-EVENT'
-    Reuses constructor from base-class
+    Inherits constructor from base-class
     """
+
+
+class InternalTriggerOccurredEvent(RteEvent):
+    """
+    Complex type AR:INTERNAL-TRIGGER-OCCURRED-EVENT
+    Tag variants: 'INTERNAL-TRIGGER-OCCURRED-EVENT'
+    """
+
+    def __init__(self,
+                 name: str,
+                 start_on_event: RunnableEntityRef | str | None = None,
+                 event_source: InternalTriggeringPointRef | str | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, start_on_event, **kwargs)
+        # .EVENT-SOURCE-REF
+        self.event_source: InternalTriggeringPointRef | None = None
+        self._assign_optional("event_source", event_source, InternalTriggeringPointRef)
 
 
 class ModeSwitchedAckEvent(RteEvent):
@@ -5813,6 +5949,36 @@ class OperationInvokedEvent(RteEvent):
 SwcModeSwitchEventModeType = Union[RModeInAtomicSwcInstanceRef,
                                    tuple[RModeInAtomicSwcInstanceRef, RModeInAtomicSwcInstanceRef],
                                    None]
+
+
+class SwcModeManagerErrorEvent(RteEvent):
+    """
+    Complex type AR:SWC-MODE-MANAGER-ERROR-EVENT
+    Tag variants: 'SWC-MODE-MANAGER-ERROR-EVENT'
+    """
+
+    def __init__(self,
+                 name: str,
+                 start_on_event: RunnableEntityRef | str | None = None,
+                 mode_group: PModeGroupInAtomicSwcInstanceRef | str | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, start_on_event, **kwargs)
+        # .MODE-GROUP-IREF
+        self.mode_group: PModeGroupInAtomicSwcInstanceRef | None = None
+        self._assign_optional_strict("mode_group", mode_group, PModeGroupInAtomicSwcInstanceRef)
+
+    @classmethod
+    def make(cls,
+             name: str,
+             start_on_event: RunnableEntityRef | str | None = None,
+             context_port: AbstractProvidedPortPrototypeRef | None = None,
+             context_mode_declaration_group_prototype: ModeDeclarationGroupPrototypeRef | str | None = None,
+             **kwargs) -> "SwcModeManagerErrorEvent":
+        """
+        #convenience-method
+        """
+        mode_group = PModeGroupInAtomicSwcInstanceRef(context_port, context_mode_declaration_group_prototype)
+        return cls(name, start_on_event, mode_group, **kwargs)
 
 
 class SwcModeSwitchEvent(RteEvent):
@@ -5891,6 +6057,32 @@ class TimingEvent(RteEvent):
 
         self._assign_optional("offset", offset, float)
         self._assign_optional("period", period, float)
+
+
+class TransformerHardErrorEvent(RteEvent):
+    """
+    Complex type AR:TRANSFORMER-HARD-ERROR-EVENT
+    Tag variants: 'TRANSFORMER-HARD-ERROR-EVENT'
+    """
+
+    def __init__(self,
+                 name: str,
+                 start_on_event: RunnableEntityRef | str | None = None,
+                 operation: POperationInAtomicSwcInstanceRef | None = None,
+                 required_trigger: RTriggerInAtomicSwcInstanceRef | None = None,
+                 trigger: PTriggerInAtomicSwcTypeInstanceRef | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, start_on_event, **kwargs)
+        # .OPERATION-IREF
+        self.operation: POperationInAtomicSwcInstanceRef | None = None
+        # .REQUIRED-TRIGGER-IREF
+        self.required_trigger: RTriggerInAtomicSwcInstanceRef | None = None
+        # .TRIGGER-IREF
+        self.trigger: PTriggerInAtomicSwcTypeInstanceRef | None = None
+
+        self._assign_optional_strict("operation", operation, POperationInAtomicSwcInstanceRef)
+        self._assign_optional_strict("required_trigger", required_trigger, RTriggerInAtomicSwcInstanceRef)
+        self._assign_optional_strict("trigger", trigger, PTriggerInAtomicSwcTypeInstanceRef)
 
 
 class InternalBehavior(Identifiable):

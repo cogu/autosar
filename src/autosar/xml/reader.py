@@ -269,16 +269,21 @@ class Reader:
             'DISABLED-MODE-IREF': self._read_r_mode_in_atomic_swc_instance_ref,
             'SWC-INTERNAL-BEHAVIOR': self._read_swc_internal_behavior,
             'RUNNABLE-ENTITY': self._read_runnable_entity,
+            'ASYNCHRONOUS-SERVER-CALL-RETURNS-EVENT': self._read_async_server_call_returns_event,
+            'BACKGROUND-EVENT': self._read_background_event,
             'DATA-RECEIVE-ERROR-EVENT': self._read_data_receive_error_event,
             'DATA-RECEIVED-EVENT': self._read_data_received_event,
             'DATA-SEND-COMPLETED-EVENT': self._read_send_completed_event,
             'DATA-WRITE-COMPLETED-EVENT': self._read_data_write_completed_event,
+            'EXTERNAL-TRIGGER-OCCURRED-EVENT': self._read_external_trigger_occured_event,
             'INIT-EVENT': self._read_init_event,
+            'INTERNAL-TRIGGER-OCCURRED-EVENT': self._read_internal_trigger_occured_event,
             'MODE-SWITCHED-ACK-EVENT': self._read_mode_switched_ack_event,
             'OPERATION-INVOKED-EVENT': self._read_operation_invoked_event,
+            'SWC-MODE-MANAGER-ERROR-EVENT': self._read_swc_mode_manager_error_event,
             'SWC-MODE-SWITCH-EVENT': self._read_swc_mode_switch_event,
             'TIMING-EVENT': self._read_timing_event,
-
+            'TRANSFORMER-HARD-ERROR-EVENT': self._read_transformer_hard_error_event,
         }
         self.switcher_all = {}
         self.switcher_all.update(self.switcher_collectable)
@@ -2658,13 +2663,45 @@ class Reader:
 
     def _read_mode_switch_point_ref(self,
                                     xml_elem: ElementTree.Element
-                                    ) -> ar_element.ModeSwitchPointRef:
+                                    ) -> ar_element.TriggerRef:
         """
         Reads references to AR:MODE-SWITCH-POINT--SUBTYPES-ENUM
         Tag variants: 'EVENT-SOURCE-REF'
         """
         dest_enum = self._read_ref_dest(xml_elem)
         return ar_element.ModeSwitchPointRef(xml_elem.text, dest_enum)
+
+    def _read_async_server_call_result_point_ref(self,
+                                                 xml_elem: ElementTree.Element
+                                                 ) -> ar_element.AsynchronousServerCallResultPointRef:
+        """
+        Reads references to AR:ASYNCHRONOUS-SERVER-CALL-RESULT-POINT--SUBTYPES-ENUM
+        Tag variants: 'EVENT-SOURCE-REF'
+        """
+        dest_enum = self._read_ref_dest(xml_elem)
+        return ar_element.AsynchronousServerCallResultPointRef(xml_elem.text, dest_enum)
+
+    def _read_trigger_ref(self,
+                          xml_elem: ElementTree.Element
+                          ) -> ar_element.TriggerRef:
+        """
+        Reads references to AR:TRIGGER--SUBTYPES-ENUM
+        Tag variants: 'TRIGGER-REF' | 'RELEASED-TRIGGER-REF' | 'MASTERED-TRIGGER-REF' |
+                      'TARGET-TRIGGER-REF' | 'SOURCE-TRIGGER-REF' | 'BSW-TRIGGER-REF' |
+                      'FIRST-TRIGGER-REF' | 'SECOND-TRIGGER-REF'
+        """
+        dest_enum = self._read_ref_dest(xml_elem)
+        return ar_element.TriggerRef(xml_elem.text, dest_enum)
+
+    def _read_internal_triggering_point_ref(self,
+                                            xml_elem: ElementTree.Element
+                                            ) -> ar_element.InternalTriggeringPointRef:
+        """
+        Reads references to AR:INTERNAL-TRIGGERING-POINT--SUBTYPES-ENUM
+        Tag variants: 'EVENT-SOURCE-REF'
+        """
+        dest_enum = self._read_ref_dest(xml_elem)
+        return ar_element.InternalTriggeringPointRef(xml_elem.text, dest_enum)
 
     # --- Constant and value specifications
 
@@ -4312,6 +4349,62 @@ class Reader:
         if xml_child is not None:
             data["required_rte_vendor"] = xml_child.text
 
+    def _read_p_mode_group_in_atomic_swc_instance_ref(self,
+                                                      xml_element: ElementTree.Element
+                                                      ) -> ar_element.PModeGroupInAtomicSwcInstanceRef:
+        """
+        Reads complex type AR:P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF
+        Tag variants: 'P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF' | 'MODE-GROUP-IREF' |
+                      'SWC-MODE-GROUP-IREF'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("CONTEXT-P-PORT-REF")
+        if xml_child is not None:
+            data["context_port"] = self._read_abstract_provided_port_prototype_ref(xml_child)
+        xml_child = child_elements.get("CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF")
+        if xml_child is not None:
+            child_element = self._read_mode_declaration_group_prototype_ref(xml_child)
+            data["context_mode_declaration_group_prototype"] = child_element
+        return ar_element.PModeGroupInAtomicSwcInstanceRef(**data)
+
+    def _read_p_operation_in_atomic_swc_instance_ref(self,
+                                                     xml_element: ElementTree.Element
+                                                     ) -> ar_element.POperationInAtomicSwcInstanceRef:
+        """
+        Complex type AR:P-OPERATION-IN-ATOMIC-SWC-INSTANCE-REF
+        Tag variants: 'OPERATION-IREF'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("CONTEXT-P-PORT-REF")
+        if xml_child is not None:
+            data["context_port"] = self._read_abstract_provided_port_prototype_ref(xml_child)
+        xml_child = child_elements.get("TARGET-PROVIDED-OPERATION-REF")
+        if xml_child is not None:
+            data["target_provided_operation"] = self._read_client_server_operation_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.POperationInAtomicSwcInstanceRef(**data)
+
+    def _read_p_trigger_in_atomic_swc_instance_ref(self,
+                                                   xml_element: ElementTree.Element
+                                                   ) -> ar_element.PTriggerInAtomicSwcTypeInstanceRef:
+        """
+        Reads complex type AR:P-TRIGGER-IN-ATOMIC-SWC-TYPE-INSTANCE-REF
+        Tag variants: 'P-TRIGGER-IN-ATOMIC-SWC-TYPE-INSTANCE-REF' | 'SWC-TRIGGER-IREF' |
+                      'TRIGGER-IREF'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("CONTEXT-P-PORT-REF")
+        if xml_child is not None:
+            data["context_port"] = self._read_abstract_provided_port_prototype_ref(xml_child)
+        xml_child = child_elements.get("TARGET-TRIGGER-REF")
+        if xml_child is not None:
+            data["target_trigger"] = self._read_trigger_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.PTriggerInAtomicSwcTypeInstanceRef(**data)
+
     def _read_r_mode_in_atomic_swc_instance_ref(self,
                                                 xml_element: ElementTree.Element
                                                 ) -> ar_element.RModeInAtomicSwcInstanceRef:
@@ -4352,23 +4445,23 @@ class Reader:
         self._report_unprocessed_elements(child_elements)
         return ar_element.RVariableInAtomicSwcInstanceRef(**data)
 
-    def _read_p_operation_in_atomic_swc_instance_ref(self,
-                                                     xml_element: ElementTree.Element
-                                                     ) -> ar_element.POperationInAtomicSwcInstanceRef:
+    def _read_r_trigger_in_atomic_swc_instance_ref(self,
+                                                   xml_element: ElementTree.Element
+                                                   ) -> ar_element.RTriggerInAtomicSwcInstanceRef:
         """
-        Complex type AR:P-OPERATION-IN-ATOMIC-SWC-INSTANCE-REF
-        Tag variants: 'OPERATION-IREF'
+        Reads complex type AR:R-TRIGGER-IN-ATOMIC-SWC-INSTANCE-REF
+        Tag variants: 'TRIGGER-IREF' | 'REQUIRED-TRIGGER-IREF'
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
-        xml_child = child_elements.get("CONTEXT-P-PORT-REF")
+        xml_child = child_elements.get("CONTEXT-R-PORT-REF")
         if xml_child is not None:
-            data["context_port"] = self._read_abstract_provided_port_prototype_ref(xml_child)
-        xml_child = child_elements.get("TARGET-PROVIDED-OPERATION-REF")
+            data["context_port"] = self._read_abstract_required_port_prototype_ref(xml_child)
+        xml_child = child_elements.get("TARGET-TRIGGER-REF")
         if xml_child is not None:
-            data["target_provided_operation"] = self._read_client_server_operation_ref(xml_child)
+            data["target_trigger"] = self._read_trigger_ref(xml_child)
         self._report_unprocessed_elements(child_elements)
-        return ar_element.POperationInAtomicSwcInstanceRef(**data)
+        return ar_element.RTriggerInAtomicSwcInstanceRef(**data)
 
     # --- Internal Behavior elements
 
@@ -4635,6 +4728,41 @@ class Reader:
             data["start_on_event"] = self._read_runnable_entity_ref(xml_child)
         child_elements.skip("VARIATION-POINT")  # Not supported
 
+    def _read_async_server_call_returns_event(self,
+                                              xml_element: ElementTree.Element
+                                              ) -> ar_element.AsynchronousServerCallReturnsEvent:
+        """
+        Reads complex type AR:ASYNCHRONOUS-SERVER-CALL-RETURNS-EVENT
+        Tag variants: 'ASYNCHRONOUS-SERVER-CALL-RETURNS-EVENT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_rte_event(child_elements, data)
+        xml_child = child_elements.get("EVENT-SOURCE-REF")
+        if xml_child is not None:
+            data["event_source"] = self._read_async_server_call_result_point_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.AsynchronousServerCallReturnsEvent(**data)
+
+    def _read_background_event(self,
+                               xml_element: ElementTree.Element
+                               ) -> ar_element.BackgroundEvent:
+        """
+        Reads complex Type AR:BACKGROUND-EVENT
+        Tag variants: 'BACKGROUND-EVENT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_rte_event(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.BackgroundEvent(**data)
+
     def _read_data_receive_error_event(self,
                                        xml_element: ElementTree.Element
                                        ) -> ar_element.DataReceiveErrorEvent:
@@ -4711,6 +4839,25 @@ class Reader:
         self._report_unprocessed_elements(child_elements)
         return ar_element.DataWriteCompletedEvent(**data)
 
+    def _read_external_trigger_occured_event(self,
+                                             xml_element: ElementTree.Element
+                                             ) -> ar_element.ExternalTriggerOccurredEvent:
+        """
+        Writes complex type AR:R-TRIGGER-IN-ATOMIC-SWC-INSTANCE-REF
+        Tag variants: 'TRIGGER-IREF' | 'REQUIRED-TRIGGER-IREF'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_rte_event(child_elements, data)
+        xml_child = child_elements.get("TRIGGER-IREF")
+        if xml_child is not None:
+            data["trigger"] = self._read_r_trigger_in_atomic_swc_instance_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ExternalTriggerOccurredEvent(**data)
+
     def _read_init_event(self,
                          xml_element: ElementTree.Element
                          ) -> ar_element.InitEvent:
@@ -4726,6 +4873,25 @@ class Reader:
         self._read_rte_event(child_elements, data)
         self._report_unprocessed_elements(child_elements)
         return ar_element.InitEvent(**data)
+
+    def _read_internal_trigger_occured_event(self,
+                                             xml_element: ElementTree.Element
+                                             ) -> ar_element.InternalTriggerOccurredEvent:
+        """
+        Reads complex type AR:INTERNAL-TRIGGER-OCCURRED-EVENT
+        Tag variants: 'INTERNAL-TRIGGER-OCCURRED-EVENT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_rte_event(child_elements, data)
+        xml_child = child_elements.get("EVENT-SOURCE-REF")
+        if xml_child is not None:
+            data["event_source"] = self._read_internal_triggering_point_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.InternalTriggerOccurredEvent(**data)
 
     def _read_mode_switched_ack_event(self,
                                       xml_element: ElementTree.Element
@@ -4764,6 +4930,25 @@ class Reader:
             data["operation"] = self._read_p_operation_in_atomic_swc_instance_ref(xml_child)
         self._report_unprocessed_elements(child_elements)
         return ar_element.OperationInvokedEvent(**data)
+
+    def _read_swc_mode_manager_error_event(self,
+                                           xml_element: ElementTree.Element
+                                           ) -> ar_element.SwcModeManagerErrorEvent:
+        """
+        Reads complex type AR:SWC-MODE-MANAGER-ERROR-EVENT
+        Tag variants: 'SWC-MODE-MANAGER-ERROR-EVENT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_rte_event(child_elements, data)
+        xml_child = child_elements.get("MODE-GROUP-IREF")
+        if xml_child is not None:
+            data["mode_group"] = self._read_p_mode_group_in_atomic_swc_instance_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.SwcModeManagerErrorEvent(**data)
 
     def _read_swc_mode_switch_event(self,
                                     xml_element: ElementTree.Element
@@ -4824,6 +5009,37 @@ class Reader:
             data["period"] = self._read_number(xml_child.text)
         self._report_unprocessed_elements(child_elements)
         return ar_element.TimingEvent(**data)
+
+    def _read_transformer_hard_error_event(self,
+                                           xml_element: ElementTree.Element
+                                           ) -> ar_element.TransformerHardErrorEvent:
+        """
+        Writes complex type AR:TRANSFORMER-HARD-ERROR-EVENT
+        Tag variants: 'TRANSFORMER-HARD-ERROR-EVENT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_rte_event(child_elements, data)
+        self._read_transformer_hard_error_event_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.TransformerHardErrorEvent(**data)
+
+    def _read_transformer_hard_error_event_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:TRANSFORMER-HARD-ERROR-EVENT
+        """
+        xml_child = child_elements.get("OPERATION-IREF")
+        if xml_child is not None:
+            data["operation"] = self._read_p_operation_in_atomic_swc_instance_ref(xml_child)
+        xml_child = child_elements.get("REQUIRED-TRIGGER-IREF")
+        if xml_child is not None:
+            data["required_trigger"] = self._read_r_trigger_in_atomic_swc_instance_ref(xml_child)
+        xml_child = child_elements.get("TRIGGER-IREF")
+        if xml_child is not None:
+            data["trigger"] = self._read_p_trigger_in_atomic_swc_instance_ref(xml_child)
 
     def _read_swc_internal_behavior(self, xml_element: ElementTree.Element) -> ar_element.SwcInternalBehavior:
         """

@@ -629,3 +629,51 @@ class ModeSwitchPointRef(BaseRef):
     def accepted_sub_types(cls) -> set[ar_enum.IdentifiableSubTypes]:
         """Acceptable values for dest"""
         return {ar_enum.IdentifiableSubTypes.MODE_SWITCH_POINT}
+
+
+class AsynchronousServerCallResultPointRef(BaseRef):
+    """
+    AR:ASYNCHRONOUS-SERVER-CALL-RESULT-POINT--SUBTYPES-ENUM
+    """
+
+    def __init__(self, value: str,
+                 dest: ar_enum.IdentifiableSubTypes = ar_enum.IdentifiableSubTypes.ASYNCHRONOUS_SERVER_CALL_RESULT_POINT
+                 ) -> None:
+        super().__init__(value, dest)
+
+    @classmethod
+    def accepted_sub_types(cls) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.ASYNCHRONOUS_SERVER_CALL_RESULT_POINT}
+
+
+class TriggerRef(BaseRef):
+    """
+    AR:TRIGGER--SUBTYPES-ENUM
+    """
+
+    def __init__(self, value: str,
+                 dest: ar_enum.IdentifiableSubTypes = ar_enum.IdentifiableSubTypes.TRIGGER
+                 ) -> None:
+        super().__init__(value, dest)
+
+    @classmethod
+    def accepted_sub_types(cls) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.TRIGGER}
+
+
+class InternalTriggeringPointRef(BaseRef):
+    """
+    AR:INTERNAL-TRIGGERING-POINT--SUBTYPES-ENUM
+    """
+
+    def __init__(self, value: str,
+                 dest: ar_enum.IdentifiableSubTypes = ar_enum.IdentifiableSubTypes.INTERNAL_TRIGGERING_POINT
+                 ) -> None:
+        super().__init__(value, dest)
+
+    @classmethod
+    def accepted_sub_types(cls) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.INTERNAL_TRIGGERING_POINT}
