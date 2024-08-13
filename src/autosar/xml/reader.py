@@ -29,6 +29,22 @@ RequirePortComSpecElement = Union[ar_element.QueuedReceiverComSpec,
                                   ar_element.ModeSwitchReceiverComSpec,
                                   ar_element.ClientComSpec]
 
+RteEventElement = Union[ar_element.AsynchronousServerCallReturnsEvent,
+                        ar_element.BackgroundEvent,
+                        ar_element.DataReceivedEvent,
+                        ar_element.DataReceiveErrorEvent,
+                        ar_element.DataSendCompletedEvent,
+                        ar_element.DataWriteCompletedEvent,
+                        ar_element.ExternalTriggerOccurredEvent,
+                        ar_element.InitEvent,
+                        ar_element.InternalTriggerOccurredEvent,
+                        ar_element.ModeSwitchedAckEvent,
+                        ar_element.OperationInvokedEvent,
+                        ar_element.SwcModeManagerErrorEvent,
+                        ar_element.SwcModeSwitchEvent,
+                        ar_element.TimingEvent,
+                        ar_element.TransformerHardErrorEvent]
+
 # Helper classes
 
 
@@ -185,6 +201,23 @@ class Reader:
             'MODE-SWITCH-RECEIVER-COM-SPEC': self._read_mode_switch_receiver_com_spec,
             'CLIENT-COM-SPEC': self._read_client_com_spec,
         }
+        self.switcher_rte_event = {
+            'ASYNCHRONOUS-SERVER-CALL-RETURNS-EVENT': self._read_async_server_call_returns_event,
+            'BACKGROUND-EVENT': self._read_background_event,
+            'DATA-RECEIVE-ERROR-EVENT': self._read_data_receive_error_event,
+            'DATA-RECEIVED-EVENT': self._read_data_received_event,
+            'DATA-SEND-COMPLETED-EVENT': self._read_data_send_completed_event,
+            'DATA-WRITE-COMPLETED-EVENT': self._read_data_write_completed_event,
+            'EXTERNAL-TRIGGER-OCCURRED-EVENT': self._read_external_trigger_occured_event,
+            'INIT-EVENT': self._read_init_event,
+            'INTERNAL-TRIGGER-OCCURRED-EVENT': self._read_internal_trigger_occured_event,
+            'MODE-SWITCHED-ACK-EVENT': self._read_mode_switched_ack_event,
+            'OPERATION-INVOKED-EVENT': self._read_operation_invoked_event,
+            'SWC-MODE-MANAGER-ERROR-EVENT': self._read_swc_mode_manager_error_event,
+            'SWC-MODE-SWITCH-EVENT': self._read_swc_mode_switch_event,
+            'TIMING-EVENT': self._read_timing_event,
+            'TRANSFORMER-HARD-ERROR-EVENT': self._read_transformer_hard_error_event,
+        }
         self.switcher_non_collectable = {  # Non-collectable, used only for unit testing
             # Documentation elements
             'ANNOTATION': self._read_annotation,
@@ -273,7 +306,7 @@ class Reader:
             'BACKGROUND-EVENT': self._read_background_event,
             'DATA-RECEIVE-ERROR-EVENT': self._read_data_receive_error_event,
             'DATA-RECEIVED-EVENT': self._read_data_received_event,
-            'DATA-SEND-COMPLETED-EVENT': self._read_send_completed_event,
+            'DATA-SEND-COMPLETED-EVENT': self._read_data_send_completed_event,
             'DATA-WRITE-COMPLETED-EVENT': self._read_data_write_completed_event,
             'EXTERNAL-TRIGGER-OCCURRED-EVENT': self._read_external_trigger_occured_event,
             'INIT-EVENT': self._read_init_event,
@@ -4713,7 +4746,7 @@ class Reader:
         child_elements.skip("WRITTEN-LOCAL-VARIABLES")
         child_elements.skip("VARIATION-POINT")
 
-    def _read_rte_event(self, child_elements: ChildElementMap, data: dict) -> None:
+    def _read_rte_event_group(self, child_elements: ChildElementMap, data: dict) -> None:
         """
         Reads group AR:RTE-EVENT
         """
@@ -4740,7 +4773,7 @@ class Reader:
         self._read_referrable(child_elements, data)
         self._read_multi_language_referrable(child_elements, data)
         self._read_identifiable(child_elements, xml_element.attrib, data)
-        self._read_rte_event(child_elements, data)
+        self._read_rte_event_group(child_elements, data)
         xml_child = child_elements.get("EVENT-SOURCE-REF")
         if xml_child is not None:
             data["event_source"] = self._read_async_server_call_result_point_ref(xml_child)
@@ -4759,7 +4792,7 @@ class Reader:
         self._read_referrable(child_elements, data)
         self._read_multi_language_referrable(child_elements, data)
         self._read_identifiable(child_elements, xml_element.attrib, data)
-        self._read_rte_event(child_elements, data)
+        self._read_rte_event_group(child_elements, data)
         self._report_unprocessed_elements(child_elements)
         return ar_element.BackgroundEvent(**data)
 
@@ -4775,7 +4808,7 @@ class Reader:
         self._read_referrable(child_elements, data)
         self._read_multi_language_referrable(child_elements, data)
         self._read_identifiable(child_elements, xml_element.attrib, data)
-        self._read_rte_event(child_elements, data)
+        self._read_rte_event_group(child_elements, data)
         xml_child = child_elements.get("DATA-IREF")
         if xml_child is not None:
             data["data"] = self._read_r_variable_in_atomic_swc_instance_ref(xml_child)
@@ -4794,16 +4827,16 @@ class Reader:
         self._read_referrable(child_elements, data)
         self._read_multi_language_referrable(child_elements, data)
         self._read_identifiable(child_elements, xml_element.attrib, data)
-        self._read_rte_event(child_elements, data)
+        self._read_rte_event_group(child_elements, data)
         xml_child = child_elements.get("DATA-IREF")
         if xml_child is not None:
             data["data"] = self._read_r_variable_in_atomic_swc_instance_ref(xml_child)
         self._report_unprocessed_elements(child_elements)
         return ar_element.DataReceivedEvent(**data)
 
-    def _read_send_completed_event(self,
-                                   xml_element: ElementTree.Element
-                                   ) -> ar_element.DataSendCompletedEvent:
+    def _read_data_send_completed_event(self,
+                                        xml_element: ElementTree.Element
+                                        ) -> ar_element.DataSendCompletedEvent:
         """
         Reads complex Type AR:DATA-SEND-COMPLETED-EVENT
         Tag variants: 'DATA-SEND-COMPLETED-EVENT'
@@ -4813,7 +4846,7 @@ class Reader:
         self._read_referrable(child_elements, data)
         self._read_multi_language_referrable(child_elements, data)
         self._read_identifiable(child_elements, xml_element.attrib, data)
-        self._read_rte_event(child_elements, data)
+        self._read_rte_event_group(child_elements, data)
         xml_child = child_elements.get("EVENT-SOURCE-REF")
         if xml_child is not None:
             data["event_source"] = self._read_variable_access_ref(xml_child)
@@ -4832,7 +4865,7 @@ class Reader:
         self._read_referrable(child_elements, data)
         self._read_multi_language_referrable(child_elements, data)
         self._read_identifiable(child_elements, xml_element.attrib, data)
-        self._read_rte_event(child_elements, data)
+        self._read_rte_event_group(child_elements, data)
         xml_child = child_elements.get("EVENT-SOURCE-REF")
         if xml_child is not None:
             data["event_source"] = self._read_variable_access_ref(xml_child)
@@ -4851,7 +4884,7 @@ class Reader:
         self._read_referrable(child_elements, data)
         self._read_multi_language_referrable(child_elements, data)
         self._read_identifiable(child_elements, xml_element.attrib, data)
-        self._read_rte_event(child_elements, data)
+        self._read_rte_event_group(child_elements, data)
         xml_child = child_elements.get("TRIGGER-IREF")
         if xml_child is not None:
             data["trigger"] = self._read_r_trigger_in_atomic_swc_instance_ref(xml_child)
@@ -4870,7 +4903,7 @@ class Reader:
         self._read_referrable(child_elements, data)
         self._read_multi_language_referrable(child_elements, data)
         self._read_identifiable(child_elements, xml_element.attrib, data)
-        self._read_rte_event(child_elements, data)
+        self._read_rte_event_group(child_elements, data)
         self._report_unprocessed_elements(child_elements)
         return ar_element.InitEvent(**data)
 
@@ -4886,7 +4919,7 @@ class Reader:
         self._read_referrable(child_elements, data)
         self._read_multi_language_referrable(child_elements, data)
         self._read_identifiable(child_elements, xml_element.attrib, data)
-        self._read_rte_event(child_elements, data)
+        self._read_rte_event_group(child_elements, data)
         xml_child = child_elements.get("EVENT-SOURCE-REF")
         if xml_child is not None:
             data["event_source"] = self._read_internal_triggering_point_ref(xml_child)
@@ -4905,7 +4938,7 @@ class Reader:
         self._read_referrable(child_elements, data)
         self._read_multi_language_referrable(child_elements, data)
         self._read_identifiable(child_elements, xml_element.attrib, data)
-        self._read_rte_event(child_elements, data)
+        self._read_rte_event_group(child_elements, data)
         xml_child = child_elements.get("EVENT-SOURCE-REF")
         if xml_child is not None:
             data["event_source"] = self._read_mode_switch_point_ref(xml_child)
@@ -4924,7 +4957,7 @@ class Reader:
         self._read_referrable(child_elements, data)
         self._read_multi_language_referrable(child_elements, data)
         self._read_identifiable(child_elements, xml_element.attrib, data)
-        self._read_rte_event(child_elements, data)
+        self._read_rte_event_group(child_elements, data)
         xml_child = child_elements.get("OPERATION-IREF")
         if xml_child is not None:
             data["operation"] = self._read_p_operation_in_atomic_swc_instance_ref(xml_child)
@@ -4943,7 +4976,7 @@ class Reader:
         self._read_referrable(child_elements, data)
         self._read_multi_language_referrable(child_elements, data)
         self._read_identifiable(child_elements, xml_element.attrib, data)
-        self._read_rte_event(child_elements, data)
+        self._read_rte_event_group(child_elements, data)
         xml_child = child_elements.get("MODE-GROUP-IREF")
         if xml_child is not None:
             data["mode_group"] = self._read_p_mode_group_in_atomic_swc_instance_ref(xml_child)
@@ -4962,7 +4995,7 @@ class Reader:
         self._read_referrable(child_elements, data)
         self._read_multi_language_referrable(child_elements, data)
         self._read_identifiable(child_elements, xml_element.attrib, data)
-        self._read_rte_event(child_elements, data)
+        self._read_rte_event_group(child_elements, data)
         self._read_swc_mode_switch_event_group(child_elements, data)
         self._report_unprocessed_elements(child_elements)
         return ar_element.SwcModeSwitchEvent(**data)
@@ -5000,7 +5033,7 @@ class Reader:
         self._read_referrable(child_elements, data)
         self._read_multi_language_referrable(child_elements, data)
         self._read_identifiable(child_elements, xml_element.attrib, data)
-        self._read_rte_event(child_elements, data)
+        self._read_rte_event_group(child_elements, data)
         xml_child = child_elements.get("OFFSET")
         if xml_child is not None:
             data["offset"] = self._read_number(xml_child.text)
@@ -5022,7 +5055,7 @@ class Reader:
         self._read_referrable(child_elements, data)
         self._read_multi_language_referrable(child_elements, data)
         self._read_identifiable(child_elements, xml_element.attrib, data)
-        self._read_rte_event(child_elements, data)
+        self._read_rte_event_group(child_elements, data)
         self._read_transformer_hard_error_event_group(child_elements, data)
         self._report_unprocessed_elements(child_elements)
         return ar_element.TransformerHardErrorEvent(**data)
@@ -5076,7 +5109,12 @@ class Reader:
         Most of it will be implemented in a future version
         """
         child_elements.skip("AR-TYPED-PER-INSTANCE-MEMORYS")
-        child_elements.skip("EVENTS")
+        xml_child = child_elements.get("EVENTS")
+        if xml_child is not None:
+            events = []
+            for xml_grand_child in xml_child.findall("./*"):
+                events.append(self._read_rte_event_element(xml_grand_child))
+            data["events"] = events
         child_elements.skip("EXCLUSIVE-AREA-POLICYS")
         child_elements.skip("EXPLICIT-INTER-RUNNABLE-VARIABLES")
         child_elements.skip("HANDLE-TERMINATION-AND-RESTART")
@@ -5097,3 +5135,13 @@ class Reader:
         child_elements.skip("SUPPORTS-MULTIPLE-INSTANTIATION")
         child_elements.skip("VARIATION-POINT-PROXYS")
         child_elements.skip("VARIATION-POINT")
+
+    def _read_rte_event_element(self, xml_element: ElementTree.Element) -> RteEventElement:
+        """
+        Reads one RTE event element
+        """
+        read_method = self.switcher_rte_event.get(xml_element.tag, None)
+        if read_method is not None:
+            return read_method(xml_element)
+        else:
+            raise KeyError(f"Found no reader for '{xml_element.tag}'")

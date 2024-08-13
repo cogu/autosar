@@ -258,7 +258,7 @@ Below is a rough roadmap of planned releases.
 
 * Fix some early design mistakes
 * Harmonize some member names to better match "qualified name" from XSD (BREAKING CHANGE)
-  * This mostly means that lot of class member names ending with "_ref" will have its suffix removed
+  * For the most part this means that several class members will have its "_ref" suffix stripped from its name.
 * Attempt to break apart large Python files into smaller ones.
 
 **v0.5.7** Add some missing elements and functions that wasn't prioritized before.

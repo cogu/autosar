@@ -253,6 +253,23 @@ class Writer(_XMLWriter):
             'ModeSwitchReceiverComSpec': self._write_mode_switch_receiver_com_spec,
             'ClientComSpec': self._write_client_com_spec,
         }
+        self.switcher_rte_event = {
+            'AsynchronousServerCallReturnsEvent': self._write_async_server_call_returns_event,
+            'BackgroundEvent': self._write_background_event,
+            'DataReceiveErrorEvent': self._write_data_receive_error_event,
+            'DataReceivedEvent': self._write_data_received_event,
+            'DataSendCompletedEvent': self._write_data_send_completed_event,
+            'DataWriteCompletedEvent': self._write_data_write_completed_event,
+            'ExternalTriggerOccurredEvent': self._write_external_trigger_occured_event,
+            'InitEvent': self._write_init_event,
+            'InternalTriggerOccurredEvent': self._write_internal_trigger_occured_event,
+            'ModeSwitchedAckEvent': self._write_mode_switched_ack_event,
+            'OperationInvokedEvent': self._write_operation_invoked_event,
+            'SwcModeManagerErrorEvent': self._write_swc_mode_manager_error_event,
+            'SwcModeSwitchEvent': self._write_swc_mode_switch_event,
+            'TimingEvent': self._write_timing_event,
+            'TransformerHardErrorEvent': self._write_transformer_hard_error_event,
+        }
         # Elements used only for unit test purposes
         self.switcher_non_collectable = {
             # Documentation elements
@@ -4078,7 +4095,7 @@ class Writer(_XMLWriter):
         This is just a placeholder. Will be implemented later
         """
 
-    def _write_rte_event(self, elem: ar_element.RteEvent) -> None:
+    def _write_rte_event_group(self, elem: ar_element.RteEvent) -> None:
         """
         Writes group AR:RTE-EVENT
         """
@@ -4100,7 +4117,7 @@ class Writer(_XMLWriter):
         self._write_referrable(elem)
         self._write_multilanguage_referrable(elem)
         self._write_identifiable(elem)
-        self._write_rte_event(elem)
+        self._write_rte_event_group(elem)
         if elem.event_source is not None:
             self._write_async_server_call_result_point_ref(elem.event_source)
         self._leave_child()
@@ -4115,7 +4132,7 @@ class Writer(_XMLWriter):
         self._write_referrable(elem)
         self._write_multilanguage_referrable(elem)
         self._write_identifiable(elem)
-        self._write_rte_event(elem)
+        self._write_rte_event_group(elem)
         self._leave_child()
 
     def _write_data_receive_error_event(self, elem: ar_element.DataReceiveErrorEvent) -> None:
@@ -4128,7 +4145,7 @@ class Writer(_XMLWriter):
         self._write_referrable(elem)
         self._write_multilanguage_referrable(elem)
         self._write_identifiable(elem)
-        self._write_rte_event(elem)
+        self._write_rte_event_group(elem)
         if elem.data is not None:
             self._write_r_variable_in_atomic_swc_instance_ref(elem.data)
         self._leave_child()
@@ -4143,7 +4160,7 @@ class Writer(_XMLWriter):
         self._write_referrable(elem)
         self._write_multilanguage_referrable(elem)
         self._write_identifiable(elem)
-        self._write_rte_event(elem)
+        self._write_rte_event_group(elem)
         if elem.data is not None:
             self._write_r_variable_in_atomic_swc_instance_ref(elem.data)
         self._leave_child()
@@ -4158,7 +4175,7 @@ class Writer(_XMLWriter):
         self._write_referrable(elem)
         self._write_multilanguage_referrable(elem)
         self._write_identifiable(elem)
-        self._write_rte_event(elem)
+        self._write_rte_event_group(elem)
         if elem.event_source is not None:
             self._write_variable_access_ref(elem.event_source, "EVENT-SOURCE-REF")
         self._leave_child()
@@ -4173,7 +4190,7 @@ class Writer(_XMLWriter):
         self._write_referrable(elem)
         self._write_multilanguage_referrable(elem)
         self._write_identifiable(elem)
-        self._write_rte_event(elem)
+        self._write_rte_event_group(elem)
         if elem.event_source is not None:
             self._write_variable_access_ref(elem.event_source, "EVENT-SOURCE-REF")
         self._leave_child()
@@ -4188,7 +4205,7 @@ class Writer(_XMLWriter):
         self._write_referrable(elem)
         self._write_multilanguage_referrable(elem)
         self._write_identifiable(elem)
-        self._write_rte_event(elem)
+        self._write_rte_event_group(elem)
         if elem.trigger is not None:
             self._write_r_trigger_in_atomic_swc_instance_ref(elem.trigger, "TRIGGER-IREF")
         self._leave_child()
@@ -4203,7 +4220,7 @@ class Writer(_XMLWriter):
         self._write_referrable(elem)
         self._write_multilanguage_referrable(elem)
         self._write_identifiable(elem)
-        self._write_rte_event(elem)
+        self._write_rte_event_group(elem)
         self._leave_child()
 
     def _write_internal_trigger_occured_event(self, elem: ar_element.InternalTriggerOccurredEvent) -> None:
@@ -4216,7 +4233,7 @@ class Writer(_XMLWriter):
         self._write_referrable(elem)
         self._write_multilanguage_referrable(elem)
         self._write_identifiable(elem)
-        self._write_rte_event(elem)
+        self._write_rte_event_group(elem)
         if elem.event_source is not None:
             self._write_internal_triggering_point_ref(elem.event_source)
         self._leave_child()
@@ -4231,7 +4248,7 @@ class Writer(_XMLWriter):
         self._write_referrable(elem)
         self._write_multilanguage_referrable(elem)
         self._write_identifiable(elem)
-        self._write_rte_event(elem)
+        self._write_rte_event_group(elem)
         if elem.event_source is not None:
             self._write_mode_switch_point_ref(elem.event_source)
         self._leave_child()
@@ -4246,7 +4263,7 @@ class Writer(_XMLWriter):
         self._write_referrable(elem)
         self._write_multilanguage_referrable(elem)
         self._write_identifiable(elem)
-        self._write_rte_event(elem)
+        self._write_rte_event_group(elem)
         if elem.operation is not None:
             self._write_p_operation_in_atomic_swc_instance_ref(elem.operation)
         self._leave_child()
@@ -4261,7 +4278,7 @@ class Writer(_XMLWriter):
         self._write_referrable(elem)
         self._write_multilanguage_referrable(elem)
         self._write_identifiable(elem)
-        self._write_rte_event(elem)
+        self._write_rte_event_group(elem)
         if elem.mode_group is not None:
             self._write_p_mode_group_in_atomic_swc_instance_ref(elem.mode_group, "MODE-GROUP-IREF")
         self._leave_child()
@@ -4276,7 +4293,7 @@ class Writer(_XMLWriter):
         self._write_referrable(elem)
         self._write_multilanguage_referrable(elem)
         self._write_identifiable(elem)
-        self._write_rte_event(elem)
+        self._write_rte_event_group(elem)
         self._write_swc_mode_switch_event_group(elem)
         self._leave_child()
 
@@ -4305,7 +4322,7 @@ class Writer(_XMLWriter):
         self._write_referrable(elem)
         self._write_multilanguage_referrable(elem)
         self._write_identifiable(elem)
-        self._write_rte_event(elem)
+        self._write_rte_event_group(elem)
         if elem.offset is not None:
             self._add_content("OFFSET", self._format_number(elem.offset))
         if elem.period is not None:
@@ -4322,7 +4339,7 @@ class Writer(_XMLWriter):
         self._write_referrable(elem)
         self._write_multilanguage_referrable(elem)
         self._write_identifiable(elem)
-        self._write_rte_event(elem)
+        self._write_rte_event_group(elem)
         self._write_transformer_hard_error_event_group(elem)
         self._leave_child()
 
@@ -4360,8 +4377,24 @@ class Writer(_XMLWriter):
         Writes group AR:SWC-INTERNAL-BEHAVIOR
         Most of it will be implemented in a future version
         """
+        if elem.events:
+            self._add_child("EVENTS")
+            for event in elem.events:
+                self._write_rte_event_element(event)
+            self._leave_child()
         if elem.runnables:
             self._add_child("RUNNABLES")
             for runnable in elem.runnables:
                 self._write_runnable_entity(runnable)
             self._leave_child()
+
+    def _write_rte_event_element(self, elem: ar_element.RteEvent) -> None:
+        """
+        Writes COM-SPEC for R-PORT
+        """
+        class_name = elem.__class__.__name__
+        write_method = self.switcher_rte_event.get(class_name, None)
+        if write_method is not None:
+            write_method(elem)
+        else:
+            raise NotImplementedError(f"Found no writer for class {class_name}")

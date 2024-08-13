@@ -28,12 +28,13 @@ Non-collectable elements are various sub-elements to collectable elements.
 * DataWriteCompletedEvent | DATA-WRITE-COMPLETED-EVENT
 * ExternalTriggerOccurredEvent | EXTERNAL-TRIGGER-OCCURRED-EVENT
 * InitEvent | INIT-EVENT
-* InternalBehavior | SWC-INTERNAL-BEHAVIOR (Partly implemented)
-  * runnables
 * InternalTriggerOccurredEvent | INTERNAL-TRIGGER-OCCURRED-EVENT
 * ModeSwitchedAckEvent | MODE-SWITCHED-ACK-EVENT
 * OperationInvokedEvent | OPERATION-INVOKED-EVENT
 * RunnableEntity | RUNNABLE-ENTITY
+* SwcInternalBehavior | SWC-INTERNAL-BEHAVIOR (Partly implemented)
+  * events
+  * runnables
 * SwcModeManagerErrorEvent | SWC-MODE-MANAGER-ERROR-EVENT
 * SwcModeSwitchEvent | SWC-MODE-SWITCH-EVENT
 * TimingEvent | TIMING-EVENT
