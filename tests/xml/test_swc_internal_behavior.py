@@ -1691,7 +1691,82 @@ class TestSwcInternalBehavior(unittest.TestCase):
     # IMPLEMENT LATER: STATIC-MEMORYS
     # Class elements
     # IMPLEMENT LATER: AR-TYPED-PER-INSTANCE-MEMORYS
-    # IMPLEMENT LATER: EVENTS
+
+    # EVENTS
+    def test_init_event_from_element(self):
+        element = ar_element.SwcInternalBehavior('MyName', events=ar_element.InitEvent("MyEvent"))
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <EVENTS>
+    <INIT-EVENT>
+      <SHORT-NAME>MyEvent</SHORT-NAME>
+    </INIT-EVENT>
+  </EVENTS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.events), 1)
+        event = elem.events[0]
+        self.assertIsInstance(event, ar_element.InitEvent)
+        self.assertEqual(event.name, "MyEvent")
+
+    def test_timing_event_from_element(self):
+        element = ar_element.SwcInternalBehavior('MyName', events=ar_element.TimingEvent("MyEvent"))
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <EVENTS>
+    <TIMING-EVENT>
+      <SHORT-NAME>MyEvent</SHORT-NAME>
+    </TIMING-EVENT>
+  </EVENTS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.events), 1)
+        event = elem.events[0]
+        self.assertIsInstance(event, ar_element.TimingEvent)
+        self.assertEqual(event.name, "MyEvent")
+
+    def test_events_from_list(self):
+        init_event = ar_element.SwcModeSwitchEvent("InitEvent")
+        exit_event = ar_element.SwcModeSwitchEvent("ExitEvent")
+        periodic_event = ar_element.TimingEvent("PeriodicEvent")
+        element = ar_element.SwcInternalBehavior('MyName', events=[init_event,
+                                                                   exit_event,
+                                                                   periodic_event])
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <EVENTS>
+    <SWC-MODE-SWITCH-EVENT>
+      <SHORT-NAME>InitEvent</SHORT-NAME>
+    </SWC-MODE-SWITCH-EVENT>
+    <SWC-MODE-SWITCH-EVENT>
+      <SHORT-NAME>ExitEvent</SHORT-NAME>
+    </SWC-MODE-SWITCH-EVENT>
+    <TIMING-EVENT>
+      <SHORT-NAME>PeriodicEvent</SHORT-NAME>
+    </TIMING-EVENT>
+  </EVENTS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.events), 3)
+        self.assertIsInstance(elem.events[0], ar_element.SwcModeSwitchEvent)
+        self.assertEqual(elem.events[0].name, "InitEvent")
+        self.assertIsInstance(elem.events[1], ar_element.SwcModeSwitchEvent)
+        self.assertEqual(elem.events[1].name, "ExitEvent")
+        self.assertIsInstance(elem.events[2], ar_element.TimingEvent)
+        self.assertEqual(elem.events[2].name, "PeriodicEvent")
+
     # IMPLEMENT LATER: EXCLUSIVE-AREA-POLICYS
     # IMPLEMENT LATER: EXPLICIT-INTER-RUNNABLE-VARIABLES
     # IMPLEMENT LATER: HANDLE-TERMINATION-AND-RESTART

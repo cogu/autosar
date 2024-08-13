@@ -5682,6 +5682,14 @@ class RunnableEntity(ExecutableEntity):
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
 
+    def ref(self) -> RunnableEntityRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        return None if ref_str is None else RunnableEntityRef(ref_str)
+
 
 class RteEvent(Identifiable):
     """
@@ -6103,10 +6111,13 @@ class SwcInternalBehavior(InternalBehavior):
     def __init__(self,
                  name: str,
                  runnables: RunnableEntity | list[RunnableEntity] | None = None,
+                 events: RteEvent | list[RteEvent] | None = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
-
-        self.runnables: list[RunnableEntity] = []  # .RUNNABLES
+        # .RUNNABLES
+        self.runnables: list[RunnableEntity] = []
+        # .EVENTS
+        self.events: list[RteEvent] = []
 
         if runnables is not None:
             if isinstance(runnables, list):
@@ -6114,6 +6125,13 @@ class SwcInternalBehavior(InternalBehavior):
                     self.append_runnable(runnable)
             else:
                 self.append_runnable(runnables)
+
+        if events is not None:
+            if isinstance(events, list):
+                for event in events:
+                    self.append_event(event)
+            else:
+                self.append_event(events)
 
     def ref(self) -> SwcInternalBehaviorRef | None:
         """
@@ -6125,9 +6143,45 @@ class SwcInternalBehavior(InternalBehavior):
 
     def append_runnable(self, runnable: RunnableEntity) -> None:
         """
-        Appends runnable to internal list of runnables
+        Adds runnable to internal list of runnables
         """
         if isinstance(runnable, RunnableEntity):
+            runnable.parent = self
             self.runnables.append(runnable)
         else:
             raise TypeError(f"runnable must be of type RunnableEntity. Got {str(type(runnable))}")
+
+    def append_event(self, event: RteEvent) -> None:
+        """
+        Adds event to internal list of events
+        """
+        if isinstance(event, RteEvent):
+            event.parent = self
+            self.events.append(event)
+        else:
+            raise TypeError(f"event must derive from RteEvent. Got {str(type(event))}")
+
+    def create_runnable(self,
+                        name: str,
+                        activation_reasons: ActivationReasonArgumentType = None,
+                        can_enter_leave: CanEnterLeaveArgumentType = None,
+                        exclusive_area_nesting_order: ExclusiveAreaNestingOrderArgumentType = None,
+                        minimum_start_interval: int | float | None = None,
+                        reentrancy_level: ar_enum.ReentrancyLevel | None = None,
+                        runs_insides: RunsInsidesArgumentType = None,
+                        sw_addr_method: str | SwAddrMethodRef | None = None,
+                        **kwargs) -> RunnableEntity:
+        """
+        Creates a new runnable in this SwcInternalBehavior object
+        """
+        data = {"activation_reasons": activation_reasons,
+                "can_enter_leave": can_enter_leave,
+                "exclusive_area_nesting_order": exclusive_area_nesting_order,
+                "minimum_start_interval": minimum_start_interval,
+                "reentrancy_level": reentrancy_level,
+                "runs_insides": runs_insides,
+                "sw_addr_method": sw_addr_method}
+        data.update(kwargs)
+        runnable = RunnableEntity(name, **data)
+        self.append_runnable(runnable)
+        return runnable
