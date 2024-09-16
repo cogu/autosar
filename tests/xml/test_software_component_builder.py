@@ -7,6 +7,7 @@ import unittest
 from typing import Any
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
 import autosar.xml.element as ar_element # noqa E402
+import autosar.xml.enumeration as ar_enum # noqa E402
 import autosar # noqa E402
 
 
@@ -20,6 +21,7 @@ def create_packages(workspace: autosar.xml.workspace.Workspace) -> dict[str, ar_
                          "PlatformCompuMethods",
                          "Constants",
                          "PortInterfaces",
+                         "ModeDeclarations",
                          "ComponentTypes"],
                     workspace.make_packages("AUTOSAR_Platform/BaseTypes",
                                             "AUTOSAR_Platform/ImplementationDataTypes",
@@ -27,6 +29,7 @@ def create_packages(workspace: autosar.xml.workspace.Workspace) -> dict[str, ar_
                                             "AUTOSAR_Platform/CompuMethods",
                                             "Constants",
                                             "PortInterfaces",
+                                            "ModeDeclarations",
                                             "ComponentTypes")))
     return packages
 
@@ -74,15 +77,91 @@ def create_platform_types(packages: dict[str, ar_element.Package]):
     packages["PlatformImplementationDataTypes"].append(uint32_impl_type)
 
 
+def create_mode_declaration_groups(packages: dict[str, ar_element.Package]):
+    """
+    Creates mode declarations
+    """
+    vehicle_mode = ar_element.ModeDeclarationGroup("VehicleMode", ["OFF",
+                                                                   "PARKING",
+                                                                   "ACCESSORY",
+                                                                   "CRANKING",
+                                                                   "RUNNING"])
+    packages["ModeDeclarations"].append(vehicle_mode)
+    vehicle_mode.initial_mode_ref = vehicle_mode.find("OFF").ref()
+
+    application_mode = ar_element.ModeDeclarationGroup("ApplicationMode", ["INACTIVE",
+                                                                           "ACTIVE"])
+    packages["ModeDeclarations"].append(application_mode)
+    application_mode.initial_mode_ref = application_mode.find("INACTIVE").ref()
+
+
 def create_vehicle_speed_interface(packages: dict[str, ar_element.Package]) -> ar_element.SenderReceiverInterface:
     """
-    Create sender-receiver port interfaces used in example
+    Create sender-receiver port interface for vehicle speed
     """
     uint16_impl_t = packages["PlatformImplementationDataTypes"].find("uint16")
     port_interface = ar_element.SenderReceiverInterface("VehicleSpeed_I")
     port_interface.create_data_element("VehicleSpeed", type_ref=uint16_impl_t.ref())
     packages["PortInterfaces"].append(port_interface)
     return port_interface
+
+
+def create_engine_speed_interface(packages: dict[str, ar_element.Package]) -> ar_element.SenderReceiverInterface:
+    """
+    Create sender-receiver port interface for engine speed
+    """
+    uint16_impl_t = packages["PlatformImplementationDataTypes"].find("uint16")
+    port_interface = ar_element.SenderReceiverInterface("EngineSpeed_I")
+    port_interface.create_data_element("EngineSpeed", type_ref=uint16_impl_t.ref())
+    packages["PortInterfaces"].append(port_interface)
+    return port_interface
+
+
+def create_safe_state_interface(packages: dict[str, ar_element.Package]) -> ar_element.SenderReceiverInterface:
+    """
+    Create sender-receiver port interface for safe state
+    """
+    boolean_impl_t = packages["PlatformImplementationDataTypes"].find("boolean")
+    port_interface = ar_element.SenderReceiverInterface("SafeState_I")
+    port_interface.create_data_element("SafeState", type_ref=boolean_impl_t.ref())
+    packages["PortInterfaces"].append(port_interface)
+    return port_interface
+
+
+def create_vehicle_mode_interface(packages: dict[str, ar_element.Package]) -> ar_element.ModeSwitchInterface:
+    """
+    Create mode switch interface
+    """
+    mode_declaration_group = packages["ModeDeclarations"].find("VehicleMode")
+    portinterface = ar_element.ModeSwitchInterface("VehicleMode_I")
+    portinterface.create_mode_group("mode", mode_declaration_group.ref())
+    packages["PortInterfaces"].append(portinterface)
+    return portinterface
+
+
+def create_application_mode_interface(packages: dict[str, ar_element.Package]) -> ar_element.ModeSwitchInterface:
+    """
+    Create mode switch interface
+    """
+    mode_declaration_group = packages["ModeDeclarations"].find("ApplicationMode")
+    portinterface = ar_element.ModeSwitchInterface("ApplicationMode_I")
+    portinterface.create_mode_group("mode", mode_declaration_group.ref())
+    packages["PortInterfaces"].append(portinterface)
+    return portinterface
+
+
+def create_timer_interface(packages: dict[str, ar_element.Package]) -> ar_element.ClientServerInterface:
+    """
+    Create mode switch interface
+    """
+    uint32_impl_t = packages["PlatformImplementationDataTypes"].find("uint32")
+    portinterface = ar_element.ClientServerInterface("Timer_I", is_service=False)
+    packages["PortInterfaces"].append(portinterface)
+    operation = portinterface.create_operation("GetTime")
+    operation.create_out_argument("value",
+                                  server_arg_impl_policy=ar_enum.ServerArgImplPolicy.USE_ARGUMENT_TYPE,
+                                  type_ref=uint32_impl_t.ref())
+    return portinterface
 
 
 def create_init_value(packages, name: str, value: Any) -> ar_element.ConstantSpecification:
@@ -100,6 +179,7 @@ def create_application_swc(packages):
     """
     swc = ar_element.ApplicationSoftwareComponentType("MyApplication")
     packages["ComponentTypes"].append(swc)
+    swc.create_internal_behavior("MyApplication_InternalBehavior")
     return swc
 
 
@@ -161,6 +241,299 @@ class TestReceiverPort(unittest.TestCase):
         self.assertIsInstance(com_spec, ar_element.NonqueuedReceiverComSpec)
         self.assertIsInstance(com_spec.init_value, ar_element.NumericalValueSpecification)
         self.assertEqual(com_spec.init_value.value, 65535)
+
+
+class TestSwcPortFinderAPI(unittest.TestCase):
+
+    def create_swc(self, workspace: autosar.xml.Workspace) -> ar_element.ApplicationSoftwareComponentType:
+        packages = create_packages(workspace)
+        create_platform_types(packages)
+        vehicle_speed_interface = create_vehicle_speed_interface(packages)
+        engine_speed_interface = create_engine_speed_interface(packages)
+        safe_state_interface = create_safe_state_interface(packages)
+        swc = create_application_swc(packages)
+        swc.create_provide_port("VehicleSpeed", vehicle_speed_interface, com_spec={'init_value': 65535})
+        swc.create_require_port("EngineSpeed", engine_speed_interface, com_spec={'init_value': 65535})
+        swc.create_pr_port("SafeState", safe_state_interface, provided_com_spec={'init_value': False})
+        return swc
+
+    def test_find_r_port(self):
+        workspace = autosar.xml.Workspace()
+        swc = self.create_swc(workspace)
+        self.assertIsInstance(swc, ar_element.ApplicationSoftwareComponentType)
+        port = swc.find_r_port("EngineSpeed")
+        self.assertIsInstance(port, ar_element.RequirePortPrototype)
+        self.assertEqual(port.name, "EngineSpeed")
+        port = swc.find_r_port("SafeState")
+        self.assertIsInstance(port, ar_element.PRPortPrototype)
+        self.assertEqual(port.name, "SafeState")
+        self.assertIsNone(swc.find_r_port("VehicleSpeed"))
+
+    def test_find_p_port(self):
+        workspace = autosar.xml.Workspace()
+        swc = self.create_swc(workspace)
+        self.assertIsInstance(swc, ar_element.ApplicationSoftwareComponentType)
+        port = swc.find_p_port("VehicleSpeed")
+        self.assertIsInstance(port, ar_element.ProvidePortPrototype)
+        self.assertEqual(port.name, "VehicleSpeed")
+        port = swc.find_p_port("SafeState")
+        self.assertIsInstance(port, ar_element.PRPortPrototype)
+        self.assertEqual(port.name, "SafeState")
+        self.assertIsNone(swc.find_p_port("EngineSpeed"))
+
+
+class TestRootCollectionAPI(unittest.TestCase):
+
+    def create_swc(self, workspace: autosar.xml.Workspace) -> ar_element.ApplicationSoftwareComponentType:
+        packages = create_packages(workspace)
+        create_platform_types(packages)
+        engine_speed_interface = create_engine_speed_interface(packages)
+        swc = create_application_swc(packages)
+        swc.create_require_port("EngineSpeed", engine_speed_interface, com_spec={'init_value': 65535})
+        return swc
+
+    def test_find_root_from_package(self):
+        workspace = autosar.xml.Workspace()
+        packages = create_packages(workspace)
+        package = packages["PortInterfaces"]
+        root = package.root_collection()
+        self.assertIs(root, workspace)
+
+    def test_find_root_from_swc(self):
+        workspace = autosar.xml.Workspace()
+        swc = self.create_swc(workspace)
+        root = swc.root_collection()
+        self.assertIs(root, workspace)
+
+    def test_find_root_from_port(self):
+        workspace = autosar.xml.Workspace()
+        swc = self.create_swc(workspace)
+        port = swc.find_r_port("EngineSpeed")
+        root = port.root_collection()
+        self.assertIs(root, workspace)
+
+
+class TestWorkspaceFinder(unittest.TestCase):
+
+    def create_swc(self, workspace: autosar.xml.Workspace) -> ar_element.ApplicationSoftwareComponentType:
+        packages = create_packages(workspace)
+        create_platform_types(packages)
+        engine_speed_interface = create_engine_speed_interface(packages)
+        swc = create_application_swc(packages)
+        swc.create_require_port("EngineSpeed", engine_speed_interface, com_spec={'init_value': 65535})
+        return swc
+
+    def test_find_port_by_reference(self):
+        workspace = autosar.xml.Workspace()
+        swc = self.create_swc(workspace)
+        port1 = swc.find_r_port("EngineSpeed")
+        self.assertEqual(str(port1.ref()), "/ComponentTypes/MyApplication/EngineSpeed")
+        port2 = workspace.find(port1.ref())
+        self.assertIs(port1, port2)
+
+    def test_find_port_interface_by_reference(self):
+        workspace = autosar.xml.Workspace()
+        swc = self.create_swc(workspace)
+        port: ar_element.RequirePortPrototype = swc.find_r_port("EngineSpeed")
+        self.assertEqual(str(port.port_interface_ref), "/PortInterfaces/EngineSpeed_I")
+        port_interface = workspace.find(port.port_interface_ref)
+        self.assertIsInstance(port_interface, ar_element.SenderReceiverInterface)
+        self.assertEqual(port_interface.name, "EngineSpeed_I")
+
+
+class TestPortInterfaceSubElementsGetterAPI(unittest.TestCase):
+
+    def create_swc(self, workspace: autosar.xml.Workspace) -> ar_element.ApplicationSoftwareComponentType:
+        packages = create_packages(workspace)
+        create_platform_types(packages)
+        vehicle_speed_interface = create_vehicle_speed_interface(packages)
+        engine_speed_interface = create_engine_speed_interface(packages)
+        swc = create_application_swc(packages)
+        swc.create_provide_port("VehicleSpeed", vehicle_speed_interface, com_spec={'init_value': 65535})
+        swc.create_require_port("EngineSpeed", engine_speed_interface, com_spec={'init_value': 65535})
+        return swc
+
+    def test_find_data_element_on_p_port_with_sender_receiver_interface(self):
+        workspace = autosar.xml.Workspace()
+        swc = self.create_swc(workspace)
+        port: ar_element.RequirePortPrototype = swc.find_p_port("VehicleSpeed")
+        # With data element name
+        data_element1 = swc.get_data_element_in_port(port, "VehicleSpeed")
+        self.assertIsInstance(data_element1, ar_element.VariableDataPrototype)
+        self.assertEqual(str(data_element1.ref()), "/PortInterfaces/VehicleSpeed_I/VehicleSpeed")
+        # Without data element name
+        data_element2 = swc.get_data_element_in_port(port)
+        self.assertIs(data_element1, data_element2)
+
+
+class TestEventCreaterAPI(unittest.TestCase):
+
+    def __init__(self, methodName: str = "runTest") -> None:
+        super().__init__(methodName)
+        self.expected_behavior_ref = "/ComponentTypes/MyApplication/MyApplication_InternalBehavior"
+
+    def create_swc(self, workspace: autosar.xml.Workspace) -> ar_element.ApplicationSoftwareComponentType:
+        packages = create_packages(workspace)
+        create_platform_types(packages)
+        create_mode_declaration_groups(packages)
+        engine_speed_interface = create_engine_speed_interface(packages)
+        vehicle_mode_interface = create_vehicle_mode_interface(packages)
+        application_mode_interface = create_application_mode_interface(packages)
+        timer_interface = create_timer_interface(packages)
+        swc = create_application_swc(packages)
+        swc.create_r_port("EngineSpeed", engine_speed_interface, com_spec={'init_value': 65535})
+        swc.create_r_port("VehicleMode", vehicle_mode_interface, com_spec={'supports_async': False})
+        swc.create_p_port("ApplicationMode", application_mode_interface)
+        swc.create_p_port("Timer", timer_interface)
+        return swc
+
+    def test_create_background_event(self):
+        workspace = autosar.xml.Workspace()
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        behavior.create_runnable("MyApplication_Background")
+        event = behavior.create_background_event("BGR_MyApplication_Background", "MyApplication_Background")
+        self.assertIsInstance(event, ar_element.BackgroundEvent)
+        self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/MyApplication_Background")
+
+    def test_create_data_receive_error_event_using_port_name_only(self):
+        workspace = autosar.xml.Workspace()
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        behavior.create_runnable("EngineSpeed_Updated")
+        event = behavior.create_data_receive_error_event("RCVERR_EngineSpeed", "EngineSpeed_Updated", "EngineSpeed")
+        self.assertIsInstance(event, ar_element.DataReceiveErrorEvent)
+        self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/EngineSpeed_Updated")
+        self.assertEqual(str(event.data.context_port), "/ComponentTypes/MyApplication/EngineSpeed")
+        self.assertEqual(str(event.data.target_data_element), "/PortInterfaces/EngineSpeed_I/EngineSpeed")
+
+    def test_create_data_receive_error_event_using_port_and_data_element(self):
+        workspace = autosar.xml.Workspace()
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        behavior.create_runnable("EngineSpeed_Updated")
+        event = behavior.create_data_receive_error_event("RCVERR_EngineSpeed",
+                                                         "EngineSpeed_Updated",
+                                                         "EngineSpeed/EngineSpeed")
+        self.assertIsInstance(event, ar_element.DataReceiveErrorEvent)
+        self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/EngineSpeed_Updated")
+        self.assertEqual(str(event.data.context_port), "/ComponentTypes/MyApplication/EngineSpeed")
+        self.assertEqual(str(event.data.target_data_element), "/PortInterfaces/EngineSpeed_I/EngineSpeed")
+
+    def test_create_data_received_event_using_port_name_only(self):
+        workspace = autosar.xml.Workspace()
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        behavior.create_runnable("EngineSpeed_Updated")
+        event = behavior.create_data_received_event("RCV_EngineSpeed", "EngineSpeed_Updated", "EngineSpeed")
+        self.assertIsInstance(event, ar_element.DataReceivedEvent)
+        self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/EngineSpeed_Updated")
+        self.assertEqual(str(event.data.context_port), "/ComponentTypes/MyApplication/EngineSpeed")
+        self.assertEqual(str(event.data.target_data_element), "/PortInterfaces/EngineSpeed_I/EngineSpeed")
+
+    def test_create_data_received_event_using_port_and_data_element(self):
+        workspace = autosar.xml.Workspace()
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        behavior.create_runnable("EngineSpeed_Updated")
+        event = behavior.create_data_received_event("RCV_EngineSpeed", "EngineSpeed_Updated", "EngineSpeed/EngineSpeed")
+        self.assertIsInstance(event, ar_element.DataReceivedEvent)
+        self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/EngineSpeed_Updated")
+        self.assertEqual(str(event.data.context_port), "/ComponentTypes/MyApplication/EngineSpeed")
+        self.assertEqual(str(event.data.target_data_element), "/PortInterfaces/EngineSpeed_I/EngineSpeed")
+
+    def test_create_init_event(self):
+        workspace = autosar.xml.Workspace()
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        behavior.create_runnable("MyApplication_Init")
+        event = behavior.create_background_event("INIT_MyApplication_Init", "MyApplication_Init")
+        self.assertIsInstance(event, ar_element.BackgroundEvent)
+        self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/MyApplication_Init")
+
+    def test_create_operation_invoked_event_port_name_only(self):
+        workspace = autosar.xml.Workspace()
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        behavior.create_runnable("MyApplication_GetTime")
+        event = behavior.create_operation_invoked_event("CALL_MyApplication_GetTime",
+                                                        "MyApplication_GetTime",
+                                                        "Timer")
+        self.assertIsInstance(event, ar_element.OperationInvokedEvent)
+        self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/MyApplication_GetTime")
+        self.assertEqual(str(event.operation.context_port), "/ComponentTypes/MyApplication/Timer")
+        self.assertEqual(str(event.operation.target_provided_operation), "/PortInterfaces/Timer_I/GetTime")
+
+    def test_create_operation_invoked_event_with_operation_name(self):
+        workspace = autosar.xml.Workspace()
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        behavior.create_runnable("MyApplication_GetTime")
+        event = behavior.create_operation_invoked_event("CALL_MyApplication_GetTime",
+                                                        "MyApplication_GetTime",
+                                                        "Timer/GetTime")
+        self.assertIsInstance(event, ar_element.OperationInvokedEvent)
+        self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/MyApplication_GetTime")
+        self.assertEqual(str(event.operation.context_port), "/ComponentTypes/MyApplication/Timer")
+        self.assertEqual(str(event.operation.target_provided_operation), "/PortInterfaces/Timer_I/GetTime")
+
+    def test_create_swc_mode_manager_error_event(self):
+        workspace = autosar.xml.Workspace()
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        behavior.create_runnable("MyApplication_ApplicationModeError")
+        event = behavior.create_swc_mode_manager_error_event("MDERR_MyApplication_ApplicationModeError",
+                                                             "MyApplication_ApplicationModeError",
+                                                             "ApplicationMode")
+        self.assertIsInstance(event, ar_element.SwcModeManagerErrorEvent)
+        self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/MyApplication_ApplicationModeError")
+        self.assertEqual(str(event.mode_group.context_port), "/ComponentTypes/MyApplication/ApplicationMode")
+        self.assertEqual(str(event.mode_group.context_mode_declaration_group_prototype),
+                         "/PortInterfaces/ApplicationMode_I/mode")
+
+    def test_create_swc_mode_mode_switch_event(self):
+        workspace = autosar.xml.Workspace()
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        behavior.create_runnable("MyApplication_Init")
+        event = behavior.create_swc_mode_mode_switch_event("MSW_MyApplication_Init",
+                                                           "MyApplication_Init",
+                                                           "VehicleMode/ACCESSORY")
+        self.assertIsInstance(event, ar_element.SwcModeSwitchEvent)
+        self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/MyApplication_Init")
+        self.assertEqual(str(event.mode.context_port), "/ComponentTypes/MyApplication/VehicleMode")
+        self.assertEqual(str(event.mode.context_mode_declaration_group_prototype), "/PortInterfaces/VehicleMode_I/mode")
+        self.assertEqual(str(event.mode.target_mode_declaration), "/ModeDeclarations/VehicleMode/ACCESSORY")
+
+    def test_create_swc_mode_mode_switch_event_with_transition(self):
+        workspace = autosar.xml.Workspace()
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        behavior.create_runnable("MyApplication_Init")
+        event = behavior.create_swc_mode_mode_switch_event("MSW_MyApplication_Init",
+                                                           "MyApplication_Init",
+                                                           ["VehicleMode/PARKING", "VehicleMode/ACCESSORY"])
+        self.assertIsInstance(event, ar_element.SwcModeSwitchEvent)
+        self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/MyApplication_Init")
+        self.assertEqual(str(event.mode[0].context_port), "/ComponentTypes/MyApplication/VehicleMode")
+        self.assertEqual(str(event.mode[0].context_mode_declaration_group_prototype),
+                         "/PortInterfaces/VehicleMode_I/mode")
+        self.assertEqual(str(event.mode[0].target_mode_declaration), "/ModeDeclarations/VehicleMode/PARKING")
+        self.assertEqual(str(event.mode[1].context_port), "/ComponentTypes/MyApplication/VehicleMode")
+        self.assertEqual(str(event.mode[1].context_mode_declaration_group_prototype),
+                         "/PortInterfaces/VehicleMode_I/mode")
+        self.assertEqual(str(event.mode[1].target_mode_declaration), "/ModeDeclarations/VehicleMode/ACCESSORY")
+
+    def test_create_timing_event_without_offset(self):
+        workspace = autosar.xml.Workspace()
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        behavior.create_runnable("MyApplication_Run")
+        event = behavior.create_timing_event("TM_MyApplication_Run", "MyApplication_Run", 0.02)
+        self.assertIsInstance(event, ar_element.TimingEvent)
+        self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/MyApplication_Run")
+        self.assertAlmostEqual(event.period, 0.02)
+        self.assertIsNone(event.offset)
 
 
 if __name__ == '__main__':

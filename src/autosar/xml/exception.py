@@ -35,3 +35,9 @@ class AssignmentTypeError(TypeError):
             expected = ", ".join(expected_types)
         msg = f"{name}: Invalid type. Expected one of ({expected}), got '{str(type(value))}'"
         super().__init__(msg)
+
+
+class InvalidReferenceError(ValueError):
+    """
+    Reference is invalid
+    """

@@ -7,7 +7,7 @@ from collections.abc import Iterable, Iterator
 from typing import Any, Union
 
 
-from autosar.base import split_ref, Searchable
+from autosar.base import split_ref, split_ref_strict, Searchable
 from autosar.xml.base import ARObject, BaseRef
 import autosar.xml.enumeration as ar_enum
 import autosar.xml.exception as ar_except
@@ -175,14 +175,27 @@ class Referrable(ARObject):
 
     def __init__(self, name: str) -> None:
         self.name: str = name  # .SHORT-NAME
-        self.parent: 'CollectableElement' = None
+        self.parent: Union["CollectableElement", "PackageCollection", None] = None
 
     @property
     def short_name(self) -> str:
         """
-        Alias for .name
+        Alias for "name"
         """
         return self.name
+
+    def root_collection(self) -> Union["PackageCollection", None]:
+        """
+        Returns the root package collection object or None if it can't be found.
+        A package collection can be either a Workspace or a Document object depending
+        on how the packages/elements was created initially.
+        """
+        elem = self
+        while elem.parent is not None:
+            elem = elem.parent
+        if isinstance(elem, PackageCollection):
+            return elem
+        return None
 
 
 class MultiLanguageReferrable(Referrable):
@@ -2923,6 +2936,7 @@ class PackageCollection:
     """
 
     def __init__(self, packages: list[Package] | None = None) -> None:
+        self.parent = None
         self.packages: list[Package] = []  # .PACKAGES
         self._package_dict = {}  # internal package map
         if packages is not None:
@@ -2942,10 +2956,14 @@ class PackageCollection:
             self.packages.append(package)
             self._package_dict[package.name] = package
 
-    def find(self, ref: str) -> Any:
+    def find(self, ref: str | BaseRef) -> Any:
         """
         Finds item by reference
         """
+        if isinstance(ref, BaseRef):
+            ref = str(ref)
+        if not isinstance(ref, str):
+            raise TypeError("ref: Must be either a string or a valid reference class")
         if ref.startswith('/'):
             ref = ref[1:]
         parts = ref.partition('/')
@@ -2970,7 +2988,7 @@ class PackageCollection:
         self.append(package)
         return package
 
-    def make_packages(self, *refs: list[str]) -> Package | list[Package]:
+    def make_packages(self, *refs: str) -> Package | list[Package]:
         """
         Recursively creates packages from reference(s)
         Returns a list of created packages.
@@ -3729,7 +3747,9 @@ class ModeSwitchInterface(PortInterface):
                  mode_group: ModeDeclarationGroupPrototype | None = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
+        # .MODE-GROUP
         self.mode_group: ModeDeclarationGroupPrototype | None = None
+
         self._assign_optional_strict("mode_group", mode_group, ModeDeclarationGroupPrototype)
 
     def ref(self) -> PortInterfaceRef | None:
@@ -3756,6 +3776,7 @@ class ModeSwitchInterface(PortInterface):
         will overwrite the previous value.
         """
         self.mode_group = ModeDeclarationGroupPrototype(name, type_ref, calibration_access, **kwargs)
+        self.mode_group.parent = self
         return self.mode_group
 
 # --- System Template Elements
@@ -4220,11 +4241,18 @@ class RequirePortComSpec(ARObject):
                                             outer dict keys are element names and each value
                                             is another dict containing key-value pairs for one com-spec
 
+        Note: Avoid manually setting the data_element_ref option, it will be automatically set for you.
+
         For ClientServerInterface:
         If interface has a single operation: kwargs is a dict with key-value pairs for one com-spec
         If interface has multiple operations: kwargs is a dict of dict where
                                               outer dict keys are operation names and each value
                                               is another dict containing key-value pairs for one com-spec
+        Note: Avoid manually setting the operation_ref option, it will be automatically set for you.
+
+        For ModeSwitchInterface:
+        kwargs is a dict with key-value pairs for one com-spec
+        Note: Avoid manually setting the mode_group_ref option, it will be automatically set for you.
         """
         if isinstance(port_interface, SenderReceiverInterface):
             if len(port_interface.data_elements) == 0:
@@ -4232,6 +4260,7 @@ class RequirePortComSpec(ARObject):
             if len(port_interface.data_elements) == 1:
                 data_element: VariableDataPrototype = port_interface.data_elements[0]
                 if data_element.is_queued:
+                    assert data_element.ref() is not None
                     return QueuedReceiverComSpec(data_element_ref=data_element.ref(), **kwargs)
                 else:
                     return cls.make_non_queued_receiver_com_spec(data_element_ref=data_element.ref(), **kwargs)
@@ -4247,9 +4276,10 @@ class RequirePortComSpec(ARObject):
                     if data_element.name in unprocessed:
                         unprocessed.remove(data_element.name)
                         com_spec_args = kwargs[data_element.name]
+                        assert data_element.ref() is not None
                         if data_element.is_queued:
-                            com_spec = QueuedSenderComSpec(data_element_ref=data_element.ref(),
-                                                           **com_spec_args)
+                            com_spec = QueuedReceiverComSpec(data_element_ref=data_element.ref(),
+                                                             **com_spec_args)
                         else:
                             com_spec = cls.make_non_queued_receiver_com_spec(data_element_ref=data_element.ref(),
                                                                              **com_spec_args)
@@ -4259,7 +4289,7 @@ class RequirePortComSpec(ARObject):
                     msg = f"{port_interface.name}: Data element(s) not found in port interface: '{element_names}'"
                     raise ValueError(msg)
                 return com_spec_list
-        if isinstance(port_interface, ClientServerInterface):
+        elif isinstance(port_interface, ClientServerInterface):
             if len(port_interface.operations) == 0:
                 raise ValueError(f"{port_interface.name}: Port interface must have at least one operation")
             if len(port_interface.operations) == 1:
@@ -4274,12 +4304,18 @@ class RequirePortComSpec(ARObject):
                     if operation.name in unprocessed:
                         unprocessed.remove(operation.name)
                         com_spec_args = kwargs[operation.name]
+                        assert operation.ref() is not None
                         com_spec = ClientComSpec(operation_ref=operation.ref(), **com_spec_args)
                         com_spec_list.append(com_spec)
                 if len(unprocessed) > 0:
                     operations = ', '.join(list[unprocessed])
                     raise ValueError(f"{port_interface.name}: Operation(s) not found in port interface: '{operations}'")
                 return com_spec_list
+        elif isinstance(port_interface, ModeSwitchInterface):
+            if port_interface.mode_group is None:
+                raise ValueError(f"{port_interface.name}: Port interface doesn't have a mode group set")
+            assert port_interface.mode_group.ref() is not None
+            return ModeSwitchReceiverComSpec(mode_group_ref=port_interface.mode_group.ref(), **kwargs)
         else:
             raise NotImplementedError(str(type(port_interface)))
 
@@ -4769,6 +4805,24 @@ class SwComponentType(ARElement, Searchable):
                 return elem
         return None
 
+    def create_p_port(self,
+                      name: str,
+                      port_interface: PortInterface | None = None,
+                      com_spec: dict | list[dict] | ProvidePortComSpec | list[ProvidePortComSpec] | None = None,
+                      **kwargs) -> ProvidePortPrototype:
+        """
+        #convenience-method
+
+        Creates a new provide-port and adds it to the internal list of ports
+        """
+        if com_spec is not None:
+            if isinstance(com_spec, dict):
+                com_spec = ProvidePortComSpec.make_from_port_interface(port_interface, **com_spec)
+                assert com_spec is not None
+        port = ProvidePortPrototype(name, port_interface.ref(), com_spec, **kwargs)
+        self.append_port(port)
+        return port
+
     def create_provide_port(self,
                             name: str,
                             port_interface: PortInterface | None = None,
@@ -4777,13 +4831,26 @@ class SwComponentType(ARElement, Searchable):
         """
         #convenience-method
 
-        Creates a new provide port and adds it to the internal list of ports
+        Alias for create_p_port
+        """
+        return self.create_p_port(name, port_interface, com_spec, **kwargs)
+
+    def create_r_port(self,
+                      name: str,
+                      port_interface: PortInterface,
+                      com_spec: dict | list[dict] | RequirePortComSpec | list[RequirePortComSpec] | None = None,
+                      allow_unconnected: bool | None = None,
+                      **kwargs) -> RequirePortPrototype:
+        """
+        #convenience-method
+
+        Creates a new require-port and adds it to the internal list of ports
         """
         if com_spec is not None:
             if isinstance(com_spec, dict):
-                com_spec = ProvidePortComSpec.make_from_port_interface(port_interface, **com_spec)
+                com_spec = RequirePortComSpec.make_from_port_interface(port_interface, **com_spec)
                 assert com_spec is not None
-        port = ProvidePortPrototype(name, port_interface.ref(), com_spec, **kwargs)
+        port = RequirePortPrototype(name, port_interface.ref(), com_spec, allow_unconnected, **kwargs)
         self.append_port(port)
         return port
 
@@ -4796,29 +4863,121 @@ class SwComponentType(ARElement, Searchable):
         """
         #convenience-method
 
-        Creates a new require port and adds it to the internal list of ports
+        Alias for create_r_port
         """
-        if com_spec is not None:
-            if isinstance(com_spec, dict):
-                com_spec = RequirePortComSpec.make_from_port_interface(port_interface, **com_spec)
-                assert com_spec is not None
-        port = RequirePortPrototype(name, port_interface.ref(), com_spec, allow_unconnected, **kwargs)
-        self.append_port(port)
-        return port
+        return self.create_r_port(name, port_interface, com_spec, allow_unconnected, **kwargs)
 
     def create_pr_port(self,
                        name: str,
-                       port_interface_ref: PortInterfaceRef | None = None,
-                       com_spec: RequirePortComSpec | list[RequirePortComSpec] | None = None,
+                       port_interface: PortInterface | None = None,
+                       provided_com_spec: ProvidePortComSpec | list[ProvidePortComSpec] | None = None,
+                       required_com_spec: RequirePortComSpec | list[RequirePortComSpec] | None = None,
                        **kwargs) -> PRPortPrototype:
         """
         #convenience-method
 
         Creates a new pr-port and adds it to the internal list of ports
         """
-        port = PRPortPrototype(name, port_interface_ref, com_spec, **kwargs)
+        if provided_com_spec is not None:
+            if isinstance(provided_com_spec, dict):
+                provided_com_spec = ProvidePortComSpec.make_from_port_interface(port_interface, **provided_com_spec)
+                assert provided_com_spec is not None
+        if required_com_spec is not None:
+            if isinstance(required_com_spec, dict):
+                required_com_spec = RequirePortComSpec.make_from_port_interface(port_interface, **required_com_spec)
+                assert required_com_spec is not None
+        port = PRPortPrototype(name, port_interface.ref(), provided_com_spec, required_com_spec, **kwargs)
         self.append_port(port)
         return port
+
+    def find_r_port(self, port_name: str) -> RequirePortPrototype | PRPortPrototype | None:
+        """
+        Finds r-port by name
+        """
+        for port in self.ports:
+            if isinstance(port, (RequirePortPrototype, PRPortPrototype)) and port.name == port_name:
+                return port
+        return None
+
+    def find_p_port(self, port_name: str) -> ProvidePortPrototype | PRPortPrototype | None:
+        """
+        Finds p-port by name
+        """
+        for port in self.ports:
+            if isinstance(port, (ProvidePortPrototype, PRPortPrototype)) and port.name == port_name:
+                return port
+        return None
+
+    def get_data_element_in_port(self,
+                                 port: RequirePortPrototype | ProvidePortPrototype,
+                                 data_element_name: str | None = None,
+                                 ) -> VariableDataPrototype | None:
+        """
+        Finds data element in given port
+        """
+        workspace = port.root_collection()
+        assert workspace is not None
+        port_interface = workspace.find(port.port_interface_ref)
+        if port_interface is None:
+            raise ar_except.InvalidReferenceError(str(port.port_interface_ref))
+        if isinstance(port_interface, SenderReceiverInterface):
+            if not data_element_name:
+                if not len(port_interface.data_elements) == 1:
+                    msg = "data_element_name: Undefined value is not allowed when "\
+                          "the port interface has more than one data element"
+                    raise ValueError(msg)
+                return port_interface.data_elements[0]
+            else:
+                for elem in port_interface.data_elements:
+                    if elem.name == data_element_name:
+                        return elem
+        else:
+            raise TypeError(f"Only SenderReceiverInterface is currently supported, got {str(type(port_interface))}")
+        return None
+
+    def get_operation_in_port(self,
+                              port: PortPrototype,
+                              operation_name: str
+                              ) -> ClientServerOperation:
+        """
+        Finds client-server operation in given port
+        """
+        workspace = port.root_collection()
+        assert workspace is not None
+        port_interface = workspace.find(port.port_interface_ref)
+        if port_interface is None:
+            raise ar_except.InvalidReferenceError(str(port.port_interface_ref))
+        if isinstance(port_interface, ClientServerInterface):
+            if not operation_name:
+                if not len(port_interface.operations) == 1:
+                    msg = "operation_name: Undefined value is not allowed when "\
+                          "the port interface has more than one operation"
+                    raise ValueError(msg)
+                return port_interface.operations[0]
+            else:
+                for operation in port_interface.operations:
+                    if operation.name == operation_name:
+                        return operation
+        else:
+            raise TypeError(f"port: '{port.name}' doesn't reference port with ClientServerInterface")
+        return None
+
+    def get_mode_declaration_group_in_port(self,
+                                           port: PortPrototype,
+                                           ) -> ModeDeclarationGroupPrototype | None:
+        """
+        Finds mode declaration group in given port
+        """
+        workspace = port.root_collection()
+        assert workspace is not None
+        port_interface = workspace.find(port.port_interface_ref)
+        if port_interface is None:
+            raise ar_except.InvalidReferenceError(str(port.port_interface_ref))
+        if isinstance(port_interface, ModeSwitchInterface):
+            return port_interface.mode_group
+        else:
+            raise TypeError(f"port: Expected a port referencing a ModeSwitchInterface, got {str(type(port_interface))}")
+        return None
 
 
 class AtomicSoftwareComponentType(SwComponentType):
@@ -5428,6 +5587,7 @@ class VariableInAtomicSWCTypeInstanceRef(ARObject):
         self.context_data_prototype_refs: list[ApplicationCompositeElementDataPrototypeRef] = []
         # .TARGET-DATA-PROTOTYPE-REF
         self.target_data_prototype_ref: DataPrototypeRef | None = None
+
         self._assign_optional_strict("port_prototype_ref", port_prototype_ref, PortPrototypeRef)
         self._assign_optional_strict("root_variable_data_prototype_ref",
                                      root_variable_data_prototype_ref, VariableDataPrototypeRef)
@@ -5492,8 +5652,11 @@ class VariableAccess(Identifiable):
                  scope: ar_enum.VariableAccessScope | None = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
-        self.accessed_variable: AutosarVariableRef | None = None  # .ACCESSED-VARIABLE
-        self.scope: ar_enum.VariableAccessScope | None = None  # .SCOPE
+        # .ACCESSED-VARIABLE
+        self.accessed_variable: AutosarVariableRef | None = None
+        # .SCOPE
+        self.scope: ar_enum.VariableAccessScope | None = None
+
         # .VARIATION-POINT not supported
         self._assign_optional_strict("accessed_variable", accessed_variable, AutosarVariableRef)
         self._assign_optional("scope", scope, ar_enum.VariableAccessScope)
@@ -6054,8 +6217,8 @@ class TimingEvent(RteEvent):
     def __init__(self,
                  name: str,
                  start_on_event: RunnableEntityRef | str | None = None,
-                 offset: int | float | None = None,
                  period: int | float | None = None,
+                 offset: int | float | None = None,
                  **kwargs) -> None:
         super().__init__(name, start_on_event, **kwargs)
         # .OFFSET
@@ -6133,6 +6296,14 @@ class SwcInternalBehavior(InternalBehavior):
             else:
                 self.append_event(events)
 
+    def _get_valid_parent(self) -> SwComponentType:
+        """
+        Verifies that this object has valid SoftwareComponent as parent before returning it
+        """
+        if self.parent is None or not isinstance(self.parent, SwComponentType):
+            raise RuntimeError("Behavior object doesn't have a valid parent")
+        return self.parent
+
     def ref(self) -> SwcInternalBehaviorRef | None:
         """
         Returns a reference to this element or
@@ -6172,7 +6343,7 @@ class SwcInternalBehavior(InternalBehavior):
                         sw_addr_method: str | SwAddrMethodRef | None = None,
                         **kwargs) -> RunnableEntity:
         """
-        Creates a new runnable in this SwcInternalBehavior object
+        Adds a new RunnableEntity to this object
         """
         data = {"activation_reasons": activation_reasons,
                 "can_enter_leave": can_enter_leave,
@@ -6185,3 +6356,321 @@ class SwcInternalBehavior(InternalBehavior):
         runnable = RunnableEntity(name, **data)
         self.append_runnable(runnable)
         return runnable
+
+    def find_runnable(self, name: str) -> RunnableEntity | None:
+        """
+        Find runnable by name. Returns None if no runnable is found.
+        """
+        for runnable in self.runnables:
+            if runnable.name == name:
+                return runnable
+        return None
+
+    def _make_unique_event_name(self, event_name: str) -> str:
+        """
+        Checks if event_name is unique in internal event list.
+        If not, then it automatically starts to add an integer-based name suffix ("_0", "_1" etc.).
+        Calling this function could potentially invalidate existing event references.
+        Note: Not yet implemented
+        """
+        # TODO: Implement this function
+        return event_name
+
+    def create_background_event(self,
+                                event_name: str,
+                                runnable_name: str,
+                                **kwargs
+                                ) -> BackgroundEvent:
+        """
+        Adds a new BackgroundEvent to this SwcInternalBehavior object.
+        """
+        runnable = self.find_runnable(runnable_name)
+        if runnable is None:
+            raise KeyError(f"Found no runnable with name '{runnable_name}'")
+        unique_event_name = self._make_unique_event_name(event_name)
+        event = BackgroundEvent(unique_event_name, runnable.ref(), **kwargs)
+        self.append_event(event)
+        return event
+
+    def create_data_receive_error_event(self,
+                                        event_name: str,
+                                        runnable_name: str,
+                                        port_data_element: str,
+                                        **kwargs
+                                        ) -> DataReceiveErrorEvent:
+        """
+        Adds a new DataReceiveErrorEvent to this SwcInternalBehavior object
+        port_data_element is a string with format '<PortName>/<DataElementName>' or
+        just '<PortName>' which can be used in the special situation when the port interface
+        only has a single data element.
+        """
+        swc = self._get_valid_parent()
+        runnable = self.find_runnable(runnable_name)
+        if runnable is None:
+            raise KeyError(f"Found no runnable with name '{runnable_name}'")
+        unique_event_name = self._make_unique_event_name(event_name)
+        name_parts = split_ref_strict(port_data_element)
+        if len(name_parts) == 1:
+            port_name, data_element_name = name_parts[0], None
+        else:
+            port_name, data_element_name = name_parts[0], name_parts[1]
+        context_port = swc.find_r_port(port_name)
+        if context_port is None:
+            raise ValueError(f"port_data_element: '{port_data_element}' does not name an existing R-PORT or PR-PORT")
+        target_data_element = swc.get_data_element_in_port(context_port, data_element_name)
+        if target_data_element is None:
+            msg = f"port_data_element: '{port_data_element}' does not name an existing data element in port interface"
+            raise ValueError(msg)
+        event = DataReceiveErrorEvent.make(unique_event_name,
+                                           runnable.ref(),
+                                           context_port.ref(),
+                                           target_data_element.ref(),
+                                           **kwargs)
+        self.append_event(event)
+        return event
+
+    def create_data_received_event(self,
+                                   event_name: str,
+                                   runnable_name: str,
+                                   data_element_ref: str,
+                                   **kwargs
+                                   ) -> DataReceivedEvent:
+        """
+        Adds a new DataReceivedEvent to this SwcInternalBehavior object
+        data_element_ref is a string with format '<PortName>/<DataElementName>' or
+        just '<PortName>' which can be used in the special situation when the port interface
+        only has a single data element.
+        """
+        swc = self._get_valid_parent()
+        runnable = self.find_runnable(runnable_name)
+        if runnable is None:
+            raise KeyError(f"Found no runnable with name '{runnable_name}'")
+        unique_event_name = self._make_unique_event_name(event_name)
+        name_parts = split_ref_strict(data_element_ref)
+        if len(name_parts) == 1:
+            port_name, data_element_name = name_parts[0], None
+        else:
+            port_name, data_element_name = name_parts[0], name_parts[1]
+        context_port = swc.find_r_port(port_name)
+        if context_port is None:
+            raise ValueError(f"data_element_ref: '{data_element_ref}' does not name an existing R-PORT or PR-PORT")
+        target_data_element = swc.get_data_element_in_port(context_port, data_element_name)
+        if target_data_element is None:
+            msg = f"data_element_ref: '{data_element_ref}' does not name an existing data element in port interface"
+            raise ValueError(msg)
+        event = DataReceivedEvent.make(unique_event_name,
+                                       runnable.ref(),
+                                       context_port.ref(),
+                                       target_data_element.ref(),
+                                       **kwargs)
+        self.append_event(event)
+        return event
+
+    def create_data_send_completed_event(self,
+                                         event_name: str,
+                                         runnable_name: str,
+                                         data_element_ref: str,
+                                         **kwargs
+                                         ) -> DataSendCompletedEvent:
+        """
+        Adds a new DataSendCompletedEvent to this SwcInternalBehavior object
+        data_element_ref is a string with format '<PortName>/<DataElementName>' or
+        just '<PortName>' which can be used in the special situation when the port interface
+        only has a single data element.
+        The given runnable must have a data send point referencing the port and data element.
+        Note: Unable to complete implementation. Requires support for port-access in runnables.
+        """
+        raise NotImplementedError("References to data send points are not yet supported")
+
+    def create_data_write_completed_event(self,
+                                          event_name: str,
+                                          runnable_name: str,
+                                          data_element_ref: str,
+                                          **kwargs
+                                          ) -> DataWriteCompletedEvent:
+        """
+        Adds a new DataWriteCompletedEvent to this SwcInternalBehavior object
+        data_element_ref is a string with format '<PortName>/<DataElementName>' or
+        just '<PortName>' which can be used in the special situation when the port interface
+        only has a single data element.
+        The given runnable must have a data send point referencing the port and data element.
+        Note: Not implemented due to lack of support for data write access
+        """
+        raise NotImplementedError("References to data write access are not yet supported")
+
+    def create_init_event(self,
+                          event_name: str,
+                          runnable_name: str,
+                          **kwargs
+                          ) -> InitEvent:
+        """
+        Adds a new InitEvent to this SwcInternalBehavior object
+        """
+        runnable = self.find_runnable(runnable_name)
+        if runnable is None:
+            raise KeyError(f"Found no runnable with name '{runnable_name}'")
+        unique_event_name = self._make_unique_event_name(event_name)
+        event = InitEvent(unique_event_name, runnable.ref(), **kwargs)
+        self.append_event(event)
+        return event
+
+    def create_operation_invoked_event(self,
+                                       event_name: str,
+                                       runnable_name: str,
+                                       operation_ref: str,
+                                       **kwargs
+                                       ) -> OperationInvokedEvent:
+        """
+        Adds a new OperationInvokedEvent to this object
+        operation_ref is a string with format <PortName>/<OperationName>
+        """
+        swc = self._get_valid_parent()
+        runnable = self.find_runnable(runnable_name)
+        if runnable is None:
+            raise KeyError(f"Found no runnable with name '{runnable_name}'")
+        unique_event_name = self._make_unique_event_name(event_name)
+        name_parts = split_ref_strict(operation_ref)
+        if len(name_parts) == 1:
+            port_name, operation_name = name_parts[0], None
+        else:
+            port_name, operation_name = name_parts[0], name_parts[1]
+        context_port = swc.find_p_port(port_name)
+        if context_port is None:
+            raise ValueError(f"port_name: '{port_name}' does not name an existing P-PORT or PR-PORT")
+        target_provided_operation = swc.get_operation_in_port(context_port, operation_name)
+        if target_provided_operation is None:
+            raise ValueError(f"operation_ref: '{operation_ref}' does not name a valid operation in port interface")
+        event = OperationInvokedEvent.make(unique_event_name,
+                                           runnable.ref(),
+                                           context_port.ref(),
+                                           target_provided_operation.ref(),
+                                           **kwargs)
+        self.append_event(event)
+        return event
+
+    def create_swc_mode_manager_error_event(self,
+                                            event_name: str,
+                                            runnable_name: str,
+                                            port_name: str,
+                                            **kwargs
+                                            ) -> SwcModeManagerErrorEvent:
+        """
+        Adds a new SwcModeManagerErrorEvent to this object
+        """
+        swc = self._get_valid_parent()
+        runnable = self.find_runnable(runnable_name)
+        if runnable is None:
+            raise KeyError(f"Found no runnable with name '{runnable_name}'")
+        unique_event_name = self._make_unique_event_name(event_name)
+        context_port = swc.find_p_port(port_name)
+        if context_port is None:
+            raise ValueError(f"port_name: '{port_name}' does not name an existing P-PORT or PR-PORT")
+        context_mode_declaration_group = swc.get_mode_declaration_group_in_port(context_port)
+        if context_mode_declaration_group is None:
+            msg = f"port_name: '{port_name}' does not name a valid ModeDeclarationGroupPrototype in port interface"
+            raise ValueError(msg)
+        event = SwcModeManagerErrorEvent.make(unique_event_name,
+                                              runnable.ref(),
+                                              context_port.ref(),
+                                              context_mode_declaration_group.ref(),
+                                              **kwargs)
+        self.append_event(event)
+        return event
+
+    def create_swc_mode_mode_switch_event(self,
+                                          event_name: str,
+                                          runnable_name: str,
+                                          mode_ref: str | list[str] | tuple[str, str],
+                                          activation: ar_enum.ModeActivationKind | None = None,
+                                          **kwargs
+                                          ) -> SwcModeSwitchEvent:
+        """
+        Adds a new SwcModeSwitchEvent to this SwcInternalBehavior object.
+        mode_ref is a string with format '<PortName>/<ModeDeclarationName>'.
+        mode_ref can also be a 2-element list or a 2-tuple containing strings with same format as above.
+        The second version is used for creating events for specific mode transitions.
+        """
+        swc = self._get_valid_parent()
+        workspace = swc.root_collection()
+        assert workspace is not None
+        runnable = self.find_runnable(runnable_name)
+        if runnable is None:
+            raise KeyError(f"Found no runnable with name '{runnable_name}'")
+        unique_event_name = self._make_unique_event_name(event_name)
+        if isinstance(mode_ref, str):
+            context_port, context_mode_declaration_group, target_mode_declaration = (
+                self._get_swc_mode_switch_event_args(workspace, swc, mode_ref))
+            event = SwcModeSwitchEvent.make(unique_event_name,
+                                            runnable.ref(),
+                                            activation,
+                                            context_port.ref(),
+                                            context_mode_declaration_group.ref(),
+                                            target_mode_declaration.ref(),
+                                            **kwargs)
+        elif isinstance(mode_ref, (list, tuple)):
+            if len(mode_ref) != 2:
+                raise ValueError("mode_ref: Must be exactly two elements in tuple or list")
+            instance_refs = []
+            for ref in mode_ref:
+                context_port, context_mode_declaration_group, target_mode_declaration = (
+                    self._get_swc_mode_switch_event_args(workspace, swc, ref))
+                instance_refs.append(RModeInAtomicSwcInstanceRef(context_port.ref(),
+                                                                 context_mode_declaration_group.ref(),
+                                                                 target_mode_declaration.ref()))
+            event = SwcModeSwitchEvent(unique_event_name,
+                                       runnable.ref(),
+                                       activation,
+                                       (instance_refs[0], instance_refs[1]),
+                                       **kwargs)
+        else:
+            raise TypeError(f"mode_ref: Unsupported type '{str(type(mode_ref))}'")
+        self.append_event(event)
+        return event
+
+    def create_timing_event(self,
+                            event_name: str,
+                            runnable_name: str,
+                            period: int | float | None = None,
+                            offset: int | float | None = None,
+                            **kwargs) -> TimingEvent:
+        """
+        Adds a new TimingEvent to this object
+        """
+        runnable = self.find_runnable(runnable_name)
+        if runnable is None:
+            raise KeyError(f"Found no runnable with name '{runnable_name}'")
+        unique_event_name = self._make_unique_event_name(event_name)
+        event = TimingEvent(unique_event_name, runnable.ref(), period, offset, **kwargs)
+        self.append_event(event)
+        return event
+
+    ModeSwitchEventArgsReturnType = tuple[RequirePortPrototype, ModeDeclarationGroupPrototype, ModeDeclaration]
+
+    def _get_swc_mode_switch_event_args(self,
+                                        workspace: PackageCollection,
+                                        swc: AtomicSoftwareComponentType,
+                                        mode_ref: str
+                                        ) -> ModeSwitchEventArgsReturnType:
+        """
+        Helper function for create_swc_mode_switch_event
+        """
+        name_parts = split_ref_strict(mode_ref)
+        if len(name_parts) != 2:
+            raise ValueError("port_mode: Formatting error, expected <PortName>/<MModeDeclarationName>")
+        else:
+            port_name, mode_declaration_name = name_parts[0], name_parts[1]
+        context_port = swc.find_r_port(port_name)
+        if context_port is None:
+            raise ValueError(f"port_mode: '{mode_ref}' does not name an existing R-PORT or PR-PORT")
+        context_mode_declaration_group = swc.get_mode_declaration_group_in_port(context_port)
+        if context_mode_declaration_group is None:
+            msg = f"port_mode: '{mode_ref}' does not name a valid ModeDeclarationGroupPrototype in port interface"
+            raise ValueError(msg)
+        target_mode_declaration_group: ModeDeclarationGroup | None
+        target_mode_declaration_group = workspace.find(context_mode_declaration_group.type_ref)
+        if target_mode_declaration_group is None:
+            raise ar_except.InvalidReferenceError(str(context_mode_declaration_group.type_ref))
+        target_mode_declaration: ModeDeclaration | None = target_mode_declaration_group.find(mode_declaration_name)
+        if target_mode_declaration is None:
+            raise ValueError(f"port_mode: '{mode_ref}' does not name a valid mode declaration in ModeDeclarationGroup")
+        return context_port, context_mode_declaration_group, target_mode_declaration

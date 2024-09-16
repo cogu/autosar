@@ -247,7 +247,7 @@ Below is a rough roadmap of planned releases.
 **v0.5.4:** SwcInternalBehavior - basics
 
 * Runnables
-* Basic event support (Init, Periodic, ModeSwitch)
+* Events
 
 **v0.5.5** SwcInternalBehavior - ports
 
