@@ -24,7 +24,7 @@ class InvalidationPolicy:
         self._handleInvalid = value
 
 class PortInterface(Element):
-    def __init__(self, name, isService=False, serviceKind = None, parent=None, adminData=None):
+    def __init__(self, name, isService=False, serviceKind=None, parent=None, adminData=None):
         super().__init__(name, parent, adminData)
         self.isService=bool(isService)
         self.serviceKind = serviceKind
@@ -328,13 +328,14 @@ class ModeSwitchInterface(PortInterface):
     def tag(self, version = None):  #pylint: disable=unused-argument
         return 'MODE-SWITCH-INTERFACE'
 
-    def __init__(self, name, isService=None, parent=None, adminData=None):
+    def __init__(self, name, isService=None, serviceKind=None, parent=None, adminData=None):
         """
         Arguments:
         name: <SHORT-NAME> (None or str)
         isService: <IS-SERVICE> (None or bool)
+        serviceKind: <SERVICE-KIND> (None or str)
         """
-        super().__init__(name, isService, parent,adminData)
+        super().__init__(name, isService, serviceKind, parent, adminData)
         self._modeGroup=None
 
     @property

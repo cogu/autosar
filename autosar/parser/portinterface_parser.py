@@ -220,7 +220,7 @@ class PortInterfacePackageParser(ElementParser):
 
     @parseElementUUID
     def parseParameterInterface(self,xmlRoot,parent=None):
-        (name, adminData, isService, xmlParameters) = (None, None, False, None)
+        (name, adminData, isService, xmlParameters, serviceKind) = (None, None, False, None, None)
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'SHORT-NAME':
                 name = self.parseTextNode(xmlElem)
@@ -231,11 +231,13 @@ class PortInterfacePackageParser(ElementParser):
                     isService = True
             elif xmlElem.tag == 'PARAMETERS':
                 xmlParameters = xmlElem
+            elif xmlElem.tag == 'SERVICE-KIND' and self.version >= 4.0:
+                serviceKind = self.parseTextNode(xmlElem)
             else:
                 raise NotImplementedError(xmlElem.tag)
 
         if (name is not None) and (xmlParameters is not None):
-            portInterface = autosar.portinterface.ParameterInterface(name, isService, parent, adminData)
+            portInterface = autosar.portinterface.ParameterInterface(name, isService, serviceKind, parent, adminData)
             for xmlChild in xmlParameters.findall('./*'):
                 if xmlChild.tag == 'PARAMETER-DATA-PROTOTYPE':
                     parameter = self._parseParameterDataPrototype(xmlChild, portInterface)
@@ -247,7 +249,7 @@ class PortInterfacePackageParser(ElementParser):
 
     @parseElementUUID
     def parseModeSwitchInterface(self,xmlRoot,parent=None):
-        (name, adminData, desc, isService, xmlModeGroup) = (None, None, None, False, None)
+        (name, adminData, desc, isService, xmlModeGroup, serviceKind) = (None, None, None, False, None, None)
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'SHORT-NAME':
                 name = self.parseTextNode(xmlElem)
@@ -258,11 +260,13 @@ class PortInterfacePackageParser(ElementParser):
                     isService = True
             elif xmlElem.tag == 'MODE-GROUP':
                 xmlModeGroup = xmlElem
+            elif xmlElem.tag == 'SERVICE-KIND' and self.version >= 4.0:
+                serviceKind = self.parseTextNode(xmlElem)            
             else:
                 raise NotImplementedError(xmlElem.tag)
 
         if (name is not None) and (xmlModeGroup is not None):
-            portInterface = autosar.portinterface.ModeSwitchInterface(name, isService, parent, adminData)
+            portInterface = autosar.portinterface.ModeSwitchInterface(name, isService, serviceKind, parent, adminData)
             portInterface.modeGroup=self._parseModeGroup(xmlModeGroup, portInterface)
             return portInterface
 
