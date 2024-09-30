@@ -190,6 +190,10 @@ class BaseParser:
 
     def parseNumberNode(self, xmlElem):
         textValue = self.parseTextNode(xmlElem)
+        
+        if textValue is None:
+            return None
+        
         retval = None
         try:
             retval = int(textValue)
