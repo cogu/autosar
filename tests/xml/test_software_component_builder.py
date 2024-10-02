@@ -389,131 +389,143 @@ class TestEventCreaterAPI(unittest.TestCase):
 
     def test_create_background_event(self):
         workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("background_event_prefix", "BT_")
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
         behavior.create_runnable("MyApplication_Background")
-        event = behavior.create_background_event("BGR_MyApplication_Background", "MyApplication_Background")
+        event = behavior.create_background_event("MyApplication_Background")
         self.assertIsInstance(event, ar_element.BackgroundEvent)
+        self.assertEqual(event.name, "BT_MyApplication_Background")
         self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/MyApplication_Background")
 
     def test_create_data_receive_error_event_using_port_name_only(self):
         workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("data_receive_error_event_prefix", "DRET_")
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
         behavior.create_runnable("EngineSpeed_Updated")
-        event = behavior.create_data_receive_error_event("RCVERR_EngineSpeed", "EngineSpeed_Updated", "EngineSpeed")
+        event = behavior.create_data_receive_error_event("EngineSpeed_Updated", "EngineSpeed")
         self.assertIsInstance(event, ar_element.DataReceiveErrorEvent)
+        self.assertEqual(event.name, "DRET_EngineSpeed_Updated_EngineSpeed_EngineSpeed")
         self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/EngineSpeed_Updated")
         self.assertEqual(str(event.data.context_port), "/ComponentTypes/MyApplication/EngineSpeed")
         self.assertEqual(str(event.data.target_data_element), "/PortInterfaces/EngineSpeed_I/EngineSpeed")
 
     def test_create_data_receive_error_event_using_port_and_data_element(self):
         workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("data_receive_error_event_prefix", "DRET_")
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
         behavior.create_runnable("EngineSpeed_Updated")
-        event = behavior.create_data_receive_error_event("RCVERR_EngineSpeed",
-                                                         "EngineSpeed_Updated",
-                                                         "EngineSpeed/EngineSpeed")
+        event = behavior.create_data_receive_error_event("EngineSpeed_Updated", "EngineSpeed/EngineSpeed")
         self.assertIsInstance(event, ar_element.DataReceiveErrorEvent)
+        self.assertEqual(event.name, "DRET_EngineSpeed_Updated_EngineSpeed_EngineSpeed")
         self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/EngineSpeed_Updated")
         self.assertEqual(str(event.data.context_port), "/ComponentTypes/MyApplication/EngineSpeed")
         self.assertEqual(str(event.data.target_data_element), "/PortInterfaces/EngineSpeed_I/EngineSpeed")
 
     def test_create_data_received_event_using_port_name_only(self):
         workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("data_receive_event_prefix", "DRT_")
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
         behavior.create_runnable("EngineSpeed_Updated")
-        event = behavior.create_data_received_event("RCV_EngineSpeed", "EngineSpeed_Updated", "EngineSpeed")
+        event = behavior.create_data_received_event("EngineSpeed_Updated", "EngineSpeed")
         self.assertIsInstance(event, ar_element.DataReceivedEvent)
+        self.assertEqual(event.name, "DRT_EngineSpeed_Updated_EngineSpeed_EngineSpeed")
         self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/EngineSpeed_Updated")
         self.assertEqual(str(event.data.context_port), "/ComponentTypes/MyApplication/EngineSpeed")
         self.assertEqual(str(event.data.target_data_element), "/PortInterfaces/EngineSpeed_I/EngineSpeed")
 
     def test_create_data_received_event_using_port_and_data_element(self):
         workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("data_receive_event_prefix", "DRT_")
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
         behavior.create_runnable("EngineSpeed_Updated")
-        event = behavior.create_data_received_event("RCV_EngineSpeed", "EngineSpeed_Updated", "EngineSpeed/EngineSpeed")
+        event = behavior.create_data_received_event("EngineSpeed_Updated", "EngineSpeed/EngineSpeed")
         self.assertIsInstance(event, ar_element.DataReceivedEvent)
+        self.assertEqual(event.name, "DRT_EngineSpeed_Updated_EngineSpeed_EngineSpeed")
         self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/EngineSpeed_Updated")
         self.assertEqual(str(event.data.context_port), "/ComponentTypes/MyApplication/EngineSpeed")
         self.assertEqual(str(event.data.target_data_element), "/PortInterfaces/EngineSpeed_I/EngineSpeed")
 
     def test_create_init_event(self):
         workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("init_event_prefix", "IT_")
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
         behavior.create_runnable("MyApplication_Init")
-        event = behavior.create_background_event("INIT_MyApplication_Init", "MyApplication_Init")
-        self.assertIsInstance(event, ar_element.BackgroundEvent)
+        event = behavior.create_init_event("MyApplication_Init")
+        self.assertIsInstance(event, ar_element.InitEvent)
+        self.assertEqual(event.name, "IT_MyApplication_Init")
         self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/MyApplication_Init")
 
     def test_create_operation_invoked_event_port_name_only(self):
         workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("operation_invoked_event_prefix", "OIT_")
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
         behavior.create_runnable("MyApplication_GetTime")
-        event = behavior.create_operation_invoked_event("CALL_MyApplication_GetTime",
-                                                        "MyApplication_GetTime",
-                                                        "Timer")
+        event = behavior.create_operation_invoked_event("MyApplication_GetTime", "Timer")
         self.assertIsInstance(event, ar_element.OperationInvokedEvent)
+        self.assertEqual(event.name, "OIT_MyApplication_GetTime_Timer_GetTime")
         self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/MyApplication_GetTime")
         self.assertEqual(str(event.operation.context_port), "/ComponentTypes/MyApplication/Timer")
         self.assertEqual(str(event.operation.target_provided_operation), "/PortInterfaces/Timer_I/GetTime")
 
     def test_create_operation_invoked_event_with_operation_name(self):
         workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("operation_invoked_event_prefix", "OIT_")
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
         behavior.create_runnable("MyApplication_GetTime")
-        event = behavior.create_operation_invoked_event("CALL_MyApplication_GetTime",
-                                                        "MyApplication_GetTime",
-                                                        "Timer/GetTime")
+        event = behavior.create_operation_invoked_event("MyApplication_GetTime", "Timer/GetTime")
         self.assertIsInstance(event, ar_element.OperationInvokedEvent)
+        self.assertEqual(event.name, "OIT_MyApplication_GetTime_Timer_GetTime")
         self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/MyApplication_GetTime")
         self.assertEqual(str(event.operation.context_port), "/ComponentTypes/MyApplication/Timer")
         self.assertEqual(str(event.operation.target_provided_operation), "/PortInterfaces/Timer_I/GetTime")
 
     def test_create_swc_mode_manager_error_event(self):
         workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("swc_mode_manager_error_event_prefix", "MMET_")
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
         behavior.create_runnable("MyApplication_ApplicationModeError")
-        event = behavior.create_swc_mode_manager_error_event("MDERR_MyApplication_ApplicationModeError",
-                                                             "MyApplication_ApplicationModeError",
-                                                             "ApplicationMode")
+        event = behavior.create_swc_mode_manager_error_event("MyApplication_ApplicationModeError", "ApplicationMode")
         self.assertIsInstance(event, ar_element.SwcModeManagerErrorEvent)
+        self.assertEqual(event.name, "MMET_MyApplication_ApplicationModeError_ApplicationMode_mode",)
         self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/MyApplication_ApplicationModeError")
         self.assertEqual(str(event.mode_group.context_port), "/ComponentTypes/MyApplication/ApplicationMode")
         self.assertEqual(str(event.mode_group.context_mode_declaration_group_prototype),
                          "/PortInterfaces/ApplicationMode_I/mode")
 
-    def test_create_swc_mode_mode_switch_event(self):
+    def test_create_swc_mode_switch_event(self):
         workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("swc_mode_switch_event_prefix", "MST_")
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
         behavior.create_runnable("MyApplication_Init")
-        event = behavior.create_swc_mode_mode_switch_event("MSW_MyApplication_Init",
-                                                           "MyApplication_Init",
+        event = behavior.create_swc_mode_mode_switch_event("MyApplication_Init",
                                                            "VehicleMode/ACCESSORY")
         self.assertIsInstance(event, ar_element.SwcModeSwitchEvent)
+        self.assertEqual(event.name, "MST_MyApplication_Init",)
         self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/MyApplication_Init")
         self.assertEqual(str(event.mode.context_port), "/ComponentTypes/MyApplication/VehicleMode")
         self.assertEqual(str(event.mode.context_mode_declaration_group_prototype), "/PortInterfaces/VehicleMode_I/mode")
         self.assertEqual(str(event.mode.target_mode_declaration), "/ModeDeclarations/VehicleMode/ACCESSORY")
 
-    def test_create_swc_mode_mode_switch_event_with_transition(self):
+    def test_create_swc_mode_switch_event_with_transition(self):
         workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("swc_mode_switch_event_prefix", "MST_")
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
         behavior.create_runnable("MyApplication_Init")
-        event = behavior.create_swc_mode_mode_switch_event("MSW_MyApplication_Init",
-                                                           "MyApplication_Init",
+        event = behavior.create_swc_mode_mode_switch_event("MyApplication_Init",
                                                            ["VehicleMode/PARKING", "VehicleMode/ACCESSORY"])
         self.assertIsInstance(event, ar_element.SwcModeSwitchEvent)
+        self.assertEqual(event.name, "MST_MyApplication_Init",)
         self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/MyApplication_Init")
         self.assertEqual(str(event.mode[0].context_port), "/ComponentTypes/MyApplication/VehicleMode")
         self.assertEqual(str(event.mode[0].context_mode_declaration_group_prototype),
@@ -526,11 +538,13 @@ class TestEventCreaterAPI(unittest.TestCase):
 
     def test_create_timing_event_without_offset(self):
         workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("timing_event_prefix", "TMT_")
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
         behavior.create_runnable("MyApplication_Run")
-        event = behavior.create_timing_event("TM_MyApplication_Run", "MyApplication_Run", 0.02)
+        event = behavior.create_timing_event("MyApplication_Run", 0.02)
         self.assertIsInstance(event, ar_element.TimingEvent)
+        self.assertEqual(event.name, "TMT_MyApplication_Run")
         self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/MyApplication_Run")
         self.assertAlmostEqual(event.period, 0.02)
         self.assertIsNone(event.offset)

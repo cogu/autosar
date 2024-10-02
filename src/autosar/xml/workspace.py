@@ -79,12 +79,12 @@ class Workspace(ar_element.PackageCollection):
     """
 
     def __init__(self, config_file_path: str | None = None, document_root: str | None = None) -> None:
+        super().__init__(behavior_settings=ar_element.BehaviorSettings())
         self.namespaces: dict[str, Namespace] = {}
         self.documents: list[DocumentConfig] = []
         self.document_mappings: list[PackageToDocumentMapping] = []
         self.document_root = document_root
         self.package_map: dict[str, ar_element.Package] = {}  # Each key is user-defined
-        super().__init__()
         if config_file_path is not None:
             self.load_config(config_file_path)
 
@@ -219,6 +219,9 @@ class Workspace(ar_element.PackageCollection):
             if document_mapping is not None:
                 for mapping in document_mapping.values():
                     self._create_document_mapping_from_config(mapping)
+            behavior_settings = config.get("behavior", None)
+            if behavior_settings is not None:
+                self.behavior_settings.update(behavior_settings)
 
     def _write_document_from_config(self,
                                     writer: Writer,
