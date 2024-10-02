@@ -146,5 +146,59 @@ class WorkspaceTests(unittest.TestCase):
             "/DataTypes")
 
 
+class BehaviorSettingsTests(unittest.TestCase):
+
+    def test_background_event_prefix(self):
+        workspace = ar_workspace.Workspace()
+        workspace.behavior_settings.set_value("background_event_prefix", "BT_")
+        self.assertEqual(workspace.behavior_settings.background_event_prefix, "BT_")
+
+    def test_data_receive_error_event_prefix(self):
+        workspace = ar_workspace.Workspace()
+        workspace.behavior_settings.set_value("data_receive_error_event_prefix", "DRET_")
+        self.assertEqual(workspace.behavior_settings.data_receive_error_event_prefix, "DRET_")
+
+    def test_data_receive_event_prefix(self):
+        workspace = ar_workspace.Workspace()
+        workspace.behavior_settings.set_value("data_receive_event_prefix", "DRT_")
+        self.assertEqual(workspace.behavior_settings.data_receive_event_prefix, "DRT_")
+
+    def test_init_event_prefix(self):
+        workspace = ar_workspace.Workspace()
+        workspace.behavior_settings.set_value("init_event_prefix", "IT_")
+        self.assertEqual(workspace.behavior_settings.init_event_prefix, "IT_")
+
+    def test_operation_invoked_event_prefix(self):
+        workspace = ar_workspace.Workspace()
+        workspace.behavior_settings.set_value("operation_invoked_event_prefix", "OIT_")
+        self.assertEqual(workspace.behavior_settings.operation_invoked_event_prefix, "OIT_")
+
+    def test_swc_mode_manager_error_event_prefix(self):
+        workspace = ar_workspace.Workspace()
+        workspace.behavior_settings.set_value("swc_mode_manager_error_event_prefix", "MMET_")
+        self.assertEqual(workspace.behavior_settings.swc_mode_manager_error_event_prefix, "MMET_")
+
+    def test_swc_mode_switch_event_prefix(self):
+        workspace = ar_workspace.Workspace()
+        workspace.behavior_settings.set_value("swc_mode_switch_event_prefix", "MST_")
+        self.assertEqual(workspace.behavior_settings.swc_mode_switch_event_prefix, "MST_")
+
+    def test_timing_event_prefix(self):
+        workspace = ar_workspace.Workspace()
+        workspace.behavior_settings.set_value("timing_event_prefix", "TMT_")
+        self.assertEqual(workspace.behavior_settings.timing_event_prefix, "TMT_")
+
+    def test_set_multiple(self):
+        workspace = ar_workspace.Workspace()
+        workspace.behavior_settings.update({"init_event_prefix": "IT_",
+                                            "operation_invoked_event_prefix": "OIT_",
+                                            "swc_mode_switch_event_prefix": "MST_",
+                                            "timing_event_prefix": "TMT_"})
+        self.assertEqual(workspace.behavior_settings.init_event_prefix, "IT_")
+        self.assertEqual(workspace.behavior_settings.operation_invoked_event_prefix, "OIT_")
+        self.assertEqual(workspace.behavior_settings.swc_mode_switch_event_prefix, "MST_")
+        self.assertEqual(workspace.behavior_settings.timing_event_prefix, "TMT_")
+
+
 if __name__ == '__main__':
     unittest.main()
