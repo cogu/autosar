@@ -4,6 +4,35 @@ Application component example
 import os
 import autosar
 import autosar.xml.element as ar_element
+import autosar.xml.workspace as ar_workspace
+
+
+def create_package_map(workspace: ar_workspace.Workspace):
+    """
+    Creates package map in workspace
+    """
+    workspace.create_package_map({"PlatformBaseTypes": "AUTOSAR_Platform/BaseTypes",
+                                  "PlatformImplementationDataTypes": "AUTOSAR_Platform/ImplementationDataTypes",
+                                  "PlatformDataConstraints": "AUTOSAR_Platform/DataConstraints",
+                                  "PlatformCompuMethods": "AUTOSAR_Platform/CompuMethods",
+                                  "Constants": "Constants",
+                                  "PortInterfaces": "PortInterfaces",
+                                  "ComponentTypes": "ComponentTypes"})
+
+
+def create_behavior_settings(workspace: ar_workspace.Workspace):
+    """
+    Define default event name prefixess
+    """
+    workspace.behavior_settings.update({
+        "background_event_prefix": "BT_",
+        "data_receive_error_event_prefix": "DRET_",
+        "data_receive_event_prefix": "DRT_",
+        "init_event_prefix": "IT_",
+        "operation_invoked_event_prefix": "OIT_",
+        "swc_mode_manager_error_event_prefix": "MMET_",
+        "swc_mode_switch_event_prefix": "MST_",
+        "timing_event_prefix": "TMT_"})
 
 
 def create_platform_types(workspace: autosar.xml.Workspace):
@@ -97,6 +126,7 @@ def create_application_component(workspace: autosar.xml.Workspace):
     vehicle_speed_interface = workspace.find_element("PortInterfaces", "VehicleSpeed_I")
     vehicle_speed_init = workspace.find_element("Constants", "VehicleSpeed_IV")
     swc = ar_element.ApplicationSoftwareComponentType("SenderComponent")
+    workspace.add_element("ComponentTypes", swc)
     swc.create_provide_port("EngineSpeed", engine_speed_interface, com_spec={"init_value": engine_speed_init.ref(),
                                                                              "uses_end_to_end_protection": False,
                                                                              })
@@ -104,7 +134,15 @@ def create_application_component(workspace: autosar.xml.Workspace):
                                                                                "uses_end_to_end_protection": False,
                                                                                })
     swc.create_internal_behavior()
-    workspace.add_element("ComponentTypes", swc)
+
+    init_runnable_name = swc.name + '_Init'
+    periodic_runnable_name = swc.name + '_Run'
+    behavior = swc.create_internal_behavior()
+    behavior.create_runnable(init_runnable_name)
+    behavior.create_runnable(periodic_runnable_name)
+    behavior.create_init_event(init_runnable_name)
+    behavior.create_timing_event(periodic_runnable_name, 0.1)
+
     impl = ar_element.SwcImplementation("SenderComponent_Implementation", behavior_ref=swc.internal_behavior.ref())
     workspace.add_element("ComponentTypes", impl)
 
@@ -128,13 +166,8 @@ def main():
     Main
     """
     workspace = autosar.xml.Workspace()
-    workspace.create_package_map({"PlatformBaseTypes": "AUTOSAR_Platform/BaseTypes",
-                                  "PlatformImplementationDataTypes": "AUTOSAR_Platform/ImplementationDataTypes",
-                                  "PlatformDataConstraints": "AUTOSAR_Platform/DataConstraints",
-                                  "PlatformCompuMethods": "AUTOSAR_Platform/CompuMethods",
-                                  "Constants": "Constants",
-                                  "PortInterfaces": "PortInterfaces",
-                                  "ComponentTypes": "ComponentTypes"})
+    create_package_map(workspace)
+    create_behavior_settings(workspace)
     create_platform_types(workspace)
     create_sender_receiver_port_interfaces(workspace)
     create_client_server_interfaces(workspace)

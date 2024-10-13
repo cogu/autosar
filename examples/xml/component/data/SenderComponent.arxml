@@ -41,6 +41,25 @@
           <INTERNAL-BEHAVIORS>
             <SWC-INTERNAL-BEHAVIOR>
               <SHORT-NAME>SenderComponent_InternalBehavior</SHORT-NAME>
+              <EVENTS>
+                <INIT-EVENT>
+                  <SHORT-NAME>IT_SenderComponent_Init</SHORT-NAME>
+                  <START-ON-EVENT-REF DEST="RUNNABLE-ENTITY">/ComponentTypes/SenderComponent/SenderComponent_InternalBehavior/SenderComponent_Init</START-ON-EVENT-REF>
+                </INIT-EVENT>
+                <TIMING-EVENT>
+                  <SHORT-NAME>TMT_SenderComponent_Run</SHORT-NAME>
+                  <START-ON-EVENT-REF DEST="RUNNABLE-ENTITY">/ComponentTypes/SenderComponent/SenderComponent_InternalBehavior/SenderComponent_Run</START-ON-EVENT-REF>
+                  <PERIOD>0.1</PERIOD>
+                </TIMING-EVENT>
+              </EVENTS>
+              <RUNNABLES>
+                <RUNNABLE-ENTITY>
+                  <SHORT-NAME>SenderComponent_Init</SHORT-NAME>
+                </RUNNABLE-ENTITY>
+                <RUNNABLE-ENTITY>
+                  <SHORT-NAME>SenderComponent_Run</SHORT-NAME>
+                </RUNNABLE-ENTITY>
+              </RUNNABLES>
             </SWC-INTERNAL-BEHAVIOR>
           </INTERNAL-BEHAVIORS>
         </APPLICATION-SW-COMPONENT-TYPE>

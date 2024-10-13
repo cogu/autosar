@@ -11,9 +11,10 @@ def create_mode_declaration_groups(workspace: autosar.xml.Workspace):
     Creates mode declarations
     """
     vehicle_mode = ar_element.ModeDeclarationGroup("VehicleMode", ["OFF",
+                                                                   "PARKING",
                                                                    "ACCESSORY",
-                                                                   "RUNNING",
-                                                                   "CRANKING"])
+                                                                   "CRANKING",
+                                                                   "RUNNING"])
     workspace.add_element("ModeDeclarations", vehicle_mode)
     vehicle_mode.initial_mode_ref = vehicle_mode.find("OFF").ref()
 

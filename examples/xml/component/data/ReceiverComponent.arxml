@@ -59,6 +59,25 @@
           <INTERNAL-BEHAVIORS>
             <SWC-INTERNAL-BEHAVIOR>
               <SHORT-NAME>ReceiverComponent_InternalBehavior</SHORT-NAME>
+              <EVENTS>
+                <INIT-EVENT>
+                  <SHORT-NAME>IT_ReceiverComponent_Init</SHORT-NAME>
+                  <START-ON-EVENT-REF DEST="RUNNABLE-ENTITY">/ComponentTypes/ReceiverComponent/ReceiverComponent_InternalBehavior/ReceiverComponent_Init</START-ON-EVENT-REF>
+                </INIT-EVENT>
+                <TIMING-EVENT>
+                  <SHORT-NAME>TMT_ReceiverComponent_Run</SHORT-NAME>
+                  <START-ON-EVENT-REF DEST="RUNNABLE-ENTITY">/ComponentTypes/ReceiverComponent/ReceiverComponent_InternalBehavior/ReceiverComponent_Run</START-ON-EVENT-REF>
+                  <PERIOD>0.1</PERIOD>
+                </TIMING-EVENT>
+              </EVENTS>
+              <RUNNABLES>
+                <RUNNABLE-ENTITY>
+                  <SHORT-NAME>ReceiverComponent_Init</SHORT-NAME>
+                </RUNNABLE-ENTITY>
+                <RUNNABLE-ENTITY>
+                  <SHORT-NAME>ReceiverComponent_Run</SHORT-NAME>
+                </RUNNABLE-ENTITY>
+              </RUNNABLES>
             </SWC-INTERNAL-BEHAVIOR>
           </INTERNAL-BEHAVIORS>
         </APPLICATION-SW-COMPONENT-TYPE>

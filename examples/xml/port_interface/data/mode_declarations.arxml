@@ -12,13 +12,16 @@
               <SHORT-NAME>OFF</SHORT-NAME>
             </MODE-DECLARATION>
             <MODE-DECLARATION>
+              <SHORT-NAME>PARKING</SHORT-NAME>
+            </MODE-DECLARATION>
+            <MODE-DECLARATION>
               <SHORT-NAME>ACCESSORY</SHORT-NAME>
             </MODE-DECLARATION>
             <MODE-DECLARATION>
-              <SHORT-NAME>RUNNING</SHORT-NAME>
+              <SHORT-NAME>CRANKING</SHORT-NAME>
             </MODE-DECLARATION>
             <MODE-DECLARATION>
-              <SHORT-NAME>CRANKING</SHORT-NAME>
+              <SHORT-NAME>RUNNING</SHORT-NAME>
             </MODE-DECLARATION>
           </MODE-DECLARATIONS>
         </MODE-DECLARATION-GROUP>

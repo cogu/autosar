@@ -33,3 +33,13 @@
     element_types = "SwComponentType"
     suffix_filters = ["_Implementation"]
 
+[behavior]
+    background_event_prefix = "BT_"
+    data_receive_error_event_prefix = "DRET_"
+    data_receive_event_prefix = "DRT_"
+    init_event_prefix = "IT_"
+    operation_invoked_event_prefix = "OIT_"
+    swc_mode_manager_error_event_prefix = "MMET_"
+    swc_mode_switch_event_prefix = "MST_"
+    timing_event_prefix = "TMT_"
+

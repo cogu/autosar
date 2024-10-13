@@ -25,6 +25,39 @@
           <INTERNAL-BEHAVIORS>
             <SWC-INTERNAL-BEHAVIOR>
               <SHORT-NAME>TimerComponent_InternalBehavior</SHORT-NAME>
+              <EVENTS>
+                <INIT-EVENT>
+                  <SHORT-NAME>IT_TimerComponent_Init</SHORT-NAME>
+                  <START-ON-EVENT-REF DEST="RUNNABLE-ENTITY">/ComponentTypes/TimerComponent/TimerComponent_InternalBehavior/TimerComponent_Init</START-ON-EVENT-REF>
+                </INIT-EVENT>
+                <OPERATION-INVOKED-EVENT>
+                  <SHORT-NAME>OIT_TimerComponent_FreeRunningTimer_GetTime_FreeRunningTimer_GetTime</SHORT-NAME>
+                  <START-ON-EVENT-REF DEST="RUNNABLE-ENTITY">/ComponentTypes/TimerComponent/TimerComponent_InternalBehavior/TimerComponent_FreeRunningTimer_GetTime</START-ON-EVENT-REF>
+                  <OPERATION-IREF>
+                    <CONTEXT-P-PORT-REF DEST="P-PORT-PROTOTYPE">/ComponentTypes/TimerComponent/FreeRunningTimer</CONTEXT-P-PORT-REF>
+                    <TARGET-PROVIDED-OPERATION-REF DEST="CLIENT-SERVER-OPERATION">/PortInterfaces/FreeRunningTimer_I/GetTime</TARGET-PROVIDED-OPERATION-REF>
+                  </OPERATION-IREF>
+                </OPERATION-INVOKED-EVENT>
+                <OPERATION-INVOKED-EVENT>
+                  <SHORT-NAME>OIT_TimerComponent_FreeRunningTimer_IsTimerElapsed_FreeRunningTimer_IsTimerElapsed</SHORT-NAME>
+                  <START-ON-EVENT-REF DEST="RUNNABLE-ENTITY">/ComponentTypes/TimerComponent/TimerComponent_InternalBehavior/TimerComponent_FreeRunningTimer_IsTimerElapsed</START-ON-EVENT-REF>
+                  <OPERATION-IREF>
+                    <CONTEXT-P-PORT-REF DEST="P-PORT-PROTOTYPE">/ComponentTypes/TimerComponent/FreeRunningTimer</CONTEXT-P-PORT-REF>
+                    <TARGET-PROVIDED-OPERATION-REF DEST="CLIENT-SERVER-OPERATION">/PortInterfaces/FreeRunningTimer_I/IsTimerElapsed</TARGET-PROVIDED-OPERATION-REF>
+                  </OPERATION-IREF>
+                </OPERATION-INVOKED-EVENT>
+              </EVENTS>
+              <RUNNABLES>
+                <RUNNABLE-ENTITY>
+                  <SHORT-NAME>TimerComponent_Init</SHORT-NAME>
+                </RUNNABLE-ENTITY>
+                <RUNNABLE-ENTITY>
+                  <SHORT-NAME>TimerComponent_FreeRunningTimer_GetTime</SHORT-NAME>
+                </RUNNABLE-ENTITY>
+                <RUNNABLE-ENTITY>
+                  <SHORT-NAME>TimerComponent_FreeRunningTimer_IsTimerElapsed</SHORT-NAME>
+                </RUNNABLE-ENTITY>
+              </RUNNABLES>
             </SWC-INTERNAL-BEHAVIOR>
           </INTERNAL-BEHAVIORS>
         </APPLICATION-SW-COMPONENT-TYPE>
