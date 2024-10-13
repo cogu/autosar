@@ -6421,8 +6421,36 @@ class SwcInternalBehavior(InternalBehavior):
         Calling this function could potentially invalidate existing event references.
         Note: Not yet implemented
         """
-        # TODO: Implement this function
-        return event_name
+        return self._make_unique_name_in_list(self.events, event_name)
+
+    def _make_unique_name_in_list(self, elements: list[Referrable], base_name: str):
+        """
+        Attempts to find a unique name in the list of elements.
+        This function can modify names in the given list.
+        If an element with the name base_name already exists in the list it will
+        append "_0" to the existing element and any newly added element will have
+        its suffix automatically increased by 1.
+        Returns a new name which is guaranteed to be unique in the given list
+        """
+        has_index = False
+        highest_index = 0
+        unpatched_elem: Referrable | None = None
+        expr = re.compile(base_name + r'_(\d+)')
+        for element in elements:
+            result = expr.match(element.name)
+            if result is not None:
+                has_index = True
+                index = int(result.group(1))
+                if index > highest_index:
+                    highest_index = index
+            elif element.name == base_name:
+                unpatched_elem = element
+        if unpatched_elem is not None:
+            unpatched_elem.name = '_'.join([unpatched_elem.name, '0'])
+        if has_index or unpatched_elem is not None:
+            return '_'.join([base_name, str(highest_index + 1)])
+        else:
+            return base_name
 
     def create_background_event(self,
                                 runnable_name: str,
@@ -6719,7 +6747,10 @@ class SwcInternalBehavior(InternalBehavior):
                 raise RuntimeError(msg)
         assert isinstance(event_name, str)
         unique_event_name = self._make_unique_event_name(event_name)
+        expected_formats = "Expected formats: '<PortName>', '<PortName>/<ModeDeclarationName>', tuple[str, str]"
         if isinstance(mode_ref, str):
+            if len(mode_ref) == 0:
+                raise ValueError("mode_ref: Invalid argument. " + expected_formats)
             context_port, context_mode_declaration_group, target_mode_declaration = (
                 self._get_swc_mode_switch_event_args(workspace, swc, mode_ref))
             event = SwcModeSwitchEvent.make(unique_event_name,
@@ -6734,11 +6765,16 @@ class SwcInternalBehavior(InternalBehavior):
                 raise ValueError("mode_ref: Must be exactly two elements in tuple or list")
             instance_refs = []
             for ref in mode_ref:
-                context_port, context_mode_declaration_group, target_mode_declaration = (
-                    self._get_swc_mode_switch_event_args(workspace, swc, ref))
-                instance_refs.append(RModeInAtomicSwcInstanceRef(context_port.ref(),
-                                                                 context_mode_declaration_group.ref(),
-                                                                 target_mode_declaration.ref()))
+                if isinstance(ref, str):
+                    if len(ref) == 0:
+                        raise ValueError("mode_ref: Invalid argument. " + expected_formats)
+                    context_port, context_mode_declaration_group, target_mode_declaration = (
+                        self._get_swc_mode_switch_event_args(workspace, swc, ref))
+                    instance_refs.append(RModeInAtomicSwcInstanceRef(context_port.ref(),
+                                                                     context_mode_declaration_group.ref(),
+                                                                     target_mode_declaration.ref()))
+                else:
+                    raise TypeError(f"mode_ref: Invalid type '{str(type(ref))}'. " + expected_formats)
             event = SwcModeSwitchEvent(unique_event_name,
                                        runnable.ref(),
                                        activation,
@@ -6788,15 +6824,14 @@ class SwcInternalBehavior(InternalBehavior):
         """
         name_parts = split_ref_strict(mode_ref)
         if len(name_parts) != 2:
-            raise ValueError("port_mode: Formatting error, expected <PortName>/<MModeDeclarationName>")
-        else:
-            port_name, mode_declaration_name = name_parts[0], name_parts[1]
+            raise ValueError("mode_ref: Formatting error, expected <PortName>/<ModeDeclarationName>")
+        port_name, mode_declaration_name = name_parts[0], name_parts[1]
         context_port = swc.find_r_port(port_name)
         if context_port is None:
-            raise ValueError(f"port_mode: '{mode_ref}' does not name an existing R-PORT or PR-PORT")
+            raise ValueError(f"mode_ref: '{mode_ref}' does not name an existing R-PORT or PR-PORT")
         context_mode_declaration_group = swc.get_mode_declaration_group_in_port(context_port)
         if context_mode_declaration_group is None:
-            msg = f"port_mode: '{mode_ref}' does not name a valid ModeDeclarationGroupPrototype in port interface"
+            msg = f"mode_ref: '{mode_ref}' does not name a valid ModeDeclarationGroupPrototype in port interface"
             raise ValueError(msg)
         target_mode_declaration_group: ModeDeclarationGroup | None
         target_mode_declaration_group = workspace.find(context_mode_declaration_group.type_ref)
@@ -6804,5 +6839,5 @@ class SwcInternalBehavior(InternalBehavior):
             raise ar_except.InvalidReferenceError(str(context_mode_declaration_group.type_ref))
         target_mode_declaration: ModeDeclaration | None = target_mode_declaration_group.find(mode_declaration_name)
         if target_mode_declaration is None:
-            raise ValueError(f"port_mode: '{mode_ref}' does not name a valid mode declaration in ModeDeclarationGroup")
+            raise ValueError(f"mode_ref: '{mode_ref}' does not name a valid mode declaration in ModeDeclarationGroup")
         return context_port, context_mode_declaration_group, target_mode_declaration

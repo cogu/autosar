@@ -362,7 +362,7 @@ class GenericComponentTypeTemplate(ar_template.ElementTemplate):
                  namespace_name: str,
                  create_func: CreateFuncType,
                  depends: list[TemplateBase] | None = None,
-                 append_to_package: bool = True) -> None:
+                 append_to_package: bool = False) -> None:
         super().__init__(element_name, namespace_name, ar_enum.PackageRole.COMPONENT_TYPE, depends, append_to_package)
         self.create_func = create_func
 

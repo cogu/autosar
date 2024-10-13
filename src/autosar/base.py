@@ -18,6 +18,8 @@ def split_ref_strict(ref: str) -> list[str] | None:
     sep = "/"
     if not isinstance(ref, str):
         raise TypeError("ref: Must be a string")
+    if len(ref) == 0:
+        raise ValueError("String cannot be empty")
     if ref[0] == sep:
         raise ValueError("ref: String cannot start with '/'")
     return ref.split(sep)

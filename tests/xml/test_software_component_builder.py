@@ -536,6 +536,32 @@ class TestEventCreaterAPI(unittest.TestCase):
                          "/PortInterfaces/VehicleMode_I/mode")
         self.assertEqual(str(event.mode[1].target_mode_declaration), "/ModeDeclarations/VehicleMode/ACCESSORY")
 
+    def test_create_multiple_swc_mode_switch_events_with_same_base_name(self):
+        workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("swc_mode_switch_event_prefix", "MST_")
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        behavior.create_runnable("MyApplication_Init")
+        event1 = behavior.create_swc_mode_mode_switch_event("MyApplication_Init",
+                                                            "VehicleMode/ACCESSORY",
+                                                            ar_enum.ModeActivationKind.ON_ENTRY)
+        event2 = behavior.create_swc_mode_mode_switch_event("MyApplication_Init",
+                                                            "VehicleMode/PARKING",
+                                                            ar_enum.ModeActivationKind.ON_ENTRY)
+        event3 = behavior.create_swc_mode_mode_switch_event("MyApplication_Init",
+                                                            "VehicleMode/RUNNING",
+                                                            ar_enum.ModeActivationKind.ON_ENTRY)
+
+        self.assertIsInstance(event1, ar_element.SwcModeSwitchEvent)
+        self.assertIsInstance(event2, ar_element.SwcModeSwitchEvent)
+        self.assertIsInstance(event3, ar_element.SwcModeSwitchEvent)
+        self.assertEqual(event1.name, "MST_MyApplication_Init_0",)
+        self.assertEqual(event2.name, "MST_MyApplication_Init_1",)
+        self.assertEqual(event3.name, "MST_MyApplication_Init_2",)
+        self.assertEqual(str(event1.mode.target_mode_declaration), "/ModeDeclarations/VehicleMode/ACCESSORY")
+        self.assertEqual(str(event2.mode.target_mode_declaration), "/ModeDeclarations/VehicleMode/PARKING")
+        self.assertEqual(str(event3.mode.target_mode_declaration), "/ModeDeclarations/VehicleMode/RUNNING")
+
     def test_create_timing_event_without_offset(self):
         workspace = autosar.xml.Workspace()
         workspace.behavior_settings.set_value("timing_event_prefix", "TMT_")

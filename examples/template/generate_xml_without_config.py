@@ -32,6 +32,21 @@ def create_namespaces(workspace: ar_workspace.Workspace):
         base_ref="/")
 
 
+def create_behavior_settings(workspace: ar_workspace.Workspace):
+    """
+    Define default event name prefixess
+    """
+    workspace.behavior_settings.update({
+        "background_event_prefix": "BT_",
+        "data_receive_error_event_prefix": "DRET_",
+        "data_receive_event_prefix": "DRT_",
+        "init_event_prefix": "IT_",
+        "operation_invoked_event_prefix": "OIT_",
+        "swc_mode_manager_error_event_prefix": "MMET_",
+        "swc_mode_switch_event_prefix": "MST_",
+        "timing_event_prefix": "TMT_"})
+
+
 def create_documents(workspace: ar_workspace.Workspace) -> None:
     """
     Creates documents
@@ -67,6 +82,7 @@ def main():
     """Main"""
     workspace = ar_workspace.Workspace(document_root="generated")
     create_namespaces(workspace)
+    create_behavior_settings(workspace)
     create_documents(workspace)
     apply_platform_types(workspace)
     apply_component_types(workspace)

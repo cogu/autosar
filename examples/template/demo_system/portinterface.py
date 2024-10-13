@@ -44,7 +44,7 @@ def create_free_running_timer_interface(_0: str,
     operation.create_out_argument("result", type_ref=boolean_impl_type.ref())
     return port_interface
 
-EcuM_CurrentMode = factory.ModeSwitchInterfaceTemplate("EcuM_CurrentMode", NAMESPACE, mode.EcuM_Mode, "currentMode", is_service=True)
+EcuM_CurrentMode_I = factory.ModeSwitchInterfaceTemplate("EcuM_CurrentMode_I", NAMESPACE, mode.EcuM_Mode, "currentMode", is_service=True)
 NvMService_I = factory.GenericPortInterfaceTemplate("NvMService_I", NAMESPACE, create_NvMService_interface)
 FreeRunningTimer_I = factory.GenericPortInterfaceTemplate("FreeRunningTimer_I",
                                                           NAMESPACE,
