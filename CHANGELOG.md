@@ -26,6 +26,8 @@ Non-collectable elements are various sub-elements to collectable elements.
 * DataReceiveErrorEvent | DATA-RECEIVE-ERROR-EVENT
 * DataSendCompletedEvent | DATA-SEND-COMPLETED-EVENT
 * DataWriteCompletedEvent | DATA-WRITE-COMPLETED-EVENT
+* ExclusiveAreaRefConditional | EXCLUSIVE-AREA-REF-CONDITIONAL
+* ExecutableEntityActivationReason | EXECUTABLE-ENTITY-ACTIVATION-REASON
 * ExternalTriggerOccurredEvent | EXTERNAL-TRIGGER-OCCURRED-EVENT
 * InitEvent | INIT-EVENT
 * InternalTriggerOccurredEvent | INTERNAL-TRIGGER-OCCURRED-EVENT
@@ -39,6 +41,22 @@ Non-collectable elements are various sub-elements to collectable elements.
 * SwcModeSwitchEvent | SWC-MODE-SWITCH-EVENT
 * TimingEvent | TIMING-EVENT
 * TransformerHardErrorEvent | TRANSFORMER-HARD-ERROR-EVENT
+
+#### XML - Reference elements
+
+* AbstractProvidedPortPrototypeRef
+* AbstractRequiredPortPrototypeRef
+* AsynchronousServerCallResultPointRef
+* ExclusiveAreaNestingOrderRef
+* ExclusiveAreaRef
+* InternalTriggeringPointRef
+* ModeSwitchPointRef
+* RunnableEntityRef
+* SwcImplementationRef
+* SwcInternalBehaviorRef
+* TriggerRef
+* VariableAccessRef
+
 
 ### Fixed
 
