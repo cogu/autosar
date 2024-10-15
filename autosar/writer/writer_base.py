@@ -4,7 +4,7 @@ import xml.sax.saxutils
 import json
 import math
 import collections
-from autosar.element import DataElement
+from autosar.element import AutosarDataPrototype
 from decimal import Decimal
 
 class BaseWriter:
@@ -345,7 +345,7 @@ class BaseWriter:
         return lines
 
     def writeDataElementXML(self, elem):
-        assert(isinstance(elem,DataElement))
+        assert(isinstance(elem,AutosarDataPrototype))
         lines=[]
         ws = elem.rootWS()
         lines.append('<%s>'%elem.tag(self.version))

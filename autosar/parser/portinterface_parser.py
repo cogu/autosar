@@ -78,7 +78,7 @@ class PortInterfacePackageParser(ElementParser):
     def _parseDataElements(self, xmlRoot):
         dataElements = []
         if self.version >= 4.0:
-            parseMethod = self.parseVariableDataPrototype
+            parseMethod = self.parseAutosarDataPrototype
             dataElemTag = 'VARIABLE-DATA-PROTOTYPE'
         else:
             parseMethod = self._parseDataElementPrototype
@@ -138,7 +138,12 @@ class PortInterfacePackageParser(ElementParser):
             else:
                 self.defaultHandler(xmlElem)
         if (self.name is not None) and (typeRef is not None):
-            elem = autosar.element.DataElement(self.name, typeRef, isQueued)
+            elem = autosar.element.AutosarDataPrototype(
+                autosar.element.AutosarDataPrototype.Role.Variable,
+                self.name,
+                typeRef,
+                isQueued
+            )
             self.pop(elem)
             return elem
         else:
@@ -174,7 +179,7 @@ class PortInterfacePackageParser(ElementParser):
                 xmlElemName = xmlElem.find("./SHORT-NAME")
                 if xmlElemName is not None:
                     typeRef=xmlElem.find("./TYPE-TREF").text
-                    parameter = autosar.element.ParameterDataPrototype(xmlElemName.text,typeRef,parent=portInterface)
+                    parameter = autosar.element.AutosarDataPrototype(autosar.element.AutosarDataPrototype.Role.Parameter, xmlElemName.text, typeRef, parent=portInterface)
                     if hasAdminData(xmlElem):
                         parameter.adminData=parseAdminDataNode(xmlElem.find('ADMIN-DATA'))
                     if xmlElem.find('SW-DATA-DEF-PROPS'):
@@ -372,25 +377,7 @@ class PortInterfacePackageParser(ElementParser):
 
     @parseElementUUID
     def _parseParameterDataPrototype(self, xmlElem, parent):
-        (name, adminData, typeRef, props_variants) = (None, None, None, None)
-        for xmlElem in xmlElem.findall('./*'):
-            if xmlElem.tag == 'SHORT-NAME':
-                name = self.parseTextNode(xmlElem)
-            elif xmlElem.tag == 'ADMIN-DATA':
-                adminData = self.parseAdminDataNode(xmlElem)
-            elif xmlElem.tag == 'SW-DATA-DEF-PROPS':
-                props_variants = self.parseSwDataDefProps(xmlElem)
-            elif xmlElem.tag == 'TYPE-TREF':
-                typeRef = self.parseTextNode(xmlElem)
-            else:
-                raise NotImplementedError(xmlElem.tag)
-
-        if (name is not None) and (typeRef is not None):
-            parameter = autosar.element.ParameterDataPrototype(name, typeRef, parent=parent, adminData=adminData)
-            if props_variants is not None:
-                parameter.swCalibrationAccess = props_variants[0].swCalibrationAccess
-                parameter.swAddressMethodRef = props_variants[0].swAddressMethodRef
-            return parameter
+        return self.parseAutosarDataPrototype(xmlElem, parent)
 
     @parseElementUUID
     def parseNvDataInterface(self, xmlRoot, parent=None):

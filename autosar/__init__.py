@@ -33,7 +33,7 @@ def splitRef(ref):
    return autosar.base.splitRef(ref)
 
 def DataElement(name, typeRef, isQueued=False, softwareAddressMethodRef=None, swCalibrationAccess=None, swImplPolicy = None, parent=None, adminData=None):
-   return autosar.element.DataElement(name, typeRef, isQueued, softwareAddressMethodRef, swCalibrationAccess, swImplPolicy, parent, adminData)
+   return autosar.element.AutosarDataPrototype(autosar.element.AutosarDataPrototype.Role.Variable, name, typeRef, isQueued, softwareAddressMethodRef, swCalibrationAccess, swImplPolicy, parent, adminData)
 
 def ApplicationError(name, errorCode, parent=None, adminData=None):
    return autosar.portinterface.ApplicationError(name, errorCode, parent, adminData)
@@ -42,7 +42,7 @@ def ModeGroup(name, typeRef, parent=None, adminData=None):
    return autosar.mode.ModeGroup(name, typeRef, parent, adminData)
 
 def ParameterDataPrototype(name, typeRef, swAddressMethodRef=None, swCalibrationAccess=None, initValue = None, parent=None, adminData=None):
-   return autosar.element.ParameterDataPrototype(name, typeRef, swAddressMethodRef, swCalibrationAccess, initValue, parent, adminData)
+   return autosar.element.AutosarDataPrototype(autosar.element.AutosarDataPrototype.Role.Parameter, name, typeRef, swAddressMethodRef, swCalibrationAccess, initValue, parent, adminData)
 
 
 #template support

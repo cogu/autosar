@@ -109,6 +109,10 @@ class BaseParser:
             self.common[-1].longName, self.common[-1].longName_attr = self.parseLongNameDirect(xmlElem)
         elif xmlElem.tag == 'DISPLAY-FORMAT':
             self.common[-1].displayFormat = None
+        elif xmlElem.tag == 'ANNOTATION':
+            pass #implement later
+        elif xmlElem.tag == 'INTRODUCTION':
+            pass #implement later
         else:
             raise NotImplementedError(xmlElem.tag)
     
@@ -437,9 +441,12 @@ class BaseParser:
         return props
 
     @parseElementUUID
-    def parseVariableDataPrototype(self, xmlRoot, parent = None):
-        assert(xmlRoot.tag == 'VARIABLE-DATA-PROTOTYPE')
-        (typeRef, props_variants, isQueued) = (None, None, False)
+    def parseAutosarDataPrototype(self, xmlRoot, parent = None):
+        assert(xmlRoot.tag in ['VARIABLE-DATA-PROTOTYPE', 'PARAMETER-DATA-PROTOTYPE', 'ARGUMENT-DATA-PROTOTYPE'])
+        dataPrototypeRole = autosar.element.AutosarDataPrototype.TAG_TO_ROLE_MAP.get(xmlRoot.tag)
+        if dataPrototypeRole is None:
+            raise NotImplementedError(xmlRoot.tag)
+        (typeRef, props_variants, isQueued, initValue, initValueRef) = (None, None, False, None, None)
         self.push()
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'TYPE-TREF':
@@ -447,15 +454,32 @@ class BaseParser:
             elif xmlElem.tag == 'SW-DATA-DEF-PROPS':
                 props_variants = self.parseSwDataDefProps(xmlElem)
             elif xmlElem.tag == 'INIT-VALUE':
-                pass #Implement later
+                for xmlChild in xmlElem.findall('./*'):
+                    if xmlChild.tag == 'CONSTANT-REFERENCE':
+                        initValueRef = self.parseTextNode(xmlChild.find('./CONSTANT-REF'))
+                    else:
+                        values = self.constantParser.parseValueV4(xmlElem, None)
+                        if len(values) != 1:
+                            raise ValueError('{0} cannot cannot contain multiple elements'.format(xmlElem.tag))
+                        initValue = values[0]
             else:
                 self.defaultHandler(xmlElem)
         if (self.name is not None) and (typeRef is not None):
-            dataElement = autosar.element.DataElement(self.name, typeRef, isQueued, category=self.category, parent = parent, adminData = self.adminData)
+            specializedAutosarDataPrototype = autosar.element.AutosarDataPrototype(
+                dataPrototypeRole,
+                self.name,
+                typeRef,
+                isQueued,
+                initValue = initValue,
+                initValueRef = initValueRef,
+                category = self.category,
+                parent = parent,
+                adminData = self.adminData
+            )
             if (props_variants is not None) and len(props_variants) > 0:
-                dataElement.setProps(props_variants[0])
-            self.pop(dataElement)
-            return dataElement
+                specializedAutosarDataPrototype.setProps(props_variants[0])
+            self.pop(specializedAutosarDataPrototype)
+            return specializedAutosarDataPrototype
         else:
             self.pop()
             if self.name is None:

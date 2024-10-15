@@ -1,6 +1,4 @@
-from autosar.element import (Element, DataElement)
-import collections
-import autosar.base
+from autosar.element import Element
 
 
 class ModeGroup(Element):

@@ -1,4 +1,5 @@
 import autosar
+import autosar.element
 
 def create_workspace_and_datatypes():
     ws = autosar.workspace(version="4.2.2")
@@ -23,7 +24,7 @@ def create_workspace_and_datatypes():
 ws = create_workspace_and_datatypes()
 package = ws.find('PortInterfaces')
 
-package.createSenderReceiverInterface('HeaterPwrStat_I', autosar.element.DataElement('HeaterPwrStat', '/DataTypes/ImplementationTypes/OffOn_T'))
+package.createSenderReceiverInterface('HeaterPwrStat_I', autosar.element.AutosarDataPrototype(autosar.element.AutosarDataPrototype.Role.Variable, 'HeaterPwrStat', '/DataTypes/ImplementationTypes/OffOn_T'))
 
 #Save only the port interfaces portion to XML 
 ws.saveXML('PortInterfaces.arxml', filters=['/PortInterfaces'])

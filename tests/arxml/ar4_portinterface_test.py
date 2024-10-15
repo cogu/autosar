@@ -1,4 +1,6 @@
 import os, sys
+
+import autosar.element
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 import autosar
 from tests.arxml.common import ARXMLTestClass
@@ -62,7 +64,7 @@ class ARXML4PortInterfaceTest(ARXMLTestClass):
         ws = autosar.workspace(version="4.2.2")
         _init_ws(ws)
         package = ws.find('/PortInterfaces')
-        pif1 =  package.createSenderReceiverInterface('HeaterPwrStat_I', autosar.element.DataElement('HeaterPwrStat', 'OffOn_T'))
+        pif1 =  package.createSenderReceiverInterface('HeaterPwrStat_I', autosar.element.AutosarDataPrototype(autosar.element.AutosarDataPrototype.Role.Variable, 'HeaterPwrStat', 'OffOn_T'))
         self.assertEqual(pif1.dataElements[0].typeRef, '/DataTypes/OffOn_T')
         file_name = 'ar4_sender_receiver_interface_single_element.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
@@ -79,9 +81,9 @@ class ARXML4PortInterfaceTest(ARXMLTestClass):
         _init_ws(ws)
         package = ws.find('/PortInterfaces')
         pif1 = package.createSenderReceiverInterface('SystemTime_I', [
-            autosar.element.DataElement('Seconds', '/DataTypes/Seconds_T'),
-            autosar.element.DataElement('Minutes', '/DataTypes/Minutes_T'),
-            autosar.element.DataElement('Hours', '/DataTypes/Hours_T')
+            autosar.element.AutosarDataPrototype(autosar.element.AutosarDataPrototype.Role.Variable, 'Seconds', '/DataTypes/Seconds_T'),
+            autosar.element.AutosarDataPrototype(autosar.element.AutosarDataPrototype.Role.Variable, 'Minutes', '/DataTypes/Minutes_T'),
+            autosar.element.AutosarDataPrototype(autosar.element.AutosarDataPrototype.Role.Variable, 'Hours', '/DataTypes/Hours_T')
             ])
         file_name = 'ar4_sender_receiver_interface_multiple_elements_explicit.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
@@ -156,7 +158,7 @@ class ARXML4PortInterfaceTest(ARXMLTestClass):
         ws = autosar.workspace(version="4.2.2")
         _init_ws(ws)
         package = ws.find('/PortInterfaces')
-        pif1 = package.createParameterInterface('CruiseControlEnable_I', autosar.element.ParameterDataPrototype('v', 'boolean'))
+        pif1 = package.createParameterInterface('CruiseControlEnable_I', autosar.element.AutosarDataPrototype(autosar.element.AutosarDataPrototype.Role.Parameter, 'v', 'boolean'))
 
         file_name = 'ar4_create_parameter_interface.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
@@ -176,7 +178,7 @@ class ARXML4PortInterfaceTest(ARXMLTestClass):
         ws = autosar.workspace(version="4.2.2")
         _init_ws(ws)
         package = ws.find('/PortInterfaces')
-        pif1 =  package.createNvDataInterface('HeaterPwrStat_NvI', autosar.element.DataElement('HeaterPwrStat', 'OffOn_T'))
+        pif1 =  package.createNvDataInterface('HeaterPwrStat_NvI', autosar.element.AutosarDataPrototype(autosar.element.AutosarDataPrototype.Role.Variable, 'HeaterPwrStat', 'OffOn_T'))
         self.assertEqual(pif1.nvDatas[0].typeRef, '/DataTypes/OffOn_T')
         file_name = 'ar4_nv_data_interface_single_element.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
@@ -193,9 +195,9 @@ class ARXML4PortInterfaceTest(ARXMLTestClass):
         _init_ws(ws)
         package = ws.find('/PortInterfaces')
         pif1 = package.createNvDataInterface('SystemTime_I', [
-            autosar.element.DataElement('Seconds', '/DataTypes/Seconds_T'),
-            autosar.element.DataElement('Minutes', '/DataTypes/Minutes_T'),
-            autosar.element.DataElement('Hours', '/DataTypes/Hours_T')
+            autosar.element.AutosarDataPrototype(autosar.element.AutosarDataPrototype.Role.Variable, 'Seconds', '/DataTypes/Seconds_T'),
+            autosar.element.AutosarDataPrototype(autosar.element.AutosarDataPrototype.Role.Variable, 'Minutes', '/DataTypes/Minutes_T'),
+            autosar.element.AutosarDataPrototype(autosar.element.AutosarDataPrototype.Role.Variable, 'Hours', '/DataTypes/Hours_T')
             ],
             True,
             "NON-VOLATILE-RAM-MANAGER")

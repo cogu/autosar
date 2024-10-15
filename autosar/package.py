@@ -129,7 +129,10 @@ class Package(object):
                         raise ValueError('invalid type reference: '+elem.typeRef)
                     elem.typeRef=dataType.ref #normalize reference to data element
                     portInterface.append(elem)
-            elif isinstance(dataElements,autosar.portinterface.DataElement):
+            elif (
+                isinstance(dataElements,autosar.portinterface.AutosarDataPrototype)
+                and dataElements.role == autosar.portinterface.AutosarDataPrototype.Role.Variable
+            ):
                 dataType=ws.find(dataElements.typeRef, role='DataType')
                 if dataType is None:
                     raise ValueError('invalid type reference: '+dataElements.typeRef)
@@ -173,22 +176,44 @@ class Package(object):
                     if dataType is None:
                         raise ValueError('invalid type reference: '+elem.typeRef)
                     elem.typeRef=dataType.ref
-                    if isinstance(autosar.portinterface.DataElement):
+                    if (
+                        isinstance(autosar.portinterface.AutosarDataPrototype)
+                        and elem.role == autosar.portinterface.AutosarDataPrototype.Role.Variable
+                    ):
                         #convert into Parameter
-                        parameter = autosar.element.ParameterDataPrototype(elem.name, elem.typeRef, elem.swAddressMethodRef, adminData=elem.adminData)
+                        parameter = autosar.element.AutosarDataPrototype(
+                            autosar.element.AutosarDataPrototype.Role.Parameter,
+                            elem.name,
+                            elem.typeRef,
+                            False,
+                            elem.swAddressMethodRef,
+                            adminData=elem.adminData
+                        )
                     else:
                         parameter = elem
                     portInterface.append(parameter)
-            elif isinstance(parameters, autosar.portinterface.DataElement):
+            elif (
+                isinstance(parameters, autosar.portinterface.AutosarDataPrototype)
+                and parameters.role == autosar.portinterface.AutosarDataPrototype.Role.Parameter
+            ):
                 dataType=ws.find(parameters.typeRef, role='DataType')
                 #normalize reference to data element
                 if dataType is None:
                     raise ValueError('invalid type reference: '+parameters.typeRef)
                 parameters.typeRef=dataType.ref
-                parameter = autosar.element.ParameterDataPrototype(parameters.name, parameters.typeRef,
-                                                            parameters.swAddressMethodRef, adminData=parameters.adminData)
+                parameter = autosar.element.AutosarDataPrototype(
+                    autosar.element.AutosarDataPrototype.Role.Parameter,
+                    parameters.name,
+                    parameters.typeRef,
+                    False,
+                    parameters.swAddressMethodRef,
+                    adminData=parameters.adminData
+                )
                 portInterface.append(parameter)
-            elif isinstance(parameters, autosar.element.ParameterDataPrototype):
+            elif (
+                isinstance(parameters, autosar.element.AutosarDataPrototype)
+                and parameters.role == autosar.element.AutosarDataPrototype.Role.Parameter
+            ):
                 dataType=ws.find(parameters.typeRef, role='DataType')
                 #normalize reference to data element
                 if dataType is None:
@@ -196,7 +221,7 @@ class Package(object):
                 parameters.typeRef=dataType.ref
                 portInterface.append(parameters)
             else:
-                raise ValueError("parameters: Expected instance of autosar.element.ParameterDataPrototype or list")
+                raise ValueError("parameters: Expected instance of autosar.element.AutosarDataPrototype (Parameter) or list")
         self.append(portInterface)
         return portInterface
 
@@ -235,7 +260,10 @@ class Package(object):
                         raise ValueError('invalid type reference: '+elem.typeRef)
                     elem.typeRef=dataType.ref #normalize reference to data element
                     portInterface.append(elem)
-            elif isinstance(nvDatas,autosar.portinterface.DataElement):
+            elif(
+                isinstance(nvDatas,autosar.portinterface.AutosarDataPrototype)
+                and nvDatas.role == autosar.portinterface.AutosarDataPrototype.Role.Variable
+            ):
                 dataType=ws.find(nvDatas.typeRef, role='DataType')
                 if dataType is None:
                     raise ValueError('invalid type reference: '+nvDatas.typeRef)

@@ -785,7 +785,7 @@ class XMLBehaviorWriter(ElementWriter):
         if isinstance(nvBlockDescriptor.ramBlock, autosar.behavior.NvBlockRamBlock):
             lines.extend(self.indent(self.writeDataElementXML(nvBlockDescriptor.ramBlock),1))
 
-        if isinstance(nvBlockDescriptor.romBlock, autosar.behavior.ParameterDataPrototype):
+        if isinstance(nvBlockDescriptor.romBlock, autosar.behavior.AutosarDataPrototype) and nvBlockDescriptor.romBlock.role is autosar.behavior.AutosarDataPrototype.Role.Parameter:
             lines.extend(self.indent(self._writeParameterDataPrototype(ws, nvBlockDescriptor.romBlock),1))
 
         lines.append(self.indent('<SUPPORT-DIRTY-FLAG>%s</SUPPORT-DIRTY-FLAG>'%(self.toBooleanStr(nvBlockDescriptor.supportDirtyFlag)),1))

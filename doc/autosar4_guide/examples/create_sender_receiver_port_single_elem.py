@@ -1,4 +1,5 @@
 import autosar
+import autosar.element
 
 def create_workspace_and_packages():
     ws = autosar.workspace(version="4.2.2")
@@ -28,7 +29,7 @@ def create_data_types(ws):
 def create_port_interfaces(ws):
     package = ws.find('/PortInterfaces')
     package.createSenderReceiverInterface('HeaterPwrStat_I',
-        autosar.element.DataElement('HeaterPwrStat',
+        autosar.element.AutosarDataPrototype(autosar.element.AutosarDataPrototype.Role.Variable, 'HeaterPwrStat',
                                     '/DataTypes/ImplementationTypes/OffOn_T'))
 
 def create_components(ws):

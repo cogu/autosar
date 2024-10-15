@@ -15,5 +15,5 @@ def create_workspace_and_datatypes():
 
 ws = create_workspace_and_datatypes()
 package = ws.findRolePackage('PortInterface')
-package.createParameterInterface('ButtonDebounceTime_I', autosar.element.ParameterDataPrototype('v', "uint8"))
+package.createParameterInterface('ButtonDebounceTime_I', autosar.element.AutosarDataPrototype(autosar.element.AutosarDataPrototype.Role.Parameter, 'v', "uint8"))
 ws.saveXML("ParameterInterface.arxml")

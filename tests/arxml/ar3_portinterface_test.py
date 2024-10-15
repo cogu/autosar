@@ -1,4 +1,6 @@
 import os, sys
+
+import autosar.element
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 import autosar
 from tests.arxml.common import ARXMLTestClass
@@ -41,7 +43,7 @@ class ARXML3PortInterfaceTest(ARXMLTestClass):
         ws = autosar.workspace(version="3.0.2")
         _init_ws(ws)
         package = ws.find('/PortInterfaces')
-        itf1 =  package.createSenderReceiverInterface('HeaterPwrStat_I', autosar.element.DataElement('HeaterPwrStat', 'OffOn_T'))
+        itf1 =  package.createSenderReceiverInterface('HeaterPwrStat_I', autosar.element.AutosarDataPrototype(autosar.element.AutosarDataPrototype.Role.Variable, 'HeaterPwrStat', 'OffOn_T'))
         file_name = 'ar3_sender_receiver_interface_single_element.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
         expected_file = os.path.join( 'expected_gen', 'portinterface', file_name)        
@@ -56,9 +58,9 @@ class ARXML3PortInterfaceTest(ARXMLTestClass):
     #     _init_ws(ws)
     #     package = ws.find('/PortInterfaces')
     #     itf1 = package.createSenderReceiverInterface('SystemTime_I', [
-    #         autosar.element.DataElement('Seconds', '/DataTypes/Seconds_T'),
-    #         autosar.element.DataElement('Minutes', '/DataTypes/Minutes_T'),
-    #         autosar.element.DataElement('Hours', '/DataTypes/Hours_T')
+    #         autosar.element.AutosarDataPrototype(autosar.element.AutosarDataPrototype.Role.Variable, 'Seconds', '/DataTypes/Seconds_T'),
+    #         autosar.element.AutosarDataPrototype(autosar.element.AutosarDataPrototype.Role.Variable, 'Minutes', '/DataTypes/Minutes_T'),
+    #         autosar.element.AutosarDataPrototype(autosar.element.AutosarDataPrototype.Role.Variable, 'Hours', '/DataTypes/Hours_T')
     #         ])
     #     file_name = 'ar4_sender_receiver_interface_multiple_elements_explicit.arxml'
     #     generated_file = os.path.join(self.output_dir, file_name)

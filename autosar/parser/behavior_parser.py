@@ -1,4 +1,4 @@
-import autosar.behavior
+import autosar.behavior, autosar.element
 from autosar.parser.parser_base import ElementParser, parseElementUUID
 from autosar.parser.constant_parser import ConstantParser
 
@@ -168,7 +168,7 @@ class BehaviorParser(ElementParser):
                 elif xmlElem.tag == 'AR-TYPED-PER-INSTANCE-MEMORYS':
                     for xmlChild in xmlElem.findall('./*'):
                         if xmlChild.tag == 'VARIABLE-DATA-PROTOTYPE':
-                            dataElement = self.parseVariableDataPrototype(xmlChild, internalBehavior)
+                            dataElement = self.parseAutosarDataPrototype(xmlChild, internalBehavior)
                             internalBehavior.perInstanceMemories.append(dataElement)
                         else:
                             raise NotImplementedError(xmlChild.tag)
@@ -207,14 +207,14 @@ class BehaviorParser(ElementParser):
                 elif xmlElem.tag == 'EXPLICIT-INTER-RUNNABLE-VARIABLES':
                     for xmlChild in xmlElem.findall('./*'):
                         if xmlChild.tag == 'VARIABLE-DATA-PROTOTYPE':
-                            dataElement = self.parseVariableDataPrototype(xmlChild, internalBehavior)
+                            dataElement = self.parseAutosarDataPrototype(xmlChild, internalBehavior)
                             internalBehavior.explicitVariables.append(dataElement)
                         else:
                             raise NotImplementedError(xmlChild.tag)
                 elif xmlElem.tag == 'IMPLICIT-INTER-RUNNABLE-VARIABLES':
                     for xmlChild in xmlElem.findall('./*'):
                         if xmlChild.tag == 'VARIABLE-DATA-PROTOTYPE':
-                            dataElement = self.parseVariableDataPrototype(xmlChild, internalBehavior)
+                            dataElement = self.parseAutosarDataPrototype(xmlChild, internalBehavior)
                             internalBehavior.implicitVariables.append(dataElement)
                         else:
                             raise NotImplementedError(xmlChild.tag)
@@ -941,33 +941,7 @@ class BehaviorParser(ElementParser):
     @parseElementUUID
     def parseParameterDataPrototype(self, xmlRoot, parent = None):
         """parses <PARAMETER-DATA-PROTOTYPE> (AUTOSAR 4)"""
-        assert(xmlRoot.tag == 'PARAMETER-DATA-PROTOTYPE')
-        (variants, typeRef, swAddressMethodRef, swCalibrationAccess, initValue, initValueRef) = (None, None, None, None, None, None)
-        self.push()
-        for xmlElem in xmlRoot.findall('./*'):
-            if xmlElem.tag == 'SW-DATA-DEF-PROPS':
-                variants = self.parseSwDataDefProps(xmlElem)
-                if len(variants) > 0:
-                    swAddressMethodRef = variants[0].swAddressMethodRef
-                    swCalibrationAccess = variants[0].swCalibrationAccess
-            elif xmlElem.tag == 'INIT-VALUE':
-                for xmlChild in xmlElem.findall('./*'):
-                    if xmlChild.tag == 'CONSTANT-REFERENCE':
-                        initValueRef = self.parseTextNode(xmlChild.find('./CONSTANT-REF'))
-                    else:
-                        values = self.constantParser.parseValueV4(xmlElem, None)
-                        if len(values) != 1:
-                            raise ValueError('{0} cannot cannot contain multiple elements'.format(xmlElem.tag))
-                        initValue = values[0]
-            elif xmlElem.tag == 'TYPE-TREF':
-                typeRef = self.parseTextNode(xmlElem)
-            else:
-                self.baseHandler(xmlElem)
-        obj = autosar.behavior.ParameterDataPrototype(self.name, typeRef=typeRef,
-                    swAddressMethodRef=swAddressMethodRef, swCalibrationAccess=swCalibrationAccess,
-                    initValue=initValue, initValueRef=initValueRef, parent=parent, adminData=self.adminData)
-        self.pop(obj)
-        return obj
+        return self.parseAutosarDataPrototype(xmlRoot, parent)
 
     @parseElementUUID
     def parseServiceNeeds(self, xmlRoot, parent = None):
@@ -1143,7 +1117,7 @@ class BehaviorParser(ElementParser):
                 elif xmlElem.tag == 'RAM-BLOCK':
                     # Change tag so it is correct for the parser.
                     xmlElem.tag = 'VARIABLE-DATA-PROTOTYPE'
-                    dataElement = self.parseVariableDataPrototype(xmlElem, descriptor)
+                    dataElement = self.parseAutosarDataPrototype(xmlElem, descriptor)
                     # Cast the object to correct class.
                     descriptor.ramBlock = autosar.behavior.NvBlockRamBlock.cast(dataElement)
                 elif xmlElem.tag == 'ROM-BLOCK':

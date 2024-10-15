@@ -1,4 +1,5 @@
 import autosar
+import autosar.element
 
 def create_workspace_and_packages():
     ws = autosar.workspace(version="4.2.2")
@@ -32,8 +33,8 @@ def create_port_interfaces(ws):
     package = ws.find('/PortInterfaces')
     package.createSenderReceiverInterface('BatteryStat_I',
         [
-            autosar.element.DataElement('ChargeLevel', '/DataTypes/ImplementationTypes/PercentLevel_T'),
-            autosar.element.DataElement('VoltageLevel', '/DataTypes/ImplementationTypes/VoltageLevel_T')
+            autosar.element.AutosarDataPrototype(autosar.element.AutosarDataPrototype.Role.Variable, 'ChargeLevel', '/DataTypes/ImplementationTypes/PercentLevel_T'),
+            autosar.element.AutosarDataPrototype(autosar.element.AutosarDataPrototype.Role.Variable, 'VoltageLevel', '/DataTypes/ImplementationTypes/VoltageLevel_T')
         ])
 
 def create_components(ws):

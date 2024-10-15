@@ -1,5 +1,5 @@
 import collections
-from autosar.element import (Element, DataElement)
+from autosar.element import (Element, AutosarDataPrototype)
 import autosar.base
 import autosar.mode
 
@@ -87,7 +87,7 @@ class SenderReceiverInterface(PortInterface):
         """
         Adds child element to this port interface
         """
-        if isinstance(elem, DataElement):
+        if isinstance(elem, AutosarDataPrototype) and elem.role == AutosarDataPrototype.Role.Variable:
             self.dataElements.append(elem)
         elif isinstance(elem, autosar.mode.ModeGroup):
             self.modeGroups.append(elem)
@@ -119,8 +119,9 @@ class ParameterInterface(PortInterface):
         """
         adds elem to the self.parameters list and sets elem.parent to self (the port interface)
         """
-        if not isinstance(elem, autosar.element.ParameterDataPrototype):
-            raise ValueError("Expected elem variable to be of type ParameterDataPrototype")
+        if not isinstance(elem, AutosarDataPrototype) or elem.role is not AutosarDataPrototype.Role.Parameter:
+            raise ValueError("Expected elem variable to be of type AutosarDataPrototype (Parameter)")
+
         self.parameters.append(elem)
         elem.parent=self
 
@@ -378,7 +379,7 @@ class NvDataInterface(PortInterface):
         """
         adds elem to the self.nvDatas list and sets elem.parent to self (the port interface)
         """
-        if not isinstance(elem, DataElement):
-            raise ValueError("expected elem variable to be of type DataElement")
+        if not isinstance(elem, AutosarDataPrototype) and elem.role == AutosarDataPrototype.Role.Variable:
+            raise ValueError("expected elem variable to be of type AutosarDataPrototype (Variable)")
         self.nvDatas.append(elem)
         elem.parent=self

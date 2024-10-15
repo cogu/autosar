@@ -1,4 +1,5 @@
 import autosar
+import autosar.element
 
 def init_workspace():
     ws = autosar.workspace("4.2.2")
@@ -46,13 +47,13 @@ def create_data_types(ws):
 def create_port_interfaces(ws):
     portInterfaces = ws.find('/PortInterfaces')
     portInterfaces.createSenderReceiverInterface('VehicleOverSpeed_I',
-                                                    autosar.element.DataElement('VehicleOverSpeed', 'Inactive_Active_T'))
+                                                    autosar.element.AutosarDataPrototype(autosar.element.AutosarDataPrototype.Role.Variable, 'VehicleOverSpeed', 'Inactive_Active_T'))
     portInterfaces.createSenderReceiverInterface('EngineOverSpeed_I',
-                                                    autosar.element.DataElement('EngineOverSpeed', 'Inactive_Active_T'))
+                                                    autosar.element.AutosarDataPrototype(autosar.element.AutosarDataPrototype.Role.Variable, 'EngineOverSpeed', 'Inactive_Active_T'))
     portInterfaces.createSenderReceiverInterface('VehicleSpeed_I',
-                                                    autosar.element.DataElement('VehicleSpeed', 'VehicleSpeed_T'))
+                                                    autosar.element.AutosarDataPrototype(autosar.element.AutosarDataPrototype.Role.Variable, 'VehicleSpeed', 'VehicleSpeed_T'))
     portInterfaces.createSenderReceiverInterface('EngineSpeed_I',
-                                                    autosar.element.DataElement('EngineSpeed', 'EngineSpeed_T'))
+                                                    autosar.element.AutosarDataPrototype(autosar.element.AutosarDataPrototype.Role.Variable, 'EngineSpeed', 'EngineSpeed_T'))
 
 
 def create_constants(ws):

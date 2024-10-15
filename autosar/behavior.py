@@ -3,7 +3,7 @@ import itertools
 import autosar.component
 import autosar.portinterface
 import autosar.base
-from autosar.element import Element, DataElement
+from autosar.element import Element, AutosarDataPrototype
 import collections
 
 
@@ -1048,7 +1048,7 @@ class InternalBehaviorCommon(Element):
                     raise autosar.base.InvalidDataElementRef('portInterface "{}" has no data elements'.format(portInterface.name))
             else:
                 dataElement = portInterface.find(dataElementName)
-                if not isinstance(dataElement, autosar.element.DataElement):
+                if not isinstance(dataElement, AutosarDataPrototype):
                     raise autosar.base.InvalidDataElementRef(dataElementName)
                 elif dataElement is None:
                     raise autosar.base.InvalidDataElementRef('portInterface "{}" has no operation {}'.format(portInterface.name, dataElementName))
@@ -1062,7 +1062,7 @@ class InternalBehaviorCommon(Element):
                     raise autosar.base.InvalidDataElementRef('portInterface "{}" has no nvdata elements'.format(portInterface.name))
             else:
                 dataElement = portInterface.find(dataElementName)
-                if not isinstance(dataElement, autosar.element.DataElement):
+                if not isinstance(dataElement, AutosarDataPrototype):
                     raise autosar.base.InvalidDataElementRef(dataElementName)
                 elif dataElement is None:
                     raise autosar.base.InvalidDataElementRef('portInterface "{}" has no nvdata {}'.format(portInterface.name, dataElementName))
@@ -1294,46 +1294,46 @@ class SwcInternalBehavior(InternalBehaviorCommon):
         dataType = ws.find(implementationTypeRef, role='DataType')
         if dataType is None:
             raise ValueError('invalid reference: '+implementationTypeRef)
-        dataElement = DataElement(name, dataType.ref, swAddressMethodRef = swAddressMethodRef, swCalibrationAccess=swCalibrationAccess, parent=self)
+        dataElement = AutosarDataPrototype(AutosarDataPrototype.Role.Variable, name, dataType.ref, swAddressMethodRef = swAddressMethodRef, swCalibrationAccess=swCalibrationAccess, parent=self)
         self.perInstanceMemories.append(dataElement)
         return dataElement
 
     def createSharedDataParameter(self, name, implementationTypeRef, swAddressMethodRef = None, swCalibrationAccess = None, initValue = None):
         """
-        AUTOSAR4: Creates a ParameterDataPrototype object and appends it to the internal sharedParameterDataPrototype list
+        AUTOSAR4: Creates a AutosarDataPrototype object and appends it to the internal sharedParameterDataPrototype list
         """
         self._initSWC()
         ws = self.rootWS()
         dataType = ws.find(implementationTypeRef, role='DataType')
         if dataType is None:
             raise ValueError('invalid reference: '+implementationTypeRef)
-        parameter = autosar.element.ParameterDataPrototype(name, dataType.ref, swAddressMethodRef = swAddressMethodRef, swCalibrationAccess=swCalibrationAccess, initValue=initValue, parent=self)
+        parameter = autosar.element.AutosarDataPrototype(autosar.element.AutosarDataPrototype.Role.Parameter, name, dataType.ref, swAddressMethodRef = swAddressMethodRef, swCalibrationAccess=swCalibrationAccess, initValue=initValue, parent=self)
         self.sharedParameterDataPrototype.append(parameter)
         return parameter
 
     def createPerInstanceDataParameter(self, name, implementationTypeRef, swAddressMethodRef = None, swCalibrationAccess = None, initValue = None):
         """
-        AUTOSAR4: Creates a ParameterDataPrototype object and appends it to the internal perInstanceParameterDataPrototype list
+        AUTOSAR4: Creates a AutosarDataPrototype object and appends it to the internal perInstanceParameterDataPrototype list
         """
         self._initSWC()
         ws = self.rootWS()
         dataType = ws.find(implementationTypeRef, role='DataType')
         if dataType is None:
             raise ValueError('invalid reference: '+implementationTypeRef)
-        parameter = autosar.element.ParameterDataPrototype(name, dataType.ref, swAddressMethodRef = swAddressMethodRef, swCalibrationAccess=swCalibrationAccess, initValue=initValue, parent=self)
+        parameter = autosar.element.AutosarDataPrototype(autosar.element.AutosarDataPrototype.Role.Parameter, name, dataType.ref, swAddressMethodRef = swAddressMethodRef, swCalibrationAccess=swCalibrationAccess, initValue=initValue, parent=self)
         self.perInstanceParameterDataPrototype.append(parameter)
         return parameter
 
     def createConstantMemory(self, name, implementationTypeRef, swAddressMethodRef = None, swCalibrationAccess = None, initValue = None):
         """
-        AUTOSAR4: Creates a ParameterDataPrototype object and appends it to the internal constantMemories list
+        AUTOSAR4: Creates a AutosarDataPrototype object and appends it to the internal constantMemories list
         """
         self._initSWC()
         ws = self.rootWS()
         dataType = ws.find(implementationTypeRef, role='DataType')
         if dataType is None:
             raise ValueError('invalid reference: '+implementationTypeRef)
-        parameter = autosar.element.ParameterDataPrototype(name, dataType.ref, swAddressMethodRef = swAddressMethodRef, swCalibrationAccess=swCalibrationAccess, initValue=initValue, parent=self)
+        parameter = autosar.element.AutosarDataPrototype(autosar.element.AutosarDataPrototype.Role.Parameter, name, dataType.ref, swAddressMethodRef = swAddressMethodRef, swCalibrationAccess=swCalibrationAccess, initValue=initValue, parent=self)
         self.constantMemories.append(parameter)
         return parameter
 
@@ -1555,20 +1555,6 @@ class RoleBasedPortAssignment:
         self.role = role
 
     def tag(self, version): return 'ROLE-BASED-PORT-ASSIGNMENT'
-
-class ParameterDataPrototype(Element):
-    """
-    Represents <PARAMETER-DATA-PROTOTYPE> (AUTOSAR 4)
-    """
-    def __init__(self, name, typeRef, swAddressMethodRef=None, swCalibrationAccess=None, initValue = None, initValueRef = None, parent=None, adminData=None):
-        super().__init__(name, parent, adminData)
-        self.typeRef = typeRef
-        self.swAddressMethodRef = swAddressMethodRef
-        self.swCalibrationAccess = swCalibrationAccess
-        self.initValue = initValue
-        self.initValueRef = initValueRef
-
-    def tag(self, version): return 'PARAMETER-DATA-PROTOTYPE'
 
 class ParameterInstanceRef:
     """
@@ -1798,7 +1784,7 @@ def createNvBlockDescriptor(parent, portAccess, **kwargs):
         parent.nvBlockDescriptors.append(descriptor)
     return descriptor
 
-class NvBlockRamBlock(autosar.element.DataElement):
+class NvBlockRamBlock(AutosarDataPrototype):
     """
     <RAM-BLOCK>
     """
@@ -1806,9 +1792,9 @@ class NvBlockRamBlock(autosar.element.DataElement):
         super().__init__(name, typeRef, isQueued, swAddressMethodRef, swCalibrationAccess, swImplPolicy, category, parent, adminData)
 
     @classmethod
-    def cast(cls, ramBlock: autosar.element.DataElement):
-        """Cast an autosar.element.DataElement into a NvBlockRamBlock."""
-        assert isinstance(ramBlock, autosar.element.DataElement)
+    def cast(cls, ramBlock: AutosarDataPrototype):
+        """Cast an AutosarDataPrototype into a NvBlockRamBlock."""
+        assert isinstance(ramBlock, AutosarDataPrototype)
         ramBlock.__class__ = cls
         assert isinstance(ramBlock, NvBlockRamBlock)
         return ramBlock
@@ -1816,7 +1802,7 @@ class NvBlockRamBlock(autosar.element.DataElement):
     def tag(self, version):
         return 'RAM-BLOCK'
 
-class NvBlockRomBlock(ParameterDataPrototype):
+class NvBlockRomBlock(AutosarDataPrototype):
     """
     Represents <ROM-BLOCK>
     """
@@ -1825,9 +1811,9 @@ class NvBlockRomBlock(ParameterDataPrototype):
         super().__init__(name=name, parent=parent, typeRef=typeRef, swAddressMethodRef=swAddressMethodRef, swCalibrationAccess=swCalibrationAccess, initValue=initValue, initValueRef=initValueRef, adminData=adminData)
 
     @classmethod
-    def cast(cls, romBlock: ParameterDataPrototype):
-        """Cast an ParameterDataPrototype into a NvBlockRomBlock."""
-        assert isinstance(romBlock, ParameterDataPrototype)
+    def cast(cls, romBlock: AutosarDataPrototype):
+        """Cast an AutosarDataPrototype (Parameter) into a NvBlockRomBlock."""
+        assert isinstance(romBlock, AutosarDataPrototype) and romBlock.role == AutosarDataPrototype.Role.Parameter
         romBlock.__class__ = cls
         assert isinstance(romBlock, NvBlockRomBlock)
         return romBlock

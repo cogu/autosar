@@ -1,3 +1,6 @@
+from enum import Enum
+import itertools
+from types import MappingProxyType
 import autosar.base
 
 class Element:
@@ -58,11 +61,48 @@ class LabelElement:
             return self.parent.rootWS()
 
 
-class DataElement(Element):
+class AutosarDataPrototype(Element):
+    class Role(Enum):
+        Variable='VARIABLE-DATA-PROTOTYPE'
+        Parameter='PARAMETER-DATA-PROTOTYPE'
+        Argument='ARGUMENT-DATA-PROTOTYPE'
+
+    class _AR3SpecificRole(Enum):
+        DataElement='DATA-ELEMENT-PROTOTYPE'
+        CalprmElement='CALPRM-ELEMENT-PROTOTYPE'
+    
+    _AR4_TO_AR3_ROLE_MAP = MappingProxyType({
+        Role.Variable: _AR3SpecificRole.DataElement,
+        Role.Parameter: _AR3SpecificRole.CalprmElement,
+        Role.Argument: Role.Argument
+    })
+
+    TAG_TO_ROLE_MAP = MappingProxyType({
+        member.value: member
+        for member in itertools.chain(Role.__members__.values(), _AR3SpecificRole.__members__.values())
+    })
+
     def tag(self,version):
-        return "VARIABLE-DATA-PROTOTYPE" if version >= 4.0 else "DATA-ELEMENT-PROTOTYPE"
-    def __init__(self, name, typeRef, isQueued=False, swAddressMethodRef=None, swCalibrationAccess=None, swImplPolicy = None, category = None, parent=None, adminData=None):
+        return self.role if version >= 4.0 else AutosarDataPrototype._AR4_TO_AR3_ROLE_MAP[self.role]
+
+    def __init__(
+
+        self,
+        role: Role,
+        name,
+        typeRef,
+        isQueued=False,
+        initValue=None,
+        initValueRef=None,
+        swAddressMethodRef=None,
+        swCalibrationAccess=None,
+        swImplPolicy = None,
+        category = None,
+        parent=None,
+        adminData=None
+    ):
         super().__init__(name, parent, adminData, category)
+        self.role = role
         if isinstance(typeRef,str):
             self.typeRef=typeRef
         elif hasattr(typeRef,'ref'):
@@ -73,6 +113,8 @@ class DataElement(Element):
         assert(isinstance(isQueued,bool))
         self.swImplPolicy = swImplPolicy
         self.isQueued = isQueued
+        self.initValue = initValue
+        self.initValueRef = initValueRef
         self.swAddressMethodRef = swAddressMethodRef
         self.swCalibrationAccess = swCalibrationAccess
         self.dataConstraintRef = None
@@ -105,23 +147,6 @@ class DataElement(Element):
             self.dataConstraintRef = props.dataConstraintRef
         else:
             raise NotImplementedError(type(props))
-
-class ParameterDataPrototype(Element):
-    """
-    Represents <PARAMETER-DATA-PROTOTYPE> (AUTOSAR 4)
-    Or
-    Represents <CALPRM-ELEMENT-PROTOTYPE> (AUTOSAR 3)
-    """
-
-    def __init__(self, name, typeRef, swAddressMethodRef=None, swCalibrationAccess=None, initValue = None, parent=None, adminData=None):
-        super().__init__(name, parent, adminData)
-        self.typeRef = typeRef
-        self.swAddressMethodRef = swAddressMethodRef
-        self.swCalibrationAccess = swCalibrationAccess
-        self.initValue = initValue
-
-    def tag(self, version):
-        return "PARAMETER-DATA-PROTOTYPE" if version >=4.0 else "CALPRM-ELEMENT-PROTOTYPE"
 
 class SoftwareAddressMethod(Element):
     """
