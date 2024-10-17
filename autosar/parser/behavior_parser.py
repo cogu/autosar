@@ -264,6 +264,8 @@ class BehaviorParser(ElementParser):
         xmlLocalDataReadAccess = None
         xmlLocalDataWriteAccess = None
 
+        self.push()
+
         if self.version < 4.0:
             for xmlElem in xmlRoot.findall('*'):
                 if xmlElem.tag=='SHORT-NAME':
@@ -321,7 +323,7 @@ class BehaviorParser(ElementParser):
                 elif xmlElem.tag == 'RUNS-INSIDE-EXCLUSIVE-AREA-REFS':
                     pass #implement later
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    self.defaultHandler(xmlElem)
         runnableEntity = autosar.behavior.RunnableEntity(name, canBeInvokedConcurrently, symbol, parent)
         if minStartInterval is not None:
             runnableEntity.minStartInterval = float(1000 * minStartInterval)
@@ -428,6 +430,7 @@ class BehaviorParser(ElementParser):
         
         if runnableEntity is not None:
             runnableEntity.adminData = adminData
+        self.pop()
         return runnableEntity
 
     def parseModeAccessPoint(self, xmlRoot):
