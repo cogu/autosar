@@ -1,8 +1,8 @@
 import sys
-from autosar.parser.parser_base import ElementParser, parseElementUUID
+from autosar.parser.parser_base import EntityParser, parseElementUUID
 import autosar.datatype
 
-class ModeDeclarationParser(ElementParser):
+class ModeDeclarationParser(EntityParser):
     def __init__(self,version=3):
         self.version=version
 

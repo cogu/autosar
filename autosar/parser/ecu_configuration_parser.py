@@ -1,7 +1,7 @@
 import autosar.ecuc
-from autosar.parser.parser_base import ElementParser, parseElementUUID
+from autosar.parser.parser_base import EntityParser, parseElementUUID
 
-class EcuConfigurationParser(ElementParser):
+class EcuConfigurationParser(EntityParser):
     """
     Ecu Configuration parser
     """

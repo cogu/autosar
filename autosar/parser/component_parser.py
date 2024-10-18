@@ -2,8 +2,7 @@ import sys
 from autosar.base import splitRef, hasAdminData, parseAdminDataNode
 import autosar.component
 from autosar.parser.behavior_parser import BehaviorParser
-from autosar.parser.parser_base import ElementParser, parseElementUUID
-from autosar.parser.constant_parser import ConstantParser
+from autosar.parser.parser_base import EntityParser, parseElementUUID
 
 def _getDataElemNameFromComSpec(xmlElem,portInterfaceRef):
     if xmlElem.find('./DATA-ELEMENT-REF') is not None:
@@ -46,7 +45,7 @@ def _getVariableNameFromComSpec(xmlElem,portInterfaceRef):
             return name
     return None
 
-class ComponentTypeParser(ElementParser):
+class ComponentTypeParser(EntityParser):
     """
     ComponentType parser
     """
@@ -55,7 +54,6 @@ class ComponentTypeParser(ElementParser):
         super().__init__(version)
         if self.version >=4.0:
             self.behavior_parser = BehaviorParser(version)
-            self.constant_parser = ConstantParser(version)
 
         if self.version >= 3.0 and self.version < 4.0:
             self.switcher = { 'APPLICATION-SOFTWARE-COMPONENT-TYPE': self.parseSoftwareComponent,
@@ -438,7 +436,7 @@ class ComponentTypeParser(ElementParser):
             if xmlChild.tag == 'CONSTANT-REFERENCE':
                 initValueRef = self.parseTextNode(xmlChild.find('./CONSTANT-REF'))
             else:
-                values = self.constant_parser.parseValueV4(xmlElem, None)
+                values = self.constantParser.parseValueV4(xmlElem, None)
                 if len(values) != 1:
                     raise ValueError('{0} cannot cannot contain multiple elements'.format(xmlElem.tag))
                 initValue = values[0]

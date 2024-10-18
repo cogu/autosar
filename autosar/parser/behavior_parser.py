@@ -1,11 +1,9 @@
 import autosar.behavior, autosar.element
-from autosar.parser.parser_base import ElementParser, parseElementUUID
-from autosar.parser.constant_parser import ConstantParser
+from autosar.parser.parser_base import EntityParser, parseElementUUID
 
-class BehaviorParser(ElementParser):
+class BehaviorParser(EntityParser):
     def __init__(self,version=3.0):
         super().__init__(version)
-        self.constantParser = ConstantParser(version)
 
     def getSupportedTags(self):
         if (self.version >=3.0) and (self.version < 4.0):

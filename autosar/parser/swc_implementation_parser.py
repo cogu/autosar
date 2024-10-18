@@ -4,9 +4,9 @@ Implements the class SwcImplementationParser
 import sys
 from autosar.base import splitRef, hasAdminData, parseAdminDataNode
 import autosar.component
-from autosar.parser.parser_base import ElementParser, parseElementUUID
+from autosar.parser.parser_base import EntityParser, parseElementUUID
 
-class SwcImplementationParser(ElementParser):
+class SwcImplementationParser(EntityParser):
     """
     ComponentType parser
     """

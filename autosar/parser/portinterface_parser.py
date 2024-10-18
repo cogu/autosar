@@ -3,9 +3,9 @@ import autosar.portinterface
 import autosar.base
 import autosar.element
 import autosar.mode
-from autosar.parser.parser_base import ElementParser, parseElementUUID
+from autosar.parser.parser_base import EntityParser, parseElementUUID
 
-class PortInterfacePackageParser(ElementParser):
+class PortInterfacePackageParser(EntityParser):
     def __init__(self, version=3.0):
         super().__init__(version)
 
@@ -406,7 +406,7 @@ class PortInterfacePackageParser(ElementParser):
             return None
 
 
-class SoftwareAddressMethodParser(ElementParser):
+class SoftwareAddressMethodParser(EntityParser):
     def __init__(self,version=3.0):
         self.version=version
 

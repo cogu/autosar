@@ -1,8 +1,8 @@
 from autosar.base import parseXMLFile,splitRef,parseTextNode,parseIntNode,hasAdminData,parseAdminDataNode
 from autosar.system import *
-from autosar.parser.parser_base import ElementParser, parseElementUUID
+from autosar.parser.parser_base import EntityParser, parseElementUUID
 
-class SystemParser(ElementParser):
+class SystemParser(EntityParser):
     def __init__(self,version=3.0):
         super().__init__(version)
 

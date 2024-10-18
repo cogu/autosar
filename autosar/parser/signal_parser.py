@@ -1,8 +1,8 @@
 from autosar.base import parseXMLFile,splitRef,parseTextNode,parseIntNode
 from autosar.signal import *
-from autosar.parser.parser_base import ElementParser, parseElementUUID
+from autosar.parser.parser_base import EntityParser, parseElementUUID
 
-class SignalParser(ElementParser):
+class SignalParser(EntityParser):
     def __init__(self,version=3):
         self.version=version
 

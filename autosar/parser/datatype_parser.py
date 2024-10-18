@@ -1,8 +1,8 @@
 import sys
-from autosar.parser.parser_base import ElementParser, parseElementUUID
+from autosar.parser.parser_base import EntityParser, parseElementUUID
 import autosar.datatype
 
-class DataTypeParser(ElementParser):
+class DataTypeParser(EntityParser):
     def __init__(self,version=3.0):
         super().__init__(version)
 
@@ -414,7 +414,7 @@ class DataTypeParser(ElementParser):
                 return literal
         raise ValueError(f"Invalid value for ArraySizeHandling field: '{text}'")
 
-class DataTypeSemanticsParser(ElementParser):
+class DataTypeSemanticsParser(EntityParser):
     def __init__(self,version=3.0):
         super().__init__(version)
 
@@ -535,7 +535,7 @@ class DataTypeSemanticsParser(ElementParser):
         denominator = self.parseNumberNode(denXml[0])
         return offset, numerator, denominator
 
-class DataTypeUnitsParser(ElementParser):
+class DataTypeUnitsParser(EntityParser):
     def __init__(self,version=3.0):
         super().__init__(version)
 

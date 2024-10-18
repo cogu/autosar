@@ -439,6 +439,48 @@ class BaseParser:
             if itemXML.tag == 'SW-DATA-DEF-PROPS':
                 props.variants = self.parseSwDataDefProps(itemXML)
         return props
+    
+    def parseSymbolProps(self, xmlRoot):
+        assert(xmlRoot.tag == 'SYMBOL-PROPS')
+        name, symbol = None, None
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == 'SHORT-NAME':
+                name = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'SYMBOL':
+                symbol = self.parseTextNode(xmlElem)
+            else:
+                raise NotImplementedError(xmlElem.tag)
+        return SymbolProps(name, symbol)
+            
+class ElementParser(BaseParser, metaclass=abc.ABCMeta):
+    """Parser for ARXML elements"""
+
+    def __init__(self, version=None):
+        super().__init__(version)
+
+    @abc.abstractmethod
+    def getSupportedTags(self):
+        """
+        Returns a list of tag-names (strings) that this parser supports.
+        A generator returning strings is also OK.
+        """
+    @abc.abstractmethod
+    def parseElement(self, xmlElement, parent = None):
+        """
+        Invokes the parser
+
+        xmlElem: Element to parse (instance of xml.etree.ElementTree.Element)
+        parent: the parent object (usually a package object)
+        Should return an object derived from autosar.element.Element
+        """
+
+class EntityParser(ElementParser, metaclass=abc.ABCMeta):
+    """Parser for AUTOSAR entities"""
+
+    def __init__(self, version=None):
+        super().__init__(version)
+        from autosar.parser.constant_parser import ConstantParser # avoid circular import
+        self.constantParser = ConstantParser(version)
 
     @parseElementUUID
     def parseAutosarDataPrototype(self, xmlRoot, parent = None):
@@ -486,37 +528,3 @@ class BaseParser:
                 raise RuntimeError(f'Error in TAG {xmlRoot.tag}: SHORT-NAME and TYPE-TREF must not be None')
             else:
                 raise RuntimeError(f'Error in TAG {xmlRoot.tag}: TYPE-TREF not defined for element with SHORT-NAME "{self.name}"')
-        
-    
-    def parseSymbolProps(self, xmlRoot):
-        assert(xmlRoot.tag == 'SYMBOL-PROPS')
-        name, symbol = None, None
-        for xmlElem in xmlRoot.findall('./*'):
-            if xmlElem.tag == 'SHORT-NAME':
-                name = self.parseTextNode(xmlElem)
-            elif xmlElem.tag == 'SYMBOL':
-                symbol = self.parseTextNode(xmlElem)
-            else:
-                raise NotImplementedError(xmlElem.tag)
-        return SymbolProps(name, symbol)
-            
-class ElementParser(BaseParser, metaclass=abc.ABCMeta):
-
-    def __init__(self, version=None):
-        super().__init__(version)
-
-    @abc.abstractmethod
-    def getSupportedTags(self):
-        """
-        Returns a list of tag-names (strings) that this parser supports.
-        A generator returning strings is also OK.
-        """
-    @abc.abstractmethod
-    def parseElement(self, xmlElement, parent = None):
-        """
-        Invokes the parser
-
-        xmlElem: Element to parse (instance of xml.etree.ElementTree.Element)
-        parent: the parent object (usually a package object)
-        Should return an object derived from autosar.element.Element
-        """
