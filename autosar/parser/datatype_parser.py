@@ -1,6 +1,7 @@
 import sys
 from autosar.parser.parser_base import EntityParser, parseElementUUID
 import autosar.datatype
+from autosar.util.errorHandler import handleNotImplementedError, handleValueError
 
 class DataTypeParser(EntityParser):
     def __init__(self,version=3.0):
@@ -50,7 +51,7 @@ class DataTypeParser(EntityParser):
                     if elem.tag=='COMPU-METHOD-REF':
                         dataType.compuMethodRef=self.parseTextNode(elem)
                     else:
-                        raise NotImplementedError(elem.tag)
+                        handleNotImplementedError(elem.tag)
             return dataType
 
     @parseElementUUID
@@ -131,7 +132,7 @@ class DataTypeParser(EntityParser):
                     elif xmlChildElem.tag == 'CONSTR-LEVEL':
                         constraintLevel = self.parseIntNode(xmlChildElem)
                     else:
-                        raise NotImplementedError(xmlChildElem.tag)
+                        handleNotImplementedError(xmlChildElem.tag)
             else:
                 self.defaultHandler(xmlElem)
         elem = autosar.datatype.DataConstraint(self.name, rules, constraintLevel, parent, self.adminData)
@@ -200,7 +201,7 @@ class DataTypeParser(EntityParser):
             if xmlElem.tag == 'IMPLEMENTATION-DATA-TYPE-ELEMENT':
                 elements.append(self.parseImplementationDataTypeElement(xmlElem, parent))
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         return elements
 
     @parseElementUUID
@@ -269,7 +270,7 @@ class DataTypeParser(EntityParser):
                         assert(dataTypeMap is not None)
                         dataTypeMaps.append(dataTypeMap)
                     else:
-                        raise NotImplementedError(xmlElem.tag)
+                        handleNotImplementedError(xmlElem.tag)
             elif xmlElem.tag == 'MODE-REQUEST-TYPE-MAPS':
                 for xmlChild in xmlElem.findall('./*'):
                     if xmlChild.tag == 'MODE-REQUEST-TYPE-MAP':
@@ -277,9 +278,9 @@ class DataTypeParser(EntityParser):
                         assert(modeRequestTypeMap is not None)
                         modeRequestTypeMaps.append(modeRequestTypeMap)
                     else:
-                        raise NotImplementedError(xmlElem.tag)
+                        handleNotImplementedError(xmlElem.tag)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         if (name is None):
             raise RuntimeError('SHORT-NAME cannot be None')
         elem = autosar.datatype.DataTypeMappingSet(name, parent, adminData)
@@ -361,7 +362,7 @@ class DataTypeParser(EntityParser):
                 if xmlChild.tag == 'APPLICATION-RECORD-ELEMENT':
                     elem.elements.append(self._parseApplicationRecordElementXML(xmlChild, parent = elem))
                 else:
-                    raise NotImplementedError(xmlChild.tag)
+                    handleNotImplementedError(xmlChild.tag)
         self.pop(elem)
         return elem
 
@@ -391,7 +392,7 @@ class DataTypeParser(EntityParser):
             elif xmlElem.tag == 'IMPLEMENTATION-DATA-TYPE-REF':
                 implementationDataTypeRef = self.parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         return autosar.datatype.DataTypeMap(applicationDataTypeRef, implementationDataTypeRef)
 
     def _parseModeRequestTypeMapXML(self, xmlRoot):
@@ -403,7 +404,7 @@ class DataTypeParser(EntityParser):
             elif xmlElem.tag == 'IMPLEMENTATION-DATA-TYPE-REF':
                 implementationDataTypeRef = self.parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         return autosar.datatype.ModeRequestTypeMap(modeDeclarationGroupRef, implementationDataTypeRef)
 
     def parseArraySizeHandling(self, xmlRoot):
@@ -412,7 +413,7 @@ class DataTypeParser(EntityParser):
         for literal in autosar.datatype.ArraySizeHandlingEnum:
             if literal.value == text:
                 return literal
-        raise ValueError(f"Invalid value for ArraySizeHandling field: '{text}'")
+        handleValueError(f"Invalid value for ArraySizeHandling field: '{text}'")
 
 class DataTypeSemanticsParser(EntityParser):
     def __init__(self,version=3.0):
@@ -474,9 +475,9 @@ class DataTypeSemanticsParser(EntityParser):
                         computation.defaultValue = self.parseNumberNode(xmlChild)
                         break
                     else:
-                        raise NotImplementedError(xmlChild.tag)
+                        handleNotImplementedError(xmlChild.tag)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         return computation
 
     def _parseCompuScaleXML(self, xmlRoot):
@@ -508,7 +509,7 @@ class DataTypeSemanticsParser(EntityParser):
             elif xmlElem.tag == 'MASK':
                 mask = self.parseIntNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         compuScale = autosar.datatype.CompuScaleElement(lowerLimit, upperLimit, lowerLimitType, upperLimitType, label, symbol, adminData)
         compuScale.offset = offset
         compuScale.numerator = numerator

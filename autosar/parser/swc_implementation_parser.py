@@ -5,6 +5,7 @@ import sys
 from autosar.base import splitRef, hasAdminData, parseAdminDataNode
 import autosar.component
 from autosar.parser.parser_base import EntityParser, parseElementUUID
+from autosar.util.errorHandler import handleNotImplementedError
 
 class SwcImplementationParser(EntityParser):
     """
@@ -45,7 +46,7 @@ class SwcImplementationParser(EntityParser):
                     if codeElem.tag  == 'CODE':
                         implementation.codeDescriptors.append(self.parseCodeDescriptor(codeElem, parent=implementation))
                     else:
-                        raise NotImplementedError(codeElem.tag)
+                        handleNotImplementedError(codeElem.tag)
             elif xmlElem.tag == 'COMPILERS':
                 #TODO: Implement later
                 continue

@@ -1,6 +1,7 @@
 from autosar.base import parseXMLFile,splitRef,parseTextNode,parseIntNode,hasAdminData,parseAdminDataNode
 from autosar.system import *
 from autosar.parser.parser_base import EntityParser, parseElementUUID
+from autosar.util.errorHandler import handleNotImplementedError
 
 class SystemParser(EntityParser):
     def __init__(self,version=3.0):
@@ -43,7 +44,7 @@ class SystemParser(EntityParser):
                 elif xmlElem.tag=='SOFTWARE-COMPOSITION':
                     self.parseSoftwareComposition(xmlElem,system)
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    handleNotImplementedError(xmlElem.tag)
             return system
         else:
             raise KeyError('expected to find <SHORT-NAME> inside <SYSTEM> tag')
@@ -53,7 +54,7 @@ class SystemParser(EntityParser):
             if xmlElem.tag=='FIBEX-ELEMENT-REF':
                 system.fibexElementRefs.append(parseTextNode(xmlElem))
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
 
     def parseSystemMapping(self,xmlRoot,system):
         """parses <MAPPING>"""
@@ -70,7 +71,7 @@ class SystemParser(EntityParser):
             elif xmlElem.tag=='SW-MAPPINGS':
                 self.parseSwMapping(xmlElem,system.mapping)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
 
     def parseDataMapping(self,xmlRoot,dataMapping):
         """parses <DATA-MAPPINGS>"""
@@ -83,7 +84,7 @@ class SystemParser(EntityParser):
             elif xmlElem.tag=='SENDER-RECEIVER-TO-SIGNAL-GROUP-MAPPING':
                 dataMapping.senderReceiverToSignalGroup.append(self.parseSenderReceiverToSignalGroupMapping(xmlElem))
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
 
     def parseSwImplMapping(self,xmlRoot,mapping):
         """parses <SW-IMPL-MAPPINGS>"""
@@ -92,7 +93,7 @@ class SystemParser(EntityParser):
             if xmlElem.tag=='SWC-TO-IMPL-MAPPING':
                 pass
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
 
     def parseSwMapping(self,xmlRoot,mapping):
         """parses <SW-MAPPINGS>"""
@@ -101,7 +102,7 @@ class SystemParser(EntityParser):
             if xmlElem.tag=='SWC-TO-ECU-MAPPING':
                 pass
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
 
     def parseSoftwareComposition(self,xmlRoot,system):
         """parses <SOFTWARE-COMPOSITION>"""
@@ -113,7 +114,7 @@ class SystemParser(EntityParser):
             elif xmlElem.tag=='SOFTWARE-COMPOSITION-TREF':
                 pass
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
 
     def parseSenderReceiverToSignalMapping(self,xmlRoot):
         """parses <'SENDER-RECEIVER-TO-SIGNAL-MAPPING'>"""
@@ -126,7 +127,7 @@ class SystemParser(EntityParser):
             elif xmlElem.tag=='SIGNAL-REF':
                 signalRef=parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         if (dataElemIRef is not None) and (signalRef is not None):
             return SenderReceiverToSignalMapping(dataElemIRef,signalRef)
         else:
@@ -154,9 +155,9 @@ class SystemParser(EntityParser):
                         for xmlItem in xmlChild.findall('./RECORD-ELEMENT-MAPPINGS/SENDER-REC-RECORD-ELEMENT-MAPPING'):
                             typeMapping.elements.append(self.parseSenderRecRecordElementMapping(xmlItem))
                     else:
-                        raise NotImplementedError(xmlChild.tag)
+                        handleNotImplementedError(xmlChild.tag)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         return SenderReceiverToSignalGroupMapping(dataElemIRef,signalGroupRef,typeMapping)
 
     def parseDataElemInstanceRef(self,xmlRoot):
@@ -173,7 +174,7 @@ class SystemParser(EntityParser):
             elif xmlChild.tag=='PORT-PROTOTYPE-REF':
                 dataElemIRef.portPrototypeRef=parseTextNode(xmlChild)
             else:
-                raise NotImplementedError(xmlChild.tag)
+                handleNotImplementedError(xmlChild.tag)
         return dataElemIRef
 
     def parseSenderRecRecordElementMapping(self,xmlRoot):
@@ -187,10 +188,10 @@ class SystemParser(EntityParser):
             elif xmlElem.tag=='SIGNAL-REF': #minOccurs="0" maxOccurs="1"
                 signalRef=parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         return SenderRecRecordElementMapping(recordElementRef,signalRef)
 
     def parseSenderRecArrayElementMapping(self,xmlRoot):
         """parses <'SENDER-REC-RECORD-ELEMENT-MAPPING'>"""
         assert(xmlRoot.tag=='SENDER-REC-RECORD-ELEMENT-MAPPING')
-        raise NotImplementedError(xmlRoot.tag)
+        handleNotImplementedError(xmlRoot.tag)

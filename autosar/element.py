@@ -2,6 +2,7 @@ from enum import Enum
 import itertools
 from types import MappingProxyType
 import autosar.base
+from autosar.util.errorHandler import handleNotImplementedError, handleValueError
 
 class Element:
     def __init__(self, name, parent = None, adminData = None, category = None, uuid = None):
@@ -31,7 +32,7 @@ class Element:
             return self.parent.rootWS()
 
     def __deepcopy__(self,memo):
-        raise NotImplementedError(type(self))
+        handleNotImplementedError(type(self))
 
 class LabelElement:
     """Same as Element but uses label as main identifier instead of name"""
@@ -137,7 +138,7 @@ class AutosarDataPrototype(Element):
                 if ucvalue == 'QUEUED':
                     self.isQueued = True
             else:
-                raise ValueError('invalid swImplPolicy value: ' +  value)
+                handleValueError('invalid swImplPolicy value: ' +  value)
 
     def setProps(self, props):
         if isinstance(props, autosar.base.SwDataDefPropsConditional):
@@ -146,7 +147,7 @@ class AutosarDataPrototype(Element):
             self.swImplPolicy = props.swImplPolicy
             self.dataConstraintRef = props.dataConstraintRef
         else:
-            raise NotImplementedError(type(props))
+            handleNotImplementedError(type(props))
 
 class SoftwareAddressMethod(Element):
     """

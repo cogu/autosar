@@ -3,6 +3,7 @@ import autosar.element
 import autosar.parser.parser_base
 import sys
 from autosar.base import parseTextNode
+from autosar.util.errorHandler import handleValueError
 
 class PackageParser:
     def __init__(self,version):
@@ -43,8 +44,8 @@ class PackageParser:
                             package.append(element)
                             elementNames.add(element.name)
                     else:
-                        #raise ValueError("parse error: %s"%type(element))
-                        raise ValueError("parse error: %s"%xmlElement.tag)
+                        #handleValueError("parse error: %s"%type(element))
+                        handleValueError("parse error: %s"%xmlElement.tag)
                 else:
                     package.unhandledParser.add(xmlElement.tag)
 

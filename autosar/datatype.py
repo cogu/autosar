@@ -5,6 +5,8 @@ import autosar.base
 import copy
 import collections
 
+from autosar.util.errorHandler import handleNotImplementedError
+
 class ArraySizeHandlingEnum(Enum):
     """
     This enumeration defines different ways to handle the sizes of variable size arrays
@@ -384,7 +386,7 @@ class DataConstraint(Element):
             elif rule['type'] == 'physicalConstraint':
                 self.rules.append(PhysicalConstraint(lowerLimit=rule['lowerLimit'], upperLimit=rule['upperLimit'], lowerLimitType=rule['lowerLimitType'], upperLimitType=rule['upperLimitType']))
             else:
-                raise NotImplementedError
+                handleNotImplementedError("")
     @property
     def constraintLevel(self):
         if self.level is None or isinstance(self.level, int):
@@ -397,34 +399,34 @@ class DataConstraint(Element):
         if len(self.rules) == 1:
             return self.rules[0].lowerLimit
         else:
-            raise NotImplementedError('Only a single constraint rule supported')
+            handleNotImplementedError('Only a single constraint rule supported')
 
     @property
     def upperLimit(self):
         if len(self.rules) == 1:
             return self.rules[0].upperLimit
         else:
-            raise NotImplementedError('Only a single constraint rule supported')
+            handleNotImplementedError('Only a single constraint rule supported')
 
     @property
     def lowerLimitType(self):
         if len(self.rules) == 1:
             return self.rules[0].lowerLimitType
         else:
-            raise NotImplementedError('Only a single constraint rule supported')
+            handleNotImplementedError('Only a single constraint rule supported')
 
     @property
     def upperLimitType(self):
         if len(self.rules) == 1:
             return self.rules[0].upperLimitType
         else:
-            raise NotImplementedError('Only a single constraint rule supported')
+            handleNotImplementedError('Only a single constraint rule supported')
 
     def checkValue(self, v):
         if len(self.rules) == 1:
             self.rules[0].check_value(v)
         else:
-            raise NotImplementedError('Only a single rule constraint supported')
+            handleNotImplementedError('Only a single rule constraint supported')
 
     def findByType(self, constraintType = 'internalConstraint'):
         """

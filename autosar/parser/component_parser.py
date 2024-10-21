@@ -3,6 +3,7 @@ from autosar.base import splitRef, hasAdminData, parseAdminDataNode
 import autosar.component
 from autosar.parser.behavior_parser import BehaviorParser
 from autosar.parser.parser_base import EntityParser, parseElementUUID
+from autosar.util.errorHandler import handleNotImplementedError, handleValueError
 
 def _getDataElemNameFromComSpec(xmlElem,portInterfaceRef):
     if xmlElem.find('./DATA-ELEMENT-REF') is not None:
@@ -106,7 +107,7 @@ class ComponentTypeParser(EntityParser):
         elif xmlRoot.tag == 'NV-BLOCK-SW-COMPONENT-TYPE': #for AUTOSAR 4.x
             componentType = autosar.component.NvBlockComponent(self.parseTextNode(xmlRoot.find('SHORT-NAME')),parent)
         else:
-            raise NotImplementedError(xmlRoot.tag)
+            handleNotImplementedError(xmlRoot.tag)
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag not in handledTags:
                 if xmlElem.tag == 'ADMIN-DATA':
@@ -118,7 +119,7 @@ class ComponentTypeParser(EntityParser):
                 elif xmlElem.tag == 'INTERNAL-BEHAVIORS':
                     behaviors = xmlElem.findall('./SWC-INTERNAL-BEHAVIOR')
                     if len(behaviors)>1:
-                        raise ValueError('%s: an SWC cannot have multiple internal behaviors'%(componentType))
+                        handleValueError('%s: an SWC cannot have multiple internal behaviors'%(componentType))
                     elif len(behaviors) == 1:
                         componentType.behavior = self.behavior_parser.parseSWCInternalBehavior(behaviors[0], componentType)
                 elif xmlElem.tag == 'NV-BLOCK-DESCRIPTORS' and isinstance(componentType, autosar.component.NvBlockComponent):
@@ -178,7 +179,7 @@ class ComponentTypeParser(EntityParser):
                             assert(comspec is not None)
                             port.comspec.append(comspec)
                         else:
-                            raise NotImplementedError(xmlItem.tag)
+                            handleNotImplementedError(xmlItem.tag)
                 componentType.requirePorts.append(port)
             elif(xmlPort.tag == 'P-PORT-PROTOTYPE'):
                 portName = xmlPort.find('SHORT-NAME').text
@@ -225,7 +226,7 @@ class ComponentTypeParser(EntityParser):
                             assert(comspec is not None)
                             port.comspec.append(comspec)
                         else:
-                            raise NotImplementedError(xmlItem.tag)
+                            handleNotImplementedError(xmlItem.tag)
                 componentType.providePorts.append(port)
 
     @parseElementUUID
@@ -277,7 +278,7 @@ class ComponentTypeParser(EntityParser):
                 typeRef=self.parseTextNode(elem.find('TYPE-TREF'))
                 parent.components.append(autosar.component.ComponentPrototype(name,typeRef,parent))
             else:
-                raise NotImplementedError(elem.tag)
+                handleNotImplementedError(elem.tag)
 
     def parseConnectorsV3(self,xmlRoot,parent=None):
         """
@@ -299,7 +300,7 @@ class ComponentTypeParser(EntityParser):
                 outerPortRef=self.parseTextNode(elem.find('./OUTER-PORT-REF'))
                 parent.delegationConnectors.append(autosar.component.DelegationConnector(name, autosar.component.InnerPortInstanceRef(innerComponentRef,innerPortRef), autosar.component.OuterPortRef(outerPortRef)))
             else:
-                raise NotImplementedError(elem.tag)
+                handleNotImplementedError(elem.tag)
 
     def parseConnectorsV4(self,xmlRoot,parent=None):
         """
@@ -319,7 +320,7 @@ class ComponentTypeParser(EntityParser):
                         requesterComponentRef=self.parseTextNode(xmlChild.find('./CONTEXT-COMPONENT-REF'))
                         requesterPortRef=self.parseTextNode(xmlChild.find('./TARGET-R-PORT-REF'))
                     else:
-                        raise NotImplementedError(xmlChild.tag)
+                        handleNotImplementedError(xmlChild.tag)
                 if providerComponentRef is None:
                     raise RuntimeError('PROVIDER-IREF/CONTEXT-COMPONENT-REF is missing: item=%s'%name)
                 if providerComponentRef is None:
@@ -340,11 +341,11 @@ class ComponentTypeParser(EntityParser):
                         innerComponentRef=self.parseTextNode(xmlChild.find('./CONTEXT-COMPONENT-REF'))
                         innerPortRef=self.parseTextNode(xmlChild.find('./TARGET-P-PORT-REF'))
                     else:
-                        raise NotImplementedError(xmlChild.tag)
+                        handleNotImplementedError(xmlChild.tag)
                 outerPortRef=self.parseTextNode(xmlElem.find('./OUTER-PORT-REF'))
                 parent.delegationConnectors.append(autosar.component.DelegationConnector(name, autosar.component.InnerPortInstanceRef(innerComponentRef,innerPortRef), autosar.component.OuterPortRef(outerPortRef)))
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
 
     def _parseModeSwitchReceiverComSpec(self, xmlRoot):
         (enhancedMode, supportAsync, modeGroupRef) = (None, None, None)
@@ -357,7 +358,7 @@ class ComponentTypeParser(EntityParser):
             elif xmlElem.tag == 'MODE-GROUP-REF':
                 modeGroupRef = self.parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         return autosar.port.ModeSwitchComSpec(None, enhancedMode, supportAsync, modeGroupRef = modeGroupRef)
 
     def _parseModeSwitchSenderComSpec(self, xmlRoot):
@@ -377,7 +378,7 @@ class ComponentTypeParser(EntityParser):
             elif xmlElem.tag == 'QUEUE-LENGTH':
                 queueLength = self.parseIntNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         return autosar.port.ModeSwitchComSpec(None, enhancedMode, None, queueLength, modeSwitchAckTimeout, modeGroupRef)
 
     def _parseParameterComSpec(self, xmlRoot, portInterfaceRef):
@@ -386,11 +387,11 @@ class ComponentTypeParser(EntityParser):
             if xmlElem.tag == 'INIT-VALUE':
                 initValue, initValueRef = self._parseAr4InitValue(xmlElem)
                 if initValueRef is not None:
-                    raise NotImplementedError('CONSTANT-REFERENCE')
+                    handleNotImplementedError('CONSTANT-REFERENCE')
             elif xmlElem.tag == 'PARAMETER-REF':
                 name = _getParameterNameFromComSpec(xmlElem, portInterfaceRef)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         if (name is not None):
             return autosar.port.ParameterComSpec(name, initValue)
         else:
@@ -406,7 +407,7 @@ class ComponentTypeParser(EntityParser):
             elif xmlElem.tag == 'VARIABLE-REF':
                 name = _getVariableNameFromComSpec(xmlElem, portInterfaceRef)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         if (name is not None):
             return autosar.port.NvProvideComSpec(name, ramBlockInitValue=ramBlockInitValue,
                                                     ramBlockInitValueRef=ramBlockInitValueRef,
@@ -423,7 +424,7 @@ class ComponentTypeParser(EntityParser):
             elif xmlElem.tag == 'VARIABLE-REF':
                 name = _getVariableNameFromComSpec(xmlElem, portInterfaceRef)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         if (name is not None):
             return autosar.port.NvRequireComSpec(name, initValue=initValue,
                                                     initValueRef=initValueRef)
@@ -438,6 +439,7 @@ class ComponentTypeParser(EntityParser):
             else:
                 values = self.constantParser.parseValueV4(xmlElem, None)
                 if len(values) != 1:
-                    raise ValueError('{0} cannot cannot contain multiple elements'.format(xmlElem.tag))
-                initValue = values[0]
+                    handleValueError('{0} cannot cannot contain multiple elements'.format(xmlElem.tag))
+                else:
+                    initValue = values[0]
         return (initValue, initValueRef)

@@ -12,6 +12,8 @@ import autosar.builder
 import copy
 import collections
 
+from autosar.util.errorHandler import handleNotImplementedError
+
 sender_receiver_com_spec_arguments_ar4 = {'dataElement', 'initValue', 'initValueRef', 'aliveTimeout', 'queueLength'}
 sender_receiver_com_spec_arguments_ar3 = {'dataElement', 'canInvalidate', 'initValueRef', 'aliveTimeout', 'queueLength'}
 client_server_com_spec_arguments = {'operation', 'queueLength'}
@@ -53,7 +55,7 @@ class Port(Element):
                         raise ValueError('Failed to create comspec from comspec data: '+repr(data))
                     self.comspec.append(comspecObj)
             else:
-                raise NotImplementedError("not supported")
+                handleNotImplementedError("not supported")
 
     def _createComSpecFromDict(self, ws, portInterface, comspec):
         """
@@ -241,7 +243,7 @@ class Port(Element):
                         raise ValueError('romBlockInitValue must be an instance of (autosar.constant.ValueAR4, int, float, str)')
                 return NvProvideComSpec(nvData.name, ramBlockInitValue, ramBlockInitValueRef, romBlockInitValue, romBlockInitValueRef)
         else:
-            raise NotImplementedError(type(portInterface))
+            handleNotImplementedError(type(portInterface))
         return None
 
     def _validate_com_spec_keys_against_port_interface(self, comspec, portInterface):
@@ -311,7 +313,7 @@ class RequirePort(Port):
             super().__init__(other.name, other.portInterfaceRef, None, False, parent)
             self.comspec=copy.deepcopy(other.comspec)
         else:
-            raise NotImplementedError(type(name))
+            handleNotImplementedError(type(name))
 
     def copy(self):
         """
@@ -338,7 +340,7 @@ class ProvidePort(Port):
             super().__init__(other.name, other.portInterfaceRef, None, False, parent)
             self.comspec=copy.deepcopy(other.comspec)
         else:
-            raise NotImplementedError(type(name))
+            handleNotImplementedError(type(name))
 
     def copy(self):
         """

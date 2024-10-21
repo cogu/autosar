@@ -1,6 +1,7 @@
 from autosar.base import parseXMLFile,splitRef,parseTextNode,parseIntNode
 from autosar.signal import *
 from autosar.parser.parser_base import EntityParser, parseElementUUID
+from autosar.util.errorHandler import handleNotImplementedError
 
 class SignalParser(EntityParser):
     def __init__(self,version=3):
@@ -48,7 +49,7 @@ class SignalParser(EntityParser):
                     if L2Xml is not None:
                         desc = parseTextNode(L2Xml)
             else:
-                raise NotImplementedError(elem.tag)
+                handleNotImplementedError(elem.tag)
 #      if (name is not None) and (dataTypeRef is not None) and (initValueRef is not None) and length is not None:
         if (name is not None) and length is not None:  #All signals doesn't have IV constant Ref or DatatypeRef
             return SystemSignal(name, dataTypeRef, initValueRef, length, desc, parent)
@@ -67,9 +68,9 @@ class SignalParser(EntityParser):
                     if childElem.tag=='SYSTEM-SIGNAL-REF':
                         systemSignalRefs.append(parseTextNode(childElem))
                     else:
-                        raise NotImplementedError(childElem.tag)
+                        handleNotImplementedError(childElem.tag)
             else:
-                raise NotImplementedError(elem.tag)
+                handleNotImplementedError(elem.tag)
 
         if (name is not None) and (isinstance(systemSignalRefs,list)):
             return SystemSignalGroup(name,systemSignalRefs)

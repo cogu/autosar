@@ -1,6 +1,8 @@
 import xml.etree.ElementTree as ElementTree
 import re
 
+from autosar.util.errorHandler import handleValueError
+
 pVersion = re.compile(r"(\d+)\.(\d+)\.(\d+)")
 
 class AdminData:
@@ -117,7 +119,8 @@ def parseBoolean(value):
     if isinstance(value,str):
         if value == 'true': return True
         elif value =='false': return False
-    raise ValueError(value)
+    handleValueError(value)
+    return None
 
 def indexByName(lst,name):
     assert(isinstance(lst,list))
@@ -294,7 +297,7 @@ class SwDataDefPropsConditional:
             if ucvalue in enum_values:
                 self._swImplPolicy = ucvalue
             else:
-                raise ValueError('invalid swImplPolicy value: ' +  value)
+                handleValueError('invalid swImplPolicy value: ' +  value)
 
     def hasAnyProp(self):
         """

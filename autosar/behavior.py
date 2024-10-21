@@ -6,6 +6,8 @@ import autosar.base
 from autosar.element import Element, AutosarDataPrototype
 import collections
 
+from autosar.util.errorHandler import handleNotImplementedError
+
 
 ###################################### Events ###########################################
 class Event(Element):
@@ -274,7 +276,7 @@ class RunnableEntity(Element):
             self.dataSendPoints.append(dataSendPoint)
             dataSendPoint.parent=self
         else:
-            raise NotImplementedError(str(type(elem)))
+            handleNotImplementedError(str(type(elem)))
 
     def _verifyDataReceivePoint(self,dataReceivePoint):
         ws=self.rootWS()
@@ -757,12 +759,12 @@ class InternalBehaviorCommon(Element):
                             dataElem=portInterface.dataElements[0]
                             self._createSendReceivePoint(port,dataElem,runnable)
                         else:
-                            raise NotImplementedError('port interfaces with multiple data elements not supported')
+                            handleNotImplementedError('port interfaces with multiple data elements not supported')
                     elif isinstance(portInterface, autosar.portinterface.ModeSwitchInterface):
                         modeGroup = portInterface.modeGroup
                         self._createModeAccessPoint(port, modeGroup, runnable)
                     else:
-                        raise NotImplementedError(type(portInterface))
+                        handleNotImplementedError(type(portInterface))
                 else:
                     #this section is for portAccess where both port name and dataelement is represented as "portName/dataElementName"
                     port = self.swc.find(ref[0])
@@ -782,7 +784,7 @@ class InternalBehaviorCommon(Element):
                             raise ValueError('invalid operation reference: '+str(elem))
                         self._createSyncServerCallPoint(port,operation,runnable)
                     else:
-                        raise NotImplementedError(type(portInterface))
+                        handleNotImplementedError(type(portInterface))
         if exclusiveAreas is not None:
             if isinstance(exclusiveAreas, str):
                 exclusiveAreas =[exclusiveAreas]
@@ -813,7 +815,7 @@ class InternalBehaviorCommon(Element):
                     modeGroup = portInterface.modeGroup
                     self._createModeSwitchPoint(port, modeGroup, runnable)
                 else:
-                    raise NotImplementedError(str(type(portInterface)))
+                    handleNotImplementedError(str(type(portInterface)))
         return runnable
 
     def _createSendReceivePoint(self,port,dataElement,runnable):
@@ -869,12 +871,12 @@ class InternalBehaviorCommon(Element):
             if (portInterface.modeGroups is None) or (len(portInterface.modeGroups)==0):
                 raise ValueError('port interface %s has no valid mode groups'%portInterface.name)
             if len(portInterface.modeGroups)>1:
-                raise NotImplementedError('port interfaces with only one mode group is currently supported')
+                handleNotImplementedError('port interfaces with only one mode group is currently supported')
             modeGroup = portInterface.modeGroups[0]
         elif isinstance(portInterface, autosar.portinterface.ModeSwitchInterface):
             modeGroup = portInterface.modeGroup
         else:
-            raise NotImplementedError(type(portInterface))
+            handleNotImplementedError(type(portInterface))
         assert(modeGroup is not None)
         dataType = ws.find(modeGroup.typeRef)
         if (dataType is None):
@@ -1130,7 +1132,7 @@ class InternalBehavior(InternalBehaviorCommon):
             self.runnables.append(elem)
             elem.parent=self
         else:
-            raise NotImplementedError(str(type(elem)))
+            handleNotImplementedError(str(type(elem)))
 
     def find(self, ref):
         if ref is None: return None
@@ -1683,7 +1685,7 @@ def createNvBlockDescriptor(parent, portAccess, **kwargs):
                 nvData=portInterface.nvDatas[0]
                 descriptor = NvBlockDescriptor('{0}_{1.name}_{2.name}'.format(baseName, port, nvData), parent, adminData)
             else:
-                raise NotImplementedError('port interfaces with multiple data elements not supported')
+                handleNotImplementedError('port interfaces with multiple data elements not supported')
         else:
             #this section is for portAccess where both port name and dataelement is represented as "portName/dataElementName"
             if isinstance(portInterface, autosar.portinterface.NvDataInterface):

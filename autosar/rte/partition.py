@@ -3,6 +3,7 @@ import autosar.component
 import autosar.rte.base
 from autosar.rte.base import (ReadPortFunction, WritePortFunction, SendPortFunction, ReceivePortFunction, CallPortFunction,
                               CalPrmPortFunction, DataElement, Operation, RequirePort, ProvidePort)
+from autosar.util.errorHandler import handleNotImplementedError
 import cfile as C
 import sys
 import autosar.bsw.com
@@ -217,7 +218,7 @@ class Component:
             assert (operation is not None)
             event = autosar.rte.base.OperationInvokedEvent(ar_event, runnable, port, operation)
          else:
-            raise NotImplementedError(str(type(event)))
+            handleNotImplementedError(str(type(event)))
          self.events.append(event)
             
    def _process_port_access(self):
@@ -225,7 +226,7 @@ class Component:
          if isinstance(access, autosar.rte.base.OperationPortAccess):
             proto = access.port.create_server_call_api(access.operation)
          else:
-            raise NotImplementedError(str(type(access)))
+            handleNotImplementedError(str(type(access)))
    def _runnables_finalize(self):
       #operation_invoke_events = [event for event in self.events if isinstance(event, OperationInvokedEvent)]         
       for runnable in self.runnables:
@@ -409,7 +410,7 @@ class Partition:
    #       elif isinstance(event, autosar.behavior.OperationInvokedEvent):
    #          pass #already processed
    #       else:
-   #          raise NotImplementedError(type(event))
+   #          handleNotImplementedError(type(event))
 
    def _analyzePortRef(self, portRef):
       parts=autosar.base.splitRef(portRef)

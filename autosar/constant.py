@@ -1,4 +1,5 @@
 from autosar.element import Element, LabelElement
+from autosar.util.errorHandler import handleNotImplementedError
 
 def initializer_string(constant):
     if constant is None:
@@ -13,7 +14,7 @@ def initializer_string(constant):
             values.append(initializer_string(elem))
         return prolog+', '.join(values) + epilog
     else:
-        raise NotImplementedError(str(type(constant)))
+        handleNotImplementedError(str(type(constant)))
 
 
 class Value(Element):

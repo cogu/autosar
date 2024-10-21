@@ -1,5 +1,6 @@
 import autosar.behavior, autosar.element
 from autosar.parser.parser_base import EntityParser, parseElementUUID
+from autosar.util.errorHandler import handleNotImplementedError, handleValueError
 
 class BehaviorParser(EntityParser):
     def __init__(self,version=3.0):
@@ -54,11 +55,11 @@ class BehaviorParser(EntityParser):
                         elif xmlEvent.tag == 'OPERATION-INVOKED-EVENT':
                             event = self.parseOperationInvokedEvent(xmlEvent,internalBehavior)
                         else:
-                            raise NotImplementedError(xmlEvent.tag)
+                            handleNotImplementedError(xmlEvent.tag)
                         if event is not None:
                             internalBehavior.events.append(event)
                         else:
-                            raise ValueError('event')
+                            handleValueError('event')
                 elif xmlNode.tag == 'PORT-API-OPTIONS':
                     for xmlOption in xmlNode.findall('./PORT-API-OPTION'):
                         portAPIOption = autosar.behavior.PortAPIOption(self.parseTextNode(xmlOption.find('PORT-REF')),self.parseBooleanNode(xmlOption.find('ENABLE-TAKE-ADDRESS')),self.parseBooleanNode(xmlOption.find('INDIRECT-API')))
@@ -79,7 +80,7 @@ class BehaviorParser(EntityParser):
                             swcNvBlockNeeds=self.parseSwcNvBlockNeeds(xmlElem)
                             if swcNvBlockNeeds is not None: internalBehavior.swcNvBlockNeeds.append(swcNvBlockNeeds)
                         else:
-                            raise NotImplementedError(xmlElem.tag)
+                            handleNotImplementedError(xmlElem.tag)
                 elif xmlNode.tag == 'SHARED-CALPRMS':
                     for xmlElem in xmlNode.findall('./*'):
                         if xmlElem.tag=='CALPRM-ELEMENT-PROTOTYPE':
@@ -87,16 +88,16 @@ class BehaviorParser(EntityParser):
                             assert(calPrmElemPrototype is not None)
                             internalBehavior.sharedCalParams.append(calPrmElemPrototype)
                         else:
-                            raise NotImplementedError(xmlElem.tag)
+                            handleNotImplementedError(xmlElem.tag)
                 elif xmlNode.tag == 'EXCLUSIVE-AREAS':
                     for xmlElem in xmlNode.findall('./*'):
                         if xmlElem.tag=='EXCLUSIVE-AREA':
                             exclusiveArea=autosar.behavior.ExclusiveArea(self.parseTextNode(xmlElem.find('SHORT-NAME')), internalBehavior)
                             internalBehavior.exclusiveAreas.append(exclusiveArea)
                         else:
-                            raise NotImplementedError(xmlElem.tag)
+                            handleNotImplementedError(xmlElem.tag)
                 else:
-                    raise NotImplementedError(xmlNode.tag)
+                    handleNotImplementedError(xmlNode.tag)
             return internalBehavior
 
     @parseElementUUID
@@ -142,7 +143,7 @@ class BehaviorParser(EntityParser):
                             #TODO: Implement later
                             pass
                         else:
-                            raise NotImplementedError(xmlEvent.tag)
+                            handleNotImplementedError(xmlEvent.tag)
                         if event is not None:
                             internalBehavior.events.append(event)
                 elif xmlElem.tag == 'PORT-API-OPTIONS':
@@ -169,14 +170,14 @@ class BehaviorParser(EntityParser):
                             dataElement = self.parseAutosarDataPrototype(xmlChild, internalBehavior)
                             internalBehavior.perInstanceMemories.append(dataElement)
                         else:
-                            raise NotImplementedError(xmlChild.tag)
+                            handleNotImplementedError(xmlChild.tag)
                 elif xmlElem.tag == 'SERVICE-DEPENDENCYS':
                     for xmlChildElem in xmlElem.findall('./*'):
                         if xmlChildElem.tag == 'SWC-SERVICE-DEPENDENCY':
                             swcServiceDependency = self.parseSwcServiceDependency(xmlChildElem, internalBehavior)
                             internalBehavior.serviceDependencies.append(swcServiceDependency)
                         else:
-                            raise NotImplementedError(xmlChildElem.tag)
+                            handleNotImplementedError(xmlChildElem.tag)
                 elif xmlElem.tag == 'SHARED-PARAMETERS':
                     for xmlChildElem in xmlElem.findall('./*'):
                         if xmlChildElem.tag == 'PARAMETER-DATA-PROTOTYPE':
@@ -184,14 +185,14 @@ class BehaviorParser(EntityParser):
                             if tmp is not None:
                                 internalBehavior.sharedParameterDataPrototype.append(tmp)
                         else:
-                            raise NotImplementedError(xmlChildElem.tag)
+                            handleNotImplementedError(xmlChildElem.tag)
                 elif xmlElem.tag == 'EXCLUSIVE-AREAS':
                     for xmlChild in xmlElem.findall('./*'):
                         if xmlChild.tag=='EXCLUSIVE-AREA':
                             exclusiveArea=autosar.behavior.ExclusiveArea(self.parseTextNode(xmlChild.find('SHORT-NAME')), internalBehavior)
                             internalBehavior.exclusiveAreas.append(exclusiveArea)
                         else:
-                            raise NotImplementedError(xmlChild.tag)
+                            handleNotImplementedError(xmlChild.tag)
                 elif xmlElem.tag == 'PER-INSTANCE-PARAMETERS':
                     for xmlChildElem in xmlElem.findall('./*'):
                         if xmlChildElem.tag == 'PARAMETER-DATA-PROTOTYPE':
@@ -201,21 +202,21 @@ class BehaviorParser(EntityParser):
                                 internalBehavior.perInstanceParameterDataPrototype.append(
                                     tmp)
                         else:
-                            raise NotImplementedError(xmlChildElem.tag)
+                            handleNotImplementedError(xmlChildElem.tag)
                 elif xmlElem.tag == 'EXPLICIT-INTER-RUNNABLE-VARIABLES':
                     for xmlChild in xmlElem.findall('./*'):
                         if xmlChild.tag == 'VARIABLE-DATA-PROTOTYPE':
                             dataElement = self.parseAutosarDataPrototype(xmlChild, internalBehavior)
                             internalBehavior.explicitVariables.append(dataElement)
                         else:
-                            raise NotImplementedError(xmlChild.tag)
+                            handleNotImplementedError(xmlChild.tag)
                 elif xmlElem.tag == 'IMPLICIT-INTER-RUNNABLE-VARIABLES':
                     for xmlChild in xmlElem.findall('./*'):
                         if xmlChild.tag == 'VARIABLE-DATA-PROTOTYPE':
                             dataElement = self.parseAutosarDataPrototype(xmlChild, internalBehavior)
                             internalBehavior.implicitVariables.append(dataElement)
                         else:
-                            raise NotImplementedError(xmlChild.tag)
+                            handleNotImplementedError(xmlChild.tag)
                 elif xmlElem.tag == 'HANDLE-TERMINATION-AND-RESTART':
                     pass #implement later
                 elif xmlElem.tag == 'STATIC-MEMORYS':
@@ -232,16 +233,16 @@ class BehaviorParser(EntityParser):
                             if tmp is not None:
                                 internalBehavior.constantMemories.append(tmp)
                         else:
-                            raise NotImplementedError(xmlChild.tag)
+                            handleNotImplementedError(xmlChild.tag)
                 elif xmlElem.tag == 'VARIATION-POINT-PROXYS':
                     for xmlChild in xmlElem.findall('./*'):
                         if xmlChild.tag == 'VARIATION-POINT-PROXY':
                             variationPointProxy = self.parseVariationPointProxy(xmlChild, internalBehavior)
                             internalBehavior.variationPointProxies.append(variationPointProxy)
                         else:
-                            raise NotImplementedError(xmlChild.tag)
+                            handleNotImplementedError(xmlChild.tag)
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    handleNotImplementedError(xmlElem.tag)
             return internalBehavior
 
     @parseElementUUID
@@ -283,7 +284,7 @@ class BehaviorParser(EntityParser):
                 elif xmlElem.tag=='ADMIN-DATA':
                     adminData=self.parseAdminDataNode(xmlElem)
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    handleNotImplementedError(xmlElem.tag)
         else:
             for xmlElem in xmlRoot.findall('*'):
                 if xmlElem.tag=='SHORT-NAME':
@@ -362,7 +363,7 @@ class BehaviorParser(EntityParser):
                     assert(modeAccessPoint is not None)
                     runnableEntity.modeAccessPoints.append(modeAccessPoint)
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    handleNotImplementedError(xmlElem.tag)
         if xmlServerCallPoints is not None:
             for xmlServerCallPoint in xmlServerCallPoints.findall('./SYNCHRONOUS-SERVER-CALL-POINT'):
                 syncServerCallPoint = self.parseSyncServerCallPoint(xmlServerCallPoint)
@@ -380,7 +381,7 @@ class BehaviorParser(EntityParser):
                     if tmp is not None:
                         runnableEntity.parameterAccessPoints.append(tmp)
                 else:
-                    raise NotImplementedError(xmlChild.tag)
+                    handleNotImplementedError(xmlChild.tag)
         if xmlModeSwitchPoints is not None:
             for xmlElem in xmlModeSwitchPoints.findall('./*'):
                 if xmlElem.tag == 'MODE-SWITCH-POINT':
@@ -388,7 +389,7 @@ class BehaviorParser(EntityParser):
                     assert(modeSwitchPoint is not None)
                     runnableEntity.modeSwitchPoints.append(modeSwitchPoint)
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    handleNotImplementedError(xmlElem.tag)
 
         if xmlDataReadAccess is not None:
             for xmlElem in xmlDataReadAccess.findall('./*'):
@@ -397,7 +398,7 @@ class BehaviorParser(EntityParser):
                     assert(variableAccess is not None)
                     runnableEntity.dataReadAccess.append(variableAccess)
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    handleNotImplementedError(xmlElem.tag)
         
         if xmlDataWriteAccess is not None:
             for xmlElem in xmlDataWriteAccess.findall('./*'):
@@ -406,7 +407,7 @@ class BehaviorParser(EntityParser):
                     assert(variableAccess is not None)
                     runnableEntity.dataWriteAccess.append(variableAccess)
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    handleNotImplementedError(xmlElem.tag)
 
         if xmlLocalDataReadAccess is not None:
             for xmlElem in xmlLocalDataReadAccess.findall('./*'):
@@ -415,7 +416,7 @@ class BehaviorParser(EntityParser):
                     assert(variableAccess is not None)
                     runnableEntity.dataLocalReadAccess.append(variableAccess)
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    handleNotImplementedError(xmlElem.tag)
         
         if xmlLocalDataWriteAccess is not None:
             for xmlElem in xmlLocalDataWriteAccess.findall('./*'):
@@ -424,7 +425,7 @@ class BehaviorParser(EntityParser):
                     assert(variableAccess is not None)
                     runnableEntity.dataLocalWriteAccess.append(variableAccess)
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    handleNotImplementedError(xmlElem.tag)
         
         if runnableEntity is not None:
             runnableEntity.adminData = adminData
@@ -443,16 +444,16 @@ class BehaviorParser(EntityParser):
                         if modeGroupInstanceRef is None:
                             modeGroupInstanceRef=self._parseRequireModeGroupInstanceRef(childElem)
                         else:
-                            raise NotImplementedError('Multiple instances of R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF not implemented')
+                            handleNotImplementedError('Multiple instances of R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF not implemented')
                     elif childElem.tag == 'P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF':
                         if modeGroupInstanceRef is None:
                             modeGroupInstanceRef=self._parseProvideModeGroupInstanceRef(childElem)
                         else:
-                            raise NotImplementedError('Multiple instances of P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF not implemented')
+                            handleNotImplementedError('Multiple instances of P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF not implemented')
                     else:
-                        raise NotImplementedError(childElem.tag)
+                        handleNotImplementedError(childElem.tag)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         return autosar.behavior.ModeAccessPoint(name, modeGroupInstanceRef)
 
     @parseElementUUID
@@ -465,7 +466,7 @@ class BehaviorParser(EntityParser):
             elif xmlElem.tag == 'MODE-GROUP-IREF':
                 modeGroupInstanceRef=self._parseProvideModeGroupInstanceRef(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         return autosar.behavior.ModeSwitchPoint(name, modeGroupInstanceRef)
 
     @parseElementUUID
@@ -478,7 +479,7 @@ class BehaviorParser(EntityParser):
             elif xmlElem.tag == 'ACCESSED-VARIABLE':
                 variableAccess = self.parseAccessedVariable(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         return autosar.behavior.VariableAccess(name, variableAccess.portPrototypeRef, variableAccess.targetDataPrototypeRef)
 
     @parseElementUUID
@@ -491,7 +492,7 @@ class BehaviorParser(EntityParser):
             elif xmlElem.tag == 'ACCESSED-VARIABLE':
                 variableAccess = self.parseLocalAccessedVariable(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         return autosar.behavior.LocalVariableAccess(name, variableAccess.localVariableRef)
 
     @parseElementUUID
@@ -508,11 +509,11 @@ class BehaviorParser(EntityParser):
                     elif xmlChild.tag == 'LOCAL-PARAMETER-REF':
                         accessedParameter = autosar.behavior.LocalParameterRef(self.parseTextNode(xmlChild))
                     else:
-                        raise NotImplementedError(xmlChild.tag)
+                        handleNotImplementedError(xmlChild.tag)
             elif xmlElem.tag == 'SW-DATA-DEF-PROPS':
                 swDataDefProps = self.parseSwDataDefProps(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         if (name is not None) and (accessedParameter is not None):
             return autosar.behavior.ParameterAccessPoint(name, accessedParameter, swDataDefProps=swDataDefProps)
 
@@ -526,7 +527,7 @@ class BehaviorParser(EntityParser):
             elif xmlElem.tag == 'TARGET-MODE-GROUP-REF':
                 modeGroupRef = self.parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         if requirePortRef is None:
             raise RuntimeError('CONTEXT-R-PORT-REF not set')
         if modeGroupRef is None:
@@ -544,7 +545,7 @@ class BehaviorParser(EntityParser):
             elif xmlElem.tag == 'TARGET-MODE-GROUP-REF':
                 modeGroupRef = self.parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         if providePortRef is None:
             raise RuntimeError('CONTEXT-P-PORT-REF not set')
         if modeGroupRef is None:
@@ -614,7 +615,7 @@ class BehaviorParser(EntityParser):
             if xmlElem.tag == 'DISABLED-MODE-IREF':
                 disabledInModes.append(self._parseDisabledModeInstanceRef(xmlElem))
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         return disabledInModes
 
     def _parseDisabledModeInstanceRef(self, xmlRoot):
@@ -628,7 +629,7 @@ class BehaviorParser(EntityParser):
             elif xmlElem.tag == 'TARGET-MODE-DECLARATION-REF':
                 modeDeclarationRef = self.parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         if (modeDeclarationRef is not None) and (modeDeclarationGroupPrototypeRef is not None) and (requirePortPrototypeRef is not None):
             return autosar.behavior.DisabledModeInstanceRef(modeDeclarationRef,modeDeclarationGroupPrototypeRef,requirePortPrototypeRef)
         else:
@@ -660,19 +661,19 @@ class BehaviorParser(EntityParser):
                 if xmlElem.tag == 'MODE-IREF':
                     modeInstanceRefs.append(self.parseModeInstanceRef(xmlElem))
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    handleNotImplementedError(xmlElem.tag)
             startOnEventRef = self.parseTextNode(xmlNode.find('START-ON-EVENT-REF'))
             activation = self.parseTextNode(xmlNode.find('ACTIVATION'))
             modeSwitchEvent=autosar.behavior.ModeSwitchEvent(name, startOnEventRef, activation, parent, self.version)
             modeSwitchEvent.modeInstRef=modeInstanceRefs[0]
         else:
-            raise NotImplementedError('version: '+self.version)
+            handleNotImplementedError('version: '+self.version)
         return modeSwitchEvent
 
     @parseElementUUID
     def parseModeSwitchedAckEvent(self, xmlNode, parent = None):
         if self.version < 4.0:
-            raise NotImplementedError(xmlNode.tag)
+            handleNotImplementedError(xmlNode.tag)
         else:
             assert(xmlNode.tag=='MODE-SWITCHED-ACK-EVENT')
             (name, startOnEventRef, eventSourceRef, xmlDisabledModeRefs) = (None, None, None, None)
@@ -686,7 +687,7 @@ class BehaviorParser(EntityParser):
                 elif xmlElem.tag == 'EVENT-SOURCE-REF':
                     eventSourceRef = self.parseTextNode(xmlElem)
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    handleNotImplementedError(xmlElem.tag)
             modeSwitchEvent = autosar.behavior.ModeSwitchAckEvent(name, startOnEventRef, eventSourceRef, parent)
             if xmlDisabledModeRefs is not None:
                 modeSwitchEvent.disabledInModes = self._parseDisabledModesInstanceRefs(xmlDisabledModeRefs, parent)
@@ -707,7 +708,7 @@ class BehaviorParser(EntityParser):
             elif xmlElem.tag == 'PERIOD':
                 period = self.parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
 
         if (name is not None) and (startOnEventRef is not None) and (period is not None):
             timingEvent=autosar.behavior.TimingEvent(name, startOnEventRef, float(period)*1000, parent)
@@ -746,7 +747,7 @@ class BehaviorParser(EntityParser):
             elif xmlElem.tag == 'MODE-DEPENDENCY':
                 modeDependency = self._parseModeDependency(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         operationInvokedEvent=autosar.behavior.OperationInvokedEvent(name, startOnEventRef, parent)
         operationInvokedEvent.modeDependency = modeDependency
         operationInvokedEvent.operationInstanceRef = operationInstanceRef
@@ -763,7 +764,7 @@ class BehaviorParser(EntityParser):
             elif xmlElem.tag == dataElemTag:
                 dataElemRef = self.parseTextNode(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         return autosar.behavior.DataInstanceRef(portRef,dataElemRef)
 
     def parseOperationInstanceRef(self,xmlRoot,portTag):
@@ -828,7 +829,7 @@ class BehaviorParser(EntityParser):
             if xmlElem.tag=='SW-ADDR-METHOD-REF':
                 calPrmElemPrototype.swDataDefsProps.append(self.parseTextNode(xmlElem))
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         return calPrmElemPrototype
 
     def _parseServerCallPoint(self, xmlRoot, callType):
@@ -843,7 +844,7 @@ class BehaviorParser(EntityParser):
                 elif xmlElem.tag=='TIMEOUT':
                     timeout=self.parseFloatNode(xmlElem)
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    handleNotImplementedError(xmlElem.tag)
         else:
             for xmlElem in xmlRoot.findall('*'):
                 if xmlElem.tag=='SHORT-NAME':
@@ -854,11 +855,11 @@ class BehaviorParser(EntityParser):
                         if xmlOperation.tag=='OPERATION-IREF':
                             operationInstanceRefs.append(self.parseOperationInstanceRef(xmlOperation,'R-PORT-PROTOTYPE-REF'))
                         else:
-                            raise NotImplementedError(xmlElem.tag)
+                            handleNotImplementedError(xmlElem.tag)
                 elif xmlElem.tag=='TIMEOUT':
                     timeout=self.parseFloatNode(xmlElem)
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    handleNotImplementedError(xmlElem.tag)
         retval=callType(name,timeout)
         retval.operationInstanceRefs=operationInstanceRefs
         return retval
@@ -914,18 +915,18 @@ class BehaviorParser(EntityParser):
                         tmp = self._parseRoleBasedDataAssignment(xmlChildElem)
                         if tmp is not None: roleBasedDataAssignments.append(tmp)
                     else:
-                        raise NotImplementedError(xmlChildElem.tag)
+                        handleNotImplementedError(xmlChildElem.tag)
             elif xmlElem.tag == 'ASSIGNED-PORTS':
                 for xmlChildElem in xmlElem.findall('./*'):
                     if xmlChildElem.tag == 'ROLE-BASED-PORT-ASSIGNMENT':
                         tmp = self._parseRoleBasedPortAssignment(xmlChildElem)
                         if tmp is not None: roleBasedPortAssignments.append(tmp)
                     else:
-                        raise NotImplementedError(xmlChildElem.tag)
+                        handleNotImplementedError(xmlChildElem.tag)
             elif xmlElem.tag == 'SERVICE-NEEDS':
                 serviceNeeds = self.parseServiceNeeds(xmlElem)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         swcServiceDependency = autosar.behavior.SwcServiceDependency(name, parent = parent)
         if desc is not None:
             swcServiceDependency.desc=desc[0]
@@ -953,7 +954,7 @@ class BehaviorParser(EntityParser):
             if xmlElem.tag == 'NV-BLOCK-NEEDS':
                 xmlNvBlockNeeds = xmlElem
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         serviceNeeds = autosar.behavior.ServiceNeeds(None, parent)
         if xmlNvBlockNeeds is not None:
             serviceNeeds.nvmBlockNeeds = self.parseNvmBlockNeeds(xmlElem, serviceNeeds)
@@ -1027,16 +1028,16 @@ class BehaviorParser(EntityParser):
                     if xmlChild.tag == 'LOCAL-VARIABLE-REF':
                         localVariableRef = self.parseTextNode(xmlChild)
                     else:
-                        raise NotImplementedError(xmlChild.tag)
+                        handleNotImplementedError(xmlChild.tag)
             elif xmlElem.tag == 'USED-PARAMETER-ELEMENT':
                 pass
                 for xmlChild in xmlElem.findall('./*'):
                     if xmlChild.tag == 'LOCAL-PARAMETER-REF':
                         localParameterRef = autosar.behavior.LocalParameterRef(self.parseTextNode(xmlChild))
                     else:
-                        raise NotImplementedError(xmlChild.tag)
+                        handleNotImplementedError(xmlChild.tag)
             else:
-                raise NotImplementedError(xmlElem.tag)
+                handleNotImplementedError(xmlElem.tag)
         if (role is not None) and ( (localVariableRef is not None) or (localParameterRef is not None) ):
             return autosar.behavior.RoleBasedDataAssignment(role, localVariableRef, localParameterRef)
         return None
@@ -1097,22 +1098,22 @@ class BehaviorParser(EntityParser):
                             localVariableRef, portPrototypeRef, targetDataPrototypeRef = self.parseAutosarVariableRefXML(xmlData)
                             if xmlData.tag == 'NV-RAM-BLOCK-ELEMENT':
                                 if localVariableRef is None:
-                                    raise ValueError('Cannot find needed LOCAL-VARIABLE-REF for NV-RAM-BLOCK-ELEMENT in {0}'.format(descriptor.name))
+                                    handleValueError('Cannot find needed LOCAL-VARIABLE-REF for NV-RAM-BLOCK-ELEMENT in {0}'.format(descriptor.name))
                                 dataMapping.nvRamBlockElement = autosar.behavior.NvRamBlockElement(dataMapping, localVariableRef=localVariableRef)
                             elif xmlData.tag == 'READ-NV-DATA':
                                 if portPrototypeRef is None and targetDataPrototypeRef is None:
-                                    raise ValueError('Cannot find needed AUTOSAR-VARIABLE-IREF or AUTOSAR-VARIABLE-IN-IMPL-DATATYPE for READ-NV-DATA in {0}'.format(descriptor.name))
+                                    handleValueError('Cannot find needed AUTOSAR-VARIABLE-IREF or AUTOSAR-VARIABLE-IN-IMPL-DATATYPE for READ-NV-DATA in {0}'.format(descriptor.name))
                                 dataMapping.readNvData = autosar.behavior.ReadNvData(dataMapping, autosarVariablePortRef=portPrototypeRef, autosarVariableElementRef=targetDataPrototypeRef)
                             elif xmlData.tag == 'WRITTEN-NV-DATA':
                                 if portPrototypeRef is None and targetDataPrototypeRef is None:
-                                    raise ValueError('Cannot find needed AUTOSAR-VARIABLE-IREF or AUTOSAR-VARIABLE-IN-IMPL-DATATYPE for WRITTEN-NV-DATA in {0}'.format(descriptor.name))
+                                    handleValueError('Cannot find needed AUTOSAR-VARIABLE-IREF or AUTOSAR-VARIABLE-IN-IMPL-DATATYPE for WRITTEN-NV-DATA in {0}'.format(descriptor.name))
                                 dataMapping.writtenNvData = autosar.behavior.WrittenNvData(dataMapping, autosarVariablePortRef=portPrototypeRef, autosarVariableElementRef=targetDataPrototypeRef)
                             elif xmlData.tag == 'WRITTEN-READ-NV-DATA':
                                 if portPrototypeRef is None and targetDataPrototypeRef is None:
-                                    raise ValueError('Cannot find needed AUTOSAR-VARIABLE-IREF or AUTOSAR-VARIABLE-IN-IMPL-DATATYPE for WRITTEN-READ-NV-DATA in {0}'.format(descriptor.name))
+                                    handleValueError('Cannot find needed AUTOSAR-VARIABLE-IREF or AUTOSAR-VARIABLE-IN-IMPL-DATATYPE for WRITTEN-READ-NV-DATA in {0}'.format(descriptor.name))
                                 dataMapping.writtenReadNvData = autosar.behavior.WrittenReadNvData(dataMapping, autosarVariablePortRef=portPrototypeRef, autosarVariableElementRef=targetDataPrototypeRef)
                             else:
-                                raise NotImplementedError(xmlData.tag)
+                                handleNotImplementedError(xmlData.tag)
                 elif xmlElem.tag == 'NV-BLOCK-NEEDS':
                     descriptor.nvBlockNeeds = self.parseNvmBlockNeeds(xmlElem, descriptor)
                 elif xmlElem.tag == 'RAM-BLOCK':
@@ -1144,10 +1145,10 @@ class BehaviorParser(EntityParser):
                         parts = parts[2].partition('/')
 
                     if timingEvent is None:
-                        raise ValueError('Cannot find timing event {0}'.format(timingRef))
+                        handleValueError('Cannot find timing event {0}'.format(timingRef))
                     descriptor.timingEventRef = timingEvent.name
                 else:
-                    raise NotImplementedError(xmlElem.tag)
+                    handleNotImplementedError(xmlElem.tag)
             return descriptor
 
     @parseElementUUID
@@ -1204,22 +1205,22 @@ class BehaviorParser(EntityParser):
                     raise RuntimeError("VALUE-ACCESS is only allowed when the category is 'VALUE'")
                 binding_time = item.get("BINDING-TIME")
                 # TODO: Implement
-                raise NotImplementedError(tag)
+                handleNotImplementedError(tag)
             elif tag == "IMPLEMENTATION-DATA-TYPE-REF":
                 if category != "VALUE":
                     raise RuntimeError("IMPLEMENTATION-DATA-TYPE-REF is only allowed when the category is 'VALUE'")
                 # TODO: Implement
-                raise NotImplementedError(tag)
+                handleNotImplementedError(tag)
             elif tag == "POST-BUILD-VALUE-ACCESS-REF":
                 if category != "VALUE":
                     raise RuntimeError("POST-BUILD-VALUE-ACCESS-REF is only allowed when the category is 'VALUE'")
                 # TODO: Implement
-                raise NotImplementedError(tag)
+                handleNotImplementedError(tag)
             elif tag == "POST-BUILD-VARIANT-CONDITIONS":
                 if category != "CONDITION":
                     raise RuntimeError("POST-BUILD-VARIANT-CONDITIONS is only allowed when the category is 'CONDITION'")
                 # TODO: Implement
-                raise NotImplementedError(tag)
+                handleNotImplementedError(tag)
             else:
                 raise RuntimeError(f"Tag '{tag}' is not present in the AUTOSAR specification for the VARIATION-POINT-PROXY element")
 

@@ -2,6 +2,7 @@ import collections
 from autosar.element import (Element, AutosarDataPrototype)
 import autosar.base
 import autosar.mode
+from autosar.util.errorHandler import handleNotImplementedError
 
 class InvalidationPolicy:
     valid_values = ['DONT-INVALIDATE', 'EXTERNAL-REPLACEMENT', 'KEEP', 'REPLACE']
@@ -36,7 +37,7 @@ class PortInterface(Element):
             raise ValueError('expected string')
 
     def find(self, ref):
-        raise NotImplementedError(type(self))
+        handleNotImplementedError(type(self))
 
 class SenderReceiverInterface(PortInterface):
 

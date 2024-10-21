@@ -3,6 +3,8 @@ import autosar.datatype
 import collections
 import sys
 
+from autosar.util.errorHandler import handleNotImplementedError
+
 class ValueBuilder:
     """
     Builds AUTOSAR 4 value specifications from python data
@@ -60,9 +62,9 @@ class ValueBuilder:
                         raise ValueError('Invalid reference: '+str(referencedTypeRef))
                     value = self._createFromDataTypeInternal(ws, label, referencedType, rawValue, parent)
                 else:
-                    raise NotImplementedError(dataType.category)
+                    handleNotImplementedError(dataType.category)
         else:
-            raise NotImplementedError(type(dataType))
+            handleNotImplementedError(type(dataType))
         return value
 
     def _createRecordValueFromTypeInternal(self, ws, label, dataType, initValue, parent=None):
@@ -87,7 +89,7 @@ class ValueBuilder:
                     if childProps.implementationTypeRef is not None:
                         childTypeRef = childProps.implementationTypeRef
                     else:
-                        raise NotImplementedError('could not deduce the type of element "%s"'%(elem.name))
+                        handleNotImplementedError('could not deduce the type of element "%s"'%(elem.name))
                     childType = ws.find(childTypeRef, role='DataType')
                     if childType is None:
                         raise autosar.base.InvalidDataTypeRef(str(childTypeRef))
@@ -158,4 +160,4 @@ class ValueBuilder:
                     raise RuntimeError('Failed to build init-value for "{}"'.format(str(inner_value)))
             return array_value
         else:
-            raise NotImplementedError(type(value))
+            handleNotImplementedError(type(value))

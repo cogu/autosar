@@ -1,5 +1,6 @@
 import autosar.ecuc
 from autosar.parser.parser_base import EntityParser, parseElementUUID
+from autosar.util.errorHandler import handleNotImplementedError
 
 class EcuConfigurationParser(EntityParser):
     """
@@ -46,7 +47,7 @@ class EcuConfigurationParser(EntityParser):
             name, def_reference, def_dest = self.getMetaInformation(xmlRoot)
             ecuConfig = autosar.ecuc.EcuConfig(name, def_reference, def_dest, parent)
         else:
-            raise NotImplementedError(xmlRoot.tag)
+            handleNotImplementedError(xmlRoot.tag)
 
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag in self.handledTags:

@@ -13,6 +13,8 @@ import collections
 import decimal
 import sys
 
+from autosar.util.errorHandler import handleNotImplementedError
+
 _supress_warnings = True
 
 class Package(object):
@@ -454,7 +456,7 @@ class Package(object):
                     assert(isinstance(declarationName, str))
                     item=autosar.mode.ModeDeclaration(declarationName, declarationValue, group)
                 else:
-                    raise NotImplementedError(type(declaration))
+                    handleNotImplementedError(type(declaration))
                 group.modeDeclarations.append(item)
                 if (initialMode is not None) and (declarationName == initialMode):
                     group.initialModeRef = item.ref
@@ -680,7 +682,7 @@ class Package(object):
                 pass
             else:
                 raise ValueError('initValue: expected type int, float or Decimal, got '+str(type(initValue)))
-            raise NotImplementedError("Creating constants from RealDataType not implemented")
+            handleNotImplementedError("Creating constants from RealDataType not implemented")
         else:
             raise ValueError('unrecognized type: '+str(type(dataType)))
         assert(value is not None)
@@ -732,13 +734,13 @@ class Package(object):
                             pass
                         else:
                             raise ValueError('v: expected type int, float or Decimal, got '+str(type(v)))
-                        raise NotImplementedError("Creating constants from RealDataType not implemented")
+                        handleNotImplementedError("Creating constants from RealDataType not implemented")
                     else:
                         raise ValueError('unrecognized type: '+str(type(childType)))
                 else:
                     raise ValueError('%s: missing initValue field: %s'%(name, elem.name))
         else:
-            raise NotImplementedError(type(initValue))
+            handleNotImplementedError(type(initValue))
         return value
 
 
@@ -788,11 +790,11 @@ class Package(object):
                         pass
                     else:
                         raise ValueError('v: expected type int, float or Decimal, got '+str(type(v)))
-                    raise NotImplementedError("Creating constants from RealDataType not implemented")
+                    handleNotImplementedError("Creating constants from RealDataType not implemented")
                 else:
                     raise ValueError('unrecognized type: '+str(type(childType)))
         else:
-            raise NotImplementedError(type(initValue))
+            handleNotImplementedError(type(initValue))
         return value
 
     def _createConstantV4(self, ws, name, dataType, initValue, label, adminData=None):
@@ -1184,7 +1186,7 @@ class Package(object):
             elif isinstance(elemType, autosar.datatype.SwBaseType):
                 elementProps = autosar.base.SwDataDefPropsConditional(baseTypeRef = elemType.ref)
             else:
-                raise NotImplementedError(type(elemType))
+                handleNotImplementedError(type(elemType))
             implementationDataTypeElement = autosar.datatype.ImplementationDataTypeElement(elementName, 'TYPE_REFERENCE', variantProps = elementProps)
             dataType.subElements.append(implementationDataTypeElement)
         self.append(dataType)
