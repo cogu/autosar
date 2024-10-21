@@ -248,13 +248,22 @@ class XMLComponentTypeWriter(ElementWriter):
 
     def _writeParameterRequireComSpecXML(self, port, portInterface, comspec):
         lines = []
+        ws = port.rootWS()
         parameter = portInterface.find(comspec.name)
         if parameter is None:
             raise ValueError('%s: invalid parameter reference name: %s'%(port.ref, comspec.name))
         lines.append('<PARAMETER-REQUIRE-COM-SPEC>')
-        if comspec.initValue is not None:
+        if comspec.initValue is not None and comspec.initValueRef is not None:
+            raise ValueError('%s: both initValue and initValueRef are set'%(port.ref))
+        if comspec.initValue is not None or comspec.initValueRef is not None:
             lines.append(self.indent('<INIT-VALUE>',1))
-            lines.extend(self.indent(self.writeValueSpecificationXML(comspec.initValue),2))
+            if comspec.initValue is not None:
+                lines.extend(self.indent(self.writeValueSpecificationXML(comspec.initValue),2))
+            if comspec.initValueRef is not None:
+                lines.append(self.indent('<CONSTANT-REFERENCE>',2))
+                constant = ws.find(comspec.initValueRef)
+                lines.append(self.indent('<CONSTANT-REF DEST="%s">%s</CONSTANT-REF>'%(constant.tag(self.version),constant.ref),3))
+                lines.append(self.indent('</CONSTANT-REFERENCE>',2))
             lines.append(self.indent('</INIT-VALUE>',1))
         lines.append(self.indent('<PARAMETER-REF DEST="%s">%s</PARAMETER-REF>'%(parameter.tag(self.version), parameter.ref),1))
         lines.append('</PARAMETER-REQUIRE-COM-SPEC>')

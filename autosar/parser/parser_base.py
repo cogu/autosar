@@ -498,15 +498,7 @@ class EntityParser(ElementParser, metaclass=abc.ABCMeta):
             elif xmlElem.tag == 'SW-DATA-DEF-PROPS':
                 props_variants = self.parseSwDataDefProps(xmlElem)
             elif xmlElem.tag == 'INIT-VALUE':
-                for xmlChild in xmlElem.findall('./*'):
-                    if xmlChild.tag == 'CONSTANT-REFERENCE':
-                        initValueRef = self.parseTextNode(xmlChild.find('./CONSTANT-REF'))
-                    else:
-                        values = self.constantParser.parseValueV4(xmlElem, None)
-                        if len(values) != 1:
-                            handleValueError('{0} cannot cannot contain multiple elements'.format(xmlElem.tag))
-                        else:
-                            initValue = values[0]
+                initValue, initValueRef = self._parseAr4InitValue(xmlElem)
             else:
                 self.defaultHandler(xmlElem)
         if (self.name is not None) and (typeRef is not None):
@@ -531,3 +523,16 @@ class EntityParser(ElementParser, metaclass=abc.ABCMeta):
                 raise RuntimeError(f'Error in TAG {xmlRoot.tag}: SHORT-NAME and TYPE-TREF must not be None')
             else:
                 raise RuntimeError(f'Error in TAG {xmlRoot.tag}: TYPE-TREF not defined for element with SHORT-NAME "{self.name}"')
+
+    def _parseAr4InitValue(self, xmlElem):
+        (initValue, initValueRef) = (None, None)
+        for xmlChild in xmlElem.findall('./*'):
+            if xmlChild.tag == 'CONSTANT-REFERENCE':
+                initValueRef = self.parseTextNode(xmlChild.find('./CONSTANT-REF'))
+            else:
+                values = self.constantParser.parseValueV4(xmlElem, None)
+                if len(values) != 1:
+                    handleValueError('{0} cannot cannot contain multiple elements'.format(xmlElem.tag))
+                else:
+                    initValue = values[0]
+        return (initValue, initValueRef)

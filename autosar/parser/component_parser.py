@@ -386,14 +386,12 @@ class ComponentTypeParser(EntityParser):
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'INIT-VALUE':
                 initValue, initValueRef = self._parseAr4InitValue(xmlElem)
-                if initValueRef is not None:
-                    handleNotImplementedError('CONSTANT-REFERENCE')
             elif xmlElem.tag == 'PARAMETER-REF':
                 name = _getParameterNameFromComSpec(xmlElem, portInterfaceRef)
             else:
                 handleNotImplementedError(xmlElem.tag)
         if (name is not None):
-            return autosar.port.ParameterComSpec(name, initValue)
+            return autosar.port.ParameterComSpec(name, initValue, initValueRef)
         else:
             raise RuntimeError('PARAMETER-REQUIRE-COM-SPEC must have a PARAMETER-REF')
 
@@ -431,15 +429,3 @@ class ComponentTypeParser(EntityParser):
         else:
             raise RuntimeError('NV-PROVIDE-COM-SPEC must have a VARIABLE-REF')
 
-    def _parseAr4InitValue(self, xmlElem):
-        (initValue, initValueRef) = (None, None)
-        for xmlChild in xmlElem.findall('./*'):
-            if xmlChild.tag == 'CONSTANT-REFERENCE':
-                initValueRef = self.parseTextNode(xmlChild.find('./CONSTANT-REF'))
-            else:
-                values = self.constantParser.parseValueV4(xmlElem, None)
-                if len(values) != 1:
-                    handleValueError('{0} cannot cannot contain multiple elements'.format(xmlElem.tag))
-                else:
-                    initValue = values[0]
-        return (initValue, initValueRef)
