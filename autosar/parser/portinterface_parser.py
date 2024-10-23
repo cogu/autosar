@@ -195,12 +195,11 @@ class PortInterfacePackageParser(EntityParser):
         name = self.parseTextNode(xmlRoot.find('SHORT-NAME'))
         if name is not None:
             portInterface = autosar.portinterface.ClientServerInterface(name)
+            self.push()
             if hasAdminData(xmlRoot):
                 portInterface.adminData=parseAdminDataNode(xmlRoot.find('ADMIN-DATA'))
             for xmlElem in xmlRoot.findall('./*'):
-                if xmlElem.tag == 'DESC':
-                    pass #implement later
-                elif (xmlElem.tag == 'SHORT-NAME') or (xmlElem.tag == 'ADMIN-DATA'):
+                if (xmlElem.tag == 'SHORT-NAME') or (xmlElem.tag == 'ADMIN-DATA'):
                     continue
                 elif xmlElem.tag == 'IS-SERVICE':
                     if self.parseTextNode(xmlElem) == 'true':
@@ -218,10 +217,9 @@ class PortInterfacePackageParser(EntityParser):
                         portInterface.applicationErrors.append(applicationError)
                 elif xmlElem.tag == 'SERVICE-KIND':
                     portInterface.serviceKind = self.parseTextNode(xmlElem)
-                elif xmlElem.tag == 'LONG-NAME':
-                    portInterface.longName = self.parseTextNode(xmlElem)
                 else:
-                    handleNotImplementedError(xmlElem.tag)
+                    self.defaultHandler(xmlElem)
+            self.pop(portInterface)
             return portInterface
 
     @parseElementUUID

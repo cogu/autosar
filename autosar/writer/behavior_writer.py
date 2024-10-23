@@ -53,6 +53,14 @@ class XMLBehaviorWriter(ElementWriter):
                     raise ValueError('Invalid DataTypeMapping reference: ' + ref)
                 lines.append(self.indent('<DATA-TYPE-MAPPING-REF DEST="%s">%s</DATA-TYPE-MAPPING-REF>'%(dataTypeMapping.tag(self.version), dataTypeMapping.ref),2))
             lines.append(self.indent('</DATA-TYPE-MAPPING-REFS>',1))
+        if isinstance(internalBehavior, autosar.behavior.SwcInternalBehavior) and len(internalBehavior.constantValueMappingRefs)>0:
+            lines.append(self.indent('<CONSTANT-VALUE-MAPPING-REFS>',1))
+            for ref in internalBehavior.constantValueMappingRefs:
+                constantValueMapping = ws.find(ref)
+                if constantValueMapping is None:
+                    raise ValueError('Invalid ConstantValueMapping reference: ' + ref)
+                lines.append(self.indent('<CONSTANT-VALUE-MAPPING-REF DEST="%s">%s</CONSTANT-VALUE-MAPPING-REF>'%(constantValueMapping.tag(self.version), constantValueMapping.ref),2))
+            lines.append(self.indent('</CONSTANT-VALUE-MAPPING-REFS>',1))
         if self.version < 4.0:
             lines.append(self.indent('<COMPONENT-REF DEST="%s">%s</COMPONENT-REF>'%(swc.tag(self.version),swc.ref),1))
         if len(internalBehavior.events):
@@ -78,6 +86,8 @@ class XMLBehaviorWriter(ElementWriter):
             lines.append(self.indent('<SERVICE-NEEDSS>',1))
             for elem in internalBehavior.swcNvBlockNeeds:
                 lines.extend(self.indent(self._writeSwcNvBlockNeedsXML(ws, elem),2))
+            for elem in internalBehavior.diagnosticEventNeeds:
+                lines.extend(self.indent(self._writeDiagnosticEventNeedsXML(ws, elem),2))
             lines.append(self.indent('</SERVICE-NEEDSS>',1))
         elif isinstance(internalBehavior, autosar.behavior.SwcInternalBehavior) and len(internalBehavior.serviceDependencies)>0:
             lines.append(self.indent('<SERVICE-DEPENDENCYS>',1))
@@ -549,6 +559,52 @@ class XMLBehaviorWriter(ElementWriter):
             lines.append(self.indent('<ROLE>%s</ROLE>'%callPoint.role,3))
             lines.append(self.indent('</ROLE-BASED-R-PORT-ASSIGNMENT>',2))
         lines.append(self.indent('</SERVICE-CALL-PORTS>',1))
+        lines.append('</%s>'%elem.tag(self.version))
+        return lines
+
+    def _writeDiagnosticEventNeedsXML(self, ws, elem):
+        lines = []
+        lines.append('<%s>'%elem.tag(self.version))
+        lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
+        if elem.adminData is not None:
+            lines.extend(self.indent(self.writeAdminDataXML(elem.adminData),1))
+        if elem.cfg.considerPtoStatus is not None:
+            lines.append(self.indent('<CONSIDER-PTO-STATUS>%s</CONSIDER-PTO-STATUS>'%('true' if elem.cfg.considerPtoStatus else 'false'),1))
+        if elem.cfg.deferringFidRefs is not None and len(elem.cfg.deferringFidRefs)>0:
+            lines.append(self.indent('<DEFERRING-FID-REFS>',1))
+            for ref in elem.cfg.deferringFidRefs:
+                item = ws.find(ref)
+                if item is None:
+                    raise ValueError('invalid reference "%s" in %s'%(ref,elem.name))
+                lines.append(self.indent('<DEFERRING-FID-REF DEST="%s">%s</DEFERRING-FID-REF>'%(item.tag(self.version), ref),2))
+            lines.append(self.indent('</DEFERRING-FID-REFS>',1))
+        if elem.cfg.dtcKind is not None:
+            lines.append(self.indent('<DTC-KIND>%s</DTC-KIND>'%elem.cfg.dtcKind,1))
+        if elem.cfg.dtcNumber is not None:
+            lines.append(self.indent('<DTC-NUMBER>%d</DTC-NUMBER>'%elem.cfg.dtcNumber,1))
+        if elem.cfg.inhibitingFidRef is not None:
+            item = ws.find(elem.cfg.inhibitingFidRef)
+            if item is None:
+                raise ValueError('invalid reference "%s" in %s'%(elem.cfg.inhibitingFidRef,elem.name))
+            lines.append(self.indent('<INHIBITING-FID-REF DEST="%s">%s</INHIBITING-FID-REF>'%(item.tag(self.version), elem.cfg.inhibitingFidRef),1))
+        if elem.cfg.inhibitingSecondaryFidRefs is not None and len(elem.cfg.inhibitingSecondaryFidRefs)>0:
+            lines.append(self.indent('<INHIBITING-SECONDARY-FID-REFS>',1))
+            for ref in elem.cfg.inhibitingSecondaryFidRefs:
+                item = ws.find(ref)
+                if item is None:
+                    raise ValueError('invalid reference "%s" in %s'%(ref,elem.name))
+                lines.append(self.indent('<INHIBITING-SECONDARY-FID-REF DEST="%s">%s</INHIBITING-SECONDARY-FID-REF>'%(item.tag(self.version), ref),2))
+            lines.append(self.indent('</INHIBITING-SECONDARY-FID-REFS>',1))
+        if elem.cfg.obdDtcNumber is not None:
+            lines.append(self.indent('<OBD-DTC-NUMBER>%d</OBD-DTC-NUMBER>'%elem.cfg.obdDtcNumber,1))
+        if elem.cfg.prestoredFreezeframeStoredInNvm is not None:
+            lines.append(self.indent('<PRESTORED-FREEZEFRAME-STORED-IN-NVM>%s</PRESTORED-FREEZEFRAME-STORED-IN-NVM>'%('true' if elem.cfg.prestoredFreezeframeStoredInNvm else 'false'),1))
+        if elem.cfg.reportBehavior is not None:
+            lines.append(self.indent('<REPORT-BEHAVIOR>%s</REPORT-BEHAVIOR>'%elem.cfg.reportBehavior,1))
+        if elem.cfg.udsDtcNumber is not None:
+            lines.append(self.indent('<UDS-DTC-NUMBER>%d</UDS-DTC-NUMBER>'%elem.cfg.udsDtcNumber,1))
+        if elem.cfg.usesMonitorData is not None:
+            lines.append(self.indent('<USES-MONITOR-DATA>%s</USES-MONITOR-DATA>'%('true' if elem.cfg.usesMonitorData else 'false'),1))
         lines.append('</%s>'%elem.tag(self.version))
         return lines
 

@@ -10,14 +10,19 @@ class ConstantParser(ElementParser):
     """
     def __init__(self,version=3.0):
         super().__init__(version)
+        self.switcher = {
+            'CONSTANT-SPECIFICATION': self.parseConstantSpecification,
+            'CONSTANT-SPECIFICATION-MAPPING-SET': self.parseConstantSpecificationMappingSet,
+        }
 
     def getSupportedTags(self):
-        return ['CONSTANT-SPECIFICATION']
+        return self.switcher.keys()
 
     @parseElementUUID
     def parseElement(self, xmlElement, parent = None):
-        if xmlElement.tag == 'CONSTANT-SPECIFICATION':
-            return self.parseConstantSpecification(xmlElement, parent)
+        parseFunc = self.switcher.get(xmlElement.tag)
+        if parseFunc is not None:
+            return parseFunc(xmlElement,parent)
         else:
             return None
 
@@ -286,3 +291,43 @@ class ConstantParser(ElementParser):
         if len(valueList)==0:
             valueList = None
         return autosar.constant.SwAxisCont(valueList, unitRef, category=category, swAxisIndex=swAxisIndex, swArraySize=sizeList)
+
+    @parseElementUUID
+    def parseConstantSpecificationMappingSet(self, xmlRoot, parent = None):
+        assert (xmlRoot.tag == 'CONSTANT-SPECIFICATION-MAPPING-SET')
+        (name, constantSpecificationMappings, adminData) = (None, None, None)
+        constantSpecificationMappings = []
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == 'ADMIN-DATA':
+                adminData=self.parseAdminDataNode(xmlElem)
+            elif xmlElem.tag == 'SHORT-NAME':
+                name = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'MAPPINGS':
+                for xmlChild in xmlElem.findall('./*'):
+                    if xmlChild.tag == 'CONSTANT-SPECIFICATION-MAPPING':
+                        constantSpecificationMapping = self._parseConstantSpecificationMapXML(xmlChild)
+                        if constantSpecificationMapping is not None:
+                            constantSpecificationMappings.append(constantSpecificationMapping)
+                    else:
+                        handleNotImplementedError(xmlElem.tag)
+            else:
+                handleNotImplementedError(xmlElem.tag)
+        if (name is None):
+            raise RuntimeError('SHORT-NAME cannot be None')
+        elem = autosar.constant.ConstantSpecificationMappingSet(name, parent, adminData)
+        for mapping in constantSpecificationMappings:
+            elem.add(mapping)
+        return elem
+
+    def _parseConstantSpecificationMapXML(self, xmlRoot):
+        assert (xmlRoot.tag == 'CONSTANT-SPECIFICATION-MAPPING')
+        (applConstantRef, implConstantRef) = (None, None)
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == 'APPL-CONSTANT-REF':
+                applConstantRef = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'IMPL-CONSTANT-REF':
+                implConstantRef = self.parseTextNode(xmlElem)
+            else:
+                handleNotImplementedError(xmlElem.tag)
+        return autosar.constant.ConstantSpecificationMapping(applConstantRef, implConstantRef)
+    

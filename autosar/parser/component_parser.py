@@ -128,6 +128,24 @@ class ComponentTypeParser(EntityParser):
                         componentType.nvBlockDescriptors.append(descriptor)
                 elif xmlElem.tag == 'CATEGORY':
                     componentType.category = self.parseTextNode(xmlElem)
+                elif xmlElem.tag == 'DATA-TYPE-MAPPING-REFS':
+                    if not isinstance(componentType, autosar.component.ParameterComponent):
+                        handleValueError(f"DATA-TYPE-MAPPING-REFS cannot appear directly inside {xmlRoot.tag}")
+                    else:
+                        for xmlChild in xmlElem.findall('./*'):
+                            if xmlChild.tag == 'DATA-TYPE-MAPPING-REF':
+                                tmp = self.parseTextNode(xmlChild)
+                                if tmp is not None:
+                                    componentType.appendDataTypeMappingRef(tmp)
+                elif xmlElem.tag == 'CONSTANT-MAPPING-REFS':
+                    if not isinstance(componentType, autosar.component.ParameterComponent):
+                        handleValueError(f"CONSTANT-MAPPING-REFS cannot appear directly inside {xmlRoot.tag}")
+                    else:
+                        for xmlChild in xmlElem.findall('./*'):
+                            if xmlChild.tag == 'CONSTANT-MAPPING-REF':
+                                tmp = self.parseTextNode(xmlChild)
+                                if tmp is not None:
+                                    componentType.appendConstantMappingRef(tmp)
                 else:
                     print('Unhandled tag: '+xmlElem.tag, file=sys.stderr)
         return componentType

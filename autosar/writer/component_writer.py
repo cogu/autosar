@@ -111,6 +111,19 @@ class XMLComponentTypeWriter(ElementWriter):
                 for desc in swc.nvBlockDescriptors:
                     lines.extend(self.indent(self.behavior_writer.writeNvBlockDescriptorXML(desc),2))
                 lines.append(self.indent('</NV-BLOCK-DESCRIPTORS>',1))
+        if isinstance(swc, autosar.component.ParameterComponent):
+            if (len(swc.dataTypeMappingRefs) > 0):
+                lines.append(self.indent('<DATA-TYPE-MAPPING-REFS>',1))
+                for ref in swc.dataTypeMappingRefs:
+                    dataTypeMapping = ws.find(ref)
+                    lines.append(self.indent('<DATA-TYPE-MAPPING-REF DEST="%s">%s</DATA-TYPE-MAPPING-REF>'%(dataTypeMapping.tag(self.version), dataTypeMapping.ref),2))
+                lines.append(self.indent('</DATA-TYPE-MAPPING-REFS>',1))
+            if (len(swc.constantValueMappingRefs) > 0):
+                lines.append(self.indent('<CONSTANT-MAPPING-REFS>',1))
+                for ref in swc.constantValueMappingRefs:
+                    constantValueMapping = ws.find(ref)
+                    lines.append(self.indent('<CONSTANT-MAPPING-REF DEST="%s">%s</CONSTANT-MAPPING-REF>'%(constantValueMapping.tag(self.version), constantValueMapping.ref),2))
+                lines.append(self.indent('</CONSTANT-MAPPING-REFS>',1))
         lines.append('</%s>'%swc.tag(self.version))
         return lines
 

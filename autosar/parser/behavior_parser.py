@@ -122,8 +122,14 @@ class BehaviorParser(EntityParser):
                     for xmlChild in xmlElem.findall('./*'):
                         if xmlChild.tag == 'DATA-TYPE-MAPPING-REF':
                             tmp = self.parseTextNode(xmlChild)
-                            assert(tmp is not None)
-                            internalBehavior.appendDataTypeMappingRef(tmp)
+                            if tmp is not None:
+                                internalBehavior.appendDataTypeMappingRef(tmp)
+                elif xmlElem.tag == 'CONSTANT-VALUE-MAPPING-REFS':
+                    for xmlChild in xmlElem.findall('./*'):
+                        if xmlChild.tag == 'CONSTANT-VALUE-MAPPING-REF':
+                            tmp = self.parseTextNode(xmlChild)
+                            if tmp is not None:
+                                internalBehavior.appendConstantValueMappingRef(tmp)
                 elif xmlElem.tag == 'EVENTS':
                     for xmlEvent in xmlElem.findall('./*'):
                         event = None
@@ -949,15 +955,19 @@ class BehaviorParser(EntityParser):
     def parseServiceNeeds(self, xmlRoot, parent = None):
         """parses <SERVICE-NEEDS> (AUTOSAR 4)"""
         assert(xmlRoot.tag == 'SERVICE-NEEDS')
-        (xmlNvBlockNeeds, nvBlockNeeds) = (None, None)
+        (xmlNvBlockNeeds, xmlDiagnosticEventNeeds) = (None, None)
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'NV-BLOCK-NEEDS':
                 xmlNvBlockNeeds = xmlElem
+            elif xmlElem.tag == 'DIAGNOSTIC-EVENT-NEEDS':
+                xmlDiagnosticEventNeeds = xmlElem
             else:
                 handleNotImplementedError(xmlElem.tag)
         serviceNeeds = autosar.behavior.ServiceNeeds(None, parent)
         if xmlNvBlockNeeds is not None:
             serviceNeeds.nvmBlockNeeds = self.parseNvmBlockNeeds(xmlElem, serviceNeeds)
+        if xmlDiagnosticEventNeeds is not None:
+            serviceNeeds.diagnosticEventNeeds = self.parseDiagnosticEventNeeds(xmlElem, serviceNeeds)
         return serviceNeeds
 
     def parseNvmBlockNeeds(self, xmlRoot, parent = None):
@@ -1013,6 +1023,50 @@ class BehaviorParser(EntityParser):
             raise RuntimeError('<SHORT-NAME> is missing or incorrectly formatted')
         config.check()
         obj = autosar.behavior.NvmBlockNeeds(self.name, blockConfig = config, parent = parent, adminData = self.adminData)
+        self.pop(obj)
+        return obj
+
+    def parseDiagnosticEventNeeds(self, xmlRoot, parent = None):
+        """parses <DIAGNOSTIC-EVENT-NEEDS> (AUTOSAR 4)"""
+        config = autosar.behavior.DiagnosticEventConfig()
+
+        self.push()
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == 'CONSIDER-PTO-STATUS':
+                config.considerPtoStatus = self.parseBooleanNode(xmlElem)
+            elif xmlElem.tag == 'DEFERRING-FID-REFS':
+                config.deferringFidRefs = []
+                for xmlChild in xmlElem.findall('./DEFERRING-FID-REF'):
+                    config.deferringFidRefs.append(self.parseTextNode(xmlChild))
+            elif xmlElem.tag == 'DIAG-EVENT-DEBOUNCE-ALGORITHM':
+                pass # implement later
+            elif xmlElem.tag == 'DTC-KIND':
+                config.dtcKind = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'DTC-NUMBER':
+                config.dtcNumber = self.parseIntNode(xmlElem)
+            elif xmlElem.tag == 'INHIBITING-FID-REF':
+                config.inhibitingFidRef = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'INHIBITING-SECONDARY-FID-REFS':
+                config.inhibitingSecondaryFidRefs = []
+                for xmlChild in xmlElem.findall('./INHIBITING-SECONDARY-FID-REF'):
+                    config.inhibitingSecondaryFidRefs.append(self.parseTextNode(xmlChild))
+            elif xmlElem.tag == 'OBD-DTC-NUMBER':
+                config.obdDtcNumber = self.parseIntNode(xmlElem)
+            elif xmlElem.tag == 'PRESTORED-FREEZEFRAME-STORED-IN-NVM':
+                config.prestoredFreezeframeStoredInNvm = self.parseBooleanNode(xmlElem)
+            elif xmlElem.tag == 'REPORT-BEHAVIOR':
+                config.reportBehavior = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'UDS-DTC-NUMBER':
+                config.udsDtcNumber = self.parseIntNode(xmlElem)
+            elif xmlElem.tag == 'USES-MONITOR-DATA':
+                config.usesMonitorData = self.parseBooleanNode(xmlElem)
+            else:
+                self.baseHandler(xmlElem)
+
+        if self.name is None:
+            raise RuntimeError('<SHORT-NAME> is missing or incorrectly formatted')
+        config.check()
+        obj = autosar.behavior.DiagnosticEventNeeds(self.name, eventConfig = config, parent = parent, adminData = self.adminData)
         self.pop(obj)
         return obj
 
@@ -1088,8 +1142,8 @@ class BehaviorParser(EntityParser):
                     for xmlChild in xmlElem.findall('./*'):
                         if xmlChild.tag == 'DATA-TYPE-MAPPING-REF':
                             tmp = self.parseTextNode(xmlChild)
-                            assert(tmp is not None)
-                            descriptor.dataTypeMappingRefs.append(tmp)
+                            if tmp is not None:
+                                descriptor.dataTypeMappingRefs.append(tmp)
                 elif xmlElem.tag == 'NV-BLOCK-DATA-MAPPINGS':
                     for xmlMapping in xmlElem.findall('./NV-BLOCK-DATA-MAPPING'):
                         dataMapping = autosar.behavior.NvBlockDataMapping(descriptor)

@@ -378,3 +378,59 @@ class PortDefinedArgumentValue:
 
     def asdict(self):
         return {'type': self.__class__.__name__, 'value':self.value.asdict(), 'valueTypeRef':self.valueTypeRef}
+
+class ConstantSpecificationMappingSet(Element):
+    def tag(self, version): return 'CONSTANT-SPECIFICATION-MAPPING-SET'
+
+    def __init__(self, name, parent = None, adminData = None):
+        super().__init__(name, parent, adminData)
+        self.mappings = {} #applConstantRef to implConstantRef dictionary
+
+    def createConstantSpecificationMapping(self, applConstantRef, implConstantRef):
+        self.mappings[applConstantRef] = implConstantRef
+        return ConstantSpecificationMapping(applConstantRef, implConstantRef)
+
+    def add(self, item):
+        if isinstance(item, ConstantSpecificationMapping):
+                self.createConstantSpecificationMapping(item.applConstantRef, item.implConstantRef)
+        else:
+            raise ValueError("Item is not an instance of ConstantSpecificationMapping")
+
+    def getMapping(self, applConstantRef):
+        """
+        Returns an instance of ConstantSpecificationMapping or None if not found.
+        """
+        implConstantRef = self.mappings.get(applConstantRef, None)
+        if implConstantRef is not None:
+            return ConstantSpecificationMapping(applConstantRef, implConstantRef)
+        return None
+
+    def findMappedConstantRef(self, applConstantRef):
+        """
+        Returns a reference (str) to the mapped constant or None if not found.
+        """
+        return self.mappings.get(applConstantRef, None)
+
+    def findMappedConstant(self, applConstantRef):
+        """
+        Returns the instance of the mapped constant.
+        This requires that both the ConstantSpecificationMappingSet and the implementation constant reference are in the same AUTOSAR workspace.
+        """
+        implConstantRef = self.mappings.get(applConstantRef, None)
+        if implConstantRef is not None:
+            ws = self.rootWS()
+            if ws is None:
+                raise RuntimeError("Root workspace not found")
+            return ws.find(implConstantRef)
+        return None
+
+class ConstantSpecificationMapping:
+    """
+    Mapping from Application Constant to Implementation Constant
+    """
+
+    def __init__(self, applConstantRef, implConstantRef):
+        self.applConstantRef = applConstantRef
+        self.implConstantRef = implConstantRef
+
+    def tag(self, version): return 'CONSTANT-SPECIFICATION-MAPPING'
