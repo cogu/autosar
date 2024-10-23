@@ -1,3 +1,4 @@
+from typing import List
 import autosar.component
 import autosar.behavior
 import autosar.element
@@ -42,23 +43,35 @@ class Package(object):
         else:
             return None
 
-    def find(self,ref):
-        if ref.startswith('/'): return self.parent.find(ref)
+    def findPackage(self,ref):
+        if ref.startswith('/'): return self.parent.findPackage(ref)
         ref = ref.partition('/')
         name = ref[0]
         if name in self.map['packages']:
             package=self.map['packages'][name]
             if len(ref[2])>0:
-                return package.find(ref[2])
+                return package.findPackage(ref[2])
             else:
                 return package
-        if name in self.map['elements']:
-            elem=self.map['elements'][name]
-            if len(ref[2])>0:
-                return elem.find(ref[2])
-            else:
-                return elem
         return None
+        
+    def find(self, ref):
+        result = []
+        self._find_non_unique_refs(ref, result)
+
+        if len(result) == 0:
+            return None
+        
+        if len(result) == 1:
+            return result[0]
+        
+        # NOTE: if multiple elements matches the same ref, check if there is a unique
+        # non-package element that can be returned, otherwise raise an error
+        non_package_entries = [entry for entry in result if not isinstance(entry, Package)]
+        if len(non_package_entries) == 1:
+            return non_package_entries[0]
+        
+        raise ValueError(f"Found multiple elements sharing the same ref: {ref}")
 
     def findall(self,ref):
         """
@@ -75,7 +88,8 @@ class Package(object):
             for item in (self.elements+self.subPackages):
                 if item.name == ref[0] or ref[0]=='*':
                     if len(ref[2])>0:
-                        result.extend(item.findall(ref[2]))
+                        if hasattr(item, "findall"):
+                            result.extend(item.findall(ref[2]))
                     else:
                         result.append(item)
             if (len(result)==0) and ('*' in ref[0]):
@@ -84,10 +98,39 @@ class Package(object):
                     m = p.match(item.name)
                     if m is not None:
                         if len(ref[2])>0:
-                            result.extend(item.findall(ref[2]))
+                            if hasattr(item, "findall"):
+                                result.extend(item.findall(ref[2]))
                         else:
                             result.append(item)
         return result
+
+    def _find_non_unique_refs(self, ref: str, result: List):
+        """
+        store in result all the elements matching a given ref
+        """
+
+        if ref.startswith('/'): 
+            self.parent._find_non_unique_refs(ref, result)
+            return
+
+        ref = ref.partition('/')
+        name = ref[0]
+        if name in self.map['packages']:
+            package=self.map['packages'][name]
+            if len(ref[2])>0:
+                package._find_non_unique_refs(ref[2], result)
+            else:
+                result.append(package)
+
+        if name in self.map['elements']:
+            elem = self.map['elements'][name]
+            if len(ref[2]) > 0:
+                if hasattr(elem, "find"):
+                    found_element = elem.find(ref[2])
+                    if found_element is not None:
+                        result.append(found_element)
+            else:
+                result.append(elem)
 
     def dir(self,ref=None,_prefix=''):
         if ref==None:
@@ -313,6 +356,15 @@ class Package(object):
                 self.map['packages'][elem.name]=elem
             else:
                 raise ValueError('unexpected value type %s'%str(type(elem)))
+    
+    def appendPackage(self, elem):
+        """appends elem to the self.packages list"""
+        if not isinstance(elem,Package):
+            raise ValueError('unexpected value type %s'%str(type(elem)))
+
+        self.subPackages.append(elem)
+        elem.parent=self
+        self.map['packages'][elem.name]=elem
 
     def update(self,other):
         """copies/clones each element from other into self.elements"""

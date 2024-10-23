@@ -54,13 +54,13 @@ class PackageParser:
                 for xmlPackage in xmlRoot.findall('./SUB-PACKAGES/AR-PACKAGE'):
                     name = xmlPackage.find("./SHORT-NAME").text
                     subPackage = autosar.package.Package(name)
-                    package.append(subPackage)
+                    package.appendPackage(subPackage)
                     self.loadXML(subPackage,xmlPackage)
         elif self.version >= 4.0:
             for subPackageXML in xmlRoot.findall('./AR-PACKAGES/AR-PACKAGE'):
                 name = parseTextNode(subPackageXML.find("./SHORT-NAME"))
-                subPackage = package.find(name)
+                subPackage = package.findPackage(name)
                 if subPackage is None:
                     subPackage = autosar.package.Package(name)
-                    package.append(subPackage)
+                    package.appendPackage(subPackage)
                 self.loadXML(subPackage, subPackageXML)
