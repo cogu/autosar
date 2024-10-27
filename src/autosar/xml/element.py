@@ -2785,9 +2785,9 @@ class ConstantSpecification(ARElement):
                       value: tuple[str, Any] | Any,
                       **kwargs) -> "ConstantSpecification":
         """
-        #convenience-method
-
         Creates a new constant object and populates it from Python data.
+
+        #convenience-method
         """
         value = ValueSpecification.make_value(value)
         return cls(name, value, **kwargs)
@@ -5055,6 +5055,8 @@ class AtomicSoftwareComponentType(SwComponentType):
         Creates an empty internal behavior object and adds it to the component.
         If the name argument is left as None, a default name will be created based on the name of
         the software component
+
+        #convenience-method
         """
         if name is None:
             name = self.name + "_InternalBehavior"
@@ -6392,6 +6394,8 @@ class SwcInternalBehavior(InternalBehavior):
                         **kwargs) -> RunnableEntity:
         """
         Adds a new RunnableEntity to this object
+
+        #convenience-method
         """
         data = {"activation_reasons": activation_reasons,
                 "can_enter_leave": can_enter_leave,
@@ -6459,6 +6463,8 @@ class SwcInternalBehavior(InternalBehavior):
                                 ) -> BackgroundEvent:
         """
         Adds a new BackgroundEvent to this SwcInternalBehavior object.
+
+        #convenience-method
         """
         runnable = self.find_runnable(runnable_name)
         if runnable is None:
@@ -6488,6 +6494,8 @@ class SwcInternalBehavior(InternalBehavior):
         port_data_element is a string with format '<PortName>/<DataElementName>' or
         just '<PortName>' which can be used in the special situation when the port interface
         only has a single data element.
+
+        #convenience-method
         """
         swc = self._get_valid_parent()
         runnable = self.find_runnable(runnable_name)
@@ -6536,6 +6544,8 @@ class SwcInternalBehavior(InternalBehavior):
         data_element_ref is a string with format '<PortName>/<DataElementName>' or
         just '<PortName>' which can be used in the special situation when the port interface
         only has a single data element.
+
+        #convenience-method
         """
         swc = self._get_valid_parent()
         runnable = self.find_runnable(runnable_name)
@@ -6586,6 +6596,8 @@ class SwcInternalBehavior(InternalBehavior):
         only has a single data element.
         The given runnable must have a data send point referencing the port and data element.
         Note: Unable to complete implementation. Requires support for port-access in runnables.
+
+        #convenience-method
         """
         raise NotImplementedError("References to data send points are not yet supported")
 
@@ -6602,6 +6614,8 @@ class SwcInternalBehavior(InternalBehavior):
         only has a single data element.
         The given runnable must have a data send point referencing the port and data element.
         Note: Not implemented due to lack of support for data write access
+
+        #convenience-method
         """
         raise NotImplementedError("References to data write access are not yet supported")
 
@@ -6612,6 +6626,8 @@ class SwcInternalBehavior(InternalBehavior):
                           ) -> InitEvent:
         """
         Adds a new InitEvent to this SwcInternalBehavior object
+
+        #convenience-method
         """
         runnable = self.find_runnable(runnable_name)
         if runnable is None:
@@ -6639,6 +6655,8 @@ class SwcInternalBehavior(InternalBehavior):
         """
         Adds a new OperationInvokedEvent to this object
         operation_ref is a string with format <PortName>/<OperationName>
+
+        #convenience-method
         """
         swc = self._get_valid_parent()
         runnable = self.find_runnable(runnable_name)
@@ -6684,6 +6702,8 @@ class SwcInternalBehavior(InternalBehavior):
                                             ) -> SwcModeManagerErrorEvent:
         """
         Adds a new SwcModeManagerErrorEvent to this object
+
+        #convenience-method
         """
         swc = self._get_valid_parent()
         runnable = self.find_runnable(runnable_name)
@@ -6729,6 +6749,8 @@ class SwcInternalBehavior(InternalBehavior):
         mode_ref is a string with format '<PortName>/<ModeDeclarationName>'.
         mode_ref can also be a 2-element list or a 2-tuple containing strings with same format as above.
         The second version is used for creating events for specific mode transitions.
+
+        #convenience-method
         """
         swc = self._get_valid_parent()
         workspace = swc.root_collection()
@@ -6793,6 +6815,8 @@ class SwcInternalBehavior(InternalBehavior):
                             **kwargs) -> TimingEvent:
         """
         Adds a new TimingEvent to this object
+
+        #convenience-method
         """
         runnable = self.find_runnable(runnable_name)
         if runnable is None:
