@@ -211,11 +211,23 @@ List of convenience-methods:
 * `ProvidePortComSpec.make_non_queued_sender_com_spec`
 * `ProvidePortComSpec.make_from_port_interface`
 * `RequirePortComSpec.make_non_queued_receiver_com_spec`
-* `SwComponentType.create_provide_port`
-* `SwComponentType.create_require_port`
+* `AtomicSoftwareComponentType.create_internal_behavior`
+* `SwComponentType.create_p_port`
+* `SwComponentType.create_r_port`
 * `SwComponentType.create_pr_port`
 * `CompositionSwComponentType.create_component_prototype`
 * `CompositionSwComponentType.create_connector`
+* `SwcInternalBehavior.create_runnable`
+* `SwcInternalBehavior.create_background_event`
+* `SwcInternalBehavior.create_data_receive_error_event`
+* `SwcInternalBehavior.create_data_received_event`
+* `SwcInternalBehavior.create_data_send_completed_event`
+* `SwcInternalBehavior.create_data_write_completed_event`
+* `SwcInternalBehavior.create_init_event`
+* `SwcInternalBehavior.create_operation_invoked_event`
+* `SwcInternalBehavior.create_swc_mode_manager_error_event`
+* `SwcInternalBehavior.create_swc_mode_mode_switch_event`
+* `SwcInternalBehavior.create_timing_event`
 
 ## Python Module Hierachy
 

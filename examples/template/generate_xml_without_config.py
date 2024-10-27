@@ -80,13 +80,13 @@ def apply_component_types(workspace: ar_workspace.Workspace):
 
 def main():
     """Main"""
-    workspace = ar_workspace.Workspace(document_root="generated")
+    document_root = os.path.join(os.path.dirname(__file__), "generated")
+    workspace = ar_workspace.Workspace(document_root=document_root)
     create_namespaces(workspace)
     create_behavior_settings(workspace)
     create_documents(workspace)
     apply_platform_types(workspace)
     apply_component_types(workspace)
-    workspace.set_document_root(os.path.join(os.path.dirname(__file__), "generated"))
     workspace.write_documents()
     print("Done")
 

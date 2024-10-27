@@ -133,8 +133,6 @@ def create_application_component(workspace: autosar.xml.Workspace):
     swc.create_provide_port("VehicleSpeed", vehicle_speed_interface, com_spec={"init_value": vehicle_speed_init.ref(),
                                                                                "uses_end_to_end_protection": False,
                                                                                })
-    swc.create_internal_behavior()
-
     init_runnable_name = swc.name + '_Init'
     periodic_runnable_name = swc.name + '_Run'
     behavior = swc.create_internal_behavior()
