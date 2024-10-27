@@ -119,6 +119,7 @@ Non-collectable elements are various sub-elements to collectable elements.
 * AutosarVariableRef | AUTOSAR-VARIABLE-REF
 * VariableAccess | VARIABLE-ACCESS
 * VariableInAtomicSWCTypeInstanceRef | VARIABLE-IN-ATOMIC-SWC-TYPE-INSTANCE-REF
+* SwcImplementation | SWC-IMPLEMENTATION
 
 #### XML - Reference elements
 
