@@ -1,5 +1,5 @@
 """
-SwAddrMethod example
+Demonstrates how the XML parser resumes when an error is encountered
 """
 import os
 import autosar.xml

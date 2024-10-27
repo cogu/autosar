@@ -1,5 +1,5 @@
 """
-Demonstrates how you can easily turn plain Python data into ARXML constants objects
+Demonstrates how to create ARXML constants
 """
 import os
 import autosar.xml

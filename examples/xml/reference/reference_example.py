@@ -1,5 +1,5 @@
 """
-Application data type examples
+Reference example
 """
 import autosar.xml.element as ar_element
 

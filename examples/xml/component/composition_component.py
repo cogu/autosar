@@ -141,7 +141,7 @@ def create_receiver_component(workspace: autosar.xml.Workspace):
                                                                                "handle_never_received": False
                                                                                })
     swc.create_require_port("FreeRunningTimer", timer_interface, com_spec={"GetTime": {}, "IsTimerElapsed": {}})
-    swc.create_internal_behavior()
+
     init_runnable_name = swc.name + '_Init'
     periodic_runnable_name = swc.name + '_Run'
     behavior = swc.create_internal_behavior()
@@ -163,7 +163,6 @@ def create_server_component(workspace: autosar.xml.Workspace):
     swc.create_provide_port("FreeRunningTimer", timer_interface, com_spec={"GetTime": {"queue_length": 1},
                                                                            "IsTimerElapsed": {"queue_length": 1}
                                                                            })
-    behavior = swc.create_internal_behavior()
     init_runnable_name = swc.name + '_Init'
     get_time_runnable_name = "TimerComponent_FreeRunningTimer_GetTime"
     is_timer_elapsed_runnable_name = "TimerComponent_FreeRunningTimer_IsTimerElapsed"
