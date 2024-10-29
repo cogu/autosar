@@ -26,6 +26,7 @@ class ValueBuilder:
         if isinstance(dataType, (autosar.datatype.ImplementationDataType, autosar.datatype.ApplicationPrimitiveDataType)):
             value = None
             dataConstraint = None
+            variantProps = None
             if isinstance(dataType, autosar.datatype.ImplementationDataType):
                 variantProps = dataType.variantProps[0]
             if variantProps is not None:
