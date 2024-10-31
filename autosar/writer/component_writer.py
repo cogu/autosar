@@ -127,72 +127,6 @@ class XMLComponentTypeWriter(ElementWriter):
         lines.append('</%s>'%swc.tag(self.version))
         return lines
 
-
-    def _writeRequirePortXML(self, port):
-        lines=[]
-        assert(port.ref is not None)
-        ws=port.rootWS()
-        assert(ws is not None)
-        portInterface=ws.find(port.portInterfaceRef)
-        if portInterface is None:
-            raise autosar.base.InvalidPortInterfaceRef("{0.ref}: {0.portInterfaceRef}".format(port))
-        lines.append('<R-PORT-PROTOTYPE>')
-        lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%port.name,1))
-        if port.adminData is not None:
-            lines.extend(self.indent(self.writeAdminDataXML(port.adminData),1))
-        if isinstance(portInterface, autosar.portinterface.ClientServerInterface) and isinstance(port.parent, autosar.component.CompositionComponent) or len(port.comspec)==0:
-            if self.version<4.0:
-                lines.append(self.indent('<REQUIRED-COM-SPECS></REQUIRED-COM-SPECS>',1))
-
-        else:
-            lines.append(self.indent('<REQUIRED-COM-SPECS>',1))
-            for comspec in port.comspec:
-                if self.version>=4.0:
-                    if isinstance(portInterface, autosar.portinterface.ModeSwitchInterface):
-                        modeGroup = None
-                        if comspec.name is not None:
-                            modeGroup = portInterface.find(comspec.name)
-                            if modeGroup is None:
-                                raise ValueError("%s: Invalid comspec name '%s'"%(port.ref, comspec.name))
-                        elif comspec.modeGroupRef is not None:
-                            modeGroup = ws.find(comspec.modeGroupRef)
-                            if modeGroup is None:
-                                raise autosar.base.InvalidModeGroupRef(comspec.modeGroupRef)
-                        lines.extend(self.indent(self._writeModeSwitchReceiverComSpecXML(ws, portInterface, comspec, modeGroup),2))
-                    elif isinstance(portInterface, autosar.portinterface.ParameterInterface):
-                        lines.extend(self.indent(self._writeParameterRequireComSpecXML(port, portInterface, comspec),2))
-                    elif isinstance(portInterface, autosar.portinterface.SenderReceiverInterface):
-                        dataElem=portInterface.find(comspec.name)
-                        if dataElem is None:
-                            raise ValueError("%s: Invalid comspec name '%s'"%(port.ref, comspec.name))
-                        lines.extend(self.indent(self._writeDataReceiverComSpecXML(ws, dataElem, comspec),2))
-                    elif isinstance(portInterface, autosar.portinterface.ClientServerInterface):
-                        operation=portInterface.find(comspec.name)
-                        if operation is None:
-                            raise ValueError("%s: Invalid comspec name '%s'"%(port.ref,comspec.name))
-                        lines.extend(self.indent(self._writeOperationComSpec(operation),2))
-                    elif isinstance(portInterface, autosar.portinterface.NvDataInterface):
-                        lines.extend(self.indent(self._writeNvDataRequireComSpecXML(port, ws, portInterface, comspec),2))
-                    else:
-                        raise NotImplementedError(str(type(portInterface)))
-                else:
-                    if isinstance(portInterface, autosar.portinterface.ClientServerInterface):
-                        operation=portInterface.find(comspec.name)
-                        if operation is None:
-                            raise ValueError("%s: invalid comspec name '%s'"%(port.ref,comspec.name))
-                        lines.extend(self.indent(self._writeOperationComSpec(operation),2))
-                    elif isinstance(portInterface, autosar.portinterface.ParameterInterface):
-                        pass #not supported in AUTOSAR 3
-                    else:
-                        dataElem=portInterface.find(comspec.name)
-                        if dataElem is None:
-                            raise ValueError("%s: invalid comspec name '%s'"%(port.ref, comspec.name))
-                        lines.extend(self.indent(self._writeDataReceiverComSpecXML(ws, dataElem, comspec),2))
-            lines.append(self.indent('</REQUIRED-COM-SPECS>',1))
-        lines.append(self.indent('<REQUIRED-INTERFACE-TREF DEST="%s">%s</REQUIRED-INTERFACE-TREF>'%(portInterface.tag(self.version),portInterface.ref),1))
-        lines.append('</R-PORT-PROTOTYPE>')
-        return lines
-
     def _writeOperationComSpec(self, operation):
         lines = []
         lines.append('<CLIENT-COM-SPEC>')
@@ -299,64 +233,6 @@ class XMLComponentTypeWriter(ElementWriter):
                 lines.append(self.indent('</INIT-VALUE>',1))
             lines.append(self.indent('<VARIABLE-REF DEST="%s">%s</VARIABLE-REF>'%(nvData.tag(self.version), nvData.ref),1))
             lines.append('</NV-REQUIRE-COM-SPEC>')
-        return lines
-
-    def _writeProvidePortXML(self, port):
-        lines=[]
-        assert(port.ref is not None)
-        ws=port.rootWS()
-        assert(ws is not None)
-        portInterface=ws.find(port.portInterfaceRef)
-        if portInterface is None:
-            raise autosar.base.InvalidPortInterfaceRef("{0.ref}: {0.portInterfaceRef}".format(port))
-        lines.append('<%s>'%port.tag(self.version))
-        lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%port.name,1))
-        if port.adminData is not None:
-            lines.extend(self.indent(self.writeAdminDataXML(port.adminData),1))
-        if isinstance(portInterface, autosar.portinterface.ClientServerInterface) and isinstance(port.parent, autosar.component.CompositionComponent) or len(port.comspec)==0:
-            lines.append(self.indent('<PROVIDED-COM-SPECS></PROVIDED-COM-SPECS>',1))
-        else:
-            lines.append(self.indent('<PROVIDED-COM-SPECS>',1))
-            for comspec in port.comspec:
-                if isinstance(comspec, autosar.port.DataElementComSpec):
-                    elem=portInterface.find(comspec.name)
-                    if elem is None:
-                        raise ValueError("%s: Invalid data element name '%s'"%(port.ref,comspec.name))
-                    if elem.isQueued:
-                        lines.extend(self.indent(self._writeQueuedSenderComSpecXML(ws, comspec, elem), 2))
-                    else:
-                        lines.extend(self.indent(self._writeUnqueuedSenderComSpecXML(ws, comspec, elem),2))
-                elif isinstance(comspec, autosar.port.OperationComSpec):
-                    operation=portInterface.find(comspec.name)
-                    if operation is None:
-                        raise ValueError("%s: Invalid operation name '%s'"%(port.ref, comspec.name))
-                    lines.extend(self.indent(self._writeServerComSpecXML(comspec, operation), 2))
-                elif isinstance(comspec, autosar.port.ParameterComSpec):
-                    param=portInterface.find(comspec.name)
-                    if param is None:
-                        raise ValueError("%s: Invalid parameter name '%s'"%(port.ref, comspec.name))
-                    lines.extend(self.indent(self._writeParameterProvideComSpecXML(ws, comspec, param),2))
-                elif isinstance(comspec, autosar.port.ModeSwitchComSpec):
-                    modeGroup = None
-                    if comspec.name is not None:
-                        modeGroup = portInterface.find(comspec.name)
-                        if modeGroup is None:
-                            raise ValueError("%s: Invalid mode group name '%s'"%(port.ref, comspec.name))
-                    elif comspec.modeGroupRef is not None:
-                        modeGroup = ws.find(comspec.modeGroupRef)
-                        if modeGroup is None:
-                            raise autosar.base.InvalidModeGroupRef(comspec.modeGroupRef)
-                    lines.extend(self.indent(self._writeModeSwitchSenderComSpecXML(ws, comspec, modeGroup),2))
-                elif isinstance(comspec, autosar.port.NvProvideComSpec):
-                    nvProvideComSpec=portInterface.find(comspec.name)
-                    if nvProvideComSpec is None:
-                        raise ValueError("%s: Invalid parameter name '%s'"%(port.ref, comspec.name))
-                    lines.extend(self.indent(self._writeNvDataProvideComSpecXML(port, ws, portInterface, comspec),2))
-                else:
-                    raise NotImplementedError(str(type(comspec)))
-            lines.append(self.indent('</PROVIDED-COM-SPECS>',1))
-        lines.append(self.indent('<PROVIDED-INTERFACE-TREF DEST="%s">%s</PROVIDED-INTERFACE-TREF>'%(portInterface.tag(self.version),portInterface.ref),1))
-        lines.append('</%s>'%port.tag(self.version))
         return lines
 
     def _writeQueuedSenderComSpecXML(self, ws, comspec, elem):
@@ -477,6 +353,142 @@ class XMLComponentTypeWriter(ElementWriter):
             lines.append(self.indent('<QUEUE-LENGTH>{:d}</QUEUE-LENGTH>'.format(int(comspec.queueLength)),1))
         lines.append('</MODE-SWITCH-SENDER-COM-SPEC>')
         return lines
+
+    def _writeProvidedComspecXML(self, port, portInterface, comspec, ws):
+        lines = []
+        lines.append(self.indent('<PROVIDED-COM-SPECS>',1))
+        for comspec in port.comspec:
+            if isinstance(comspec, autosar.port.DataElementComSpec):
+                elem=portInterface.find(comspec.name)
+                if elem is None:
+                    raise ValueError("%s: Invalid data element name '%s'"%(port.ref,comspec.name))
+                if elem.isQueued:
+                    lines.extend(self.indent(self._writeQueuedSenderComSpecXML(ws, comspec, elem), 2))
+                else:
+                    lines.extend(self.indent(self._writeUnqueuedSenderComSpecXML(ws, comspec, elem),2))
+            elif isinstance(comspec, autosar.port.OperationComSpec):
+                operation=portInterface.find(comspec.name)
+                if operation is None:
+                    raise ValueError("%s: Invalid operation name '%s'"%(port.ref, comspec.name))
+                lines.extend(self.indent(self._writeServerComSpecXML(comspec, operation), 2))
+            elif isinstance(comspec, autosar.port.ParameterComSpec):
+                param=portInterface.find(comspec.name)
+                if param is None:
+                    raise ValueError("%s: Invalid parameter name '%s'"%(port.ref, comspec.name))
+                lines.extend(self.indent(self._writeParameterProvideComSpecXML(ws, comspec, param),2))
+            elif isinstance(comspec, autosar.port.ModeSwitchComSpec):
+                modeGroup = None
+                if comspec.name is not None:
+                    modeGroup = portInterface.find(comspec.name)
+                    if modeGroup is None:
+                        raise ValueError("%s: Invalid mode group name '%s'"%(port.ref, comspec.name))
+                elif comspec.modeGroupRef is not None:
+                    modeGroup = ws.find(comspec.modeGroupRef)
+                    if modeGroup is None:
+                        raise autosar.base.InvalidModeGroupRef(comspec.modeGroupRef)
+                lines.extend(self.indent(self._writeModeSwitchSenderComSpecXML(ws, comspec, modeGroup),2))
+            elif isinstance(comspec, autosar.port.NvProvideComSpec):
+                nvProvideComSpec=portInterface.find(comspec.name)
+                if nvProvideComSpec is None:
+                    raise ValueError("%s: Invalid parameter name '%s'"%(port.ref, comspec.name))
+                lines.extend(self.indent(self._writeNvDataProvideComSpecXML(port, ws, portInterface, comspec),2))
+            else:
+                raise NotImplementedError(str(type(comspec)))
+        lines.append(self.indent('</PROVIDED-COM-SPECS>',1))
+        return lines
+
+    def _writeRequiredComspecXML(self, port, portInterface, comspec, ws):
+        lines = []
+        lines.append(self.indent('<REQUIRED-COM-SPECS>',1))
+        for comspec in port.comspec:
+            if self.version>=4.0:
+                if isinstance(portInterface, autosar.portinterface.ModeSwitchInterface):
+                    modeGroup = None
+                    if comspec.name is not None:
+                        modeGroup = portInterface.find(comspec.name)
+                        if modeGroup is None:
+                            raise ValueError("%s: Invalid comspec name '%s'"%(port.ref, comspec.name))
+                    elif comspec.modeGroupRef is not None:
+                        modeGroup = ws.find(comspec.modeGroupRef)
+                        if modeGroup is None:
+                            raise autosar.base.InvalidModeGroupRef(comspec.modeGroupRef)
+                    lines.extend(self.indent(self._writeModeSwitchReceiverComSpecXML(ws, portInterface, comspec, modeGroup),2))
+                elif isinstance(portInterface, autosar.portinterface.ParameterInterface):
+                    lines.extend(self.indent(self._writeParameterRequireComSpecXML(port, portInterface, comspec),2))
+                elif isinstance(portInterface, autosar.portinterface.SenderReceiverInterface):
+                    dataElem=portInterface.find(comspec.name)
+                    if dataElem is None:
+                        raise ValueError("%s: Invalid comspec name '%s'"%(port.ref, comspec.name))
+                    lines.extend(self.indent(self._writeDataReceiverComSpecXML(ws, dataElem, comspec),2))
+                elif isinstance(portInterface, autosar.portinterface.ClientServerInterface):
+                    operation=portInterface.find(comspec.name)
+                    if operation is None:
+                        raise ValueError("%s: Invalid comspec name '%s'"%(port.ref,comspec.name))
+                    lines.extend(self.indent(self._writeOperationComSpec(operation),2))
+                elif isinstance(portInterface, autosar.portinterface.NvDataInterface):
+                    lines.extend(self.indent(self._writeNvDataRequireComSpecXML(port, ws, portInterface, comspec),2))
+                else:
+                    raise NotImplementedError(str(type(portInterface)))
+            else:
+                if isinstance(portInterface, autosar.portinterface.ClientServerInterface):
+                    operation=portInterface.find(comspec.name)
+                    if operation is None:
+                        raise ValueError("%s: invalid comspec name '%s'"%(port.ref,comspec.name))
+                    lines.extend(self.indent(self._writeOperationComSpec(operation),2))
+                elif isinstance(portInterface, autosar.portinterface.ParameterInterface):
+                    pass #not supported in AUTOSAR 3
+                else:
+                    dataElem=portInterface.find(comspec.name)
+                    if dataElem is None:
+                        raise ValueError("%s: invalid comspec name '%s'"%(port.ref, comspec.name))
+                    lines.extend(self.indent(self._writeDataReceiverComSpecXML(ws, dataElem, comspec),2))
+        lines.append(self.indent('</REQUIRED-COM-SPECS>',1))
+        return lines
+
+    def _writePortXML(self, port):
+        lines=[]
+        assert(port.ref is not None)
+        ws=port.rootWS()
+        assert(ws is not None)
+        portInterface=ws.find(port.portInterfaceRef)
+        if portInterface is None:
+            raise autosar.base.InvalidPortInterfaceRef("{0.ref}: {0.portInterfaceRef}".format(port))
+        lines.append(f'<{port.tag()}>')
+        lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%port.name,1))
+        if port.adminData is not None:
+            lines.extend(self.indent(self.writeAdminDataXML(port.adminData),1))
+        if isinstance(portInterface, autosar.portinterface.ClientServerInterface) and isinstance(port.parent, autosar.component.CompositionComponent) or len(port.comspec)==0:
+            if self.version<4.0:
+                if isinstance(port, autosar.component.ProvidePort) or isinstance(port, autosar.component.ProvideRequirePort):
+                    lines.append(self.indent('<PROVIDED-COM-SPECS></PROVIDED-COM-SPECS>',1))
+                if isinstance(port, autosar.component.RequirePort) or isinstance(port, autosar.component.ProvideRequirePort):
+                    lines.append(self.indent('<REQUIRED-COM-SPECS></REQUIRED-COM-SPECS>',1))   
+        else:
+            if isinstance(port, autosar.component.ProvidePort):
+                lines.extend(self._writeProvidedComspecXML(port, portInterface, port.comspec, ws))
+            elif isinstance(port, autosar.component.RequirePort):
+                lines.extend(self._writeRequiredComspecXML(port, portInterface, port.comspec, ws))
+            elif isinstance(port, autosar.component.ProvideRequirePort):
+                lines.extend(self._writeProvidedComspecXML(port, portInterface, port.providedComspec, ws))
+                lines.extend(self._writeRequiredComspecXML(port, portInterface, port.requiredComspec, ws))
+
+        interface_tref_tag = None
+        if isinstance(port, autosar.component.ProvidePort):
+            interface_tref_tag = 'PROVIDED-INTERFACE-TREF'
+        elif isinstance(port, autosar.component.RequirePort):
+            interface_tref_tag = 'REQUIRED-INTERFACE-TREF'
+        elif isinstance(port, autosar.component.ProvideRequirePort):
+            interface_tref_tag = 'PROVIDED-REQUIRED-INTERFACE-TREF'
+
+        lines.append(self.indent(f'<{interface_tref_tag} DEST="{portInterface.tag(self.version)}">{portInterface.ref}</{interface_tref_tag}>',1))
+        lines.append(f'</{port.tag()}>')
+        return lines
+    
+    def _writeProvidePortXML(self, port):
+        return self._writePortXML(port)
+
+    def _writeRequirePortXML(self, port):
+        return self._writePortXML(port)
 
     def writeSwcImplementationXML(self, elem):
         assert(isinstance(elem,autosar.component.SwcImplementation))

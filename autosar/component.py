@@ -16,6 +16,7 @@ class ComponentType(Element):
         super().__init__(name,parent)
         self.requirePorts=[]
         self.providePorts=[]
+        self.provideRequirePorts=[]
 
     def find(self,ref):
         ref=ref.partition('/')
@@ -23,6 +24,9 @@ class ComponentType(Element):
             if port.name == ref[0]:
                 return port
         for port in self.providePorts:
+            if port.name == ref[0]:
+                return port
+        for port in self.provideRequirePorts:
             if port.name == ref[0]:
                 return port
         return None
@@ -33,6 +37,9 @@ class ComponentType(Element):
             elem.parent=self
         elif isinstance(elem,autosar.port.ProvidePort):
             self.providePorts.append(elem)
+            elem.parent=self
+        elif isinstance(elem,autosar.port.ProvideRequirePort):
+            self.provideRequirePorts.append(elem)
             elem.parent=self
         else:
             raise ValueError("unexpected type:" + str(type(elem)))
@@ -146,6 +153,39 @@ class ComponentType(Element):
         self.requirePorts.append(port)
         return port
 
+    def createProvideRequirePort(self, name, portInterfaceRef, **kwargs):
+        """
+        Creates a provide-require port on this ComponentType
+        The ComponentType must have a valid ref (must belong to a valid package in a valid workspace).
+        Parameters:
+
+        - name: Name of the port
+        - portInterfaceRef: Reference to existing port interface
+        - providedComspec: Optional list of comspecs for the provided part of the port
+        - requiredComspec: Optional list of comspecs for the required part of the port
+        """
+        providedComspec = kwargs.get('providedComspec', None)
+        if providedComspec is not None:
+            providedComspecList = providedComspec
+        else:
+            providedComspecList = None
+        requiredComspec = kwargs.get('requiredComspec', None)
+        if requiredComspec is not None:
+            requiredComspecList = requiredComspec
+        else:
+            requiredComspecList = None
+        assert (self.ref is not None)
+        ws = self.rootWS()
+        assert(ws is not None)
+        portInterface = ws.find(portInterfaceRef, role='PortInterface')
+        if portInterface is None:
+            raise autosar.base.InvalidPortInterfaceRef(portInterfaceRef)
+
+        port = autosar.port.ProvideRequirePort(name, portInterface.ref, providedComspecList, requiredComspecList, parent=self)
+
+        self.provideRequirePorts.append(port)
+        return port
+
     def apply(self, template, **kwargs):
         """
         Applies template to this component
@@ -179,14 +219,10 @@ class AtomicSoftwareComponent(ComponentType):
         self.implementation=None
 
     def find(self,ref):
+        if (found := super().find(ref)) is not None:
+            return found
         ws = self.rootWS()
         ref=ref.partition('/')
-        for port in self.requirePorts:
-            if port.name == ref[0]:
-                return port
-        for port in self.providePorts:
-            if port.name == ref[0]:
-                return port
         if (ws is not None) and (ws.version >= 4.0) and (self.behavior is not None):
             if self.behavior.name == ref[0]:
                 if len(ref[2])>0:

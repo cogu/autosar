@@ -5,6 +5,8 @@ Copyright (c) 2019-2021 Conny Gustafsson.
 See LICENSE file for additional information.
 """
 
+from dataclasses import dataclass, field
+from typing import List
 from autosar.element import Element
 import autosar.portinterface
 import autosar.constant
@@ -24,10 +26,16 @@ valid_com_spec_arguments_ar4 = set().union(sender_receiver_com_spec_arguments_ar
     mode_switch_com_spec_arguments, parameter_com_spec_arguments, nv_data_com_spec_arguments)
 valid_com_spec_arguments_ar3 = set().union(sender_receiver_com_spec_arguments_ar3, client_server_com_spec_arguments, parameter_com_spec_arguments)
 
+
 class Port(Element):
+    @dataclass
+    class _PortComSpecs:
+        provided: List['ComSpec'] = field(default_factory=list)
+        required: List['ComSpec'] = field(default_factory=list)
+
     def __init__(self, name, portInterfaceRef, comspec=None, autoCreateComspec = True, parent=None, adminData=None):
         super().__init__(name, parent, adminData)
-        self.comspec=[]
+        self._comspec=Port._PortComSpecs()
         if portInterfaceRef is not None and not isinstance(portInterfaceRef,str):
             raise ValueError('portInterfaceRef needs to be of type None or str')
         self.portInterfaceRef = portInterfaceRef
@@ -36,26 +44,33 @@ class Port(Element):
         portInterface=ws.find(portInterfaceRef, role='PortInterface')
 
         if comspec is None and autoCreateComspec:
-            comspec = self._createDefaultComSpecList(portInterface)
+            comspec = {
+                "provided": self._createDefaultComSpecList(portInterface),
+                "required": self._createDefaultComSpecList(portInterface)
+            }
 
-        if comspec is not None:
-            if isinstance(comspec, ComSpec):
-                self.comspec.append(comspec)
-            elif isinstance(comspec, collections.abc.Mapping):
-                #Typical usage: port interfaces containing a single data element
-                comspecObj = self._createComSpecFromDict(ws, portInterface, comspec)
-                if comspecObj is None:
-                    raise ValueError('Failed to create comspec from comspec data: '+repr(comspec))
-                self.comspec.append(comspecObj)
-            elif isinstance(comspec, collections.abc.Iterable):
-                #Typical usage: port interfaces containing a multiple data elements
-                for data in comspec:
-                    comspecObj = self._createComSpecFromDict(ws, portInterface, data)
+        for  comspec, comspec_member in [
+            (comspec.get('provided', None), self._comspec.provided),
+            (comspec.get('required', None), self._comspec.required)
+        ]:
+            if comspec is not None:
+                if isinstance(comspec, ComSpec):
+                    comspec_member.append(comspec)
+                elif isinstance(comspec, collections.abc.Mapping):
+                    #Typical usage: port interfaces containing a single data element
+                    comspecObj = self._createComSpecFromDict(ws, portInterface, comspec)
                     if comspecObj is None:
-                        raise ValueError('Failed to create comspec from comspec data: '+repr(data))
-                    self.comspec.append(comspecObj)
-            else:
-                handleNotImplementedError("not supported")
+                        raise ValueError('Failed to create comspec from comspec data: '+repr(comspec))
+                    comspec_member.append(comspecObj)
+                elif isinstance(comspec, collections.abc.Iterable):
+                    #Typical usage: port interfaces containing a multiple data elements
+                    for data in comspec:
+                        comspecObj = self._createComSpecFromDict(ws, portInterface, data)
+                        if comspecObj is None:
+                            raise ValueError('Failed to create comspec from comspec data: '+repr(data))
+                        comspec_member.append(comspecObj)
+                else:
+                    handleNotImplementedError("not supported")
 
     def _createComSpecFromDict(self, ws, portInterface, comspec):
         """
@@ -307,14 +322,21 @@ class RequirePort(Port):
     def __init__(self,name , portInterfaceRef=None, comspec=None, autoCreateComSpec = True, parent=None):
         if isinstance(name, str):
             #normal constructor
-            super().__init__(name, portInterfaceRef, comspec, autoCreateComSpec, parent)
+            super().__init__(name, portInterfaceRef, {'required':comspec}, autoCreateComSpec, parent)
         elif isinstance(name, (RequirePort, ProvidePort)):
             other=name #alias
             #copy constructor
             super().__init__(other.name, other.portInterfaceRef, None, False, parent)
-            self.comspec=copy.deepcopy(other.comspec)
+            self._comspec=copy.deepcopy(other._comspec)
+            if isinstance(other, ProvidePort):
+                self._comspec.required = self._comspec.provided
+                self._comspec.provided = []
         else:
             handleNotImplementedError(type(name))
+
+    @property
+    def comspec(self):
+        return self._comspec.required
 
     def copy(self):
         """
@@ -334,14 +356,21 @@ class ProvidePort(Port):
     def __init__(self, name, portInterfaceRef = None, comspec = None, autoCreateComSpec = True, parent = None):
         if isinstance(name, str):
         #normal constructor
-            super().__init__(name, portInterfaceRef, comspec, autoCreateComSpec, parent)
+            super().__init__(name, portInterfaceRef, {'provided':comspec}, autoCreateComSpec, parent)
         elif isinstance(name, (RequirePort, ProvidePort)):
             other=name #alias
             #copy constructor
             super().__init__(other.name, other.portInterfaceRef, None, False, parent)
-            self.comspec=copy.deepcopy(other.comspec)
+            self._comspec=copy.deepcopy(other._comspec)
+            if isinstance(other, RequirePort):
+                self._comspec.provided = self._comspec.required
+                self._comspec.required = []
         else:
             handleNotImplementedError(type(name))
+
+    @property
+    def comspec(self):
+        return self._comspec.provided
 
     def copy(self):
         """
@@ -354,6 +383,42 @@ class ProvidePort(Port):
         returns a mirrored copy of itself
         """
         return RequirePort(self)
+
+class ProvideRequirePort(Port):
+    def tag(self,version=None): return "PR-PORT-PROTOTYPE"
+    def __init__(self, name, portInterfaceRef = None, providedComspec = None, requiredComspec = None, autoCreateComSpec = True, parent = None):
+        if isinstance(name, str):
+        #normal constructor
+            super().__init__(name, portInterfaceRef, {'provided': providedComspec, 'required': requiredComspec}, autoCreateComSpec, parent)
+        elif isinstance(name, ProvideRequirePort):
+            other=name #alias
+            #copy constructor
+            super().__init__(other.name, other.portInterfaceRef, None, False, parent)
+            self._comspec=copy.deepcopy(other._comspec)
+        else:
+            handleNotImplementedError(type(name))
+
+    @property
+    def providedComspec(self):
+        return self._comspec.provided
+    
+    @property
+    def requiredComspec(self):
+        return self._comspec.required
+
+    def copy(self):
+        """
+        returns a copy of itself
+        """
+        return ProvideRequirePort(self)
+
+    def mirror(self):
+        """
+        returns a mirrored copy of itself
+        """
+        copy = ProvideRequirePort(self)
+        copy._comspec.provided, copy._comspec.required = copy._comspec.required, copy._comspec.provided
+        return copy
 
 class ComSpec:
     def __init__(self, name=None):
