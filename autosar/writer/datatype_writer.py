@@ -501,6 +501,11 @@ class XMLDataTypeWriter(ElementWriter):
             lines.append(self.indent('<ARRAY-SIZE-SEMANTICS>{}</ARRAY-SIZE-SEMANTICS>'.format(elem.sizeSemantics),1))
         if elem.arraySize is not None:
             lines.append(self.indent('<MAX-NUMBER-OF-ELEMENTS>{:d}</MAX-NUMBER-OF-ELEMENTS>'.format(elem.arraySize),1))
+        if elem.indexDataTypeRef is not None:
+            dataType = ws.find(elem.indexDataTypeRef)
+            if dataType is None:
+                raise autosar.base.InvalidDataTypeRef(elem.indexDataTypeRef)
+            lines.append(self.indent('<INDEX-DATA-TYPE-REF DEST="{0}">{1}</INDEX-DATA-TYPE-REF>'.format(dataType.tag(ws.version), elem.indexDataTypeRef),1))
         lines.append("</%s>"%elem.tag(self.version))
         return lines
 

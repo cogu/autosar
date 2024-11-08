@@ -613,15 +613,21 @@ class ApplicationArrayElement(Element):
     arraySize: <MAX-NUMBER-OF-ELEMENTS> (None or int)
     sizeHandling: <ARRAY-SIZE-HANDLING> (None or ArraySizeHandlingEnum)
     sizeSemantics: <ARRAY-SIZE-SEMANTICS> (None or str['FIXED-SIZE', 'VARIABLE-SIZE']])
+    indexDataTypeRef: <INDEX-DATA-TYPE-REF> (None or str)
+    variantProps: <SW-DATA-DEF-PROPS-VARIANTS> (None or instance (or list) of autosar.base.SwDataDefPropsConditional)
     """
     def tag(self, version=None): return 'ELEMENT'
 
-    def __init__(self, name = None, typeRef = None, arraySize = None, sizeHandling: ArraySizeHandlingEnum = None, sizeSemantics = 'FIXED-SIZE', category = 'VALUE', parent = None, adminData = None):
+    def __init__(self, name = None, typeRef = None, arraySize = None, sizeHandling: ArraySizeHandlingEnum = None, 
+                 sizeSemantics = 'FIXED-SIZE', indexDataTypeRef = None, variantProps = None, category = 'VALUE', 
+                 parent = None, adminData = None):
         super().__init__(name, parent, adminData, category)
         self.typeRef = None if typeRef is None else str(typeRef)
         self.arraySize = None if arraySize is None else int(arraySize)
         self.sizeHandling = sizeHandling
         self.sizeSemantics = None if sizeSemantics is None else str(sizeSemantics)
+        self.indexDataTypeRef = None if indexDataTypeRef is None else str(indexDataTypeRef)
+        self.variantProps = variantProps
 
 class ApplicationRecordDataType(ApplicationDataType):
     """

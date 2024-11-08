@@ -86,8 +86,6 @@ class XMLBehaviorWriter(ElementWriter):
             lines.append(self.indent('<SERVICE-NEEDSS>',1))
             for elem in internalBehavior.swcNvBlockNeeds:
                 lines.extend(self.indent(self._writeSwcNvBlockNeedsXML(ws, elem),2))
-            for elem in internalBehavior.diagnosticEventNeeds:
-                lines.extend(self.indent(self._writeDiagnosticEventNeedsXML(ws, elem),2))
             lines.append(self.indent('</SERVICE-NEEDSS>',1))
         elif isinstance(internalBehavior, autosar.behavior.SwcInternalBehavior) and len(internalBehavior.serviceDependencies)>0:
             lines.append(self.indent('<SERVICE-DEPENDENCYS>',1))
@@ -562,12 +560,25 @@ class XMLBehaviorWriter(ElementWriter):
         lines.append('</%s>'%elem.tag(self.version))
         return lines
 
+    def _writeDiagnosticCapabilityElementConfigs(self, elem_cfg):
+        assert(isinstance(elem_cfg, autosar.behavior.DiagnosticCapabilityElementConfig))
+        lines = []
+        if elem_cfg.audiences is not None:
+            lines.append('<AUDIENCES>%s</AUDIENCES>'%elem_cfg.audiences)
+        if elem_cfg.diagRequirement is not None:
+            lines.append('<DIAG-REQUIREMENT>%s</DIAG-REQUIREMENT>'%elem_cfg.diagRequirement)
+        if elem_cfg.securityAccessLevel is not None:
+            lines.append('<SECURITY-ACCESS-LEVEL>%d</SECURITY-ACCESS-LEVEL>'%elem_cfg.securityAccessLevel)
+        return lines
+
     def _writeDiagnosticEventNeedsXML(self, ws, elem):
+        assert(isinstance(elem, autosar.behavior.DiagnosticEventNeeds))
         lines = []
         lines.append('<%s>'%elem.tag(self.version))
         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
         if elem.adminData is not None:
             lines.extend(self.indent(self.writeAdminDataXML(elem.adminData),1))
+        lines.extend(self.indent(self._writeDiagnosticCapabilityElementConfigs(elem.cfg),1))
         if elem.cfg.considerPtoStatus is not None:
             lines.append(self.indent('<CONSIDER-PTO-STATUS>%s</CONSIDER-PTO-STATUS>'%('true' if elem.cfg.considerPtoStatus else 'false'),1))
         if elem.cfg.deferringFidRefs is not None and len(elem.cfg.deferringFidRefs)>0:
@@ -605,6 +616,30 @@ class XMLBehaviorWriter(ElementWriter):
             lines.append(self.indent('<UDS-DTC-NUMBER>%d</UDS-DTC-NUMBER>'%elem.cfg.udsDtcNumber,1))
         if elem.cfg.usesMonitorData is not None:
             lines.append(self.indent('<USES-MONITOR-DATA>%s</USES-MONITOR-DATA>'%('true' if elem.cfg.usesMonitorData else 'false'),1))
+        lines.append('</%s>'%elem.tag(self.version))
+        return lines
+
+    def _writeDiagnosticEventManagerNeedsXML(self, ws, elem):
+        assert(isinstance(elem, autosar.behavior.DiagnosticEventManagerNeeds))
+        lines = []
+        lines.append('<%s>'%elem.tag(self.version))
+        lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
+        if elem.adminData is not None:
+            lines.extend(self.indent(self.writeAdminDataXML(elem.adminData),1))
+        lines.extend(self.indent(self._writeDiagnosticCapabilityElementConfigs(elem.cfg),1))
+        lines.append('</%s>'%elem.tag(self.version))
+        return lines
+    
+    def _writeDiagnosticCommunicationManagerNeedsXML(self, ws, elem):
+        assert(isinstance(elem, autosar.behavior.DiagnosticCommunicationManagerNeeds))
+        lines = []
+        lines.append('<%s>'%elem.tag(self.version))
+        lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%elem.name,1))
+        if elem.adminData is not None:
+            lines.extend(self.indent(self.writeAdminDataXML(elem.adminData),1))
+        lines.extend(self.indent(self._writeDiagnosticCapabilityElementConfigs(elem.cfg),1))
+        if elem.cfg.serviceRequestCallbackType is not None:
+            lines.append(self.indent('<SERVICE-REQUEST-CALLBACK-TYPE>%s</SERVICE-REQUEST-CALLBACK-TYPE>'%elem.cfg.serviceRequestCallbackType,1))
         lines.append('</%s>'%elem.tag(self.version))
         return lines
 
@@ -664,11 +699,14 @@ class XMLBehaviorWriter(ElementWriter):
         lines.append("<%s>"%elem.tag(self.version))
         tmp = self.writeDescXML(elem)
         if tmp is not None: lines.extend(self.indent(tmp,1))
-        if isinstance(elem, autosar.behavior.NvmBlockServiceNeeds):
-            if elem.nvmBlockNeeds is not None:
-                lines.extend(self.indent(self._writeNvmBlockNeedsXML(ws, elem.nvmBlockNeeds),1))
-        else:
-            raise NotImplementedError(type(elem))
+        if elem.nvmBlockNeeds is not None:
+            lines.extend(self.indent(self._writeNvmBlockNeedsXML(ws, elem.nvmBlockNeeds),1))
+        if elem.diagnosticEventNeeds is not None:
+            lines.extend(self.indent(self._writeDiagnosticEventNeedsXML(ws, elem.diagnosticEventNeeds),1))
+        if elem.diagnosticEventManagerNeeds is not None:
+            lines.extend(self.indent(self._writeDiagnosticEventManagerNeedsXML(ws, elem.diagnosticEventManagerNeeds),1))
+        if elem.diagnosticCommunicationManagerNeeds is not None:
+            lines.extend(self.indent(self._writeDiagnosticCommunicationManagerNeedsXML(ws, elem.diagnosticCommunicationManagerNeeds),1))
         lines.append("</%s>"%elem.tag(self.version))
         return lines
 

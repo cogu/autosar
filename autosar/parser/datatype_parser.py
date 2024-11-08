@@ -327,7 +327,7 @@ class DataTypeParser(EntityParser):
     @parseElementUUID
     def parseApplicationArrayElement(self, xmlRoot):
         assert (xmlRoot.tag == 'ELEMENT')
-        (typeRef, arraySize, sizeHandling, sizeSemantics) = (None, None, None, None)
+        (typeRef, arraySize, sizeHandling, sizeSemantics, indexDataTypeRef, variantProps) = (None, None, None, None, None, None)
         self.push()
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'TYPE-TREF':
@@ -338,9 +338,13 @@ class DataTypeParser(EntityParser):
                 sizeSemantics = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'MAX-NUMBER-OF-ELEMENTS':
                 arraySize = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'INDEX-DATA-TYPE-REF':
+                indexDataTypeRef = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'SW-DATA-DEF-PROPS':
+                variantProps = self.parseSwDataDefProps(xmlElem)
             else:
                 self.defaultHandler(xmlElem)
-        elem = autosar.datatype.ApplicationArrayElement(self.name, typeRef, arraySize, sizeHandling, sizeSemantics, self.category, adminData = self.adminData)
+        elem = autosar.datatype.ApplicationArrayElement(self.name, typeRef, arraySize, sizeHandling, sizeSemantics, indexDataTypeRef, variantProps, self.category, adminData = self.adminData)
         self.pop(elem)
         return elem
 
