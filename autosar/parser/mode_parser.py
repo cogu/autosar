@@ -1,6 +1,7 @@
 import sys
 from autosar.parser.parser_base import EntityParser, parseElementUUID
 import autosar.datatype
+import autosar.mode
 
 class ModeDeclarationParser(EntityParser):
     def __init__(self,version=3):
@@ -32,7 +33,9 @@ class ModeDeclarationParser(EntityParser):
         name = self.parseTextNode(xmlRoot.find("./SHORT-NAME"))
         category = self.parseTextNode(xmlRoot.find("./CATEGORY"))
         initialModeRef = self.parseTextNode(xmlRoot.find('./INITIAL-MODE-REF'))
-        modeDclrGroup = autosar.mode.ModeDeclarationGroup(name,initialModeRef,None,parent)
+        modeDclrGroup = autosar.mode.ModeDeclarationGroup(name,initialModeRef=initialModeRef,parent=parent)
+        if xmlRoot.find('./ON-TRANSITION-VALUE') is not None:
+            modeDclrGroup.onTransitionValue = self.parseNumberNode(xmlRoot.find("./ON-TRANSITION-VALUE"))
         if xmlRoot.find('./MODE-DECLARATIONS') is not None:
             self.parseModeDeclarations(xmlRoot.find('./MODE-DECLARATIONS'), modeDclrGroup)
         if self.hasAdminData(xmlRoot):

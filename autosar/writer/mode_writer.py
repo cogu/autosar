@@ -1,5 +1,6 @@
 from autosar.writer.writer_base import ElementWriter
 import autosar.behavior
+import autosar.mode
 
 class XMLModeWriter(ElementWriter):
     def __init__(self, version, patch):
@@ -30,6 +31,8 @@ class XMLModeWriter(ElementWriter):
         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%modeDeclGroup.name,1))
         if modeDeclGroup.category is not None:
             lines.append(self.indent('<CATEGORY>%s</CATEGORY>'%modeDeclGroup.category,1))
+        if modeDeclGroup.onTransitionValue is not None:
+            lines.append(self.indent('<ON-TRANSITION-VALUE>%s</ON-TRANSITION-VALUE>'%modeDeclGroup.onTransitionValue,1))
         if modeDeclGroup.adminData is not None:
             lines.extend(self.indent(self.writeAdminDataXML(modeDeclGroup.adminData),1))
         if modeDeclGroup.initialModeRef is not None:

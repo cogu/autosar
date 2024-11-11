@@ -39,7 +39,7 @@ class ModeDeclarationGroup(Element):
     """
     def tag(self, version=None): return "MODE-DECLARATION-GROUP"
 
-    def __init__(self, name, initialModeRef=None, modeDeclarations=None, category=None, parent=None, adminData=None):
+    def __init__(self, name, initialModeRef=None, modeDeclarations=None, category=None, onTransitionValue=None, parent=None, adminData=None):
         super().__init__(name, parent, adminData, category)
         self.initialModeRef = initialModeRef
         if modeDeclarations is None:
@@ -47,6 +47,7 @@ class ModeDeclarationGroup(Element):
         else:
             self.modeDeclarations = list(modeDeclarations)
         self.category=category
+        self.onTransitionValue=onTransitionValue
 
     def find(self,ref):
         ref = ref.partition('/')

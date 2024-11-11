@@ -495,7 +495,7 @@ class Package(object):
             adminDataObj = adminData
         if (adminDataObj is not None) and not isinstance(adminDataObj, autosar.base.AdminData):
             raise ValueError("adminData must be of type dict or AdminData")
-        group = autosar.mode.ModeDeclarationGroup(name, None, None, category, self,adminDataObj)
+        group = autosar.mode.ModeDeclarationGroup(name, None, None, category, None, self,adminDataObj)
         if modeDeclarations is not None:
             for declaration in modeDeclarations:
                 if isinstance(declaration, str):

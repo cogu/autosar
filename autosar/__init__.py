@@ -5,6 +5,7 @@ import autosar.portinterface
 import autosar.datatype
 import autosar.constant
 import autosar.signal
+import autosar.mode
 import autosar.package
 import autosar.rte
 import autosar.builder
