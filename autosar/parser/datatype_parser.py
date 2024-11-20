@@ -258,12 +258,9 @@ class DataTypeParser(EntityParser):
         (name, dataTypeMaps, adminData) = (None, None, None)
         dataTypeMaps = []
         modeRequestTypeMaps = []
+        self.push()
         for xmlElem in xmlRoot.findall('./*'):
-            if xmlElem.tag == 'ADMIN-DATA':
-                adminData=self.parseAdminDataNode(xmlElem)
-            elif xmlElem.tag == 'SHORT-NAME':
-                name = self.parseTextNode(xmlElem)
-            elif xmlElem.tag == 'DATA-TYPE-MAPS':
+            if xmlElem.tag == 'DATA-TYPE-MAPS':
                 for xmlChild in xmlElem.findall('./*'):
                     if xmlChild.tag == 'DATA-TYPE-MAP':
                         dataTypeMap = self._parseDataTypeMapXML(xmlChild)
@@ -280,10 +277,11 @@ class DataTypeParser(EntityParser):
                     else:
                         handleNotImplementedError(xmlElem.tag)
             else:
-                handleNotImplementedError(xmlElem.tag)
-        if (name is None):
+                self.defaultHandler(xmlElem)
+        if (self.name is None):
             raise RuntimeError('SHORT-NAME cannot be None')
-        elem = autosar.datatype.DataTypeMappingSet(name, parent, adminData)
+        elem = autosar.datatype.DataTypeMappingSet(self.name, parent, self.adminData)
+        self.pop(elem)
         for mapping in dataTypeMaps + modeRequestTypeMaps:
             elem.add(mapping)
         return elem
