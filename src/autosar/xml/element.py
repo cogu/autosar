@@ -170,7 +170,6 @@ class PositiveIntegerValue:
 class Referrable(ARObject):
     """
     Group AR:REFERRABLE
-    Type: Abstract
     """
 
     def __init__(self, name: str) -> None:
@@ -201,7 +200,6 @@ class Referrable(ARObject):
 class MultiLanguageReferrable(Referrable):
     """
     Group AR:MULTILANGUAGE-REFERRABLE
-    Type: Abstract
     """
 
     def __init__(self,
@@ -219,8 +217,7 @@ class MultiLanguageReferrable(Referrable):
 
 class Identifiable(MultiLanguageReferrable):
     """
-    Complex type AR:IDENTIFIABLE
-    Type: Abstract
+    Group AR:IDENTIFIABLE
     """
 
     def __init__(self,
@@ -270,24 +267,20 @@ class Identifiable(MultiLanguageReferrable):
 
 class CollectableElement(Identifiable):
     """
-    AR:COLLECTABLE-ELEMENT
+    Group AR:COLLECTABLE-ELEMENT
 
-    Meta-class that identify either an
+    Meta-class that identifies either an
     AR:PACKAGE or AR-ELEMENT.
-    Both types can be places inside another
+    Both types can be placed inside another
     package.
-
-    Type Abstract
     """
 
 
 class ARElement(CollectableElement):
     """
-    AR:AR-ELEMENT
+    Group AR:AR-ELEMENT
 
     Base class for all package-elements
-
-    Type: Abstract
     """
 
 # Common structure elements
@@ -296,7 +289,6 @@ class ARElement(CollectableElement):
 class AdminData(ARObject):
     """
     Complex type AR:ADMIN-DATA
-    Type: Concrete
     Tag variants: 'ADMIN-DATA'
     """
 
@@ -438,24 +430,20 @@ class Implementation(ARElement):
 class Break(ARObject):
     """
     Complex type AR:BR
-    Type: Concrete
     Tag variants: BR
 
     Same function as the html element.
-
     """
 
 
 class EmphasisText(ARObject):
     """
     Complex type AR:EMPHASIS-TEXT
-    Type: Concrete
     Tag variants: E
 
     Emphasized text
 
     Limitations: No support for child-elements. Type for argument elements must be string.
-
     """
 
     def __init__(self,
@@ -477,7 +465,6 @@ class EmphasisText(ARObject):
 class IndexEntry(ARObject):
     """
     Complex type AR:INDEX-ENTRY
-    Type: Concrete
     Tag variants: IE
 
     Index Entry
@@ -492,7 +479,6 @@ class IndexEntry(ARObject):
 class TechnicalTerm(ARObject):
     """
     Complex type AR:TT
-    Type: Concrete
     Tag variants: TT
 
     Technical Term
@@ -511,10 +497,9 @@ class TechnicalTerm(ARObject):
 class Subscript(ARObject):
     """
     Complex type AR:SUPSCRIPT
-    Type: Concrete
     Tag variants: SUB
 
-    Subscript is based on the same Complex type
+    Subscript is based on the same Complex type as superscript
 
     """
 
@@ -525,7 +510,6 @@ class Subscript(ARObject):
 class Superscript(ARObject):
     """
     Complex type AR:SUPSCRIPT
-    Type: Concrete
     Tag variants: SUP
 
     Superscript
@@ -544,7 +528,6 @@ class Superscript(ARObject):
 class LanguageSpecific(ARObject):
     """
     Complex type AR:LANGUAGE-SPECIFIC
-    Type: Abstract
     """
 
     def __init__(self, language: ar_enum.Language) -> None:
@@ -555,7 +538,6 @@ class LanguageSpecific(ARObject):
 class MixedContentForLongName(LanguageSpecific):
     """
     Group AR:MIXED-CONTENT-FOR-LONG-NAME
-    Type: Abstract
     """
 
     def __init__(self, language: ar_enum.Language) -> None:
@@ -575,7 +557,6 @@ class MixedContentForLongName(LanguageSpecific):
 class MixedContentForOverviewParagraph(LanguageSpecific):
     """
     Group AR:MIXED-CONTENT-FOR-OVERVIEW-PARAGRAPH
-    Type: Abstract
     """
 
     def __init__(self, language: ar_enum.Language) -> None:
@@ -599,8 +580,7 @@ class MixedContentForOverviewParagraph(LanguageSpecific):
 class LanguageLongName(MixedContentForLongName):
     """
     Complex type AR:L-LONG-NAME
-    Type: Concrete
-    Tag: L-4
+    Tag variants: L-4
 
     Longname for a specific language.
 
@@ -627,7 +607,6 @@ class LanguageLongName(MixedContentForLongName):
 class MultilanguageLongName(ARObject):
     """
     Complex type AR:MULTILANGUAGE-LONG-NAME
-    Type: Concrete
     Tag variants: 'LABEL' | 'LONG-NAME'
     """
 
@@ -656,7 +635,6 @@ class MultilanguageLongName(ARObject):
 class LanguageOverviewParagraph(MixedContentForOverviewParagraph):
     """
     Complex type AR:L-OVERVIEW-PARAGRAPH
-    Type: Concrete
     Tag variants: 'L-2'
 
     Overview paragraph for specific language
@@ -684,7 +662,6 @@ class LanguageOverviewParagraph(MixedContentForOverviewParagraph):
 class MultiLanguageOverviewParagraph(ARObject):
     """
     Complex type AR:MULTI-LANGUAGE-OVERVIEW-PARAGRAPH
-    Type: Concrete
     Tag variants: 'DESC' | 'ITEM-LABEL' | 'CHANGE' | 'REASON'
     """
 
@@ -722,7 +699,6 @@ class MultiLanguageOverviewParagraph(ARObject):
 class DocumentViewSelectable(ARObject):
     """
     Group AR:DOCUMENT-VIEW-SELECTABLE
-    Type: Abstract
     """
 
     def __init__(self,
@@ -741,10 +717,6 @@ class DocumentViewSelectable(ARObject):
 class Paginateable(DocumentViewSelectable):
     """
     Group AR:PAGINATEABLE
-    Type: Abstract
-
-    Experiment with named attributes for this class while keeping
-    Unknown parent attributes hidden in kwargs
     """
 
     def __init__(self,
@@ -765,7 +737,6 @@ class Paginateable(DocumentViewSelectable):
 class MixedContentForParagraph(LanguageSpecific):
     """
     Group AR:MIXED-CONTENT-FOR-PARAGRAPH
-    Type: Abstract
     """
 
     def __init__(self, language: ar_enum.Language) -> None:
@@ -794,7 +765,6 @@ class MixedContentForParagraph(LanguageSpecific):
 class LanguageParagraph(MixedContentForParagraph):
     """
     Complex type AR:L-PARAGRAPH
-    Type: Concrete
     Tag variants: 'L-1'
 
     Paragraph for specific language
@@ -823,7 +793,6 @@ class LanguageParagraph(MixedContentForParagraph):
 class MultiLanguageParagraph(Paginateable):
     """
     Complex type AR:MULTI-LANGUAGE-PARAGRAPH
-    Type: Concrete
     Tag variants: 'P'
     """
 
@@ -856,7 +825,6 @@ class MultiLanguageParagraph(Paginateable):
 class MixedContentForVerbatim(LanguageSpecific):
     """
     Group AR:MIXED-CONTENT-FOR-VERBATIM
-    Type: Abstract
 
     This includes AR:WHITESPACE-CONTROLLED as it
     does not have any attributes or elements of its
@@ -883,7 +851,6 @@ class MixedContentForVerbatim(LanguageSpecific):
 class LanguageVerbatim(MixedContentForVerbatim):
     """
     Complex type AR:L-VERBATIM
-    Type: Concrete
     Tag variants: 'L-5'
     """
 
@@ -900,7 +867,6 @@ class LanguageVerbatim(MixedContentForVerbatim):
 class MultiLanguageVerbatim(Paginateable):
     """
     Complex type AR:MULTI-LANGUAGE-VERBATIM
-    Type: Concrete
     Tag variants: 'VERBATIM'
     """
 
@@ -939,7 +905,6 @@ class MultiLanguageVerbatim(Paginateable):
 class MixedContentForUnitNames(ARObject):
     """
     Group MIXED-CONTENT-FOR-UNIT-NAMES
-    Type: Abstract
     """
 
     def __init__(self) -> None:
@@ -959,8 +924,7 @@ class MixedContentForUnitNames(ARObject):
 class SingleLanguageUnitNames(MixedContentForUnitNames):
     """
     Complex type AR:SINGLE-LANGUAGE-UNIT-NAMES
-    Type: Concrete
-    Tag variants: 'PRM-UNIT' | 'UNIT-DISPLAY-NAME' | 'UNIT-DISPLAY-NAME' | 'DISPLAY-NAME'
+    Tag variants: 'PRM-UNIT' | 'UNIT-DISPLAY-NAME' | 'DISPLAY-NAME'
     """
 
     def __init__(self, parts: str | list | None = None) -> None:
@@ -991,7 +955,6 @@ class SingleLanguageUnitNames(MixedContentForUnitNames):
 class DocumentationBlock(ARObject):
     """
     Complex type AR:DOCUMENTATION-BLOCK
-    Type: Concrete
     Tag Variants: 'INTRODUCTION', 'DEF', 'VALUE', 'ANNOTATION-TEXT', 'REMARK'
                   'COND', 'DESCRICPTION', 'RATIONALE', 'DEPENDENCIES', 'USE-CASE',
                   'CONFLICTS', 'SUPPORTING-MATERIAL', 'SW-GENERIC-AXIS-DESC'
@@ -1020,7 +983,6 @@ class DocumentationBlock(ARObject):
 class GeneralAnnotation(ARObject):
     """
     Group AR:GENERAL-ANNOTATION
-    Type: Abstract
     """
 
     def __init__(self,
@@ -1036,7 +998,7 @@ class GeneralAnnotation(ARObject):
 class Annotation(GeneralAnnotation):
     """
     Complex type AR:ANNOTATION
-    Type: Concrete
+    Tag variants: 'ANNOTATION'
     """
 
     def __init__(self,  # pylint: disable=useless-parent-delegation
@@ -1081,8 +1043,7 @@ class Describable(ARObject):
 
 class CompuRational(ARObject):
     """
-    AR:COMPU-RATIONAL-COEFFS
-    Type: Concrete
+    Complex type AR:COMPU-RATIONAL-COEFFS
     Tag variants: 'COMPU-RATIONAL-COEFFS'
     """
 
@@ -1105,11 +1066,11 @@ class CompuRational(ARObject):
 
 class CompuConst(ARObject):
     """
-    AR:COMPU-CONST
-    Type: Concrete
+    Complex type AR:COMPU-CONST
+    Tag variant: 'COMPU-DEFAULT-VALUE' | 'COMPU-INVERSE-VALUE' | 'COMPU-CONST'
 
-    Handles AR:COMPU-CONST-NUMERIC-CONTENT
-    and AR:COMPU-CONST-TEXT-CONTENT dynamically
+    Handles AR:COMPU-CONST-NUMERIC-CONTENT and AR:COMPU-CONST-TEXT-CONTENT
+    dynamically.
     """
 
     def __init__(self, value: int | float | str):
@@ -1118,8 +1079,7 @@ class CompuConst(ARObject):
 
 class CompuScale(ARObject):
     """
-    AR:COMPU-SCALE
-    Type: Concrete
+    Complex type AR:COMPU-SCALE
     Tag variants: 'COMPU-SCALE'
     """
 
@@ -1168,8 +1128,7 @@ class CompuScale(ARObject):
 
 class Computation(ARObject):
     """
-    AR:COMPU
-    Type: Concrete
+    Complex Type: AR:COMPU
     Tag variants: 'COMPU-INTERNAL-TO-PHYS' | 'COMPU-PHYS-TO-INTERNAL'
     """
 
@@ -1252,8 +1211,7 @@ class Computation(ARObject):
 
 class CompuMethod(ARElement):
     """
-    AR:COMPU-METHOD
-    Type: Concrete
+    Complex Type: AR:COMPU-METHOD
     Tag Variants: 'COMPU-METHOD'
     """
 
@@ -1283,9 +1241,7 @@ class CompuMethod(ARElement):
 
 class LimitObject(ARObject):
     """
-    Base class for elements that has
-    upper and lower limits
-    Type: Abstract
+    Base class for elements that has upper and lower limits
     """
 
     def __init__(self,
@@ -1324,7 +1280,6 @@ class LimitObject(ARObject):
 class ScaleConstraint(LimitObject):
     """
     AR:SCALE-CONSTR
-    Type: Concrete
     Tag variants: 'SCALE-CONSTR'
     """
 
@@ -1344,8 +1299,7 @@ class ScaleConstraint(LimitObject):
 
 class ConstraintBase(LimitObject):
     """
-    Base class data constraint rules
-    Type: Abstract
+    Base class for data constraint rules
     """
 
     def __init__(self,
@@ -1367,7 +1321,6 @@ class ConstraintBase(LimitObject):
 class InternalConstraint(ConstraintBase):
     """
     AR:INTERNAL-CONSTRS
-    Type: Concrete
     Tag variants: 'INTERNAL-CONSTRS'
     """
 
@@ -1393,7 +1346,6 @@ class InternalConstraint(ConstraintBase):
 class PhysicalConstraint(ConstraintBase):
     """
     AR:PHYS-CONSTRS
-    Type: Concrete
     Tag variants: 'PHYS-CONSTRS'
     """
 
@@ -1421,7 +1373,6 @@ class PhysicalConstraint(ConstraintBase):
 class DataConstraintRule(ARObject):
     """
     AR:DATA-CONSTR-RULE
-    Type: Concrete
     Tag variants: 'DATA-CONSTR-RULE'
     """
 
@@ -1437,7 +1388,6 @@ class DataConstraintRule(ARObject):
 class DataConstraint(ARElement):
     """
     AR:DATA-CONSTR
-    Type: Concrete
     Tag variants: 'DATA-CONSTR'
     """
 
@@ -1521,7 +1471,6 @@ class DataConstraint(ARElement):
 class Unit(ARElement):
     """
     Complex type AR:UNIT
-    Type: Concrete
     Tag variants: 'UNIT'
     """
 
@@ -1569,7 +1518,6 @@ class BaseType(ARElement):
     """
     Merge of Complex types AR:BASE-TYPE, AR:BASE-TYPE-DEFINITION,
     AR:BASE-TYPE-DIRECT-DEFINITION
-    Type: Abstract
     """
 
     def __init__(self, name: str, **kwargs: dict) -> None:
@@ -1585,7 +1533,6 @@ class BaseType(ARElement):
 class SwBaseType(BaseType):
     """
     Complex type AR:SW-BASE-TYPE
-    Type: Concrete
     Tag variants: SW-BASE-TYPE
     """
 
@@ -1617,8 +1564,8 @@ class SwBaseType(BaseType):
 
 class SwBitRepresentation(ARObject):
     """
-    SW-BIT-REPRESENTATION
-    Type: Concrete
+    Complex Type AR:SW-BIT-REPRESENTATION
+    Tag variants: SW-BIT-REPRESENTATION
     """
 
     def __init__(self,
@@ -1634,7 +1581,6 @@ class SwBitRepresentation(ARObject):
 class SwTextProps(ARObject):
     """
     Complex type AR:SW-TEXT-PROPS
-    Type: Concrete
     Tag Variants: 'SW-TEXT-PROPS'
     """
 
@@ -1657,7 +1603,6 @@ class SwTextProps(ARObject):
 class SwPointerTargetProps(ARObject):
     """
     Complex type AR:SW-POINTER-TARGET-PROPS
-    Type: Concrete
     Tag Variants: 'SW-POINTER-TARGET-PROPS'
     """
 
@@ -1684,7 +1629,6 @@ class SwDataDefPropsConditional(ARObject):
     """
     Merge of Complex types AR:SW-DATA-DEF-PROPS-CONDITIONAL and
     AR:SW-DATA-DEF-PROPS-CONTENT
-    Type: Concrete
     Tag Variants: SW-DATA-DEF-PROPS-CONDITIONAL
     """
 
@@ -1849,8 +1793,7 @@ class SwDataDefProps(ARObject):
 
 class AutosarDataType(ARElement):
     """
-    Element AUTOSAR-DATA-TYPE
-    Type: Abstract
+    Group AR:AUTOSAR-DATA-TYPE
     """
 
     def __init__(self,
@@ -1884,15 +1827,15 @@ class ImplementationProps(Referrable):
 class SymbolProps(ImplementationProps):
     """
     Complex type AR:SYMBOL-PROPS
-    Type: Concrete
     Tag Variants: 'SYMBOL-PROPS', 'EVENT-SYMBOL-PROPS'
+
+    Base class already supports everything we need
     """
 
 
 class ImplementationDataTypeElement(Identifiable):
     """
     Complex type AR:IMPLEMENTATION-DATA-TYPE-ELEMENT
-    Type: Concrete
     Tag variants: 'IMPLEMENTATION-DATA-TYPE-ELEMENT'
     """
 
@@ -1942,8 +1885,7 @@ class ImplementationDataTypeElement(Identifiable):
 
 class ImplementationDataType(AutosarDataType):
     """
-    AR: IMPLEMENTATION-DATA-TYPE
-    Type: Concrete
+    Complex type AR:IMPLEMENTATION-DATA-TYPE
     Tag Variants: 'IMPLEMENTATION-DATA-TYPE'
     """
 
@@ -2001,7 +1943,6 @@ class ImplementationDataType(AutosarDataType):
 class DataPrototype(Identifiable):
     """
     Group AR:DATA-PROTOTYPE
-    Type: Abstract
     """
 
     def __init__(self,
@@ -2022,7 +1963,6 @@ class DataPrototype(Identifiable):
 class AutosarDataPrototype(DataPrototype):
     """
     Group AR:AUTOSAR-DATA-PROTOTYPE
-    Type: Abstract
     """
 
     def __init__(self,
@@ -2038,7 +1978,6 @@ class AutosarDataPrototype(DataPrototype):
 class VariableDataPrototype(AutosarDataPrototype):
     """
     Complex type AR:VARIABLE-DATA-PROTOTYPE
-    Type: Concrete
     Tag variants: 'VARIABLE-DATA-PROTOTYPE' | 'BULK-NV-BLOCK' | 'RAM-BLOCK'
     """
 
@@ -2072,7 +2011,6 @@ class VariableDataPrototype(AutosarDataPrototype):
 class ParameterDataPrototype(AutosarDataPrototype):
     """
     Complex type AR:PARAMETER-DATA-PROTOTYPE
-    Type: Concrete
     Tag variants: 'PARAMETER-DATA-PROTOTYPE' | 'ROM-BLOCK'
     """
 
@@ -2097,7 +2035,6 @@ class ParameterDataPrototype(AutosarDataPrototype):
 class ArgumentDataPrototype(AutosarDataPrototype):
     """
     Complex type AR:ARGUMENT-DATA-PROTOTYPE
-    Type: Concrete
     Tag variants: 'ARGUMENT-DATA-PROTOTYPE'
     """
 
@@ -2118,32 +2055,29 @@ class ArgumentDataPrototype(AutosarDataPrototype):
 class ApplicationDataType(AutosarDataType):
     """
     Group AR:APPLICATION-DATA-TYPE
-    Type: Abstract
     """
 
 
 class ApplicationCompositeDataType(ApplicationDataType):
     """
     Group AR:APPLICATION-COMPOSITE-DATA-TYPE
-    Type: Abstract
     """
 
     @property
     def is_composite(self):
-        """Is this a composite data type?"""
+        """Returns true if this is a composite data type"""
         return True
 
 
 class ApplicationPrimitiveDataType(ApplicationDataType):
     """
     Complex type AR:APPLICATION-PRIMITIVE-DATA-TYPE
-    Type: Concrete
     Tag variants: 'APPLICATION-PRIMITIVE-DATA-TYPE'
     """
 
     @property
     def is_composite(self):
-        """Is this a composite data type?"""
+        """Returns true if this is a composite data type"""
         return False
 
     def ref(self) -> ApplicationDataTypeRef | None:
@@ -2160,7 +2094,6 @@ class ApplicationPrimitiveDataType(ApplicationDataType):
 class ApplicationCompositeElementDataPrototype(DataPrototype):
     """
     Group AR:APPLICATION-COMPOSITE-ELEMENT-DATA-PROTOTYPE
-    Type: Abstract
     """
 
     def __init__(self,
@@ -2175,7 +2108,6 @@ class ApplicationCompositeElementDataPrototype(DataPrototype):
 class ApplicationArrayElement(ApplicationCompositeElementDataPrototype):
     """
     Complex type AR:APPLICATION-ARRAY-ELEMENT
-    Type: Concrete
     Tag variants: 'ELEMENT'
     """
 
@@ -2200,7 +2132,6 @@ class ApplicationArrayElement(ApplicationCompositeElementDataPrototype):
 class ApplicationArrayDataType(ApplicationCompositeDataType):
     """
     Complex type AR:APPLICATION-ARRAY-DATA-TYPE
-    Type: Concrete
     Tag variants: 'APPLICATION-ARRAY-DATA-TYPE'
     """
 
@@ -2229,7 +2160,6 @@ class ApplicationArrayDataType(ApplicationCompositeDataType):
 class ApplicationRecordElement(ApplicationCompositeElementDataPrototype):
     """
     Complex type AR:APPLICATION-RECORD-ELEMENT
-    Type: Concrete
     Tag variants: 'APPLICATION-RECORD-ELEMENT'
     """
 
@@ -2245,7 +2175,6 @@ class ApplicationRecordElement(ApplicationCompositeElementDataPrototype):
 class ApplicationRecordDataType(ApplicationCompositeDataType):
     """
     Complex type AR:APPLICATION-RECORD-DATA-TYPE
-    Type: Concrete
     Tag variants: 'APPLICATION-RECORD-DATA-TYPE'
     """
 
@@ -2291,7 +2220,6 @@ class ApplicationRecordDataType(ApplicationCompositeDataType):
 class DataTypeMap(ARObject):
     """
     Complex type AR:DATA-TYPE-MAP
-    Type: Concrete
     Tag variants: 'DATA-TYPE-MAP'
     """
 
@@ -2306,7 +2234,6 @@ class DataTypeMap(ARObject):
 class DataTypeMappingSet(ARElement):
     """
     Complex type AR:DATA-TYPE-MAPPING-SET
-    Type: Concrete
     Tag variants: 'DATA-TYPE-MAPPING-SET'
     """
 
@@ -2341,7 +2268,6 @@ class DataTypeMappingSet(ARElement):
 class ValueList(ARObject):
     """
     Complex type AR:VALUE-LIST
-    Type: Concrete
     Tag variants: 'SW-ARRAYSIZE'
     """
 
@@ -2364,13 +2290,12 @@ class ValueList(ARObject):
             raise TypeError(f"Invalid type for value: {str(type(value))}")
 
 
-# Software address method (partly implemented)
+# --- Auxillary Objects
 
 
 class SwAddrMethod(ARElement):
     """
     Complex type AR:SW-ADDR-METHOD
-    Type: Concrete
     Tag Variants: 'SW-ADDR-METHOD'
     """
 
@@ -2398,8 +2323,7 @@ SwValueElement = Union[int, float, str, NumericalValue, "ValueGroup"]  # Type al
 class SwValues(ARObject):
     """
     Complex type AR:SW-VALUES
-    Type: Concrete
-    Tag variants: SW-VALUES-PHYS
+    Tag variants: 'SW-VALUES-PHYS'
     """
 
     def __init__(self,
@@ -2429,8 +2353,7 @@ class SwValues(ARObject):
 class ValueGroup(SwValues):
     """
     Complex type AR:VALUE-GROUP
-    Type: Concrete
-    Tag variants: VG
+    Tag variants: 'VG'
     """
 
     def __init__(self,
@@ -2450,8 +2373,7 @@ class ValueGroup(SwValues):
 class SwAxisCont(ARObject):
     """
     Complex type AR:SW-AXIS-CONT
-    Type: Concrete
-    Tag variants: SW-AXIS-CONT
+    Tag variants: 'SW-AXIS-CONT'
     """
 
     def __init__(self,
@@ -2483,8 +2405,7 @@ class SwAxisCont(ARObject):
 class SwValueCont(ARObject):
     """
     Complex type AR:SW-VALUE-CONT
-    Type: Concrete
-    Tag variants: SW-VALUE-CONT
+    Tag variants: 'SW-VALUE-CONT'
     """
 
     def __init__(self,
@@ -2508,7 +2429,6 @@ class SwValueCont(ARObject):
 class ValueSpecification(ARObject):
     """
     Group AR:VALUE-SPECIFCATION
-    Type: Abstract
     Base class for value specifications
     """
 
@@ -2622,7 +2542,6 @@ class ValueSpecification(ARObject):
 class TextValueSpecification(ValueSpecification):
     """
     Complex type AR:TEXT-VALUE-SPECIFICATION
-    Type: Concrete
     Tag variants: 'TEXT-VALUE-SPECIFICATION'
     """
 
@@ -2634,7 +2553,6 @@ class TextValueSpecification(ValueSpecification):
 class NumericalValueSpecification(ValueSpecification):
     """
     Complex type AR:NUMERICAL-VALUE-SPECIFICATION
-    Type: Concrete
     Tag variants: 'NUMERICAL-VALUE-SPECIFICATION'
     """
 
@@ -2646,7 +2564,6 @@ class NumericalValueSpecification(ValueSpecification):
 class NotAvailableValueSpecification(ValueSpecification):
     """
     Complex type AR:NOT-AVAILABLE-VALUE-SPECIFICATION
-    Type: Concrete
     Tag variants: 'NOT-AVAILABLE-VALUE-SPECIFICATION'
     """
 
@@ -2665,7 +2582,6 @@ class NotAvailableValueSpecification(ValueSpecification):
 class ArrayValueSpecification(ValueSpecification):
     """
     Complex type AR:ARRAY-VALUE-SPECIFICATION
-    Type: Concrete
     Tag variants: 'ARRAY-VALUE-SPECIFICATION'
     """
 
@@ -2694,7 +2610,6 @@ class ArrayValueSpecification(ValueSpecification):
 class RecordValueSpecification(ValueSpecification):
     """
     Complex type AR:RECORD-VALUE-SPECIFICATION
-    Type: Concrete
     Tag variants: 'RECORD-VALUE-SPECIFICATION'
     """
 
@@ -2723,7 +2638,6 @@ class RecordValueSpecification(ValueSpecification):
 class ApplicationValueSpecification(ValueSpecification):
     """
     Complex type AR:APPLICATION-VALUE-SPECIFICATION
-    Type: Concrete
     Tag variants: APPLICATION-VALUE-SPECIFICATION
     """
 
@@ -2757,7 +2671,6 @@ class ApplicationValueSpecification(ValueSpecification):
 class ConstantSpecification(ARElement):
     """
     Complex type AR:CONSTANT-SPECIFICATION
-    Type: Concrete
     Tag Variants: 'CONSTANT-SPECIFICATION'
     """
 
@@ -2796,7 +2709,6 @@ class ConstantSpecification(ARElement):
 class ConstantReference(ValueSpecification):
     """
     Complex type AR:CONSTANT-REFERENCE
-    Type: Concrete
     Tag variants 'CONSTANT-REFERENCE'
 
     It's easy to confuse this with the ConstantRef class.
@@ -3253,7 +3165,6 @@ class ModeDeclarationGroupPrototype(Identifiable):
 class PortInterface(ARElement):
     """
     Group AR:PORT-INTERFACE
-    Type: Abstract
     """
 
     def __init__(self,
@@ -3272,16 +3183,14 @@ class PortInterface(ARElement):
 class DataInterface(PortInterface):
     """
     Group AR-DATA-INTERFACE
-    Type: Abstract
 
-    Base class for data-concerned interfaces (as opposed to operations-based)
+    Base class for data-based interfaces (as opposed to operations-based)
     """
 
 
 class InvalidationPolicy(ARObject):
     """
     Complex type AR:INVALIDATION-POLICY
-    Type: Concrete
     Tag variants: 'INVALIDATION-POLICY'
     """
 
@@ -3297,7 +3206,6 @@ class InvalidationPolicy(ARObject):
 class SenderReceiverInterface(DataInterface):
     """
     Complex type AR:SENDER-RECEIVER-INTERFACE
-    Type: Concrete
     Tag variants: 'SENDER-RECEIVER-INTERFACE'
     """
 
@@ -3397,7 +3305,6 @@ class SenderReceiverInterface(DataInterface):
 class NvDataInterface(DataInterface):
     """
     Complex type AR:NV-DATA-INTERFACE
-    Type: Concrete
     Tag variants: 'NV-DATA-INTERFACE'
     """
 
@@ -3454,7 +3361,6 @@ class NvDataInterface(DataInterface):
 class ParameterInterface(DataInterface):
     """
     Complex type AR:PARAMETER-INTERFACE
-    Type: Concrete
     Tag variants: 'PARAMETER-INTERFACE'
     """
 

@@ -12,6 +12,7 @@ It also has some support for parsing AUTOSAR XML files.
 1. Python AUTOSAR v0.5+ uses a new API and is incompatible with earlier versions.
 2. For Python AUTOSAR v0.4, see the [v0.4 maintenance branch](https://github.com/cogu/autosar/tree/maintenance/0.4).
 3. At this point most elements are supported except for SwcInternalBehavior. Due to its massive size, that element won't have proper support until v0.5.5.
+4. There's no offical documentation yet for v0.5. The [documentation](https://autosar.readthedocs.io/en/latest/) found at Read the Docs is for v0.4.
 
 ## Major design changes
 
@@ -45,7 +46,9 @@ Only Clasic AUTOSAR will be supported.
 
 ## Supported XML elements
 
-For currently supported XML elements, see the [CHANGELOG](CHANGELOG.md) file.
+For currently supported XML elements, see the [XML Index](https://github.com/cogu/autosar/wiki/XML-Index).
+
+If you can't find it in the index it's not implemented.
 
 ## Usage
 
