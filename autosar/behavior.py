@@ -50,6 +50,19 @@ class DataReceivedEvent(Event):
     def tag(self, version=None):
         return "DATA-RECEIVED-EVENT"
 
+class ExternalTriggerOccurredEvent(Event):
+    def __init__(self, name, startOnEventRef=None, parent=None):
+        super().__init__(name, startOnEventRef, parent)
+        self.triggerInstanceRef=None
+    def tag(self, version=None):
+        return "EXTERNAL-TRIGGER-OCCURRED-EVENT"
+
+class AsyncServerCallReturnsEvent(Event):
+    def __init__(self, name, startOnEventRef=None, parent=None):
+        super().__init__(name, startOnEventRef, parent)
+        self.eventSourceRef=None
+    def tag(self, version=None):
+        return "ASYNCHRONOUS-SERVER-CALL-RETURNS-EVENT"
 
 class OperationInvokedEvent(Event):
     def __init__(self, name, startOnEventRef=None, parent=None):
@@ -234,6 +247,7 @@ class RunnableEntity(Element):
         self.dataReceivePoints=[]
         self.dataSendPoints=[]
         self.serverCallPoints=[]
+        self.asyncServerCallResultPoints=[]
         self.exclusiveAreaRefs=[]
         self.modeAccessPoints=[] #AUTOSAR4 only
         self.modeSwitchPoints=[] #AUTOSAR4 only
@@ -244,6 +258,8 @@ class RunnableEntity(Element):
         self.dataLocalWriteAccess=[] #AUTOSAR4 only?
 
         self.parameterAccessPoints = [] #AUTOSAR4 only
+        self.activationReasons = [] #AUTOSAR4 only
+        self.externalTriggeringPoints = [] #AUTOSAR4 only
 
     def tag(self,version=None):
         return 'RUNNABLE-ENTITY'
@@ -373,6 +389,30 @@ class DataInstanceRef(object):
 
     def tag(self, version=None):
         return 'DATA-IREF'
+
+
+class RTriggerInAtomicSwcInstanceRef(object):
+    """
+    xsd complex type: <R-TRIGGER-IN-ATOMIC-SWC-INSTANCE-REF>
+    """
+    def __init__(self,portRef,triggerRef):
+        self.portRef = portRef
+        self.triggerRef = triggerRef
+    def asdict(self):
+        data={'type': self.__class__.__name__,'portRef':self.portRef, 'triggerRef':self.triggerRef}
+        return data
+
+class PTriggerInAtomicSwcTypeInstanceRef(object):
+    """
+    xsd complex type: <P-TRIGGER-IN-ATOMIC-SWC-TYPE-INSTANCE-REF>
+    """
+    def __init__(self,portRef,triggerRef):
+        self.portRef = portRef
+        self.triggerRef = triggerRef
+    def asdict(self):
+        data={'type': self.__class__.__name__,'portRef':self.portRef, 'triggerRef':self.triggerRef}
+        return data
+
 
 
 class OperationInstanceRef(object):
@@ -894,6 +934,19 @@ class AsyncServerCallPoint(ServerCallPointCommon):
     """
     <ASYNCHRONOUS-SERVER-CALL-POINT>
     """
+
+class AsyncServerCallReturnPoint(object):
+    """
+    <ASYNCHRONOUS-SERVER-CALL-RESULT-POINT>
+    """
+    def __init__(self, name, timeout=0.0):
+        self.name=name
+        self.timeout=timeout
+        self.operationInstanceRefs=[]
+
+    def asdict(self):
+        data={'type': self.__class__.__name__,'name':self.name,'timeout':self.timeout}
+        return data
 
 class InternalBehaviorCommon(Element):
     """
@@ -1497,6 +1550,7 @@ class SwcInternalBehavior(InternalBehaviorCommon):
         self.constantMemories = [] #list of ParameterDataPrototye objects
         self.variationPointProxies = [] #list of VariationPointProxy objects
         self.constantValueMappingRefs = [] #list of strings
+        self.exclusiveAreaPolicys=[] #list of SwcExclusiveAreaPolicy
 
     def tag(self, version): return "SWC-INTERNAL-BEHAVIOR"
 
@@ -1740,6 +1794,15 @@ class LocalVariableAccess(Element):
     def tag(self, version=None):
         return 'VARIABLE-ACCESS'
 
+class ExecutableEntityActivationReason(Element):
+    def __init__(self, name, bit_position, symbol, parent=None):
+        super().__init__(name, parent)
+        self.bit_position = bit_position
+        self.symbol = symbol
+
+    def tag(self, version=None):
+        return 'EXECUTABLE-ENTITY-ACTIVATION-REASON'
+
 class ServiceNeeds(Element):
     """
     Represents <SERVICE-NEEDS> (AUTOSAR 4)
@@ -1779,6 +1842,26 @@ class SwcServiceDependency(Element):
     def serviceNeeds(self, elem):
         elem.parent = self
         self._serviceNeeds = elem
+
+
+class ExternalTriggeringPoint:
+    """
+    Represents <EXTERNAL-TRIGGERING-POINT> (AUTODSAR 4)
+    """
+    def __init__(self, triggerIref):
+        self.triggerIref = triggerIref
+    
+    def tag(self, version): return 'EXTERNAL-TRIGGERING-POINT'
+
+class SwcExclusiveAreaPolicy:
+    """
+    Represents <SWC-EXCLUSIVE-AREA-POLICY> (AUTODSAR 4)
+    """
+    def __init__(self, exclusiveAreaRef, apiPrinciple):
+        self.exclusiveAreaRef = exclusiveAreaRef
+        self.apiPrinciple = apiPrinciple
+    
+    def tag(self, version): return 'SWC-EXCLUSIVE-AREA-POLICY'
 
 class RoleBasedDataAssignment:
     """

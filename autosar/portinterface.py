@@ -384,3 +384,40 @@ class NvDataInterface(PortInterface):
             raise ValueError("expected elem variable to be of type AutosarDataPrototype (Variable)")
         self.nvDatas.append(elem)
         elem.parent=self
+ 
+class Trigger(Element):
+    def __init__(self, name, swImplPolicy, parent=None, adminData=None):
+        super().__init__(name, parent, adminData)
+        self.swImplPolicy=swImplPolicy
+
+    def tag(self, version = None):  #pylint: disable=unused-argument
+        return 'TRIGGER'
+
+    def asdict(self):
+        return {'type': self.__class__.__name__, 'name':self.name, 'trigger':self.swImplPolicy}
+class TriggerInterface(PortInterface):
+    def tag(self,version=None):
+        if version>=4.0:
+            return 'TRIGGER-INTERFACE'
+        else:
+            raise ValueError("Autosar 3 is not supported")
+
+    def __init__(self, name, isService=False, serviceKind = None, parent=None, adminData=None):
+        super().__init__(name, isService, serviceKind, parent, adminData)
+        self.triggers=[]
+
+    def find(self,ref):
+        ref = ref.partition('/')
+        name = ref[0]
+        for elem in self.triggers:
+            if elem.name==name:
+                return elem
+
+    def append(self,elem):
+        """
+        adds elem to the self.triggers list and sets elem.parent to self (the port interface)
+        """
+        if not isinstance(elem, Trigger):
+            raise ValueError("expected elem variable to be of type Trigger")
+        self.triggers.append(elem)
+        elem.parent=self

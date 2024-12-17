@@ -4,10 +4,30 @@ class System(Element):
     def __init__(self,name,parent=None):
         super().__init__(name,parent)
         self.fibexElementRefs=[]
+        self.fibexElementRefConditionals=[]
         self.mapping=None
         self.softwareComposition=None
+        self.rootSoftwareCompositions=[]
+    
+    def find(self, ref):
+        if ref is None: return None
+        if ref[0]=='/': ref=ref[1:] #removes initial '/' if it exists
+        ref=ref.partition('/')
+        name=ref[0]
+        foundElem = None
+        for elem in self.rootSoftwareCompositions:
+            if elem.name == name:
+                foundElem = elem
+                break
+        if foundElem is not None:
+            if len(ref[2])>0 and hasattr(foundElem, "find"):
+                return foundElem.find(ref[2])
+            else:
+                return foundElem
+        return None
 
     def asdict(self):
+        # NOTE: outdated, does not include all elements (e.g.: missing fibexElementRefConditionals)
         data={'type': self.__class__.__name__,'name':self.name,
               }
         if len(self.fibexElementRefs)>0:
@@ -73,3 +93,13 @@ class SenderRecRecordElementMapping:
     def __init__(self,recordElementRef,signalRef):
         self.recordElementRef=recordElementRef
         self.signalRef=signalRef
+
+class RootSwCompositionPrototype(Element):
+    """
+    Implements <ROOT-SW-COMPOSITION-PROTOTYPE> (AUTOSAR 4)
+    """
+    def tag(self, version=None): return "ROOT-SW-COMPOSITION-PROTOTYPE"
+
+    def __init__(self, name, softwareCompositionTref, adminData=None, category=None, parent=None):
+        super().__init__(name, parent, adminData, category)
+        self.softwareCompositionTref = softwareCompositionTref

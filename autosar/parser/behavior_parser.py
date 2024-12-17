@@ -142,6 +142,10 @@ class BehaviorParser(EntityParser):
                             event = self.parseTimingEvent(xmlEvent, internalBehavior)
                         elif xmlEvent.tag == 'DATA-RECEIVED-EVENT':
                             event = self.parseDataReceivedEvent(xmlEvent, internalBehavior)
+                        elif xmlEvent.tag == 'EXTERNAL-TRIGGER-OCCURRED-EVENT':
+                            event = self.parseExternalTriggerOccurredEvent(xmlEvent,internalBehavior)
+                        elif xmlEvent.tag == 'ASYNCHRONOUS-SERVER-CALL-RETURNS-EVENT':
+                            event = self.parseAsyncServerCallReturnsEvent(xmlEvent,internalBehavior)
                         elif xmlEvent.tag == 'OPERATION-INVOKED-EVENT':
                             event = self.parseOperationInvokedEvent(xmlEvent, internalBehavior)
                         elif xmlEvent.tag == 'MODE-SWITCHED-ACK-EVENT':
@@ -200,6 +204,14 @@ class BehaviorParser(EntityParser):
                             internalBehavior.exclusiveAreas.append(exclusiveArea)
                         else:
                             handleNotImplementedError(xmlChild.tag)
+                elif xmlElem.tag == 'EXCLUSIVE-AREA-POLICYS':
+                    for xmlChildElem in xmlElem.findall('./*'):
+                        if xmlChildElem.tag == 'SWC-EXCLUSIVE-AREA-POLICY':
+                            tmp = self.parseSwcExclusiveAreaPolicy(xmlChildElem, internalBehavior)
+                            if tmp is not None:
+                                internalBehavior.exclusiveAreaPolicys.append(tmp)
+                        else:
+                            handleNotImplementedError(xmlChildElem.tag)
                 elif xmlElem.tag == 'PER-INSTANCE-PARAMETERS':
                     for xmlChildElem in xmlElem.findall('./*'):
                         if xmlChildElem.tag == 'PARAMETER-DATA-PROTOTYPE':
@@ -263,6 +275,7 @@ class BehaviorParser(EntityParser):
         xmlDataReceivePoints = None
         xmlDataSendPoints = None
         xmlServerCallPoints = None
+        xmlAsyncServerCallResultPoints = None
         xmlCanEnterExclusiveAreas = None
         adminData = None
         xmlModeAccessPoints = None
@@ -270,6 +283,8 @@ class BehaviorParser(EntityParser):
         canBeInvokedConcurrently = False
         xmlModeSwitchPoints = None
         minStartInterval = None
+        xmlActivationReasons = None
+        xmlExternalTriggeringPoints = None
 
         xmlDataReadAccess = None
         xmlDataWriteAccess = None
@@ -312,6 +327,8 @@ class BehaviorParser(EntityParser):
                     xmlDataSendPoints=xmlElem
                 elif xmlElem.tag=='SERVER-CALL-POINTS':
                     xmlServerCallPoints=xmlElem
+                elif xmlElem.tag == 'ASYNCHRONOUS-SERVER-CALL-RESULT-POINTS':
+                    xmlAsyncServerCallResultPoints=xmlElem
                 elif xmlElem.tag=='SYMBOL':
                     symbol=self.parseTextNode(xmlElem)
                 elif xmlElem.tag=='CAN-ENTER-EXCLUSIVE-AREA-REFS':
@@ -332,6 +349,10 @@ class BehaviorParser(EntityParser):
                     xmlDataReadAccess = xmlElem
                 elif xmlElem.tag == 'DATA-WRITE-ACCESSS':
                     xmlDataWriteAccess = xmlElem
+                elif xmlElem.tag == 'ACTIVATION-REASONS':
+                    xmlActivationReasons = xmlElem
+                elif xmlElem.tag == 'EXTERNAL-TRIGGERING-POINTS':
+                    xmlExternalTriggeringPoints = xmlElem
                 elif xmlElem.tag == 'RUNS-INSIDE-EXCLUSIVE-AREA-REFS':
                     pass #implement later
                 else:
@@ -387,6 +408,10 @@ class BehaviorParser(EntityParser):
             for xmlServerCallPoint in xmlServerCallPoints.findall('./ASYNCHRONOUS-SERVER-CALL-POINT'):
                 asyncServerCallPoint = self.parseAsyncServerCallPoint(xmlServerCallPoint)
                 if asyncServerCallPoint is not None: runnableEntity.serverCallPoints.append(asyncServerCallPoint)
+        if xmlAsyncServerCallResultPoints is not None:
+            for xmlAsyncServerCallResultPoint in xmlAsyncServerCallResultPoints.findall('./ASYNCHRONOUS-SERVER-CALL-RESULT-POINT'):
+                asyncServerCallResultPoint = self.parseAsyncServerCallResultPoint(xmlAsyncServerCallResultPoint)
+                if asyncServerCallResultPoint is not None: runnableEntity.asyncServerCallResultPoints.append(asyncServerCallResultPoint)
         if xmlCanEnterExclusiveAreas is not None:
             for xmlCanEnterExclusiveAreaRef in xmlCanEnterExclusiveAreas.findall('./CAN-ENTER-EXCLUSIVE-AREA-REF'):
                 runnableEntity.exclusiveAreaRefs.append(self.parseTextNode(xmlCanEnterExclusiveAreaRef))
@@ -440,6 +465,24 @@ class BehaviorParser(EntityParser):
                     variableAccess = self._parseLocalVariableAccess(xmlElem)
                     if variableAccess is not None:
                         runnableEntity.dataLocalWriteAccess.append(variableAccess)
+                else:
+                    handleNotImplementedError(xmlElem.tag)
+        
+        if xmlActivationReasons is not None:
+            for xmlElem in xmlActivationReasons.findall('./*'):
+                if xmlElem.tag == 'EXECUTABLE-ENTITY-ACTIVATION-REASON':
+                    activationReason = self._parseExecutableEntityActivationReason(xmlElem, runnableEntity)
+                    if activationReason is not None:
+                        runnableEntity.activationReasons.append(activationReason)
+                else:
+                    handleNotImplementedError(xmlElem.tag)
+        
+        if xmlExternalTriggeringPoints is not None:
+            for xmlElem in xmlExternalTriggeringPoints.findall('./*'):
+                if xmlElem.tag == 'EXTERNAL-TRIGGERING-POINT':
+                    externalTriggeringPoint = self._parseExternalTriggeringPoint(xmlElem)
+                    if externalTriggeringPoint is not None:
+                        runnableEntity.externalTriggeringPoints.append(externalTriggeringPoint)
                 else:
                     handleNotImplementedError(xmlElem.tag)
         
@@ -518,6 +561,39 @@ class BehaviorParser(EntityParser):
             obj = None
         self.pop()
         return obj
+    
+    def _parseExecutableEntityActivationReason(self, xmlRoot, parent = None):
+        assert(xmlRoot.tag == 'EXECUTABLE-ENTITY-ACTIVATION-REASON')
+        (bit_position, symbol) = (None, None)
+        self.push()
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == 'BIT-POSITION':
+                bit_position = self.parseNumberNode(xmlElem)
+            elif xmlElem.tag == 'SYMBOL':
+                symbol = self.parseTextNode(xmlElem)
+            else:
+                self.defaultHandler(xmlElem)
+        
+        obj = autosar.behavior.ExecutableEntityActivationReason(self.name, bit_position, symbol, parent)
+        self.pop(obj)
+        return obj
+    
+    def _parseExternalTriggeringPoint(self, xmlRoot):
+        assert(xmlRoot.tag == 'EXTERNAL-TRIGGERING-POINT')
+        triggerIref = None
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == 'TRIGGER-IREF':
+                triggerIrefXml = xmlElem.find('P-TRIGGER-IN-ATOMIC-SWC-TYPE-INSTANCE-REF')
+                if triggerIrefXml is not None:
+                    triggerIref = self.parsePTriggerInAtomicSwcTypeInstanceRef(triggerIrefXml)
+            else:
+                # TODO: support IDENT and VARIATION-POINT
+                handleNotImplementedError(xmlElem.tag)
+        
+        if triggerIref is not None:
+            return autosar.behavior.ExternalTriggeringPoint(triggerIref)
+
+        return None
 
     @parseElementUUID
     def parseParameterAccessPoint(self, xmlRoot, parent = None):
@@ -765,12 +841,35 @@ class BehaviorParser(EntityParser):
         return dataReceivedEvent
 
     @parseElementUUID
+    def parseExternalTriggerOccurredEvent(self,xmlRoot,parent=None):
+        name = self.parseTextNode(xmlRoot.find('SHORT-NAME'))
+        startOnEventRef = self.parseTextNode(xmlRoot.find('START-ON-EVENT-REF'))
+        triggerInstanceRef=self.parseRTriggerInAtomicSwcInstanceRef(xmlRoot.find('TRIGGER-IREF'))
+        externalTriggerOccurredEvent=autosar.behavior.ExternalTriggerOccurredEvent(name, startOnEventRef, parent)
+        xmlModeDependency = xmlRoot.find('MODE-DEPENDENCY')
+        if xmlModeDependency is not None:
+            externalTriggerOccurredEvent.modeDependency = self._parseModeDependency(xmlModeDependency)
+        externalTriggerOccurredEvent.triggerInstanceRef=triggerInstanceRef
+        return externalTriggerOccurredEvent
+
+    @parseElementUUID
+    def parseAsyncServerCallReturnsEvent(self,xmlRoot,parent=None):
+        name = self.parseTextNode(xmlRoot.find('SHORT-NAME'))
+        startOnEventRef = self.parseTextNode(xmlRoot.find('START-ON-EVENT-REF'))
+        eventSourceRef=self.parseTextNode(xmlRoot.find('EVENT-SOURCE-REF'))
+        AsyncServerCallReturnsEvent=autosar.behavior.AsyncServerCallReturnsEvent(name, startOnEventRef, parent)
+        xmlModeDependency = xmlRoot.find('MODE-DEPENDENCY')
+        if xmlModeDependency is not None:
+            AsyncServerCallReturnsEvent.modeDependency = self._parseModeDependency(xmlModeDependency)
+        AsyncServerCallReturnsEvent.eventSourceRef=eventSourceRef
+        return AsyncServerCallReturnsEvent
+
+    @parseElementUUID
     def parseOperationInvokedEvent(self,xmlRoot,parent=None):
-        (name, startOnEventRef, modeDependency, operationInstanceRef) = (None, None, None, None)
+        (startOnEventRef, modeDependency, operationInstanceRef) = (None, None, None)
+        self.push()
         for xmlElem in xmlRoot.findall('./*'):
-            if xmlElem.tag == 'SHORT-NAME':
-                name = self.parseTextNode(xmlElem)
-            elif xmlElem.tag == 'START-ON-EVENT-REF':
+            if xmlElem.tag == 'START-ON-EVENT-REF':
                 startOnEventRef = self.parseTextNode(xmlElem)
             elif xmlElem.tag == 'OPERATION-IREF':
                 portTag = 'CONTEXT-P-PORT-REF' if self.version >= 4.0 else 'P-PORT-PROTOTYPE-REF'
@@ -778,8 +877,9 @@ class BehaviorParser(EntityParser):
             elif xmlElem.tag == 'MODE-DEPENDENCY':
                 modeDependency = self._parseModeDependency(xmlElem)
             else:
-                handleNotImplementedError(xmlElem.tag)
-        operationInvokedEvent=autosar.behavior.OperationInvokedEvent(name, startOnEventRef, parent)
+                self.defaultHandler(xmlElem)
+        operationInvokedEvent=autosar.behavior.OperationInvokedEvent(self.name, startOnEventRef, parent)
+        self.pop(operationInvokedEvent)
         operationInvokedEvent.modeDependency = modeDependency
         operationInvokedEvent.operationInstanceRef = operationInstanceRef
         return operationInvokedEvent
@@ -797,6 +897,32 @@ class BehaviorParser(EntityParser):
             else:
                 handleNotImplementedError(xmlElem.tag)
         return autosar.behavior.DataInstanceRef(portRef,dataElemRef)
+    
+    def parseRTriggerInAtomicSwcInstanceRef(self, xmlRoot):
+        """parses <TRIGGER-IREF> referring to type: R-TRIGGER-IN-ATOMIC-SWC-INSTANCE-REF"""
+        assert(xmlRoot.tag=='TRIGGER-IREF')
+        (portRef, triggerRef) = (None, None)
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == "CONTEXT-R-PORT-REF":
+                portRef = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == "TARGET-TRIGGER-REF":
+                triggerRef = self.parseTextNode(xmlElem)
+            else:
+                handleNotImplementedError(xmlElem.tag)
+        return autosar.behavior.RTriggerInAtomicSwcInstanceRef(portRef,triggerRef)
+
+    def parsePTriggerInAtomicSwcTypeInstanceRef(self, xmlRoot):
+        """parses <P-TRIGGER-IN-ATOMIC-SWC-TYPE-INSTANCE-REF>"""
+        assert(xmlRoot.tag=='P-TRIGGER-IN-ATOMIC-SWC-TYPE-INSTANCE-REF')
+        (portRef, triggerRef) = (None, None)
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == "CONTEXT-P-PORT-REF":
+                portRef = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == "TARGET-TRIGGER-REF":
+                triggerRef = self.parseTextNode(xmlElem)
+            else:
+                handleNotImplementedError(xmlElem.tag)
+        return autosar.behavior.PTriggerInAtomicSwcTypeInstanceRef(portRef,triggerRef)
 
     def parseOperationInstanceRef(self,xmlRoot,portTag,xmlParentElement):
         """parses <OPERATION-IREF>"""
@@ -917,6 +1043,23 @@ class BehaviorParser(EntityParser):
         """
         assert(xmlRoot.tag=='SYNCHRONOUS-SERVER-CALL-POINT')
         return self._parseServerCallPoint(xmlRoot, autosar.behavior.SyncServerCallPoint)
+    
+    def parseAsyncServerCallResultPoint(self, xmlRoot):
+        """
+        parses <ASYNCHRONOUS-SERVER-CALL-RESULT-POINT>
+        """
+        assert(xmlRoot.tag=='ASYNCHRONOUS-SERVER-CALL-RESULT-POINT')
+        (name, asyncServerCallPointRef) = (None, None)
+
+        for xmlElem in xmlRoot.findall('*'):
+            if xmlElem.tag=='SHORT-NAME':
+                name=self.parseTextNode(xmlElem)
+            elif xmlElem.tag=='ASYNCHRONOUS-SERVER-CALL-POINT-REF':
+                asyncServerCallPointRef = self.parseTextNode(xmlElem)            
+            else:
+                handleNotImplementedError(xmlElem.tag)
+        
+        return autosar.behavior.AsyncServerCallReturnPoint(name, asyncServerCallPointRef)
 
     @parseElementUUID
     def parseAccessedVariable(self, xmlRoot, xmlParentElement):
@@ -958,6 +1101,7 @@ class BehaviorParser(EntityParser):
         (name, desc, serviceNeeds) = (None, None, None)
         roleBasedDataAssignments = []
         roleBasedPortAssignments = []
+        self.push()
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'SHORT-NAME':
                 name = self.parseTextNode(xmlElem)
@@ -980,8 +1124,9 @@ class BehaviorParser(EntityParser):
             elif xmlElem.tag == 'SERVICE-NEEDS':
                 serviceNeeds = self.parseServiceNeeds(xmlElem)
             else:
-                handleNotImplementedError(xmlElem.tag)
-        swcServiceDependency = autosar.behavior.SwcServiceDependency(name, parent = parent)
+                self.baseHandler(xmlElem)
+        swcServiceDependency = autosar.behavior.SwcServiceDependency(name, parent = parent, adminData=self.adminData)
+        self.pop(swcServiceDependency)
         if desc is not None:
             swcServiceDependency.desc=desc[0]
             swcServiceDependency.descAttr=desc[1]
@@ -993,6 +1138,21 @@ class BehaviorParser(EntityParser):
             swcServiceDependency.roleBasedPortAssignments = roleBasedPortAssignments
         return swcServiceDependency
 
+    @parseElementUUID
+    def parseSwcExclusiveAreaPolicy(self, xmlRoot, parent = None):
+        assert(xmlRoot.tag == 'SWC-EXCLUSIVE-AREA-POLICY')
+        (exclusiveAreaRef, apiPrinciple) = (None, None)
+        
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == 'EXCLUSIVE-AREA-REF':
+                exclusiveAreaRef = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'API-PRINCIPLE':
+                apiPrinciple = self.parseTextNode(xmlElem)
+            else:
+                # TODO: support VARIATION-POINT
+                handleNotImplementedError(xmlElem.tag)
+        
+        return autosar.behavior.SwcExclusiveAreaPolicy(exclusiveAreaRef, apiPrinciple)
 
     @parseElementUUID
     def parseParameterDataPrototype(self, xmlRoot, parent = None):
@@ -1228,7 +1388,10 @@ class BehaviorParser(EntityParser):
             elif xmlElem.tag == 'AUTOSAR-VARIABLE-IREF' or xmlElem.tag == 'AUTOSAR-VARIABLE-IN-IMPL-DATATYPE':
                 xmlPortPrototypeRef = xmlElem.find('./PORT-PROTOTYPE-REF')
                 xmlTargetDataPrototypeRef = xmlElem.find('./TARGET-DATA-PROTOTYPE-REF')
-                assert (xmlPortPrototypeRef is not None)
+                if xmlPortPrototypeRef is None:
+                    # TODO: add support for ROOT-VARIABLE-DATA-PROTOTYPE-REF
+                    continue
+                
                 assert (xmlTargetDataPrototypeRef is not None)
                 portPrototypeRef = self.parseTextNode(xmlPortPrototypeRef)
                 targetDataPrototypeRef = self.parseTextNode(xmlTargetDataPrototypeRef)
@@ -1261,8 +1424,10 @@ class BehaviorParser(EntityParser):
                             localVariableRef, portPrototypeRef, targetDataPrototypeRef = self.parseAutosarVariableRefXML(xmlData)
                             if xmlData.tag == 'NV-RAM-BLOCK-ELEMENT':
                                 if localVariableRef is None:
-                                    handleValueError('Cannot find needed LOCAL-VARIABLE-REF for NV-RAM-BLOCK-ELEMENT in {0}'.format(descriptor.name))
-                                dataMapping.nvRamBlockElement = autosar.behavior.NvRamBlockElement(dataMapping, localVariableRef=localVariableRef)
+                                    # TODO: add support for non local variable ref for NV-RAM-BLOCK-ELEMENT
+                                    dataMapping.nvRamBlockElement = None
+                                else:
+                                    dataMapping.nvRamBlockElement = autosar.behavior.NvRamBlockElement(dataMapping, localVariableRef=localVariableRef)
                             elif xmlData.tag == 'READ-NV-DATA':
                                 if portPrototypeRef is None and targetDataPrototypeRef is None:
                                     handleValueError('Cannot find needed AUTOSAR-VARIABLE-IREF or AUTOSAR-VARIABLE-IN-IMPL-DATATYPE for READ-NV-DATA in {0}'.format(descriptor.name))

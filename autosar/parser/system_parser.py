@@ -30,29 +30,51 @@ class SystemParser(EntityParser):
                 if xmlElem.tag=='SHORT-NAME':
                     pass
                 elif xmlElem.tag=='CATEGORY':
-                    print("Unhandled: %s"%xmlElem.tag)
+                    system.category=parseTextNode(xmlElem)
                 elif xmlElem.tag=='MAPPINGS':
                     print("Unhandled: %s"%xmlElem.tag)
                 elif xmlElem.tag=='ROOT-SOFTWARE-COMPOSITIONS':
-                    print("Unhandled: %s"%xmlElem.tag)
+                    self.parseRootSoftwareCompositions(xmlElem,system)
                 elif xmlElem.tag=='ADMIN-DATA':
                     system.adminData=parseAdminDataNode(xmlElem)
                 elif xmlElem.tag=='FIBEX-ELEMENT-REFS':
                     self.parseFibexElementRefs(xmlElem,system)
+                elif xmlElem.tag=='FIBEX-ELEMENTS':
+                    self.parseFibexElementRefConditionals(xmlElem,system)
                 elif xmlElem.tag=='MAPPING':
                     self.parseSystemMapping(xmlElem,system)
-                elif xmlElem.tag=='SOFTWARE-COMPOSITION':
-                    self.parseSoftwareComposition(xmlElem,system)
                 else:
                     handleNotImplementedError(xmlElem.tag)
             return system
         else:
             raise KeyError('expected to find <SHORT-NAME> inside <SYSTEM> tag')
 
+    def parseRootSoftwareCompositions(self,xmlRoot,system):
+        """parses <ROOT-SOFTWARE-COMPOSITIONS>"""
+        assert(xmlRoot.tag=='ROOT-SOFTWARE-COMPOSITIONS')
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag=='ROOT-SW-COMPOSITION-PROTOTYPE':
+                rootSwCompositionPrototype = self.parseRootSwCompositionPrototype(xmlElem,system)
+                if rootSwCompositionPrototype is not None:
+                    system.rootSoftwareCompositions.append(rootSwCompositionPrototype)        
+            else:
+                handleNotImplementedError(xmlElem.tag)
+
     def parseFibexElementRefs(self,xmlRoot,system):
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag=='FIBEX-ELEMENT-REF':
                 system.fibexElementRefs.append(parseTextNode(xmlElem))
+            else:
+                handleNotImplementedError(xmlElem.tag)
+
+    def parseFibexElementRefConditionals(self,xmlRoot,system):
+        """parses <FIBEX-ELEMENTS>"""
+        assert(xmlRoot.tag=='FIBEX-ELEMENTS')
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag=='FIBEX-ELEMENT-REF-CONDITIONAL':
+                refXmlElem = xmlElem.find('FIBEX-ELEMENT-REF')
+                if refXmlElem is not None:
+                    system.fibexElementRefConditionals.append(parseTextNode(refXmlElem))
             else:
                 handleNotImplementedError(xmlElem.tag)
 
@@ -104,17 +126,20 @@ class SystemParser(EntityParser):
             else:
                 handleNotImplementedError(xmlElem.tag)
 
-    def parseSoftwareComposition(self,xmlRoot,system):
-        """parses <SOFTWARE-COMPOSITION>"""
-        assert(xmlRoot.tag=='SOFTWARE-COMPOSITION')
-        name=parseTextNode(xmlRoot.find('SHORT-NAME'))
+    def parseRootSwCompositionPrototype(self,xmlRoot,system):
+        """parses <ROOT-SW-COMPOSITION-PROTOTYPE>"""
+        assert(xmlRoot.tag=='ROOT-SW-COMPOSITION-PROTOTYPE')
+        compositionTref = None
+        self.push()
         for xmlElem in xmlRoot.findall('./*'):
-            if xmlElem.tag=='SHORT-NAME':
-                pass
-            elif xmlElem.tag=='SOFTWARE-COMPOSITION-TREF':
-                pass
+            if xmlElem.tag=='SOFTWARE-COMPOSITION-TREF':
+                compositionTref = self.parseTextNode(xmlElem)
             else:
-                handleNotImplementedError(xmlElem.tag)
+                self.defaultHandler(xmlElem)
+        obj = RootSwCompositionPrototype(self.name, compositionTref, self.adminData, self.category, system)
+        self.pop(obj)
+        return obj
+
 
     def parseSenderReceiverToSignalMapping(self,xmlRoot):
         """parses <'SENDER-RECEIVER-TO-SIGNAL-MAPPING'>"""

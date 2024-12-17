@@ -114,6 +114,8 @@ class ComponentTypeParser(EntityParser):
                     componentType.adminData = self.parseAdminDataNode(xmlElem)
                 elif xmlElem.tag == 'DESC':
                     pass #Implement later
+                elif xmlElem.tag == 'LONG-NAME':
+                    pass #Implement later
                 elif xmlElem.tag == 'PORTS':
                     self.parseComponentPorts(componentType,xmlRoot)
                 elif xmlElem.tag == 'INTERNAL-BEHAVIORS':

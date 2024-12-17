@@ -21,7 +21,8 @@ class PortInterfacePackageParser(EntityParser):
                'PARAMETER-INTERFACE': self.parseParameterInterface,
                'CLIENT-SERVER-INTERFACE': self.parseClientServerInterface,
                'MODE-SWITCH-INTERFACE': self.parseModeSwitchInterface,
-               'NV-DATA-INTERFACE': self.parseNvDataInterface
+               'NV-DATA-INTERFACE': self.parseNvDataInterface,
+               'TRIGGER-INTERFACE': self.parseTriggerInterface
             }
 
     def getSupportedTags(self):
@@ -92,6 +93,28 @@ class PortInterfacePackageParser(EntityParser):
             else:
                 handleNotImplementedError(xmlElem.tag)
         return dataElements
+    
+    @parseElementUUID
+    def _parseTriggers(self, xmlRoot):
+        assert(xmlRoot.tag == 'TRIGGERS')
+        triggers = []
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == 'TRIGGER':
+                swImplPolicy = None
+                self.push()
+                for xmlChild in xmlElem.findall('./*'):
+                    if xmlChild.tag == "SW-IMPL-POLICY":
+                        swImplPolicy = self.parseTextNode(xmlChild)
+                    else:
+                        # TODO: implement "TRIGGER-PERIOD"
+                        self.defaultHandler(xmlChild)
+                
+                if self.name is not None:
+                    triggers.append(autosar.portinterface.Trigger(self.name, swImplPolicy))
+                self.pop()
+            else:
+                handleNotImplementedError(xmlElem.tag)
+        return triggers
 
     @parseElementUUID
     def _parseModeGroups(self, xmlRoot):
@@ -400,6 +423,32 @@ class PortInterfacePackageParser(EntityParser):
                     nvDataInterface.nvDatas.append(nvData)
             self.pop(nvDataInterface)
             return nvDataInterface
+        else:
+            self.pop()
+            return None
+        
+    @parseElementUUID
+    def parseTriggerInterface(self, xmlRoot, parent=None):
+        assert (xmlRoot.tag == 'TRIGGER-INTERFACE')
+        (isService, serviceKind, triggers) = (False, None, None)
+        self.push()
+        for xmlElem in xmlRoot.findall('./*'):
+            if xmlElem.tag == 'IS-SERVICE':
+                isService = self.parseBooleanNode(xmlElem)
+            elif xmlElem.tag == 'SERVICE-KIND':
+                serviceKind = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'TRIGGERS':
+                triggers = self._parseTriggers(xmlElem)
+            else:
+                self.defaultHandler(xmlElem)
+        if self.name is not None:
+            triggerInterface = autosar.portinterface.TriggerInterface(self.name, isService, serviceKind, parent = parent, adminData = self.adminData)
+            if triggers is not None:
+                for trigger in triggers:
+                    trigger.parent = triggerInterface
+                    triggerInterface.triggers.append(trigger)
+            self.pop(triggerInterface)
+            return triggerInterface
         else:
             self.pop()
             return None
