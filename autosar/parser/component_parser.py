@@ -342,6 +342,56 @@ class ComponentTypeParser(EntityParser):
             else:
                 handleNotImplementedError(elem.tag)
 
+    @parseElementUUID
+    def _parseAssemblySwConnector(self, xmlRoot, parent = None):
+        """
+        parses <ASSEMBLY-SW-CONNECTOR>
+        """
+        assert xmlRoot.tag == 'ASSEMBLY-SW-CONNECTOR'
+        name=self.parseTextNode(xmlRoot.find('SHORT-NAME'))
+        for xmlChild in xmlRoot.findall('./*'):
+            if xmlChild.tag == 'SHORT-NAME':
+                continue
+            elif xmlChild.tag == 'PROVIDER-IREF':
+                providerComponentRef=self.parseTextNode(xmlChild.find('./CONTEXT-COMPONENT-REF'))
+                providerPortRef=self.parseTextNode(xmlChild.find('./TARGET-P-PORT-REF'))
+            elif xmlChild.tag == 'REQUESTER-IREF':
+                requesterComponentRef=self.parseTextNode(xmlChild.find('./CONTEXT-COMPONENT-REF'))
+                requesterPortRef=self.parseTextNode(xmlChild.find('./TARGET-R-PORT-REF'))
+            else:
+                handleNotImplementedError(xmlChild.tag)
+        if providerComponentRef is None:
+            raise RuntimeError('PROVIDER-IREF/CONTEXT-COMPONENT-REF is missing: item=%s'%name)
+        if providerComponentRef is None:
+            raise RuntimeError('PROVIDER-IREF/TARGET-P-PORT-REF is missing: item=%s'%name)
+        if requesterComponentRef is None:
+            raise RuntimeError('REQUESTER-IREF/CONTEXT-COMPONENT-REF is missing: item=%s'%name)
+        if requesterPortRef is None:
+            raise RuntimeError('REQUESTER-IREF/TARGET-R-PORT-REF is missing: item=%s'%name)
+
+        return autosar.component.AssemblyConnector(name, autosar.component.ProviderInstanceRef(providerComponentRef,providerPortRef), autosar.component.RequesterInstanceRef(requesterComponentRef,requesterPortRef), parent=parent)
+
+    @parseElementUUID
+    def _parseDelegationSwConnector(self, xmlRoot, parent = None):
+        """
+        parses <DELEGATION-SW-CONNECTOR>
+        """
+        assert xmlRoot.tag == 'DELEGATION-SW-CONNECTOR'
+        name=self.parseTextNode(xmlRoot.find('SHORT-NAME'))
+        for xmlChild in xmlRoot.findall('./INNER-PORT-IREF/*'):
+            if xmlChild.tag == 'R-PORT-IN-COMPOSITION-INSTANCE-REF':
+                innerComponentRef=self.parseTextNode(xmlChild.find('./CONTEXT-COMPONENT-REF'))
+                innerPortRef=self.parseTextNode(xmlChild.find('./TARGET-R-PORT-REF'))
+            elif xmlChild.tag == 'P-PORT-IN-COMPOSITION-INSTANCE-REF':
+                innerComponentRef=self.parseTextNode(xmlChild.find('./CONTEXT-COMPONENT-REF'))
+                innerPortRef=self.parseTextNode(xmlChild.find('./TARGET-P-PORT-REF'))
+            else:
+                handleNotImplementedError(xmlChild.tag)
+        outerPortRef=self.parseTextNode(xmlRoot.find('./OUTER-PORT-REF'))
+
+        return autosar.component.DelegationConnector(name, autosar.component.InnerPortInstanceRef(innerComponentRef,innerPortRef), autosar.component.OuterPortRef(outerPortRef), parent=parent)
+
+    @parseElementUUID
     def parseConnectorsV4(self,xmlRoot,parent=None):
         """
         parses <CONNECTORS> (AUTOSAR 4)
@@ -349,41 +399,11 @@ class ComponentTypeParser(EntityParser):
         assert(xmlRoot.tag=='CONNECTORS')
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag=='ASSEMBLY-SW-CONNECTOR':
-                name=self.parseTextNode(xmlElem.find('SHORT-NAME'))
-                for xmlChild in xmlElem.findall('./*'):
-                    if xmlChild.tag == 'SHORT-NAME':
-                        continue
-                    elif xmlChild.tag == 'PROVIDER-IREF':
-                        providerComponentRef=self.parseTextNode(xmlChild.find('./CONTEXT-COMPONENT-REF'))
-                        providerPortRef=self.parseTextNode(xmlChild.find('./TARGET-P-PORT-REF'))
-                    elif xmlChild.tag == 'REQUESTER-IREF':
-                        requesterComponentRef=self.parseTextNode(xmlChild.find('./CONTEXT-COMPONENT-REF'))
-                        requesterPortRef=self.parseTextNode(xmlChild.find('./TARGET-R-PORT-REF'))
-                    else:
-                        handleNotImplementedError(xmlChild.tag)
-                if providerComponentRef is None:
-                    raise RuntimeError('PROVIDER-IREF/CONTEXT-COMPONENT-REF is missing: item=%s'%name)
-                if providerComponentRef is None:
-                    raise RuntimeError('PROVIDER-IREF/TARGET-P-PORT-REF is missing: item=%s'%name)
-                if requesterComponentRef is None:
-                    raise RuntimeError('REQUESTER-IREF/CONTEXT-COMPONENT-REF is missing: item=%s'%name)
-                if requesterPortRef is None:
-                    raise RuntimeError('REQUESTER-IREF/TARGET-R-PORT-REF is missing: item=%s'%name)
-
-                parent.assemblyConnectors.append(autosar.component.AssemblyConnector(name, autosar.component.ProviderInstanceRef(providerComponentRef,providerPortRef), autosar.component.RequesterInstanceRef(requesterComponentRef,requesterPortRef)))
+                connector = self._parseAssemblySwConnector(xmlElem,parent)
+                parent.assemblyConnectors.append(connector)
             elif xmlElem.tag=='DELEGATION-SW-CONNECTOR':
-                name=self.parseTextNode(xmlElem.find('SHORT-NAME'))
-                for xmlChild in xmlElem.findall('./INNER-PORT-IREF/*'):
-                    if xmlChild.tag == 'R-PORT-IN-COMPOSITION-INSTANCE-REF':
-                        innerComponentRef=self.parseTextNode(xmlChild.find('./CONTEXT-COMPONENT-REF'))
-                        innerPortRef=self.parseTextNode(xmlChild.find('./TARGET-R-PORT-REF'))
-                    elif xmlChild.tag == 'P-PORT-IN-COMPOSITION-INSTANCE-REF':
-                        innerComponentRef=self.parseTextNode(xmlChild.find('./CONTEXT-COMPONENT-REF'))
-                        innerPortRef=self.parseTextNode(xmlChild.find('./TARGET-P-PORT-REF'))
-                    else:
-                        handleNotImplementedError(xmlChild.tag)
-                outerPortRef=self.parseTextNode(xmlElem.find('./OUTER-PORT-REF'))
-                parent.delegationConnectors.append(autosar.component.DelegationConnector(name, autosar.component.InnerPortInstanceRef(innerComponentRef,innerPortRef), autosar.component.OuterPortRef(outerPortRef)))
+                connector = self._parseDelegationSwConnector(xmlElem,parent)
+                parent.delegationConnectors.append(connector)
             else:
                 handleNotImplementedError(xmlElem.tag)
 
