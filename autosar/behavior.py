@@ -270,7 +270,21 @@ class RunnableEntity(Element):
         ref=ref.partition('/')
         name=ref[0]
         foundElem = None
-        for elem in self.modeAccessPoints + self.modeSwitchPoints + self.parameterAccessPoints:
+        for elem in itertools.chain(
+            self.dataReceivePoints,
+            self.dataSendPoints,
+            self.serverCallPoints,
+            self.asyncServerCallResultPoints,
+            self.modeAccessPoints,
+            self.modeSwitchPoints,
+            self.dataReadAccess,
+            self.dataWriteAccess,
+            self.dataLocalReadAccess,
+            self.dataLocalWriteAccess,
+            self.parameterAccessPoints,
+            self.activationReasons,
+            self.externalTriggeringPoints
+        ):
             if elem.name == name:
                 foundElem = elem
                 break
@@ -939,13 +953,12 @@ class AsyncServerCallReturnPoint(object):
     """
     <ASYNCHRONOUS-SERVER-CALL-RESULT-POINT>
     """
-    def __init__(self, name, timeout=0.0):
+    def __init__(self, name, asyncServerCallPointRef):
         self.name=name
-        self.timeout=timeout
-        self.operationInstanceRefs=[]
+        self.asyncServerCallPointRef=asyncServerCallPointRef
 
     def asdict(self):
-        data={'type': self.__class__.__name__,'name':self.name,'timeout':self.timeout}
+        data={'type': self.__class__.__name__, 'name':self.name, 'asyncServerCallPointRef':self.asyncServerCallPointRef}
         return data
 
 class InternalBehaviorCommon(Element):
