@@ -317,6 +317,7 @@ class Reader:
             'SWC-MODE-SWITCH-EVENT': self._read_swc_mode_switch_event,
             'TIMING-EVENT': self._read_timing_event,
             'TRANSFORMER-HARD-ERROR-EVENT': self._read_transformer_hard_error_event,
+            'PORT-DEFINED-ARGUMENT-VALUE': self._read_port_defined_argument_value,
         }
         self.switcher_all = {}
         self.switcher_all.update(self.switcher_collectable)
@@ -5047,7 +5048,7 @@ class Reader:
                                            xml_element: ElementTree.Element
                                            ) -> ar_element.TransformerHardErrorEvent:
         """
-        Writes complex type AR:TRANSFORMER-HARD-ERROR-EVENT
+        Reads complex type AR:TRANSFORMER-HARD-ERROR-EVENT
         Tag variants: 'TRANSFORMER-HARD-ERROR-EVENT'
         """
         data = {}
@@ -5073,6 +5074,29 @@ class Reader:
         xml_child = child_elements.get("TRIGGER-IREF")
         if xml_child is not None:
             data["trigger"] = self._read_p_trigger_in_atomic_swc_instance_ref(xml_child)
+
+    def _read_port_defined_argument_value(self,
+                                          xml_element: ElementTree.Element
+                                          ) -> ar_element.PortDefinedArgumentValue:
+        """
+        Reads complex type AR:PORT-DEFINED-ARGUMENT-VALUE
+        Tag variants: 'PORT-DEFINED-ARGUMENT-VALUE'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("VALUE")
+        if xml_child is not None:
+            try:
+                xml_grand_child = xml_child.find("./*")
+                if xml_grand_child is not None:
+                    data["value"] = self._read_value_specification_element(xml_grand_child)
+            except KeyError:
+                pass
+        xml_child = child_elements.get("VALUE-TYPE-TREF")
+        if xml_child is not None:
+            data["value_type"] = self._read_impl_data_type_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.PortDefinedArgumentValue(**data)
 
     def _read_swc_internal_behavior(self, xml_element: ElementTree.Element) -> ar_element.SwcInternalBehavior:
         """

@@ -1664,6 +1664,48 @@ class TestTransformerHardErrorEvent(unittest.TestCase):
         self.assertEqual(str(inner.target_trigger), target_trigger_ref_str)
 
 
+class TestPortDefinedArgumentValue(unittest.TestCase):
+    def test_empty(self):
+        element = ar_element.PortDefinedArgumentValue()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<PORT-DEFINED-ARGUMENT-VALUE/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.PortDefinedArgumentValue = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.PortDefinedArgumentValue)
+
+    def test_value(self):
+        value = ar_element.NumericalValueSpecification(value=10)
+        element = ar_element.PortDefinedArgumentValue(value=value)
+        writer = autosar.xml.Writer()
+        xml = '''<PORT-DEFINED-ARGUMENT-VALUE>
+  <VALUE>
+    <NUMERICAL-VALUE-SPECIFICATION>
+      <VALUE>10</VALUE>
+    </NUMERICAL-VALUE-SPECIFICATION>
+  </VALUE>
+</PORT-DEFINED-ARGUMENT-VALUE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.PortDefinedArgumentValue = reader.read_str_elem(xml)
+        self.assertIsInstance(elem.value, ar_element.NumericalValueSpecification)
+        self.assertEqual(elem.value.value, 10)
+
+    def test_value_type(self):
+        ref_str = "/DataTypes/TypeName"
+        impl_type_ref = ar_element.ImplementationDataTypeRef(ref_str)
+        element = ar_element.PortDefinedArgumentValue(value_type=impl_type_ref)
+        writer = autosar.xml.Writer()
+        xml = f'''<PORT-DEFINED-ARGUMENT-VALUE>
+  <VALUE-TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">{ref_str}</VALUE-TYPE-TREF>
+</PORT-DEFINED-ARGUMENT-VALUE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.PortDefinedArgumentValue = reader.read_str_elem(xml)
+        self.assertIsInstance(elem.value_type, ar_element.ImplementationDataTypeRef)
+        self.assertEqual(str(elem.value_type), ref_str)
+
+
 class TestSwcInternalBehavior(unittest.TestCase):
     """
     Most elements are not implemented yet
