@@ -6202,6 +6202,32 @@ class TransformerHardErrorEvent(RteEvent):
         self._assign_optional_strict("trigger", trigger, PTriggerInAtomicSwcTypeInstanceRef)
 
 
+class PortDefinedArgumentValue(ARObject):
+    """
+    Complex type AR:PORT-DEFINED-ARGUMENT-VALUE
+    Tag variantS: 'PORT-DEFINED-ARGUMENT-VALUE'
+    """
+
+    def __init__(self,
+                 value: ValueSpecificationElement | None = None,
+                 value_type: ImplementationDataTypeRef | str | None = None) -> None:
+        super().__init__()
+        # .VALUE
+        self.value: ValueSpecificationElement | None = None
+        # .VALUE-TYPE-TREF
+        self.value_type: ImplementationDataTypeRef | None = None
+
+        self._assign_optional_strict("value", value, ValueSpecification)
+        self._assign_optional("value_type", value_type, ImplementationDataTypeRef)
+
+
+class PortAPIOption(ARObject):
+    """
+    Complex type AR:PORT-API-OPTION
+    Tag variants: 'PORT-API-OPTION'
+    """
+
+
 class InternalBehavior(Identifiable):
     """
     Group AR:INTERNAL-BEHAVIOR

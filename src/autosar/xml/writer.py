@@ -372,6 +372,7 @@ class Writer(_XMLWriter):
             'SwcModeSwitchEvent': self._write_swc_mode_switch_event,
             'TimingEvent': self._write_timing_event,
             'TransformerHardErrorEvent': self._write_transformer_hard_error_event,
+            'PortDefinedArgumentValue': self._write_port_defined_argument_value,
         }
         self.switcher_all = {}  # All concrete elements (used for unit testing)
         self.switcher_all.update(self.switcher_collectable)
@@ -1467,7 +1468,7 @@ class Writer(_XMLWriter):
         if elem.data_constraint_ref is not None:
             self._write_data_constraint_ref(elem.data_constraint_ref)
         if elem.impl_data_type_ref is not None:
-            self._write_impl_data_type_ref(elem.impl_data_type_ref)
+            self._write_impl_data_type_ref(elem.impl_data_type_ref, "IMPLEMENTATION-DATA-TYPE-REF")
         if elem.impl_policy is not None:
             self._add_content('SW-IMPL-POLICY',
                               ar_enum.enum_to_xml(elem.impl_policy))
@@ -1792,7 +1793,7 @@ class Writer(_XMLWriter):
         if elem.appl_data_type_ref is not None:
             self._write_application_data_type_ref(elem.appl_data_type_ref, "APPLICATION-DATA-TYPE-REF")
         if elem.impl_data_type_ref is not None:
-            self._write_impl_data_type_ref(elem.impl_data_type_ref)
+            self._write_impl_data_type_ref(elem.impl_data_type_ref, "IMPLEMENTATION-DATA-TYPE-REF")
         self._leave_child()
 
     def _write_data_type_mapping_set(self, elem: ar_element.DataTypeMappingSet) -> None:
@@ -1986,11 +1987,10 @@ class Writer(_XMLWriter):
         self._collect_base_ref_attr(elem, attr)
         self._add_content('FUNCTION-POINTER-SIGNATURE-REF', elem.value, attr)
 
-    def _write_impl_data_type_ref(self, elem: ar_element.ImplementationDataTypeRef) -> None:
+    def _write_impl_data_type_ref(self, elem: ar_element.ImplementationDataTypeRef, tag: str) -> None:
         """
-        Writes complex type AR:IMPLEMENTATION-DATA-TYPE-REF
-        Type: Concrete
-        Tag variants: 'IMPLEMENTATION-DATA-TYPE-REF'
+        Writes reference to AR:IMPLEMENTATION-DATA-TYPE-REF
+        Tag variants: 'IMPLEMENTATION-DATA-TYPE-REF' | 'VALUE-TYPE-TREF'
 
         Note: The name of the complex-type is anonymous in the XML schema.
 
@@ -1998,7 +1998,7 @@ class Writer(_XMLWriter):
         assert isinstance(elem, ar_element.ImplementationDataTypeRef)
         attr: TupleList = []
         self._collect_base_ref_attr(elem, attr)
-        self._add_content('IMPLEMENTATION-DATA-TYPE-REF', elem.value, attr)
+        self._add_content(tag, elem.value, attr)
 
     def _write_sw_base_type_ref(self, elem: ar_element.SwBaseTypeRef) -> None:
         """
@@ -2016,7 +2016,7 @@ class Writer(_XMLWriter):
 
     def _write_sw_addr_method_ref(self, elem: ar_element.SwAddrMethodRef) -> None:
         """
-        Writes references to AR:SW-ADDR-METHOD--SUBTYPES-ENUM
+        Writes reference to AR:SW-ADDR-METHOD--SUBTYPES-ENUM
         Tag variants: 'SW-ADDR-METHOD-REF'
         """
         assert isinstance(elem, ar_element.SwAddrMethodRef)
@@ -4350,6 +4350,25 @@ class Writer(_XMLWriter):
             self._write_r_trigger_in_atomic_swc_instance_ref(elem.required_trigger, "REQUIRED-TRIGGER-IREF")
         if elem.trigger is not None:
             self._write_p_trigger_in_atomic_swc_instance_ref(elem.trigger, "TRIGGER-IREF")
+
+    def _write_port_defined_argument_value(self, elem: ar_element.PortDefinedArgumentValue) -> None:
+        """
+        Writes complex type AR:PORT-DEFINED-ARGUMENT-VALUE
+        Tag variants: 'PORT-DEFINED-ARGUMENT-VALUE'
+        """
+        assert isinstance(elem, ar_element.PortDefinedArgumentValue)
+        tag = "PORT-DEFINED-ARGUMENT-VALUE"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.value is not None:
+                self._add_child("VALUE")
+                self._write_value_specification_element(elem.value)
+                self._leave_child()
+            if elem.value_type is not None:
+                self._write_impl_data_type_ref(elem.value_type, "VALUE-TYPE-TREF")
+            self._leave_child()
 
     def _write_swc_internal_behavior(self, elem: ar_element.SwcInternalBehavior) -> None:
         """
