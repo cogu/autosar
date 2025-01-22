@@ -129,14 +129,16 @@ class SystemParser(EntityParser):
     def parseRootSwCompositionPrototype(self,xmlRoot,system):
         """parses <ROOT-SW-COMPOSITION-PROTOTYPE>"""
         assert(xmlRoot.tag=='ROOT-SW-COMPOSITION-PROTOTYPE')
-        compositionTref = None
+        compositionTref, flatMapRef = None, None
         self.push()
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag=='SOFTWARE-COMPOSITION-TREF':
                 compositionTref = self.parseTextNode(xmlElem)
+            elif xmlElem.tag=='FLAT-MAP-REF':
+                flatMapRef = self.parseTextNode(xmlElem)
             else:
                 self.defaultHandler(xmlElem)
-        obj = RootSwCompositionPrototype(self.name, compositionTref, self.adminData, self.category, system)
+        obj = RootSwCompositionPrototype(self.name, compositionTref, flatMapRef, self.adminData, self.category, system)
         self.pop(obj)
         return obj
 

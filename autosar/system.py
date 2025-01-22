@@ -100,6 +100,7 @@ class RootSwCompositionPrototype(Element):
     """
     def tag(self, version=None): return "ROOT-SW-COMPOSITION-PROTOTYPE"
 
-    def __init__(self, name, softwareCompositionTref, adminData=None, category=None, parent=None):
+    def __init__(self, name, softwareCompositionTref, flatMapRef, adminData=None, category=None, parent=None):
         super().__init__(name, parent, adminData, category)
         self.softwareCompositionTref = softwareCompositionTref
+        self.flatMapRef = flatMapRef
