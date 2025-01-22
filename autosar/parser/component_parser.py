@@ -362,7 +362,7 @@ class ComponentTypeParser(EntityParser):
             elif xmlChild.tag == 'MAPPING-REF':
                 mappingRef = self.parseTextNode(xmlChild)
             else:
-                handleNotImplementedError(xmlChild.tag)
+                self.defaultHandler(xmlChild)
         if providerComponentRef is None:
             raise RuntimeError('PROVIDER-IREF/CONTEXT-COMPONENT-REF is missing: item=%s'%name)
         if providerComponentRef is None:

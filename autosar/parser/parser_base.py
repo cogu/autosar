@@ -113,6 +113,8 @@ class BaseParser:
             self.common[-1].displayFormat = None
         elif xmlElem.tag == 'ANNOTATION':
             pass #implement later
+        elif xmlElem.tag == 'ANNOTATIONS':
+            pass #implement later
         elif xmlElem.tag == 'INTRODUCTION':
             pass #implement later
         else:
