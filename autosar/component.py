@@ -626,12 +626,13 @@ class AssemblyConnector(Element):
     """
     <ASSEMBLY-CONNECTOR-PROTOTYPE>
     """
-    def __init__(self,name,providerInstanceRef,requesterInstanceRef,parent=None):
+    def __init__(self,name,providerInstanceRef,requesterInstanceRef,mappingRef,parent=None):
         assert(isinstance(providerInstanceRef,ProviderInstanceRef))
         assert(isinstance(requesterInstanceRef,RequesterInstanceRef))
         super().__init__(name, parent)
         self.providerInstanceRef=providerInstanceRef
         self.requesterInstanceRef=requesterInstanceRef
+        self.mappingRef=mappingRef
     def asdict(self):
         return {'type': self.__class__.__name__,'providerInstanceRef':self.providerInstanceRef.asdict(),'requesterInstanceRef':self.requesterInstanceRef.asdict()}
 

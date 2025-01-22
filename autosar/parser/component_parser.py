@@ -348,6 +348,7 @@ class ComponentTypeParser(EntityParser):
         parses <ASSEMBLY-SW-CONNECTOR>
         """
         assert xmlRoot.tag == 'ASSEMBLY-SW-CONNECTOR'
+        mappingRef = None
         name=self.parseTextNode(xmlRoot.find('SHORT-NAME'))
         for xmlChild in xmlRoot.findall('./*'):
             if xmlChild.tag == 'SHORT-NAME':
@@ -358,6 +359,8 @@ class ComponentTypeParser(EntityParser):
             elif xmlChild.tag == 'REQUESTER-IREF':
                 requesterComponentRef=self.parseTextNode(xmlChild.find('./CONTEXT-COMPONENT-REF'))
                 requesterPortRef=self.parseTextNode(xmlChild.find('./TARGET-R-PORT-REF'))
+            elif xmlChild.tag == 'MAPPING-REF':
+                mappingRef = self.parseTextNode(xmlChild)
             else:
                 handleNotImplementedError(xmlChild.tag)
         if providerComponentRef is None:
@@ -369,7 +372,12 @@ class ComponentTypeParser(EntityParser):
         if requesterPortRef is None:
             raise RuntimeError('REQUESTER-IREF/TARGET-R-PORT-REF is missing: item=%s'%name)
 
-        return autosar.component.AssemblyConnector(name, autosar.component.ProviderInstanceRef(providerComponentRef,providerPortRef), autosar.component.RequesterInstanceRef(requesterComponentRef,requesterPortRef), parent=parent)
+        return autosar.component.AssemblyConnector(
+            name,
+            autosar.component.ProviderInstanceRef(providerComponentRef,providerPortRef),
+            autosar.component.RequesterInstanceRef(requesterComponentRef,requesterPortRef),
+            mappingRef,
+            parent=parent)
 
     @parseElementUUID
     def _parseDelegationSwConnector(self, xmlRoot, parent = None):
