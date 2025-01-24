@@ -1632,7 +1632,7 @@ class SwDataDefPropsConditional(ARObject):
     Tag Variants: SW-DATA-DEF-PROPS-CONDITIONAL
     """
 
-    def __init__(self,
+    def __init__(self,  # pylint: disable=R0917
                  display_presentation: ar_enum.DisplayPresentation | None = None,
                  step_size: float | None = None,
                  annotations: Annotation | list[Annotation] | None = None,
@@ -3757,7 +3757,7 @@ class EndToEndTransformationComSpecProps(Describable):
     Tag variants: 'END-TO-END-TRANSFORMATION-COM-SPEC-PROPS'
     """
 
-    def __init__(self,
+    def __init__(self,  # pylint: disable=R0917
                  clear_from_valid_to_invalid: bool | None = None,
                  disable_e2e_check: bool | None = None,
                  disable_e2e_state_machine: bool | None = None,
@@ -5815,6 +5815,7 @@ class RteEvent(Identifiable):
         self.disabled_modes: list[RModeInAtomicSwcInstanceRef] = []
         # .START-ON-EVENT-REF
         self.start_on_event: RunnableEntityRef | None = None
+
         if disabled_modes is not None:
             if isinstance(disabled_modes, RModeInAtomicSwcInstanceRef):
                 self.append_disabled_mode(disabled_modes)
@@ -6221,11 +6222,100 @@ class PortDefinedArgumentValue(ARObject):
         self._assign_optional("value_type", value_type, ImplementationDataTypeRef)
 
 
+class SwcSupportedFeature(ARObject):
+    """
+    Base class for supported features
+    """
+
+
+class CommunicationBufferLocking(SwcSupportedFeature):
+    """
+    Complex type AR:COMMUNICATION-BUFFER-LOCKING
+    Tag variantS: 'COMMUNICATION-BUFFER-LOCKING'
+    """
+
+    def __init__(self,
+                 support_buffer_locking: ar_enum.SupportBufferLocking | None = None) -> None:
+        super().__init__()
+        # .SUPPORT-BUFFER-LOCKING
+        self.support_buffer_locking: ar_enum.SupportBufferLocking = None
+
+        self._assign_optional("support_buffer_locking", support_buffer_locking, ar_enum.SupportBufferLocking)
+
+
+PortDefinedArgumentValueArgType = PortDefinedArgumentValue | list[PortDefinedArgumentValue] | None
+SwcSupportedFeatureArgType = SwcSupportedFeature | list[SwcSupportedFeature] | None
+
+
 class PortAPIOption(ARObject):
     """
     Complex type AR:PORT-API-OPTION
     Tag variants: 'PORT-API-OPTION'
     """
+
+    def __init__(self,
+                 enable_take_address: bool | None = None,
+                 error_handling: ar_enum.DataTransformationErrorHandling | None = None,
+                 indirect_api: bool | None = None,
+                 port_arg_values: PortDefinedArgumentValueArgType = None,
+                 port: PortPrototypeRef | None = None,
+                 supported_features: SwcSupportedFeatureArgType = None,
+                 transformer_status_forwarding: ar_enum.DataTransformationStatusForwarding | None = None
+                 ) -> None:
+        super().__init__()
+        # .ENABLE-TAKE-ADDRESS
+        self.enable_take_address: bool | None = None
+        # .ERROR-HANDLING
+        self.error_handling: ar_enum.DataTransformationErrorHandling | None = None
+        # .INDIRECT-API
+        self.indirect_api: bool | None = None
+        # .PORT-ARG-VALUES
+        self.port_arg_values: list[PortDefinedArgumentValue] = []
+        # .PORT-REF
+        self.port: PortPrototypeRef | None = port
+        # .SUPPORTED-FEATURES
+        self.supported_features: list[SwcSupportedFeature] = []
+        # .TRANSFORMER-STATUS-FORWARDING
+        self.transformer_status_forwarding: ar_enum.DataTransformationStatusForwarding | None = None
+        # .VARIATION-POINT not supported
+
+        self._assign_optional("enable_take_address", enable_take_address, bool)
+        self._assign_optional("error_handling", error_handling, ar_enum.DataTransformationErrorHandling)
+        self._assign_optional("indirect_api", indirect_api, bool)
+        self._assign_optional("port", port, PortPrototypeRef)
+        self._assign_optional("transformer_status_forwarding",
+                              transformer_status_forwarding,
+                              ar_enum.DataTransformationStatusForwarding)
+        if port_arg_values is not None:
+            if isinstance(port_arg_values, list):
+                for port_arg_value in port_arg_values:
+                    self.append_port_arg_value(port_arg_value)
+            else:
+                self.append_port_arg_value(port_arg_values)
+        if supported_features is not None:
+            if isinstance(supported_features, list):
+                for supported_feature in supported_features:
+                    self.append_supported_feature(supported_feature)
+            else:
+                self.append_supported_feature(supported_features)
+
+    def append_port_arg_value(self, port_arg_value: PortDefinedArgumentValue) -> None:
+        """
+        Adds PortDefinedArgumentValue to internal list
+        """
+        if isinstance(port_arg_value, PortDefinedArgumentValue):
+            self.port_arg_values.append(port_arg_value)
+        else:
+            raise TypeError("port_arg_value must be of type PortDefinedArgumentValue")
+
+    def append_supported_feature(self, supported_feature: SwcSupportedFeature) -> None:
+        """
+        Adds PortDefinedArgumentValue to internal list
+        """
+        if isinstance(supported_feature, (CommunicationBufferLocking,)):
+            self.supported_features.append(supported_feature)
+        else:
+            raise TypeError("supported_feature must be of type CommunicationBufferLocking")
 
 
 class InternalBehavior(Identifiable):

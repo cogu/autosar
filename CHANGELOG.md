@@ -1,9 +1,19 @@
 # Changelog
 
-The first name in a bullet point below is the Python class name while the second name is the identifier used in the XML schema (XSD file).
+The first name in a bullet point below is the Python class name while the second name is the complex type in the AUTOSAR XML schema (XSD file).
 
-Elements marked as `collectable` means that they can be added directly to a package.
+Elements marked as `collectable` means that they are allowed to be added as sub-elements in a package.
 Non-collectable elements are various sub-elements to collectable elements.
+
+## [Unreleased]
+
+### Added
+
+#### XML - SWC internal behavior elements
+
+* CommunicationBufferLocking | COMMUNICATION-BUFFER-LOCKING
+* PortAPIOption | PORT-API-OPTION
+* PortDefinedArgumentValue | PORT-DEFINED-ARGUMENT-VALUE
 
 ## [v0.5.4] - 2024-10-28
 

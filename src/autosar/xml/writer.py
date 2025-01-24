@@ -373,6 +373,8 @@ class Writer(_XMLWriter):
             'TimingEvent': self._write_timing_event,
             'TransformerHardErrorEvent': self._write_transformer_hard_error_event,
             'PortDefinedArgumentValue': self._write_port_defined_argument_value,
+            'CommunicationBufferLocking': self._write_communication_buffer_locking,
+            'PortAPIOption': self._write_port_api_option,
         }
         self.switcher_all = {}  # All concrete elements (used for unit testing)
         self.switcher_all.update(self.switcher_collectable)
@@ -4369,6 +4371,64 @@ class Writer(_XMLWriter):
             if elem.value_type is not None:
                 self._write_impl_data_type_ref(elem.value_type, "VALUE-TYPE-TREF")
             self._leave_child()
+
+    def _write_communication_buffer_locking(self, elem: ar_element.CommunicationBufferLocking) -> None:
+        """
+        Writes complex type AR:COMMUNICATION-BUFFER-LOCKING
+        Tag variantS: 'COMMUNICATION-BUFFER-LOCKING'
+        """
+        assert isinstance(elem, ar_element.CommunicationBufferLocking)
+        tag = "COMMUNICATION-BUFFER-LOCKING"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.support_buffer_locking is not None:
+                self._add_content("SUPPORT-BUFFER-LOCKING", ar_enum.enum_to_xml(elem.support_buffer_locking))
+            self._leave_child()
+
+    def _write_port_api_option(self, elem: ar_element.PortAPIOption) -> None:
+        """
+        Writes complex type AR:PORT-API-OPTION
+        Tag variants: 'PORT-API-OPTION'
+        """
+        assert isinstance(elem, ar_element.PortAPIOption)
+        tag = "PORT-API-OPTION"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_port_api_option_group(elem)
+            self._leave_child()
+
+    def _write_port_api_option_group(self, elem: ar_element.PortAPIOption) -> None:
+        """
+        Writes group AR:PORT-API-OPTION
+        Tag variants: 'PORT-API-OPTION'
+        """
+        if elem.enable_take_address is not None:
+            self._add_content("ENABLE-TAKE-ADDRESS", self._format_boolean(elem.enable_take_address))
+        if elem.error_handling is not None:
+            self._add_content("ERROR-HANDLING", ar_enum.enum_to_xml(elem.error_handling))
+        if elem.indirect_api is not None:
+            self._add_content("INDIRECT-API", self._format_boolean(elem.indirect_api))
+        if len(elem.port_arg_values) > 0:
+            self._add_child("PORT-ARG-VALUES")
+            for port_arg_value in elem.port_arg_values:
+                self._write_port_defined_argument_value(port_arg_value)
+            self._leave_child()
+        if elem.port is not None:
+            self._write_port_prototype_ref(elem.port, "PORT-REF")
+        if len(elem.supported_features) > 0:
+            self._add_child("SUPPORTED-FEATURES")
+            for supported_feature in elem.supported_features:
+                if isinstance(supported_feature, ar_element.CommunicationBufferLocking):
+                    self._write_communication_buffer_locking(supported_feature)
+                else:
+                    raise NotImplementedError(str(type(supported_feature)))
+            self._leave_child()
+        if elem.transformer_status_forwarding is not None:
+            self._add_content("TRANSFORMER-STATUS-FORWARDING", ar_enum.enum_to_xml(elem.transformer_status_forwarding))
 
     def _write_swc_internal_behavior(self, elem: ar_element.SwcInternalBehavior) -> None:
         """
