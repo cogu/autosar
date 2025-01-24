@@ -104,6 +104,22 @@ class DataFilterType(Enum):
     ONE_EVERY_N = 7
 
 
+class DataTransformationErrorHandling(Enum):
+    """
+    DATA-TRANSFORMATION-ERROR-HANDLING-ENUM--SIMPLE
+    """
+    NO_TRANSFORMER_ERROR_HANDLING = 0
+    TRANSFORMER_ERROR_HANDLING = 1
+
+
+class DataTransformationStatusForwarding(Enum):
+    """
+    DATA-TRANSFORMATION-STATUS-FORWARDING-ENUM--SIMPLE
+    """
+    NO_TRANSFORMER_STATUS_FORWARDING = 0
+    TRANSFORMER_STATUS_FORWARDING = 1
+
+
 class DisplayPresentation(Enum):
     """DISPLAY-PRESENTATION-ENUM"""
 
@@ -546,6 +562,14 @@ class ServiceKind(Enum):
     WATCH_DOG_MANAGER = 17
 
 
+class SupportBufferLocking(Enum):
+    """
+    SUPPORT-BUFFER-LOCKING-ENUM--SIMPLE
+    """
+    DOES_NOT_SUPPORT_BUFFER_LOCKING = 0
+    SUPPORTS_BUFFER_LOCKING = 1
+
+
 class SwCalibrationAccess(Enum):
     """
     AR:SW-CALIBRATION-ACCESS-ENUM--SIMPLE
@@ -678,6 +702,14 @@ xml_to_enum_map: dict[str, dict] = {
         "NEW-IS-WITHIN": DataFilterType.NEW_IS_WITHIN,
         "ONE-EVERY-N": DataFilterType.ONE_EVERY_N
 
+    },
+    "DataTransformationErrorHandling": {
+        "NO-TRANSFORMER-ERROR-HANDLING": DataTransformationErrorHandling.NO_TRANSFORMER_ERROR_HANDLING,
+        "TRANSFORMER-ERROR-HANDLING": DataTransformationErrorHandling.TRANSFORMER_ERROR_HANDLING
+    },
+    "DataTransformationStatusForwarding": {
+        "NO-TRANSFORMER-STATUS-FORWARDING": DataTransformationStatusForwarding.NO_TRANSFORMER_STATUS_FORWARDING,
+        "TRANSFORMER-STATUS-FORWARDING": DataTransformationStatusForwarding.TRANSFORMER_STATUS_FORWARDING
     },
     "DisplayPresentation": {
         "PRESENTATION-CONTINUOUS": DisplayPresentation.CONTINUOUS,
@@ -968,6 +1000,10 @@ xml_to_enum_map: dict[str, dict] = {
         "USE-ARRAY-BASE-TYPE": ServerArgImplPolicy.USE_ARRAY_BASED_TYPE,
         "USE-VOID": ServerArgImplPolicy.USE_VOID
     },
+    "SupportBufferLocking": {
+        "DOES-NOT-SUPPORT-BUFFER-LOCKING": SupportBufferLocking.DOES_NOT_SUPPORT_BUFFER_LOCKING,
+        "SUPPORTS-BUFFER-LOCKING": SupportBufferLocking.SUPPORTS_BUFFER_LOCKING
+    },
     "SwCalibrationAccess": {
         "NOT-ACCESSIBLE": SwCalibrationAccess.NOT_ACCESSIBLE,
         "READ-ONLY": SwCalibrationAccess.READ_ONLY,
@@ -1042,6 +1078,14 @@ enum_to_xml_map: dict[str, list] = {
         "FIX-AXIS",    # 2
         "RES-AXIS",    # 3
         "STD-AXIS"     # 4
+    ],
+    "DataTransformationErrorHandling": [
+        "NO-TRANSFORMER-ERROR-HANDLING",
+        "TRANSFORMER-ERROR-HANDLING"
+    ],
+    "DataTransformationStatusForwarding": [
+        "NO-TRANSFORMER-STATUS-FORWARDING",
+        "TRANSFORMER-STATUS-FORWARDING"
     ],
     "DataFilterType": [
         "ALWAYS",                         # 0
@@ -1342,6 +1386,10 @@ enum_to_xml_map: dict[str, list] = {
         "USE-ARGUMENT-TYPE",    # 0
         "USE-ARRAY-BASE-TYPE",  # 1
         "USE-VOID",             # 2
+    ],
+    "SupportBufferLocking": [
+        "DOES-NOT-SUPPORT-BUFFER-LOCKING",  # 0
+        "SUPPORTS-BUFFER-LOCKING"           # 1
     ],
     "SwCalibrationAccess": [
         "NOT-ACCESSIBLE",  # 0

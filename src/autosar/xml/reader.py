@@ -318,6 +318,8 @@ class Reader:
             'TIMING-EVENT': self._read_timing_event,
             'TRANSFORMER-HARD-ERROR-EVENT': self._read_transformer_hard_error_event,
             'PORT-DEFINED-ARGUMENT-VALUE': self._read_port_defined_argument_value,
+            'COMMUNICATION-BUFFER-LOCKING': self._read_communication_buffer_locking,
+            'PORT-API-OPTION': self._read_port_api_option,
         }
         self.switcher_all = {}
         self.switcher_all.update(self.switcher_collectable)
@@ -5097,6 +5099,71 @@ class Reader:
             data["value_type"] = self._read_impl_data_type_ref(xml_child)
         self._report_unprocessed_elements(child_elements)
         return ar_element.PortDefinedArgumentValue(**data)
+
+    def _read_communication_buffer_locking(self,
+                                           xml_element: ElementTree.Element
+                                           ) -> ar_element.CommunicationBufferLocking:
+        """
+        Reads complex type AR:COMMUNICATION-BUFFER-LOCKING
+        Tag variantS: 'COMMUNICATION-BUFFER-LOCKING'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("SUPPORT-BUFFER-LOCKING")
+        if xml_child is not None:
+            data["support_buffer_locking"] = ar_enum.xml_to_enum("SupportBufferLocking", xml_child.text)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.CommunicationBufferLocking(**data)
+
+    def _read_port_api_option(self,
+                              xml_element: ElementTree.Element
+                              ) -> ar_element.PortAPIOption:
+        """
+        Reads complex type AR:PORT-API-OPTION
+        Tag variants: 'PORT-API-OPTION'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_port_api_option_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.PortAPIOption(**data)
+
+    def _read_port_api_option_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:PORT-API-OPTION
+        """
+        xml_child = child_elements.get("ENABLE-TAKE-ADDRESS")
+        if xml_child is not None:
+            data["enable_take_address"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("ERROR-HANDLING")
+        if xml_child is not None:
+            data["error_handling"] = ar_enum.xml_to_enum("DataTransformationErrorHandling", xml_child.text)
+        xml_child = child_elements.get("INDIRECT-API")
+        if xml_child is not None:
+            data["indirect_api"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("PORT-ARG-VALUES")
+        if xml_child is not None:
+            port_arg_values = []
+            for xml_grand_child in xml_child.findall("./PORT-DEFINED-ARGUMENT-VALUE"):
+                port_arg_values.append(self._read_port_defined_argument_value(xml_grand_child))
+            data["port_arg_values"] = port_arg_values
+        xml_child = child_elements.get("PORT-REF")
+        if xml_child is not None:
+            data["port"] = self._read_port_prototype_ref(xml_child)
+        xml_child = child_elements.get("PORT-REF")
+        if xml_child is not None:
+            data["port"] = self._read_port_prototype_ref(xml_child)
+        xml_child = child_elements.get("SUPPORTED-FEATURES")
+        if xml_child is not None:
+            supported_features = []
+            for xml_grand_child in xml_child.findall("./*"):
+                if xml_grand_child.tag == "COMMUNICATION-BUFFER-LOCKING":
+                    supported_features.append(self._read_communication_buffer_locking(xml_grand_child))
+            data["supported_features"] = supported_features
+        xml_child = child_elements.get("TRANSFORMER-STATUS-FORWARDING")
+        if xml_child is not None:
+            data["transformer_status_forwarding"] = ar_enum.xml_to_enum("DataTransformationStatusForwarding",
+                                                                        xml_child.text)
 
     def _read_swc_internal_behavior(self, xml_element: ElementTree.Element) -> ar_element.SwcInternalBehavior:
         """

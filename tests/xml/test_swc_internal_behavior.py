@@ -1706,6 +1706,205 @@ class TestPortDefinedArgumentValue(unittest.TestCase):
         self.assertEqual(str(elem.value_type), ref_str)
 
 
+class TestCommunicationBufferLocking(unittest.TestCase):
+    def test_empty(self):
+        element = ar_element.CommunicationBufferLocking()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<COMMUNICATION-BUFFER-LOCKING/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.CommunicationBufferLocking = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.CommunicationBufferLocking)
+
+    def test_support_buffer_locking(self):
+        buffer_locking = ar_enum.SupportBufferLocking.SUPPORTS_BUFFER_LOCKING
+        element = ar_element.CommunicationBufferLocking(support_buffer_locking=buffer_locking)
+        writer = autosar.xml.Writer()
+        xml = '''<COMMUNICATION-BUFFER-LOCKING>
+  <SUPPORT-BUFFER-LOCKING>SUPPORTS-BUFFER-LOCKING</SUPPORT-BUFFER-LOCKING>
+</COMMUNICATION-BUFFER-LOCKING>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.CommunicationBufferLocking = reader.read_str_elem(xml)
+        self.assertEqual(elem.support_buffer_locking, ar_enum.SupportBufferLocking.SUPPORTS_BUFFER_LOCKING)
+
+
+class TestPortAPIOption(unittest.TestCase):
+    def test_empty(self):
+        element = ar_element.PortAPIOption()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<PORT-API-OPTION/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.PortAPIOption = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.PortAPIOption)
+
+    def test_enable_take_address(self):
+        element = ar_element.PortAPIOption(enable_take_address=True)
+        writer = autosar.xml.Writer()
+        xml = '''<PORT-API-OPTION>
+  <ENABLE-TAKE-ADDRESS>true</ENABLE-TAKE-ADDRESS>
+</PORT-API-OPTION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.PortAPIOption = reader.read_str_elem(xml)
+        self.assertTrue(elem.enable_take_address)
+
+    def test_error_handling(self):
+        error_handling = ar_enum.DataTransformationErrorHandling.TRANSFORMER_ERROR_HANDLING
+        element = ar_element.PortAPIOption(error_handling=error_handling)
+        writer = autosar.xml.Writer()
+        xml = '''<PORT-API-OPTION>
+  <ERROR-HANDLING>TRANSFORMER-ERROR-HANDLING</ERROR-HANDLING>
+</PORT-API-OPTION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.PortAPIOption = reader.read_str_elem(xml)
+        self.assertEqual(elem.error_handling, error_handling)
+
+    def test_indirect_handling(self):
+        element = ar_element.PortAPIOption(indirect_api=True)
+        writer = autosar.xml.Writer()
+        xml = '''<PORT-API-OPTION>
+  <INDIRECT-API>true</INDIRECT-API>
+</PORT-API-OPTION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.PortAPIOption = reader.read_str_elem(xml)
+        self.assertTrue(elem.indirect_api)
+
+    def test_port_arg_value_from_single_element(self):
+        value = ar_element.NumericalValueSpecification(value=0)
+        type_ref_str = "/DataTypes/TypeName"
+        port_arg_value = ar_element.PortDefinedArgumentValue(value=value, value_type=type_ref_str)
+        element = ar_element.PortAPIOption(port_arg_values=port_arg_value)
+        writer = autosar.xml.Writer()
+        xml = f'''<PORT-API-OPTION>
+  <PORT-ARG-VALUES>
+    <PORT-DEFINED-ARGUMENT-VALUE>
+      <VALUE>
+        <NUMERICAL-VALUE-SPECIFICATION>
+          <VALUE>0</VALUE>
+        </NUMERICAL-VALUE-SPECIFICATION>
+      </VALUE>
+      <VALUE-TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">{type_ref_str}</VALUE-TYPE-TREF>
+    </PORT-DEFINED-ARGUMENT-VALUE>
+  </PORT-ARG-VALUES>
+</PORT-API-OPTION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.PortAPIOption = reader.read_str_elem(xml)
+        self.assertEqual(len(elem.port_arg_values), 1)
+        child: ar_element.PortDefinedArgumentValue = elem.port_arg_values[0]
+        self.assertEqual(child.value.value, 0)
+        self.assertEqual(str(child.value_type), type_ref_str)
+
+    def test_port_arg_value_from_list(self):
+        value1 = ar_element.NumericalValueSpecification(value=1)
+        type_ref_str1 = "/DataTypes/TypeName1"
+        value2 = ar_element.NumericalValueSpecification(value=2)
+        type_ref_str2 = "/DataTypes/TypeName2"
+        port_arg_values = [
+            ar_element.PortDefinedArgumentValue(value=value1, value_type=type_ref_str1),
+            ar_element.PortDefinedArgumentValue(value=value2, value_type=type_ref_str2),
+        ]
+        element = ar_element.PortAPIOption(port_arg_values=port_arg_values)
+        writer = autosar.xml.Writer()
+        xml = f'''<PORT-API-OPTION>
+  <PORT-ARG-VALUES>
+    <PORT-DEFINED-ARGUMENT-VALUE>
+      <VALUE>
+        <NUMERICAL-VALUE-SPECIFICATION>
+          <VALUE>1</VALUE>
+        </NUMERICAL-VALUE-SPECIFICATION>
+      </VALUE>
+      <VALUE-TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">{type_ref_str1}</VALUE-TYPE-TREF>
+    </PORT-DEFINED-ARGUMENT-VALUE>
+    <PORT-DEFINED-ARGUMENT-VALUE>
+      <VALUE>
+        <NUMERICAL-VALUE-SPECIFICATION>
+          <VALUE>2</VALUE>
+        </NUMERICAL-VALUE-SPECIFICATION>
+      </VALUE>
+      <VALUE-TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">{type_ref_str2}</VALUE-TYPE-TREF>
+    </PORT-DEFINED-ARGUMENT-VALUE>
+  </PORT-ARG-VALUES>
+</PORT-API-OPTION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.PortAPIOption = reader.read_str_elem(xml)
+        self.assertEqual(len(elem.port_arg_values), 2)
+        child: ar_element.PortDefinedArgumentValue = elem.port_arg_values[0]
+        self.assertEqual(child.value.value, 1)
+        self.assertEqual(str(child.value_type), type_ref_str1)
+        child = elem.port_arg_values[1]
+        self.assertEqual(child.value.value, 2)
+        self.assertEqual(str(child.value_type), type_ref_str2)
+
+    def test_port(self):
+        port_ref_str = "/ComponentTypes/ComponentName/PortName"
+        port = ar_element.PortPrototypeRef(port_ref_str, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
+        element = ar_element.PortAPIOption(port=port)
+        writer = autosar.xml.Writer()
+        xml = f'''<PORT-API-OPTION>
+  <PORT-REF DEST="R-PORT-PROTOTYPE">{port_ref_str}</PORT-REF>
+</PORT-API-OPTION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.PortAPIOption = reader.read_str_elem(xml)
+        self.assertEqual(str(elem.port), port_ref_str)
+
+    def test_supported_features_from_single_element(self):
+        supported_feature = ar_element.CommunicationBufferLocking(
+            ar_enum.SupportBufferLocking.DOES_NOT_SUPPORT_BUFFER_LOCKING)
+        element = ar_element.PortAPIOption(supported_features=supported_feature)
+        writer = autosar.xml.Writer()
+        xml = '''<PORT-API-OPTION>
+  <SUPPORTED-FEATURES>
+    <COMMUNICATION-BUFFER-LOCKING>
+      <SUPPORT-BUFFER-LOCKING>DOES-NOT-SUPPORT-BUFFER-LOCKING</SUPPORT-BUFFER-LOCKING>
+    </COMMUNICATION-BUFFER-LOCKING>
+  </SUPPORTED-FEATURES>
+</PORT-API-OPTION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.PortAPIOption = reader.read_str_elem(xml)
+        self.assertEqual(len(elem.supported_features), 1)
+        child: ar_element.CommunicationBufferLocking = elem.supported_features[0]
+        self.assertEqual(child.support_buffer_locking, ar_enum.SupportBufferLocking.DOES_NOT_SUPPORT_BUFFER_LOCKING)
+
+    def test_supported_features_from_list(self):
+        supported_feature = ar_element.CommunicationBufferLocking(
+            ar_enum.SupportBufferLocking.DOES_NOT_SUPPORT_BUFFER_LOCKING)
+        element = ar_element.PortAPIOption(supported_features=[supported_feature])
+        writer = autosar.xml.Writer()
+        xml = '''<PORT-API-OPTION>
+  <SUPPORTED-FEATURES>
+    <COMMUNICATION-BUFFER-LOCKING>
+      <SUPPORT-BUFFER-LOCKING>DOES-NOT-SUPPORT-BUFFER-LOCKING</SUPPORT-BUFFER-LOCKING>
+    </COMMUNICATION-BUFFER-LOCKING>
+  </SUPPORTED-FEATURES>
+</PORT-API-OPTION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.PortAPIOption = reader.read_str_elem(xml)
+        self.assertEqual(len(elem.supported_features), 1)
+        child: ar_element.CommunicationBufferLocking = elem.supported_features[0]
+        self.assertEqual(child.support_buffer_locking, ar_enum.SupportBufferLocking.DOES_NOT_SUPPORT_BUFFER_LOCKING)
+
+    def test_transformer_status_forwarding(self):
+        status_forwarding = ar_enum.DataTransformationStatusForwarding.NO_TRANSFORMER_STATUS_FORWARDING
+        element = ar_element.PortAPIOption(transformer_status_forwarding=status_forwarding)
+        writer = autosar.xml.Writer()
+        xml = '''<PORT-API-OPTION>
+  <TRANSFORMER-STATUS-FORWARDING>NO-TRANSFORMER-STATUS-FORWARDING</TRANSFORMER-STATUS-FORWARDING>
+</PORT-API-OPTION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.PortAPIOption = reader.read_str_elem(xml)
+        self.assertEqual(elem.transformer_status_forwarding, status_forwarding)
+
+
 class TestSwcInternalBehavior(unittest.TestCase):
     """
     Most elements are not implemented yet
