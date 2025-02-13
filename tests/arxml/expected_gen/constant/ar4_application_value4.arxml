@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AUTOSAR xmlns="http://autosar.org/schema/r4.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://autosar.org/schema/r4.0 AUTOSAR_4-2-2.xsd">
+  <AR-PACKAGES>
+    <AR-PACKAGE>
+      <SHORT-NAME>Constants</SHORT-NAME>
+      <ELEMENTS>
+        <CONSTANT-SPECIFICATION>
+          <SHORT-NAME>Phys_SteeringWheelAngle_IV</SHORT-NAME>
+          <VALUE-SPEC>
+            <APPLICATION-VALUE-SPECIFICATION>
+              <SW-VALUE-CONT>
+                <UNIT-REF DEST="UNIT">/DataTypes/Units/deg</UNIT-REF>
+                <SW-ARRAYSIZE>
+                  <V>5</V>
+                </SW-ARRAYSIZE>
+                <SW-VALUES-PHYS>
+                  <V>32.05</V>
+                  <V>120.11</V>
+                  <V>-36.345</V>
+                  <V>22.0</V>
+                  <V>58.0</V>
+                </SW-VALUES-PHYS>
+              </SW-VALUE-CONT>
+            </APPLICATION-VALUE-SPECIFICATION>
+          </VALUE-SPEC>
+        </CONSTANT-SPECIFICATION>
+      </ELEMENTS>
+    </AR-PACKAGE>
+  </AR-PACKAGES>
+</AUTOSAR>

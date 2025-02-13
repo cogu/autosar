@@ -259,5 +259,33 @@ class ARXML4ConstantTest(ARXMLTestClass):
         self.assertEqual(len(value.swValueCont.values), 1)
         self.assertEqual(value.swValueCont.values[0], 'TextValue')
 
+    def test_create_application_value3(self):
+        ws = autosar.workspace(version="4.2.2")
+        _init_ws(ws)
+        package = ws['DataTypes']
+        package.createUnit('deg', 'degree')
+        package = ws['Constants']
+        c1 = package.createApplicationValueConstant(
+            'Phys_SteeringWheelAngle_IV',
+            autosar.constant.SwValueCont(
+                [32.05, 120.11, -36.345, 22.0, 58.0], '/DataTypes/Units/deg'))
+        self.assertIsInstance(c1, autosar.constant.Constant)
+
+        file_name = 'ar4_application_value3.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'constant', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/Constants'])
+
+        ws2 = autosar.workspace(ws.version_str)
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        c2 = ws2.find(c1.ref)
+        self.assertIsInstance(c2, autosar.constant.Constant)
+
+        explicit_array_size_file_path = os.path.join( 'expected_gen', 'constant', 'ar4_application_value4.arxml')
+        ws3 = autosar.workspace(ws.version_str)
+        ws3.loadXML(os.path.join(os.path.dirname(__file__), explicit_array_size_file_path))
+        c3 = ws3.find(c1.ref)
+        self.assertIsInstance(c3, autosar.constant.Constant)
+
 if __name__ == '__main__':
     unittest.main()
