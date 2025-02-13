@@ -231,6 +231,9 @@ class BaseParser:
             elif xmlItem.tag == 'INVALID-VALUE':
                 print("[BaseParser] unhandled: %s"%xmlItem.tag)
                 pass #implement later
+            elif xmlItem.tag == 'ANNOTATIONS':
+                print("[BaseParser] unhandled: %s"%xmlItem.tag)
+                pass #implement later
             else:
                 raise NotImplementedError(xmlItem.tag)
         variant = SwDataDefPropsConditional(baseTypeRef, implementationTypeRef, swAddressMethodRef, swCalibrationAccess, swImplPolicy, None, compuMethodRef, dataConstraintRef, unitRef)
