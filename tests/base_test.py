@@ -117,6 +117,18 @@ class TestBase(unittest.TestCase):
       self.assertEqual(release, 44)
       self.assertEqual(schema, 'AUTOSAR_00044.xsd')
 
+      xmlData = """<?xml version='1.0' encoding='utf-8'?>
+      <AUTOSAR xmlns="http://autosar.org/schema/r4.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" T="2023-08-01T12:34:56Z" xsi:schemaLocation="http://autosar.org/schema/r4.0 autosar_00045.xsd">
+      </AUTOSAR>
+      """
+      xmlRoot = ElementTree.fromstring(xmlData)
+      (major, minor, patch, release, schema) = autosar.base.parseAutosarVersionAndSchema(xmlRoot)
+      self.assertEqual(major, 4)
+      self.assertEqual(minor, 0)
+      self.assertEqual(patch, None)
+      self.assertEqual(release, 45)
+      self.assertEqual(schema, 'autosar_00045.xsd')
+
    def test_parseVersionString(self):
       (major, minor, patch) = (autosar.base.parseVersionString("3.0.0"))
       self.assertEqual(major, 3)

@@ -175,9 +175,9 @@ def parseAutosarVersionAndSchema(xmlRoot):
                     return (int(result.group(1)),int(result.group(2)),int(result.group(3)), None, schemaFile)
                 else:
                     #Is this AUTOSAR 4.4 or above?
-                    result = re.search(r'r(\d+)\.(\d+)\s+AUTOSAR_(\d+).xsd', value)
+                    result = re.search(r'r(\d+)\.(\d+)\s+(autosar|AUTOSAR)_(\d+).xsd', value)
                     if result is not None:
-                        return (int(result.group(1)),int(result.group(2)),None, int(result.group(3)), schemaFile)
+                        return (int(result.group(1)),int(result.group(2)),None, int(result.group(4)), schemaFile)
 
     return (None, None, None, None, None)
 
