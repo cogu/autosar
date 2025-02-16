@@ -200,9 +200,20 @@ class ConstantParser(ElementParser):
     def _parseSwValueCont(self, xmlRoot):
         unitRef = None
         valueList = []
+        arraySize = 0
+        isArraySizePresent = False
         for xmlElem in xmlRoot.findall('./*'):
             if xmlElem.tag == 'UNIT-REF':
                 unitRef = self.parseTextNode(xmlElem)
+            elif xmlElem.tag == 'SW-ARRAYSIZE':
+                isArraySizePresent = True
+                children = xmlElem.findall('./*')
+                if len(children) != 1:
+                    raise ValueError('Invalid number of values {}'.format(len(children)))
+                valueElem = children[0]
+                if valueElem.tag != 'V':
+                    raise ValueError('Unexpected child tag {}'.valueElem.tag)
+                arraySize = self.parseNumberNode(valueElem)
             elif xmlElem.tag == 'SW-VALUES-PHYS':
                 for xmlChild in xmlElem.findall('./*'):
                     if (xmlChild.tag == 'V') or (xmlChild.tag == 'VF'):
@@ -213,6 +224,8 @@ class ConstantParser(ElementParser):
                         raise NotImplementedError(xmlChild.tag)
             else:
                 raise NotImplementedError(xmlElem.tag)
+        if isArraySizePresent and len(valueList) != arraySize:
+            raise ValueError('Array size and values count mismatch')
         if len(valueList)==0:
             valueList = None
         return autosar.constant.SwValueCont(valueList, unitRef)
