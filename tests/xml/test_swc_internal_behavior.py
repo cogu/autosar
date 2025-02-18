@@ -281,6 +281,563 @@ class TestExclusiveAreaRefConditional(unittest.TestCase):
         self.assertEqual(str(elem.exclusive_area_ref), ref_str)
 
 
+class TestAsynchronousServerCallPoint(unittest.TestCase):
+    """
+    Also tests base classes ServerCallPoint and AbstractAccessPoint
+    """
+
+    def test_name_only(self):
+        element = ar_element.AsynchronousServerCallPoint('MyName')
+        xml = '''<ASYNCHRONOUS-SERVER-CALL-POINT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+</ASYNCHRONOUS-SERVER-CALL-POINT>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.AsynchronousServerCallPoint = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.AsynchronousServerCallPoint)
+        self.assertEqual(elem.name, 'MyName')
+        self.assertEqual(elem.short_name, 'MyName')
+
+    def test_return_value_provision(self):
+        return_value_provision = ar_enum.RteApiReturnValueProvision.NO_RETURN_VALUE_PROVIDED
+        element = ar_element.AsynchronousServerCallPoint('MyName', return_value_provision=return_value_provision)
+        xml = '''<ASYNCHRONOUS-SERVER-CALL-POINT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <RETURN-VALUE-PROVISION>NO-RETURN-VALUE-PROVIDED</RETURN-VALUE-PROVISION>
+</ASYNCHRONOUS-SERVER-CALL-POINT>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.AsynchronousServerCallPoint = reader.read_str_elem(xml)
+        self.assertEqual(elem.return_value_provision, return_value_provision)
+
+    def test_operation(self):
+        dest_str1 = "R-PORT-PROTOTYPE"
+        dest_str2 = "CLIENT-SERVER-OPERATION"
+        context_port_ref_str = "/ComponentTypes/MyComponent/StoredData"
+        target_operation_ref_str = "/PortInterfaces/StoredData_I/Read"
+        context_port = ar_element.PortPrototypeRef(context_port_ref_str, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
+        target_operation = ar_element.ClientServerOperationRef(target_operation_ref_str)
+        operation = ar_element.ROperationInAtomicSwcInstanceRef(context_port=context_port,
+                                                                target_required_operation=target_operation)
+        element = ar_element.AsynchronousServerCallPoint('MyName', operation=operation)
+        xml = f'''<ASYNCHRONOUS-SERVER-CALL-POINT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <OPERATION-IREF>
+    <CONTEXT-R-PORT-REF DEST="{dest_str1}">{context_port_ref_str}</CONTEXT-R-PORT-REF>
+    <TARGET-REQUIRED-OPERATION-REF DEST="{dest_str2}">{target_operation_ref_str}</TARGET-REQUIRED-OPERATION-REF>
+  </OPERATION-IREF>
+</ASYNCHRONOUS-SERVER-CALL-POINT>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.AsynchronousServerCallPoint = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.AsynchronousServerCallPoint)
+        inner: ar_element.POperationInAtomicSwcInstanceRef = elem.operation
+        self.assertEqual(str(inner.context_port), context_port_ref_str)
+        self.assertEqual(str(inner.target_required_operation), target_operation_ref_str)
+
+    def test_timeout_from_int(self):
+        element = ar_element.AsynchronousServerCallPoint('MyName', timeout=1)
+        xml = '''<ASYNCHRONOUS-SERVER-CALL-POINT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <TIMEOUT>1</TIMEOUT>
+</ASYNCHRONOUS-SERVER-CALL-POINT>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.AsynchronousServerCallPoint = reader.read_str_elem(xml)
+        self.assertAlmostEqual(elem.timeout, 1.0)
+
+    def test_timeout_from_float(self):
+        element = ar_element.AsynchronousServerCallPoint('MyName', timeout=2.5)
+        xml = '''<ASYNCHRONOUS-SERVER-CALL-POINT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <TIMEOUT>2.5</TIMEOUT>
+</ASYNCHRONOUS-SERVER-CALL-POINT>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.AsynchronousServerCallPoint = reader.read_str_elem(xml)
+        self.assertAlmostEqual(elem.timeout, 2.5)
+
+
+class SynchronousServerCallPoint(unittest.TestCase):
+    def test_name_only(self):
+        element = ar_element.SynchronousServerCallPoint('MyName')
+        xml = '''<SYNCHRONOUS-SERVER-CALL-POINT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+</SYNCHRONOUS-SERVER-CALL-POINT>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SynchronousServerCallPoint = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SynchronousServerCallPoint)
+        self.assertEqual(elem.name, 'MyName')
+
+    def test_called_from_within_exclusive_area(self):
+        dest_str = "EXCLUSIVE-AREA-NESTING-ORDER"
+        ref_str = "/ExclusiveAreas/ExclusiveAreaName"
+        element = ar_element.SynchronousServerCallPoint('MyName', called_from_within_exclusive_area=ref_str)
+        xml = f'''<SYNCHRONOUS-SERVER-CALL-POINT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <CALLED-FROM-WITHIN-EXCLUSIVE-AREA-REF DEST="{dest_str}">{ref_str}</CALLED-FROM-WITHIN-EXCLUSIVE-AREA-REF>
+</SYNCHRONOUS-SERVER-CALL-POINT>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SynchronousServerCallPoint = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SynchronousServerCallPoint)
+        self.assertIsInstance(elem.called_from_within_exclusive_area, ar_element.ExclusiveAreaNestingOrderRef)
+        self.assertEqual(str(elem.called_from_within_exclusive_area), ref_str)
+
+
+class TestExternalTriggeringPoint(unittest.TestCase):
+    def test_empty(self):
+        element = ar_element.ExternalTriggeringPoint()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<EXTERNAL-TRIGGERING-POINT/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.ExternalTriggeringPoint = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ExternalTriggeringPoint)
+
+    def test_ident(self):
+        ident = ar_element.ExternalTriggeringPointIdent("MyName")
+        element = ar_element.ExternalTriggeringPoint(ident=ident)
+
+        xml = '''<EXTERNAL-TRIGGERING-POINT>
+  <IDENT>
+    <SHORT-NAME>MyName</SHORT-NAME>
+  </IDENT>
+</EXTERNAL-TRIGGERING-POINT>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ExternalTriggeringPoint = reader.read_str_elem(xml)
+        self.assertIsInstance(elem.ident, ar_element.ExternalTriggeringPointIdent)
+        self.assertEqual(elem.ident.name, "MyName")
+
+
+class TestInternalTriggeringPoint(unittest.TestCase):
+
+    def test_name_only(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.InternalTriggeringPoint('MyName')
+        xml = '''<INTERNAL-TRIGGERING-POINT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+</INTERNAL-TRIGGERING-POINT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.InternalTriggeringPoint = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.InternalTriggeringPoint)
+        self.assertEqual(elem.name, 'MyName')
+
+    def test_sw_impl_policy(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.InternalTriggeringPoint('MyName', sw_impl_policy=ar_enum.SwImplPolicy.QUEUED)
+        xml = '''<INTERNAL-TRIGGERING-POINT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <SW-IMPL-POLICY>QUEUED</SW-IMPL-POLICY>
+</INTERNAL-TRIGGERING-POINT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.InternalTriggeringPoint = reader.read_str_elem(xml)
+        self.assertEqual(elem.sw_impl_policy, ar_enum.SwImplPolicy.QUEUED)
+
+
+class TestModeAccessPoint(unittest.TestCase):
+
+    def test_empty(self):
+        element = ar_element.ModeAccessPoint()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<MODE-ACCESS-POINT/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.ModeAccessPoint = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ModeAccessPoint)
+
+    def test_ident(self):
+        return_value_provision = ar_enum.RteApiReturnValueProvision.RETURN_VALUE_PROVIDED
+        ident = ar_element.ModeAccessPointIdent("MyName",
+                                                return_value_provision=return_value_provision)
+        element = ar_element.ModeAccessPoint(ident=ident)
+
+        xml = '''<MODE-ACCESS-POINT>
+  <IDENT>
+    <SHORT-NAME>MyName</SHORT-NAME>
+    <RETURN-VALUE-PROVISION>RETURN-VALUE-PROVIDED</RETURN-VALUE-PROVISION>
+  </IDENT>
+</MODE-ACCESS-POINT>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ModeAccessPoint = reader.read_str_elem(xml)
+        self.assertIsInstance(elem.ident, ar_element.ModeAccessPointIdent)
+        self.assertEqual(elem.ident.name, "MyName")
+        self.assertEqual(elem.ident.return_value_provision, return_value_provision)
+
+    def test_mode_group_with_p_port(self):
+        context_port_ref_str = "/ComponentTypes/MyComponent/BswM_Mode"
+        context_mode_decl_group_ref_str = "/PortInterfaces/BswM_ModeSwitchInterface/BswM_Mode"
+        context_port = ar_element.PortPrototypeRef(context_port_ref_str, ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE)
+        mode_group_iref = ar_element.PModeGroupInAtomicSwcInstanceRef(
+            context_port=context_port,
+            context_mode_declaration_group_prototype=context_mode_decl_group_ref_str)
+        element = ar_element.ModeAccessPoint(mode_group=mode_group_iref)
+
+        inner_tag = "CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF"
+        xml = f'''<MODE-ACCESS-POINT>
+  <MODE-GROUP-IREF>
+    <P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF>
+      <CONTEXT-P-PORT-REF DEST="P-PORT-PROTOTYPE">{context_port_ref_str}</CONTEXT-P-PORT-REF>
+      <{inner_tag} DEST="MODE-DECLARATION-GROUP-PROTOTYPE">{context_mode_decl_group_ref_str}</{inner_tag}>
+    </P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF>
+  </MODE-GROUP-IREF>
+</MODE-ACCESS-POINT>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ModeAccessPoint = reader.read_str_elem(xml)
+        mode_group: ar_element.PModeGroupInAtomicSwcInstanceRef = elem.mode_group
+        self.assertIsInstance(mode_group, ar_element.PModeGroupInAtomicSwcInstanceRef)
+        self.assertEqual(str(mode_group.context_port), context_port_ref_str)
+        self.assertEqual(mode_group.context_port.dest, ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE)
+        self.assertEqual(str(mode_group.context_mode_declaration_group_prototype), context_mode_decl_group_ref_str)
+
+    def test_mode_group_with_r_port(self):
+        context_port_ref_str = "/Components/ComponentName/RequirePortName"
+        target_mode_group_ref_str = "/ModeDeclarationGroups/ModeDeclarationGroupName"
+        context_port = ar_element.PortPrototypeRef(context_port_ref_str, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
+        target_mode_group_ref = ar_element.ModeDeclarationGroupPrototypeRef(target_mode_group_ref_str)
+        mode_group_iref = ar_element.RModeGroupInAtomicSwcInstanceRef(
+            context_port=context_port,
+            target_mode_group=target_mode_group_ref)
+        element = ar_element.ModeAccessPoint(mode_group=mode_group_iref)
+
+        inner_tag = "TARGET-MODE-GROUP-REF"
+        xml = f'''<MODE-ACCESS-POINT>
+  <MODE-GROUP-IREF>
+    <R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF>
+      <CONTEXT-R-PORT-REF DEST="R-PORT-PROTOTYPE">{context_port_ref_str}</CONTEXT-R-PORT-REF>
+      <{inner_tag} DEST="MODE-DECLARATION-GROUP-PROTOTYPE">{target_mode_group_ref_str}</{inner_tag}>
+    </R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF>
+  </MODE-GROUP-IREF>
+</MODE-ACCESS-POINT>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ModeAccessPoint = reader.read_str_elem(xml)
+        mode_group: ar_element.RModeGroupInAtomicSwcInstanceRef = elem.mode_group
+        self.assertIsInstance(mode_group, ar_element.RModeGroupInAtomicSwcInstanceRef)
+        self.assertEqual(str(mode_group.context_port), context_port_ref_str)
+        self.assertEqual(mode_group.context_port.dest, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
+        self.assertEqual(str(mode_group.target_mode_group), target_mode_group_ref_str)
+
+
+class TestModeSwitchPoint(unittest.TestCase):
+
+    def test_name_only(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ModeSwitchPoint('MyName')
+        xml = '''<MODE-SWITCH-POINT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+</MODE-SWITCH-POINT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ModeSwitchPoint = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ModeSwitchPoint)
+        self.assertEqual(elem.name, 'MyName')
+
+    def test_mode_group(self):
+        context_port_ref_str = "/Components/ComponentName/ProvidePortName"
+        context_mode_decl_group_ref_str = "/ModeDeclarationGroups/ModeDeclarationGroupName"
+        context_port = ar_element.PortPrototypeRef(context_port_ref_str, ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE)
+        mode_group_iref = ar_element.PModeGroupInAtomicSwcInstanceRef(
+            context_port=context_port,
+            context_mode_declaration_group_prototype=context_mode_decl_group_ref_str)
+        element = ar_element.ModeSwitchPoint("MyName", mode_group=mode_group_iref)
+
+        inner_tag = "CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF"
+        xml = f'''<MODE-SWITCH-POINT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <MODE-GROUP-IREF>
+    <CONTEXT-P-PORT-REF DEST="P-PORT-PROTOTYPE">{context_port_ref_str}</CONTEXT-P-PORT-REF>
+    <{inner_tag} DEST="MODE-DECLARATION-GROUP-PROTOTYPE">{context_mode_decl_group_ref_str}</{inner_tag}>
+  </MODE-GROUP-IREF>
+</MODE-SWITCH-POINT>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ModeSwitchPoint = reader.read_str_elem(xml)
+        mode_group: ar_element.PModeGroupInAtomicSwcInstanceRef = elem.mode_group
+        self.assertIsInstance(mode_group, ar_element.PModeGroupInAtomicSwcInstanceRef)
+        self.assertEqual(str(mode_group.context_port), context_port_ref_str)
+        self.assertEqual(mode_group.context_port.dest, ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE)
+        self.assertEqual(str(mode_group.context_mode_declaration_group_prototype), context_mode_decl_group_ref_str)
+
+
+class TestParameterInAtomicSWCTypeInstanceRef(unittest.TestCase):
+
+    def test_empty(self):
+        element = ar_element.ParameterInAtomicSWCTypeInstanceRef()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<AUTOSAR-PARAMETER-IREF/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.ParameterInAtomicSWCTypeInstanceRef = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ParameterInAtomicSWCTypeInstanceRef)
+
+    def test_port_prototype(self):
+        port_ref_str = "/ComponentTypes/MyComponent/ParameterPort"
+        port_ref = ar_element.PortPrototypeRef(port_ref_str, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
+        element = ar_element.ParameterInAtomicSWCTypeInstanceRef(port_prototype=port_ref)
+        xml = f'''<AUTOSAR-PARAMETER-IREF>
+  <PORT-PROTOTYPE-REF DEST="R-PORT-PROTOTYPE">{port_ref_str}</PORT-PROTOTYPE-REF>
+</AUTOSAR-PARAMETER-IREF>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ParameterInAtomicSWCTypeInstanceRef = reader.read_str_elem(xml)
+        self.assertIsInstance(elem.port_prototype, ar_element.PortPrototypeRef)
+        self.assertEqual(str(elem.port_prototype), port_ref_str)
+
+    def test_root_parameter_data_prototype(self):
+        ref_str = "/DataTypes/ParameterDataPrototype/ElementName"
+        dest = ar_enum.IdentifiableSubTypes.PARAMETER_DATA_PROTOTYPE
+        element_ref = ar_element.DataPrototypeRef(ref_str, dest)
+        element = ar_element.ParameterInAtomicSWCTypeInstanceRef(root_parameter_data_prototype=element_ref)
+        xml = f'''<AUTOSAR-PARAMETER-IREF>
+  <ROOT-PARAMETER-DATA-PROTOTYPE-REF DEST="PARAMETER-DATA-PROTOTYPE">{ref_str}</ROOT-PARAMETER-DATA-PROTOTYPE-REF>
+</AUTOSAR-PARAMETER-IREF>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ParameterInAtomicSWCTypeInstanceRef = reader.read_str_elem(xml)
+        self.assertIsInstance(elem.root_parameter_data_prototype, ar_element.DataPrototypeRef)
+        self.assertEqual(str(elem.root_parameter_data_prototype), ref_str)
+
+    def test_context_data_prototype(self):
+        ref_str = "/DataTypes/RecordTypeName/ElementName"
+        dest = ar_enum.IdentifiableSubTypes.APPLICATION_RECORD_ELEMENT
+        element_ref = ar_element.ApplicationCompositeElementDataPrototypeRef(ref_str, dest)
+        element = ar_element.ParameterInAtomicSWCTypeInstanceRef(context_data_prototype=element_ref)
+        xml = f'''<AUTOSAR-PARAMETER-IREF>
+  <CONTEXT-DATA-PROTOTYPE-REF DEST="APPLICATION-RECORD-ELEMENT">{ref_str}</CONTEXT-DATA-PROTOTYPE-REF>
+</AUTOSAR-PARAMETER-IREF>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ParameterInAtomicSWCTypeInstanceRef = reader.read_str_elem(xml)
+        self.assertIsInstance(elem.context_data_prototype, ar_element.ApplicationCompositeElementDataPrototypeRef)
+        self.assertEqual(str(elem.context_data_prototype), ref_str)
+
+    def test_target_data_prototype(self):
+        ref_str = "/DataTypes/ParameterDataPrototype/ElementName"
+        dest = ar_enum.IdentifiableSubTypes.PARAMETER_DATA_PROTOTYPE
+        parameter_ref = ar_element.DataPrototypeRef(ref_str, dest)
+        element = ar_element.ParameterInAtomicSWCTypeInstanceRef(target_data_prototype=parameter_ref)
+        xml = f'''<AUTOSAR-PARAMETER-IREF>
+  <TARGET-DATA-PROTOTYPE-REF DEST="PARAMETER-DATA-PROTOTYPE">{ref_str}</TARGET-DATA-PROTOTYPE-REF>
+</AUTOSAR-PARAMETER-IREF>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ParameterInAtomicSWCTypeInstanceRef = reader.read_str_elem(xml)
+        self.assertIsInstance(elem.target_data_prototype, ar_element.DataPrototypeRef)
+        self.assertEqual(str(elem.target_data_prototype), ref_str)
+
+
+class TestAutosarParameterRef(unittest.TestCase):
+
+    def __init__(self, methodName: str = "runTest") -> None:
+        super().__init__(methodName)
+        self.xml_tag = "ACCESSED-PARAMETER"
+
+    def test_empty(self):
+        element = ar_element.AutosarParameterRef()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element, self.xml_tag)
+        self.assertEqual(xml, '<ACCESSED-PARAMETER/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.AutosarParameterRef = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.AutosarParameterRef)
+
+    def test_autosar_parameter(self):
+        port_ref_str = "/ComponentTypes/MyComponent/ParameterPort"
+        port_ref = ar_element.PortPrototypeRef(port_ref_str, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
+        parameter = ar_element.ParameterInAtomicSWCTypeInstanceRef(port_prototype=port_ref)
+        element = ar_element.AutosarParameterRef(autosar_parameter=parameter)
+        xml = f'''<ACCESSED-PARAMETER>
+  <AUTOSAR-PARAMETER-IREF>
+    <PORT-PROTOTYPE-REF DEST="R-PORT-PROTOTYPE">{port_ref_str}</PORT-PROTOTYPE-REF>
+  </AUTOSAR-PARAMETER-IREF>
+</ACCESSED-PARAMETER>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element, self.xml_tag), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.AutosarParameterRef = reader.read_str_elem(xml)
+        self.assertIsInstance(elem.autosar_parameter, ar_element.ParameterInAtomicSWCTypeInstanceRef)
+
+    def test_local_parameter(self):
+        ref_str = "/DataTypes/ParameterDataPrototype"
+        dest = ar_enum.IdentifiableSubTypes.PARAMETER_DATA_PROTOTYPE
+        parameter_ref = ar_element.DataPrototypeRef(ref_str, dest)
+        element = ar_element.AutosarParameterRef(local_parameter=parameter_ref)
+        xml = f'''<ACCESSED-PARAMETER>
+  <LOCAL-PARAMETER-REF DEST="PARAMETER-DATA-PROTOTYPE">{ref_str}</LOCAL-PARAMETER-REF>
+</ACCESSED-PARAMETER>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element, self.xml_tag), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.AutosarParameterRef = reader.read_str_elem(xml)
+        self.assertIsInstance(elem.local_parameter, ar_element.DataPrototypeRef)
+        self.assertEqual(str(elem.local_parameter), ref_str)
+
+
+class TestParameterAccess(unittest.TestCase):
+
+    def test_name_only(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.ParameterAccess('MyName')
+        xml = '''<PARAMETER-ACCESS>
+  <SHORT-NAME>MyName</SHORT-NAME>
+</PARAMETER-ACCESS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ParameterAccess = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ParameterAccess)
+        self.assertEqual(elem.name, 'MyName')
+
+    def test_accessed_parameter(self):
+        ref_str = "/DataTypes/ParameterDataPrototype"
+        dest = ar_enum.IdentifiableSubTypes.PARAMETER_DATA_PROTOTYPE
+        local_param = ar_element.DataPrototypeRef(ref_str, dest)
+        parameter = ar_element.AutosarParameterRef(local_parameter=local_param)
+        element = ar_element.ParameterAccess('MyName', accessed_parameter=parameter)
+        xml = f'''<PARAMETER-ACCESS>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <ACCESSED-PARAMETER>
+    <LOCAL-PARAMETER-REF DEST="PARAMETER-DATA-PROTOTYPE">{ref_str}</LOCAL-PARAMETER-REF>
+  </ACCESSED-PARAMETER>
+</PARAMETER-ACCESS>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ParameterAccess = reader.read_str_elem(xml)
+        self.assertIsInstance(elem.accessed_parameter, ar_element.AutosarParameterRef)
+
+    def test_sw_data_def_props(self):
+        ref_str = "/DataTypes/TypeName"
+        impl_type_ref = ar_element.ImplementationDataTypeRef(ref_str)
+        props = ar_element.SwDataDefProps(
+            ar_element.SwDataDefPropsConditional(impl_data_type_ref=impl_type_ref))
+        element = ar_element.ParameterAccess('MyName', sw_data_def_props=props)
+        xml = f'''<PARAMETER-ACCESS>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <SW-DATA-DEF-PROPS>
+    <SW-DATA-DEF-PROPS-VARIANTS>
+      <SW-DATA-DEF-PROPS-CONDITIONAL>
+        <IMPLEMENTATION-DATA-TYPE-REF DEST="IMPLEMENTATION-DATA-TYPE">{ref_str}</IMPLEMENTATION-DATA-TYPE-REF>
+      </SW-DATA-DEF-PROPS-CONDITIONAL>
+    </SW-DATA-DEF-PROPS-VARIANTS>
+  </SW-DATA-DEF-PROPS>
+</PARAMETER-ACCESS>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ParameterAccess = reader.read_str_elem(xml)
+        self.assertIsInstance(elem.sw_data_def_props, ar_element.SwDataDefProps)
+
+
+class TestAsynchronousServerCallResultPoint(unittest.TestCase):
+    def test_name_only(self):
+        element = ar_element.AsynchronousServerCallResultPoint('MyName')
+        xml = '''<ASYNCHRONOUS-SERVER-CALL-RESULT-POINT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+</ASYNCHRONOUS-SERVER-CALL-RESULT-POINT>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.AsynchronousServerCallResultPoint = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.AsynchronousServerCallResultPoint)
+        self.assertEqual(elem.name, 'MyName')
+
+    def test_async_server_call_point(self):
+        dest_str = "ASYNCHRONOUS-SERVER-CALL-POINT"
+        ref_str = "/MyPackage/MySwc/MyServerCallPoint"
+        element = ar_element.AsynchronousServerCallResultPoint('MyName', async_server_call_point=ref_str)
+        xml = f'''<ASYNCHRONOUS-SERVER-CALL-RESULT-POINT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <ASYNCHRONOUS-SERVER-CALL-POINT-REF DEST="{dest_str}">{ref_str}</ASYNCHRONOUS-SERVER-CALL-POINT-REF>
+</ASYNCHRONOUS-SERVER-CALL-RESULT-POINT>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.AsynchronousServerCallResultPoint = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.AsynchronousServerCallResultPoint)
+        self.assertIsInstance(elem.async_server_call_point, ar_element.AsynchronousServerCallPointRef)
+        self.assertEqual(str(elem.async_server_call_point), ref_str)
+
+
+class TestWaitPoint(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.WaitPoint('MyName')
+        xml = '''<WAIT-POINT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+</WAIT-POINT>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.WaitPoint = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.WaitPoint)
+        self.assertEqual(elem.name, 'MyName')
+
+    def test_timeout_from_int(self):
+        element = ar_element.WaitPoint('MyName', timeout=2)
+        xml = '''<WAIT-POINT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <TIMEOUT>2</TIMEOUT>
+</WAIT-POINT>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.WaitPoint = reader.read_str_elem(xml)
+        self.assertAlmostEqual(elem.timeout, 2.0)
+
+    def test_timeout_from_float(self):
+        element = ar_element.WaitPoint('MyName', timeout=2.5)
+        xml = '''<WAIT-POINT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <TIMEOUT>2.5</TIMEOUT>
+</WAIT-POINT>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.WaitPoint = reader.read_str_elem(xml)
+        self.assertAlmostEqual(elem.timeout, 2.5)
+
+    def test_trigger(self):
+        ref_str = "/ComponentTypes/MyComponent/InternalBehavior/RunnableName"
+        dest_str = "INTERNAL-TRIGGER-OCCURRED-EVENT"
+        rte_event_ref = ar_element.RteEventRef(ref_str, ar_enum.IdentifiableSubTypes.INTERNAL_TRIGGER_OCCURRED_EVENT)
+        element = ar_element.WaitPoint('MyName', trigger=rte_event_ref)
+        xml = f'''<WAIT-POINT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <TRIGGER-REF DEST="{dest_str}">{ref_str}</TRIGGER-REF>
+</WAIT-POINT>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.WaitPoint = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.WaitPoint)
+        self.assertIsInstance(elem.trigger, ar_element.RteEventRef)
+        self.assertEqual(elem.trigger.value, ref_str)
+        self.assertEqual(elem.trigger.dest, ar_enum.IdentifiableSubTypes.INTERNAL_TRIGGER_OCCURRED_EVENT)
+
+
 class TestExecutableEntity(unittest.TestCase):
     """
     ExecutableEntity is a base class. Use RunnableEntity
@@ -709,6 +1266,130 @@ class TestExecutableEntity(unittest.TestCase):
         ref = element.sw_addr_method
         self.assertEqual(ref.value, '/SwAddrMethods/DEFAULT')
         self.assertEqual(ref.dest, ar_enum.IdentifiableSubTypes.SW_ADDR_METHOD)
+
+
+class TestRunnableEntity(unittest.TestCase):
+    """
+    Tests elements not already found in base class
+    """
+
+    def test_arguments_from_single_element(self):
+        symbol = "SymbolName"
+        argument = ar_element.RunnableEntityArgument(symbol)
+        element = ar_element.RunnableEntity("MyName", arguments=argument)
+        writer = autosar.xml.Writer()
+        xml = f'''<RUNNABLE-ENTITY>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <ARGUMENTS>
+    <RUNNABLE-ENTITY-ARGUMENT>
+      <SYMBOL>{symbol}</SYMBOL>
+    </RUNNABLE-ENTITY-ARGUMENT>
+  </ARGUMENTS>
+</RUNNABLE-ENTITY>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RunnableEntity = reader.read_str_elem(xml)
+        self.assertEqual(len(elem.arguments), 1)
+        child: ar_element.RunnableEntityArgument = elem.arguments[0]
+        self.assertEqual(child.symbol, symbol)
+
+    def test_arguments_from_list(self):
+        symbol1 = "SymbolName1"
+        symbol2 = "SymbolName2"
+        argument1 = ar_element.RunnableEntityArgument(symbol1)
+        argument2 = ar_element.RunnableEntityArgument(symbol2)
+        element = ar_element.RunnableEntity("MyName", arguments=[argument1, argument2])
+        writer = autosar.xml.Writer()
+        xml = f'''<RUNNABLE-ENTITY>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <ARGUMENTS>
+    <RUNNABLE-ENTITY-ARGUMENT>
+      <SYMBOL>{symbol1}</SYMBOL>
+    </RUNNABLE-ENTITY-ARGUMENT>
+    <RUNNABLE-ENTITY-ARGUMENT>
+      <SYMBOL>{symbol2}</SYMBOL>
+    </RUNNABLE-ENTITY-ARGUMENT>
+  </ARGUMENTS>
+</RUNNABLE-ENTITY>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RunnableEntity = reader.read_str_elem(xml)
+        self.assertEqual(len(elem.arguments), 2)
+        child: ar_element.RunnableEntityArgument = elem.arguments[0]
+        self.assertEqual(child.symbol, symbol1)
+        child = elem.arguments[1]
+        self.assertEqual(child.symbol, symbol2)
+
+    def test_async_server_call_result_points_from_single_element(self):
+        dest_str = "ASYNCHRONOUS-SERVER-CALL-POINT"
+        ref_str = "/MyPackage/MySwc/MyServerCallPoint"
+        async_server_call_result_point = ar_element.AsynchronousServerCallResultPoint("MyCallResultPoint", ref_str)
+        element = ar_element.RunnableEntity("MyName", async_server_call_result_points=async_server_call_result_point)
+        writer = autosar.xml.Writer()
+        xml = f'''<RUNNABLE-ENTITY>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <ASYNCHRONOUS-SERVER-CALL-RESULT-POINTS>
+    <ASYNCHRONOUS-SERVER-CALL-RESULT-POINT>
+      <SHORT-NAME>MyCallResultPoint</SHORT-NAME>
+      <ASYNCHRONOUS-SERVER-CALL-POINT-REF DEST="{dest_str}">{ref_str}</ASYNCHRONOUS-SERVER-CALL-POINT-REF>
+    </ASYNCHRONOUS-SERVER-CALL-RESULT-POINT>
+  </ASYNCHRONOUS-SERVER-CALL-RESULT-POINTS>
+</RUNNABLE-ENTITY>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RunnableEntity = reader.read_str_elem(xml)
+        self.assertEqual(len(elem.async_server_call_result_points), 1)
+        child: ar_element.AsynchronousServerCallResultPoint = elem.async_server_call_result_points[0]
+        self.assertEqual(child.name, "MyCallResultPoint")
+        self.assertEqual(str(child.async_server_call_point), ref_str)
+
+    def test_async_server_call_result_points_from_list(self):
+        dest_str = "ASYNCHRONOUS-SERVER-CALL-POINT"
+        ref_str1 = "/MyPackage/MySwc/MyServerCallPoint1"
+        ref_str2 = "/MyPackage/MySwc/MyServerCallPoint1"
+        # construct first reference from string, the other from AsynchronousServerCallPointRef object
+        call_result_point1 = ar_element.AsynchronousServerCallResultPoint("MyCallResultPoint1", ref_str1)
+        call_result_point2 = ar_element.AsynchronousServerCallResultPoint(
+            "MyCallResultPoint2",
+            ar_element.AsynchronousServerCallPointRef(ref_str2))
+        element = ar_element.RunnableEntity("MyName",
+                                            async_server_call_result_points=[call_result_point1, call_result_point2])
+        writer = autosar.xml.Writer()
+        xml = f'''<RUNNABLE-ENTITY>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <ASYNCHRONOUS-SERVER-CALL-RESULT-POINTS>
+    <ASYNCHRONOUS-SERVER-CALL-RESULT-POINT>
+      <SHORT-NAME>MyCallResultPoint1</SHORT-NAME>
+      <ASYNCHRONOUS-SERVER-CALL-POINT-REF DEST="{dest_str}">{ref_str1}</ASYNCHRONOUS-SERVER-CALL-POINT-REF>
+    </ASYNCHRONOUS-SERVER-CALL-RESULT-POINT>
+    <ASYNCHRONOUS-SERVER-CALL-RESULT-POINT>
+      <SHORT-NAME>MyCallResultPoint2</SHORT-NAME>
+      <ASYNCHRONOUS-SERVER-CALL-POINT-REF DEST="{dest_str}">{ref_str2}</ASYNCHRONOUS-SERVER-CALL-POINT-REF>
+    </ASYNCHRONOUS-SERVER-CALL-RESULT-POINT>
+  </ASYNCHRONOUS-SERVER-CALL-RESULT-POINTS>
+</RUNNABLE-ENTITY>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RunnableEntity = reader.read_str_elem(xml)
+        self.assertEqual(len(elem.async_server_call_result_points), 2)
+        child: ar_element.AsynchronousServerCallResultPoint = elem.async_server_call_result_points[0]
+        self.assertEqual(child.name, "MyCallResultPoint1")
+        self.assertEqual(str(child.async_server_call_point), ref_str1)
+        child = elem.async_server_call_result_points[1]
+        self.assertEqual(child.name, "MyCallResultPoint2")
+        self.assertEqual(str(child.async_server_call_point), ref_str2)
+
+    def test_can_be_invoked_concurrently(self):
+        element = ar_element.RunnableEntity("MyName", can_be_invoked_concurrently=True)
+        writer = autosar.xml.Writer()
+        xml = '''<RUNNABLE-ENTITY>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <CAN-BE-INVOKED-CONCURRENTLY>true</CAN-BE-INVOKED-CONCURRENTLY>
+</RUNNABLE-ENTITY>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RunnableEntity = reader.read_str_elem(xml)
+        self.assertTrue(elem.can_be_invoked_concurrently)
 
 
 class TestInitEvent(unittest.TestCase):

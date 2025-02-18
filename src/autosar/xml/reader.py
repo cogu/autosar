@@ -4,7 +4,7 @@ ARXML reader module
 import os
 import re
 import sys
-
+# pylint: disable=duplicate-code
 from typing import Iterable, Union, Any
 import lxml.etree as ElementTree
 import autosar.base as ar_base
@@ -292,6 +292,7 @@ class Reader:
             'ASSEMBLY-SW-CONNECTOR': self._read_assembly_sw_connector,
             'DELEGATION-SW-CONNECTOR': self._read_delegation_sw_connector,
             'PASS-THROUGH-SW-CONNECTOR': self._read_pass_through_sw_connector,
+            'R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF': self._read_r_mode_group_in_atomic_swc_instance_ref,
             # SWC internal behavior elements
             'AUTOSAR-VARIABLE-IN-IMPL-DATATYPE': self._read_variable_in_impl_data_instance_ref,
             'AUTOSAR-VARIABLE-IREF': self._read_variable_in_atomic_swc_type_instance_ref,
@@ -301,6 +302,7 @@ class Reader:
             'EXCLUSIVE-AREA-REF-CONDITIONAL': self._read_exclusive_area_ref_conditional,
             'DISABLED-MODE-IREF': self._read_r_mode_in_atomic_swc_instance_ref,
             'SWC-INTERNAL-BEHAVIOR': self._read_swc_internal_behavior,
+            'RUNNABLE-ENTITY-ARGUMENT': self._read_runnable_entity_argument,
             'RUNNABLE-ENTITY': self._read_runnable_entity,
             'ASYNCHRONOUS-SERVER-CALL-RETURNS-EVENT': self._read_async_server_call_returns_event,
             'BACKGROUND-EVENT': self._read_background_event,
@@ -320,6 +322,17 @@ class Reader:
             'PORT-DEFINED-ARGUMENT-VALUE': self._read_port_defined_argument_value,
             'COMMUNICATION-BUFFER-LOCKING': self._read_communication_buffer_locking,
             'PORT-API-OPTION': self._read_port_api_option,
+            'ASYNCHRONOUS-SERVER-CALL-POINT': self._read_async_server_call_point,
+            'SYNCHRONOUS-SERVER-CALL-POINT': self._read_sync_server_call_point,
+            'ASYNCHRONOUS-SERVER-CALL-RESULT-POINT': self._read_async_server_call_result_point,
+            'EXTERNAL-TRIGGERING-POINT': self._read_external_triggering_point,
+            'INTERNAL-TRIGGERING-POINT': self._read_internal_triggering_point,
+            'MODE-ACCESS-POINT': self._read_mode_access_point,
+            'MODE-SWITCH-POINT': self._read_mode_switch_point,
+            'AUTOSAR-PARAMETER-IREF': self._read_parameter_in_atomic_swc_type_instance_ref,
+            'ACCESSED-PARAMETER': self._read_autosar_parameter_ref,
+            'PARAMETER-ACCESS': self._read_parameter_access,
+            'WAIT-POINT': self._read_wait_point,
         }
         self.switcher_all = {}
         self.switcher_all.update(self.switcher_collectable)
@@ -2707,6 +2720,16 @@ class Reader:
         dest_enum = self._read_ref_dest(xml_elem)
         return ar_element.ModeSwitchPointRef(xml_elem.text, dest_enum)
 
+    def _read_async_server_call_point_ref(self,
+                                          xml_elem: ElementTree.Element
+                                          ) -> ar_element.AsynchronousServerCallPointRef:
+        """
+        Reads references to AR:ASYNCHRONOUS-SERVER-CALL-POINT--SUBTYPES-ENUM
+        Tag variants: 'ASYNCHRONOUS-SERVER-CALL-POINT-REF'
+        """
+        dest_enum = self._read_ref_dest(xml_elem)
+        return ar_element.AsynchronousServerCallPointRef(xml_elem.text, dest_enum)
+
     def _read_async_server_call_result_point_ref(self,
                                                  xml_elem: ElementTree.Element
                                                  ) -> ar_element.AsynchronousServerCallResultPointRef:
@@ -2738,6 +2761,16 @@ class Reader:
         """
         dest_enum = self._read_ref_dest(xml_elem)
         return ar_element.InternalTriggeringPointRef(xml_elem.text, dest_enum)
+
+    def _read_rte_event_ref(self,
+                            xml_elem: ElementTree.Element
+                            ) -> ar_element.RteEventRef:
+        """
+        Reads references to AR:RTE-EVENT--SUBTYPES-ENUM
+        Tag variants: 'TARGET-EVENT-REF' | 'TARGET-RTE-EVENT-REF' | 'TRIGGER-REF'
+        """
+        dest_enum = self._read_ref_dest(xml_elem)
+        return ar_element.RteEventRef(xml_elem.text, dest_enum)
 
     # --- Constant and value specifications
 
@@ -4463,6 +4496,42 @@ class Reader:
         self._report_unprocessed_elements(child_elements)
         return ar_element.RModeInAtomicSwcInstanceRef(**data)
 
+    def _read_r_mode_group_in_atomic_swc_instance_ref(self,
+                                                      xml_element: ElementTree.Element
+                                                      ) -> ar_element.RModeGroupInAtomicSwcInstanceRef:
+        """
+        Complex type AR:R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF
+        Tag variants: 'R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("CONTEXT-R-PORT-REF")
+        if xml_child is not None:
+            data["context_port"] = self._read_abstract_required_port_prototype_ref(xml_child)
+        xml_child = child_elements.get("TARGET-MODE-GROUP-REF")
+        if xml_child is not None:
+            child_element = self._read_mode_declaration_group_prototype_ref(xml_child)
+            data["target_mode_group"] = child_element
+        return ar_element.RModeGroupInAtomicSwcInstanceRef(**data)
+
+    def _read_r_operation_in_atomic_swc_instance_ref(self,
+                                                     xml_element: ElementTree.Element
+                                                     ) -> ar_element.ROperationInAtomicSwcInstanceRef:
+        """
+        Complex type AR:R-OPERATION-IN-ATOMIC-SWC-INSTANCE-REF
+        Tag variants: 'OPERATION-IREF'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("CONTEXT-R-PORT-REF")
+        if xml_child is not None:
+            data["context_port"] = self._read_abstract_required_port_prototype_ref(xml_child)
+        xml_child = child_elements.get("TARGET-REQUIRED-OPERATION-REF")
+        if xml_child is not None:
+            data["target_required_operation"] = self._read_client_server_operation_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ROperationInAtomicSwcInstanceRef(**data)
+
     def _read_r_variable_in_atomic_swc_instance_ref(self,
                                                     xml_element: ElementTree.Element
                                                     ) -> ar_element.RVariableInAtomicSwcInstanceRef:
@@ -4649,6 +4718,296 @@ class Reader:
         self._report_unprocessed_elements(child_elements)
         return ar_element.ExclusiveAreaRefConditional(**data)
 
+    def _read_runnable_entity_argument(self, xml_element: ElementTree.Element) -> ar_element.RunnableEntityArgument:
+        """
+        Reads complex type AR:RUNNABLE-ENTITY-ARGUMENT
+        Tag variants: 'RUNNABLE-ENTITY-ARGUMENT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("SYMBOL")
+        if xml_child is not None:
+            data["symbol"] = xml_child.text  # TODO: Check if valid C-STRING
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.RunnableEntityArgument(**data)
+
+    def _read_abstract_access_point(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:SERVER-CALL-POINT
+        """
+        xml_child = child_elements.get("RETURN-VALUE-PROVISION")
+        if xml_child is not None:
+            data["return_value_provision"] = ar_enum.xml_to_enum("RteApiReturnValueProvision", xml_child.text)
+
+    def _read_server_call_point(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:ABSTRACT-ACCESS-POINT
+        """
+        xml_child = child_elements.get("OPERATION-IREF")
+        if xml_child is not None:
+            data["operation"] = self._read_r_operation_in_atomic_swc_instance_ref(xml_child)
+        xml_child = child_elements.get("TIMEOUT")
+        if xml_child is not None:
+            data["timeout"] = self._read_number(xml_child.text)
+        child_elements.skip("VARIATION-POINT")
+
+    def _read_async_server_call_point(self, xml_element: ElementTree.Element) -> ar_element.AsynchronousServerCallPoint:
+        """
+        Reads complex type: AR:ASYNCHRONOUS-SERVER-CALL-POINT
+        Tag variants: 'ASYNCHRONOUS-SERVER-CALL-POINT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_abstract_access_point(child_elements, data)
+        self._read_server_call_point(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.AsynchronousServerCallPoint(**data)
+
+    def _read_sync_server_call_point(self, xml_element: ElementTree.Element) -> ar_element.SynchronousServerCallPoint:
+        """
+        Reads complex type: AR:SYNCHRONOUS-SERVER-CALL-POINT
+        Tag variants: 'SYNCHRONOUS-SERVER-CALL-POINT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_abstract_access_point(child_elements, data)
+        self._read_server_call_point(child_elements, data)
+        xml_child = child_elements.get("CALLED-FROM-WITHIN-EXCLUSIVE-AREA-REF")
+        if xml_child is not None:
+            data["called_from_within_exclusive_area"] = self._read_exclusive_area_nesting_order_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.SynchronousServerCallPoint(**data)
+
+    def _read_async_server_call_result_point(self,
+                                             xml_element: ElementTree.Element
+                                             ) -> ar_element.AsynchronousServerCallResultPoint:
+        """
+        Reads complex type: AR:ASYNCHRONOUS-SERVER-CALL-RESULT-POINT
+        Tag variants: 'ASYNCHRONOUS-SERVER-CALL-RESULT-POINT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_abstract_access_point(child_elements, data)
+        self._read_async_server_call_result_point_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.AsynchronousServerCallResultPoint(**data)
+
+    def _read_async_server_call_result_point_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:ASYNCHRONOUS-SERVER-CALL-RESULT-POINT
+        """
+        xml_child = child_elements.get("ASYNCHRONOUS-SERVER-CALL-POINT-REF")
+        if xml_child is not None:
+            data["async_server_call_point"] = self._read_async_server_call_point_ref(xml_child)
+
+    def _read_external_triggering_point_ident(self,
+                                              xml_element: ElementTree.Element
+                                              ) -> ar_element.ExternalTriggeringPointIdent:
+        """
+        Reads complex type AR:EXTERNAL-TRIGGERING-POINT-IDENT
+        Tag variants: 'IDENT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_abstract_access_point(child_elements, data)
+        return ar_element.ExternalTriggeringPointIdent(**data)
+
+    def _read_external_triggering_point(self, xml_element: ElementTree.Element) -> ar_element.ExternalTriggeringPoint:
+        """
+        Reads complex type AR:EXTERNAL-TRIGGERING-POINT
+        Tag variants: 'EXTERNAL-TRIGGERING-POINT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("IDENT")
+        if xml_child is not None:
+            data["ident"] = self._read_external_triggering_point_ident(xml_child)
+        xml_child = child_elements.get("TRIGGER-IREF")
+        if xml_child is not None:
+            data["trigger"] = self._read_external_triggering_point_ident(xml_child)
+        child_elements.skip("VARIATION-POINT")
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ExternalTriggeringPoint(**data)
+
+    def _read_internal_triggering_point(self, xml_element: ElementTree.Element) -> ar_element.InternalTriggeringPoint:
+        """
+        Reads complex type AR:EXTERNAL-TRIGGERING-POINT
+        Tag variants: 'EXTERNAL-TRIGGERING-POINT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_abstract_access_point(child_elements, data)
+        xml_child = child_elements.get("SW-IMPL-POLICY")
+        if xml_child is not None:
+            data["sw_impl_policy"] = ar_enum.xml_to_enum("SwImplPolicy", xml_child.text)
+        child_elements.skip("VARIATION-POINT")
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.InternalTriggeringPoint(**data)
+
+    def _read_mode_access_point_ident(self,
+                                      xml_element: ElementTree.Element
+                                      ) -> ar_element.ModeAccessPointIdent:
+        """
+        Complex type AR:MODE-ACCESS-POINT-IDENT
+        Tag variants: 'IDENT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_abstract_access_point(child_elements, data)
+        self._read_async_server_call_result_point_group(child_elements, data)
+        return ar_element.ModeAccessPointIdent(**data)
+
+    def _read_mode_access_point(self, xml_element: ElementTree.Element) -> ar_element.ModeAccessPoint:
+        """
+        Reads complex type AR:MODE-ACCESS-POINT
+        Tag variants: 'MODE-ACCESS-POINT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("IDENT")
+        if xml_child is not None:
+            data["ident"] = self._read_mode_access_point_ident(xml_child)
+        xml_child = child_elements.get("MODE-GROUP-IREF")
+        if xml_child is not None and len(xml_child) > 0:
+            xml_grand_child = xml_child[0]
+            if xml_grand_child.tag == "P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF":
+                data["mode_group"] = self._read_p_mode_group_in_atomic_swc_instance_ref(xml_grand_child)
+            elif xml_grand_child.tag == "R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF":
+                data["mode_group"] = self._read_r_mode_group_in_atomic_swc_instance_ref(xml_grand_child)
+        child_elements.skip("VARIATION-POINT")
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ModeAccessPoint(**data)
+
+    def _read_mode_switch_point(self, xml_element: ElementTree.Element) -> ar_element.ModeSwitchPoint:
+        """
+        Reads complex Type AR:MODE-SWITCH-POINT
+        Tag variants: 'MODE-SWITCH-POINT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_abstract_access_point(child_elements, data)
+        xml_child = child_elements.get("MODE-GROUP-IREF")
+        if xml_child is not None:
+            data["mode_group"] = self._read_p_mode_group_in_atomic_swc_instance_ref(xml_child)
+        child_elements.skip("VARIATION-POINT")
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ModeSwitchPoint(**data)
+
+    def _read_parameter_in_atomic_swc_type_instance_ref(self,
+                                                        xml_element: ElementTree.Element
+                                                        ) -> ar_element.ParameterInAtomicSWCTypeInstanceRef:
+        """
+        Reads complex type AR:PARAMETER-IN-ATOMIC-SWC-TYPE-INSTANCE-REF
+        Tag variants: 'AUTOSAR-PARAMETER-IREF'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("PORT-PROTOTYPE-REF")
+        if xml_child is not None:
+            data["port_prototype"] = self._read_port_prototype_ref(xml_child)
+        xml_child = child_elements.get("ROOT-PARAMETER-DATA-PROTOTYPE-REF")
+        if xml_child is not None:
+            data["root_parameter_data_prototype"] = self._read_data_prototype_ref(xml_child)
+        xml_child = child_elements.get("CONTEXT-DATA-PROTOTYPE-REF")
+        if xml_child is not None:
+            data["context_data_prototype"] = self._read_appl_composite_element_data_proto_ref(xml_child)
+        xml_child = child_elements.get("TARGET-DATA-PROTOTYPE-REF")
+        if xml_child is not None:
+            data["target_data_prototype"] = self._read_data_prototype_ref(xml_child)
+        xml_child = child_elements.get("MODE-GROUP-IREF")
+        child_elements.skip("VARIATION-POINT")
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ParameterInAtomicSWCTypeInstanceRef(**data)
+
+    def _read_autosar_parameter_ref(self, xml_element: ElementTree.Element) -> ar_element.AutosarParameterRef:
+        """
+        Reads complex type AR:AUTOSAR-PARAMETER-REF
+        Tag variants: 'PARAMETER-INSTANCE' | 'ACCESSED-PARAMETER' | 'USED-PARAMETER-ELEMENT' | 'AR-PARAMETER'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("AUTOSAR-PARAMETER-IREF")
+        if xml_child is not None:
+            data["autosar_parameter"] = self._read_parameter_in_atomic_swc_type_instance_ref(xml_child)
+        xml_child = child_elements.get("LOCAL-PARAMETER-REF")
+        if xml_child is not None:
+            data["local_parameter"] = self._read_data_prototype_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.AutosarParameterRef(**data)
+
+    def _read_parameter_access(self, xml_element: ElementTree.Element) -> ar_element.ParameterAccess:
+        """
+        Reads complex type AR:PARAMETER-ACCESS
+        Tag variants: 'PARAMETER-ACCESS'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_abstract_access_point(child_elements, data)
+        self._read_parameter_access_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ParameterAccess(**data)
+
+    def _read_parameter_access_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:PARAMETER-ACCESS
+        """
+        xml_child = child_elements.get("ACCESSED-PARAMETER")
+        if xml_child is not None:
+            data["accessed_parameter"] = self._read_autosar_parameter_ref(xml_child)
+        xml_child = child_elements.get("SW-DATA-DEF-PROPS")
+        if xml_child is not None:
+            data["sw_data_def_props"] = self._read_sw_data_def_props(xml_child)
+        child_elements.skip("VARIATION-POINT")
+
+    def _read_wait_point(self, xml_element: ElementTree.Element) -> ar_element.WaitPoint:
+        """
+        Reads complex type AR:WAIT-POINT
+        Tag variants: 'WAIT-POINT'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_wait_point_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.WaitPoint(**data)
+
+    def _read_wait_point_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:WAIT-POINT
+        """
+        xml_child = child_elements.get("TIMEOUT")
+        if xml_child is not None:
+            data["timeout"] = self._read_number(xml_child.text)
+        xml_child = child_elements.get("TRIGGER-REF")
+        if xml_child is not None:
+            data["trigger"] = self._read_rte_event_ref(xml_child)
+
     def _read_executable_entity(self, child_elements: ChildElementMap, data: dict) -> None:
         """
         Reads group AR:EXECUTABLE-ENTITY
@@ -4727,11 +5086,23 @@ class Reader:
     def _read_runnable_entity_group(self, child_elements: ChildElementMap, data: dict) -> None:
         """
         Reads group AR:RUNNABLE-ENTITY
-        These elements will be implemented in the next releae
         """
-        child_elements.skip("ARGUMENTS")
-        child_elements.skip("ASYNCHRONOUS-SERVER-CALL-RESULT-POINTS")
-        child_elements.skip("CAN-BE-INVOKED-CONCURRENTLY")
+        xml_child = child_elements.get("ARGUMENTS")
+        if xml_child is not None:
+            arguments = []
+            for xml_grand_child in xml_child.findall("./RUNNABLE-ENTITY-ARGUMENT"):
+                arguments.append(self._read_runnable_entity_argument(xml_grand_child))
+            data["arguments"] = arguments
+        xml_child = child_elements.get("ASYNCHRONOUS-SERVER-CALL-RESULT-POINTS")
+        if xml_child is not None:
+            async_server_call_result_points = []
+            for xml_grand_child in xml_child.findall("./ASYNCHRONOUS-SERVER-CALL-RESULT-POINT"):
+                async_server_call_result_points.append(self._read_async_server_call_result_point(xml_grand_child))
+            data["async_server_call_result_points"] = async_server_call_result_points
+        xml_child = child_elements.get('CAN-BE-INVOKED-CONCURRENTLY')
+        if xml_child is not None:
+            data['can_be_invoked_concurrently'] = self._read_boolean(xml_child.text)
+
         child_elements.skip("DATA-READ-ACCESSS")
         child_elements.skip("DATA-RECEIVE-POINT-BY-ARGUMENTS")
         child_elements.skip("DATA-RECEIVE-POINT-BY-VALUES")
