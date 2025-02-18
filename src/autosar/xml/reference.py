@@ -184,7 +184,7 @@ class ApplicationDataTypeRef(BaseRef):
 
 class ApplicationCompositeElementDataPrototypeRef(BaseRef):
     """
-    References to APPLICATION-COMPOSITE-ELEMENT-DATA-PROTOTYPE--SUBTYPES-ENUM
+    References to AR:APPLICATION-COMPOSITE-ELEMENT-DATA-PROTOTYPE--SUBTYPES-ENUM
     """
 
     @classmethod
@@ -631,6 +631,22 @@ class ModeSwitchPointRef(BaseRef):
         return {ar_enum.IdentifiableSubTypes.MODE_SWITCH_POINT}
 
 
+class AsynchronousServerCallPointRef(BaseRef):
+    """
+    AR:ASYNCHRONOUS-SERVER-CALL-POINT--SUBTYPES-ENUM
+    """
+
+    def __init__(self, value: str,
+                 dest: ar_enum.IdentifiableSubTypes = ar_enum.IdentifiableSubTypes.ASYNCHRONOUS_SERVER_CALL_POINT
+                 ) -> None:
+        super().__init__(value, dest)
+
+    @classmethod
+    def accepted_sub_types(cls) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.ASYNCHRONOUS_SERVER_CALL_POINT}
+
+
 class AsynchronousServerCallResultPointRef(BaseRef):
     """
     AR:ASYNCHRONOUS-SERVER-CALL-RESULT-POINT--SUBTYPES-ENUM
@@ -677,3 +693,24 @@ class InternalTriggeringPointRef(BaseRef):
     def accepted_sub_types(cls) -> set[ar_enum.IdentifiableSubTypes]:
         """Acceptable values for dest"""
         return {ar_enum.IdentifiableSubTypes.INTERNAL_TRIGGERING_POINT}
+
+
+class RteEventRef(BaseRef):
+    """
+    AR:RTE-EVENT--SUBTYPES-ENUM
+    """
+
+    @classmethod
+    def accepted_sub_types(cls) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.ASYNCHRONOUS_SERVER_CALL_RETURNS_EVENT,
+                ar_enum.IdentifiableSubTypes.BACKGROUND_EVENT,
+                ar_enum.IdentifiableSubTypes.DATA_RECEIVE_ERROR_EVENT,
+                ar_enum.IdentifiableSubTypes.DATA_RECEIVED_EVENT,
+                ar_enum.IdentifiableSubTypes.DATA_SEND_COMPLETED_EVENT,
+                ar_enum.IdentifiableSubTypes.DATA_WRITE_COMPLETED_EVENT,
+                ar_enum.IdentifiableSubTypes.EXTERNAL_TRIGGER_OCCURRED_EVENT,
+                ar_enum.IdentifiableSubTypes.INIT_EVENT,
+                ar_enum.IdentifiableSubTypes.INTERNAL_TRIGGER_OCCURRED_EVENT,
+                ar_enum.IdentifiableSubTypes.MODE_SWITCHED_ACK_EVENT,
+                ar_enum.IdentifiableSubTypes.OPERATION_INVOKED_EVENT}

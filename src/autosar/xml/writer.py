@@ -1,7 +1,7 @@
 """
 ARXML writer module
 """
-# pylint: disable=consider-using-with
+# pylint: disable=consider-using-with, duplicate-code
 from io import StringIO
 from typing import TextIO
 import sys
@@ -348,6 +348,7 @@ class Writer(_XMLWriter):
             'DelegationSwConnector': self._write_delegation_sw_connector,
             'PassThroughSwConnector': self._write_passthrough_sw_connector,
             'RModeInAtomicSwcInstanceRef': self._write_r_mode_in_atomic_swc_instance_ref,
+            'RModeGroupInAtomicSwcInstanceRef': self._write_r_mode_group_in_atomic_swc_instance_ref,
             # SWC internal behavior elements
             'ArVariableInImplementationDataInstanceRef': self._write_variable_in_impl_data_instance_ref,
             'VariableInAtomicSWCTypeInstanceRef': self._write_variable_in_atomic_swc_type_instance_ref,
@@ -356,6 +357,7 @@ class Writer(_XMLWriter):
             'SwcInternalBehavior': self._write_swc_internal_behavior,
             'ExecutableEntityActivationReason': self._write_executable_entity_activation_reason,
             'ExclusiveAreaRefConditional': self._write_exclusive_area_ref_conditional,
+            'RunnableEntityArgument': self._write_runnable_entity_argument,
             'RunnableEntity': self._write_runnable_entity,
             'AsynchronousServerCallReturnsEvent': self._write_async_server_call_returns_event,
             'BackgroundEvent': self._write_background_event,
@@ -375,7 +377,19 @@ class Writer(_XMLWriter):
             'PortDefinedArgumentValue': self._write_port_defined_argument_value,
             'CommunicationBufferLocking': self._write_communication_buffer_locking,
             'PortAPIOption': self._write_port_api_option,
+            'AsynchronousServerCallPoint': self._write_async_server_call_point,
+            'SynchronousServerCallPoint': self._write_sync_server_call_point,
+            'AsynchronousServerCallResultPoint': self._write_async_server_call_result_point,
+            'ExternalTriggeringPoint': self._write_external_triggering_point,
+            'InternalTriggeringPoint': self._write_internal_triggering_point,
+            'ModeAccessPoint': self._write_mode_access_point,
+            'ModeSwitchPoint': self._write_mode_switch_point,
+            'ParameterInAtomicSWCTypeInstanceRef': self._write_parameter_in_atomic_swc_type_instance_ref,
+            'AutosarParameterRef': self._write_autosar_parameter_ref,
+            'ParameterAccess': self._write_parameter_access,
+            'WaitPoint': self._write_wait_point,
         }
+        #
         self.switcher_all = {}  # All concrete elements (used for unit testing)
         self.switcher_all.update(self.switcher_collectable)
         self.switcher_all.update(self.switcher_value_specification)
@@ -2359,6 +2373,16 @@ class Writer(_XMLWriter):
         assert isinstance(elem, ar_element.ModeSwitchPointRef)
         self._write_ref_content(elem, "EVENT-SOURCE-REF")
 
+    def _write_async_server_call_point_ref(self,
+                                           elem: ar_element.AsynchronousServerCallPointRef
+                                           ) -> None:
+        """
+        Writes references to AR:ASYNCHRONOUS-SERVER-CALL-POINT--SUBTYPES-ENUM
+        Tag variants: 'ASYNCHRONOUS-SERVER-CALL-POINT-REF'
+        """
+        assert isinstance(elem, ar_element.AsynchronousServerCallPointRef)
+        self._write_ref_content(elem, "ASYNCHRONOUS-SERVER-CALL-POINT-REF")
+
     def _write_async_server_call_result_point_ref(self,
                                                   elem: ar_element.AsynchronousServerCallResultPointRef
                                                   ) -> None:
@@ -2390,6 +2414,16 @@ class Writer(_XMLWriter):
         """
         assert isinstance(elem, ar_element.InternalTriggeringPointRef)
         self._write_ref_content(elem, "EVENT-SOURCE-REF")
+
+    def _write_rte_event_ref(self,
+                             elem: ar_element.InternalTriggeringPointRef,
+                             tag: str) -> None:
+        """
+        Writes references to AR:RTE-EVENT--SUBTYPES-ENUM
+        Tag variants: 'TARGET-EVENT-REF' | 'TARGET-RTE-EVENT-REF' | 'TRIGGER-REF'
+        """
+        assert isinstance(elem, ar_element.RteEventRef)
+        self._write_ref_content(elem, tag)
 
 # -- Constant and value specifications
 
@@ -3863,6 +3897,44 @@ class Writer(_XMLWriter):
                 self._write_mode_declaration_ref(elem.target_mode_declaration, "TARGET-MODE-DECLARATION-REF")
             self._leave_child()
 
+    def _write_r_mode_group_in_atomic_swc_instance_ref(self,
+                                                       elem: ar_element.RModeGroupInAtomicSwcInstanceRef) -> None:
+        """
+        Writes complex type AR:R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF
+        Tag variants: 'R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF'
+        """
+        assert isinstance(elem, ar_element.RModeGroupInAtomicSwcInstanceRef)
+        tag = "R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.context_port is not None:
+                self._write_abstract_required_port_prototype_ref(elem.context_port, "CONTEXT-R-PORT-REF")
+            if elem.target_mode_group is not None:
+                self._write_mode_declaration_group_prototype_ref(elem.target_mode_group, "TARGET-MODE-GROUP-REF")
+            self._leave_child()
+
+    def _write_r_operation_in_atomic_swc_instance_ref(self,
+                                                      elem: ar_element.ROperationInAtomicSwcInstanceRef
+                                                      ) -> None:
+        """
+        Writes complex type AR:R-OPERATION-IN-ATOMIC-SWC-INSTANCE-REF
+        Tag variants: 'OPERATION-IREF'
+        """
+        assert isinstance(elem, ar_element.ROperationInAtomicSwcInstanceRef)
+        tag = "OPERATION-IREF"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.context_port is not None:
+                self._write_abstract_required_port_prototype_ref(elem.context_port, "CONTEXT-R-PORT-REF")
+            if elem.target_required_operation is not None:
+                self._write_client_server_operation_ref(elem.target_required_operation,
+                                                        "TARGET-REQUIRED-OPERATION-REF")
+            self._leave_child()
+
     def _write_r_variable_in_atomic_swc_instance_ref(self,
                                                      elem: ar_element.RVariableInAtomicSwcInstanceRef
                                                      ) -> None:
@@ -3995,6 +4067,21 @@ class Writer(_XMLWriter):
             self._add_content("SCOPE", ar_enum.enum_to_xml(elem.scope))
         self._leave_child()
 
+    def _write_runnable_entity_argument(self, elem: ar_element.RunnableEntityArgument) -> None:
+        """
+        Writes complex type AR:RUNNABLE-ENTITY-ARGUMENT
+        Tag variants: 'RUNNABLE-ENTITY-ARGUMENT'
+        """
+        assert isinstance(elem, ar_element.RunnableEntityArgument)
+        tag = "RUNNABLE-ENTITY-ARGUMENT"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.symbol is not None:
+                self._add_content("SYMBOL", elem.symbol)
+            self._leave_child()
+
     def _write_executable_entity_activation_reason(self,
                                                    elem: ar_element.ExecutableEntityActivationReason) -> None:
         """
@@ -4024,6 +4111,257 @@ class Writer(_XMLWriter):
             if elem.exclusive_area_ref is not None:
                 self._write_exclusive_area_ref(elem.exclusive_area_ref, "EXCLUSIVE-AREA-REF")
             self._leave_child()
+
+    def _write_abstract_access_point(self, elem: ar_element.AbstractAccessPoint) -> None:
+        """
+        Writes group AR:ABSTRACT-ACCESS-POINT
+        """
+        if elem.return_value_provision is not None:
+            self._add_content("RETURN-VALUE-PROVISION", ar_enum.enum_to_xml(elem.return_value_provision))
+
+    def _write_server_call_point(self, elem: ar_element.ServerCallPoint) -> None:
+        """
+        Writes group AR:SERVER-CALL-POINT
+        """
+        if elem.operation is not None:
+            self._write_r_operation_in_atomic_swc_instance_ref(elem.operation)
+        if elem.timeout is not None:
+            self._add_content("TIMEOUT", self._format_number(elem.timeout))
+
+    def _write_async_server_call_point(self, elem: ar_element.AsynchronousServerCallPoint) -> None:
+        """
+        Writes complex type: AR:ASYNCHRONOUS-SERVER-CALL-POINT
+        Tag variants: 'ASYNCHRONOUS-SERVER-CALL-POINT'
+        """
+        assert isinstance(elem, ar_element.AsynchronousServerCallPoint)
+        self._add_child("ASYNCHRONOUS-SERVER-CALL-POINT")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_abstract_access_point(elem)
+        self._write_server_call_point(elem)
+        self._leave_child()
+
+    def _write_sync_server_call_point(self, elem: ar_element.SynchronousServerCallPoint) -> None:
+        """
+        Writes complex type: AR:SYNCHRONOUS-SERVER-CALL-POINT
+        Tag variants: 'SYNCHRONOUS-SERVER-CALL-POINT'
+        """
+        assert isinstance(elem, ar_element.SynchronousServerCallPoint)
+        self._add_child("SYNCHRONOUS-SERVER-CALL-POINT")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_abstract_access_point(elem)
+        self._write_server_call_point(elem)
+        if elem.called_from_within_exclusive_area is not None:
+            self._write_exclusive_area_nesting_order_ref(elem.called_from_within_exclusive_area,
+                                                         "CALLED-FROM-WITHIN-EXCLUSIVE-AREA-REF")
+        self._leave_child()
+
+    def _write_async_server_call_result_point(self, elem: ar_element.AsynchronousServerCallResultPoint) -> None:
+        """
+        Writes complex type: AR:ASYNCHRONOUS-SERVER-CALL-RESULT-POINT
+        Tag variants: 'ASYNCHRONOUS-SERVER-CALL-RESULT-POINT'
+        """
+        assert isinstance(elem, ar_element.AsynchronousServerCallResultPoint)
+        self._add_child("ASYNCHRONOUS-SERVER-CALL-RESULT-POINT")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_abstract_access_point(elem)
+        self._write_async_server_call_result_point_group(elem)
+        self._leave_child()
+
+    def _write_async_server_call_result_point_group(self, elem: ar_element.AsynchronousServerCallResultPoint) -> None:
+        """
+        Writes group: AR:ASYNCHRONOUS-SERVER-CALL-RESULT-POINT
+        """
+        if elem.async_server_call_point is not None:
+            self._write_async_server_call_point_ref(elem.async_server_call_point)
+
+    def _write_external_triggering_point_ident(self, elem: ar_element.ExternalTriggeringPointIdent) -> None:
+        """
+        Complex type AR:EXTERNAL-TRIGGERING-POINT-IDENT
+        Tag variants: 'IDENT'
+        """
+        assert isinstance(elem, ar_element.ExternalTriggeringPointIdent)
+        self._add_child("IDENT")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_abstract_access_point(elem)
+        self._leave_child()
+
+    def _write_external_triggering_point(self, elem: ar_element.ExternalTriggeringPoint) -> None:
+        """
+        Writes complex type AR:EXTERNAL-TRIGGERING-POINT
+        Tag variants: 'EXTERNAL-TRIGGERING-POINT'
+        """
+        assert isinstance(elem, ar_element.ExternalTriggeringPoint)
+        tag = "EXTERNAL-TRIGGERING-POINT"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.ident is not None:
+                self._write_external_triggering_point_ident(elem.ident)
+            if elem.trigger is not None:
+                self._write_p_trigger_in_atomic_swc_instance_ref(elem.trigger, "TRIGGER-IREF")
+            self._leave_child()
+
+    def _write_internal_triggering_point(self, elem: ar_element.InternalTriggeringPoint) -> None:
+        """
+        Writes complex type AR:INTERNAL-TRIGGERING-POINT
+        Tag variants: 'INTERNAL-TRIGGERING-POINT'
+        """
+        assert isinstance(elem, ar_element.InternalTriggeringPoint)
+        self._add_child("INTERNAL-TRIGGERING-POINT")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_abstract_access_point(elem)
+        if elem.sw_impl_policy is not None:
+            self._add_content("SW-IMPL-POLICY", ar_enum.enum_to_xml(elem.sw_impl_policy))
+        self._leave_child()
+
+    def _write_mode_access_point_ident(self, elem: ar_element.ModeAccessPointIdent) -> None:
+        """
+        Complex type AR:MODE-ACCESS-POINT-IDENT
+        Tag variants: 'IDENT'
+        """
+        assert isinstance(elem, ar_element.ModeAccessPointIdent)
+        self._add_child("IDENT")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_abstract_access_point(elem)
+        self._leave_child()
+
+    def _write_mode_access_point(self, elem: ar_element.ModeAccessPoint) -> None:
+        """
+        Writes complex type AR:MODE-ACCESS-POINT
+        Tag variants: 'MODE-ACCESS-POINT'
+        """
+        assert isinstance(elem, ar_element.ModeAccessPoint)
+        tag = "MODE-ACCESS-POINT"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.ident is not None:
+                self._write_mode_access_point_ident(elem.ident)
+            if elem.mode_group is not None:
+                self._add_child("MODE-GROUP-IREF")
+                if isinstance(elem.mode_group, ar_element.PModeGroupInAtomicSwcInstanceRef):
+                    self._write_p_mode_group_in_atomic_swc_instance_ref(elem.mode_group,
+                                                                        "P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF")
+                elif isinstance(elem.mode_group, ar_element.RModeGroupInAtomicSwcInstanceRef):
+                    self._write_r_mode_group_in_atomic_swc_instance_ref(elem.mode_group)
+                else:
+                    raise TypeError(f"mode_group: Invalid type: {str(type(elem.mode_group))}")
+                self._leave_child()
+            self._leave_child()
+
+    def _write_mode_switch_point(self, elem: ar_element.ModeSwitchPoint) -> None:
+        """
+        Writes complex Type AR:MODE-SWITCH-POINT
+        Tag variants: 'MODE-SWITCH-POINT'
+        """
+        assert isinstance(elem, ar_element.ModeSwitchPoint)
+        self._add_child("MODE-SWITCH-POINT")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_abstract_access_point(elem)
+        if elem.mode_group is not None:
+            self._write_p_mode_group_in_atomic_swc_instance_ref(elem.mode_group, 'MODE-GROUP-IREF')
+        self._leave_child()
+
+    def _write_parameter_in_atomic_swc_type_instance_ref(self,
+                                                         elem: ar_element.ParameterInAtomicSWCTypeInstanceRef
+                                                         ) -> None:
+        """
+        Writes complex type AR:PARAMETER-IN-ATOMIC-SWC-TYPE-INSTANCE-REF
+        Tag variants: 'AUTOSAR-PARAMETER-IREF'
+        """
+        assert isinstance(elem, ar_element.ParameterInAtomicSWCTypeInstanceRef)
+        tag = "AUTOSAR-PARAMETER-IREF"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.port_prototype is not None:
+                self._write_port_prototype_ref(elem.port_prototype, "PORT-PROTOTYPE-REF")
+            if elem.root_parameter_data_prototype is not None:
+                self._write_data_prototype_ref(elem.root_parameter_data_prototype, "ROOT-PARAMETER-DATA-PROTOTYPE-REF")
+            if elem.context_data_prototype is not None:
+                self._write_appl_composite_element_data_proto_ref(elem.context_data_prototype,
+                                                                  "CONTEXT-DATA-PROTOTYPE-REF")
+            if elem.target_data_prototype is not None:
+                self._write_data_prototype_ref(elem.target_data_prototype, "TARGET-DATA-PROTOTYPE-REF")
+            self._leave_child()
+
+    def _write_autosar_parameter_ref(self, elem: ar_element.AutosarParameterRef, tag: str) -> None:
+        """
+        Writes complex type AR:AUTOSAR-PARAMETER-REF
+        Tag variants: 'PARAMETER-INSTANCE' | 'ACCESSED-PARAMETER' | 'USED-PARAMETER-ELEMENT' | 'AR-PARAMETER'
+        """
+        assert isinstance(elem, ar_element.AutosarParameterRef)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.autosar_parameter is not None:
+                self._write_parameter_in_atomic_swc_type_instance_ref(elem.autosar_parameter)
+            if elem.local_parameter is not None:
+                self._write_data_prototype_ref(elem.local_parameter, "LOCAL-PARAMETER-REF")
+            self._leave_child()
+
+    def _write_parameter_access(self, elem: ar_element.ParameterAccess) -> None:
+        """
+        Writes complex type AR:PARAMETER-ACCESS
+        Tag variants: 'PARAMETER-ACCESS'
+        """
+        assert isinstance(elem, ar_element.ParameterAccess)
+        self._add_child("PARAMETER-ACCESS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_abstract_access_point(elem)
+        self._write_parameter_access_group(elem)
+        self._leave_child()
+
+    def _write_parameter_access_group(self, elem: ar_element.ParameterAccess) -> None:
+        """
+        Writes group AR:PARAMETER-ACCESS
+        """
+        if elem.accessed_parameter is not None:
+            self._write_autosar_parameter_ref(elem.accessed_parameter, "ACCESSED-PARAMETER")
+        if elem.sw_data_def_props is not None:
+            self._write_sw_data_def_props(elem.sw_data_def_props, "SW-DATA-DEF-PROPS")
+
+    def _write_wait_point(self, elem: ar_element.WaitPoint) -> None:
+        """
+        Writes complex type AR:WAIT-POINT
+        Tag variants: 'WAIT-POINT'
+        """
+        assert isinstance(elem, ar_element.WaitPoint)
+        self._add_child("WAIT-POINT")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_wait_point_group(elem)
+        self._leave_child()
+
+    def _write_wait_point_group(self, elem: ar_element.WaitPoint) -> None:
+        """
+        Writes group AR:WAIT-POINT
+        """
+        if elem.timeout is not None:
+            self._add_content("TIMEOUT", self._format_number(elem.timeout))
+        if elem.trigger is not None:
+            self._write_rte_event_ref(elem.trigger, "TRIGGER-REF")
 
     def _write_executable_entity(self, elem: ar_element.ExecutableEntity) -> None:
         """
@@ -4088,14 +4426,25 @@ class Writer(_XMLWriter):
         self._write_multilanguage_referrable(elem)
         self._write_identifiable(elem)
         self._write_executable_entity(elem)
+        self._write_runnable_entity_group(elem)
         self._leave_child()
 
     def _write_runnable_entity_group(self, elem: ar_element.RunnableEntity) -> None:
         """
         Writes group type AR:RUNNABLE-ENTITY
-
-        This is just a placeholder. Will be implemented later
         """
+        if len(elem.arguments) > 0:
+            self._add_child("ARGUMENTS")
+            for argument in elem.arguments:
+                self._write_runnable_entity_argument(argument)
+            self._leave_child()
+        if len(elem.async_server_call_result_points) > 0:
+            self._add_child("ASYNCHRONOUS-SERVER-CALL-RESULT-POINTS")
+            for async_server_call_result_point in elem.async_server_call_result_points:
+                self._write_async_server_call_result_point(async_server_call_result_point)
+            self._leave_child()
+        if elem.can_be_invoked_concurrently is not None:
+            self._add_content("CAN-BE-INVOKED-CONCURRENTLY", self._format_boolean(elem.can_be_invoked_concurrently))
 
     def _write_rte_event_group(self, elem: ar_element.RteEvent) -> None:
         """

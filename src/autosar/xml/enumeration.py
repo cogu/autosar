@@ -108,6 +108,7 @@ class DataTransformationErrorHandling(Enum):
     """
     DATA-TRANSFORMATION-ERROR-HANDLING-ENUM--SIMPLE
     """
+
     NO_TRANSFORMER_ERROR_HANDLING = 0
     TRANSFORMER_ERROR_HANDLING = 1
 
@@ -116,6 +117,7 @@ class DataTransformationStatusForwarding(Enum):
     """
     DATA-TRANSFORMATION-STATUS-FORWARDING-ENUM--SIMPLE
     """
+
     NO_TRANSFORMER_STATUS_FORWARDING = 0
     TRANSFORMER_STATUS_FORWARDING = 1
 
@@ -224,47 +226,59 @@ class IdentifiableSubTypes(Enum):
     APPLICATION_SW_COMPONENT_TYPE = 14
     AR_PACKAGE = 15
     ARGUMENT_DATA_PROTOTYPE = 16
-    ASYNCHRONOUS_SERVER_CALL_RESULT_POINT = 17
-    AUTOSAR_DATA_PROTOTYPE = 18
-    AUTOSAR_DATA_TYPE = 19
-    BSW_MODULE_ENTRY = 20
-    CLIENT_SERVER_INTERFACE = 21
-    CLIENT_SERVER_OPERATION = 22
-    COMPOSITION_SW_COMPONENT_TYPE = 23
-    COMPU_METHOD = 24
-    CONSTANT_SPECIFICATION = 25
-    DATA_CONSTR = 26
-    DATA_PROTOTYPE = 27
-    E2E_PROFILE_COMPATIBILITY_PROPS = 28
-    EXCLUSIVE_AREA = 29
-    EXCLUSIVE_AREA_NESTING_ORDER = 30
-    IMPLEMENTATION_DATA_TYPE = 31
-    IMPLEMENTATION_DATA_TYPE_ELEMENT = 32
-    INTERNAL_TRIGGERING_POINT = 33
-    MODE_DECLARATION = 34
-    MODE_DECLARATION_GROUP = 35
-    MODE_DECLARATION_GROUP_PROTOTYPE = 36
-    MODE_SWITCH_INTERFACE = 37
-    MODE_SWITCH_POINT = 38
-    NV_DATA_INTERFACE = 39
-    P_PORT_PROTOTYPE = 40
-    PARAMETER_INTERFACE = 41
-    PARAMETER_DATA_PROTOTYPE = 42
-    PHYSICAL_DIMENSION = 43
-    PORT_PROTOTYPE = 44
-    PR_PORT_PROTOTYPE = 45
-    R_PORT_PROTOTYPE = 46
-    RUNNABLE_ENTITY = 47
-    SENDER_RECEIVER_INTERFACE = 48
-    SW_ADDR_METHOD = 49
-    SW_BASE_TYPE = 50
-    SW_COMPONENT_PROTOTYPE = 51
-    SWC_IMPLEMENTATION = 52
-    SWC_INTERNAL_BEHAVIOR = 53
-    TRIGGER = 54
-    UNIT = 55
-    VARIABLE_ACCESS = 56
-    VARIABLE_DATA_PROTOTYPE = 57
+    ASYNCHRONOUS_SERVER_CALL_POINT = 17
+    ASYNCHRONOUS_SERVER_CALL_RESULT_POINT = 18
+    ASYNCHRONOUS_SERVER_CALL_RETURNS_EVENT = 19
+    AUTOSAR_DATA_PROTOTYPE = 20
+    AUTOSAR_DATA_TYPE = 21
+    BACKGROUND_EVENT = 22
+    BSW_MODULE_ENTRY = 23
+    CLIENT_SERVER_INTERFACE = 24
+    CLIENT_SERVER_OPERATION = 25
+    COMPOSITION_SW_COMPONENT_TYPE = 26
+    COMPU_METHOD = 27
+    CONSTANT_SPECIFICATION = 28
+    DATA_CONSTR = 29
+    DATA_PROTOTYPE = 30
+    DATA_RECEIVE_ERROR_EVENT = 31
+    DATA_RECEIVED_EVENT = 32
+    DATA_SEND_COMPLETED_EVENT = 33
+    DATA_WRITE_COMPLETED_EVENT = 34
+    E2E_PROFILE_COMPATIBILITY_PROPS = 35
+    EXCLUSIVE_AREA = 36
+    EXCLUSIVE_AREA_NESTING_ORDER = 37
+    EXTERNAL_TRIGGER_OCCURRED_EVENT = 38
+    IMPLEMENTATION_DATA_TYPE = 39
+    IMPLEMENTATION_DATA_TYPE_ELEMENT = 40
+    INIT_EVENT = 41
+    INTERNAL_TRIGGER_OCCURRED_EVENT = 42
+    INTERNAL_TRIGGERING_POINT = 43
+    MODE_DECLARATION = 44
+    MODE_DECLARATION_GROUP = 45
+    MODE_DECLARATION_GROUP_PROTOTYPE = 46
+    MODE_SWITCH_INTERFACE = 47
+    MODE_SWITCH_POINT = 48
+    MODE_SWITCHED_ACK_EVENT = 49
+    NV_DATA_INTERFACE = 50
+    OPERATION_INVOKED_EVENT = 51
+    P_PORT_PROTOTYPE = 52
+    PARAMETER_DATA_PROTOTYPE = 53
+    PARAMETER_INTERFACE = 54
+    PHYSICAL_DIMENSION = 55
+    PORT_PROTOTYPE = 56
+    PR_PORT_PROTOTYPE = 57
+    R_PORT_PROTOTYPE = 58
+    RUNNABLE_ENTITY = 59
+    SENDER_RECEIVER_INTERFACE = 60
+    SW_ADDR_METHOD = 61
+    SW_BASE_TYPE = 62
+    SW_COMPONENT_PROTOTYPE = 63
+    SWC_IMPLEMENTATION = 64
+    SWC_INTERNAL_BEHAVIOR = 65
+    TRIGGER = 66
+    UNIT = 67
+    VARIABLE_ACCESS = 68
+    VARIABLE_DATA_PROTOTYPE = 69
 
 
 class IntervalType(Enum):
@@ -509,6 +523,15 @@ class ReentrancyLevel(Enum):
     SINGLE_CORE_REENTRANT = 2
 
 
+class RteApiReturnValueProvision(Enum):
+    """
+    AR:RTE-API-RETURN-VALUE-PROVISION-ENUM--SIMPLE
+    """
+
+    RETURN_VALUE_PROVIDED = 0
+    NO_RETURN_VALUE_PROVIDED = 1
+
+
 class ScaleConstraintValidity(Enum):
     """
     AR:SCALE-CONSTR-VALIDITY-ENUM--SIMPLE
@@ -566,6 +589,7 @@ class SupportBufferLocking(Enum):
     """
     SUPPORT-BUFFER-LOCKING-ENUM--SIMPLE
     """
+
     DOES_NOT_SUPPORT_BUFFER_LOCKING = 0
     SUPPORTS_BUFFER_LOCKING = 1
 
@@ -768,11 +792,14 @@ xml_to_enum_map: dict[str, dict] = {
         "APPLICATION-RECORD-DATA-TYPE": IdentifiableSubTypes.APPLICATION_RECORD_DATA_TYPE,
         "APPLICATION-RECORD-ELEMENT": IdentifiableSubTypes.APPLICATION_RECORD_ELEMENT,
         "APPLICATION-SW-COMPONENT-TYPE": IdentifiableSubTypes.APPLICATION_SW_COMPONENT_TYPE,
-        "ARGUMENT-DATA-PROTOTYPE": IdentifiableSubTypes.ARGUMENT_DATA_PROTOTYPE,
         "AR-PACKAGE": IdentifiableSubTypes.AR_PACKAGE,
+        "ARGUMENT-DATA-PROTOTYPE": IdentifiableSubTypes.ARGUMENT_DATA_PROTOTYPE,
+        "ASYNCHRONOUS-SERVER-CALL-POINT": IdentifiableSubTypes.ASYNCHRONOUS_SERVER_CALL_POINT,
         "ASYNCHRONOUS-SERVER-CALL-RESULT-POINT": IdentifiableSubTypes.ASYNCHRONOUS_SERVER_CALL_RESULT_POINT,
+        "ASYNCHRONOUS-SERVER-CALL-RETURNS-EVENT": IdentifiableSubTypes.ASYNCHRONOUS_SERVER_CALL_RETURNS_EVENT,
         "AUTOSAR-DATA-PROTOTYPE": IdentifiableSubTypes.AUTOSAR_DATA_PROTOTYPE,
         "AUTOSAR-DATA-TYPE": IdentifiableSubTypes.AUTOSAR_DATA_TYPE,
+        "BACKGROUND-EVENT": IdentifiableSubTypes.BACKGROUND_EVENT,
         "BSW-MODULE-ENTRY": IdentifiableSubTypes.BSW_MODULE_ENTRY,
         "CLIENT-SERVER-INTERFACE": IdentifiableSubTypes.CLIENT_SERVER_INTERFACE,
         "CLIENT-SERVER-OPERATION": IdentifiableSubTypes.CLIENT_SERVER_OPERATION,
@@ -780,18 +807,28 @@ xml_to_enum_map: dict[str, dict] = {
         "COMPU-METHOD": IdentifiableSubTypes.COMPU_METHOD,
         "CONSTANT-SPECIFICATION": IdentifiableSubTypes.CONSTANT_SPECIFICATION,
         "DATA-CONSTR": IdentifiableSubTypes.DATA_CONSTR,
+        "DATA-PROTOTYPE": IdentifiableSubTypes.DATA_PROTOTYPE,
+        "DATA-RECEIVE-ERROR-EVENT": IdentifiableSubTypes.DATA_RECEIVE_ERROR_EVENT,
+        "DATA-RECEIVED-EVENT": IdentifiableSubTypes.DATA_RECEIVED_EVENT,
+        "DATA-SEND-COMPLETED-EVENT": IdentifiableSubTypes.DATA_SEND_COMPLETED_EVENT,
+        "DATA-WRITE-COMPLETED-EVENT": IdentifiableSubTypes.DATA_WRITE_COMPLETED_EVENT,
         "E-2-E-PROFILE-COMPATIBILITY-PROPS": IdentifiableSubTypes.E2E_PROFILE_COMPATIBILITY_PROPS,
         "EXCLUSIVE-AREA": IdentifiableSubTypes.EXCLUSIVE_AREA,
         "EXCLUSIVE-AREA-NESTING-ORDER": IdentifiableSubTypes.EXCLUSIVE_AREA_NESTING_ORDER,
+        "EXTERNAL-TRIGGER-OCCURRED-EVENT": IdentifiableSubTypes.EXTERNAL_TRIGGER_OCCURRED_EVENT,
         "IMPLEMENTATION-DATA-TYPE": IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE,
         "IMPLEMENTATION-DATA-TYPE-ELEMENT": IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE_ELEMENT,
+        "INIT-EVENT": IdentifiableSubTypes.INIT_EVENT,
+        "INTERNAL-TRIGGER-OCCURRED-EVENT": IdentifiableSubTypes.INTERNAL_TRIGGER_OCCURRED_EVENT,
         "INTERNAL-TRIGGERING-POINT": IdentifiableSubTypes.INTERNAL_TRIGGERING_POINT,
         "MODE-DECLARATION": IdentifiableSubTypes.MODE_DECLARATION,
         "MODE-DECLARATION-GROUP": IdentifiableSubTypes.MODE_DECLARATION_GROUP,
         "MODE-DECLARATION-GROUP-PROTOTYPE": IdentifiableSubTypes.MODE_DECLARATION_GROUP_PROTOTYPE,
         "MODE-SWITCH-INTERFACE": IdentifiableSubTypes.MODE_SWITCH_INTERFACE,
         "MODE-SWITCH-POINT": IdentifiableSubTypes.MODE_SWITCH_POINT,
+        "MODE-SWITCHED-ACK-EVENT": IdentifiableSubTypes.MODE_SWITCHED_ACK_EVENT,
         "NV-DATA-INTERFACE": IdentifiableSubTypes.NV_DATA_INTERFACE,
+        "OPERATION-INVOKED-EVENT": IdentifiableSubTypes.OPERATION_INVOKED_EVENT,
         "P-PORT-PROTOTYPE": IdentifiableSubTypes.P_PORT_PROTOTYPE,
         "PARAMETER-DATA-PROTOTYPE": IdentifiableSubTypes.PARAMETER_DATA_PROTOTYPE,
         "PARAMETER-INTERFACE": IdentifiableSubTypes.PARAMETER_INTERFACE,
@@ -989,6 +1026,10 @@ xml_to_enum_map: dict[str, dict] = {
         "NON-REENTRANT": ReentrancyLevel.NON_REENTRANT,
         "SINGLE-CORE-REENTRANT": ReentrancyLevel.SINGLE_CORE_REENTRANT
     },
+    "RteApiReturnValueProvision": {
+        "RETURN-VALUE-PROVIDED": RteApiReturnValueProvision.RETURN_VALUE_PROVIDED,
+        "NO-RETURN-VALUE-PROVIDED": RteApiReturnValueProvision.NO_RETURN_VALUE_PROVIDED
+    },
     "ScaleConstraintValidity": {
         "NOT-AVAILABLE": ScaleConstraintValidity.NOT_AVAILABLE,
         "NOT-DEFINED": ScaleConstraintValidity.NOT_DEFINED,
@@ -1154,49 +1195,61 @@ enum_to_xml_map: dict[str, list] = {
         "APPLICATION-RECORD-DATA-TYPE",                  # 12
         "APPLICATION-RECORD-ELEMENT",                    # 13
         "APPLICATION-SW-COMPONENT-TYPE",                 # 14
-        "ARGUMENT-DATA-PROTOTYPE",                       # 15
-        "AR-PACKAGE",                                    # 16
-        "ASYNCHRONOUS-SERVER-CALL-RESULT-POINT",         # 17
-        "AUTOSAR-DATA-PROTOTYPE",                        # 18
-        "AUTOSAR-DATA-TYPE",                             # 19
-        "BSW-MODULE-ENTRY",                              # 20
-        "CLIENT-SERVER-INTERFACE",                       # 21
-        "CLIENT-SERVER-OPERATION",                       # 22
-        "COMPOSITION-SW-COMPONENT-TYPE",                 # 23
-        "COMPU-METHOD",                                  # 24
-        "CONSTANT-SPECIFICATION",                        # 25
-        "DATA-CONSTR",                                   # 26
-        "DATA-PROTOTYPE",                                # 27
-        "E-2-E-PROFILE-COMPATIBILITY-PROPS",             # 28
-        "EXCLUSIVE-AREA",                                # 29
-        "EXCLUSIVE-AREA-NESTING-ORDER",                  # 30
-        "IMPLEMENTATION-DATA-TYPE",                      # 31
-        "IMPLEMENTATION-DATA-TYPE-ELEMENT",              # 32
-        "INTERNAL-TRIGGERING-POINT",                     # 33
-        "MODE-DECLARATION",                              # 34
-        "MODE-DECLARATION-GROUP",                        # 35
-        "MODE-DECLARATION-GROUP-PROTOTYPE",              # 36
-        "MODE-SWITCH-INTERFACE",                         # 37
-        "MODE-SWITCH-POINT",                             # 38
-        "NV-DATA-INTERFACE",                             # 39
-        "P-PORT-PROTOTYPE",                              # 40
-        "PARAMETER-INTERFACE",                           # 41
-        "PARAMETER-DATA-PROTOTYPE",                      # 42
-        "PHYSICAL-DIMENSION",                            # 43
-        "PORT-PROTOTYPE",                                # 44
-        "PR-PORT-PROTOTYPE",                             # 45
-        "R-PORT-PROTOTYPE",                              # 46
-        "RUNNABLE-ENTITY",                               # 47
-        "SENDER-RECEIVER-INTERFACE",                     # 48
-        "SW-ADDR-METHOD",                                # 49
-        "SW-BASE-TYPE",                                  # 50
-        "SW-COMPONENT-PROTOTYPE",                        # 51
-        "SWC-IMPLEMENTATION",                            # 52
-        "SWC-INTERNAL-BEHAVIOR",                         # 53
-        "TRIGGER",                                       # 54
-        "UNIT",                                          # 55
-        "VARIABLE-ACCESS",                               # 56
-        "VARIABLE-DATA-PROTOTYPE",                       # 57
+        "AR-PACKAGE",                                    # 15
+        "ARGUMENT-DATA-PROTOTYPE",                       # 16
+        "ASYNCHRONOUS-SERVER-CALL-POINT",                # 17
+        "ASYNCHRONOUS-SERVER-CALL-RESULT-POINT",         # 18
+        "ASYNCHRONOUS-SERVER-CALL-RETURNS-EVENT",        # 19
+        "AUTOSAR-DATA-PROTOTYPE",                        # 20
+        "AUTOSAR-DATA-TYPE",                             # 21
+        "BACKGROUND-EVENT",                              # 22
+        "BSW-MODULE-ENTRY",                              # 23
+        "CLIENT-SERVER-INTERFACE",                       # 24
+        "CLIENT-SERVER-OPERATION",                       # 25
+        "COMPOSITION-SW-COMPONENT-TYPE",                 # 26
+        "COMPU-METHOD",                                  # 27
+        "CONSTANT-SPECIFICATION",                        # 28
+        "DATA-CONSTR",                                   # 29
+        "DATA-PROTOTYPE",                                # 30
+        "DATA-RECEIVE-ERROR-EVENT",                      # 31
+        "DATA-RECEIVED-EVENT",                           # 32
+        "DATA-SEND-COMPLETED-EVENT",                     # 33
+        "DATA-WRITE-COMPLETED-EVENT",                    # 34
+        "E-2-E-PROFILE-COMPATIBILITY-PROPS",             # 35
+        "EXCLUSIVE-AREA",                                # 36
+        "EXCLUSIVE-AREA-NESTING-ORDER",                  # 37
+        "EXTERNAL-TRIGGER-OCCURRED-EVENT",               # 38
+        "IMPLEMENTATION-DATA-TYPE",                      # 39
+        "IMPLEMENTATION-DATA-TYPE-ELEMENT",              # 40
+        "INIT-EVENT",                                    # 41
+        "INTERNAL-TRIGGER-OCCURRED-EVENT",               # 42
+        "INTERNAL-TRIGGERING-POINT",                     # 43
+        "MODE-DECLARATION",                              # 44
+        "MODE-DECLARATION-GROUP",                        # 45
+        "MODE-DECLARATION-GROUP-PROTOTYPE",              # 46
+        "MODE-SWITCH-INTERFACE",                         # 47
+        "MODE-SWITCH-POINT",                             # 48
+        "MODE-SWITCHED-ACK-EVENT",                       # 49
+        "NV-DATA-INTERFACE",                             # 50
+        "OPERATION-INVOKED-EVENT",                       # 51
+        "P-PORT-PROTOTYPE",                              # 52
+        "PARAMETER-DATA-PROTOTYPE",                      # 53
+        "PARAMETER-INTERFACE",                           # 54
+        "PHYSICAL-DIMENSION",                            # 55
+        "PORT-PROTOTYPE",                                # 56
+        "PR-PORT-PROTOTYPE",                             # 57
+        "R-PORT-PROTOTYPE",                              # 58
+        "RUNNABLE-ENTITY",                               # 59
+        "SENDER-RECEIVER-INTERFACE",                     # 60
+        "SW-ADDR-METHOD",                                # 61
+        "SW-BASE-TYPE",                                  # 62
+        "SW-COMPONENT-PROTOTYPE",                        # 63
+        "SWC-IMPLEMENTATION",                            # 64
+        "SWC-INTERNAL-BEHAVIOR",                         # 65
+        "TRIGGER",                                       # 66
+        "UNIT",                                          # 67
+        "VARIABLE-ACCESS",                               # 68
+        "VARIABLE-DATA-PROTOTYPE",                       # 69
     ],
     "IntervalType": [
         "CLOSED",  # 0
@@ -1375,6 +1428,10 @@ enum_to_xml_map: dict[str, list] = {
         "MULTICORE-REENTRANT",   # 0
         "NON-REENTRANT",         # 1
         "SINGLE-CORE-REENTRANT"  # 2
+    ],
+    "RteApiReturnValueProvision": [
+        "RETURN-VALUE-PROVIDED",    # 0
+        "NO-RETURN-VALUE-PROVIDED"  # 1
     ],
     "ScaleConstraintValidity": [
         "NOT-AVAILABLE",  # 0

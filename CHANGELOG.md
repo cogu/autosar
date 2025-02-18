@@ -9,11 +9,30 @@ Non-collectable elements are various sub-elements to collectable elements.
 
 ### Added
 
+#### XML - Software component elements
+
+RModeGroupInAtomicSwcInstanceRef | R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF
+ROperationInAtomicSwcInstanceRef | R-OPERATION-IN-ATOMIC-SWC-INSTANCE-REF
+
 #### XML - SWC internal behavior elements
 
+* AsynchronousServerCallPoint | ASYNCHRONOUS-SERVER-CALL-POINT
+* AsynchronousServerCallResultPoint | ASYNCHRONOUS-SERVER-CALL-RESULT-POINT
+* AutosarParameterRef | AUTOSAR-PARAMETER-REF
 * CommunicationBufferLocking | COMMUNICATION-BUFFER-LOCKING
+* ExternalTriggeringPoint | EXTERNAL-TRIGGERING-POINT
+* ExternalTriggeringPointIdent | EXTERNAL-TRIGGERING-POINT-IDENT
+* InternalTriggeringPoint | INTERNAL-TRIGGERING-POINT
+* ModeAccessPoint | MODE-ACCESS-POINT
+* ModeAccessPointIdent | MODE-ACCESS-POINT-IDENT
+* ModeSwitchPoint | MODE-SWITCH-POINT
+* ParameterAccess | PARAMETER-ACCESS
+* ParameterInAtomicSWCTypeInstanceRef | PARAMETER-IN-ATOMIC-SWC-TYPE-INSTANCE-REF
 * PortAPIOption | PORT-API-OPTION
 * PortDefinedArgumentValue | PORT-DEFINED-ARGUMENT-VALUE
+* RunnableEntityArgument | RUNNABLE-ENTITY-ARGUMENT
+* SynchronousServerCallPoint | SYNCHRONOUS-SERVER-CALL-POINT
+* WaitPoint | WAIT-POINT
 
 ## [v0.5.4] - 2024-10-28
 

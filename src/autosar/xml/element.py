@@ -49,9 +49,11 @@ from autosar.xml.reference import (SwBaseTypeRef,  # noqa F401
                                    RunnableEntityRef,
                                    VariableAccessRef,
                                    ModeSwitchPointRef,
+                                   AsynchronousServerCallPointRef,
                                    AsynchronousServerCallResultPointRef,
                                    TriggerRef,
                                    InternalTriggeringPointRef,
+                                   RteEventRef,
                                    )
 
 
@@ -5337,6 +5339,13 @@ class CompositionSwComponentType(SwComponentType, Searchable):
         return connector
 
 
+class ModeGroupInAtomicSwcInstanceRef(ARObject):
+    """
+    Group AR:MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF
+    Abstract base class
+    """
+
+
 class POperationInAtomicSwcInstanceRef(ARObject):
     """
     Complex type AR:P-OPERATION-IN-ATOMIC-SWC-INSTANCE-REF
@@ -5355,7 +5364,7 @@ class POperationInAtomicSwcInstanceRef(ARObject):
         self._assign_optional("target_provided_operation", target_provided_operation, ClientServerOperationRef)
 
 
-class PModeGroupInAtomicSwcInstanceRef(ARObject):
+class PModeGroupInAtomicSwcInstanceRef(ModeGroupInAtomicSwcInstanceRef):
     """
     Complex type AR:P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF
     Tag variants: 'P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF' | 'MODE-GROUP-IREF' |
@@ -5396,6 +5405,24 @@ class PTriggerInAtomicSwcTypeInstanceRef(ARObject):
         self._assign_optional("target_trigger", target_trigger, TriggerRef)
 
 
+class ROperationInAtomicSwcInstanceRef(ARObject):
+    """
+    Complex type AR:R-OPERATION-IN-ATOMIC-SWC-INSTANCE-REF
+    Tag variants: 'OPERATION-IREF'
+    """
+
+    def __init__(self,
+                 context_port: AbstractRequiredPortPrototypeRef | None = None,
+                 target_required_operation: ClientServerOperationRef | str | None = None,
+                 ) -> None:
+        # .CONTEXT-R-PORT-REF (Keep name consistent in similar classes)
+        self.context_port: AbstractRequiredPortPrototypeRef | None = None
+        # .TARGET-REQUIRED-OPERATION-REF
+        self.target_required_operation: ClientServerOperationRef | None = None
+        self._assign_optional("context_port", context_port, AbstractRequiredPortPrototypeRef)
+        self._assign_optional("target_required_operation", target_required_operation, ClientServerOperationRef)
+
+
 class RModeInAtomicSwcInstanceRef(ARObject):
     """
     Complex type AR:R-MODE-IN-ATOMIC-SWC-INSTANCE-REF
@@ -5418,6 +5445,25 @@ class RModeInAtomicSwcInstanceRef(ARObject):
                               context_mode_declaration_group_prototype,
                               ModeDeclarationGroupPrototypeRef)
         self._assign_optional("target_mode_declaration", target_mode_declaration, ModeDeclarationRef)
+
+
+class RModeGroupInAtomicSwcInstanceRef(ModeGroupInAtomicSwcInstanceRef):
+    """
+    Complex type AR:R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF
+    Tag variants: 'R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF'
+    """
+
+    def __init__(self,
+                 context_port: AbstractRequiredPortPrototypeRef | None = None,
+                 target_mode_group: ModeDeclarationGroupPrototypeRef | str | None = None,
+                 ) -> None:
+        # .CONTEXT-R-PORT-REF
+        self.context_port: AbstractRequiredPortPrototypeRef | None = None
+        # .TARGET-MODE-GROUP-REF
+        self.target_mode_group: ModeDeclarationGroupPrototypeRef | None = None
+
+        self._assign_optional("context_port", context_port, AbstractRequiredPortPrototypeRef)
+        self._assign_optional("target_mode_group", target_mode_group, ModeDeclarationGroupPrototypeRef)
 
 
 class RVariableInAtomicSwcInstanceRef(ARObject):
@@ -5456,6 +5502,7 @@ class RTriggerInAtomicSwcInstanceRef(ARObject):
 
         self._assign_optional("context_port", context_port, AbstractRequiredPortPrototypeRef)
         self._assign_optional("target_trigger", target_trigger, TriggerRef)
+
 
 # --- SWC internal behavior elements
 
@@ -5779,17 +5826,351 @@ class ExecutableEntity(Identifiable):
             raise TypeError("value: Invalid type. Expected one of ExclusiveAreaRefConditional, ExclusiveAreaRef, str.")
 
 
-class RunnableEntity(ExecutableEntity):
+class RunnableEntityArgument(ARObject):
     """
-    Complex type AR:RUNNABLE-ENTITY
-    Tag variants: 'RUNNABLE-ENTITY'
-    Only implements base class features for now.
+    Complex type AR:RUNNABLE-ENTITY-ARGUMENT
+    Tag variants: 'RUNNABLE-ENTITY-ARGUMENT'
+    """
+
+    def __init__(self, symbol: str | None = None) -> None:
+        super().__init__()
+        # .SYMBOL
+        self.symbol: str | None = None
+        self._assign_optional_strict("symbol", symbol, str)
+
+
+class AbstractAccessPoint(Identifiable):
+    """
+    Group AR:ABSTRACT-ACCESS-POINT
     """
 
     def __init__(self,
                  name: str,
+                 return_value_provision: ar_enum.RteApiReturnValueProvision | None = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
+        # .RETURN-VALUE-PROVISION
+        self.return_value_provision: ar_enum.RteApiReturnValueProvision | None = None
+
+        self._assign_optional("return_value_provision", return_value_provision, ar_enum.RteApiReturnValueProvision)
+
+
+class ServerCallPoint(AbstractAccessPoint):
+    """
+    Group AR:SERVER-CALL-POINT
+    """
+
+    def __init__(self,
+                 name: str,
+                 operation: ROperationInAtomicSwcInstanceRef | None = None,
+                 timeout: float | None = None,
+                 **kwargs):
+        super().__init__(name, **kwargs)
+        # .OPERATION-IREF
+        self.operation: ROperationInAtomicSwcInstanceRef | None = None
+        # .TIMEOUT
+        self.timeout: float | None = None
+        # .VARIATION-POINT not supported
+
+        self._assign_optional_strict("operation", operation, ROperationInAtomicSwcInstanceRef)
+        self._assign_optional('timeout', timeout, float)
+
+
+class AsynchronousServerCallPoint(ServerCallPoint):
+    """
+    Complex type: AR:ASYNCHRONOUS-SERVER-CALL-POINT
+    Tag variants: 'ASYNCHRONOUS-SERVER-CALL-POINT'
+    Use constructor from base class
+    """
+
+    def ref(self) -> AsynchronousServerCallPointRef:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        return None if ref_str is None else AsynchronousServerCallPointRef(ref_str)
+
+
+class AsynchronousServerCallResultPoint(AbstractAccessPoint):
+    """
+    Complex type: AR:ASYNCHRONOUS-SERVER-CALL-RESULT-POINT
+    Tag variants: 'ASYNCHRONOUS-SERVER-CALL-RESULT-POINT'
+    """
+
+    def __init__(self,
+                 name: str,
+                 async_server_call_point: AsynchronousServerCallPointRef | str | None = None,
+                 **kwargs):
+        super().__init__(name, **kwargs)
+        # .ASYNCHRONOUS-SERVER-CALL-POINT-REF
+        self.async_server_call_point: AsynchronousServerCallPointRef | None = None
+
+        self._assign_optional("async_server_call_point", async_server_call_point, AsynchronousServerCallPointRef)
+
+    def ref(self) -> AsynchronousServerCallResultPointRef:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        return None if ref_str is None else AsynchronousServerCallResultPointRef(ref_str)
+
+
+class SynchronousServerCallPoint(ServerCallPoint):
+    """
+    Complex type: AR:SYNCHRONOUS-SERVER-CALL-POINT
+    Tag variants: 'SYNCHRONOUS-SERVER-CALL-POINT'
+    """
+
+    def __init__(self,
+                 name: str,
+                 called_from_within_exclusive_area: ExclusiveAreaNestingOrderRef | None = None,
+                 **kwargs):
+        super().__init__(name, **kwargs)
+        # .CALLED-FROM-WITHIN-EXCLUSIVE-AREA-REF
+        self.called_from_within_exclusive_area: ExclusiveAreaNestingOrderRef | None = None
+
+        self._assign_optional("called_from_within_exclusive_area",
+                              called_from_within_exclusive_area,
+                              ExclusiveAreaNestingOrderRef)
+
+
+class ExternalTriggeringPointIdent(AbstractAccessPoint):
+    """
+    Complex type AR:EXTERNAL-TRIGGERING-POINT-IDENT
+    Tag variants: 'IDENT'
+    Use constructor from base class
+    """
+
+
+class ExternalTriggeringPoint(ARObject):
+    """
+    Complex type AR:EXTERNAL-TRIGGERING-POINT
+    Tag variants: 'EXTERNAL-TRIGGERING-POINT'
+    """
+
+    def __init__(self,
+                 ident: ExternalTriggeringPointIdent | None = None,
+                 trigger: PTriggerInAtomicSwcTypeInstanceRef | None = None
+                 ) -> None:
+        super().__init__()
+        # .IDENT
+        self.ident: ExternalTriggeringPointIdent | None = None
+        # .TRIGGER-IREF
+        self.trigger: PTriggerInAtomicSwcTypeInstanceRef | None = None
+        # .VARIATION-POINT not supported
+
+        self._assign_optional_strict("ident", ident, ExternalTriggeringPointIdent)
+        self._assign_optional_strict("trigger", trigger, PTriggerInAtomicSwcTypeInstanceRef)
+
+
+class InternalTriggeringPoint(AbstractAccessPoint):
+    """
+    Complex type AR:INTERNAL-TRIGGERING-POINT
+    Tag variants: 'INTERNAL-TRIGGERING-POINT'
+    """
+
+    def __init__(self, name: str, sw_impl_policy: ar_enum.SwImplPolicy | None = None, **kwargs):
+        super().__init__(name, **kwargs)
+
+        # .SW-IMPL-POLICY
+        self.sw_impl_policy: ar_enum.SwImplPolicy | None = None
+        # .VARIATION-POINT
+
+        self._assign_optional("sw_impl_policy", sw_impl_policy, ar_enum.SwImplPolicy)
+
+
+class ModeAccessPointIdent(AbstractAccessPoint):
+    """
+    Complex type AR:MODE-ACCESS-POINT-IDENT
+    Tag variants: 'IDENT'
+    Use constructor from base class
+    """
+
+
+class ModeAccessPoint(ARObject):
+    """
+    Complex type AR:MODE-ACCESS-POINT
+    Tag variants: 'MODE-ACCESS-POINT'
+    """
+
+    def __init__(self,
+                 ident: ModeAccessPointIdent | None = None,
+                 mode_group: PModeGroupInAtomicSwcInstanceRef | RModeGroupInAtomicSwcInstanceRef | None = None
+                 ) -> None:
+        super().__init__()
+        # .IDENT
+        self.ident: ModeAccessPointIdent | None = None
+        # .MODE-GROUP-IREF
+        self.mode_group: PModeGroupInAtomicSwcInstanceRef | RModeGroupInAtomicSwcInstanceRef | None = None
+        # .VARIATION-POINT not supported
+
+        self._assign_optional_strict("ident", ident, ModeAccessPointIdent)
+        if mode_group is not None:
+            if isinstance(mode_group, ModeGroupInAtomicSwcInstanceRef):
+                self.mode_group = mode_group
+            else:
+                msg_part_1 = "Invalid type for parameter 'mode_group'. "
+                msg_part_2 = "Expected types PModeGroupInAtomicSwcInstanceRef or RModeInAtomicSwcInstanceRef, "
+                msg_part_3 = f"got {str(type(mode_group))}"
+                raise TypeError(msg_part_1 + msg_part_2 + msg_part_3)
+
+
+class ModeSwitchPoint(AbstractAccessPoint):
+    """
+    Complex Type AR:MODE-SWITCH-POINT
+    Tag variants: 'MODE-SWITCH-POINT'
+    """
+
+    def __init__(self,
+                 name: str,
+                 mode_group: PModeGroupInAtomicSwcInstanceRef | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .MODE-GROUP-IREF
+        self.mode_group: PModeGroupInAtomicSwcInstanceRef | None = None
+        # .VARIATION-POINT not supported
+
+        self._assign_optional_strict("mode_group", mode_group, PModeGroupInAtomicSwcInstanceRef)
+
+
+class ParameterInAtomicSWCTypeInstanceRef(ARObject):
+    """
+    Complex type AR:PARAMETER-IN-ATOMIC-SWC-TYPE-INSTANCE-REF
+    Tag variants: 'AUTOSAR-PARAMETER-IREF'
+    """
+
+    def __init__(self,
+                 port_prototype: PortPrototypeRef | None = None,
+                 root_parameter_data_prototype: DataPrototypeRef | None = None,
+                 context_data_prototype: ApplicationCompositeElementDataPrototypeRef | None = None,
+                 target_data_prototype: DataPrototypeRef | None = None
+                 ) -> None:
+        super().__init__()
+        # .PORT-PROTOTYPE-REF
+        self.port_prototype: PortPrototypeRef | None = None
+        # .ROOT-PARAMETER-DATA-PROTOTYPE-REF
+        self.root_parameter_data_prototype: DataPrototypeRef | None = None
+        # .CONTEXT-DATA-PROTOTYPE-REF
+        self.context_data_prototype: ApplicationCompositeElementDataPrototypeRef | None = None
+        # .TARGET-DATA-PROTOTYPE-REF
+        self.target_data_prototype: DataPrototypeRef | None = None
+
+        self._assign_optional("port_prototype", port_prototype, PortPrototypeRef)
+        self._assign_optional("root_parameter_data_prototype", root_parameter_data_prototype, DataPrototypeRef)
+        self._assign_optional("context_data_prototype",
+                              context_data_prototype, ApplicationCompositeElementDataPrototypeRef)
+        self._assign_optional("target_data_prototype", target_data_prototype, DataPrototypeRef)
+
+
+class AutosarParameterRef(ARObject):
+    """
+    Complex type AR:AUTOSAR-PARAMETER-REF
+    Tag variants: 'PARAMETER-INSTANCE' | 'ACCESSED-PARAMETER' | 'USED-PARAMETER-ELEMENT' | 'AR-PARAMETER'
+    """
+
+    def __init__(self,
+                 autosar_parameter: ParameterInAtomicSWCTypeInstanceRef | None = None,
+                 local_parameter: DataPrototypeRef | None = None) -> None:
+        super().__init__()
+        # .AUTOSAR-PARAMETER-IREF
+        self.autosar_parameter: ParameterInAtomicSWCTypeInstanceRef | None = None
+        # .LOCAL-PARAMETER-REF
+        self.local_parameter: DataPrototypeRef | None = None
+
+        self._assign_optional_strict("autosar_parameter", autosar_parameter, ParameterInAtomicSWCTypeInstanceRef)
+        self._assign_optional("local_parameter", local_parameter, DataPrototypeRef)
+
+
+class ParameterAccess(AbstractAccessPoint):
+    """
+    Complex type AR:PARAMETER-ACCESS
+    Tag variants: 'PARAMETER-ACCESS'
+    """
+
+    def __init__(self,
+                 name: str,
+                 accessed_parameter: AutosarParameterRef | None = None,
+                 sw_data_def_props: SwDataDefProps | SwDataDefPropsConditional | None = None,
+                 **kwargs):
+        super().__init__(name, **kwargs)
+
+        # .ACCESSED-PARAMETER
+        self.accessed_parameter: AutosarParameterRef | None = None
+        # .SW-DATA-DEF-PROPS
+        self.sw_data_def_props: SwDataDefProps | None = None
+        # .VARIATION-POINT not supported
+
+        self._assign_optional_strict("accessed_parameter", accessed_parameter, AutosarParameterRef)
+        if sw_data_def_props is not None:
+            if isinstance(sw_data_def_props, SwDataDefProps):
+                self.sw_data_def_props = sw_data_def_props
+            elif isinstance(sw_data_def_props, SwDataDefPropsConditional):
+                self.sw_data_def_props = SwDataDefProps(sw_data_def_props)
+            else:
+                raise TypeError("sw_data_def_props: must be one of (SwDataDefProps, SwDataDefPropsConditional)")
+
+
+class WaitPoint(Identifiable):
+    """
+    Complex type AR:WAIT-POINT
+    Tag variants: 'WAIT-POINT'
+    """
+
+    def __init__(self,
+                 name: str,
+                 timeout: int | float | None = None,
+                 trigger: RteEventRef | None = None,
+                 **kwargs):
+        super().__init__(name, **kwargs)
+        # .TIMEOUT
+        self.timeout: float | None = None
+        # .TRIGGER-REF
+        self.trigger: RteEventRef | None = None
+
+        self._assign_optional("timeout", timeout, float)
+        self._assign_optional("trigger", trigger, RteEventRef)
+
+
+AsyncServerCallResultPointArgumentType = AsynchronousServerCallResultPoint | list[AsynchronousServerCallResultPoint]
+
+
+class RunnableEntity(ExecutableEntity):
+    """
+    Complex type AR:RUNNABLE-ENTITY
+    Tag variants: 'RUNNABLE-ENTITY'
+    """
+
+    def __init__(self,
+                 name: str,
+                 arguments: RunnableEntityArgument | list[RunnableEntityArgument] | None = None,
+                 async_server_call_result_points: AsyncServerCallResultPointArgumentType | None = None,
+                 can_be_invoked_concurrently: bool | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .ARGUMENTS
+        self.arguments: list[RunnableEntityArgument] = []
+        # .ASYNCHRONOUS-SERVER-CALL-RESULT-POINTS
+        self.async_server_call_result_points: list[AsynchronousServerCallResultPoint] = []
+        # .CAN-BE-INVOKED-CONCURRENTLY
+        self.can_be_invoked_concurrently: bool | None = None
+
+        self._assign_optional("can_be_invoked_concurrently", can_be_invoked_concurrently, bool)
+
+        if arguments is not None:
+            if isinstance(arguments, Iterable):
+                for argument in arguments:
+                    self.append_argument(argument)
+            else:
+                self.append_argument(arguments)
+
+        if async_server_call_result_points is not None:
+            if isinstance(async_server_call_result_points, Iterable):
+                for async_server_call_result_point in async_server_call_result_points:
+                    self.append_async_server_call_result_point(async_server_call_result_point)
+            else:
+                self.append_async_server_call_result_point(async_server_call_result_points)
 
     def ref(self) -> RunnableEntityRef | None:
         """
@@ -5798,6 +6179,26 @@ class RunnableEntity(ExecutableEntity):
         """
         ref_str = self._calc_ref_string()
         return None if ref_str is None else RunnableEntityRef(ref_str)
+
+    def append_argument(self, argument: RunnableEntityArgument) -> None:
+        """
+        Adds RunnableEntityArgument to internal list of arguments
+        """
+        if isinstance(argument, RunnableEntityArgument):
+            self.arguments.append(argument)
+        else:
+            raise TypeError("argument must be of type RunnableEntityArgument")
+
+    def append_async_server_call_result_point(self,
+                                              async_server_call_result_point: AsynchronousServerCallResultPoint
+                                              ) -> None:
+        """
+        Adds AsynchronousServerCallResultPoint to internal list of result points
+        """
+        if isinstance(async_server_call_result_point, AsynchronousServerCallResultPoint):
+            self.async_server_call_result_points.append(async_server_call_result_point)
+        else:
+            raise TypeError("argument must be of type AsynchronousServerCallResultPoint")
 
 
 class RteEvent(Identifiable):
@@ -6467,8 +6868,7 @@ class SwcInternalBehavior(InternalBehavior):
             if result is not None:
                 has_index = True
                 index = int(result.group(1))
-                if index > highest_index:
-                    highest_index = index
+                highest_index = max(highest_index, index)
             elif element.name == base_name:
                 unpatched_elem = element
         if unpatched_elem is not None:

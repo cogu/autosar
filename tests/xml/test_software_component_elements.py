@@ -2111,5 +2111,47 @@ class TestRModeInAtomicSwcInstanceRef(unittest.TestCase):
         self.assertEqual(str(elem.target_mode_declaration), ref_str)
 
 
+class TestRModeGroupInAtomicSwcInstanceRef(unittest.TestCase):
+
+    def test_empty(self):
+        element = ar_element.RModeGroupInAtomicSwcInstanceRef()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.RModeGroupInAtomicSwcInstanceRef = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RModeGroupInAtomicSwcInstanceRef)
+
+    def test_context_port(self):
+        ref_str = "/Components/ComponentName/RequirePortName"
+        port_ref = ar_element.PortPrototypeRef(ref_str, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
+        element = ar_element.RModeGroupInAtomicSwcInstanceRef(context_port=port_ref)
+        xml = f'''<R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF>
+  <CONTEXT-R-PORT-REF DEST="R-PORT-PROTOTYPE">{ref_str}</CONTEXT-R-PORT-REF>
+</R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RModeGroupInAtomicSwcInstanceRef = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RModeGroupInAtomicSwcInstanceRef)
+        self.assertEqual(str(elem.context_port), ref_str)
+        self.assertEqual(elem.context_port.dest, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
+
+    def test_target_mode_group(self):
+        ref_str = "/ModeDeclarationGroups/ModeDeclarationGroupName"
+        mode_group_ref = ar_element.ModeDeclarationGroupPrototypeRef(ref_str)
+        element = ar_element.RModeGroupInAtomicSwcInstanceRef(target_mode_group=mode_group_ref)
+        inner_tag = "TARGET-MODE-GROUP-REF"
+        xml = f'''<R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF>
+  <{inner_tag} DEST="MODE-DECLARATION-GROUP-PROTOTYPE">{ref_str}</{inner_tag}>
+</R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RModeGroupInAtomicSwcInstanceRef = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RModeGroupInAtomicSwcInstanceRef)
+        self.assertEqual(str(elem.target_mode_group), ref_str)
+
+
 if __name__ == '__main__':
     unittest.main()
