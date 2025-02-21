@@ -4916,7 +4916,7 @@ class Reader:
 
     def _read_parameter_in_atomic_swc_type_instance_ref(self,
                                                         xml_element: ElementTree.Element
-                                                        ) -> ar_element.ParameterInAtomicSWCTypeInstanceRef:
+                                                        ) -> ar_element.ParameterInAtomicSwcTypeInstanceRef:
         """
         Reads complex type AR:PARAMETER-IN-ATOMIC-SWC-TYPE-INSTANCE-REF
         Tag variants: 'AUTOSAR-PARAMETER-IREF'
@@ -4938,7 +4938,7 @@ class Reader:
         xml_child = child_elements.get("MODE-GROUP-IREF")
         child_elements.skip("VARIATION-POINT")
         self._report_unprocessed_elements(child_elements)
-        return ar_element.ParameterInAtomicSWCTypeInstanceRef(**data)
+        return ar_element.ParameterInAtomicSwcTypeInstanceRef(**data)
 
     def _read_autosar_parameter_ref(self, xml_element: ElementTree.Element) -> ar_element.AutosarParameterRef:
         """
@@ -5488,7 +5488,7 @@ class Reader:
 
     def _read_port_api_option(self,
                               xml_element: ElementTree.Element
-                              ) -> ar_element.PortAPIOption:
+                              ) -> ar_element.PortApiOption:
         """
         Reads complex type AR:PORT-API-OPTION
         Tag variants: 'PORT-API-OPTION'
@@ -5497,7 +5497,7 @@ class Reader:
         child_elements = ChildElementMap(xml_element)
         self._read_port_api_option_group(child_elements, data)
         self._report_unprocessed_elements(child_elements)
-        return ar_element.PortAPIOption(**data)
+        return ar_element.PortApiOption(**data)
 
     def _read_port_api_option_group(self, child_elements: ChildElementMap, data: dict) -> None:
         """

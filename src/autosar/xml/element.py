@@ -6035,7 +6035,7 @@ class ModeSwitchPoint(AbstractAccessPoint):
         self._assign_optional_strict("mode_group", mode_group, PModeGroupInAtomicSwcInstanceRef)
 
 
-class ParameterInAtomicSWCTypeInstanceRef(ARObject):
+class ParameterInAtomicSwcTypeInstanceRef(ARObject):
     """
     Complex type AR:PARAMETER-IN-ATOMIC-SWC-TYPE-INSTANCE-REF
     Tag variants: 'AUTOSAR-PARAMETER-IREF'
@@ -6071,15 +6071,15 @@ class AutosarParameterRef(ARObject):
     """
 
     def __init__(self,
-                 autosar_parameter: ParameterInAtomicSWCTypeInstanceRef | None = None,
+                 autosar_parameter: ParameterInAtomicSwcTypeInstanceRef | None = None,
                  local_parameter: DataPrototypeRef | None = None) -> None:
         super().__init__()
         # .AUTOSAR-PARAMETER-IREF
-        self.autosar_parameter: ParameterInAtomicSWCTypeInstanceRef | None = None
+        self.autosar_parameter: ParameterInAtomicSwcTypeInstanceRef | None = None
         # .LOCAL-PARAMETER-REF
         self.local_parameter: DataPrototypeRef | None = None
 
-        self._assign_optional_strict("autosar_parameter", autosar_parameter, ParameterInAtomicSWCTypeInstanceRef)
+        self._assign_optional_strict("autosar_parameter", autosar_parameter, ParameterInAtomicSwcTypeInstanceRef)
         self._assign_optional("local_parameter", local_parameter, DataPrototypeRef)
 
 
@@ -6648,7 +6648,7 @@ PortDefinedArgumentValueArgType = PortDefinedArgumentValue | list[PortDefinedArg
 SwcSupportedFeatureArgType = SwcSupportedFeature | list[SwcSupportedFeature] | None
 
 
-class PortAPIOption(ARObject):
+class PortApiOption(ARObject):
     """
     Complex type AR:PORT-API-OPTION
     Tag variants: 'PORT-API-OPTION'
