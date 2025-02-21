@@ -27,8 +27,8 @@ ROperationInAtomicSwcInstanceRef | R-OPERATION-IN-ATOMIC-SWC-INSTANCE-REF
 * ModeAccessPointIdent | MODE-ACCESS-POINT-IDENT
 * ModeSwitchPoint | MODE-SWITCH-POINT
 * ParameterAccess | PARAMETER-ACCESS
-* ParameterInAtomicSWCTypeInstanceRef | PARAMETER-IN-ATOMIC-SWC-TYPE-INSTANCE-REF
-* PortAPIOption | PORT-API-OPTION
+* ParameterInAtomicSwcTypeInstanceRef | PARAMETER-IN-ATOMIC-SWC-TYPE-INSTANCE-REF
+* PortApiOption | PORT-API-OPTION
 * PortDefinedArgumentValue | PORT-DEFINED-ARGUMENT-VALUE
 * RunnableEntityArgument | RUNNABLE-ENTITY-ARGUMENT
 * SynchronousServerCallPoint | SYNCHRONOUS-SERVER-CALL-POINT

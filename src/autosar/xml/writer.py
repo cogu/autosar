@@ -376,7 +376,7 @@ class Writer(_XMLWriter):
             'TransformerHardErrorEvent': self._write_transformer_hard_error_event,
             'PortDefinedArgumentValue': self._write_port_defined_argument_value,
             'CommunicationBufferLocking': self._write_communication_buffer_locking,
-            'PortAPIOption': self._write_port_api_option,
+            'PortApiOption': self._write_port_api_option,
             'AsynchronousServerCallPoint': self._write_async_server_call_point,
             'SynchronousServerCallPoint': self._write_sync_server_call_point,
             'AsynchronousServerCallResultPoint': self._write_async_server_call_result_point,
@@ -384,7 +384,7 @@ class Writer(_XMLWriter):
             'InternalTriggeringPoint': self._write_internal_triggering_point,
             'ModeAccessPoint': self._write_mode_access_point,
             'ModeSwitchPoint': self._write_mode_switch_point,
-            'ParameterInAtomicSWCTypeInstanceRef': self._write_parameter_in_atomic_swc_type_instance_ref,
+            'ParameterInAtomicSwcTypeInstanceRef': self._write_parameter_in_atomic_swc_type_instance_ref,
             'AutosarParameterRef': self._write_autosar_parameter_ref,
             'ParameterAccess': self._write_parameter_access,
             'WaitPoint': self._write_wait_point,
@@ -4279,13 +4279,13 @@ class Writer(_XMLWriter):
         self._leave_child()
 
     def _write_parameter_in_atomic_swc_type_instance_ref(self,
-                                                         elem: ar_element.ParameterInAtomicSWCTypeInstanceRef
+                                                         elem: ar_element.ParameterInAtomicSwcTypeInstanceRef
                                                          ) -> None:
         """
         Writes complex type AR:PARAMETER-IN-ATOMIC-SWC-TYPE-INSTANCE-REF
         Tag variants: 'AUTOSAR-PARAMETER-IREF'
         """
-        assert isinstance(elem, ar_element.ParameterInAtomicSWCTypeInstanceRef)
+        assert isinstance(elem, ar_element.ParameterInAtomicSwcTypeInstanceRef)
         tag = "AUTOSAR-PARAMETER-IREF"
         if elem.is_empty:
             self._add_content(tag)
@@ -4736,12 +4736,12 @@ class Writer(_XMLWriter):
                 self._add_content("SUPPORT-BUFFER-LOCKING", ar_enum.enum_to_xml(elem.support_buffer_locking))
             self._leave_child()
 
-    def _write_port_api_option(self, elem: ar_element.PortAPIOption) -> None:
+    def _write_port_api_option(self, elem: ar_element.PortApiOption) -> None:
         """
         Writes complex type AR:PORT-API-OPTION
         Tag variants: 'PORT-API-OPTION'
         """
-        assert isinstance(elem, ar_element.PortAPIOption)
+        assert isinstance(elem, ar_element.PortApiOption)
         tag = "PORT-API-OPTION"
         if elem.is_empty:
             self._add_content(tag)
@@ -4750,7 +4750,7 @@ class Writer(_XMLWriter):
             self._write_port_api_option_group(elem)
             self._leave_child()
 
-    def _write_port_api_option_group(self, elem: ar_element.PortAPIOption) -> None:
+    def _write_port_api_option_group(self, elem: ar_element.PortApiOption) -> None:
         """
         Writes group AR:PORT-API-OPTION
         Tag variants: 'PORT-API-OPTION'

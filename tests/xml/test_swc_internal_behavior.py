@@ -578,28 +578,28 @@ class TestModeSwitchPoint(unittest.TestCase):
         self.assertEqual(str(mode_group.context_mode_declaration_group_prototype), context_mode_decl_group_ref_str)
 
 
-class TestParameterInAtomicSWCTypeInstanceRef(unittest.TestCase):
+class TestParameterInAtomicSwcTypeInstanceRef(unittest.TestCase):
 
     def test_empty(self):
-        element = ar_element.ParameterInAtomicSWCTypeInstanceRef()
+        element = ar_element.ParameterInAtomicSwcTypeInstanceRef()
         writer = autosar.xml.Writer()
         xml = writer.write_str_elem(element)
         self.assertEqual(xml, '<AUTOSAR-PARAMETER-IREF/>')
         reader = autosar.xml.Reader()
-        elem: ar_element.ParameterInAtomicSWCTypeInstanceRef = reader.read_str_elem(xml)
-        self.assertIsInstance(elem, ar_element.ParameterInAtomicSWCTypeInstanceRef)
+        elem: ar_element.ParameterInAtomicSwcTypeInstanceRef = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ParameterInAtomicSwcTypeInstanceRef)
 
     def test_port_prototype(self):
         port_ref_str = "/ComponentTypes/MyComponent/ParameterPort"
         port_ref = ar_element.PortPrototypeRef(port_ref_str, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
-        element = ar_element.ParameterInAtomicSWCTypeInstanceRef(port_prototype=port_ref)
+        element = ar_element.ParameterInAtomicSwcTypeInstanceRef(port_prototype=port_ref)
         xml = f'''<AUTOSAR-PARAMETER-IREF>
   <PORT-PROTOTYPE-REF DEST="R-PORT-PROTOTYPE">{port_ref_str}</PORT-PROTOTYPE-REF>
 </AUTOSAR-PARAMETER-IREF>'''
         writer = autosar.xml.Writer()
         self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
-        elem: ar_element.ParameterInAtomicSWCTypeInstanceRef = reader.read_str_elem(xml)
+        elem: ar_element.ParameterInAtomicSwcTypeInstanceRef = reader.read_str_elem(xml)
         self.assertIsInstance(elem.port_prototype, ar_element.PortPrototypeRef)
         self.assertEqual(str(elem.port_prototype), port_ref_str)
 
@@ -607,14 +607,14 @@ class TestParameterInAtomicSWCTypeInstanceRef(unittest.TestCase):
         ref_str = "/DataTypes/ParameterDataPrototype/ElementName"
         dest = ar_enum.IdentifiableSubTypes.PARAMETER_DATA_PROTOTYPE
         element_ref = ar_element.DataPrototypeRef(ref_str, dest)
-        element = ar_element.ParameterInAtomicSWCTypeInstanceRef(root_parameter_data_prototype=element_ref)
+        element = ar_element.ParameterInAtomicSwcTypeInstanceRef(root_parameter_data_prototype=element_ref)
         xml = f'''<AUTOSAR-PARAMETER-IREF>
   <ROOT-PARAMETER-DATA-PROTOTYPE-REF DEST="PARAMETER-DATA-PROTOTYPE">{ref_str}</ROOT-PARAMETER-DATA-PROTOTYPE-REF>
 </AUTOSAR-PARAMETER-IREF>'''
         writer = autosar.xml.Writer()
         self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
-        elem: ar_element.ParameterInAtomicSWCTypeInstanceRef = reader.read_str_elem(xml)
+        elem: ar_element.ParameterInAtomicSwcTypeInstanceRef = reader.read_str_elem(xml)
         self.assertIsInstance(elem.root_parameter_data_prototype, ar_element.DataPrototypeRef)
         self.assertEqual(str(elem.root_parameter_data_prototype), ref_str)
 
@@ -622,14 +622,14 @@ class TestParameterInAtomicSWCTypeInstanceRef(unittest.TestCase):
         ref_str = "/DataTypes/RecordTypeName/ElementName"
         dest = ar_enum.IdentifiableSubTypes.APPLICATION_RECORD_ELEMENT
         element_ref = ar_element.ApplicationCompositeElementDataPrototypeRef(ref_str, dest)
-        element = ar_element.ParameterInAtomicSWCTypeInstanceRef(context_data_prototype=element_ref)
+        element = ar_element.ParameterInAtomicSwcTypeInstanceRef(context_data_prototype=element_ref)
         xml = f'''<AUTOSAR-PARAMETER-IREF>
   <CONTEXT-DATA-PROTOTYPE-REF DEST="APPLICATION-RECORD-ELEMENT">{ref_str}</CONTEXT-DATA-PROTOTYPE-REF>
 </AUTOSAR-PARAMETER-IREF>'''
         writer = autosar.xml.Writer()
         self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
-        elem: ar_element.ParameterInAtomicSWCTypeInstanceRef = reader.read_str_elem(xml)
+        elem: ar_element.ParameterInAtomicSwcTypeInstanceRef = reader.read_str_elem(xml)
         self.assertIsInstance(elem.context_data_prototype, ar_element.ApplicationCompositeElementDataPrototypeRef)
         self.assertEqual(str(elem.context_data_prototype), ref_str)
 
@@ -637,14 +637,14 @@ class TestParameterInAtomicSWCTypeInstanceRef(unittest.TestCase):
         ref_str = "/DataTypes/ParameterDataPrototype/ElementName"
         dest = ar_enum.IdentifiableSubTypes.PARAMETER_DATA_PROTOTYPE
         parameter_ref = ar_element.DataPrototypeRef(ref_str, dest)
-        element = ar_element.ParameterInAtomicSWCTypeInstanceRef(target_data_prototype=parameter_ref)
+        element = ar_element.ParameterInAtomicSwcTypeInstanceRef(target_data_prototype=parameter_ref)
         xml = f'''<AUTOSAR-PARAMETER-IREF>
   <TARGET-DATA-PROTOTYPE-REF DEST="PARAMETER-DATA-PROTOTYPE">{ref_str}</TARGET-DATA-PROTOTYPE-REF>
 </AUTOSAR-PARAMETER-IREF>'''
         writer = autosar.xml.Writer()
         self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
-        elem: ar_element.ParameterInAtomicSWCTypeInstanceRef = reader.read_str_elem(xml)
+        elem: ar_element.ParameterInAtomicSwcTypeInstanceRef = reader.read_str_elem(xml)
         self.assertIsInstance(elem.target_data_prototype, ar_element.DataPrototypeRef)
         self.assertEqual(str(elem.target_data_prototype), ref_str)
 
@@ -667,7 +667,7 @@ class TestAutosarParameterRef(unittest.TestCase):
     def test_autosar_parameter(self):
         port_ref_str = "/ComponentTypes/MyComponent/ParameterPort"
         port_ref = ar_element.PortPrototypeRef(port_ref_str, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
-        parameter = ar_element.ParameterInAtomicSWCTypeInstanceRef(port_prototype=port_ref)
+        parameter = ar_element.ParameterInAtomicSwcTypeInstanceRef(port_prototype=port_ref)
         element = ar_element.AutosarParameterRef(autosar_parameter=parameter)
         xml = f'''<ACCESSED-PARAMETER>
   <AUTOSAR-PARAMETER-IREF>
@@ -678,7 +678,7 @@ class TestAutosarParameterRef(unittest.TestCase):
         self.assertEqual(writer.write_str_elem(element, self.xml_tag), xml)
         reader = autosar.xml.Reader()
         elem: ar_element.AutosarParameterRef = reader.read_str_elem(xml)
-        self.assertIsInstance(elem.autosar_parameter, ar_element.ParameterInAtomicSWCTypeInstanceRef)
+        self.assertIsInstance(elem.autosar_parameter, ar_element.ParameterInAtomicSwcTypeInstanceRef)
 
     def test_local_parameter(self):
         ref_str = "/DataTypes/ParameterDataPrototype"
@@ -2410,55 +2410,55 @@ class TestCommunicationBufferLocking(unittest.TestCase):
         self.assertEqual(elem.support_buffer_locking, ar_enum.SupportBufferLocking.SUPPORTS_BUFFER_LOCKING)
 
 
-class TestPortAPIOption(unittest.TestCase):
+class TestPortApiOption(unittest.TestCase):
     def test_empty(self):
-        element = ar_element.PortAPIOption()
+        element = ar_element.PortApiOption()
         writer = autosar.xml.Writer()
         xml = writer.write_str_elem(element)
         self.assertEqual(xml, '<PORT-API-OPTION/>')
         reader = autosar.xml.Reader()
-        elem: ar_element.PortAPIOption = reader.read_str_elem(xml)
-        self.assertIsInstance(elem, ar_element.PortAPIOption)
+        elem: ar_element.PortApiOption = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.PortApiOption)
 
     def test_enable_take_address(self):
-        element = ar_element.PortAPIOption(enable_take_address=True)
+        element = ar_element.PortApiOption(enable_take_address=True)
         writer = autosar.xml.Writer()
         xml = '''<PORT-API-OPTION>
   <ENABLE-TAKE-ADDRESS>true</ENABLE-TAKE-ADDRESS>
 </PORT-API-OPTION>'''
         self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
-        elem: ar_element.PortAPIOption = reader.read_str_elem(xml)
+        elem: ar_element.PortApiOption = reader.read_str_elem(xml)
         self.assertTrue(elem.enable_take_address)
 
     def test_error_handling(self):
         error_handling = ar_enum.DataTransformationErrorHandling.TRANSFORMER_ERROR_HANDLING
-        element = ar_element.PortAPIOption(error_handling=error_handling)
+        element = ar_element.PortApiOption(error_handling=error_handling)
         writer = autosar.xml.Writer()
         xml = '''<PORT-API-OPTION>
   <ERROR-HANDLING>TRANSFORMER-ERROR-HANDLING</ERROR-HANDLING>
 </PORT-API-OPTION>'''
         self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
-        elem: ar_element.PortAPIOption = reader.read_str_elem(xml)
+        elem: ar_element.PortApiOption = reader.read_str_elem(xml)
         self.assertEqual(elem.error_handling, error_handling)
 
     def test_indirect_handling(self):
-        element = ar_element.PortAPIOption(indirect_api=True)
+        element = ar_element.PortApiOption(indirect_api=True)
         writer = autosar.xml.Writer()
         xml = '''<PORT-API-OPTION>
   <INDIRECT-API>true</INDIRECT-API>
 </PORT-API-OPTION>'''
         self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
-        elem: ar_element.PortAPIOption = reader.read_str_elem(xml)
+        elem: ar_element.PortApiOption = reader.read_str_elem(xml)
         self.assertTrue(elem.indirect_api)
 
     def test_port_arg_value_from_single_element(self):
         value = ar_element.NumericalValueSpecification(value=0)
         type_ref_str = "/DataTypes/TypeName"
         port_arg_value = ar_element.PortDefinedArgumentValue(value=value, value_type=type_ref_str)
-        element = ar_element.PortAPIOption(port_arg_values=port_arg_value)
+        element = ar_element.PortApiOption(port_arg_values=port_arg_value)
         writer = autosar.xml.Writer()
         xml = f'''<PORT-API-OPTION>
   <PORT-ARG-VALUES>
@@ -2474,7 +2474,7 @@ class TestPortAPIOption(unittest.TestCase):
 </PORT-API-OPTION>'''
         self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
-        elem: ar_element.PortAPIOption = reader.read_str_elem(xml)
+        elem: ar_element.PortApiOption = reader.read_str_elem(xml)
         self.assertEqual(len(elem.port_arg_values), 1)
         child: ar_element.PortDefinedArgumentValue = elem.port_arg_values[0]
         self.assertEqual(child.value.value, 0)
@@ -2489,7 +2489,7 @@ class TestPortAPIOption(unittest.TestCase):
             ar_element.PortDefinedArgumentValue(value=value1, value_type=type_ref_str1),
             ar_element.PortDefinedArgumentValue(value=value2, value_type=type_ref_str2),
         ]
-        element = ar_element.PortAPIOption(port_arg_values=port_arg_values)
+        element = ar_element.PortApiOption(port_arg_values=port_arg_values)
         writer = autosar.xml.Writer()
         xml = f'''<PORT-API-OPTION>
   <PORT-ARG-VALUES>
@@ -2513,7 +2513,7 @@ class TestPortAPIOption(unittest.TestCase):
 </PORT-API-OPTION>'''
         self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
-        elem: ar_element.PortAPIOption = reader.read_str_elem(xml)
+        elem: ar_element.PortApiOption = reader.read_str_elem(xml)
         self.assertEqual(len(elem.port_arg_values), 2)
         child: ar_element.PortDefinedArgumentValue = elem.port_arg_values[0]
         self.assertEqual(child.value.value, 1)
@@ -2525,20 +2525,20 @@ class TestPortAPIOption(unittest.TestCase):
     def test_port(self):
         port_ref_str = "/ComponentTypes/ComponentName/PortName"
         port = ar_element.PortPrototypeRef(port_ref_str, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
-        element = ar_element.PortAPIOption(port=port)
+        element = ar_element.PortApiOption(port=port)
         writer = autosar.xml.Writer()
         xml = f'''<PORT-API-OPTION>
   <PORT-REF DEST="R-PORT-PROTOTYPE">{port_ref_str}</PORT-REF>
 </PORT-API-OPTION>'''
         self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
-        elem: ar_element.PortAPIOption = reader.read_str_elem(xml)
+        elem: ar_element.PortApiOption = reader.read_str_elem(xml)
         self.assertEqual(str(elem.port), port_ref_str)
 
     def test_supported_features_from_single_element(self):
         supported_feature = ar_element.CommunicationBufferLocking(
             ar_enum.SupportBufferLocking.DOES_NOT_SUPPORT_BUFFER_LOCKING)
-        element = ar_element.PortAPIOption(supported_features=supported_feature)
+        element = ar_element.PortApiOption(supported_features=supported_feature)
         writer = autosar.xml.Writer()
         xml = '''<PORT-API-OPTION>
   <SUPPORTED-FEATURES>
@@ -2549,7 +2549,7 @@ class TestPortAPIOption(unittest.TestCase):
 </PORT-API-OPTION>'''
         self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
-        elem: ar_element.PortAPIOption = reader.read_str_elem(xml)
+        elem: ar_element.PortApiOption = reader.read_str_elem(xml)
         self.assertEqual(len(elem.supported_features), 1)
         child: ar_element.CommunicationBufferLocking = elem.supported_features[0]
         self.assertEqual(child.support_buffer_locking, ar_enum.SupportBufferLocking.DOES_NOT_SUPPORT_BUFFER_LOCKING)
@@ -2557,7 +2557,7 @@ class TestPortAPIOption(unittest.TestCase):
     def test_supported_features_from_list(self):
         supported_feature = ar_element.CommunicationBufferLocking(
             ar_enum.SupportBufferLocking.DOES_NOT_SUPPORT_BUFFER_LOCKING)
-        element = ar_element.PortAPIOption(supported_features=[supported_feature])
+        element = ar_element.PortApiOption(supported_features=[supported_feature])
         writer = autosar.xml.Writer()
         xml = '''<PORT-API-OPTION>
   <SUPPORTED-FEATURES>
@@ -2568,21 +2568,21 @@ class TestPortAPIOption(unittest.TestCase):
 </PORT-API-OPTION>'''
         self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
-        elem: ar_element.PortAPIOption = reader.read_str_elem(xml)
+        elem: ar_element.PortApiOption = reader.read_str_elem(xml)
         self.assertEqual(len(elem.supported_features), 1)
         child: ar_element.CommunicationBufferLocking = elem.supported_features[0]
         self.assertEqual(child.support_buffer_locking, ar_enum.SupportBufferLocking.DOES_NOT_SUPPORT_BUFFER_LOCKING)
 
     def test_transformer_status_forwarding(self):
         status_forwarding = ar_enum.DataTransformationStatusForwarding.NO_TRANSFORMER_STATUS_FORWARDING
-        element = ar_element.PortAPIOption(transformer_status_forwarding=status_forwarding)
+        element = ar_element.PortApiOption(transformer_status_forwarding=status_forwarding)
         writer = autosar.xml.Writer()
         xml = '''<PORT-API-OPTION>
   <TRANSFORMER-STATUS-FORWARDING>NO-TRANSFORMER-STATUS-FORWARDING</TRANSFORMER-STATUS-FORWARDING>
 </PORT-API-OPTION>'''
         self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
-        elem: ar_element.PortAPIOption = reader.read_str_elem(xml)
+        elem: ar_element.PortApiOption = reader.read_str_elem(xml)
         self.assertEqual(elem.transformer_status_forwarding, status_forwarding)
 
 
