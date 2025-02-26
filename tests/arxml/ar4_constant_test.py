@@ -174,6 +174,50 @@ class ARXML4ConstantTest(ARXMLTestClass):
         expected_file = os.path.join( 'expected_gen', 'constant', file_name)
         self.save_and_check(ws, expected_file, generated_file, ['/Constants'])
 
+    def test_create_record_in_record_constant(self):
+        ws = autosar.workspace(version="4.2.2")
+        _init_ws(ws)
+        package = ws['DataTypes']
+        package.createImplementationDataTypeRef('Active_T', '/DataTypes/boolean')
+        package.createImplementationDataTypeRef('AlarmTime_T', '/DataTypes/uint32')
+        package.createImplementationDataTypeRef('AlarmId_T', '/DataTypes/uint32')
+        package.createImplementationRecordDataType('RecordType1_T', [('AlarmEnabled', '/DataTypes/Active_T'), ('AlarmTime', '/DataTypes/AlarmTime_T')])
+        package.createImplementationRecordDataType('RecordType2_T', [('AlarmId', '/DataTypes/AlarmId_T'), ('AlarmProps', '/DataTypes/RecordType1_T')])
+        package = ws['Constants']
+        c1 = package.createConstant('RecordInRecord_IV','/DataTypes/RecordType2_T', {'AlarmId': 1, 'AlarmProps': {"AlarmEnabled": True, "AlarmTime": 10000}})
+        self.assertIsInstance(c1, autosar.constant.Constant)
+
+        file_name = 'ar4_record_in_record_constant.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join('expected_gen', 'constant', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/Constants'])
+
+        ws2 = autosar.workspace(ws.version_str)
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        c2 = ws2.find(c1.ref)
+        self.assertIsInstance(c2, autosar.constant.Constant)
+
+    def test_array_in_array_constant(self):
+        ws = autosar.workspace(version="4.2.2")
+        _init_ws(ws)
+        package = ws['DataTypes']
+        package.createImplementationDataTypeRef('Number_T', '/DataTypes/uint8')
+        package.createImplementationArrayDataType('ArrayType1_T', '/DataTypes/Number_T', 4)
+        package.createImplementationArrayDataType('ArrayType2_T', '/DataTypes/ArrayType1_T', 2)
+        package = ws['Constants']
+        c1 = package.createConstant('ArrayInArray_IV', '/DataTypes/ArrayType2_T', [[1, 2, 3, 4], [5, 6, 7, 8]])
+        self.assertIsInstance(c1, autosar.constant.Constant)
+
+        file_name = 'ar4_array_of_array_constant.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join('expected_gen', 'constant', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/Constants'])
+
+        ws2 = autosar.workspace(ws.version_str)
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        c2 = ws2.find(c1.ref)
+        self.assertIsInstance(c2, autosar.constant.Constant)
+
     def test_create_application_value1(self):
         ws = autosar.workspace(version="4.2.2")
         _init_ws(ws)

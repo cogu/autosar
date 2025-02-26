@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AUTOSAR xmlns="http://autosar.org/schema/r4.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://autosar.org/schema/r4.0 AUTOSAR_4-2-2.xsd">
+  <AR-PACKAGES>
+    <AR-PACKAGE>
+      <SHORT-NAME>Constants</SHORT-NAME>
+      <ELEMENTS>
+        <CONSTANT-SPECIFICATION>
+          <SHORT-NAME>RecordInRecord_IV</SHORT-NAME>
+          <VALUE-SPEC>
+            <RECORD-VALUE-SPECIFICATION>
+              <SHORT-LABEL>RecordInRecord_IV</SHORT-LABEL>
+              <FIELDS>
+                <NUMERICAL-VALUE-SPECIFICATION>
+                  <SHORT-LABEL>AlarmId</SHORT-LABEL>
+                  <VALUE>1</VALUE>
+                </NUMERICAL-VALUE-SPECIFICATION>
+                <RECORD-VALUE-SPECIFICATION>
+                  <SHORT-LABEL>AlarmProps</SHORT-LABEL>
+                  <FIELDS>
+                    <TEXT-VALUE-SPECIFICATION>
+                      <SHORT-LABEL>AlarmEnabled</SHORT-LABEL>
+                      <VALUE>True</VALUE>
+                    </TEXT-VALUE-SPECIFICATION>
+                    <NUMERICAL-VALUE-SPECIFICATION>
+                      <SHORT-LABEL>AlarmTime</SHORT-LABEL>
+                      <VALUE>10000</VALUE>
+                    </NUMERICAL-VALUE-SPECIFICATION>
+                  </FIELDS>
+                </RECORD-VALUE-SPECIFICATION>
+              </FIELDS>
+            </RECORD-VALUE-SPECIFICATION>
+          </VALUE-SPEC>
+        </CONSTANT-SPECIFICATION>
+      </ELEMENTS>
+    </AR-PACKAGE>
+  </AR-PACKAGES>
+</AUTOSAR>

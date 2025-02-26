@@ -67,7 +67,7 @@ class ValueBuilder:
         return value
 
     def _createRecordValueFromTypeInternal(self, ws, label, dataType, initValue, parent=None):
-        value = autosar.constant.RecordValueAR4(label, dataType.ref, parent)
+        value = autosar.constant.RecordValueAR4(label, dataType.ref, parent=parent)
         if isinstance(initValue, collections.abc.Mapping):
             a = set() #datatype elements
             b = set() #initvalue elements
@@ -103,7 +103,7 @@ class ValueBuilder:
         return value
 
     def _createArrayValueFromTypeInternal(self, ws, label, dataType, initValue, parent=None):
-        value = autosar.constant.ArrayValueAR4(label, dataType.ref, None, parent)
+        value = autosar.constant.ArrayValueAR4(label, dataType.ref, parent=parent)
         typeArrayLength = dataType.subElements[0].arraySize
         if not isinstance(typeArrayLength, int):
             raise ValueError('dataType has no valid array length')
@@ -124,7 +124,7 @@ class ValueBuilder:
             if childType is None:
                 raise autosar.base.InvalidDataTypeRef(str(childTypeRef))
             for v in initValue:
-                inner_value = self._createFromDataTypeInternal(ws, None, childType, v, None)
+                inner_value = self._createFromDataTypeInternal(ws, None, childType, v, value)
                 if inner_value is not None:
                     value.elements.append(inner_value)
                 else:
