@@ -4434,7 +4434,7 @@ class Reader:
         xml_child = child_elements.get("CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF")
         if xml_child is not None:
             child_element = self._read_mode_declaration_group_prototype_ref(xml_child)
-            data["context_mode_declaration_group_prototype"] = child_element
+            data["target_mode_group"] = child_element
         return ar_element.PModeGroupInAtomicSwcInstanceRef(**data)
 
     def _read_p_operation_in_atomic_swc_instance_ref(self,
@@ -4836,15 +4836,15 @@ class Reader:
             data["ident"] = self._read_external_triggering_point_ident(xml_child)
         xml_child = child_elements.get("TRIGGER-IREF")
         if xml_child is not None:
-            data["trigger"] = self._read_external_triggering_point_ident(xml_child)
+            data["trigger"] = self._read_p_trigger_in_atomic_swc_instance_ref(xml_child)
         child_elements.skip("VARIATION-POINT")
         self._report_unprocessed_elements(child_elements)
         return ar_element.ExternalTriggeringPoint(**data)
 
     def _read_internal_triggering_point(self, xml_element: ElementTree.Element) -> ar_element.InternalTriggeringPoint:
         """
-        Reads complex type AR:EXTERNAL-TRIGGERING-POINT
-        Tag variants: 'EXTERNAL-TRIGGERING-POINT'
+        Reads complex type AR:INTERNAL-TRIGGERING-POINT
+        Tag variants: 'INTERNAL-TRIGGERING-POINT'
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5092,32 +5092,106 @@ class Reader:
             arguments = []
             for xml_grand_child in xml_child.findall("./RUNNABLE-ENTITY-ARGUMENT"):
                 arguments.append(self._read_runnable_entity_argument(xml_grand_child))
-            data["arguments"] = arguments
+            data["argument"] = arguments
         xml_child = child_elements.get("ASYNCHRONOUS-SERVER-CALL-RESULT-POINTS")
         if xml_child is not None:
             async_server_call_result_points = []
             for xml_grand_child in xml_child.findall("./ASYNCHRONOUS-SERVER-CALL-RESULT-POINT"):
                 async_server_call_result_points.append(self._read_async_server_call_result_point(xml_grand_child))
-            data["async_server_call_result_points"] = async_server_call_result_points
+            data["async_server_call_result_point"] = async_server_call_result_points
         xml_child = child_elements.get('CAN-BE-INVOKED-CONCURRENTLY')
         if xml_child is not None:
-            data['can_be_invoked_concurrently'] = self._read_boolean(xml_child.text)
-
-        child_elements.skip("DATA-READ-ACCESSS")
-        child_elements.skip("DATA-RECEIVE-POINT-BY-ARGUMENTS")
-        child_elements.skip("DATA-RECEIVE-POINT-BY-VALUES")
-        child_elements.skip("DATA-SEND-POINTS")
-        child_elements.skip("DATA-WRITE-ACCESSS")
-        child_elements.skip("EXTERNAL-TRIGGERING-POINTS")
-        child_elements.skip("INTERNAL-TRIGGERING-POINTS")
-        child_elements.skip("MODE-ACCESS-POINTS")
-        child_elements.skip("MODE-SWITCH-POINTS")
-        child_elements.skip("PARAMETER-ACCESSS")
-        child_elements.skip("READ-LOCAL-VARIABLES")
-        child_elements.skip("SERVER-CALL-POINTS")
-        child_elements.skip("SYMBOL")
-        child_elements.skip("WAIT-POINTS")
-        child_elements.skip("WRITTEN-LOCAL-VARIABLES")
+            data["can_be_invoked_concurrently"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("DATA-READ-ACCESSS")
+        if xml_child is not None:
+            data_read_access = []
+            for xml_grand_child in xml_child.findall("./VARIABLE-ACCESS"):
+                data_read_access.append(self._read_variable_access(xml_grand_child))
+            data["data_read_access"] = data_read_access
+        xml_child = child_elements.get("DATA-RECEIVE-POINT-BY-ARGUMENTS")
+        if xml_child is not None:
+            data_receive_point_by_argument = []
+            for xml_grand_child in xml_child.findall("./VARIABLE-ACCESS"):
+                data_receive_point_by_argument.append(self._read_variable_access(xml_grand_child))
+            data["data_receive_point_by_argument"] = data_receive_point_by_argument
+        xml_child = child_elements.get("DATA-RECEIVE-POINT-BY-VALUES")
+        if xml_child is not None:
+            data_receive_point_by_value = []
+            for xml_grand_child in xml_child.findall("./VARIABLE-ACCESS"):
+                data_receive_point_by_value.append(self._read_variable_access(xml_grand_child))
+            data["data_receive_point_by_value"] = data_receive_point_by_value
+        xml_child = child_elements.get("DATA-SEND-POINTS")
+        if xml_child is not None:
+            data_send_points = []
+            for xml_grand_child in xml_child.findall("./VARIABLE-ACCESS"):
+                data_send_points.append(self._read_variable_access(xml_grand_child))
+            data["data_send_point"] = data_send_points
+        xml_child = child_elements.get("DATA-WRITE-ACCESSS")
+        if xml_child is not None:
+            data_write_access = []
+            for xml_grand_child in xml_child.findall("./VARIABLE-ACCESS"):
+                data_write_access.append(self._read_variable_access(xml_grand_child))
+            data["data_write_access"] = data_write_access
+        xml_child = child_elements.get("EXTERNAL-TRIGGERING-POINTS")
+        if xml_child is not None:
+            external_triggering_point = []
+            for xml_grand_child in xml_child.findall("./EXTERNAL-TRIGGERING-POINT"):
+                external_triggering_point.append(self._read_external_triggering_point(xml_grand_child))
+            data["external_triggering_point"] = external_triggering_point
+        xml_child = child_elements.get("INTERNAL-TRIGGERING-POINTS")
+        if xml_child is not None:
+            internal_triggering_point = []
+            for xml_grand_child in xml_child.findall("./INTERNAL-TRIGGERING-POINT"):
+                internal_triggering_point.append(self._read_internal_triggering_point(xml_grand_child))
+            data["internal_triggering_point"] = internal_triggering_point
+        xml_child = child_elements.get("MODE-ACCESS-POINTS")
+        if xml_child is not None:
+            mode_access_point = []
+            for xml_grand_child in xml_child.findall("./MODE-ACCESS-POINT"):
+                mode_access_point.append(self._read_mode_access_point(xml_grand_child))
+            data["mode_access_point"] = mode_access_point
+        xml_child = child_elements.get("MODE-SWITCH-POINTS")
+        if xml_child is not None:
+            mode_switch_point = []
+            for xml_grand_child in xml_child.findall("./MODE-SWITCH-POINT"):
+                mode_switch_point.append(self._read_mode_switch_point(xml_grand_child))
+            data["mode_switch_point"] = mode_switch_point
+        xml_child = child_elements.get("PARAMETER-ACCESSS")
+        if xml_child is not None:
+            parameter_access = []
+            for xml_grand_child in xml_child.findall("./PARAMETER-ACCESS"):
+                parameter_access.append(self._read_parameter_access(xml_grand_child))
+            data["parameter_access"] = parameter_access
+        xml_child = child_elements.get("READ-LOCAL-VARIABLES")
+        if xml_child is not None:
+            read_local_variable = []
+            for xml_grand_child in xml_child.findall("./VARIABLE-ACCESS"):
+                read_local_variable.append(self._read_variable_access(xml_grand_child))
+            data["read_local_variable"] = read_local_variable
+        xml_child = child_elements.get("SERVER-CALL-POINTS")
+        if xml_child is not None:
+            server_call_points = []
+            for xml_grand_child in xml_child.findall("./*"):
+                if xml_grand_child.tag == "ASYNCHRONOUS-SERVER-CALL-POINT":
+                    server_call_points.append(self._read_async_server_call_point(xml_grand_child))
+                elif xml_grand_child.tag == "SYNCHRONOUS-SERVER-CALL-POINT":
+                    server_call_points.append(self._read_sync_server_call_point(xml_grand_child))
+            data["server_call_point"] = server_call_points
+        xml_child = child_elements.get("SYMBOL")
+        if xml_child is not None:
+            data["symbol"] = xml_child.text
+        xml_child = child_elements.get("WAIT-POINTS")
+        if xml_child is not None:
+            wait_points = []
+            for xml_grand_child in xml_child.findall("./WAIT-POINT"):
+                wait_points.append(self._read_wait_point(xml_grand_child))
+            data["wait_point"] = wait_points
+        xml_child = child_elements.get("WRITTEN-LOCAL-VARIABLES")
+        if xml_child is not None:
+            write_local_variables = []
+            for xml_grand_child in xml_child.findall("./VARIABLE-ACCESS"):
+                write_local_variables.append(self._read_variable_access(xml_grand_child))
+            data["write_local_variable"] = write_local_variables
         child_elements.skip("VARIATION-POINT")
 
     def _read_rte_event_group(self, child_elements: ChildElementMap, data: dict) -> None:

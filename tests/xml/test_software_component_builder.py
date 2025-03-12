@@ -498,7 +498,7 @@ class TestEventCreaterAPI(unittest.TestCase):
         self.assertEqual(event.name, "MMET_MyApplication_ApplicationModeError_ApplicationMode_mode",)
         self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/MyApplication_ApplicationModeError")
         self.assertEqual(str(event.mode_group.context_port), "/ComponentTypes/MyApplication/ApplicationMode")
-        self.assertEqual(str(event.mode_group.context_mode_declaration_group_prototype),
+        self.assertEqual(str(event.mode_group.target_mode_group),
                          "/PortInterfaces/ApplicationMode_I/mode")
 
     def test_create_swc_mode_switch_event(self):
