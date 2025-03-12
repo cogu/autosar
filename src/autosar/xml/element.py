@@ -5373,16 +5373,16 @@ class PModeGroupInAtomicSwcInstanceRef(ModeGroupInAtomicSwcInstanceRef):
 
     def __init__(self,
                  context_port: AbstractProvidedPortPrototypeRef | None = None,
-                 context_mode_declaration_group_prototype: ModeDeclarationGroupPrototypeRef | str | None = None,
+                 target_mode_group: ModeDeclarationGroupPrototypeRef | str | None = None,
                  ) -> None:
         # .CONTEXT-P-PORT-REF
         self.context_port: AbstractProvidedPortPrototypeRef | None = None
-        # .CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF
-        self.context_mode_declaration_group_prototype: ModeDeclarationGroupPrototypeRef | None = None
+        # .CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF (keep name consistent in similar classes)
+        self.target_mode_group: ModeDeclarationGroupPrototypeRef | None = None
 
         self._assign_optional("context_port", context_port, AbstractProvidedPortPrototypeRef)
-        self._assign_optional("context_mode_declaration_group_prototype",
-                              context_mode_declaration_group_prototype,
+        self._assign_optional("target_mode_group",
+                              target_mode_group,
                               ModeDeclarationGroupPrototypeRef)
 
 
@@ -5401,6 +5401,7 @@ class PTriggerInAtomicSwcTypeInstanceRef(ARObject):
         self.context_port: AbstractProvidedPortPrototypeRef | None = None
         # .TARGET-TRIGGER-REF
         self.target_trigger: TriggerRef | None = None
+
         self._assign_optional("context_port", context_port, AbstractProvidedPortPrototypeRef)
         self._assign_optional("target_trigger", target_trigger, TriggerRef)
 
@@ -5863,7 +5864,7 @@ class ServerCallPoint(AbstractAccessPoint):
     def __init__(self,
                  name: str,
                  operation: ROperationInAtomicSwcInstanceRef | None = None,
-                 timeout: float | None = None,
+                 timeout: int | float | None = None,
                  **kwargs):
         super().__init__(name, **kwargs)
         # .OPERATION-IREF
@@ -6012,7 +6013,7 @@ class ModeAccessPoint(ARObject):
                 self.mode_group = mode_group
             else:
                 msg_part_1 = "Invalid type for parameter 'mode_group'. "
-                msg_part_2 = "Expected types PModeGroupInAtomicSwcInstanceRef or RModeInAtomicSwcInstanceRef, "
+                msg_part_2 = "Expected types PModeGroupInAtomicSwcInstanceRef or RModeGroupInAtomicSwcInstanceRef, "
                 msg_part_3 = f"got {str(type(mode_group))}"
                 raise TypeError(msg_part_1 + msg_part_2 + msg_part_3)
 
@@ -6120,8 +6121,8 @@ class WaitPoint(Identifiable):
 
     def __init__(self,
                  name: str,
-                 timeout: int | float | None = None,
                  trigger: RteEventRef | None = None,
+                 timeout: int | float | None = None,
                  **kwargs):
         super().__init__(name, **kwargs)
         # .TIMEOUT
@@ -6129,11 +6130,14 @@ class WaitPoint(Identifiable):
         # .TRIGGER-REF
         self.trigger: RteEventRef | None = None
 
-        self._assign_optional("timeout", timeout, float)
         self._assign_optional("trigger", trigger, RteEventRef)
+        self._assign_optional("timeout", timeout, float)
 
 
 AsyncServerCallResultPointArgumentType = AsynchronousServerCallResultPoint | list[AsynchronousServerCallResultPoint]
+ServerCallPointArgumentType = Union[AsynchronousServerCallPoint,
+                                    SynchronousServerCallPoint,
+                                    list[AsynchronousServerCallPoint | SynchronousServerCallPoint]]
 
 
 class RunnableEntity(ExecutableEntity):
@@ -6144,33 +6148,179 @@ class RunnableEntity(ExecutableEntity):
 
     def __init__(self,
                  name: str,
-                 arguments: RunnableEntityArgument | list[RunnableEntityArgument] | None = None,
-                 async_server_call_result_points: AsyncServerCallResultPointArgumentType | None = None,
+                 argument: RunnableEntityArgument | list[RunnableEntityArgument] | None = None,
+                 async_server_call_result_point: AsyncServerCallResultPointArgumentType | None = None,
                  can_be_invoked_concurrently: bool | None = None,
+                 data_read_access: VariableAccess | list[VariableAccess] | None = None,
+                 data_receive_point_by_argument: VariableAccess | list[VariableAccess] | None = None,
+                 data_receive_point_by_value: VariableAccess | list[VariableAccess] | None = None,
+                 data_send_point: VariableAccess | list[VariableAccess] | None = None,
+                 data_write_access: VariableAccess | list[VariableAccess] | None = None,
+                 external_triggering_point: ExternalTriggeringPoint | list[ExternalTriggeringPoint] | None = None,
+                 internal_triggering_point: InternalTriggeringPoint | list[InternalTriggeringPoint] | None = None,
+                 mode_access_point: ModeAccessPoint | list[ModeAccessPoint] | None = None,
+                 mode_switch_point: ModeSwitchPoint | list[ModeSwitchPoint] | None = None,
+                 parameter_access: ParameterAccess | list[ParameterAccess] | None = None,
+                 read_local_variable: VariableAccess | list[VariableAccess] | None = None,
+                 write_local_variable: VariableAccess | list[VariableAccess] | None = None,
+                 server_call_point: ServerCallPointArgumentType | None = None,
+                 wait_point: WaitPoint | list[WaitPoint] | None = None,
+                 symbol: str | None = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
         # .ARGUMENTS
-        self.arguments: list[RunnableEntityArgument] = []
+        self.argument: list[RunnableEntityArgument] = []
         # .ASYNCHRONOUS-SERVER-CALL-RESULT-POINTS
-        self.async_server_call_result_points: list[AsynchronousServerCallResultPoint] = []
+        self.async_server_call_result_point: list[AsynchronousServerCallResultPoint] = []
         # .CAN-BE-INVOKED-CONCURRENTLY
         self.can_be_invoked_concurrently: bool | None = None
+        # .DATA-READ-ACCESSS
+        self.data_read_access: list[VariableAccess] = []
+        # .DATA-RECEIVE-POINT-BY-ARGUMENTS
+        self.data_receive_point_by_argument: list[VariableAccess] = []
+        # .DATA-RECEIVE-POINT-BY-VALUES
+        self.data_receive_point_by_value: list[VariableAccess] = []
+        # .DATA-SEND-POINTS
+        self.data_send_point: list[VariableAccess] = []
+        # .DATA-WRITE-ACCESSS
+        self.data_write_access: list[VariableAccess] = []
+        # .EXTERNAL-TRIGGERING-POINTS
+        self.external_triggering_point: list[ExternalTriggeringPoint] = []
+        # .INTERNAL-TRIGGERING-POINTS
+        self.internal_triggering_point: list[InternalTriggeringPoint] = []
+        # .MODE-ACCESS-POINTS
+        self.mode_access_point: list[ModeAccessPoint] = []
+        # .MODE-SWITCH-POINTS
+        self.mode_switch_point: list[ModeSwitchPoint] = []
+        # .PARAMETER-ACCESSS
+        self.parameter_access: list[ParameterAccess] = []
+        # .READ-LOCAL-VARIABLES
+        self.read_local_variable: list[VariableAccess] = []
+        # .SERVER-CALL-POINTS
+        self.server_call_point: list[AsynchronousServerCallPoint | SynchronousServerCallPoint] = []
+        # .SYMBOL
+        self.symbol: str | None = None
+        # .WAIT-POINTS
+        self.wait_point: list[WaitPoint] = []
+        # .WRITTEN-LOCAL-VARIABLES (Change used variable name to match )
+        self.write_local_variable: list[VariableAccess] = []
 
+        # Simple arguments
         self._assign_optional("can_be_invoked_concurrently", can_be_invoked_concurrently, bool)
+        self._assign_optional_strict("symbol", symbol, str)
 
-        if arguments is not None:
-            if isinstance(arguments, Iterable):
-                for argument in arguments:
-                    self.append_argument(argument)
+        # Complex arguments
+        if argument is not None:
+            if isinstance(argument, Iterable):
+                for elem in argument:
+                    self.append_argument(elem)
             else:
-                self.append_argument(arguments)
+                self.append_argument(argument)
 
-        if async_server_call_result_points is not None:
-            if isinstance(async_server_call_result_points, Iterable):
-                for async_server_call_result_point in async_server_call_result_points:
-                    self.append_async_server_call_result_point(async_server_call_result_point)
+        if async_server_call_result_point is not None:
+            if isinstance(async_server_call_result_point, Iterable):
+                for elem in async_server_call_result_point:
+                    self.append_async_server_call_result_point(elem)
             else:
-                self.append_async_server_call_result_point(async_server_call_result_points)
+                self.append_async_server_call_result_point(async_server_call_result_point)
+
+        if data_read_access is not None:
+            if isinstance(data_read_access, Iterable):
+                for elem in data_read_access:
+                    self.append_data_read_access(elem)
+            else:
+                self.append_data_read_access(data_read_access)
+
+        if data_receive_point_by_argument is not None:
+            if isinstance(data_receive_point_by_argument, Iterable):
+                for elem in data_receive_point_by_argument:
+                    self.append_data_receive_point_by_argument(elem)
+            else:
+                self.append_data_receive_point_by_argument(data_receive_point_by_argument)
+
+        if data_receive_point_by_value is not None:
+            if isinstance(data_receive_point_by_value, Iterable):
+                for elem in data_receive_point_by_value:
+                    self.append_data_receive_point_by_value(elem)
+            else:
+                self.append_data_receive_point_by_value(data_receive_point_by_value)
+
+        if data_send_point is not None:
+            if isinstance(data_send_point, Iterable):
+                for elem in data_send_point:
+                    self.append_data_send_point(elem)
+            else:
+                self.append_data_send_point(data_send_point)
+
+        if data_write_access is not None:
+            if isinstance(data_write_access, Iterable):
+                for elem in data_write_access:
+                    self.append_data_write_access(elem)
+            else:
+                self.append_data_write_access(data_write_access)
+
+        if external_triggering_point is not None:
+            if isinstance(external_triggering_point, Iterable):
+                for elem in external_triggering_point:
+                    self.append_external_triggering_point(elem)
+            else:
+                self.append_external_triggering_point(external_triggering_point)
+
+        if internal_triggering_point is not None:
+            if isinstance(internal_triggering_point, Iterable):
+                for elem in internal_triggering_point:
+                    self.append_internal_triggering_point(elem)
+            else:
+                self.append_internal_triggering_point(internal_triggering_point)
+
+        if mode_access_point is not None:
+            if isinstance(mode_access_point, Iterable):
+                for elem in mode_access_point:
+                    self.append_mode_access_point(elem)
+            else:
+                self.append_mode_access_point(mode_access_point)
+
+        if mode_switch_point is not None:
+            if isinstance(mode_switch_point, Iterable):
+                for elem in mode_switch_point:
+                    self.append_mode_switch_point(elem)
+            else:
+                self.append_mode_switch_point(mode_switch_point)
+
+        if parameter_access is not None:
+            if isinstance(parameter_access, Iterable):
+                for elem in parameter_access:
+                    self.append_parameter_access(elem)
+            else:
+                self.append_parameter_access(parameter_access)
+
+        if read_local_variable is not None:
+            if isinstance(read_local_variable, Iterable):
+                for elem in read_local_variable:
+                    self.append_read_local_variable(elem)
+            else:
+                self.append_read_local_variable(read_local_variable)
+
+        if write_local_variable is not None:
+            if isinstance(write_local_variable, Iterable):
+                for elem in write_local_variable:
+                    self.append_write_local_variable(elem)
+            else:
+                self.append_write_local_variable(write_local_variable)
+
+        if server_call_point is not None:
+            if isinstance(server_call_point, Iterable):
+                for elem in server_call_point:
+                    self.append_server_call_point(elem)
+            else:
+                self.append_server_call_point(server_call_point)
+
+        if wait_point is not None:
+            if isinstance(wait_point, Iterable):
+                for elem in wait_point:
+                    self.append_wait_point(elem)
+            else:
+                self.append_wait_point(wait_point)
 
     def ref(self) -> RunnableEntityRef | None:
         """
@@ -6182,23 +6332,153 @@ class RunnableEntity(ExecutableEntity):
 
     def append_argument(self, argument: RunnableEntityArgument) -> None:
         """
-        Adds RunnableEntityArgument to internal list of arguments
+        Adds additional argument to the RunnableEntity
         """
         if isinstance(argument, RunnableEntityArgument):
-            self.arguments.append(argument)
+            self.argument.append(argument)
         else:
-            raise TypeError("argument must be of type RunnableEntityArgument")
+            raise TypeError(f"argument: Expected type RunnableEntityArgument, got '{str(type(argument))}'")
 
     def append_async_server_call_result_point(self,
-                                              async_server_call_result_point: AsynchronousServerCallResultPoint
+                                              result_point: AsynchronousServerCallResultPoint
                                               ) -> None:
         """
-        Adds AsynchronousServerCallResultPoint to internal list of result points
+        A server call result point allows a runnable to fetch the result of an asynchronous server call.
         """
-        if isinstance(async_server_call_result_point, AsynchronousServerCallResultPoint):
-            self.async_server_call_result_points.append(async_server_call_result_point)
+        if isinstance(result_point, AsynchronousServerCallResultPoint):
+            self.async_server_call_result_point.append(result_point)
         else:
-            raise TypeError("argument must be of type AsynchronousServerCallResultPoint")
+            raise TypeError("result_point: Expected type AsynchronousServerCallResultPoint, "
+                            f"got '{str(type(result_point))}'")
+
+    def append_data_read_access(self, element: VariableAccess) -> None:
+        """
+        Implicit read access to data element of a sender-receiver port or nv-data port.
+        """
+        if isinstance(element, VariableAccess):
+            self.data_read_access.append(element)
+        else:
+            raise TypeError(f"element: Expected type VariableAccess, got '{str(type(element))}'")
+
+    def append_data_receive_point_by_argument(self, element: VariableAccess) -> None:
+        """
+        Explicit read access to data element of a sender-receiver port or nv-data port.
+        The result is passed back to the application by means of an argument in the function signature.
+        """
+        if isinstance(element, VariableAccess):
+            self.data_receive_point_by_argument.append(element)
+        else:
+            raise TypeError(f"element: Expected type VariableAccess, got '{str(type(element))}'")
+
+    def append_data_receive_point_by_value(self, element: VariableAccess) -> None:
+        """
+        Explicit read access to data element of a sender-receiver port or nv-data port.
+        The result is passed back to the application by means of the return value.
+        """
+        if isinstance(element, VariableAccess):
+            self.data_receive_point_by_value.append(element)
+        else:
+            raise TypeError(f"element: Expected type VariableAccess, got '{str(type(element))}'")
+
+    def append_data_send_point(self, element: VariableAccess) -> None:
+        """
+        Explicit write access to data element of a sender-receiver port or nv-data.
+        """
+        if isinstance(element, VariableAccess):
+            self.data_send_point.append(element)
+        else:
+            raise TypeError(f"element: Expected type VariableAccess, got '{str(type(element))}'")
+
+    def append_data_write_access(self, element: VariableAccess) -> None:
+        """
+        Implicit write access to data element of a sender-receiver port or nv-data port.
+        """
+        if isinstance(element, VariableAccess):
+            self.data_write_access.append(element)
+        else:
+            raise TypeError(f"element: Expected type VariableAccess, got '{str(type(element))}'")
+
+    def append_external_triggering_point(self, element: ExternalTriggeringPoint) -> None:
+        """
+        External triggering point
+        """
+        if isinstance(element, ExternalTriggeringPoint):
+            self.external_triggering_point.append(element)
+        else:
+            raise TypeError(f"element: Expected type ExternalTriggeringPoint, got '{str(type(element))}'")
+
+    def append_internal_triggering_point(self, element: InternalTriggeringPoint) -> None:
+        """
+        Internal triggering point
+        """
+        if isinstance(element, InternalTriggeringPoint):
+            self.internal_triggering_point.append(element)
+        else:
+            raise TypeError(f"element: Expected type InternalTriggeringPoint, got '{str(type(element))}'")
+
+    def append_mode_access_point(self, element: ModeAccessPoint) -> None:
+        """
+        Mode access point
+        """
+        if isinstance(element, ModeAccessPoint):
+            self.mode_access_point.append(element)
+        else:
+            raise TypeError(f"element: Expected type ModeAccessPoint, got '{str(type(element))}'")
+
+    def append_mode_switch_point(self, element: ModeSwitchPoint) -> None:
+        """
+        Mode switch point
+        """
+        if isinstance(element, ModeSwitchPoint):
+            self.mode_switch_point.append(element)
+        else:
+            raise TypeError(f"element: Expected type ModeSwitchPoint, got '{str(type(element))}'")
+
+    def append_parameter_access(self, element: ParameterAccess) -> None:
+        """
+        Read access to parameter which may either be local or within a PortPrototype.
+        """
+        if isinstance(element, ParameterAccess):
+            self.parameter_access.append(element)
+        else:
+            raise TypeError(f"element: Expected type ParameterAccess, got '{str(type(element))}'")
+
+    def append_read_local_variable(self, element: VariableAccess) -> None:
+        """
+        Read access to a local variable in the role of ImplicitInterRunnableVariable or ExplicitInterRunnableVariable.
+        """
+        if isinstance(element, VariableAccess):
+            self.read_local_variable.append(element)
+        else:
+            raise TypeError(f"element: Expected type VariableAccess, got '{str(type(element))}'")
+
+    def append_write_local_variable(self, element: VariableAccess) -> None:
+        """
+        Write access to a local varaible in the role of ImplicitInterRunnableVariable or ExplicitInterRunnableVariable.
+        """
+        if isinstance(element, VariableAccess):
+            self.write_local_variable.append(element)
+        else:
+            raise TypeError(f"element: Expected type VariableAccess, got '{str(type(element))}'")
+
+    def append_server_call_point(self, element: AsynchronousServerCallPoint | SynchronousServerCallPoint) -> None:
+        """
+        Access to call a server operation of a client-server port.
+        """
+        if isinstance(element, ServerCallPoint):
+            self.server_call_point.append(element)
+        else:
+            raise TypeError("element: Expected type AsynchronousServerCallPoint or SynchronousServerCallPoint, "
+                            f"got '{str(type(element))}'")
+
+    def append_wait_point(self, element: WaitPoint) -> None:
+        """
+        WaitPoint associated with the RunnableEntity
+        """
+        if isinstance(element, WaitPoint):
+            self.wait_point.append(element)
+        else:
+            raise TypeError(f"element: Expected type WaitPoint, got '{str(type(element))}'")
 
 
 class RteEvent(Identifiable):

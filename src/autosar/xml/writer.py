@@ -3833,8 +3833,8 @@ class Writer(_XMLWriter):
             self._add_child(tag)
             if elem.context_port is not None:
                 self._write_abstract_provided_port_prototype_ref(elem.context_port, "CONTEXT-P-PORT-REF")
-            if elem.context_mode_declaration_group_prototype is not None:
-                self._write_mode_declaration_group_prototype_ref(elem.context_mode_declaration_group_prototype,
+            if elem.target_mode_group is not None:
+                self._write_mode_declaration_group_prototype_ref(elem.target_mode_group,
                                                                  "CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF")
             self._leave_child()
 
@@ -4431,20 +4431,95 @@ class Writer(_XMLWriter):
 
     def _write_runnable_entity_group(self, elem: ar_element.RunnableEntity) -> None:
         """
-        Writes group type AR:RUNNABLE-ENTITY
+        Writes group AR:RUNNABLE-ENTITY
         """
-        if len(elem.arguments) > 0:
+        if len(elem.argument) > 0:
             self._add_child("ARGUMENTS")
-            for argument in elem.arguments:
+            for argument in elem.argument:
                 self._write_runnable_entity_argument(argument)
             self._leave_child()
-        if len(elem.async_server_call_result_points) > 0:
+        if len(elem.async_server_call_result_point) > 0:
             self._add_child("ASYNCHRONOUS-SERVER-CALL-RESULT-POINTS")
-            for async_server_call_result_point in elem.async_server_call_result_points:
+            for async_server_call_result_point in elem.async_server_call_result_point:
                 self._write_async_server_call_result_point(async_server_call_result_point)
             self._leave_child()
         if elem.can_be_invoked_concurrently is not None:
             self._add_content("CAN-BE-INVOKED-CONCURRENTLY", self._format_boolean(elem.can_be_invoked_concurrently))
+        if len(elem.data_read_access) > 0:
+            self._add_child("DATA-READ-ACCESSS")
+            for child in elem.data_read_access:
+                self._write_variable_access(child, "VARIABLE-ACCESS")
+            self._leave_child()
+        if len(elem.data_receive_point_by_argument) > 0:
+            self._add_child("DATA-RECEIVE-POINT-BY-ARGUMENTS")
+            for child in elem.data_receive_point_by_argument:
+                self._write_variable_access(child, "VARIABLE-ACCESS")
+            self._leave_child()
+        if len(elem.data_receive_point_by_value) > 0:
+            self._add_child("DATA-RECEIVE-POINT-BY-VALUES")
+            for child in elem.data_receive_point_by_value:
+                self._write_variable_access(child, "VARIABLE-ACCESS")
+            self._leave_child()
+        if len(elem.data_send_point) > 0:
+            self._add_child("DATA-SEND-POINTS")
+            for child in elem.data_send_point:
+                self._write_variable_access(child, "VARIABLE-ACCESS")
+            self._leave_child()
+        if len(elem.data_write_access) > 0:
+            self._add_child("DATA-WRITE-ACCESSS")
+            for child in elem.data_write_access:
+                self._write_variable_access(child, "VARIABLE-ACCESS")
+            self._leave_child()
+        if len(elem.external_triggering_point) > 0:
+            self._add_child("EXTERNAL-TRIGGERING-POINTS")
+            for child in elem.external_triggering_point:
+                self._write_external_triggering_point(child)
+            self._leave_child()
+        if len(elem.internal_triggering_point) > 0:
+            self._add_child("INTERNAL-TRIGGERING-POINTS")
+            for child in elem.internal_triggering_point:
+                self._write_internal_triggering_point(child)
+            self._leave_child()
+        if len(elem.mode_access_point) > 0:
+            self._add_child("MODE-ACCESS-POINTS")
+            for child in elem.mode_access_point:
+                self._write_mode_access_point(child)
+            self._leave_child()
+        if len(elem.mode_switch_point) > 0:
+            self._add_child("MODE-SWITCH-POINTS")
+            for child in elem.mode_switch_point:
+                self._write_mode_switch_point(child)
+            self._leave_child()
+        if len(elem.parameter_access) > 0:
+            self._add_child("PARAMETER-ACCESSS")
+            for child in elem.parameter_access:
+                self._write_parameter_access(child)
+            self._leave_child()
+        if len(elem.read_local_variable) > 0:
+            self._add_child("READ-LOCAL-VARIABLES")
+            for child in elem.read_local_variable:
+                self._write_variable_access(child, "VARIABLE-ACCESS")
+            self._leave_child()
+        if len(elem.server_call_point) > 0:
+            self._add_child("SERVER-CALL-POINTS")
+            for child in elem.server_call_point:
+                if isinstance(child, ar_element.AsynchronousServerCallPoint):
+                    self._write_async_server_call_point(child)
+                else:
+                    self._write_sync_server_call_point(child)
+            self._leave_child()
+        if elem.symbol is not None:
+            self._add_content("SYMBOL", str(elem.symbol))
+        if len(elem.wait_point) > 0:
+            self._add_child("WAIT-POINTS")
+            for child in elem.wait_point:
+                self._write_wait_point(child)
+            self._leave_child()
+        if len(elem.write_local_variable) > 0:
+            self._add_child("WRITTEN-LOCAL-VARIABLES")
+            for child in elem.write_local_variable:
+                self._write_variable_access(child, "VARIABLE-ACCESS")
+            self._leave_child()
 
     def _write_rte_event_group(self, elem: ar_element.RteEvent) -> None:
         """
