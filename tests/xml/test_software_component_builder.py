@@ -133,10 +133,10 @@ def create_vehicle_mode_interface(packages: dict[str, ar_element.Package]) -> ar
     Create mode switch interface
     """
     mode_declaration_group = packages["ModeDeclarations"].find("VehicleMode")
-    portinterface = ar_element.ModeSwitchInterface("VehicleMode_I")
-    portinterface.create_mode_group("mode", mode_declaration_group.ref())
-    packages["PortInterfaces"].append(portinterface)
-    return portinterface
+    port_interface = ar_element.ModeSwitchInterface("VehicleMode_I")
+    port_interface.create_mode_group("mode", mode_declaration_group.ref())
+    packages["PortInterfaces"].append(port_interface)
+    return port_interface
 
 
 def create_application_mode_interface(packages: dict[str, ar_element.Package]) -> ar_element.ModeSwitchInterface:
@@ -144,24 +144,92 @@ def create_application_mode_interface(packages: dict[str, ar_element.Package]) -
     Create mode switch interface
     """
     mode_declaration_group = packages["ModeDeclarations"].find("ApplicationMode")
-    portinterface = ar_element.ModeSwitchInterface("ApplicationMode_I")
-    portinterface.create_mode_group("mode", mode_declaration_group.ref())
-    packages["PortInterfaces"].append(portinterface)
-    return portinterface
+    port_interface = ar_element.ModeSwitchInterface("ApplicationMode_I")
+    port_interface.create_mode_group("mode", mode_declaration_group.ref())
+    packages["PortInterfaces"].append(port_interface)
+    return port_interface
+
+
+def create_check_point_interface(packages: dict[str, ar_element.Package]) -> ar_element.ClientServerInterface:
+    """
+    Creates a simple client-server interface
+    """
+    uint32_impl_t = packages["PlatformImplementationDataTypes"].find("uint32")
+    port_interface = ar_element.ClientServerInterface("AliveSupervision_I")
+    packages["PortInterfaces"].append(port_interface)
+    operation = port_interface.create_operation("CheckPointReached")
+    operation.create_in_argument("id", type_ref=uint32_impl_t.ref())
+    return port_interface
 
 
 def create_timer_interface(packages: dict[str, ar_element.Package]) -> ar_element.ClientServerInterface:
     """
-    Create mode switch interface
+    Creates client server interface FreeRunningTimer_I
     """
     uint32_impl_t = packages["PlatformImplementationDataTypes"].find("uint32")
-    portinterface = ar_element.ClientServerInterface("Timer_I", is_service=False)
-    packages["PortInterfaces"].append(portinterface)
-    operation = portinterface.create_operation("GetTime")
+    boolean_impl_t = packages["PlatformImplementationDataTypes"].find("boolean")
+    port_interface = ar_element.ClientServerInterface("FreeRunningTimer_I")
+    packages["PortInterfaces"].append(port_interface)
+    operation = port_interface.create_operation("GetTime")
     operation.create_out_argument("value",
                                   server_arg_impl_policy=ar_enum.ServerArgImplPolicy.USE_ARGUMENT_TYPE,
                                   type_ref=uint32_impl_t.ref())
-    return portinterface
+    operation = port_interface.create_operation("IsTimerElapsed")
+    operation.create_in_argument("startTime", type_ref=uint32_impl_t.ref())
+    operation.create_in_argument("duration", type_ref=uint32_impl_t.ref())
+    operation.create_out_argument("result", type_ref=boolean_impl_t.ref())
+    return port_interface
+
+
+def create_stored_data_interface(packages: dict[str, ar_element.Package]) -> ar_element.NvDataInterface:
+    """
+    Create non-volatile data interface
+    """
+    uint8_impl_t = packages["PlatformImplementationDataTypes"].find("uint8")
+    port_interface = ar_element.NvDataInterface("StoredData_I")
+    port_interface.create_data_element("Value", type_ref=uint8_impl_t.ref())
+    packages["PortInterfaces"].append(port_interface)
+    return port_interface
+
+
+def create_parameter_interface(packages: dict[str, ar_element.Package]) -> ar_element.ParameterInterface:
+    """
+    Create non-volatile data interface
+    """
+    uint8_impl_t = packages["PlatformImplementationDataTypes"].find("uint8")
+    port_interface = ar_element.ParameterInterface("Calibration_I")
+    port_interface.create_parameter("p1", type_ref=uint8_impl_t.ref())
+    port_interface.create_parameter("p2", type_ref=uint8_impl_t.ref())
+    packages["PortInterfaces"].append(port_interface)
+    return port_interface
+
+
+def create_actuator_interface(packages: dict[str, ar_element.Package]) -> ar_element.SenderReceiverInterface:
+    """
+    Create sender-receiver port interface containing two generic data elements.
+    The interface is just nonsense. The purpose is to test multi-element ports.
+    """
+    uint16_impl_t = packages["PlatformImplementationDataTypes"].find("uint16")
+    uint8_impl_t = packages["PlatformImplementationDataTypes"].find("uint8")
+    port_interface = ar_element.SenderReceiverInterface("Actuator_I")
+    port_interface.create_data_element("Primary", type_ref=uint16_impl_t.ref())
+    port_interface.create_data_element("Secondary", type_ref=uint8_impl_t.ref())
+    packages["PortInterfaces"].append(port_interface)
+    return port_interface
+
+
+def create_sensor_interface(packages: dict[str, ar_element.Package]) -> ar_element.SenderReceiverInterface:
+    """
+    Create sender-receiver port interface containing sensor-related data elements.
+    The interface is just nonsense. The purpose is to test multi-element ports.
+    """
+    uint32_impl_t = packages["PlatformImplementationDataTypes"].find("uint32")
+    uint16_impl_t = packages["PlatformImplementationDataTypes"].find("uint16")
+    port_interface = ar_element.SenderReceiverInterface("Sensor_I")
+    port_interface.create_data_element("Sensor1", type_ref=uint32_impl_t.ref())
+    port_interface.create_data_element("Sensor2", type_ref=uint16_impl_t.ref())
+    packages["PortInterfaces"].append(port_interface)
+    return port_interface
 
 
 def create_init_value(packages, name: str, value: Any) -> ar_element.ConstantSpecification:
@@ -366,7 +434,7 @@ class TestPortInterfaceSubElementsGetterAPI(unittest.TestCase):
         self.assertIs(data_element1, data_element2)
 
 
-class TestEventCreaterAPI(unittest.TestCase):
+class TestEventCreationAPI(unittest.TestCase):
 
     def __init__(self, methodName: str = "runTest") -> None:
         super().__init__(methodName)
@@ -379,17 +447,17 @@ class TestEventCreaterAPI(unittest.TestCase):
         engine_speed_interface = create_engine_speed_interface(packages)
         vehicle_mode_interface = create_vehicle_mode_interface(packages)
         application_mode_interface = create_application_mode_interface(packages)
-        timer_interface = create_timer_interface(packages)
+        alive_supervision_interface = create_check_point_interface(packages)
         swc = create_application_swc(packages)
         swc.create_r_port("EngineSpeed", engine_speed_interface, com_spec={'init_value': 65535})
         swc.create_r_port("VehicleMode", vehicle_mode_interface, com_spec={'supports_async': False})
         swc.create_p_port("ApplicationMode", application_mode_interface)
-        swc.create_p_port("Timer", timer_interface)
+        swc.create_p_port("AliveSupervision", alive_supervision_interface)
         return swc
 
     def test_create_background_event(self):
         workspace = autosar.xml.Workspace()
-        workspace.behavior_settings.set_value("background_event_prefix", "BT_")
+        workspace.behavior_settings.set_value("background_event_prefix", "BT")
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
         behavior.create_runnable("MyApplication_Background")
@@ -400,7 +468,7 @@ class TestEventCreaterAPI(unittest.TestCase):
 
     def test_create_data_receive_error_event_using_port_name_only(self):
         workspace = autosar.xml.Workspace()
-        workspace.behavior_settings.set_value("data_receive_error_event_prefix", "DRET_")
+        workspace.behavior_settings.set_value("data_receive_error_event_prefix", "DRET")
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
         behavior.create_runnable("EngineSpeed_Updated")
@@ -413,7 +481,7 @@ class TestEventCreaterAPI(unittest.TestCase):
 
     def test_create_data_receive_error_event_using_port_and_data_element(self):
         workspace = autosar.xml.Workspace()
-        workspace.behavior_settings.set_value("data_receive_error_event_prefix", "DRET_")
+        workspace.behavior_settings.set_value("data_receive_error_event_prefix", "DRET")
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
         behavior.create_runnable("EngineSpeed_Updated")
@@ -426,7 +494,7 @@ class TestEventCreaterAPI(unittest.TestCase):
 
     def test_create_data_received_event_using_port_name_only(self):
         workspace = autosar.xml.Workspace()
-        workspace.behavior_settings.set_value("data_receive_event_prefix", "DRT_")
+        workspace.behavior_settings.set_value("data_receive_event_prefix", "DRT")
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
         behavior.create_runnable("EngineSpeed_Updated")
@@ -439,7 +507,7 @@ class TestEventCreaterAPI(unittest.TestCase):
 
     def test_create_data_received_event_using_port_and_data_element(self):
         workspace = autosar.xml.Workspace()
-        workspace.behavior_settings.set_value("data_receive_event_prefix", "DRT_")
+        workspace.behavior_settings.set_value("data_receive_event_prefix", "DRT")
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
         behavior.create_runnable("EngineSpeed_Updated")
@@ -452,7 +520,7 @@ class TestEventCreaterAPI(unittest.TestCase):
 
     def test_create_init_event(self):
         workspace = autosar.xml.Workspace()
-        workspace.behavior_settings.set_value("init_event_prefix", "IT_")
+        workspace.behavior_settings.set_value("init_event_prefix", "IT")
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
         behavior.create_runnable("MyApplication_Init")
@@ -463,33 +531,36 @@ class TestEventCreaterAPI(unittest.TestCase):
 
     def test_create_operation_invoked_event_port_name_only(self):
         workspace = autosar.xml.Workspace()
-        workspace.behavior_settings.set_value("operation_invoked_event_prefix", "OIT_")
+        workspace.behavior_settings.set_value("operation_invoked_event_prefix", "OIT")
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
-        behavior.create_runnable("MyApplication_GetTime")
-        event = behavior.create_operation_invoked_event("MyApplication_GetTime", "Timer")
+        behavior.create_runnable("MyApplication_CheckPointReached")
+        event = behavior.create_operation_invoked_event("MyApplication_CheckPointReached", "AliveSupervision")
         self.assertIsInstance(event, ar_element.OperationInvokedEvent)
-        self.assertEqual(event.name, "OIT_MyApplication_GetTime_Timer_GetTime")
-        self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/MyApplication_GetTime")
-        self.assertEqual(str(event.operation.context_port), "/ComponentTypes/MyApplication/Timer")
-        self.assertEqual(str(event.operation.target_provided_operation), "/PortInterfaces/Timer_I/GetTime")
+        self.assertEqual(event.name, "OIT_MyApplication_CheckPointReached_AliveSupervision_CheckPointReached")
+        self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/MyApplication_CheckPointReached")
+        self.assertEqual(str(event.operation.context_port), "/ComponentTypes/MyApplication/AliveSupervision")
+        self.assertEqual(str(event.operation.target_provided_operation),
+                         "/PortInterfaces/AliveSupervision_I/CheckPointReached")
 
     def test_create_operation_invoked_event_with_operation_name(self):
         workspace = autosar.xml.Workspace()
-        workspace.behavior_settings.set_value("operation_invoked_event_prefix", "OIT_")
+        workspace.behavior_settings.set_value("operation_invoked_event_prefix", "OIT")
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
-        behavior.create_runnable("MyApplication_GetTime")
-        event = behavior.create_operation_invoked_event("MyApplication_GetTime", "Timer/GetTime")
+        behavior.create_runnable("MyApplication_CheckPointReached")
+        event = behavior.create_operation_invoked_event("MyApplication_CheckPointReached",
+                                                        "AliveSupervision/CheckPointReached")
         self.assertIsInstance(event, ar_element.OperationInvokedEvent)
-        self.assertEqual(event.name, "OIT_MyApplication_GetTime_Timer_GetTime")
-        self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/MyApplication_GetTime")
-        self.assertEqual(str(event.operation.context_port), "/ComponentTypes/MyApplication/Timer")
-        self.assertEqual(str(event.operation.target_provided_operation), "/PortInterfaces/Timer_I/GetTime")
+        self.assertEqual(event.name, "OIT_MyApplication_CheckPointReached_AliveSupervision_CheckPointReached")
+        self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/MyApplication_CheckPointReached")
+        self.assertEqual(str(event.operation.context_port), "/ComponentTypes/MyApplication/AliveSupervision")
+        self.assertEqual(str(event.operation.target_provided_operation),
+                         "/PortInterfaces/AliveSupervision_I/CheckPointReached")
 
     def test_create_swc_mode_manager_error_event(self):
         workspace = autosar.xml.Workspace()
-        workspace.behavior_settings.set_value("swc_mode_manager_error_event_prefix", "MMET_")
+        workspace.behavior_settings.set_value("swc_mode_manager_error_event_prefix", "MMET")
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
         behavior.create_runnable("MyApplication_ApplicationModeError")
@@ -503,7 +574,7 @@ class TestEventCreaterAPI(unittest.TestCase):
 
     def test_create_swc_mode_switch_event(self):
         workspace = autosar.xml.Workspace()
-        workspace.behavior_settings.set_value("swc_mode_switch_event_prefix", "MST_")
+        workspace.behavior_settings.set_value("swc_mode_switch_event_prefix", "MST")
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
         behavior.create_runnable("MyApplication_Init")
@@ -518,7 +589,7 @@ class TestEventCreaterAPI(unittest.TestCase):
 
     def test_create_swc_mode_switch_event_with_transition(self):
         workspace = autosar.xml.Workspace()
-        workspace.behavior_settings.set_value("swc_mode_switch_event_prefix", "MST_")
+        workspace.behavior_settings.set_value("swc_mode_switch_event_prefix", "MST")
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
         behavior.create_runnable("MyApplication_Init")
@@ -538,7 +609,7 @@ class TestEventCreaterAPI(unittest.TestCase):
 
     def test_create_multiple_swc_mode_switch_events_with_same_base_name(self):
         workspace = autosar.xml.Workspace()
-        workspace.behavior_settings.set_value("swc_mode_switch_event_prefix", "MST_")
+        workspace.behavior_settings.set_value("swc_mode_switch_event_prefix", "MST")
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
         behavior.create_runnable("MyApplication_Init")
@@ -564,7 +635,7 @@ class TestEventCreaterAPI(unittest.TestCase):
 
     def test_create_timing_event_without_offset(self):
         workspace = autosar.xml.Workspace()
-        workspace.behavior_settings.set_value("timing_event_prefix", "TMT_")
+        workspace.behavior_settings.set_value("timing_event_prefix", "TMT")
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
         behavior.create_runnable("MyApplication_Run")
@@ -574,6 +645,310 @@ class TestEventCreaterAPI(unittest.TestCase):
         self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/MyApplication_Run")
         self.assertAlmostEqual(event.period, 0.02)
         self.assertIsNone(event.offset)
+
+
+class TestRunnableEntityAPI(unittest.TestCase):
+
+    def __init__(self, methodName: str = "runTest") -> None:
+        super().__init__(methodName)
+        self.expected_behavior_ref = "/ComponentTypes/MyApplication/MyApplication_InternalBehavior"
+
+    def create_swc(self, workspace: autosar.xml.Workspace) -> ar_element.ApplicationSoftwareComponentType:
+        packages = create_packages(workspace)
+        create_platform_types(packages)
+        create_mode_declaration_groups(packages)
+        vehicle_speed_interface = create_vehicle_speed_interface(packages)
+        engine_speed_interface = create_engine_speed_interface(packages)
+        safe_state_interface = create_safe_state_interface(packages)
+        data_interface = create_stored_data_interface(packages)
+        parameter_interface = create_parameter_interface(packages)
+        actuator_interface = create_actuator_interface(packages)
+        sensor_interface = create_sensor_interface(packages)
+        vehicle_mode_interface = create_vehicle_mode_interface(packages)
+        application_mode_interface = create_application_mode_interface(packages)
+        timer_interface = create_timer_interface(packages)
+
+        swc = create_application_swc(packages)
+        swc.create_p_port("VehicleSpeed", vehicle_speed_interface, com_spec={"init_value": 65535})
+        swc.create_r_port("EngineSpeed", engine_speed_interface, com_spec={"init_value": 65535})
+        swc.create_r_port("StoredData", data_interface)
+        swc.create_r_port("CalibrationData", parameter_interface)
+        swc.create_r_port("Timer", timer_interface)
+        swc.create_p_port("Actuator", actuator_interface, com_spec=[("Primary", {"init_value": 65535}),
+                                                                    ("Secondary", {"init_value": 255})])
+        swc.create_r_port("Sensor", sensor_interface, com_spec=[("Sensor1", {"init_value": (2 ** 32) - 1}),
+                                                                ("Sensor2", {"init_value": 65535})])
+        swc.create_pr_port("SafeState", safe_state_interface, provided_com_spec={"init_value": False})
+        swc.create_r_port("VehicleMode", vehicle_mode_interface, com_spec={'supports_async': False})
+        swc.create_p_port("ApplicationMode", application_mode_interface)
+
+        return swc
+
+    def test_create_data_read_access(self):
+        workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("data_read_access_prefix", "READ")
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        runnable = behavior.create_runnable("MyApplication_Run")
+        runnable.create_port_access(["READ: EngineSpeed",
+                                     "READ: Sensor/Sensor2"])
+
+        self.assertEqual(len(runnable.data_read_access), 2)
+        child: ar_element.VariableAccess = runnable.data_read_access[0]
+        self.assertEqual(child.name, "READ_EngineSpeed_EngineSpeed")
+        variable = child.accessed_variable.ar_variable_iref
+        self.assertEqual(str(variable.port_prototype_ref), "/ComponentTypes/MyApplication/EngineSpeed")
+        self.assertEqual(str(variable.target_data_prototype_ref), "/PortInterfaces/EngineSpeed_I/EngineSpeed")
+        child = runnable.data_read_access[1]
+        self.assertEqual(child.name, "READ_Sensor_Sensor2")
+        variable = child.accessed_variable.ar_variable_iref
+        self.assertEqual(str(variable.port_prototype_ref), "/ComponentTypes/MyApplication/Sensor")
+        self.assertEqual(str(variable.target_data_prototype_ref), "/PortInterfaces/Sensor_I/Sensor2")
+
+    def test_create_default_data_receive_point_sender_receiver(self):
+        workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("data_receive_point_prefix", "REC")
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        runnable = behavior.create_runnable("MyApplication_Run")
+        runnable.create_port_access(["EngineSpeed", "Sensor/Sensor1"])
+
+        self.assertEqual(len(runnable.data_receive_point_by_argument), 2)
+        child: ar_element.VariableAccess = runnable.data_receive_point_by_argument[0]
+        self.assertEqual(child.name, "REC_EngineSpeed_EngineSpeed")
+        variable = child.accessed_variable.ar_variable_iref
+        self.assertEqual(str(variable.port_prototype_ref), "/ComponentTypes/MyApplication/EngineSpeed")
+        self.assertEqual(str(variable.target_data_prototype_ref), "/PortInterfaces/EngineSpeed_I/EngineSpeed")
+        child = runnable.data_receive_point_by_argument[1]
+        self.assertEqual(child.name, "REC_Sensor_Sensor1")
+        variable = child.accessed_variable.ar_variable_iref
+        self.assertEqual(str(variable.port_prototype_ref), "/ComponentTypes/MyApplication/Sensor")
+        self.assertEqual(str(variable.target_data_prototype_ref), "/PortInterfaces/Sensor_I/Sensor1")
+
+    def test_create_data_receive_point_by_argument_sender_receiver(self):
+        workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("data_receive_point_prefix", "REC")
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        runnable = behavior.create_runnable("MyApplication_Run")
+        runnable.create_port_access(["ARG:EngineSpeed", "ARGUMENT:Sensor/Sensor1"])
+
+        self.assertEqual(len(runnable.data_receive_point_by_argument), 2)
+        child: ar_element.VariableAccess = runnable.data_receive_point_by_argument[0]
+        self.assertEqual(child.name, "REC_EngineSpeed_EngineSpeed")
+        variable = child.accessed_variable.ar_variable_iref
+        self.assertEqual(str(variable.port_prototype_ref), "/ComponentTypes/MyApplication/EngineSpeed")
+        self.assertEqual(str(variable.target_data_prototype_ref), "/PortInterfaces/EngineSpeed_I/EngineSpeed")
+        child = runnable.data_receive_point_by_argument[1]
+        self.assertEqual(child.name, "REC_Sensor_Sensor1")
+        variable = child.accessed_variable.ar_variable_iref
+        self.assertEqual(str(variable.port_prototype_ref), "/ComponentTypes/MyApplication/Sensor")
+        self.assertEqual(str(variable.target_data_prototype_ref), "/PortInterfaces/Sensor_I/Sensor1")
+
+    def test_create_data_receive_point_by_value_sender_receiver(self):
+        workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("data_receive_point_prefix", "REC")
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        runnable = behavior.create_runnable("MyApplication_Run")
+        runnable.create_port_access(["VAL: EngineSpeed",
+                                     "VALUE: Sensor/Sensor1"])
+
+        self.assertEqual(len(runnable.data_receive_point_by_value), 2)
+        child: ar_element.VariableAccess = runnable.data_receive_point_by_value[0]
+        self.assertEqual(child.name, "REC_EngineSpeed_EngineSpeed")
+        variable = child.accessed_variable.ar_variable_iref
+        self.assertEqual(str(variable.port_prototype_ref), "/ComponentTypes/MyApplication/EngineSpeed")
+        self.assertEqual(str(variable.target_data_prototype_ref), "/PortInterfaces/EngineSpeed_I/EngineSpeed")
+        child = runnable.data_receive_point_by_value[1]
+        self.assertEqual(child.name, "REC_Sensor_Sensor1")
+        variable = child.accessed_variable.ar_variable_iref
+        self.assertEqual(str(variable.port_prototype_ref), "/ComponentTypes/MyApplication/Sensor")
+        self.assertEqual(str(variable.target_data_prototype_ref), "/PortInterfaces/Sensor_I/Sensor1")
+
+    def test_create_data_receive_point_with_ambiguous_element_name(self):
+        workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("data_receive_point_prefix", "REC")
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        runnable = behavior.create_runnable("MyApplication_Run")
+        with self.assertRaises(RuntimeError):
+            # Ambiguous name, the port interface has multiple data elements and giving just the port name shall
+            # raise an exception
+            runnable.create_port_access("ARG:Sensor")
+            runnable.create_port_access("READ:Sensor")
+
+    def test_create_data_receive_point_by_argument_from_nv_data(self):
+        workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("data_receive_point_prefix", "REC")
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        runnable = behavior.create_runnable("MyApplication_Run")
+        runnable.create_port_access("StoredData/Value")
+
+        self.assertEqual(len(runnable.data_receive_point_by_argument), 1)
+        child: ar_element.VariableAccess = runnable.data_receive_point_by_argument[0]
+        self.assertEqual(child.name, "REC_StoredData_Value")
+        variable = child.accessed_variable.ar_variable_iref
+        self.assertEqual(str(variable.port_prototype_ref), "/ComponentTypes/MyApplication/StoredData")
+        self.assertEqual(str(variable.target_data_prototype_ref), "/PortInterfaces/StoredData_I/Value")
+
+    def test_create_data_send_from_sender_receiver(self):
+        workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("data_send_point_prefix", "SEND")
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        runnable = behavior.create_runnable("MyApplication_Run")
+        runnable.create_port_access(["VehicleSpeed",
+                                     "Actuator/Primary"])
+
+        self.assertEqual(len(runnable.data_send_point), 2)
+        child: ar_element.VariableAccess = runnable.data_send_point[0]
+        self.assertEqual(child.name, "SEND_VehicleSpeed_VehicleSpeed")
+        variable = child.accessed_variable.ar_variable_iref
+        self.assertEqual(str(variable.port_prototype_ref), "/ComponentTypes/MyApplication/VehicleSpeed")
+        self.assertEqual(str(variable.target_data_prototype_ref), "/PortInterfaces/VehicleSpeed_I/VehicleSpeed")
+        child = runnable.data_send_point[1]
+        self.assertEqual(child.name, "SEND_Actuator_Primary")
+        variable = child.accessed_variable.ar_variable_iref
+        self.assertEqual(str(variable.port_prototype_ref), "/ComponentTypes/MyApplication/Actuator")
+        self.assertEqual(str(variable.target_data_prototype_ref), "/PortInterfaces/Actuator_I/Primary")
+
+    def test_create_data_write_access_from_sender_receiver(self):
+        workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("data_write_access_prefix", "WRITE")
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        runnable = behavior.create_runnable("MyApplication_Run")
+        runnable.create_port_access(["WRITE:VehicleSpeed", "WRITE:Actuator/Primary"])
+
+        self.assertEqual(len(runnable.data_write_access), 2)
+        child: ar_element.VariableAccess = runnable.data_write_access[0]
+        self.assertEqual(child.name, "WRITE_VehicleSpeed_VehicleSpeed")
+        variable = child.accessed_variable.ar_variable_iref
+        self.assertEqual(str(variable.port_prototype_ref), "/ComponentTypes/MyApplication/VehicleSpeed")
+        self.assertEqual(str(variable.target_data_prototype_ref), "/PortInterfaces/VehicleSpeed_I/VehicleSpeed")
+        child = runnable.data_write_access[1]
+        self.assertEqual(child.name, "WRITE_Actuator_Primary")
+        variable = child.accessed_variable.ar_variable_iref
+        self.assertEqual(str(variable.port_prototype_ref), "/ComponentTypes/MyApplication/Actuator")
+        self.assertEqual(str(variable.target_data_prototype_ref), "/PortInterfaces/Actuator_I/Primary")
+
+    # # TODO: implement unit test for external_triggering_point and internal_triggering_point
+
+    def test_create_default_mode_access_point(self):
+        workspace = autosar.xml.Workspace()
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        runnable = behavior.create_runnable("MyApplication_Run")
+        runnable.create_port_access(["VehicleMode", "ApplicationMode"])
+        self.assertEqual(len(runnable.mode_access_point), 2)
+        child: ar_element.ModeAccessPoint = runnable.mode_access_point[0]
+        self.assertIsNone(child.ident)
+        r_mode_group: ar_element.RModeGroupInAtomicSwcInstanceRef = child.mode_group
+        self.assertIsInstance(r_mode_group, ar_element.RModeGroupInAtomicSwcInstanceRef)
+        self.assertEqual(str(r_mode_group.context_port), "/ComponentTypes/MyApplication/VehicleMode")
+        self.assertEqual(str(r_mode_group.target_mode_group), "/PortInterfaces/VehicleMode_I/mode")
+        child: ar_element.ModeAccessPoint = runnable.mode_access_point[1]
+        self.assertIsNone(child.ident)
+        p_mode_group: ar_element.PModeGroupInAtomicSwcInstanceRef = child.mode_group
+        self.assertIsInstance(p_mode_group, ar_element.PModeGroupInAtomicSwcInstanceRef)
+        self.assertEqual(str(p_mode_group.context_port), "/ComponentTypes/MyApplication/ApplicationMode")
+        self.assertEqual(str(p_mode_group.target_mode_group), "/PortInterfaces/ApplicationMode_I/mode")
+
+    def test_create_named_mode_access_point(self):
+        workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("mode_access_point_prefix", "ACCESS")
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        runnable = behavior.create_runnable("MyApplication_Run")
+        runnable.create_port_access(["ACCESS:VehicleMode", "ACCESS:ApplicationMode"])
+        self.assertEqual(len(runnable.mode_access_point), 2)
+        child: ar_element.ModeAccessPoint = runnable.mode_access_point[0]
+        self.assertEqual(child.ident.name, "ACCESS_VehicleMode_mode")
+        r_mode_group: ar_element.RModeGroupInAtomicSwcInstanceRef = child.mode_group
+        self.assertIsInstance(r_mode_group, ar_element.RModeGroupInAtomicSwcInstanceRef)
+        self.assertEqual(str(r_mode_group.context_port), "/ComponentTypes/MyApplication/VehicleMode")
+        self.assertEqual(str(r_mode_group.target_mode_group), "/PortInterfaces/VehicleMode_I/mode")
+        child: ar_element.ModeAccessPoint = runnable.mode_access_point[1]
+        self.assertEqual(child.ident.name, "ACCESS_ApplicationMode_mode")
+        p_mode_group: ar_element.PModeGroupInAtomicSwcInstanceRef = child.mode_group
+        self.assertIsInstance(p_mode_group, ar_element.PModeGroupInAtomicSwcInstanceRef)
+        self.assertEqual(str(p_mode_group.context_port), "/ComponentTypes/MyApplication/ApplicationMode")
+        self.assertEqual(str(p_mode_group.target_mode_group), "/PortInterfaces/ApplicationMode_I/mode")
+
+    def test_create_mode_switch_point(self):
+        workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("mode_switch_point_prefix", "SWITCH")
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        runnable = behavior.create_runnable("MyApplication_Run")
+        runnable.create_port_access("SWITCH:ApplicationMode")
+        self.assertEqual(len(runnable.mode_switch_point), 1)
+        child: ar_element.ModeSwitchPoint = runnable.mode_switch_point[0]
+        self.assertEqual(child.name, "SWITCH_ApplicationMode_mode")
+        mode_group: ar_element.PModeGroupInAtomicSwcInstanceRef = child.mode_group
+        self.assertIsInstance(mode_group, ar_element.PModeGroupInAtomicSwcInstanceRef)
+        self.assertEqual(str(mode_group.context_port), "/ComponentTypes/MyApplication/ApplicationMode")
+        self.assertEqual(str(mode_group.target_mode_group), "/PortInterfaces/ApplicationMode_I/mode")
+
+    def test_parameter_access(self):
+        workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("parameter_access_prefix", "PRM")
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        runnable = behavior.create_runnable("MyApplication_Run")
+        runnable.create_port_access(["CalibrationData/p1", "CalibrationData/p2"])
+        self.assertEqual(len(runnable.parameter_access), 2)
+        child: ar_element.ParameterAccess = runnable.parameter_access[0]
+        self.assertEqual(child.name, "PRM_CalibrationData_p1")
+        parameter = child.accessed_parameter.autosar_parameter
+        self.assertEqual(str(parameter.port_prototype), "/ComponentTypes/MyApplication/CalibrationData")
+        self.assertEqual(str(parameter.target_data_prototype), "/PortInterfaces/Calibration_I/p1")
+        child = runnable.parameter_access[1]
+        self.assertEqual(child.name, "PRM_CalibrationData_p2")
+        parameter = child.accessed_parameter.autosar_parameter
+        self.assertEqual(str(parameter.port_prototype), "/ComponentTypes/MyApplication/CalibrationData")
+        self.assertEqual(str(parameter.target_data_prototype), "/PortInterfaces/Calibration_I/p2")
+
+    def test_server_call_point(self):
+        """
+        This also tests adding additional arguments using tuples
+        """
+        workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("server_call_point_prefix", "SC")
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        runnable = behavior.create_runnable("MyApplication_Run")
+        exclusive_are_ref = ar_element.ExclusiveAreaNestingOrderRef("/ComponentTypes/MyApplication/MyExclusiveArea")
+        runnable.create_port_access([("SYNC:Timer/GetTime",
+                                      {"timeout": 1.0, "called_from_within_exclusive_area": exclusive_are_ref}),
+                                     "Timer/IsTimerElapsed"])
+
+        self.assertEqual(len(runnable.server_call_point), 2)
+        child: ar_element.SynchronousServerCallPoint = runnable.server_call_point[0]
+        self.assertIsInstance(child, ar_element.SynchronousServerCallPoint)
+        self.assertEqual(child.name, "SC_Timer_GetTime")
+        operation = child.operation
+        self.assertEqual(str(operation.context_port), "/ComponentTypes/MyApplication/Timer")
+        self.assertEqual(str(operation.target_required_operation), "/PortInterfaces/FreeRunningTimer_I/GetTime")
+        self.assertAlmostEqual(child.timeout, 1.0)
+        self.assertEqual(str(child.called_from_within_exclusive_area), str(exclusive_are_ref))
+        child = runnable.server_call_point[1]
+        self.assertIsInstance(child, ar_element.SynchronousServerCallPoint)
+        self.assertEqual(child.name, "SC_Timer_IsTimerElapsed")
+        operation = child.operation
+        self.assertEqual(str(operation.context_port), "/ComponentTypes/MyApplication/Timer")
+        self.assertEqual(str(operation.target_required_operation), "/PortInterfaces/FreeRunningTimer_I/IsTimerElapsed")
+        self.assertIsNone(child.timeout)
+
+    def test_custom_symbol(self):
+        workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("server_call_point_prefix", "SC")
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        runnable = behavior.create_runnable("MyApplication_Run", symbol="Run")
+        self.assertEqual(runnable.symbol, "Run")
 
 
 if __name__ == '__main__':

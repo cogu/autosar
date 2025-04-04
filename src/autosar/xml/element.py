@@ -4,6 +4,7 @@ Classes related to AUTOSAR XML Elements
 
 import re
 from collections.abc import Iterable, Iterator
+from dataclasses import dataclass
 from typing import Any, Union
 
 
@@ -254,16 +255,23 @@ class Identifiable(MultiLanguageReferrable):
         Utility method used for generating reference strings
         """
         ref_parts.append(self.name)
-        self.parent.update_ref_parts(ref_parts)
+        if self.parent is None:
+            ref_parts.append(None)
+        else:
+            self.parent.update_ref_parts(ref_parts)
 
     def _calc_ref_string(self) -> str | None:
         """
-        Calculates reference string based on parent
+        Calculates reference string based on parent tree
+        If a missing parent is detected during tree-traversal
+        the function as a whole will returns None
         """
         if self.parent is None:
             return None
         ref_parts: list[str] = [self.name]
         self.parent.update_ref_parts(ref_parts)
+        if ref_parts[-1] is None:
+            return None
         return '/'.join(reversed(ref_parts))
 
 
@@ -284,6 +292,38 @@ class ARElement(CollectableElement):
 
     Base class for all package-elements
     """
+
+# Utility functions
+
+
+def make_unique_name_in_list(elements: list[Referrable], base_name: str):
+    """
+    Attempts to find a unique name in the list of elements.
+    This function can modify names in the given list.
+    If an element with the name base_name already exists in the list it will
+    append "_0" to the existing element and any newly added element will have
+    its suffix automatically increased by 1.
+    Returns a new name which is guaranteed to be unique in the given list
+    """
+    has_index = False
+    highest_index = 0
+    unpatched_elem: Referrable | None = None
+    expr = re.compile(base_name + r'_(\d+)')
+    for element in elements:
+        result = expr.match(element.name)
+        if result is not None:
+            has_index = True
+            index = int(result.group(1))
+            highest_index = max(highest_index, index)
+        elif element.name == base_name:
+            unpatched_elem = element
+    if unpatched_elem is not None:
+        unpatched_elem.name = '_'.join([unpatched_elem.name, '0'])
+    if has_index or unpatched_elem is not None:
+        return '_'.join([base_name, str(highest_index + 1)])
+    else:
+        return base_name
+
 
 # Common structure elements
 
@@ -2441,7 +2481,7 @@ class ValueSpecification(ARObject):
     @classmethod
     def make_value_with_check(cls,
                               value: InitValueArgType | None = None,
-                              ) -> ValueSpecificationElement:
+                              ) -> ValueSpecificationElement | None:
         """
         #convenience-method
 
@@ -2851,15 +2891,31 @@ class BehaviorSettings:
 
     def __init__(self) -> None:
 
-        # Default prefix used for generating event names
-        self.background_event_prefix: str | None = None  # BackgroundEvent prefix
-        self.data_receive_error_event_prefix: str | None = None  # DataReceiveErrorEvent prefix
-        self.data_receive_event_prefix: str | None = None  # DataReceivedEvent prefix
-        self.init_event_prefix: str | None = None  # InitEvent prefix
-        self.operation_invoked_event_prefix: str | None = None  # OperationInvokedEvent prefix
-        self.swc_mode_manager_error_event_prefix: str | None = None  # SwcModeManagerErrorEvent prefix
-        self.swc_mode_switch_event_prefix: str | None = None  # SwcModeSwitchEvent prefix
-        self.timing_event_prefix: str | None = None  # TimingEvent prefix
+        # Events
+        self.background_event_prefix: str | None = None  # BackgroundEvent name prefix
+        self.data_receive_error_event_prefix: str | None = None  # DataReceiveErrorEvent name prefix
+        self.data_receive_event_prefix: str | None = None  # DataReceivedEvent name prefix
+        self.init_event_prefix: str | None = None  # InitEvent name prefix
+        self.operation_invoked_event_prefix: str | None = None  # OperationInvokedEvent name prefix
+        self.swc_mode_manager_error_event_prefix: str | None = None  # SwcModeManagerErrorEvent name prefix
+        self.swc_mode_switch_event_prefix: str | None = None  # SwcModeSwitchEvent name prefix
+        self.timing_event_prefix: str | None = None  # TimingEvent name prefix
+        # Runnables
+        self.data_read_access_prefix: str | None = None  # DATA-READ-ACCESS name prefix
+        # (DATA-RECEIVE-POINT-BY-ARGUMENT and DATA-RECEIVE-POINT-BY-VALUE) name prefix
+        self.data_receive_point_prefix: str | None = None
+        self.data_send_point_prefix: str | None = None  # DATA-SEND-POINT name prefix
+        self.data_write_access_prefix: str | None = None  # DATA-WRITE-ACCESSS name prefix
+
+        self.external_triggering_point_prefix: str | None = None  # EXTERNAL-TRIGGERING-POINT name prefix
+        self.internal_triggering_point_prefix: str | None = None  # INTERNAL-TRIGGERING-POINT name prefix
+        self.mode_access_point_prefix: str | None = None  # MODE-ACCESS-POINT name prefix
+        self.mode_switch_point_prefix: str | None = None  # MODE-SWITCH-POINT name prefix
+        self.parameter_access_prefix: str | None = None  # PARAMETER-ACCESS name prefix
+        self.read_local_variable_prefix: str | None = None  # READ-LOCAL-VARIABLE name prefix
+        self.server_call_point_prefix: str | None = None  # SERVER-CALL-POINT name prefix
+        self.wait_point_prefix: str | None = None  # WAIT_POINT name prefix
+        self.write_local_variable_prefix: str | None = None  # WRITTEN-LOCAL-VARIABLE name prefix
 
     def set_value(self, name: str, value: str):
         """
@@ -2878,6 +2934,20 @@ class BehaviorSettings:
         """
         for name, value in value_map.items():
             self.set_value(name, value)
+
+    def set_default(self):
+        """
+        Set default values (Not yet implemented)
+        """
+
+    def get_value(self, name: str) -> str:
+        """
+        Returns named value only if it's not None
+        """
+        value = getattr(self, name)
+        if value is None:
+            raise ValueError(f"{name} is not set in behavior settings")
+        return value
 
 
 class PackageCollection:
@@ -2915,7 +2985,8 @@ class PackageCollection:
         if isinstance(ref, BaseRef):
             ref = str(ref)
         if not isinstance(ref, str):
-            raise TypeError("ref: Must be either a string or a valid reference class")
+            raise TypeError("ref: Must be either a string or a valid reference class."
+                            f"Got '{str(type(ref))}'")
         if ref.startswith('/'):
             ref = ref[1:]
         parts = ref.partition('/')
@@ -2958,6 +3029,23 @@ class PackageCollection:
                 package = package.make_packages(parts[2])
             result.append(package)
         return result[0] if len(result) == 1 else result
+
+    def get_valid_behavior_settings(self) -> BehaviorSettings:
+        """
+        Verifies that behavior_settings is a proper object before returning it
+        """
+        if not isinstance(self.behavior_settings, BehaviorSettings):
+            raise ValueError("Object doesn't seem to be a proper workspace")
+        return self.behavior_settings
+
+    def get_port_interface(self, ref: str | BaseRef) -> "PortInterface":
+        """
+        Find port inteface from reference
+        """
+        port_interface = self.find(ref)
+        if port_interface is None:
+            raise ar_except.InvalidReferenceError(f"Invalid port interface reference: '{str(port_interface)}'")
+        return port_interface
 
 # --- ModeDeclaration elements
 
@@ -3254,8 +3342,8 @@ class SenderReceiverInterface(DataInterface):
         Appends data element to internal list of elements
         """
         if isinstance(data_element, VariableDataPrototype):
-            data_element.parent = self
             self.data_elements.append(data_element)
+            data_element.parent = self
         else:
             msg = f"data_element: Invalid type '{str(type(data_element))}'"
             raise TypeError(msg + ". Expected 'VariableDataPrototype'")
@@ -3342,6 +3430,7 @@ class NvDataInterface(DataInterface):
         """
         if isinstance(nv_data, VariableDataPrototype):
             self.data_elements.append(nv_data)
+            nv_data.parent = self
         else:
             msg = f"nv_data: Invalid type '{str(type(nv_data))}'"
             raise TypeError(msg + ". Expected 'VariableDataPrototype'")
@@ -3398,6 +3487,7 @@ class ParameterInterface(DataInterface):
         """
         if isinstance(parameter, ParameterDataPrototype):
             self.parameters.append(parameter)
+            parameter.parent = self
         else:
             msg = f"parameter: Invalid type '{str(type(parameter))}'"
             raise TypeError(msg + ". Expected 'ParameterDataPrototype'")
@@ -3634,8 +3724,8 @@ class ClientServerInterface(PortInterface):
         Appends operation to internal list of operations
         """
         if isinstance(operation, ClientServerOperation):
-            operation.parent = self
             self.operations.append(operation)
+            operation.parent = self
         else:
             msg = f"operation: Invalid type '{str(type(operation))}'"
             raise TypeError(msg + ". Expected 'ClientServerOperation'")
@@ -3920,8 +4010,9 @@ class ProvidePortComSpec(ARObject):
                                                                            **com_spec_args)
                         com_spec_list.append(com_spec)
                 if len(unprocessed) > 0:
-                    operations = ', '.join(list[unprocessed])
-                    raise ValueError(f"{port_interface.name}: Operation(s) not found in port interface: '{operations}'")
+                    element_names = ', '.join(list(unprocessed))
+                    msg = f"{port_interface.name}: Data element(s) not found in port interface: '{element_names}'"
+                    raise ValueError(msg)
                 return com_spec_list
         if isinstance(port_interface, ClientServerInterface):
             if len(port_interface.operations) == 0:
@@ -3941,9 +4032,8 @@ class ProvidePortComSpec(ARObject):
                         com_spec = ServerComSpec(operation_ref=operation.ref(), **com_spec_args)
                         com_spec_list.append(com_spec)
                 if len(unprocessed) > 0:
-                    element_names = ', '.join(list[unprocessed])
-                    msg = f"{port_interface.name}: Data element(s) not found in port interface: '{element_names}'"
-                    raise ValueError(msg)
+                    operations = ', '.join(list(unprocessed))
+                    raise ValueError(f"{port_interface.name}: Operation(s) not found in port interface: '{operations}'")
                 return com_spec_list
         else:
             raise NotImplementedError(str(type(port_interface)))
@@ -4754,7 +4844,7 @@ class SwComponentType(ARElement, Searchable):
     def create_p_port(self,
                       name: str,
                       port_interface: PortInterface | None = None,
-                      com_spec: dict | list[dict] | ProvidePortComSpec | list[ProvidePortComSpec] | None = None,
+                      com_spec: dict | list[tuple[str, dict]] | ProvidePortComSpec | list[ProvidePortComSpec] | None = None,  # noqa E501 pylint: disable=C0301
                       **kwargs) -> ProvidePortPrototype:
         """
         #convenience-method
@@ -4765,6 +4855,25 @@ class SwComponentType(ARElement, Searchable):
             if isinstance(com_spec, dict):
                 com_spec = ProvidePortComSpec.make_from_port_interface(port_interface, **com_spec)
                 assert com_spec is not None
+            elif isinstance(com_spec, Iterable):
+                processed = []
+                unprocessed = {}
+                for elem in com_spec:
+                    if isinstance(elem, ProvidePortComSpec):
+                        processed.append(elem)
+                    elif isinstance(elem, tuple):
+                        if not len(elem) == 2:
+                            raise NotImplementedError("Com-spec element must be a 2-tuple containing [str, dict]. "
+                                                      f"Got tuple with length {len(elem)}")
+                        else:
+                            unprocessed[elem[0]] = elem[1]
+                    else:
+                        raise TypeError(f"Unsupported type in com-spec element: {str(type(elem))}")
+                if len(unprocessed):
+                    processed.extend(ProvidePortComSpec.make_from_port_interface(port_interface, **unprocessed))
+                com_spec = processed
+            else:
+                com_spec = None  # Clear when not implemented
         port = ProvidePortPrototype(name, port_interface.ref(), com_spec, **kwargs)
         self.append_port(port)
         return port
@@ -4772,7 +4881,7 @@ class SwComponentType(ARElement, Searchable):
     def create_provide_port(self,
                             name: str,
                             port_interface: PortInterface | None = None,
-                            com_spec: dict | list[dict] | ProvidePortComSpec | list[ProvidePortComSpec] | None = None,
+                            com_spec: dict | list[tuple[str, dict]] | ProvidePortComSpec | list[ProvidePortComSpec] | None = None,  # noqa E501 pylint: disable=C0301
                             **kwargs) -> ProvidePortPrototype:
         """
         #convenience-method
@@ -4796,6 +4905,25 @@ class SwComponentType(ARElement, Searchable):
             if isinstance(com_spec, dict):
                 com_spec = RequirePortComSpec.make_from_port_interface(port_interface, **com_spec)
                 assert com_spec is not None
+            elif isinstance(com_spec, Iterable):
+                processed = []
+                unprocessed = {}
+                for elem in com_spec:
+                    if isinstance(elem, RequirePortComSpec):
+                        processed.append(elem)
+                    elif isinstance(elem, tuple):
+                        if not len(elem) == 2:
+                            raise NotImplementedError("Com-spec element must be a 2-tuple containing [str, dict]. "
+                                                      f"Got tuple with length {len(elem)}")
+                        else:
+                            unprocessed[elem[0]] = elem[1]
+                    else:
+                        raise TypeError(f"Unsupported type in com-spec element: {str(type(elem))}")
+                if len(unprocessed):
+                    processed.extend(RequirePortComSpec.make_from_port_interface(port_interface, **unprocessed))
+                com_spec = processed
+            else:
+                com_spec = None  # Clear when not implemented
         port = RequirePortPrototype(name, port_interface.ref(), com_spec, allow_unconnected, **kwargs)
         self.append_port(port)
         return port
@@ -4969,6 +5097,7 @@ class AtomicSoftwareComponentType(SwComponentType):
         if name is None:
             name = self.name + "_InternalBehavior"
         self.internal_behavior = SwcInternalBehavior(name, **kwargs)
+        self.internal_behavior.parent = self
         return self.internal_behavior
 
 
@@ -5582,10 +5711,10 @@ class VariableInAtomicSWCTypeInstanceRef(ARObject):
         # .TARGET-DATA-PROTOTYPE-REF
         self.target_data_prototype_ref: DataPrototypeRef | None = None
 
-        self._assign_optional_strict("port_prototype_ref", port_prototype_ref, PortPrototypeRef)
-        self._assign_optional_strict("root_variable_data_prototype_ref",
-                                     root_variable_data_prototype_ref, VariableDataPrototypeRef)
-        self._assign_optional_strict("target_data_prototype_ref", target_data_prototype_ref, DataPrototypeRef)
+        self._assign_optional("port_prototype_ref", port_prototype_ref, PortPrototypeRef)
+        self._assign_optional("root_variable_data_prototype_ref",
+                              root_variable_data_prototype_ref, VariableDataPrototypeRef)
+        self._assign_optional("target_data_prototype_ref", target_data_prototype_ref, DataPrototypeRef)
         if context_data_prototype_refs is not None:
             if isinstance(context_data_prototype_refs, ApplicationCompositeElementDataPrototypeRef):
                 self.append_context_data_protype_ref(context_data_prototype_refs)
@@ -5654,6 +5783,22 @@ class VariableAccess(Identifiable):
         # .VARIATION-POINT not supported
         self._assign_optional_strict("accessed_variable", accessed_variable, AutosarVariableRef)
         self._assign_optional("scope", scope, ar_enum.VariableAccessScope)
+
+    @classmethod
+    def make_from_port(cls,
+                       name: str,
+                       port_prototype_ref: PortPrototypeRef,
+                       target_data_prototype_ref: DataPrototypeRef,
+                       **kwargs) -> "VariableAccess":
+        """
+        #convenience-method
+
+        Simplified creation method for use with VariableInAtomicSWCTypeInstanceRef
+        """
+        variable_iref = VariableInAtomicSWCTypeInstanceRef(port_prototype_ref=port_prototype_ref,
+                                                           target_data_prototype_ref=target_data_prototype_ref)
+        autosar_variable_ref = AutosarVariableRef(ar_variable_iref=variable_iref)
+        return cls(name, autosar_variable_ref, **kwargs)
 
 
 class SwcImplementation(Implementation):
@@ -6110,7 +6255,7 @@ class ParameterAccess(AbstractAccessPoint):
             elif isinstance(sw_data_def_props, SwDataDefPropsConditional):
                 self.sw_data_def_props = SwDataDefProps(sw_data_def_props)
             else:
-                raise TypeError("sw_data_def_props: must be one of (SwDataDefProps, SwDataDefPropsConditional)")
+                raise TypeError("sw_data_def_props: Type must be one of (SwDataDefProps, SwDataDefPropsConditional)")
 
 
 class WaitPoint(Identifiable):
@@ -6138,6 +6283,18 @@ AsyncServerCallResultPointArgumentType = AsynchronousServerCallResultPoint | lis
 ServerCallPointArgumentType = Union[AsynchronousServerCallPoint,
                                     SynchronousServerCallPoint,
                                     list[AsynchronousServerCallPoint | SynchronousServerCallPoint]]
+
+
+@dataclass
+class PortAccessOptions:
+    """
+    Internal class used for creating port access
+    """
+
+    access: ar_enum.PortAccess = ar_enum.PortAccess.EXPLICIT
+    result: ar_enum.ReadResult = ar_enum.ReadResult.BY_ARGUMENT
+    mode: ar_enum.ModeAccess | None = None
+    call: ar_enum.CallPoint = ar_enum.CallPoint.SYNC
 
 
 class RunnableEntity(ExecutableEntity):
@@ -6202,7 +6359,7 @@ class RunnableEntity(ExecutableEntity):
         self.symbol: str | None = None
         # .WAIT-POINTS
         self.wait_point: list[WaitPoint] = []
-        # .WRITTEN-LOCAL-VARIABLES (Change used variable name to match )
+        # .WRITTEN-LOCAL-VARIABLES (We use a different name in our variable)
         self.write_local_variable: list[VariableAccess] = []
 
         # Simple arguments
@@ -6330,6 +6487,278 @@ class RunnableEntity(ExecutableEntity):
         ref_str = self._calc_ref_string()
         return None if ref_str is None else RunnableEntityRef(ref_str)
 
+    def create_port_access(self,
+                           elements: str | list[str] | tuple[str, dict] | list[tuple[str, dict]]
+                           ) -> None:
+        """
+        #convenience-method
+
+        Attempts to automatically create new port access points based on SWC port names.
+        Before this function can be used you must first setup the necessary name prefixes in the
+        BehaviorSeettings object (see unit tests for examples).
+
+        Arguments:
+        elements: list of strings (See below).
+                  Optionally each element can be of type tuple[str, dict] where the the dict is used
+                  as additional arguments for during the access point creation.
+
+        SenderReceiver and NvData Interfaces:
+            String formats:
+                1. "<prefix>:<port-name>/<element-name>"
+                2. "<prefix>:<port-name>
+                3. "<port-name>/<element-name>"
+                4. "<port-name>"
+            Accepted Prefixes:
+                * "ARGUMENT" | "ARG" (default for r-port): Explicit read. Value is returned by argument.
+                * "VALUE" | "VAL" : Explicit read. Value is returned by function return.
+                * "READ" : Implicit read.
+                * "WRITE" : Implicit write.
+                * "SEND" (defalt for p-port) : Explicit write.
+
+        ClientServer Interface:
+            String formats:
+                1. "<prefix>:<port-name>/<operation-name>"
+                2. "<port-name>/<operation-name>"
+            Accepted Prefixes:
+                * "ASYNC" : Asynchronous call point
+                * "SYNC" (default) : Synchronous call point
+
+        ModeSwitch Interface:
+            String formats:
+                1. "<prefix>:<port-name>"
+                2. "<port-name>"
+            Accepcted prefixes:
+                * "ACCESS" (default) : ModeAccessPoint
+                * "SWITCH" :  ModeSwitchpoint
+
+        """
+        behavior = self.get_valid_parent()
+        swc = behavior.get_valid_parent()
+        workspace: PackageCollection = swc.root_collection()
+        if workspace is None:
+            raise ValueError("Runnable doesn't seem to belong to a root collection")
+        settings = workspace.get_valid_behavior_settings()
+        if isinstance(elements, (str, tuple)):
+            elements = [elements]
+        for elem in elements:
+            if isinstance(elem, tuple):
+                text, access_point_args = elem
+            else:
+                text, access_point_args = elem, None
+            options = PortAccessOptions()
+            parts = text.partition(":")
+            if parts[1] == ":":
+                self._parse_port_access_option(parts[0].upper(), options)
+                port_arg = parts[2].lstrip()
+            else:
+                port_arg = parts[0]
+            ref = port_arg.partition("/")
+            port_name = ref[0]
+            port: PortPrototypeElement = swc.find(port_name)
+            if port is None:
+                raise ValueError(f"Invalid port name: {port_name}")
+            port_interface = workspace.get_port_interface(port.port_interface_ref)
+            self._create_port_access_internal(port, port_interface, ref[2], settings, options, access_point_args)
+
+    def _parse_port_access_option(self, text: str, options: PortAccessOptions) -> None:
+        """
+        Parses port access option prefixes
+        """
+        if text == 'ASYNC':
+            options.call = ar_enum.CallPoint.ASYNC
+        elif text == "SYNC":
+            options.call = ar_enum.CallPoint.SYNC
+        elif text in ["READ", "WRITE"]:
+            options.access = ar_enum.PortAccess.IMPLICIT
+        elif text in ["ARGUMENT", "ARG"]:
+            options.access = ar_enum.PortAccess.EXPLICIT
+            options.result = ar_enum.ReadResult.BY_ARGUMENT
+        elif text in ["VALUE", "VAL"]:
+            options.access = ar_enum.PortAccess.EXPLICIT
+            options.result = ar_enum.ReadResult.BY_VALUE
+        elif text == "SEND":
+            options.access = ar_enum.PortAccess.EXPLICIT
+        elif text == "ACCESS":
+            options.mode = ar_enum.ModeAccess.ACCESS
+        elif text == "SWITCH":
+            options.mode = ar_enum.ModeAccess.SWITCH
+        else:
+            raise ValueError(f"Unrecognized access option: '{text}'")
+
+    def _create_port_access_internal(self,
+                                     port: PortPrototypeElement,
+                                     port_interface: PortInterface,
+                                     element_name: str,
+                                     settings: BehaviorSettings,
+                                     options: PortAccessOptions,
+                                     access_point_args: dict[str, Any] | None) -> None:
+        """
+        Helper function for creating port access
+        """
+        if isinstance(port_interface, (SenderReceiverInterface, NvDataInterface)):
+            self._create_data_based_port_access(port, port_interface, element_name,
+                                                settings, options.access, options.result)
+        elif isinstance(port_interface, ModeSwitchInterface):
+            self._create_mode_based_port_access(port, port_interface, element_name, settings, options.mode)
+        elif isinstance(port_interface, ParameterInterface):
+            self._create_parameter_port_access(port, port_interface, element_name, settings)
+        elif isinstance(port_interface, ClientServerInterface):
+            self._create_client_server_port_access(port, port_interface, element_name,
+                                                   settings, options.call, access_point_args)
+        else:
+            raise NotImplementedError(str(type(port_interface)))
+
+    def _create_data_based_port_access(self,
+                                       port: PortPrototypeElement,
+                                       port_interface: SenderReceiverInterface | NvDataInterface,
+                                       element_name: str,
+                                       settings: BehaviorSettings,
+                                       access_type: ar_enum.PortAccess,
+                                       result_type: ar_enum.ReadResult) -> None:
+        """
+        Automatically create port access for SenderReceiverInterface or NvDataInterface
+        """
+        data_element = None
+        if len(element_name) == 0:
+            if len(port_interface.data_elements) == 1:
+                data_element = port_interface.data_elements[0]
+        else:
+            for element in port_interface.data_elements:
+                if element.name == element_name:
+                    data_element = element
+        if data_element is None:
+            raise RuntimeError(f"Unable to find a matching data element '{element_name}' "
+                               f"in port interface '{port_interface.name}'")
+        if isinstance(port, RequirePortPrototype):
+            if access_type == ar_enum.PortAccess.IMPLICIT:
+                name = "_".join([settings.get_value("data_read_access_prefix"), port.name, data_element.name])
+                self.append_data_read_access(VariableAccess.make_from_port(name, port.ref(), data_element.ref()))
+            else:
+                name = "_".join([settings.get_value("data_receive_point_prefix"), port.name, data_element.name])
+                variable_access = VariableAccess.make_from_port(name, port.ref(), data_element.ref())
+                if result_type == ar_enum.ReadResult.BY_VALUE:
+                    self.append_data_receive_point_by_value(variable_access)
+                else:
+                    self.append_data_receive_point_by_argument(variable_access)
+        elif isinstance(port, ProvidePortPrototype):
+            if access_type == ar_enum.PortAccess.IMPLICIT:
+                name = "_".join([settings.get_value("data_write_access_prefix"), port.name, data_element.name])
+                self.append_data_write_access(VariableAccess.make_from_port(name, port.ref(), data_element.ref()))
+            else:
+                name = "_".join([settings.get_value("data_send_point_prefix"), port.name, data_element.name])
+                variable_access = VariableAccess.make_from_port(name, port.ref(), data_element.ref())
+                self.append_data_send_point(variable_access)
+        else:
+            raise TypeError(f"Type not supported: {str(type(port))}")
+
+    def _create_parameter_port_access(self,
+                                      port: PortPrototypeElement,
+                                      port_interface: ParameterInterface,
+                                      parameter_name: str,
+                                      settings: BehaviorSettings) -> None:
+        """
+        Creates port access for parameter interface
+        """
+        target_data = None
+        if len(parameter_name) == 0:
+            if len(port_interface.parameters) == 1:
+                target_data = port_interface.parameter[0]
+        else:
+            for element in port_interface.parameters:
+                if element.name == parameter_name:
+                    target_data = element
+        if target_data is None:
+            raise RuntimeError(f"Unable to find a matching parameter element '{parameter_name}' "
+                               f"in port interface '{port_interface.name}'")
+        parameter_iref = ParameterInAtomicSwcTypeInstanceRef(port_prototype=port.ref(),
+                                                             target_data_prototype=target_data.ref())
+        name = "_".join([settings.get_value("parameter_access_prefix"),
+                         port.name,
+                         target_data.name])
+        parameter_access = ParameterAccess(name, AutosarParameterRef(autosar_parameter=parameter_iref))
+        self.append_parameter_access(parameter_access)
+
+    def _create_mode_based_port_access(self,
+                                       port: PortPrototypeElement,
+                                       port_interface: ModeSwitchInterface,
+                                       mode_group_name: str,
+                                       settings: BehaviorSettings,
+                                       access_type: ar_enum.ModeAccess | None) -> None:
+        """
+        Creates port access for mode-based interfaces
+        """
+        mode_group = None
+        if len(mode_group_name) != 0:
+            if mode_group_name == port_interface.mode_group.name:
+                mode_group = port_interface.mode_group
+        else:
+            mode_group = port_interface.mode_group
+        if mode_group is None:
+            raise RuntimeError(f"Unable to find a ModeDeclarationGroupPrototype named '{mode_group_name}' "
+                               f"in port interface '{port_interface.name}'")
+        access_point = None
+        if isinstance(port, RequirePortPrototype):
+            mode_group_iref = RModeGroupInAtomicSwcInstanceRef(port.ref(), mode_group.ref())
+            if access_type is None:
+                access_point = ModeAccessPoint(mode_group=mode_group_iref)
+            elif access_type == ar_enum.ModeAccess.ACCESS:
+                name = "_".join([settings.get_value("mode_access_point_prefix"), port.name, mode_group.name])
+                ident = ModeAccessPointIdent(name)
+                access_point = ModeAccessPoint(ident=ident, mode_group=mode_group_iref)
+        elif isinstance(port, ProvidePortPrototype):
+            mode_group_iref = PModeGroupInAtomicSwcInstanceRef(port.ref(), mode_group.ref())
+            if access_type is None:
+                access_point = ModeAccessPoint(mode_group=mode_group_iref)
+            elif access_type == ar_enum.ModeAccess.ACCESS:
+                name = "_".join([settings.get_value("mode_access_point_prefix"), port.name, mode_group.name])
+                ident = ModeAccessPointIdent(name)
+                access_point = ModeAccessPoint(ident=ident, mode_group=mode_group_iref)
+            else:
+                name = "_".join([settings.get_value("mode_switch_point_prefix"), port.name, mode_group.name])
+                switch_point = ModeSwitchPoint(name, mode_group_iref)
+                self.append_mode_switch_point(switch_point)
+        if access_point:
+            self.append_mode_access_point(access_point)
+
+    def _create_client_server_port_access(self,
+                                          port: PortPrototypeElement,
+                                          port_interface: ClientServerInterface,
+                                          operation_name: str,
+                                          settings: BehaviorSettings,
+                                          call_type: ar_enum.CallPoint,
+                                          access_point_args: dict[str, Any] | None) -> None:
+        """
+        Creates port access for client-server interfaces
+        """
+        operation = None
+        if len(operation_name) == 0:
+            if len(port_interface.operations) == 1:
+                operation = port_interface.operations[0]
+        else:
+            for element in port_interface.operations:
+                if element.name == operation_name:
+                    operation = element
+        if operation is None:
+            raise RuntimeError(f"Unable to find a matching operation '{operation_name}' "
+                               f"in port interface '{port_interface.name}'")
+        if isinstance(port, (RequirePortPrototype, PRPortPrototype)):
+            access_point = None
+            name = "_".join([settings.get_value("server_call_point_prefix"), port.name, operation.name])
+            operation_iref = ROperationInAtomicSwcInstanceRef(port.ref(), operation.ref())
+            if access_point_args is not None:
+                if call_type == ar_enum.CallPoint.ASYNC:
+                    access_point = AsynchronousServerCallPoint(name, operation_iref, **access_point_args)
+                else:
+                    access_point_args["operation"] = operation_iref
+                    access_point = SynchronousServerCallPoint(name, **access_point_args)
+            else:
+                if call_type == ar_enum.CallPoint.ASYNC:
+                    access_point = AsynchronousServerCallPoint(name, operation_iref)
+                else:
+                    access_point = SynchronousServerCallPoint(name, operation=operation_iref)
+            if access_point:
+                self.append_server_call_point(access_point)
+
     def append_argument(self, argument: RunnableEntityArgument) -> None:
         """
         Adds additional argument to the RunnableEntity
@@ -6346,7 +6775,9 @@ class RunnableEntity(ExecutableEntity):
         A server call result point allows a runnable to fetch the result of an asynchronous server call.
         """
         if isinstance(result_point, AsynchronousServerCallResultPoint):
+            make_unique_name_in_list(self.async_server_call_result_point, result_point.name)
             self.async_server_call_result_point.append(result_point)
+            result_point.parent = self
         else:
             raise TypeError("result_point: Expected type AsynchronousServerCallResultPoint, "
                             f"got '{str(type(result_point))}'")
@@ -6356,7 +6787,9 @@ class RunnableEntity(ExecutableEntity):
         Implicit read access to data element of a sender-receiver port or nv-data port.
         """
         if isinstance(element, VariableAccess):
+            make_unique_name_in_list(self.data_read_access, element.name)
             self.data_read_access.append(element)
+            element.parent = self
         else:
             raise TypeError(f"element: Expected type VariableAccess, got '{str(type(element))}'")
 
@@ -6366,7 +6799,9 @@ class RunnableEntity(ExecutableEntity):
         The result is passed back to the application by means of an argument in the function signature.
         """
         if isinstance(element, VariableAccess):
+            make_unique_name_in_list(self.data_receive_point_by_argument, element.name)
             self.data_receive_point_by_argument.append(element)
+            element.parent = self
         else:
             raise TypeError(f"element: Expected type VariableAccess, got '{str(type(element))}'")
 
@@ -6376,7 +6811,9 @@ class RunnableEntity(ExecutableEntity):
         The result is passed back to the application by means of the return value.
         """
         if isinstance(element, VariableAccess):
+            make_unique_name_in_list(self.data_receive_point_by_value, element.name)
             self.data_receive_point_by_value.append(element)
+            element.parent = self
         else:
             raise TypeError(f"element: Expected type VariableAccess, got '{str(type(element))}'")
 
@@ -6385,7 +6822,9 @@ class RunnableEntity(ExecutableEntity):
         Explicit write access to data element of a sender-receiver port or nv-data.
         """
         if isinstance(element, VariableAccess):
+            make_unique_name_in_list(self.data_send_point, element.name)
             self.data_send_point.append(element)
+            element.parent = self
         else:
             raise TypeError(f"element: Expected type VariableAccess, got '{str(type(element))}'")
 
@@ -6394,7 +6833,9 @@ class RunnableEntity(ExecutableEntity):
         Implicit write access to data element of a sender-receiver port or nv-data port.
         """
         if isinstance(element, VariableAccess):
+            make_unique_name_in_list(self.data_write_access, element.name)
             self.data_write_access.append(element)
+            element.parent = self
         else:
             raise TypeError(f"element: Expected type VariableAccess, got '{str(type(element))}'")
 
@@ -6404,6 +6845,8 @@ class RunnableEntity(ExecutableEntity):
         """
         if isinstance(element, ExternalTriggeringPoint):
             self.external_triggering_point.append(element)
+            if element.ident is not None:
+                element.ident.parent = self
         else:
             raise TypeError(f"element: Expected type ExternalTriggeringPoint, got '{str(type(element))}'")
 
@@ -6412,7 +6855,9 @@ class RunnableEntity(ExecutableEntity):
         Internal triggering point
         """
         if isinstance(element, InternalTriggeringPoint):
+            make_unique_name_in_list(self.internal_triggering_point, element.name)
             self.internal_triggering_point.append(element)
+            element.parent = self
         else:
             raise TypeError(f"element: Expected type InternalTriggeringPoint, got '{str(type(element))}'")
 
@@ -6422,6 +6867,8 @@ class RunnableEntity(ExecutableEntity):
         """
         if isinstance(element, ModeAccessPoint):
             self.mode_access_point.append(element)
+            if element.ident is not None:
+                element.ident.parent = self
         else:
             raise TypeError(f"element: Expected type ModeAccessPoint, got '{str(type(element))}'")
 
@@ -6430,7 +6877,9 @@ class RunnableEntity(ExecutableEntity):
         Mode switch point
         """
         if isinstance(element, ModeSwitchPoint):
+            make_unique_name_in_list(self.mode_switch_point, element.name)
             self.mode_switch_point.append(element)
+            element.parent = self
         else:
             raise TypeError(f"element: Expected type ModeSwitchPoint, got '{str(type(element))}'")
 
@@ -6439,7 +6888,9 @@ class RunnableEntity(ExecutableEntity):
         Read access to parameter which may either be local or within a PortPrototype.
         """
         if isinstance(element, ParameterAccess):
+            make_unique_name_in_list(self.parameter_access, element.name)
             self.parameter_access.append(element)
+            element.parent = self
         else:
             raise TypeError(f"element: Expected type ParameterAccess, got '{str(type(element))}'")
 
@@ -6448,7 +6899,9 @@ class RunnableEntity(ExecutableEntity):
         Read access to a local variable in the role of ImplicitInterRunnableVariable or ExplicitInterRunnableVariable.
         """
         if isinstance(element, VariableAccess):
+            make_unique_name_in_list(self.read_local_variable, element.name)
             self.read_local_variable.append(element)
+            element.parent = self
         else:
             raise TypeError(f"element: Expected type VariableAccess, got '{str(type(element))}'")
 
@@ -6457,7 +6910,9 @@ class RunnableEntity(ExecutableEntity):
         Write access to a local varaible in the role of ImplicitInterRunnableVariable or ExplicitInterRunnableVariable.
         """
         if isinstance(element, VariableAccess):
+            make_unique_name_in_list(self.write_local_variable, element.name)
             self.write_local_variable.append(element)
+            element.parent = self
         else:
             raise TypeError(f"element: Expected type VariableAccess, got '{str(type(element))}'")
 
@@ -6466,7 +6921,9 @@ class RunnableEntity(ExecutableEntity):
         Access to call a server operation of a client-server port.
         """
         if isinstance(element, ServerCallPoint):
+            make_unique_name_in_list(self.server_call_point, element.name)
             self.server_call_point.append(element)
+            element.parent = self
         else:
             raise TypeError("element: Expected type AsynchronousServerCallPoint or SynchronousServerCallPoint, "
                             f"got '{str(type(element))}'")
@@ -6476,9 +6933,19 @@ class RunnableEntity(ExecutableEntity):
         WaitPoint associated with the RunnableEntity
         """
         if isinstance(element, WaitPoint):
+            make_unique_name_in_list(self.wait_point, element.name)
             self.wait_point.append(element)
+            element.parent = self
         else:
             raise TypeError(f"element: Expected type WaitPoint, got '{str(type(element))}'")
+
+    def get_valid_parent(self) -> "SwcInternalBehavior":
+        """
+        Verifies that this object has valid SwcInternalBehavior as parent before returning it
+        """
+        if self.parent is None or not isinstance(self.parent, SwcInternalBehavior):
+            raise RuntimeError("Runnable object doesn't have a valid parent")
+        return self.parent
 
 
 class RteEvent(Identifiable):
@@ -7039,7 +7506,7 @@ class SwcInternalBehavior(InternalBehavior):
             else:
                 self.append_event(events)
 
-    def _get_valid_parent(self) -> SwComponentType:
+    def get_valid_parent(self) -> SwComponentType:
         """
         Verifies that this object has valid SoftwareComponent as parent before returning it
         """
@@ -7047,15 +7514,15 @@ class SwcInternalBehavior(InternalBehavior):
             raise RuntimeError("Behavior object doesn't have a valid parent")
         return self.parent
 
-    def _get_valid_behavior_settings(self) -> BehaviorSettings:
+    def get_valid_behavior_settings(self) -> BehaviorSettings:
         """
         Verifies that the root collection has a valid behavior_settings object and returns it
         """
-        swc = self._get_valid_parent()
+        swc = self.get_valid_parent()
         workspace = swc.root_collection()
-        if not isinstance(workspace.behavior_settings, BehaviorSettings):
-            raise TypeError("Root collection doesn't seem to be a valid workspace")
-        return workspace.behavior_settings
+        if workspace is None:
+            raise ValueError("SWC doesn't seem to belong to a root collection")
+        return workspace.get_valid_behavior_settings()
 
     def ref(self) -> SwcInternalBehaviorRef | None:
         """
@@ -7110,6 +7577,7 @@ class SwcInternalBehavior(InternalBehavior):
         data.update(kwargs)
         runnable = RunnableEntity(name, **data)
         self.append_runnable(runnable)
+        runnable.parent = self
         return runnable
 
     def find_runnable(self, name: str) -> RunnableEntity | None:
@@ -7128,35 +7596,7 @@ class SwcInternalBehavior(InternalBehavior):
         Calling this function could potentially invalidate existing event references.
         Note: Not yet implemented
         """
-        return self._make_unique_name_in_list(self.events, event_name)
-
-    def _make_unique_name_in_list(self, elements: list[Referrable], base_name: str):
-        """
-        Attempts to find a unique name in the list of elements.
-        This function can modify names in the given list.
-        If an element with the name base_name already exists in the list it will
-        append "_0" to the existing element and any newly added element will have
-        its suffix automatically increased by 1.
-        Returns a new name which is guaranteed to be unique in the given list
-        """
-        has_index = False
-        highest_index = 0
-        unpatched_elem: Referrable | None = None
-        expr = re.compile(base_name + r'_(\d+)')
-        for element in elements:
-            result = expr.match(element.name)
-            if result is not None:
-                has_index = True
-                index = int(result.group(1))
-                highest_index = max(highest_index, index)
-            elif element.name == base_name:
-                unpatched_elem = element
-        if unpatched_elem is not None:
-            unpatched_elem.name = '_'.join([unpatched_elem.name, '0'])
-        if has_index or unpatched_elem is not None:
-            return '_'.join([base_name, str(highest_index + 1)])
-        else:
-            return base_name
+        return make_unique_name_in_list(self.events, event_name)
 
     def create_background_event(self,
                                 runnable_name: str,
@@ -7172,9 +7612,9 @@ class SwcInternalBehavior(InternalBehavior):
         if runnable is None:
             raise KeyError(f"Found no runnable with name '{runnable_name}'")
         if event_name is None:
-            behavior_settings = self._get_valid_behavior_settings()
+            behavior_settings = self.get_valid_behavior_settings()
             if behavior_settings.background_event_prefix:
-                event_name = behavior_settings.background_event_prefix + runnable_name
+                event_name = behavior_settings.background_event_prefix + "_" + runnable_name
             else:
                 msg = "event_name: Unable to dynamically create event name,"\
                       " background_event_prefix is not set in behavior settings"
@@ -7199,7 +7639,7 @@ class SwcInternalBehavior(InternalBehavior):
 
         #convenience-method
         """
-        swc = self._get_valid_parent()
+        swc = self.get_valid_parent()
         runnable = self.find_runnable(runnable_name)
         if runnable is None:
             raise KeyError(f"Found no runnable with name '{runnable_name}'")
@@ -7216,11 +7656,12 @@ class SwcInternalBehavior(InternalBehavior):
             msg = f"port_data_element: '{port_data_element}' does not name an existing data element in port interface"
             raise ValueError(msg)
         if event_name is None:
-            behavior_settings = self._get_valid_behavior_settings()
+            behavior_settings = self.get_valid_behavior_settings()
             if behavior_settings.data_receive_error_event_prefix:
-                event_name = behavior_settings.data_receive_error_event_prefix + "_".join([runnable_name,
-                                                                                           context_port.name,
-                                                                                           target_data_element.name])
+                event_name = "_".join([behavior_settings.data_receive_error_event_prefix,
+                                       runnable_name,
+                                       context_port.name,
+                                       target_data_element.name])
             else:
                 msg = "event_name: Unable to dynamically create event name,"\
                       " data_receive_error_event_prefix is not set in behavior settings"
@@ -7249,7 +7690,7 @@ class SwcInternalBehavior(InternalBehavior):
 
         #convenience-method
         """
-        swc = self._get_valid_parent()
+        swc = self.get_valid_parent()
         runnable = self.find_runnable(runnable_name)
         if runnable is None:
             raise KeyError(f"Found no runnable with name '{runnable_name}'")
@@ -7266,11 +7707,12 @@ class SwcInternalBehavior(InternalBehavior):
             msg = f"data_element_ref: '{data_element_ref}' does not name an existing data element in port interface"
             raise ValueError(msg)
         if event_name is None:
-            behavior_settings = self._get_valid_behavior_settings()
+            behavior_settings = self.get_valid_behavior_settings()
             if behavior_settings.data_receive_event_prefix:
-                event_name = behavior_settings.data_receive_event_prefix + "_".join([runnable_name,
-                                                                                     context_port.name,
-                                                                                     target_data_element.name])
+                event_name = "_".join([behavior_settings.data_receive_event_prefix,
+                                       runnable_name,
+                                       context_port.name,
+                                       target_data_element.name])
             else:
                 msg = "event_name: Unable to dynamically create event name,"\
                       " data_receive_event_prefix is not set in behavior settings"
@@ -7335,9 +7777,9 @@ class SwcInternalBehavior(InternalBehavior):
         if runnable is None:
             raise KeyError(f"Found no runnable with name '{runnable_name}'")
         if event_name is None:
-            behavior_settings = self._get_valid_behavior_settings()
+            behavior_settings = self.get_valid_behavior_settings()
             if behavior_settings.init_event_prefix:
-                event_name = behavior_settings.init_event_prefix + runnable_name
+                event_name = behavior_settings.init_event_prefix + "_" + runnable_name
             else:
                 msg = "event_name: Unable to dynamically create event name,"\
                       " init_event_prefix is not set in behavior settings"
@@ -7360,7 +7802,7 @@ class SwcInternalBehavior(InternalBehavior):
 
         #convenience-method
         """
-        swc = self._get_valid_parent()
+        swc = self.get_valid_parent()
         runnable = self.find_runnable(runnable_name)
         if runnable is None:
             raise KeyError(f"Found no runnable with name '{runnable_name}'")
@@ -7376,12 +7818,12 @@ class SwcInternalBehavior(InternalBehavior):
         if target_provided_operation is None:
             raise ValueError(f"operation_ref: '{operation_ref}' does not name a valid operation in port interface")
         if event_name is None:
-            behavior_settings = self._get_valid_behavior_settings()
+            behavior_settings = self.get_valid_behavior_settings()
             if behavior_settings.operation_invoked_event_prefix:
-                prefix = behavior_settings.operation_invoked_event_prefix
-                event_name = prefix + "_".join([runnable_name,
-                                                context_port.name,
-                                                target_provided_operation.name])
+                event_name = "_".join([behavior_settings.operation_invoked_event_prefix,
+                                       runnable_name,
+                                       context_port.name,
+                                       target_provided_operation.name])
             else:
                 msg = "event_name: Unable to dynamically create event name,"\
                       " operation_invoked_event_prefix is not set in behavior settings"
@@ -7407,7 +7849,7 @@ class SwcInternalBehavior(InternalBehavior):
 
         #convenience-method
         """
-        swc = self._get_valid_parent()
+        swc = self.get_valid_parent()
         runnable = self.find_runnable(runnable_name)
         if runnable is None:
             raise KeyError(f"Found no runnable with name '{runnable_name}'")
@@ -7419,12 +7861,12 @@ class SwcInternalBehavior(InternalBehavior):
             msg = f"port_name: '{port_name}' does not name a valid ModeDeclarationGroupPrototype in port interface"
             raise ValueError(msg)
         if event_name is None:
-            behavior_settings = self._get_valid_behavior_settings()
+            behavior_settings = self.get_valid_behavior_settings()
             if behavior_settings.swc_mode_manager_error_event_prefix:
-                prefix = behavior_settings.swc_mode_manager_error_event_prefix
-                event_name = prefix + "_".join([runnable_name,
-                                                context_port.name,
-                                                context_mode_declaration_group.name])
+                event_name = "_".join([behavior_settings.swc_mode_manager_error_event_prefix,
+                                       runnable_name,
+                                       context_port.name,
+                                       context_mode_declaration_group.name])
             else:
                 msg = "event_name: Unable to dynamically create event name,"\
                       " swc_mode_manager_error_event_prefix is not set in behavior settings"
@@ -7454,17 +7896,16 @@ class SwcInternalBehavior(InternalBehavior):
 
         #convenience-method
         """
-        swc = self._get_valid_parent()
+        swc = self.get_valid_parent()
         workspace = swc.root_collection()
         assert workspace is not None
         runnable = self.find_runnable(runnable_name)
         if runnable is None:
             raise KeyError(f"Found no runnable with name '{runnable_name}'")
         if event_name is None:
-            behavior_settings = self._get_valid_behavior_settings()
+            behavior_settings = self.get_valid_behavior_settings()
             if behavior_settings.swc_mode_switch_event_prefix:
-                prefix = behavior_settings.swc_mode_switch_event_prefix
-                event_name = prefix + runnable_name
+                event_name = behavior_settings.swc_mode_switch_event_prefix + "_" + runnable_name
             else:
                 msg = "event_name: Unable to dynamically create event name,"\
                       " swc_mode_switch_event_prefix is not set in behavior settings"
@@ -7524,10 +7965,9 @@ class SwcInternalBehavior(InternalBehavior):
         if runnable is None:
             raise KeyError(f"Found no runnable with name '{runnable_name}'")
         if event_name is None:
-            behavior_settings = self._get_valid_behavior_settings()
+            behavior_settings = self.get_valid_behavior_settings()
             if behavior_settings.timing_event_prefix:
-                prefix = behavior_settings.timing_event_prefix
-                event_name = prefix + runnable_name
+                event_name = behavior_settings.timing_event_prefix + "_" + runnable_name
             else:
                 msg = "event_name: Unable to dynamically create event name,"\
                       " timing_event_prefix is not set in behavior settings"
