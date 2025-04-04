@@ -37,14 +37,14 @@ def create_behavior_settings(workspace: ar_workspace.Workspace):
     Define default event name prefixess
     """
     workspace.behavior_settings.update({
-        "background_event_prefix": "BT_",
-        "data_receive_error_event_prefix": "DRET_",
-        "data_receive_event_prefix": "DRT_",
-        "init_event_prefix": "IT_",
-        "operation_invoked_event_prefix": "OIT_",
-        "swc_mode_manager_error_event_prefix": "MMET_",
-        "swc_mode_switch_event_prefix": "MST_",
-        "timing_event_prefix": "TMT_"})
+        "background_event_prefix": "BT",
+        "data_receive_error_event_prefix": "DRET",
+        "data_receive_event_prefix": "DRT",
+        "init_event_prefix": "IT",
+        "operation_invoked_event_prefix": "OIT",
+        "swc_mode_manager_error_event_prefix": "MMET",
+        "swc_mode_switch_event_prefix": "MST",
+        "timing_event_prefix": "TMT"})
 
 
 def create_documents(workspace: ar_workspace.Workspace) -> None:
