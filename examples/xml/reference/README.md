@@ -1,3 +1,3 @@
 # Reference examples
 
-Demonstrates how to create reference objects and how to convert them back to strings.
+Demonstrates how references can be created and printed.

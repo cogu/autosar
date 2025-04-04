@@ -78,6 +78,16 @@ class CalibrationAxisCategory(Enum):
     STD_AXIS = 4
 
 
+class CallPoint(Enum):
+    """
+    Used internally to differentiate between
+    call point types
+    """
+
+    ASYNC = 0
+    SYNC = 1
+
+
 class CompuScaleContent(Enum):
     """
     Used internally to differentiate the
@@ -445,6 +455,15 @@ class Language(Enum):
     ZU = 136  # Zulu
 
 
+class ModeAccess(Enum):
+    """
+    Used internally for selecting mode access
+    """
+
+    ACCESS = 0
+    SWITCH = 1
+
+
 class ModeActivationKind(Enum):
     """
     AR:MODE-ACTIVATION-KIND--SIMPLE
@@ -511,6 +530,25 @@ class PageWide(Enum):
 
     NO_PGWIDE = 0
     PGWIDE = 1
+
+
+class PortAccess(Enum):
+    """
+    Used internally for selecting port access type
+    """
+
+    EXPLICIT = 0
+    IMPLICIT = 1
+
+
+class ReadResult(Enum):
+    """
+    Used internally for selecting how the result is
+    passed for explcit read.
+    """
+
+    BY_ARGUMENT = 0
+    BY_VALUE = 1
 
 
 class ReentrancyLevel(Enum):

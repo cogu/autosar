@@ -231,6 +231,7 @@ List of convenience-methods:
 * `SwcInternalBehavior.create_swc_mode_manager_error_event`
 * `SwcInternalBehavior.create_swc_mode_mode_switch_event`
 * `SwcInternalBehavior.create_timing_event`
+* `RunnableEntity.create_port_access`
 
 ## Python Module Hierachy
 
