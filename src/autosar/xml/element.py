@@ -5800,6 +5800,22 @@ class VariableAccess(Identifiable):
         autosar_variable_ref = AutosarVariableRef(ar_variable_iref=variable_iref)
         return cls(name, autosar_variable_ref, **kwargs)
 
+    @classmethod
+    def make_from_port_with_args(cls,
+                                 name: str,
+                                 port_prototype_ref: PortPrototypeRef,
+                                 target_data_prototype_ref: DataPrototypeRef,
+                                 args: dict[str, Any] | None) -> "VariableAccess":
+        """
+        #convenience-method
+
+        Same as make_from_port but allows extra arguments to be given as an optional dictionary
+        """
+        if args is not None:
+            return cls.make_from_port(name, port_prototype_ref, target_data_prototype_ref, **args)
+        else:
+            return cls.make_from_port(name, port_prototype_ref, target_data_prototype_ref)
+
 
 class SwcImplementation(Implementation):
     """
@@ -6133,6 +6149,15 @@ class ModeAccessPointIdent(AbstractAccessPoint):
     Tag variants: 'IDENT'
     Use constructor from base class
     """
+
+    @classmethod
+    def make_with_args(cls, name: str, args: dict[str, Any] | None) -> "ModeAccessPointIdent":
+        """
+        #convenienct-method
+
+        Enables creation of ModeAccessPointIdent by giving extra arguments as an optional dictionary
+        """
+        return cls(name, **args) if args is not None else cls(name)
 
 
 class ModeAccessPoint(ARObject):
@@ -6548,7 +6573,7 @@ class RunnableEntity(ExecutableEntity):
             options = PortAccessOptions()
             parts = text.partition(":")
             if parts[1] == ":":
-                self._parse_port_access_option(parts[0].upper(), options)
+                self._parse_port_access_prefix(parts[0].upper(), options)
                 port_arg = parts[2].lstrip()
             else:
                 port_arg = parts[0]
@@ -6560,9 +6585,9 @@ class RunnableEntity(ExecutableEntity):
             port_interface = workspace.get_port_interface(port.port_interface_ref)
             self._create_port_access_internal(port, port_interface, ref[2], settings, options, access_point_args)
 
-    def _parse_port_access_option(self, text: str, options: PortAccessOptions) -> None:
+    def _parse_port_access_prefix(self, text: str, options: PortAccessOptions) -> None:
         """
-        Parses port access option prefixes
+        Parses port access prefix
         """
         if text == 'ASYNC':
             options.call = ar_enum.CallPoint.ASYNC
@@ -6597,11 +6622,12 @@ class RunnableEntity(ExecutableEntity):
         """
         if isinstance(port_interface, (SenderReceiverInterface, NvDataInterface)):
             self._create_data_based_port_access(port, port_interface, element_name,
-                                                settings, options.access, options.result)
+                                                settings, options.access, options.result, access_point_args)
         elif isinstance(port_interface, ModeSwitchInterface):
-            self._create_mode_based_port_access(port, port_interface, element_name, settings, options.mode)
+            self._create_mode_based_port_access(port, port_interface, element_name,
+                                                settings, options.mode, access_point_args)
         elif isinstance(port_interface, ParameterInterface):
-            self._create_parameter_port_access(port, port_interface, element_name, settings)
+            self._create_parameter_port_access(port, port_interface, element_name, settings, access_point_args)
         elif isinstance(port_interface, ClientServerInterface):
             self._create_client_server_port_access(port, port_interface, element_name,
                                                    settings, options.call, access_point_args)
@@ -6614,7 +6640,8 @@ class RunnableEntity(ExecutableEntity):
                                        element_name: str,
                                        settings: BehaviorSettings,
                                        access_type: ar_enum.PortAccess,
-                                       result_type: ar_enum.ReadResult) -> None:
+                                       result_type: ar_enum.ReadResult,
+                                       access_point_args: dict[str, Any] | None) -> None:
         """
         Automatically create port access for SenderReceiverInterface or NvDataInterface
         """
@@ -6632,10 +6659,13 @@ class RunnableEntity(ExecutableEntity):
         if isinstance(port, RequirePortPrototype):
             if access_type == ar_enum.PortAccess.IMPLICIT:
                 name = "_".join([settings.get_value("data_read_access_prefix"), port.name, data_element.name])
-                self.append_data_read_access(VariableAccess.make_from_port(name, port.ref(), data_element.ref()))
+                variable_access = VariableAccess.make_from_port_with_args(name, port.ref(), data_element.ref(),
+                                                                          access_point_args)
+                self.append_data_read_access(variable_access)
             else:
                 name = "_".join([settings.get_value("data_receive_point_prefix"), port.name, data_element.name])
-                variable_access = VariableAccess.make_from_port(name, port.ref(), data_element.ref())
+                variable_access = VariableAccess.make_from_port_with_args(name, port.ref(), data_element.ref(),
+                                                                          access_point_args)
                 if result_type == ar_enum.ReadResult.BY_VALUE:
                     self.append_data_receive_point_by_value(variable_access)
                 else:
@@ -6643,19 +6673,73 @@ class RunnableEntity(ExecutableEntity):
         elif isinstance(port, ProvidePortPrototype):
             if access_type == ar_enum.PortAccess.IMPLICIT:
                 name = "_".join([settings.get_value("data_write_access_prefix"), port.name, data_element.name])
-                self.append_data_write_access(VariableAccess.make_from_port(name, port.ref(), data_element.ref()))
+                variable_access = VariableAccess.make_from_port_with_args(name, port.ref(), data_element.ref(),
+                                                                          access_point_args)
+                self.append_data_write_access(variable_access)
             else:
                 name = "_".join([settings.get_value("data_send_point_prefix"), port.name, data_element.name])
-                variable_access = VariableAccess.make_from_port(name, port.ref(), data_element.ref())
+                variable_access = VariableAccess.make_from_port_with_args(name, port.ref(), data_element.ref(),
+                                                                          access_point_args)
                 self.append_data_send_point(variable_access)
         else:
             raise TypeError(f"Type not supported: {str(type(port))}")
+
+    def _create_mode_based_port_access(self,
+                                       port: PortPrototypeElement,
+                                       port_interface: ModeSwitchInterface,
+                                       mode_group_name: str,
+                                       settings: BehaviorSettings,
+                                       access_type: ar_enum.ModeAccess | None,
+                                       access_point_args: dict[str, Any] | None) -> None:
+        """
+        Creates port access for mode-based interfaces.
+
+        access_point_args:
+            For ModeAccess it's used as additional arguments for the internal ModeAccessPointIdent object.
+            For ModeSwitchPoint it's used as additional arguments for the ModeSwitchPoint object.
+        """
+        mode_group = None
+        if len(mode_group_name) != 0:
+            if mode_group_name == port_interface.mode_group.name:
+                mode_group = port_interface.mode_group
+        else:
+            mode_group = port_interface.mode_group
+        if mode_group is None:
+            raise RuntimeError(f"Unable to find a ModeDeclarationGroupPrototype named '{mode_group_name}' "
+                               f"in port interface '{port_interface.name}'")
+        access_point = None
+        if isinstance(port, RequirePortPrototype):
+            mode_group_iref = RModeGroupInAtomicSwcInstanceRef(port.ref(), mode_group.ref())
+            if access_type is None:
+                access_point = ModeAccessPoint(mode_group=mode_group_iref)
+            elif access_type == ar_enum.ModeAccess.ACCESS:
+                name = "_".join([settings.get_value("mode_access_point_prefix"), port.name, mode_group.name])
+                ident = ModeAccessPointIdent.make_with_args(name, access_point_args)
+                access_point = ModeAccessPoint(ident=ident, mode_group=mode_group_iref)
+        elif isinstance(port, ProvidePortPrototype):
+            mode_group_iref = PModeGroupInAtomicSwcInstanceRef(port.ref(), mode_group.ref())
+            if access_type is None:
+                access_point = ModeAccessPoint(mode_group=mode_group_iref)
+            elif access_type == ar_enum.ModeAccess.ACCESS:
+                name = "_".join([settings.get_value("mode_access_point_prefix"), port.name, mode_group.name])
+                ident = ModeAccessPointIdent.make_with_args(name, access_point_args)
+                access_point = ModeAccessPoint(ident=ident, mode_group=mode_group_iref)
+            else:
+                name = "_".join([settings.get_value("mode_switch_point_prefix"), port.name, mode_group.name])
+                if access_point_args is not None:
+                    switch_point = ModeSwitchPoint(name, mode_group_iref, **access_point_args)
+                else:
+                    switch_point = ModeSwitchPoint(name, mode_group_iref)
+                self.append_mode_switch_point(switch_point)
+        if access_point:
+            self.append_mode_access_point(access_point)
 
     def _create_parameter_port_access(self,
                                       port: PortPrototypeElement,
                                       port_interface: ParameterInterface,
                                       parameter_name: str,
-                                      settings: BehaviorSettings) -> None:
+                                      settings: BehaviorSettings,
+                                      access_point_args: dict[str, Any] | None) -> None:
         """
         Creates port access for parameter interface
         """
@@ -6675,50 +6759,13 @@ class RunnableEntity(ExecutableEntity):
         name = "_".join([settings.get_value("parameter_access_prefix"),
                          port.name,
                          target_data.name])
-        parameter_access = ParameterAccess(name, AutosarParameterRef(autosar_parameter=parameter_iref))
-        self.append_parameter_access(parameter_access)
-
-    def _create_mode_based_port_access(self,
-                                       port: PortPrototypeElement,
-                                       port_interface: ModeSwitchInterface,
-                                       mode_group_name: str,
-                                       settings: BehaviorSettings,
-                                       access_type: ar_enum.ModeAccess | None) -> None:
-        """
-        Creates port access for mode-based interfaces
-        """
-        mode_group = None
-        if len(mode_group_name) != 0:
-            if mode_group_name == port_interface.mode_group.name:
-                mode_group = port_interface.mode_group
+        if access_point_args is not None:
+            parameter_access = ParameterAccess(name,
+                                               AutosarParameterRef(autosar_parameter=parameter_iref),
+                                               **access_point_args)
         else:
-            mode_group = port_interface.mode_group
-        if mode_group is None:
-            raise RuntimeError(f"Unable to find a ModeDeclarationGroupPrototype named '{mode_group_name}' "
-                               f"in port interface '{port_interface.name}'")
-        access_point = None
-        if isinstance(port, RequirePortPrototype):
-            mode_group_iref = RModeGroupInAtomicSwcInstanceRef(port.ref(), mode_group.ref())
-            if access_type is None:
-                access_point = ModeAccessPoint(mode_group=mode_group_iref)
-            elif access_type == ar_enum.ModeAccess.ACCESS:
-                name = "_".join([settings.get_value("mode_access_point_prefix"), port.name, mode_group.name])
-                ident = ModeAccessPointIdent(name)
-                access_point = ModeAccessPoint(ident=ident, mode_group=mode_group_iref)
-        elif isinstance(port, ProvidePortPrototype):
-            mode_group_iref = PModeGroupInAtomicSwcInstanceRef(port.ref(), mode_group.ref())
-            if access_type is None:
-                access_point = ModeAccessPoint(mode_group=mode_group_iref)
-            elif access_type == ar_enum.ModeAccess.ACCESS:
-                name = "_".join([settings.get_value("mode_access_point_prefix"), port.name, mode_group.name])
-                ident = ModeAccessPointIdent(name)
-                access_point = ModeAccessPoint(ident=ident, mode_group=mode_group_iref)
-            else:
-                name = "_".join([settings.get_value("mode_switch_point_prefix"), port.name, mode_group.name])
-                switch_point = ModeSwitchPoint(name, mode_group_iref)
-                self.append_mode_switch_point(switch_point)
-        if access_point:
-            self.append_mode_access_point(access_point)
+            parameter_access = ParameterAccess(name, AutosarParameterRef(autosar_parameter=parameter_iref))
+        self.append_parameter_access(parameter_access)
 
     def _create_client_server_port_access(self,
                                           port: PortPrototypeElement,

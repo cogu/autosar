@@ -793,14 +793,29 @@ class TestRunnableEntityAPI(unittest.TestCase):
         self.assertEqual(str(variable.port_prototype_ref), "/ComponentTypes/MyApplication/StoredData")
         self.assertEqual(str(variable.target_data_prototype_ref), "/PortInterfaces/StoredData_I/Value")
 
+    def test_create_data_receive_point_by_argument_from_nv_data_with_extra_args(self):
+        workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("data_receive_point_prefix", "REC")
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        runnable = behavior.create_runnable("MyApplication_Run")
+        runnable.create_port_access(("StoredData/Value", {"desc": "MyDescription"}))
+
+        self.assertEqual(len(runnable.data_receive_point_by_argument), 1)
+        child: ar_element.VariableAccess = runnable.data_receive_point_by_argument[0]
+        self.assertEqual(child.name, "REC_StoredData_Value")
+        variable = child.accessed_variable.ar_variable_iref
+        self.assertEqual(str(variable.port_prototype_ref), "/ComponentTypes/MyApplication/StoredData")
+        self.assertEqual(str(variable.target_data_prototype_ref), "/PortInterfaces/StoredData_I/Value")
+        self.assertEqual(child.desc.elements[0].parts[0], "MyDescription")
+
     def test_create_data_send_from_sender_receiver(self):
         workspace = autosar.xml.Workspace()
         workspace.behavior_settings.set_value("data_send_point_prefix", "SEND")
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
         runnable = behavior.create_runnable("MyApplication_Run")
-        runnable.create_port_access(["VehicleSpeed",
-                                     "Actuator/Primary"])
+        runnable.create_port_access(["VehicleSpeed", "Actuator/Primary"])
 
         self.assertEqual(len(runnable.data_send_point), 2)
         child: ar_element.VariableAccess = runnable.data_send_point[0]
@@ -813,6 +828,23 @@ class TestRunnableEntityAPI(unittest.TestCase):
         variable = child.accessed_variable.ar_variable_iref
         self.assertEqual(str(variable.port_prototype_ref), "/ComponentTypes/MyApplication/Actuator")
         self.assertEqual(str(variable.target_data_prototype_ref), "/PortInterfaces/Actuator_I/Primary")
+
+    def test_create_data_send_from_sender_receiver_with_extra_args(self):
+        workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("data_send_point_prefix", "SEND")
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        runnable = behavior.create_runnable("MyApplication_Run")
+        access_args = {"scope": ar_enum.VariableAccessScope.COMMUNICATION_INTRA_PARTITION}
+        runnable.create_port_access(("VehicleSpeed", access_args))
+
+        self.assertEqual(len(runnable.data_send_point), 1)
+        child: ar_element.VariableAccess = runnable.data_send_point[0]
+        self.assertEqual(child.name, "SEND_VehicleSpeed_VehicleSpeed")
+        variable = child.accessed_variable.ar_variable_iref
+        self.assertEqual(str(variable.port_prototype_ref), "/ComponentTypes/MyApplication/VehicleSpeed")
+        self.assertEqual(str(variable.target_data_prototype_ref), "/PortInterfaces/VehicleSpeed_I/VehicleSpeed")
+        self.assertEqual(child.scope, ar_enum.VariableAccessScope.COMMUNICATION_INTRA_PARTITION)
 
     def test_create_data_write_access_from_sender_receiver(self):
         workspace = autosar.xml.Workspace()
@@ -892,6 +924,23 @@ class TestRunnableEntityAPI(unittest.TestCase):
         self.assertEqual(str(mode_group.context_port), "/ComponentTypes/MyApplication/ApplicationMode")
         self.assertEqual(str(mode_group.target_mode_group), "/PortInterfaces/ApplicationMode_I/mode")
 
+    def test_create_mode_switch_point_extra_args(self):
+        workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("mode_switch_point_prefix", "SWITCH")
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        runnable = behavior.create_runnable("MyApplication_Run")
+        access_point_args = {"return_value_provision": ar_enum.RteApiReturnValueProvision.RETURN_VALUE_PROVIDED}
+        runnable.create_port_access(("SWITCH:ApplicationMode", access_point_args))
+        self.assertEqual(len(runnable.mode_switch_point), 1)
+        child: ar_element.ModeSwitchPoint = runnable.mode_switch_point[0]
+        self.assertEqual(child.name, "SWITCH_ApplicationMode_mode")
+        mode_group: ar_element.PModeGroupInAtomicSwcInstanceRef = child.mode_group
+        self.assertIsInstance(mode_group, ar_element.PModeGroupInAtomicSwcInstanceRef)
+        self.assertEqual(str(mode_group.context_port), "/ComponentTypes/MyApplication/ApplicationMode")
+        self.assertEqual(str(mode_group.target_mode_group), "/PortInterfaces/ApplicationMode_I/mode")
+        self.assertEqual(child.return_value_provision, ar_enum.RteApiReturnValueProvision.RETURN_VALUE_PROVIDED)
+
     def test_parameter_access(self):
         workspace = autosar.xml.Workspace()
         workspace.behavior_settings.set_value("parameter_access_prefix", "PRM")
@@ -910,6 +959,22 @@ class TestRunnableEntityAPI(unittest.TestCase):
         parameter = child.accessed_parameter.autosar_parameter
         self.assertEqual(str(parameter.port_prototype), "/ComponentTypes/MyApplication/CalibrationData")
         self.assertEqual(str(parameter.target_data_prototype), "/PortInterfaces/Calibration_I/p2")
+
+    def test_parameter_access_with_extra_args(self):
+        workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("parameter_access_prefix", "PRM")
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        runnable = behavior.create_runnable("MyApplication_Run")
+        sw_data_def_props = ar_element.SwDataDefPropsConditional(sw_addr_method_ref="/SWADDR/Protected")
+        runnable.create_port_access(("CalibrationData/p1", {"sw_data_def_props": sw_data_def_props}))
+        self.assertEqual(len(runnable.parameter_access), 1)
+        child: ar_element.ParameterAccess = runnable.parameter_access[0]
+        self.assertEqual(child.name, "PRM_CalibrationData_p1")
+        parameter = child.accessed_parameter.autosar_parameter
+        self.assertEqual(str(parameter.port_prototype), "/ComponentTypes/MyApplication/CalibrationData")
+        self.assertEqual(str(parameter.target_data_prototype), "/PortInterfaces/Calibration_I/p1")
+        self.assertEqual(str(child.sw_data_def_props.variants[0].sw_addr_method_ref), "/SWADDR/Protected")
 
     def test_server_call_point(self):
         """
