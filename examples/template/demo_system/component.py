@@ -50,8 +50,13 @@ def create_ReceiverComponent(package: ar_element.Package,
     init_runnable_name = swc_name + '_Init'
     periodic_runnable_name = swc_name + '_Run'
     behavior = swc.create_internal_behavior()
-    behavior.create_runnable(init_runnable_name)
-    behavior.create_runnable(periodic_runnable_name)
+    behavior.create_runnable(init_runnable_name, can_be_invoked_concurrently=False, minimum_start_interval=0)
+    runnable = behavior.create_runnable(periodic_runnable_name,
+                                        can_be_invoked_concurrently=False, minimum_start_interval=0)
+    runnable.create_port_access(["EngineSpeed",
+                                 "VehicleSpeed",
+                                 ("FreeRunningTimer/GetTime", {"timeout": 0}),
+                                 ("FreeRunningTimer/IsTimerElapsed", {"timeout": 0})])
     behavior.create_swc_mode_mode_switch_event(init_runnable_name,
                                                "EcuM_CurrentMode/RUN",
                                                ar_enum.ModeActivationKind.ON_ENTRY)
@@ -76,9 +81,9 @@ def create_TimerComponent(package: ar_element.Package,
     init_runnable_name = swc.name + "_Init"
     get_time_runnable_name = swc.name + "_GetTime"
     timer_elapsed_runnable_name = swc.name + "_IsTimerElapsed"
-    behavior.create_runnable(init_runnable_name)
-    behavior.create_runnable(get_time_runnable_name, reentrancy_level=ar_enum.ReentrancyLevel.NON_REENTRANT)
-    behavior.create_runnable(timer_elapsed_runnable_name, reentrancy_level=ar_enum.ReentrancyLevel.NON_REENTRANT)
+    behavior.create_runnable(init_runnable_name, can_be_invoked_concurrently=False, minimum_start_interval=0)
+    behavior.create_runnable(get_time_runnable_name, can_be_invoked_concurrently=False, minimum_start_interval=0)
+    behavior.create_runnable(timer_elapsed_runnable_name, can_be_invoked_concurrently=False, minimum_start_interval=0)
     behavior.create_init_event(init_runnable_name)
     behavior.create_operation_invoked_event(get_time_runnable_name, "FreeRunningTimer/GetTime")
     behavior.create_operation_invoked_event(timer_elapsed_runnable_name, "FreeRunningTimer/IsTimerElapsed")

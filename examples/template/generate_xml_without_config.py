@@ -32,7 +32,7 @@ def create_namespaces(workspace: ar_workspace.Workspace):
         base_ref="/")
 
 
-def create_behavior_settings(workspace: ar_workspace.Workspace):
+def init_behavior_settings(workspace: ar_workspace.Workspace):
     """
     Define default event name prefixess
     """
@@ -44,7 +44,10 @@ def create_behavior_settings(workspace: ar_workspace.Workspace):
         "operation_invoked_event_prefix": "OIT",
         "swc_mode_manager_error_event_prefix": "MMET",
         "swc_mode_switch_event_prefix": "MST",
-        "timing_event_prefix": "TMT"})
+        "timing_event_prefix": "TMT",
+        "data_send_point_prefix": "SEND",
+        "data_receive_point_prefix": "REC",
+        "server_call_point_prefix": "SC"})
 
 
 def create_documents(workspace: ar_workspace.Workspace) -> None:
@@ -83,7 +86,7 @@ def main():
     document_root = os.path.join(os.path.dirname(__file__), "generated")
     workspace = ar_workspace.Workspace(document_root=document_root)
     create_namespaces(workspace)
-    create_behavior_settings(workspace)
+    init_behavior_settings(workspace)
     create_documents(workspace)
     apply_platform_types(workspace)
     apply_component_types(workspace)
