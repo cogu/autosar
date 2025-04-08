@@ -7601,10 +7601,12 @@ class SwcInternalBehavior(InternalBehavior):
 
     def create_runnable(self,
                         name: str,
+                        can_be_invoked_concurrently: bool | None = None,
+                        minimum_start_interval: int | float | None = None,
+                        symbol: str | None = None,
                         activation_reasons: ActivationReasonArgumentType = None,
                         can_enter_leave: CanEnterLeaveArgumentType = None,
                         exclusive_area_nesting_order: ExclusiveAreaNestingOrderArgumentType = None,
-                        minimum_start_interval: int | float | None = None,
                         reentrancy_level: ar_enum.ReentrancyLevel | None = None,
                         runs_insides: RunsInsidesArgumentType = None,
                         sw_addr_method: str | SwAddrMethodRef | None = None,
@@ -7614,13 +7616,16 @@ class SwcInternalBehavior(InternalBehavior):
 
         #convenience-method
         """
-        data = {"activation_reasons": activation_reasons,
+        data = {"can_be_invoked_concurrently": can_be_invoked_concurrently,
+                "minimum_start_interval": minimum_start_interval,
+                "symbol": symbol,
+                "activation_reasons": activation_reasons,
                 "can_enter_leave": can_enter_leave,
                 "exclusive_area_nesting_order": exclusive_area_nesting_order,
-                "minimum_start_interval": minimum_start_interval,
                 "reentrancy_level": reentrancy_level,
                 "runs_insides": runs_insides,
-                "sw_addr_method": sw_addr_method}
+                "sw_addr_method": sw_addr_method
+                }
         data.update(kwargs)
         runnable = RunnableEntity(name, **data)
         self.append_runnable(runnable)

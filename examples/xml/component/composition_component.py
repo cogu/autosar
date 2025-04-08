@@ -20,7 +20,7 @@ def create_package_map(workspace: ar_workspace.Workspace):
                                   "ComponentTypes": "ComponentTypes"})
 
 
-def create_behavior_settings(workspace: ar_workspace.Workspace):
+def init_behavior_settings(workspace: ar_workspace.Workspace):
     """
     Define default event name prefixess
     """
@@ -32,7 +32,10 @@ def create_behavior_settings(workspace: ar_workspace.Workspace):
         "operation_invoked_event_prefix": "OIT",
         "swc_mode_manager_error_event_prefix": "MMET",
         "swc_mode_switch_event_prefix": "MST",
-        "timing_event_prefix": "TMT"})
+        "timing_event_prefix": "TMT",
+        "data_send_point_prefix": "SEND",
+        "data_receive_point_prefix": "REC",
+        "server_call_point_prefix": "SC"})
 
 
 def create_platform_types(workspace: autosar.xml.Workspace):
@@ -83,11 +86,11 @@ def create_sender_receiver_port_interfaces(workspace: autosar.xml.Workspace):
     Creates necessary sender-receiver port interfaces
     """
     uint16_impl_t = workspace.find_element("PlatformImplementationDataTypes", "uint16")
-    port_interface = ar_element.SenderReceiverInterface("VehicleSpeed_I")
-    port_interface.create_data_element("VehicleSpeed", type_ref=uint16_impl_t.ref())
-    workspace.add_element("PortInterfaces", port_interface)
     port_interface = ar_element.SenderReceiverInterface("EngineSpeed_I")
     port_interface.create_data_element("EngineSpeed", type_ref=uint16_impl_t.ref())
+    workspace.add_element("PortInterfaces", port_interface)
+    port_interface = ar_element.SenderReceiverInterface("VehicleSpeed_I")
+    port_interface.create_data_element("VehicleSpeed", type_ref=uint16_impl_t.ref())
     workspace.add_element("PortInterfaces", port_interface)
 
 
@@ -145,8 +148,14 @@ def create_receiver_component(workspace: autosar.xml.Workspace):
     init_runnable_name = swc.name + '_Init'
     periodic_runnable_name = swc.name + '_Run'
     behavior = swc.create_internal_behavior()
-    behavior.create_runnable(init_runnable_name)
-    behavior.create_runnable(periodic_runnable_name)
+    behavior.create_runnable(init_runnable_name, can_be_invoked_concurrently=False, minimum_start_interval=0)
+    runnable = behavior.create_runnable(periodic_runnable_name,
+                                        can_be_invoked_concurrently=False,
+                                        minimum_start_interval=0)
+    runnable.create_port_access(["EngineSpeed",
+                                 "VehicleSpeed",
+                                 ("FreeRunningTimer/GetTime", {"timeout": 0}),
+                                 ("FreeRunningTimer/IsTimerElapsed", {"timeout": 0})])
     behavior.create_init_event(init_runnable_name)
     behavior.create_timing_event(periodic_runnable_name, 0.1)
     impl = ar_element.SwcImplementation("ReceiverComponent_Implementation", behavior_ref=behavior.ref())
@@ -167,9 +176,10 @@ def create_server_component(workspace: autosar.xml.Workspace):
     get_time_runnable_name = "TimerComponent_FreeRunningTimer_GetTime"
     is_timer_elapsed_runnable_name = "TimerComponent_FreeRunningTimer_IsTimerElapsed"
     behavior = swc.create_internal_behavior()
-    behavior.create_runnable(init_runnable_name)
-    behavior.create_runnable(get_time_runnable_name)
-    behavior.create_runnable(is_timer_elapsed_runnable_name)
+    behavior.create_runnable(init_runnable_name, can_be_invoked_concurrently=False, minimum_start_interval=0)
+    behavior.create_runnable(get_time_runnable_name, can_be_invoked_concurrently=False, minimum_start_interval=0)
+    behavior.create_runnable(is_timer_elapsed_runnable_name, can_be_invoked_concurrently=False,
+                             minimum_start_interval=0)
     behavior.create_init_event(init_runnable_name)
     behavior.create_operation_invoked_event(get_time_runnable_name, "FreeRunningTimer/GetTime")
     behavior.create_operation_invoked_event(is_timer_elapsed_runnable_name, "FreeRunningTimer/IsTimerElapsed")
@@ -219,7 +229,7 @@ def main():
     """
     workspace = autosar.xml.Workspace()
     create_package_map(workspace)
-    create_behavior_settings(workspace)
+    init_behavior_settings(workspace)
     create_platform_types(workspace)
     create_sender_receiver_port_interfaces(workspace)
     create_client_server_interfaces(workspace)

@@ -20,7 +20,7 @@ def create_package_map(workspace: ar_workspace.Workspace):
                                   "ComponentTypes": "ComponentTypes"})
 
 
-def create_behavior_settings(workspace: ar_workspace.Workspace):
+def init_behavior_settings(workspace: ar_workspace.Workspace):
     """
     Define default event name prefixess
     """
@@ -32,7 +32,9 @@ def create_behavior_settings(workspace: ar_workspace.Workspace):
         "operation_invoked_event_prefix": "OIT",
         "swc_mode_manager_error_event_prefix": "MMET",
         "swc_mode_switch_event_prefix": "MST",
-        "timing_event_prefix": "TMT"})
+        "timing_event_prefix": "TMT",
+        "data_send_point_prefix": "SEND",
+        "data_receive_point_prefix": "REC"})
 
 
 def create_platform_types(workspace: autosar.xml.Workspace):
@@ -136,10 +138,12 @@ def create_application_component(workspace: autosar.xml.Workspace):
     init_runnable_name = swc.name + '_Init'
     periodic_runnable_name = swc.name + '_Run'
     behavior = swc.create_internal_behavior()
-    behavior.create_runnable(init_runnable_name)
-    behavior.create_runnable(periodic_runnable_name)
+    behavior.create_runnable(init_runnable_name, can_be_invoked_concurrently=False, minimum_start_interval=0)
+    runnable = behavior.create_runnable(periodic_runnable_name,
+                                        can_be_invoked_concurrently=False, minimum_start_interval=0)
+    runnable.create_port_access(["EngineSpeed", "VehicleSpeed"])
     behavior.create_init_event(init_runnable_name)
-    behavior.create_timing_event(periodic_runnable_name, 0.1)
+    behavior.create_timing_event(periodic_runnable_name, period=0.1)
 
     impl = ar_element.SwcImplementation("SenderComponent_Implementation", behavior_ref=swc.internal_behavior.ref())
     workspace.add_element("ComponentTypes", impl)
@@ -165,7 +169,7 @@ def main():
     """
     workspace = autosar.xml.Workspace()
     create_package_map(workspace)
-    create_behavior_settings(workspace)
+    init_behavior_settings(workspace)
     create_platform_types(workspace)
     create_sender_receiver_port_interfaces(workspace)
     create_client_server_interfaces(workspace)
