@@ -987,8 +987,8 @@ class TestRunnableEntityAPI(unittest.TestCase):
         runnable = behavior.create_runnable("MyApplication_Run")
         exclusive_are_ref = ar_element.ExclusiveAreaNestingOrderRef("/ComponentTypes/MyApplication/MyExclusiveArea")
         runnable.create_port_access([("SYNC:Timer/GetTime",
-                                      {"timeout": 1.0, "called_from_within_exclusive_area": exclusive_are_ref}),
-                                     "Timer/IsTimerElapsed"])
+                                      {"timeout": 0.0, "called_from_within_exclusive_area": exclusive_are_ref}),
+                                     ("ASYNC:Timer/IsTimerElapsed", {"timeout": 1.0})])
 
         self.assertEqual(len(runnable.server_call_point), 2)
         child: ar_element.SynchronousServerCallPoint = runnable.server_call_point[0]
@@ -997,15 +997,15 @@ class TestRunnableEntityAPI(unittest.TestCase):
         operation = child.operation
         self.assertEqual(str(operation.context_port), "/ComponentTypes/MyApplication/Timer")
         self.assertEqual(str(operation.target_required_operation), "/PortInterfaces/FreeRunningTimer_I/GetTime")
-        self.assertAlmostEqual(child.timeout, 1.0)
+        self.assertEqual(child.timeout, 0)
         self.assertEqual(str(child.called_from_within_exclusive_area), str(exclusive_are_ref))
         child = runnable.server_call_point[1]
-        self.assertIsInstance(child, ar_element.SynchronousServerCallPoint)
+        self.assertIsInstance(child, ar_element.AsynchronousServerCallPoint)
         self.assertEqual(child.name, "SC_Timer_IsTimerElapsed")
         operation = child.operation
         self.assertEqual(str(operation.context_port), "/ComponentTypes/MyApplication/Timer")
         self.assertEqual(str(operation.target_required_operation), "/PortInterfaces/FreeRunningTimer_I/IsTimerElapsed")
-        self.assertIsNone(child.timeout)
+        self.assertAlmostEqual(child.timeout, 1.0)
 
     def test_custom_symbol(self):
         workspace = autosar.xml.Workspace()
