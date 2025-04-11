@@ -52,11 +52,24 @@
                   <PERIOD>0.1</PERIOD>
                 </TIMING-EVENT>
               </EVENTS>
+              <PORT-API-OPTIONS>
+                <PORT-API-OPTION>
+                  <ENABLE-TAKE-ADDRESS>false</ENABLE-TAKE-ADDRESS>
+                  <INDIRECT-API>false</INDIRECT-API>
+                  <PORT-REF DEST="P-PORT-PROTOTYPE">/ComponentTypes/SenderComponent/EngineSpeed</PORT-REF>
+                </PORT-API-OPTION>
+                <PORT-API-OPTION>
+                  <ENABLE-TAKE-ADDRESS>false</ENABLE-TAKE-ADDRESS>
+                  <INDIRECT-API>false</INDIRECT-API>
+                  <PORT-REF DEST="P-PORT-PROTOTYPE">/ComponentTypes/SenderComponent/VehicleSpeed</PORT-REF>
+                </PORT-API-OPTION>
+              </PORT-API-OPTIONS>
               <RUNNABLES>
                 <RUNNABLE-ENTITY>
                   <SHORT-NAME>SenderComponent_Init</SHORT-NAME>
                   <MINIMUM-START-INTERVAL>0</MINIMUM-START-INTERVAL>
                   <CAN-BE-INVOKED-CONCURRENTLY>false</CAN-BE-INVOKED-CONCURRENTLY>
+                  <SYMBOL>SenderComponent_Init</SYMBOL>
                 </RUNNABLE-ENTITY>
                 <RUNNABLE-ENTITY>
                   <SHORT-NAME>SenderComponent_Run</SHORT-NAME>
@@ -82,6 +95,7 @@
                       </ACCESSED-VARIABLE>
                     </VARIABLE-ACCESS>
                   </DATA-SEND-POINTS>
+                  <SYMBOL>SenderComponent_Run</SYMBOL>
                 </RUNNABLE-ENTITY>
               </RUNNABLES>
             </SWC-INTERNAL-BEHAVIOR>

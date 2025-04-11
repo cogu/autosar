@@ -5660,6 +5660,12 @@ class Reader:
         child_elements.skip("PER-INSTANCE-MEMORYS")
         child_elements.skip("PER-INSTANCE-PARAMETERS")
         child_elements.skip("PORT-API-OPTIONS")
+        xml_child = child_elements.get("PORT-API-OPTIONS")
+        if xml_child is not None:
+            port_api_options = []
+            for xml_grand_child in xml_child.findall("./PORT-API-OPTION"):
+                port_api_options.append(self._read_port_api_option(xml_grand_child))
+            data["port_api_options"] = port_api_options
         xml_child = child_elements.get("RUNNABLES")
         if xml_child is not None:
             runnables = []

@@ -6,6 +6,7 @@ import re
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from typing import Any, Union
+from collections import OrderedDict
 
 
 from autosar.base import split_ref, split_ref_strict, Searchable
@@ -4865,8 +4866,7 @@ class SwComponentType(ARElement, Searchable):
                         if not len(elem) == 2:
                             raise NotImplementedError("Com-spec element must be a 2-tuple containing [str, dict]. "
                                                       f"Got tuple with length {len(elem)}")
-                        else:
-                            unprocessed[elem[0]] = elem[1]
+                        unprocessed[elem[0]] = elem[1]
                     else:
                         raise TypeError(f"Unsupported type in com-spec element: {str(type(elem))}")
                 if len(unprocessed):
@@ -4915,8 +4915,7 @@ class SwComponentType(ARElement, Searchable):
                         if not len(elem) == 2:
                             raise NotImplementedError("Com-spec element must be a 2-tuple containing [str, dict]. "
                                                       f"Got tuple with length {len(elem)}")
-                        else:
-                            unprocessed[elem[0]] = elem[1]
+                        unprocessed[elem[0]] = elem[1]
                     else:
                         raise TypeError(f"Unsupported type in com-spec element: {str(type(elem))}")
                 if len(unprocessed):
@@ -7449,11 +7448,11 @@ class PortApiOption(ARObject):
     """
 
     def __init__(self,
-                 enable_take_address: bool | None = None,
-                 error_handling: ar_enum.DataTransformationErrorHandling | None = None,
-                 indirect_api: bool | None = None,
-                 port_arg_values: PortDefinedArgumentValueArgType = None,
                  port: PortPrototypeRef | None = None,
+                 enable_take_address: bool | None = None,
+                 indirect_api: bool | None = None,
+                 error_handling: ar_enum.DataTransformationErrorHandling | None = None,
+                 port_arg_values: PortDefinedArgumentValueArgType = None,
                  supported_features: SwcSupportedFeatureArgType = None,
                  transformer_status_forwarding: ar_enum.DataTransformationStatusForwarding | None = None
                  ) -> None:
@@ -7530,28 +7529,52 @@ class SwcInternalBehavior(InternalBehavior):
 
     def __init__(self,
                  name: str,
-                 runnables: RunnableEntity | list[RunnableEntity] | None = None,
                  events: RteEvent | list[RteEvent] | None = None,
+                 runnables: RunnableEntity | list[RunnableEntity] | None = None,
+                 port_api_options: PortApiOption | list[PortApiOption] | None = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
-        # .RUNNABLES
-        self.runnables: list[RunnableEntity] = []
+        # .AR-TYPED-PER-INSTANCE-MEMORYS (not yet implemented)
         # .EVENTS
         self.events: list[RteEvent] = []
+        # .EXCLUSIVE-AREA-POLICYS (not yet implemented)
+        # .EXPLICIT-INTER-RUNNABLE-VARIABLES (not yet implemented)
+        # .HANDLE-TERMINATION-AND-RESTART (not yet implemented)
+        # .INCLUDED-DATA-TYPE-SETS (not yet implemented)
+        # .INCLUDED-MODE-DECLARATION-GROUP-SETS (not yet implemented)
+        # .INSTANTIATION-DATA-DEF-PROPSS (not yet implemented)
+        # .PER-INSTANCE-MEMORYS (not yet implemented)
+        # .PER-INSTANCE-PARAMETERS (not yet implemented)
+        # .PORT-API-OPTIONS
+        self.port_api_options: OrderedDict[PortApiOption] = OrderedDict()
+        # .RUNNABLES
+        self.runnables: list[RunnableEntity] = []
+        # .SERVICE-DEPENDENCYS (not yet implemented)
+        # .SHARED-PARAMETERS (not yet implemented)
+        # .SUPPORTS-MULTIPLE-INSTANTIATION (not yet implemented)
+        # .VARIATION-POINT-PROXYS (not supported)
+        # .VARIATION-POINT (not supported)
+
+        if events is not None:
+            if isinstance(events, Iterable):
+                for event in events:
+                    self.append_event(event)
+            else:
+                self.append_event(events)
 
         if runnables is not None:
-            if isinstance(runnables, list):
+            if isinstance(runnables, Iterable):
                 for runnable in runnables:
                     self.append_runnable(runnable)
             else:
                 self.append_runnable(runnables)
 
-        if events is not None:
-            if isinstance(events, list):
-                for event in events:
-                    self.append_event(event)
+        if port_api_options is not None:
+            if isinstance(port_api_options, Iterable):
+                for port_api_option in port_api_options:
+                    self.append_port_api_option(port_api_option)
             else:
-                self.append_event(events)
+                self.append_port_api_option(port_api_options)
 
     def get_valid_parent(self) -> SwComponentType:
         """
@@ -7599,11 +7622,22 @@ class SwcInternalBehavior(InternalBehavior):
         else:
             raise TypeError(f"event must derive from RteEvent. Got {str(type(event))}")
 
+    def append_port_api_option(self, element: PortApiOption) -> None:
+        """
+        Generation options for port-related calls in the RTE.
+        """
+        if isinstance(element, PortApiOption):
+            if element.port is not None:
+                parts = str(element.port).split("/")
+                self.port_api_options[parts[-1]] = element
+        else:
+            raise TypeError(f"element: Expected type PortApiOption, got '{str(type(element))}'")
+
     def create_runnable(self,
                         name: str,
                         can_be_invoked_concurrently: bool | None = None,
                         minimum_start_interval: int | float | None = None,
-                        symbol: str | None = None,
+                        symbol: str | None = "",
                         activation_reasons: ActivationReasonArgumentType = None,
                         can_enter_leave: CanEnterLeaveArgumentType = None,
                         exclusive_area_nesting_order: ExclusiveAreaNestingOrderArgumentType = None,
@@ -7612,10 +7646,16 @@ class SwcInternalBehavior(InternalBehavior):
                         sw_addr_method: str | SwAddrMethodRef | None = None,
                         **kwargs) -> RunnableEntity:
         """
-        Adds a new RunnableEntity to this object
+        Adds a new RunnableEntity to this behavior object
+
+        If the symbol argument is an empty string (default value), it will generate a symbol
+        identcal to the the name argument.
+        If you don't want a symbol at all, explicitly pass the value None as argument for symbol.
 
         #convenience-method
         """
+        if isinstance(symbol, str) and len(symbol) == 0:
+            symbol = name
         data = {"can_be_invoked_concurrently": can_be_invoked_concurrently,
                 "minimum_start_interval": minimum_start_interval,
                 "symbol": symbol,
@@ -8059,3 +8099,77 @@ class SwcInternalBehavior(InternalBehavior):
         if target_mode_declaration is None:
             raise ValueError(f"mode_ref: '{mode_ref}' does not name a valid mode declaration in ModeDeclarationGroup")
         return context_port, context_mode_declaration_group, target_mode_declaration
+
+    def create_port_api_options(self,
+                                port_name: str | list[str],
+                                enable_take_address: bool | None = None,
+                                indirect_api: bool | None = None,
+                                error_handling: ar_enum.DataTransformationErrorHandling | None = None,
+                                port_arg_values: PortDefinedArgumentValueArgType = None,
+                                supported_features: SwcSupportedFeatureArgType = None,
+                                transformer_status_forwarding: ar_enum.DataTransformationStatusForwarding | None = None
+                                ) -> None:
+        """
+        Creates and adds new port-api-options to this SwcInternalBehavior object
+
+        port_name: Name of the port to create options for. It can also be a list of names in case you want to use
+                   identical options for multiple ports.
+                   Special value is "*" which creates one options object per port found in parent SWC.
+
+        #convenience-method
+        """
+        swc = self.get_valid_parent()
+        # names of ports to process.
+        # The bool is used to check if it has been handled or not
+        ports_to_process: dict[str, bool] = {}
+        if isinstance(port_name, str):
+            if port_name == "*":
+                for port in swc.ports:
+                    ports_to_process[port.name] = False
+            else:
+                ports_to_process[port_name] = False
+        elif isinstance(port_name, Iterable):
+            for name in port_name:
+                ports_to_process[name] = False
+        else:
+            raise TypeError(f"port_name: Expected type string or list of string. Got {str(type(port_name))}")
+        if len(ports_to_process):
+            for port in sorted(swc.ports, key=lambda x: x.name.lower()):
+                if port.name in ports_to_process:
+                    ports_to_process[port.name] = True
+                    option = self._create_port_api_option_internal(port,
+                                                                   enable_take_address,
+                                                                   indirect_api,
+                                                                   error_handling,
+                                                                   port_arg_values,
+                                                                   supported_features,
+                                                                   transformer_status_forwarding)
+                    self.append_port_api_option(option)
+            for key, value in ports_to_process.items():
+                if not value:
+                    raise ValueError(f"port_name: '{key}' is not a valid port name in SWC '{swc.name}'")
+
+    def _create_port_api_option_internal(self,
+                                         port: PortPrototypeElement,
+                                         enable_take_address: bool | None = None,
+                                         indirect_api: bool | None = None,
+                                         error_handling: ar_enum.DataTransformationErrorHandling | None = None,
+                                         port_arg_values: PortDefinedArgumentValueArgType = None,
+                                         supported_features: SwcSupportedFeatureArgType = None,
+                                         transformer_status_forwarding: ar_enum.DataTransformationStatusForwarding | None = None # noqa E501 pylint: disable=C0301
+                                         ) -> PortApiOption:
+        """
+        Creates a single PortApiOption object. The port argument must be a valid port in parent SWC.
+        """
+        if not isinstance(port, PortPrototype):
+            raise TypeError("port: argument must be a valid port")
+        if port.ref() is None:
+            msg = f"port {port.name} must have a valid reference. Make sure the parent SWC is part of a package"
+            raise ValueError(msg)
+        return PortApiOption(port.ref(),
+                             enable_take_address,
+                             indirect_api,
+                             error_handling,
+                             port_arg_values,
+                             supported_features,
+                             transformer_status_forwarding)

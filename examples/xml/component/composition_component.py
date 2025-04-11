@@ -148,10 +148,15 @@ def create_receiver_component(workspace: autosar.xml.Workspace):
     init_runnable_name = swc.name + '_Init'
     periodic_runnable_name = swc.name + '_Run'
     behavior = swc.create_internal_behavior()
-    behavior.create_runnable(init_runnable_name, can_be_invoked_concurrently=False, minimum_start_interval=0)
+    behavior.create_port_api_options("*", enable_take_address=False, indirect_api=False)
+    behavior.create_runnable(init_runnable_name,
+                             can_be_invoked_concurrently=False,
+                             minimum_start_interval=0,
+                             symbol=init_runnable_name)
     runnable = behavior.create_runnable(periodic_runnable_name,
                                         can_be_invoked_concurrently=False,
-                                        minimum_start_interval=0)
+                                        minimum_start_interval=0,
+                                        symbol=periodic_runnable_name)
     runnable.create_port_access(["EngineSpeed",
                                  "VehicleSpeed",
                                  ("FreeRunningTimer/GetTime", {"timeout": 0}),
@@ -176,9 +181,11 @@ def create_server_component(workspace: autosar.xml.Workspace):
     get_time_runnable_name = "TimerComponent_FreeRunningTimer_GetTime"
     is_timer_elapsed_runnable_name = "TimerComponent_FreeRunningTimer_IsTimerElapsed"
     behavior = swc.create_internal_behavior()
+    behavior.create_port_api_options("*", enable_take_address=False, indirect_api=False)
     behavior.create_runnable(init_runnable_name, can_be_invoked_concurrently=False, minimum_start_interval=0)
     behavior.create_runnable(get_time_runnable_name, can_be_invoked_concurrently=False, minimum_start_interval=0)
-    behavior.create_runnable(is_timer_elapsed_runnable_name, can_be_invoked_concurrently=False,
+    behavior.create_runnable(is_timer_elapsed_runnable_name,
+                             can_be_invoked_concurrently=False,
                              minimum_start_interval=0)
     behavior.create_init_event(init_runnable_name)
     behavior.create_operation_invoked_event(get_time_runnable_name, "FreeRunningTimer/GetTime")

@@ -50,6 +50,8 @@ def create_ReceiverComponent(package: ar_element.Package,
     init_runnable_name = swc_name + '_Init'
     periodic_runnable_name = swc_name + '_Run'
     behavior = swc.create_internal_behavior()
+    behavior.create_port_api_options(["EngineSpeed", "VehicleSpeed", "FreeRunningTimer"],
+                                     enable_take_address=False, indirect_api=False)
     behavior.create_runnable(init_runnable_name, can_be_invoked_concurrently=False, minimum_start_interval=0)
     runnable = behavior.create_runnable(periodic_runnable_name,
                                         can_be_invoked_concurrently=False, minimum_start_interval=0)
@@ -78,6 +80,7 @@ def create_TimerComponent(package: ar_element.Package,
                                                                            "IsTimerElapsed": {"queue_length": 1}
                                                                            })
     behavior = swc.create_internal_behavior()
+    behavior.create_port_api_options("*", enable_take_address=False, indirect_api=False)
     init_runnable_name = swc.name + "_Init"
     get_time_runnable_name = swc.name + "_GetTime"
     timer_elapsed_runnable_name = swc.name + "_IsTimerElapsed"

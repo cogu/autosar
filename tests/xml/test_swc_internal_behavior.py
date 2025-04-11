@@ -3913,8 +3913,74 @@ class TestSwcInternalBehavior(unittest.TestCase):
     # IMPLEMENT LATER: INSTANTIATION-DATA-DEF-PROPSS
     # IMPLEMENT LATER: PER-INSTANCE-MEMORYS
     # IMPLEMENT LATER: PER-INSTANCE-PARAMETERS
-    # IMPLEMENT LATER: PORT-API-OPTIONS
 
+    def test_port_api_option_from_element(self):
+        port_ref_str = "/Components/MyComponent/MyPortName"
+        port_ref = ar_element.PortPrototypeRef(port_ref_str, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
+        options = ar_element.PortApiOption(port_ref, enable_take_address=True, indirect_api=False)
+        element = ar_element.SwcInternalBehavior('MyName', port_api_options=options)
+        xml = f'''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <PORT-API-OPTIONS>
+    <PORT-API-OPTION>
+      <ENABLE-TAKE-ADDRESS>true</ENABLE-TAKE-ADDRESS>
+      <INDIRECT-API>false</INDIRECT-API>
+      <PORT-REF DEST="R-PORT-PROTOTYPE">{port_ref_str}</PORT-REF>
+    </PORT-API-OPTION>
+  </PORT-API-OPTIONS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.port_api_options), 1)
+        child: ar_element.PortApiOption = elem.port_api_options["MyPortName"]
+        self.assertIsInstance(child, ar_element.PortApiOption)
+        self.assertTrue(child.enable_take_address)
+        self.assertFalse(child.indirect_api)
+        self.assertEqual(str(child.port), port_ref_str)
+
+    def test_port_api_option_from_list(self):
+        port_ref_str1 = "/Components/MyComponent/MyPortName2"
+        port_ref_str2 = "/Components/MyComponent/MyPortName1"
+        port_ref1 = ar_element.PortPrototypeRef(port_ref_str1, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
+        port_ref2 = ar_element.PortPrototypeRef(port_ref_str2, ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE)
+        options1 = ar_element.PortApiOption(port_ref1, enable_take_address=True, indirect_api=False)
+        options2 = ar_element.PortApiOption(port_ref2, enable_take_address=False, indirect_api=True)
+        element = ar_element.SwcInternalBehavior('MyName', port_api_options=[options1, options2])
+        xml = f'''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <PORT-API-OPTIONS>
+    <PORT-API-OPTION>
+      <ENABLE-TAKE-ADDRESS>true</ENABLE-TAKE-ADDRESS>
+      <INDIRECT-API>false</INDIRECT-API>
+      <PORT-REF DEST="R-PORT-PROTOTYPE">{port_ref_str1}</PORT-REF>
+    </PORT-API-OPTION>
+    <PORT-API-OPTION>
+      <ENABLE-TAKE-ADDRESS>false</ENABLE-TAKE-ADDRESS>
+      <INDIRECT-API>true</INDIRECT-API>
+      <PORT-REF DEST="P-PORT-PROTOTYPE">{port_ref_str2}</PORT-REF>
+    </PORT-API-OPTION>
+  </PORT-API-OPTIONS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.port_api_options), 2)
+        items = list(elem.port_api_options.values())
+        child: ar_element.PortApiOption = items[0]
+        self.assertIsInstance(child, ar_element.PortApiOption)
+        self.assertTrue(child.enable_take_address)
+        self.assertFalse(child.indirect_api)
+        self.assertEqual(str(child.port), port_ref_str1)
+        child = items[1]
+        self.assertIsInstance(child, ar_element.PortApiOption)
+        self.assertFalse(child.enable_take_address)
+        self.assertTrue(child.indirect_api)
+        self.assertEqual(str(child.port), port_ref_str2)
     # RUNNABLES
 
     def test_runnables_from_element(self):

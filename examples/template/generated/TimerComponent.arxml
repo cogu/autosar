@@ -47,21 +47,31 @@
                   </OPERATION-IREF>
                 </OPERATION-INVOKED-EVENT>
               </EVENTS>
+              <PORT-API-OPTIONS>
+                <PORT-API-OPTION>
+                  <ENABLE-TAKE-ADDRESS>false</ENABLE-TAKE-ADDRESS>
+                  <INDIRECT-API>false</INDIRECT-API>
+                  <PORT-REF DEST="P-PORT-PROTOTYPE">/ComponentTypes/TimerComponent/FreeRunningTimer</PORT-REF>
+                </PORT-API-OPTION>
+              </PORT-API-OPTIONS>
               <RUNNABLES>
                 <RUNNABLE-ENTITY>
                   <SHORT-NAME>TimerComponent_Init</SHORT-NAME>
                   <MINIMUM-START-INTERVAL>0</MINIMUM-START-INTERVAL>
                   <CAN-BE-INVOKED-CONCURRENTLY>false</CAN-BE-INVOKED-CONCURRENTLY>
+                  <SYMBOL>TimerComponent_Init</SYMBOL>
                 </RUNNABLE-ENTITY>
                 <RUNNABLE-ENTITY>
                   <SHORT-NAME>TimerComponent_GetTime</SHORT-NAME>
                   <MINIMUM-START-INTERVAL>0</MINIMUM-START-INTERVAL>
                   <CAN-BE-INVOKED-CONCURRENTLY>false</CAN-BE-INVOKED-CONCURRENTLY>
+                  <SYMBOL>TimerComponent_GetTime</SYMBOL>
                 </RUNNABLE-ENTITY>
                 <RUNNABLE-ENTITY>
                   <SHORT-NAME>TimerComponent_IsTimerElapsed</SHORT-NAME>
                   <MINIMUM-START-INTERVAL>0</MINIMUM-START-INTERVAL>
                   <CAN-BE-INVOKED-CONCURRENTLY>false</CAN-BE-INVOKED-CONCURRENTLY>
+                  <SYMBOL>TimerComponent_IsTimerElapsed</SYMBOL>
                 </RUNNABLE-ENTITY>
               </RUNNABLES>
             </SWC-INTERNAL-BEHAVIOR>

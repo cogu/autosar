@@ -649,10 +649,6 @@ class TestEventCreationAPI(unittest.TestCase):
 
 class TestRunnableEntityAPI(unittest.TestCase):
 
-    def __init__(self, methodName: str = "runTest") -> None:
-        super().__init__(methodName)
-        self.expected_behavior_ref = "/ComponentTypes/MyApplication/MyApplication_InternalBehavior"
-
     def create_swc(self, workspace: autosar.xml.Workspace) -> ar_element.ApplicationSoftwareComponentType:
         packages = create_packages(workspace)
         create_platform_types(packages)
@@ -1014,6 +1010,83 @@ class TestRunnableEntityAPI(unittest.TestCase):
         behavior = swc.internal_behavior
         runnable = behavior.create_runnable("MyApplication_Run", symbol="Run")
         self.assertEqual(runnable.symbol, "Run")
+
+
+class TestPortAPIOptionAPI(unittest.TestCase):
+
+    def create_swc(self, workspace: autosar.xml.Workspace) -> ar_element.ApplicationSoftwareComponentType:
+        packages = create_packages(workspace)
+        create_platform_types(packages)
+        create_mode_declaration_groups(packages)
+        vehicle_speed_interface = create_vehicle_speed_interface(packages)
+        engine_speed_interface = create_engine_speed_interface(packages)
+        safe_state_interface = create_safe_state_interface(packages)
+        data_interface = create_stored_data_interface(packages)
+        parameter_interface = create_parameter_interface(packages)
+        actuator_interface = create_actuator_interface(packages)
+        sensor_interface = create_sensor_interface(packages)
+        vehicle_mode_interface = create_vehicle_mode_interface(packages)
+        application_mode_interface = create_application_mode_interface(packages)
+        timer_interface = create_timer_interface(packages)
+
+        swc = create_application_swc(packages)
+        swc.create_p_port("VehicleSpeed", vehicle_speed_interface, com_spec={"init_value": 65535})
+        swc.create_r_port("EngineSpeed", engine_speed_interface, com_spec={"init_value": 65535})
+        swc.create_r_port("StoredData", data_interface)
+        swc.create_r_port("CalibrationData", parameter_interface)
+        swc.create_r_port("Timer", timer_interface)
+        swc.create_p_port("Actuator", actuator_interface, com_spec=[("Primary", {"init_value": 65535}),
+                                                                    ("Secondary", {"init_value": 255})])
+        swc.create_r_port("Sensor", sensor_interface, com_spec=[("Sensor1", {"init_value": (2 ** 32) - 1}),
+                                                                ("Sensor2", {"init_value": 65535})])
+        swc.create_pr_port("SafeState", safe_state_interface, provided_com_spec={"init_value": False})
+        swc.create_r_port("VehicleMode", vehicle_mode_interface, com_spec={'supports_async': False})
+        swc.create_p_port("ApplicationMode", application_mode_interface)
+
+        return swc
+
+    def test_create_options_for_all(self):
+        workspace = autosar.xml.Workspace()
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        behavior.create_port_api_options("*", enable_take_address=True, indirect_api=True)
+        self.assertEqual(len(behavior.port_api_options), 10)
+        options: ar_element.PortApiOption
+        for options in behavior.port_api_options.values():
+            self.assertTrue(options.enable_take_address)
+            self.assertTrue(options.indirect_api)
+
+    def test_create_options_for_single_port(self):
+        workspace = autosar.xml.Workspace()
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        behavior.create_port_api_options("VehicleSpeed", enable_take_address=True, indirect_api=True)
+        self.assertEqual(len(behavior.port_api_options), 1)
+        options = behavior.port_api_options["VehicleSpeed"]
+        self.assertIsInstance(options, ar_element.PortApiOption)
+        self.assertTrue(options.enable_take_address)
+        self.assertTrue(options.indirect_api)
+
+    def test_create_options_for_invalid_port_name(self):
+        workspace = autosar.xml.Workspace()
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        with self.assertRaises(ValueError):
+            behavior.create_port_api_options("VehicleSpeeds", enable_take_address=True, indirect_api=True)
+
+    def test_create_default_options_then_modify_existing(self):
+        workspace = autosar.xml.Workspace()
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        behavior.create_port_api_options("*", enable_take_address=False)
+        behavior.port_api_options["VehicleSpeed"].enable_take_address = True
+        options: ar_element.PortApiOption
+        for key, options in behavior.port_api_options.items():
+            self.assertIsInstance(options.enable_take_address, bool)
+            if key == "VehicleSpeed":
+                self.assertTrue(options.enable_take_address)
+            else:
+                self.assertFalse(options.enable_take_address)
 
 
 if __name__ == '__main__':
