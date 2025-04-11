@@ -4885,6 +4885,11 @@ class Writer(_XMLWriter):
             for event in elem.events:
                 self._write_rte_event_element(event)
             self._leave_child()
+        if elem.port_api_options:
+            self._add_child("PORT-API-OPTIONS")
+            for element in elem.port_api_options.values():
+                self._write_port_api_option(element)
+            self._leave_child()
         if elem.runnables:
             self._add_child("RUNNABLES")
             for runnable in elem.runnables:

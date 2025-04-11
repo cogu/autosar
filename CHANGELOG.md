@@ -55,6 +55,8 @@ ROperationInAtomicSwcInstanceRef | R-OPERATION-IN-ATOMIC-SWC-INSTANCE-REF
   * SYMBOL
   * WAIT-POINTS
   * WRITTEN-LOCAL-VARIABLES
+- SwcInternalBehavior supports new sub-elements:
+  * PORT-API-OPTIONS
 
 ## [v0.5.4] - 2024-10-28
 

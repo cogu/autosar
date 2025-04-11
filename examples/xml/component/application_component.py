@@ -138,7 +138,9 @@ def create_application_component(workspace: autosar.xml.Workspace):
     init_runnable_name = swc.name + '_Init'
     periodic_runnable_name = swc.name + '_Run'
     behavior = swc.create_internal_behavior()
-    behavior.create_runnable(init_runnable_name, can_be_invoked_concurrently=False, minimum_start_interval=0)
+    behavior.create_port_api_options("*", enable_take_address=False, indirect_api=False)
+    behavior.create_runnable(init_runnable_name,
+                             can_be_invoked_concurrently=False, minimum_start_interval=0)
     runnable = behavior.create_runnable(periodic_runnable_name,
                                         can_be_invoked_concurrently=False, minimum_start_interval=0)
     runnable.create_port_access(["EngineSpeed", "VehicleSpeed"])
