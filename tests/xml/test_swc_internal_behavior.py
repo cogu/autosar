@@ -3807,10 +3807,6 @@ class TestInternalBehavior(unittest.TestCase):
     """
     # IMPLEMENT LATER: CONSTANT-MEMORYS
     # IMPLEMENT LATER: CONSTANT-VALUE-MAPPING-REFS
-    # IMPLEMENT: DATA-TYPE-MAPPING-REFS
-    # IMPLEMENT: EXCLUSIVE-AREAS
-    # IMPLEMENT LATER: EXCLUSIVE-AREA-NESTING-ORDERS
-    # IMPLEMENT LATER: STATIC-MEMORYS
 
     def test_data_type_mapping_refs_from_str(self):
         dest_str = "DATA-TYPE-MAPPING-SET"
@@ -3879,6 +3875,60 @@ class TestInternalBehavior(unittest.TestCase):
         mapping_set = elem.data_type_mappings[1]
         self.assertIsInstance(mapping_set, ar_element.DataTypeMappingSetRef)
         self.assertEqual(str(mapping_set), ref_str2)
+
+    def test_data_exclusive_area_from_element(self):
+        self.maxDiff = None
+        exclusive_area = ar_element.ExclusiveArea("MyExclusiveArea")
+        element = ar_element.SwcInternalBehavior("MyName", exclusive_areas=exclusive_area)
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <EXCLUSIVE-AREAS>
+    <EXCLUSIVE-AREA>
+      <SHORT-NAME>MyExclusiveArea</SHORT-NAME>
+    </EXCLUSIVE-AREA>
+  </EXCLUSIVE-AREAS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.exclusive_areas), 1)
+        exclusive_area = elem.exclusive_areas[0]
+        self.assertIsInstance(exclusive_area, ar_element.ExclusiveArea)
+        self.assertEqual(exclusive_area.name, "MyExclusiveArea")
+
+    def test_data_exclusive_area_from_list(self):
+        self.maxDiff = None
+        exclusive_area1 = ar_element.ExclusiveArea("MyExclusiveArea1")
+        exclusive_area2 = ar_element.ExclusiveArea("MyExclusiveArea2")
+        element = ar_element.SwcInternalBehavior("MyName", exclusive_areas=[exclusive_area1, exclusive_area2])
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <EXCLUSIVE-AREAS>
+    <EXCLUSIVE-AREA>
+      <SHORT-NAME>MyExclusiveArea1</SHORT-NAME>
+    </EXCLUSIVE-AREA>
+    <EXCLUSIVE-AREA>
+      <SHORT-NAME>MyExclusiveArea2</SHORT-NAME>
+    </EXCLUSIVE-AREA>
+  </EXCLUSIVE-AREAS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.exclusive_areas), 2)
+        exclusive_area = elem.exclusive_areas[0]
+        self.assertIsInstance(exclusive_area, ar_element.ExclusiveArea)
+        self.assertEqual(exclusive_area.name, "MyExclusiveArea1")
+        exclusive_area = elem.exclusive_areas[1]
+        self.assertIsInstance(exclusive_area, ar_element.ExclusiveArea)
+        self.assertEqual(exclusive_area.name, "MyExclusiveArea2")
+
+    # IMPLEMENT LATER: EXCLUSIVE-AREA-NESTING-ORDERS
+    # IMPLEMENT LATER: STATIC-MEMORYS
 
 
 class TestSwcInternalBehavior(unittest.TestCase):

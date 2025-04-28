@@ -7533,6 +7533,22 @@ class PortApiOption(ARObject):
             raise TypeError("supported_feature must be of type CommunicationBufferLocking")
 
 
+class ExclusiveArea(Identifiable):
+    """
+    Complex Type AR:EXCLUSIVE-AREA
+    Tag variants: 'EXCLUSIVE-AREA'
+    Inherits constructor from parent class
+    """
+
+    def ref(self) -> ExclusiveAreaRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        return None if ref_str is None else ExclusiveAreaRef(ref_str)
+
+
 class InternalBehavior(Identifiable):
     """
     Group AR:INTERNAL-BEHAVIOR
@@ -7541,6 +7557,7 @@ class InternalBehavior(Identifiable):
     def __init__(self,
                  name: str,
                  data_type_mappings: str | DataTypeMappingSetRef | list[DataTypeMappingSetRef] | None = None,
+                 exclusive_areas: ExclusiveArea | list[ExclusiveArea] | None = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
         # .CONSTANT-MEMORYS (not yet implemented)
@@ -7548,6 +7565,7 @@ class InternalBehavior(Identifiable):
         # .DATA-TYPE-MAPPING-REFS
         self.data_type_mappings: list[DataTypeMappingSetRef] = []
         # .EXCLUSIVE-AREAS
+        self.exclusive_areas: list[ExclusiveArea] = []
         # .EXCLUSIVE-AREA-NESTING-ORDERS (not yet implemented)
         # .STATIC-MEMORYS (not yet implemented)
 
@@ -7559,6 +7577,12 @@ class InternalBehavior(Identifiable):
                     self.append_data_type_mapping(mapping_set)
             else:
                 self.append_data_type_mapping(data_type_mappings)
+        if exclusive_areas is not None:
+            if isinstance(exclusive_areas, Iterable):
+                for exclusive_area in exclusive_areas:
+                    self.append_exclusive_area(exclusive_area)
+            else:
+                self.append_exclusive_area(exclusive_areas)
 
     def append_data_type_mapping(self, mapping_set: DataTypeMappingSetRef) -> None:
         """
@@ -7568,6 +7592,16 @@ class InternalBehavior(Identifiable):
             self.data_type_mappings.append(mapping_set)
         else:
             raise TypeError(f"mapping_set must be of type DataTypeMappingSetRef. Got {str(type(mapping_set))}")
+
+    def append_exclusive_area(self, exclusive_area: ExclusiveArea) -> None:
+        """
+        Adds runnable to internal list of runnables
+        """
+        if isinstance(exclusive_area, ExclusiveArea):
+            self.exclusive_areas.append(exclusive_area)
+            exclusive_area.parent = self
+        else:
+            raise TypeError(f"exclusive_area must be of type ExclusiveArea. Got {str(type(exclusive_area))}")
 
 
 class SwcInternalBehavior(InternalBehavior):
