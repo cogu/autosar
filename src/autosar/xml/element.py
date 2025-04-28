@@ -56,6 +56,7 @@ from autosar.xml.reference import (SwBaseTypeRef,  # noqa F401
                                    TriggerRef,
                                    InternalTriggeringPointRef,
                                    RteEventRef,
+                                   DataTypeMappingSetRef,
                                    )
 
 
@@ -1554,7 +1555,7 @@ class Unit(ARElement):
         return None if ref_str is None else UnitRef(ref_str)
 
 
-# DataDictionary and DataType elements
+# --- DataDictionary and DataType elements
 
 
 class BaseType(ARElement):
@@ -1930,6 +1931,9 @@ class ImplementationDataType(AutosarDataType):
     """
     Complex type AR:IMPLEMENTATION-DATA-TYPE
     Tag Variants: 'IMPLEMENTATION-DATA-TYPE'
+
+    Skip parent class AbstractImplementationDataType since it doesn't have any properties
+    of its own.
     """
 
     def __init__(self,
@@ -3249,6 +3253,23 @@ class ModeDeclarationGroupPrototype(Identifiable):
         """
         ref_str = self._calc_ref_string()
         return None if ref_str is None else ModeDeclarationGroupPrototypeRef(ref_str)
+
+
+class ModeRequestTypeMap(ARObject):
+    """
+    Complex type AR:MODE-REQUEST-TYPE-MAP
+    Tag variants: 'MODE-REQUEST-TYPE-MAP'
+    """
+    def __init__(self,
+                 implementation_data_type: ImplementationDataTypeRef | None = None,
+                 mode_group: ModeDeclarationGroupRef | None = None) -> None:
+        # .IMPLEMENTATION-DATA-TYPE-REF
+        self.implementation_data_type: ImplementationDataTypeRef | None = None
+        # .MODE-GROUP-REF
+        self.mode_group: ModeDeclarationGroupRef | None = None
+        self._assign_optional('implementation_data_type', implementation_data_type, ImplementationDataTypeRef)
+        self._assign_optional('mode_group', mode_group, ModeDeclarationGroupRef)
+
 
 # --- Port Interface elements
 
@@ -7515,8 +7536,38 @@ class PortApiOption(ARObject):
 class InternalBehavior(Identifiable):
     """
     Group AR:INTERNAL-BEHAVIOR
-    This is just a placeholder. Will be implemented later.
+    Implementation is very limited for now
     """
+    def __init__(self,
+                 name: str,
+                 data_type_mappings: str | DataTypeMappingSetRef | list[DataTypeMappingSetRef] | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .CONSTANT-MEMORYS (not yet implemented)
+        # .CONSTANT-VALUE-MAPPING-REFS (not yet implemented)
+        # .DATA-TYPE-MAPPING-REFS
+        self.data_type_mappings: list[DataTypeMappingSetRef] = []
+        # .EXCLUSIVE-AREAS
+        # .EXCLUSIVE-AREA-NESTING-ORDERS (not yet implemented)
+        # .STATIC-MEMORYS (not yet implemented)
+
+        if data_type_mappings is not None:
+            if isinstance(data_type_mappings, str):
+                data_type_mappings = DataTypeMappingSetRef(data_type_mappings)
+            if isinstance(data_type_mappings, Iterable):
+                for mapping_set in data_type_mappings:
+                    self.append_data_type_mapping(mapping_set)
+            else:
+                self.append_data_type_mapping(data_type_mappings)
+
+    def append_data_type_mapping(self, mapping_set: DataTypeMappingSetRef) -> None:
+        """
+        Adds runnable to internal list of runnables
+        """
+        if isinstance(mapping_set, DataTypeMappingSetRef):
+            self.data_type_mappings.append(mapping_set)
+        else:
+            raise TypeError(f"mapping_set must be of type DataTypeMappingSetRef. Got {str(type(mapping_set))}")
 
 
 class SwcInternalBehavior(InternalBehavior):

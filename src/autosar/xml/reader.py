@@ -258,6 +258,7 @@ class Reader:
             'ARGUMENT-DATA-PROTOTYPE': self._read_argument_data_prototype,
             'DATA-TYPE-MAP': self._read_data_type_map,
             'SW-ARRAYSIZE': self._read_value_list,
+            'MODE-REQUEST-TYPE-MAP': self._read_mode_request_type_map,
             # CalibrationData elements
             'SW-VALUES-PHYS': self._read_sw_values,
             'SW-AXIS-CONT': self._read_sw_axis_cont,
@@ -2265,6 +2266,22 @@ class Reader:
         child_elements.skip("TYPE-BLUEPRINTS")  # Not supported
         child_elements.skip("VARIATION-POINT")  # Not supported
 
+    def _read_mode_request_type_map(self, xml_element: ElementTree.Element) -> ar_element.ModeRequestTypeMap:
+        """
+        Reads complex type AR:MODE-REQUEST-TYPE-MAP
+        Tag variants: 'MODE-REQUEST-TYPE-MAP'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get('IMPLEMENTATION-DATA-TYPE-REF')
+        if xml_child is not None:
+            data['implementation_data_type'] = self._read_impl_data_type_ref(xml_child)
+        xml_child = child_elements.get('MODE-GROUP-REF')
+        if xml_child is not None:
+            data['mode_group'] = self._read_mode_declaration_group_ref(xml_child)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ModeRequestTypeMap(**data)
+
     # --- Reference elements
 
     def _read_base_ref_attributes(self, attr: dict, data: dict) -> None:
@@ -2771,6 +2788,16 @@ class Reader:
         """
         dest_enum = self._read_ref_dest(xml_elem)
         return ar_element.RteEventRef(xml_elem.text, dest_enum)
+
+    def _read_data_type_mapping_set_ref(self,
+                                        xml_elem: ElementTree.Element
+                                        ) -> ar_element.DataTypeMappingSetRef:
+        """
+        Reads references to AR:DATA-TYPE-MAPPING-SET--SUBTYPES-ENUM
+        Tag variants: 'DATA-TYPE-MAPPING-REF' | 'DATA-TYPE-MAPPING-SET-REF'
+        """
+        dest_enum = self._read_ref_dest(xml_elem)
+        return ar_element.DataTypeMappingSetRef(xml_elem.text, dest_enum)
 
     # --- Constant and value specifications
 
@@ -5630,11 +5657,15 @@ class Reader:
     def _read_internal_behavior_group(self, child_elements: ChildElementMap, data: dict) -> None:
         """
         Reads group AR:INTERNAL-BEHAVIOR
-        Will be implemented in a future version
         """
         child_elements.skip("CONSTANT-MEMORYS")
         child_elements.skip("CONSTANT-VALUE-MAPPING-REFS")
-        child_elements.skip("DATA-TYPE-MAPPING-REFS")
+        xml_child = child_elements.get("DATA-TYPE-MAPPING-REFS")
+        if xml_child is not None:
+            data_type_mappings = []
+            for xml_grand_child in xml_child.findall("./DATA-TYPE-MAPPING-REF"):
+                data_type_mappings.append(self._read_data_type_mapping_set_ref(xml_grand_child))
+            data["data_type_mappings"] = data_type_mappings
         child_elements.skip("EXCLUSIVE-AREAS")
         child_elements.skip("EXCLUSIVE-AREA-NESTING-ORDERS")
         child_elements.skip("STATIC-MEMORYS")
