@@ -5637,12 +5637,22 @@ class Reader:
             data["transformer_status_forwarding"] = ar_enum.xml_to_enum("DataTransformationStatusForwarding",
                                                                         xml_child.text)
 
+    def _read_exclusive_area(self, xml_element: ElementTree.Element) -> ar_element.ExclusiveArea:
+        """
+        Reads complex type AR:EXCLUSIVE-AREA
+        Tag variants: 'EXCLUSIVE-AREA'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        return ar_element.ExclusiveArea(**data)
+
     def _read_swc_internal_behavior(self, xml_element: ElementTree.Element) -> ar_element.SwcInternalBehavior:
         """
         Reads complex type AR:SWC-INTERNAL-BEHAVIOR
         Tag variants: 'SWC-INTERNAL-BEHAVIOR'
-
-        This is just a placeholder.
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5666,7 +5676,13 @@ class Reader:
             for xml_grand_child in xml_child.findall("./DATA-TYPE-MAPPING-REF"):
                 data_type_mappings.append(self._read_data_type_mapping_set_ref(xml_grand_child))
             data["data_type_mappings"] = data_type_mappings
-        child_elements.skip("EXCLUSIVE-AREAS")
+        xml_child = child_elements.get("EXCLUSIVE-AREAS")
+        if xml_child is not None:
+            exclusive_areas = []
+            for xml_grand_child in xml_child.findall("./EXCLUSIVE-AREA"):
+                exclusive_areas.append(self._read_exclusive_area(xml_grand_child))
+            data["exclusive_areas"] = exclusive_areas
+
         child_elements.skip("EXCLUSIVE-AREA-NESTING-ORDERS")
         child_elements.skip("STATIC-MEMORYS")
 

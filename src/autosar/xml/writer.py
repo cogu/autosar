@@ -4882,12 +4882,21 @@ class Writer(_XMLWriter):
         if elem.transformer_status_forwarding is not None:
             self._add_content("TRANSFORMER-STATUS-FORWARDING", ar_enum.enum_to_xml(elem.transformer_status_forwarding))
 
+    def _write_exclusive_area(self, elem: ar_element.ExclusiveArea) -> None:
+        """
+        Writes complex type AR:EXCLUSIVE-AREA
+        Tag variants: 'EXCLUSIVE-AREA'
+        """
+        self._add_child("EXCLUSIVE-AREA")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._leave_child()
+
     def _write_swc_internal_behavior(self, elem: ar_element.SwcInternalBehavior) -> None:
         """
         Writes complex type AR:SWC-INTERNAL-BEHAVIOR
         Tag variants: 'SWC-INTERNAL-BEHAVIOR'
-
-        This is just a placeholder. Will be implemented later
         """
         self._add_child("SWC-INTERNAL-BEHAVIOR")
         self._write_referrable(elem)
@@ -4905,6 +4914,11 @@ class Writer(_XMLWriter):
             self._add_child("DATA-TYPE-MAPPING-REFS")
             for mapping_set in elem.data_type_mappings:
                 self._write_data_type_mapping_set_ref(mapping_set, "DATA-TYPE-MAPPING-REF")
+            self._leave_child()
+        if elem.exclusive_areas:
+            self._add_child("EXCLUSIVE-AREAS")
+            for exclusive_area in elem.exclusive_areas:
+                self._write_exclusive_area(exclusive_area)
             self._leave_child()
 
     def _write_swc_internal_behavior_group(self, elem: ar_element.SwcInternalBehavior) -> None:

@@ -20,6 +20,7 @@ ROperationInAtomicSwcInstanceRef | R-OPERATION-IN-ATOMIC-SWC-INSTANCE-REF
 * AsynchronousServerCallResultPoint | ASYNCHRONOUS-SERVER-CALL-RESULT-POINT
 * AutosarParameterRef | AUTOSAR-PARAMETER-REF
 * CommunicationBufferLocking | COMMUNICATION-BUFFER-LOCKING
+* ExclusiveArea | EXCLUSIVE-AREA
 * ExternalTriggeringPoint | EXTERNAL-TRIGGERING-POINT
 * ExternalTriggeringPointIdent | EXTERNAL-TRIGGERING-POINT-IDENT
 * InternalTriggeringPoint | INTERNAL-TRIGGERING-POINT
@@ -55,6 +56,9 @@ ROperationInAtomicSwcInstanceRef | R-OPERATION-IN-ATOMIC-SWC-INSTANCE-REF
   * SYMBOL
   * WAIT-POINTS
   * WRITTEN-LOCAL-VARIABLES
+- InternalBehavior support new sub-elements:
+  * DATA-TYPE-MAPPING-REFS
+  * EXCLUSIVE-AREAS
 - SwcInternalBehavior supports new sub-elements:
   * PORT-API-OPTIONS
 
