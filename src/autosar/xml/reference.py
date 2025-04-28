@@ -714,3 +714,19 @@ class RteEventRef(BaseRef):
                 ar_enum.IdentifiableSubTypes.INTERNAL_TRIGGER_OCCURRED_EVENT,
                 ar_enum.IdentifiableSubTypes.MODE_SWITCHED_ACK_EVENT,
                 ar_enum.IdentifiableSubTypes.OPERATION_INVOKED_EVENT}
+
+
+class DataTypeMappingSetRef(BaseRef):
+    """
+    AR:DATA-TYPE-MAPPING-SET--SUBTYPES-ENUM
+    """
+
+    def __init__(self, value: str,
+                 dest: ar_enum.IdentifiableSubTypes = ar_enum.IdentifiableSubTypes.DATA_TYPE_MAPPING_SET
+                 ) -> None:
+        super().__init__(value, dest)
+
+    @classmethod
+    def accepted_sub_types(cls) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.DATA_TYPE_MAPPING_SET}

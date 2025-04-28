@@ -2128,5 +2128,45 @@ class TestArgumentDataPrototype(unittest.TestCase):
         self.assertEqual(elem.server_arg_impl_policy, ar_enum.ServerArgImplPolicy.USE_ARGUMENT_TYPE)
 
 
+class TestModeRequestTypeMap(unittest.TestCase):
+
+    def test_empty(self):
+        element = ar_element.ModeRequestTypeMap()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<MODE-REQUEST-TYPE-MAP/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.ModeRequestTypeMap = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ModeRequestTypeMap)
+
+    def test_implementation_data_type(self):
+        impl_ref_str = "/DataTypes/TypeName"
+        impl_type_ref = ar_element.ImplementationDataTypeRef(impl_ref_str)
+        element = ar_element.ModeRequestTypeMap(impl_type_ref)
+        xml = f'''<MODE-REQUEST-TYPE-MAP>
+  <IMPLEMENTATION-DATA-TYPE-REF DEST="IMPLEMENTATION-DATA-TYPE">{impl_ref_str}</IMPLEMENTATION-DATA-TYPE-REF>
+</MODE-REQUEST-TYPE-MAP>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ModeRequestTypeMap = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ModeRequestTypeMap)
+        self.assertEqual(str(elem.implementation_data_type), impl_ref_str)
+
+    def test_mode_group(self):
+        mode_group_ref_str = "/ModeGrops/MyModeDeclarationGroup"
+        mode_group_ref = ar_element.ModeDeclarationGroupRef(mode_group_ref_str)
+        element = ar_element.ModeRequestTypeMap(mode_group=mode_group_ref)
+        xml = f'''<MODE-REQUEST-TYPE-MAP>
+  <MODE-GROUP-REF DEST="MODE-DECLARATION-GROUP">{mode_group_ref_str}</MODE-GROUP-REF>
+</MODE-REQUEST-TYPE-MAP>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ModeRequestTypeMap = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ModeRequestTypeMap)
+        self.assertEqual(str(elem.mode_group), mode_group_ref_str)
+
+
 if __name__ == '__main__':
     unittest.main()

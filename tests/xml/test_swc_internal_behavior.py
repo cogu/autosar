@@ -3801,6 +3801,86 @@ class TestPortApiOption(unittest.TestCase):
         self.assertEqual(elem.transformer_status_forwarding, status_forwarding)
 
 
+class TestInternalBehavior(unittest.TestCase):
+    """
+    Use SwcInternalBehavior as test class since InternalBehavior is abstract.
+    """
+    # IMPLEMENT LATER: CONSTANT-MEMORYS
+    # IMPLEMENT LATER: CONSTANT-VALUE-MAPPING-REFS
+    # IMPLEMENT: DATA-TYPE-MAPPING-REFS
+    # IMPLEMENT: EXCLUSIVE-AREAS
+    # IMPLEMENT LATER: EXCLUSIVE-AREA-NESTING-ORDERS
+    # IMPLEMENT LATER: STATIC-MEMORYS
+
+    def test_data_type_mapping_refs_from_str(self):
+        dest_str = "DATA-TYPE-MAPPING-SET"
+        ref_str = "/DataTypes/Mappings/MyMapping"
+        element = ar_element.SwcInternalBehavior("MyName", data_type_mappings=ref_str)
+        xml = f'''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <DATA-TYPE-MAPPING-REFS>
+    <DATA-TYPE-MAPPING-REF DEST="{dest_str}">{ref_str}</DATA-TYPE-MAPPING-REF>
+  </DATA-TYPE-MAPPING-REFS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.data_type_mappings), 1)
+        mapping_set = elem.data_type_mappings[0]
+        self.assertIsInstance(mapping_set, ar_element.DataTypeMappingSetRef)
+        self.assertEqual(str(mapping_set), ref_str)
+
+    def test_data_type_mapping_refs_from_element(self):
+        dest_str = "DATA-TYPE-MAPPING-SET"
+        ref_str = "/DataTypes/Mappings/MyMapping"
+        mapping_set_ref = ar_element.DataTypeMappingSetRef(ref_str)
+        element = ar_element.SwcInternalBehavior("MyName", data_type_mappings=mapping_set_ref)
+        xml = f'''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <DATA-TYPE-MAPPING-REFS>
+    <DATA-TYPE-MAPPING-REF DEST="{dest_str}">{ref_str}</DATA-TYPE-MAPPING-REF>
+  </DATA-TYPE-MAPPING-REFS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.data_type_mappings), 1)
+        mapping_set = elem.data_type_mappings[0]
+        self.assertIsInstance(mapping_set, ar_element.DataTypeMappingSetRef)
+        self.assertEqual(str(mapping_set), ref_str)
+
+    def test_data_type_mapping_refs_from_list(self):
+        dest_str = "DATA-TYPE-MAPPING-SET"
+        ref_str1 = "/DataTypes/Mappings/MyMapping1"
+        ref_str2 = "/DataTypes/Mappings/MyMapping1"
+        mapping_set_ref1 = ar_element.DataTypeMappingSetRef(ref_str1)
+        mapping_set_ref2 = ar_element.DataTypeMappingSetRef(ref_str2)
+        element = ar_element.SwcInternalBehavior("MyName", data_type_mappings=[mapping_set_ref1, mapping_set_ref2])
+        xml = f'''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <DATA-TYPE-MAPPING-REFS>
+    <DATA-TYPE-MAPPING-REF DEST="{dest_str}">{ref_str1}</DATA-TYPE-MAPPING-REF>
+    <DATA-TYPE-MAPPING-REF DEST="{dest_str}">{ref_str2}</DATA-TYPE-MAPPING-REF>
+  </DATA-TYPE-MAPPING-REFS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.data_type_mappings), 2)
+        mapping_set = elem.data_type_mappings[0]
+        self.assertIsInstance(mapping_set, ar_element.DataTypeMappingSetRef)
+        self.assertEqual(str(mapping_set), ref_str1)
+        mapping_set = elem.data_type_mappings[1]
+        self.assertIsInstance(mapping_set, ar_element.DataTypeMappingSetRef)
+        self.assertEqual(str(mapping_set), ref_str2)
+
+
 class TestSwcInternalBehavior(unittest.TestCase):
     """
     Most elements are not implemented yet
@@ -3819,13 +3899,6 @@ class TestSwcInternalBehavior(unittest.TestCase):
         self.assertEqual(elem.name, 'MyName')
         self.assertEqual(elem.short_name, 'MyName')
 
-    # Base class elements
-    # IMPLEMENT LATER: CONSTANT-MEMORYS
-    # IMPLEMENT LATER: CONSTANT-VALUE-MAPPING-REFS
-    # IMPLEMENT LATER: DATA-TYPE-MAPPING-REFS
-    # IMPLEMENT LATER: EXCLUSIVE-AREAS
-    # IMPLEMENT LATER: EXCLUSIVE-AREA-NESTING-ORDERS
-    # IMPLEMENT LATER: STATIC-MEMORYS
     # Class elements
     # IMPLEMENT LATER: AR-TYPED-PER-INSTANCE-MEMORYS
 

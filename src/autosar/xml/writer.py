@@ -314,6 +314,7 @@ class Writer(_XMLWriter):
             'VariableDataPrototype': self._write_variable_data_prototype,
             'ParameterDataPrototype': self._write_parameter_data_prototype,
             'ArgumentDataPrototype': self._write_argument_data_prototype,
+            'ModeRequestTypeMap': self._write_mode_request_type_map,
             # CalibrationData elements
             'SwValues': self._write_sw_values,
             'SwAxisCont': self._write_sw_axis_cont,
@@ -1949,6 +1950,23 @@ class Writer(_XMLWriter):
         if elem.server_arg_impl_policy is not None:
             self._add_content("SERVER-ARGUMENT-IMPL-POLICY", ar_enum.enum_to_xml(elem.server_arg_impl_policy))
 
+    def _write_mode_request_type_map(self, elem: ar_element.ModeRequestTypeMap) -> None:
+        """
+        Writes complex type AR:MODE-REQUEST-TYPE-MAP
+        Tag variants: 'MODE-REQUEST-TYPE-MAP'
+        """
+        assert isinstance(elem, ar_element.ModeRequestTypeMap)
+        tag = "MODE-REQUEST-TYPE-MAP"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.implementation_data_type is not None:
+                self._write_impl_data_type_ref(elem.implementation_data_type, "IMPLEMENTATION-DATA-TYPE-REF")
+            if elem.mode_group is not None:
+                self._write_mode_declaration_group_ref(elem.mode_group, "MODE-GROUP-REF")
+            self._leave_child()
+
 # --- Reference Elements
 
     def _collect_base_ref_attr(self,
@@ -2423,6 +2441,16 @@ class Writer(_XMLWriter):
         Tag variants: 'TARGET-EVENT-REF' | 'TARGET-RTE-EVENT-REF' | 'TRIGGER-REF'
         """
         assert isinstance(elem, ar_element.RteEventRef)
+        self._write_ref_content(elem, tag)
+
+    def _write_data_type_mapping_set_ref(self,
+                                         elem: ar_element.DataTypeMappingSetRef,
+                                         tag: str) -> None:
+        """
+        Writes references to AR:DATA-TYPE-MAPPING-SET--SUBTYPES-ENUM
+        Tag variants: 'DATA-TYPE-MAPPING-REF' | 'DATA-TYPE-MAPPING-SET-REF'
+        """
+        assert isinstance(elem, ar_element.DataTypeMappingSetRef)
         self._write_ref_content(elem, tag)
 
 # -- Constant and value specifications
@@ -4872,8 +4900,12 @@ class Writer(_XMLWriter):
     def _write_internal_behavior_group(self, elem: ar_element.InternalBehavior) -> None:
         """
         Writes group AR:INTERNAL-BEHAVIOR
-        This is just a placeholder. Will be implemented later.
         """
+        if elem.data_type_mappings:
+            self._add_child("DATA-TYPE-MAPPING-REFS")
+            for mapping_set in elem.data_type_mappings:
+                self._write_data_type_mapping_set_ref(mapping_set, "DATA-TYPE-MAPPING-REF")
+            self._leave_child()
 
     def _write_swc_internal_behavior_group(self, elem: ar_element.SwcInternalBehavior) -> None:
         """

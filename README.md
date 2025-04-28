@@ -269,8 +269,10 @@ Below is a rough roadmap of planned releases.
 * Runnables
 * Events
 
-**v0.5.5** SwcInternalBehavior - ports
+**v0.5.5** SwcInternalBehavior - advanced
 
+* Data Type Mapping Sets
+* Exclusive Areas
 * Port-access
 * Port-API options
 
