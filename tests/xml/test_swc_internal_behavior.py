@@ -267,7 +267,7 @@ class TestExclusiveAreaRefConditional(unittest.TestCase):
         elem: ar_element.ExclusiveAreaRefConditional = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.ExclusiveAreaRefConditional)
 
-    def test_exclusive_area_ref_from_str(self):
+    def test_exclusive_area_from_str(self):
         ref_str = "/ExclusiveAreas/AreaName"
         element = ar_element.ExclusiveAreaRefConditional(ref_str)
         writer = autosar.xml.Writer()
@@ -278,7 +278,7 @@ class TestExclusiveAreaRefConditional(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.ExclusiveAreaRefConditional = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.ExclusiveAreaRefConditional)
-        self.assertEqual(str(elem.exclusive_area_ref), ref_str)
+        self.assertEqual(str(elem.exclusive_area), ref_str)
 
 
 class TestAsynchronousServerCallPoint(unittest.TestCase):
@@ -935,7 +935,7 @@ class TestExecutableEntity(unittest.TestCase):
         self.assertEqual(len(elem.can_enter_leave), 1)
         conditional: ar_element.ExclusiveAreaRefConditional = elem.can_enter_leave[0]
         self.assertIsInstance(conditional, ar_element.ExclusiveAreaRefConditional)
-        self.assertEqual(str(conditional.exclusive_area_ref), ref_str)
+        self.assertEqual(str(conditional.exclusive_area), ref_str)
 
     def test_can_enters_from_list(self):
         ref_str1 = "/MyPackage/MySwc/MyExclusiveArea1"
@@ -962,10 +962,10 @@ class TestExecutableEntity(unittest.TestCase):
         self.assertEqual(len(elem.can_enter_leave), 2)
         conditional: ar_element.ExclusiveAreaRefConditional = elem.can_enter_leave[0]
         self.assertIsInstance(conditional, ar_element.ExclusiveAreaRefConditional)
-        self.assertEqual(str(conditional.exclusive_area_ref), ref_str1)
+        self.assertEqual(str(conditional.exclusive_area), ref_str1)
         conditional: ar_element.ExclusiveAreaRefConditional = elem.can_enter_leave[1]
         self.assertIsInstance(conditional, ar_element.ExclusiveAreaRefConditional)
-        self.assertEqual(str(conditional.exclusive_area_ref), ref_str2)
+        self.assertEqual(str(conditional.exclusive_area), ref_str2)
 
     def test_can_enter_exclusive_area_from_element(self):
         """
@@ -988,7 +988,7 @@ class TestExecutableEntity(unittest.TestCase):
         self.assertEqual(len(elem.can_enter_leave), 1)
         conditional: ar_element.ExclusiveAreaRefConditional = elem.can_enter_leave[0]
         self.assertIsInstance(conditional, ar_element.ExclusiveAreaRefConditional)
-        self.assertEqual(str(conditional.exclusive_area_ref), ref_str)
+        self.assertEqual(str(conditional.exclusive_area), ref_str)
 
     def test_can_enter_exclusive_area_from_list(self):
         ref_str1 = "/MyPackage/MySwc/MyExclusiveArea1"
@@ -1013,10 +1013,10 @@ class TestExecutableEntity(unittest.TestCase):
         self.assertEqual(len(elem.can_enter_leave), 2)
         conditional: ar_element.ExclusiveAreaRefConditional = elem.can_enter_leave[0]
         self.assertIsInstance(conditional, ar_element.ExclusiveAreaRefConditional)
-        self.assertEqual(str(conditional.exclusive_area_ref), ref_str1)
+        self.assertEqual(str(conditional.exclusive_area), ref_str1)
         conditional: ar_element.ExclusiveAreaRefConditional = elem.can_enter_leave[1]
         self.assertIsInstance(conditional, ar_element.ExclusiveAreaRefConditional)
-        self.assertEqual(str(conditional.exclusive_area_ref), ref_str2)
+        self.assertEqual(str(conditional.exclusive_area), ref_str2)
 
     def test_can_enter_create_directly_from_reference_string(self):
         ref_str = "/MyPackage/MySwc/MyExclusiveArea"
@@ -1160,7 +1160,7 @@ class TestExecutableEntity(unittest.TestCase):
         self.assertEqual(len(elem.runs_insides), 1)
         conditional: ar_element.ExclusiveAreaRefConditional = elem.runs_insides[0]
         self.assertIsInstance(conditional, ar_element.ExclusiveAreaRefConditional)
-        self.assertEqual(str(conditional.exclusive_area_ref), ref_str)
+        self.assertEqual(str(conditional.exclusive_area), ref_str)
 
     def test_runs_insides_from_list(self):
         ref_str1 = "/MyPackage/MySwc/MyExclusiveArea1"
@@ -1187,10 +1187,10 @@ class TestExecutableEntity(unittest.TestCase):
         self.assertEqual(len(elem.runs_insides), 2)
         conditional: ar_element.ExclusiveAreaRefConditional = elem.runs_insides[0]
         self.assertIsInstance(conditional, ar_element.ExclusiveAreaRefConditional)
-        self.assertEqual(str(conditional.exclusive_area_ref), ref_str1)
+        self.assertEqual(str(conditional.exclusive_area), ref_str1)
         conditional: ar_element.ExclusiveAreaRefConditional = elem.runs_insides[1]
         self.assertIsInstance(conditional, ar_element.ExclusiveAreaRefConditional)
-        self.assertEqual(str(conditional.exclusive_area_ref), ref_str2)
+        self.assertEqual(str(conditional.exclusive_area), ref_str2)
 
     def test_runs_inside_exclusive_area_from_element(self):
         """
@@ -1213,7 +1213,7 @@ class TestExecutableEntity(unittest.TestCase):
         self.assertEqual(len(elem.runs_insides), 1)
         conditional: ar_element.ExclusiveAreaRefConditional = elem.runs_insides[0]
         self.assertIsInstance(conditional, ar_element.ExclusiveAreaRefConditional)
-        self.assertEqual(str(conditional.exclusive_area_ref), ref_str)
+        self.assertEqual(str(conditional.exclusive_area), ref_str)
 
     def test_run_insides_exclusive_area_from_list(self):
         ref_str1 = "/MyPackage/MySwc/MyExclusiveArea1"
@@ -1238,10 +1238,10 @@ class TestExecutableEntity(unittest.TestCase):
         self.assertEqual(len(elem.runs_insides), 2)
         conditional: ar_element.ExclusiveAreaRefConditional = elem.runs_insides[0]
         self.assertIsInstance(conditional, ar_element.ExclusiveAreaRefConditional)
-        self.assertEqual(str(conditional.exclusive_area_ref), ref_str1)
+        self.assertEqual(str(conditional.exclusive_area), ref_str1)
         conditional: ar_element.ExclusiveAreaRefConditional = elem.runs_insides[1]
         self.assertIsInstance(conditional, ar_element.ExclusiveAreaRefConditional)
-        self.assertEqual(str(conditional.exclusive_area_ref), ref_str2)
+        self.assertEqual(str(conditional.exclusive_area), ref_str2)
 
     def test_sw_addr_method_from_element(self):
         ref_str = '/SwAddrMethods/DEFAULT'

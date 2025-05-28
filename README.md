@@ -220,14 +220,15 @@ List of convenience-methods:
 * `SwComponentType.create_pr_port`
 * `CompositionSwComponentType.create_component_prototype`
 * `CompositionSwComponentType.create_connector`
-* `SwcInternalBehavior.create_runnable`
 * `SwcInternalBehavior.create_background_event`
 * `SwcInternalBehavior.create_data_receive_error_event`
 * `SwcInternalBehavior.create_data_received_event`
 * `SwcInternalBehavior.create_data_send_completed_event`
 * `SwcInternalBehavior.create_data_write_completed_event`
+* `SwcInternalBehavior.create_exclusive_area`
 * `SwcInternalBehavior.create_init_event`
 * `SwcInternalBehavior.create_operation_invoked_event`
+* `SwcInternalBehavior.create_runnable`
 * `SwcInternalBehavior.create_swc_mode_manager_error_event`
 * `SwcInternalBehavior.create_swc_mode_mode_switch_event`
 * `SwcInternalBehavior.create_timing_event`

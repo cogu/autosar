@@ -5889,9 +5889,9 @@ class ExclusiveAreaRefConditional(ARObject):
     """
 
     def __init__(self,
-                 exclusive_area_ref: ExclusiveAreaRef | str | None = None) -> None:
-        self.exclusive_area_ref: ExclusiveAreaRef | None = None  # .EXCLUSIVE-AREA-REF
-        self._assign_optional("exclusive_area_ref", exclusive_area_ref, ExclusiveAreaRef)
+                 exclusive_area: ExclusiveAreaRef | str | None = None) -> None:
+        self.exclusive_area: ExclusiveAreaRef | None = None  # .EXCLUSIVE-AREA-REF
+        self._assign_optional("exclusive_area", exclusive_area, ExclusiveAreaRef)
 
 
 ActivationReasonArgumentType = ExecutableEntityActivationReason | list[ExecutableEntityActivationReason] | None
@@ -5900,6 +5900,7 @@ CanEnterLeaveArgumentType = Union[ExclusiveAreaRefConditional,
                                   ExclusiveAreaRef,
                                   list[ExclusiveAreaRef],
                                   str,
+                                  list[str],
                                   None]
 
 ExclusiveAreaNestingOrderArgumentType = ExclusiveAreaNestingOrderRef | list[ExclusiveAreaNestingOrderRef] | None
@@ -7584,6 +7585,16 @@ class InternalBehavior(Identifiable):
             else:
                 self.append_exclusive_area(exclusive_areas)
 
+    def create_exclusive_area(self, name: str, **kwargs) -> ExclusiveArea:
+        """
+        Adds a new ExclusiveArea to this object
+
+        #convenience-method
+        """
+        exclusive_area = ExclusiveArea(name, **kwargs)
+        self.append_exclusive_area(exclusive_area)
+        return exclusive_area
+
     def append_data_type_mapping(self, mapping_set: DataTypeMappingSetRef) -> None:
         """
         Adds runnable to internal list of runnables
@@ -7602,6 +7613,9 @@ class InternalBehavior(Identifiable):
             exclusive_area.parent = self
         else:
             raise TypeError(f"exclusive_area must be of type ExclusiveArea. Got {str(type(exclusive_area))}")
+
+
+ModeSwitchEventArgsReturnType = tuple[RequirePortPrototype, ModeDeclarationGroupPrototype, ModeDeclaration]
 
 
 class SwcInternalBehavior(InternalBehavior):
@@ -7733,14 +7747,37 @@ class SwcInternalBehavior(InternalBehavior):
         """
         Adds a new RunnableEntity to this behavior object
 
-        If the symbol argument is an empty string (default value), it will generate a symbol
-        identcal to the the name argument.
-        If you don't want a symbol at all, explicitly pass the value None as argument for symbol.
+        symbol: If the symbol argument is an empty string (default value), it will generate a symbol
+                identcal to the the name argument.
+                If you don't want a symbol at all, explicitly pass the value None as argument for symbol.
+
+        can_enter_leave: If argument type is str or list[str] then it expects each string to be the
+                         short-name of an existing exclusive area.
 
         #convenience-method
         """
         if isinstance(symbol, str) and len(symbol) == 0:
             symbol = name
+        if can_enter_leave is not None:
+            names: dict[str, bool] = {}
+            if isinstance(can_enter_leave, str):
+                names[can_enter_leave] = False
+            elif isinstance(can_enter_leave, Iterable):
+                for elem in can_enter_leave:
+                    if isinstance(elem, str):
+                        names[elem] = False
+            if names:
+                exclusive_area_refs: ExclusiveAreaRef = []
+                for area in self.exclusive_areas:
+                    if area.name in names:
+                        names[area.name] = True  # Marks it as handled
+                        exclusive_area_refs.append(area.ref())
+                for key, value in names.items():
+                    if not value:
+                        raise ValueError(f"can_enter_leave: '{key}' does not name an exclusive area in "
+                                         "this SwcInternalBehavior object")
+                can_enter_leave = exclusive_area_refs
+
         data = {"can_be_invoked_concurrently": can_be_invoked_concurrently,
                 "minimum_start_interval": minimum_start_interval,
                 "symbol": symbol,
@@ -8154,8 +8191,6 @@ class SwcInternalBehavior(InternalBehavior):
         event = TimingEvent(unique_event_name, runnable.ref(), period, offset, **kwargs)
         self.append_event(event)
         return event
-
-    ModeSwitchEventArgsReturnType = tuple[RequirePortPrototype, ModeDeclarationGroupPrototype, ModeDeclaration]
 
     def _get_swc_mode_switch_event_args(self,
                                         workspace: PackageCollection,

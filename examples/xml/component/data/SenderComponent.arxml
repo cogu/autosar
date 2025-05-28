@@ -41,6 +41,11 @@
           <INTERNAL-BEHAVIORS>
             <SWC-INTERNAL-BEHAVIOR>
               <SHORT-NAME>SenderComponent_InternalBehavior</SHORT-NAME>
+              <EXCLUSIVE-AREAS>
+                <EXCLUSIVE-AREA>
+                  <SHORT-NAME>ExampleExclusiveArea</SHORT-NAME>
+                </EXCLUSIVE-AREA>
+              </EXCLUSIVE-AREAS>
               <EVENTS>
                 <INIT-EVENT>
                   <SHORT-NAME>IT_SenderComponent_Init</SHORT-NAME>
@@ -59,7 +64,7 @@
                   <PORT-REF DEST="P-PORT-PROTOTYPE">/ComponentTypes/SenderComponent/EngineSpeed</PORT-REF>
                 </PORT-API-OPTION>
                 <PORT-API-OPTION>
-                  <ENABLE-TAKE-ADDRESS>false</ENABLE-TAKE-ADDRESS>
+                  <ENABLE-TAKE-ADDRESS>true</ENABLE-TAKE-ADDRESS>
                   <INDIRECT-API>false</INDIRECT-API>
                   <PORT-REF DEST="P-PORT-PROTOTYPE">/ComponentTypes/SenderComponent/VehicleSpeed</PORT-REF>
                 </PORT-API-OPTION>
@@ -73,6 +78,11 @@
                 </RUNNABLE-ENTITY>
                 <RUNNABLE-ENTITY>
                   <SHORT-NAME>SenderComponent_Run</SHORT-NAME>
+                  <CAN-ENTERS>
+                    <EXCLUSIVE-AREA-REF-CONDITIONAL>
+                      <EXCLUSIVE-AREA-REF DEST="EXCLUSIVE-AREA">/ComponentTypes/SenderComponent/SenderComponent_InternalBehavior/ExampleExclusiveArea</EXCLUSIVE-AREA-REF>
+                    </EXCLUSIVE-AREA-REF-CONDITIONAL>
+                  </CAN-ENTERS>
                   <MINIMUM-START-INTERVAL>0</MINIMUM-START-INTERVAL>
                   <CAN-BE-INVOKED-CONCURRENTLY>false</CAN-BE-INVOKED-CONCURRENTLY>
                   <DATA-SEND-POINTS>
