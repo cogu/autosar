@@ -4136,8 +4136,8 @@ class Writer(_XMLWriter):
             self._add_content(tag)
         else:
             self._add_child(tag)
-            if elem.exclusive_area_ref is not None:
-                self._write_exclusive_area_ref(elem.exclusive_area_ref, "EXCLUSIVE-AREA-REF")
+            if elem.exclusive_area is not None:
+                self._write_exclusive_area_ref(elem.exclusive_area, "EXCLUSIVE-AREA-REF")
             self._leave_child()
 
     def _write_abstract_access_point(self, elem: ar_element.AbstractAccessPoint) -> None:
@@ -4406,7 +4406,7 @@ class Writer(_XMLWriter):
             if self.schema_version < 50:
                 self._add_child("CAN-ENTER-EXCLUSIVE-AREA-REFS")
                 for child_elem in elem.can_enter_leave:
-                    self._write_exclusive_area_ref(child_elem.exclusive_area_ref,
+                    self._write_exclusive_area_ref(child_elem.exclusive_area,
                                                    "CAN-ENTER-EXCLUSIVE-AREA-REF")
                 self._leave_child()
             else:
@@ -4430,7 +4430,7 @@ class Writer(_XMLWriter):
             if self.schema_version < 50:
                 self._add_child("RUNS-INSIDE-EXCLUSIVE-AREA-REFS")
                 for child_elem in elem.runs_insides:
-                    self._write_exclusive_area_ref(child_elem.exclusive_area_ref,
+                    self._write_exclusive_area_ref(child_elem.exclusive_area,
                                                    "RUNS-INSIDE-EXCLUSIVE-AREA-REF")
                 self._leave_child()
             else:

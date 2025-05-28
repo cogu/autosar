@@ -4740,7 +4740,7 @@ class Reader:
         child_elements = ChildElementMap(xml_element)
         xml_child = child_elements.get("EXCLUSIVE-AREA-REF")
         if xml_child is not None:
-            data["exclusive_area_ref"] = self._read_exclusive_area_ref(xml_child)
+            data["exclusive_area"] = self._read_exclusive_area_ref(xml_child)
         child_elements.skip("VARIATION-POINT")  # Not supported
         self._report_unprocessed_elements(child_elements)
         return ar_element.ExclusiveAreaRefConditional(**data)

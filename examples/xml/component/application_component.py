@@ -129,24 +129,37 @@ def create_application_component(workspace: autosar.xml.Workspace):
     vehicle_speed_init = workspace.find_element("Constants", "VehicleSpeed_IV")
     swc = ar_element.ApplicationSoftwareComponentType("SenderComponent")
     workspace.add_element("ComponentTypes", swc)
+
+    # Create ports
     swc.create_provide_port("EngineSpeed", engine_speed_interface, com_spec={"init_value": engine_speed_init.ref(),
-                                                                             "uses_end_to_end_protection": False,
-                                                                             })
+                                                                             "uses_end_to_end_protection": False})
     swc.create_provide_port("VehicleSpeed", vehicle_speed_interface, com_spec={"init_value": vehicle_speed_init.ref(),
-                                                                               "uses_end_to_end_protection": False,
-                                                                               })
+                                                                               "uses_end_to_end_protection": False})
+    # Create internal behavior
+    behavior = swc.create_internal_behavior()
+
+    # Create Exclusive areas
+    behavior.create_exclusive_area("ExampleExclusiveArea")
+
+    # Create Runnables
     init_runnable_name = swc.name + '_Init'
     periodic_runnable_name = swc.name + '_Run'
-    behavior = swc.create_internal_behavior()
-    behavior.create_port_api_options("*", enable_take_address=False, indirect_api=False)
     behavior.create_runnable(init_runnable_name,
                              can_be_invoked_concurrently=False, minimum_start_interval=0)
     runnable = behavior.create_runnable(periodic_runnable_name,
-                                        can_be_invoked_concurrently=False, minimum_start_interval=0)
+                                        can_be_invoked_concurrently=False,
+                                        minimum_start_interval=0,
+                                        can_enter_leave="ExampleExclusiveArea")
     runnable.create_port_access(["EngineSpeed", "VehicleSpeed"])
+    # Create events
     behavior.create_init_event(init_runnable_name)
     behavior.create_timing_event(periodic_runnable_name, period=0.1)
 
+    # Adding port API options
+    behavior.create_port_api_options("*", enable_take_address=False, indirect_api=False)
+    behavior.port_api_options["VehicleSpeed"].enable_take_address = True
+
+    # Create SWC Implementation object
     impl = ar_element.SwcImplementation("SenderComponent_Implementation", behavior_ref=swc.internal_behavior.ref())
     workspace.add_element("ComponentTypes", impl)
 

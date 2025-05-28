@@ -1089,5 +1089,29 @@ class TestPortAPIOptionAPI(unittest.TestCase):
                 self.assertFalse(options.enable_take_address)
 
 
+class TestExclusiveAreaAPI(unittest.TestCase):
+
+    def create_swc(self, workspace: autosar.xml.Workspace) -> ar_element.ApplicationSoftwareComponentType:
+        packages = create_packages(workspace)
+        create_platform_types(packages)
+        vehicle_speed_interface = create_vehicle_speed_interface(packages)
+
+        swc = create_application_swc(packages)
+        swc.create_p_port("VehicleSpeed", vehicle_speed_interface, com_spec={"init_value": 65535})
+        return swc
+
+    def test_create_exclusive_area(self):
+        ref_str = "/ComponentTypes/MyApplication/MyApplication_InternalBehavior/MyExclusiveArea"
+        workspace = autosar.xml.Workspace()
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        exclusive_area = behavior.create_exclusive_area("MyExclusiveArea")
+        runnable = behavior.create_runnable("MyRunnable", can_enter_leave=exclusive_area.ref())
+        self.assertEqual(len(runnable.can_enter_leave), 1)
+        elem: ar_element.ExclusiveAreaRefConditional = runnable.can_enter_leave[0]
+        self.assertIsInstance(elem, ar_element.ExclusiveAreaRefConditional)
+        self.assertEqual(str(elem.exclusive_area), ref_str)
+
+
 if __name__ == '__main__':
     unittest.main()
