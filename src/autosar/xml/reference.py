@@ -511,7 +511,7 @@ class SwcInternalBehaviorRef(BaseRef):
 
 class SwcImplementationRef(BaseRef):
     """
-    Reference to SwcImplementation
+    AR:SWC-IMPLEMENTATION--SUBTYPES-ENUM
     """
 
     def __init__(self, value: str,
@@ -527,7 +527,7 @@ class SwcImplementationRef(BaseRef):
 
 class ExclusiveAreaRef(BaseRef):
     """
-    EXCLUSIVE-AREA--SUBTYPES-ENUM
+    AR:EXCLUSIVE-AREA--SUBTYPES-ENUM
     """
 
     def __init__(self, value: str,
@@ -713,7 +713,12 @@ class RteEventRef(BaseRef):
                 ar_enum.IdentifiableSubTypes.INIT_EVENT,
                 ar_enum.IdentifiableSubTypes.INTERNAL_TRIGGER_OCCURRED_EVENT,
                 ar_enum.IdentifiableSubTypes.MODE_SWITCHED_ACK_EVENT,
-                ar_enum.IdentifiableSubTypes.OPERATION_INVOKED_EVENT}
+                ar_enum.IdentifiableSubTypes.OPERATION_INVOKED_EVENT,
+                ar_enum.IdentifiableSubTypes.SWC_MODE_MANAGER_ERROR_EVENT,
+                ar_enum.IdentifiableSubTypes.SWC_MODE_SWITCH_EVENT,
+                ar_enum.IdentifiableSubTypes.TIMING_EVENT,
+                ar_enum.IdentifiableSubTypes.TRANSFORMER_HARD_ERROR_EVENT,
+                }
 
 
 class DataTypeMappingSetRef(BaseRef):
@@ -730,3 +735,51 @@ class DataTypeMappingSetRef(BaseRef):
     def accepted_sub_types(cls) -> set[ar_enum.IdentifiableSubTypes]:
         """Acceptable values for dest"""
         return {ar_enum.IdentifiableSubTypes.DATA_TYPE_MAPPING_SET}
+
+
+class ArgumentDataPrototypeRef(BaseRef):
+    """
+    AR:ARGUMENT-DATA-PROTOTYPE--SUBTYPES-ENUM
+    """
+
+    def __init__(self, value: str,
+                 dest: ar_enum.IdentifiableSubTypes = ar_enum.IdentifiableSubTypes.ARGUMENT_DATA_PROTOTYPE
+                 ) -> None:
+        super().__init__(value, dest)
+
+    @classmethod
+    def accepted_sub_types(cls) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.ARGUMENT_DATA_PROTOTYPE}
+
+
+class ApplicationArrayElementRef(BaseRef):
+    """
+    AR:APPLICATION-ARRAY-ELEMENT--SUBTYPES-ENUM
+    """
+
+    def __init__(self, value: str,
+                 dest: ar_enum.IdentifiableSubTypes = ar_enum.IdentifiableSubTypes.APPLICATION_ARRAY_ELEMENT
+                 ) -> None:
+        super().__init__(value, dest)
+
+    @classmethod
+    def accepted_sub_types(cls) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.APPLICATION_ARRAY_ELEMENT}
+
+
+class ApplicationRecordElementRef(BaseRef):
+    """
+    AR:APPLICATION-RECORD-ELEMENT--SUBTYPES-ENUM
+    """
+
+    def __init__(self, value: str,
+                 dest: ar_enum.IdentifiableSubTypes = ar_enum.IdentifiableSubTypes.APPLICATION_RECORD_ELEMENT
+                 ) -> None:
+        super().__init__(value, dest)
+
+    @classmethod
+    def accepted_sub_types(cls) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.APPLICATION_RECORD_ELEMENT}

@@ -2799,6 +2799,36 @@ class Reader:
         dest_enum = self._read_ref_dest(xml_elem)
         return ar_element.DataTypeMappingSetRef(xml_elem.text, dest_enum)
 
+    def _read_argument_data_prototype_ref(self,
+                                          xml_elem: ElementTree.Element
+                                          ) -> ar_element.ArgumentDataPrototypeRef:
+        """
+        Reads reference to AR:ARGUMENT-DATA-PROTOTYPE--SUBTYPES-ENUM
+        Tag variants: 'ARGUMENT-REF' | 'ROOT-ARGUMENT-DATA-PROTOTYPE-REF' | 'TLV-ARGUMENT-REF'
+        """
+        dest_enum = self._read_ref_dest(xml_elem)
+        return ar_element.ArgumentDataPrototypeRef(xml_elem.text, dest_enum)
+
+    def _read_application_array_element_ref(self,
+                                            xml_elem: ElementTree.Element
+                                            ) -> ar_element.ApplicationArrayElementRef:
+        """
+        Reads references to AR:APPLICATION-ARRAY-ELEMENT--SUBTYPES-ENUM
+        Tag variants: 'APPLICATION-ARRAY-ELEMENT-REF'
+        """
+        dest_enum = self._read_ref_dest(xml_elem)
+        return ar_element.ApplicationArrayElementRef(xml_elem.text, dest_enum)
+
+    def _read_application_record_element_ref(self,
+                                             xml_elem: ElementTree.Element
+                                             ) -> ar_element.ApplicationRecordElementRef:
+        """
+        Reads references to AR:APPLICATION-RECORD-ELEMENT--SUBTYPES-ENUM
+        Tag variants: 'APPLICATION-RECORD-ELEMENT-REF' | 'TLV-RECORD-ELEMENT-REF'
+        """
+        dest_enum = self._read_ref_dest(xml_elem)
+        return ar_element.ApplicationRecordElementRef(xml_elem.text, dest_enum)
+
     # --- Constant and value specifications
 
     def _read_text_value_specification(self,
