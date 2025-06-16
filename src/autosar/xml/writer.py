@@ -2453,6 +2453,30 @@ class Writer(_XMLWriter):
         assert isinstance(elem, ar_element.DataTypeMappingSetRef)
         self._write_ref_content(elem, tag)
 
+    def _write_argument_data_prototype_ref(self, elem: ar_element.ArgumentDataPrototypeRef, tag: str) -> None:
+        """
+        Writes references to AR:ARGUMENT-DATA-PROTOTYPE--SUBTYPES-ENUM
+        Tag variants: 'ARGUMENT-REF' | 'ROOT-ARGUMENT-DATA-PROTOTYPE-REF' | 'TLV-ARGUMENT-REF'
+        """
+        assert isinstance(elem, ar_element.ArgumentDataPrototypeRef)
+        self._write_ref_content(elem, tag)
+
+    def _write_application_array_element_ref(self, elem: ar_element.ApplicationArrayElementRef) -> None:
+        """
+        Writes references to AR:APPLICATION-ARRAY-ELEMENT--SUBTYPES-ENUM
+        Tag variants: 'APPLICATION-ARRAY-ELEMENT-REF'
+        """
+        assert isinstance(elem, ar_element.ApplicationArrayElementRef)
+        self._write_ref_content(elem, "APPLICATION-ARRAY-ELEMENT-REF")
+
+    def _write_application_record_element_ref(self, elem: ar_element.ApplicationRecordElementRef, tag: str) -> None:
+        """
+        Writes references to AR:APPLICATION-RECORD-ELEMENT--SUBTYPES-ENUM
+        Tag variants: 'APPLICATION-RECORD-ELEMENT-REF' | 'TLV-RECORD-ELEMENT-REF'
+        """
+        assert isinstance(elem, ar_element.ApplicationRecordElementRef)
+        self._write_ref_content(elem, tag)
+
 # -- Constant and value specifications
 
     def _write_text_value_specification(self, elem: ar_element.TextValueSpecification) -> None:

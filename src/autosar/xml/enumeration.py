@@ -286,10 +286,14 @@ class IdentifiableSubTypes(Enum):
     SW_COMPONENT_PROTOTYPE = 64
     SWC_IMPLEMENTATION = 65
     SWC_INTERNAL_BEHAVIOR = 66
-    TRIGGER = 67
-    UNIT = 68
-    VARIABLE_ACCESS = 69
-    VARIABLE_DATA_PROTOTYPE = 70
+    SWC_MODE_MANAGER_ERROR_EVENT = 67
+    SWC_MODE_SWITCH_EVENT = 68
+    TIMING_EVENT = 69
+    TRANSFORMER_HARD_ERROR_EVENT = 70
+    TRIGGER = 71
+    UNIT = 72
+    VARIABLE_ACCESS = 73
+    VARIABLE_DATA_PROTOTYPE = 74
 
 
 class IntervalType(Enum):
@@ -883,6 +887,10 @@ xml_to_enum_map: dict[str, dict] = {
         "SW-COMPONENT-PROTOTYPE": IdentifiableSubTypes.SW_COMPONENT_PROTOTYPE,
         "SWC-IMPLEMENTATION": IdentifiableSubTypes.SWC_IMPLEMENTATION,
         "SWC-INTERNAL-BEHAVIOR": IdentifiableSubTypes.SWC_INTERNAL_BEHAVIOR,
+        "SWC-MODE-MANAGER-ERROR-EVENT": IdentifiableSubTypes.SWC_MODE_MANAGER_ERROR_EVENT,
+        "SWC-MODE-SWITCH-EVENT": IdentifiableSubTypes.SWC_MODE_SWITCH_EVENT,
+        "TIMING-EVENT": IdentifiableSubTypes.TIMING_EVENT,
+        "TRANSFORMER-HARD-ERROR-EVENT": IdentifiableSubTypes.TRANSFORMER_HARD_ERROR_EVENT,
         "TRIGGER": IdentifiableSubTypes.TRIGGER,
         "UNIT": IdentifiableSubTypes.UNIT,
         "VARIABLE-ACCESS": IdentifiableSubTypes.VARIABLE_ACCESS,
@@ -1287,10 +1295,14 @@ enum_to_xml_map: dict[str, list] = {
         "SW-COMPONENT-PROTOTYPE",                        # 64
         "SWC-IMPLEMENTATION",                            # 65
         "SWC-INTERNAL-BEHAVIOR",                         # 66
-        "TRIGGER",                                       # 67
-        "UNIT",                                          # 68
-        "VARIABLE-ACCESS",                               # 69
-        "VARIABLE-DATA-PROTOTYPE",                       # 70
+        "SWC-MODE-MANAGER-ERROR-EVENT",                  # 67
+        "SWC-MODE-SWITCH-EVENT",                         # 68
+        "TIMING-EVENT",                                  # 69
+        "TRANSFORMER-HARD-ERROR-EVENT",                  # 70
+        "TRIGGER",                                       # 71
+        "UNIT",                                          # 72
+        "VARIABLE-ACCESS",                               # 73
+        "VARIABLE-DATA-PROTOTYPE",                       # 74
     ],
     "IntervalType": [
         "CLOSED",  # 0

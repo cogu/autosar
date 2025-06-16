@@ -57,6 +57,9 @@ from autosar.xml.reference import (SwBaseTypeRef,  # noqa F401
                                    InternalTriggeringPointRef,
                                    RteEventRef,
                                    DataTypeMappingSetRef,
+                                   ArgumentDataPrototypeRef,
+                                   ApplicationArrayElementRef,
+                                   ApplicationRecordElementRef,
                                    )
 
 
@@ -1926,6 +1929,17 @@ class ImplementationDataTypeElement(Identifiable):
         else:
             raise TypeError("'elem' must be of type ImplementationDataTypeElement")
 
+    def ref(self) -> AbstractImplementationDataTypeElementRef | None:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return AbstractImplementationDataTypeElementRef(ref_str,
+                                                        ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE_ELEMENT)
+
 
 class ImplementationDataType(AutosarDataType):
     """
@@ -2098,6 +2112,14 @@ class ArgumentDataPrototype(AutosarDataPrototype):
         self._assign_optional("direction", direction, ar_enum.ArgumentDirection)
         self._assign_optional("server_arg_impl_policy", server_arg_impl_policy, ar_enum.ServerArgImplPolicy)
 
+    def ref(self) -> ArgumentDataPrototypeRef | None:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        return None if ref_str is None else ArgumentDataPrototypeRef(ref_str)
+
 
 class ApplicationDataType(AutosarDataType):
     """
@@ -2175,6 +2197,16 @@ class ApplicationArrayElement(ApplicationCompositeElementDataPrototype):
         self._assign_optional_positive_int("max_number_of_elements", max_number_of_elements)
         self._assign_optional("index_data_type_ref", index_data_type_ref, IndexDataTypeRef)
 
+    def ref(self) -> ApplicationArrayElementRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return ApplicationArrayElementRef(ref_str)
+
 
 class ApplicationArrayDataType(ApplicationCompositeDataType):
     """
@@ -2217,6 +2249,16 @@ class ApplicationRecordElement(ApplicationCompositeElementDataPrototype):
         super().__init__(name, **kwargs)
         self.is_optional: bool | None = None  # .IS-OPTIONAL
         self._assign_optional('is_optional', is_optional, bool)
+
+    def ref(self) -> ApplicationRecordElementRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return ApplicationRecordElementRef(ref_str)
 
 
 class ApplicationRecordDataType(ApplicationCompositeDataType):
@@ -2310,6 +2352,16 @@ class DataTypeMappingSet(ARElement):
             self.data_type_maps.append(element)
         else:
             raise TypeError(f'Unexpected type: "{str(type(element))}"')
+
+    def ref(self) -> DataTypeMappingSetRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return DataTypeMappingSetRef(ref_str)
 
 
 class ValueList(ARObject):
@@ -5836,6 +5888,16 @@ class VariableAccess(Identifiable):
         else:
             return cls.make_from_port(name, port_prototype_ref, target_data_prototype_ref)
 
+    def ref(self) -> VariableAccessRef | None:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return VariableAccessRef(ref_str)
+
 
 class SwcImplementation(Implementation):
     """
@@ -6225,6 +6287,14 @@ class ModeSwitchPoint(AbstractAccessPoint):
         # .VARIATION-POINT not supported
 
         self._assign_optional_strict("mode_group", mode_group, PModeGroupInAtomicSwcInstanceRef)
+
+    def ref(self) -> ModeSwitchPointRef:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        return None if ref_str is None else ModeSwitchPointRef(ref_str)
 
 
 class ParameterInAtomicSwcTypeInstanceRef(ARObject):
@@ -7066,6 +7136,16 @@ class AsynchronousServerCallReturnsEvent(RteEvent):
         self.event_source: AsynchronousServerCallResultPointRef | None = None
         self._assign_optional("event_source", event_source, AsynchronousServerCallResultPointRef)
 
+    def ref(self) -> RteEventRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return RteEventRef(ref_str, ar_enum.IdentifiableSubTypes.ASYNCHRONOUS_SERVER_CALL_RETURNS_EVENT)
+
 
 class BackgroundEvent(RteEvent):
     """
@@ -7073,6 +7153,16 @@ class BackgroundEvent(RteEvent):
     Tag variants: 'BACKGROUND-EVENT'
     Inherits constructor from base-class
     """
+
+    def ref(self) -> RteEventRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return RteEventRef(ref_str, ar_enum.IdentifiableSubTypes.BACKGROUND_EVENT)
 
 
 class DataReceiveErrorEvent(RteEvent):
@@ -7107,6 +7197,16 @@ class DataReceiveErrorEvent(RteEvent):
         data = RVariableInAtomicSwcInstanceRef(context_port, target_data_element)
         return cls(name, start_on_event, data, **kwargs)
 
+    def ref(self) -> RteEventRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return RteEventRef(ref_str, ar_enum.IdentifiableSubTypes.DATA_RECEIVE_ERROR_EVENT)
+
 
 class DataReceivedEvent(RteEvent):
     """
@@ -7140,6 +7240,16 @@ class DataReceivedEvent(RteEvent):
         data = RVariableInAtomicSwcInstanceRef(context_port, target_data_element)
         return cls(name, start_on_event, data, **kwargs)
 
+    def ref(self) -> RteEventRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return RteEventRef(ref_str, ar_enum.IdentifiableSubTypes.DATA_RECEIVED_EVENT)
+
 
 class DataSendCompletedEvent(RteEvent):
     """
@@ -7157,6 +7267,16 @@ class DataSendCompletedEvent(RteEvent):
         self.event_source: VariableAccessRef | None = None
         self._assign_optional("event_source", event_source, VariableAccessRef)
 
+    def ref(self) -> RteEventRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return RteEventRef(ref_str, ar_enum.IdentifiableSubTypes.DATA_SEND_COMPLETED_EVENT)
+
 
 class DataWriteCompletedEvent(RteEvent):
     """
@@ -7173,6 +7293,16 @@ class DataWriteCompletedEvent(RteEvent):
         # .EVENT-SOURCE-REF
         self.event_source: VariableAccessRef | None = None
         self._assign_optional("event_source", event_source, VariableAccessRef)
+
+    def ref(self) -> RteEventRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return RteEventRef(ref_str, ar_enum.IdentifiableSubTypes.DATA_WRITE_COMPLETED_EVENT)
 
 
 class ExternalTriggerOccurredEvent(RteEvent):
@@ -7204,6 +7334,16 @@ class ExternalTriggerOccurredEvent(RteEvent):
         trigger = RTriggerInAtomicSwcInstanceRef(context_port, target_trigger)
         return cls(name, start_on_event, trigger, **kwargs)
 
+    def ref(self) -> RteEventRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return RteEventRef(ref_str, ar_enum.IdentifiableSubTypes.EXTERNAL_TRIGGER_OCCURRED_EVENT)
+
 
 class InitEvent(RteEvent):
     """
@@ -7211,6 +7351,16 @@ class InitEvent(RteEvent):
     Tag variants: 'INIT-EVENT'
     Inherits constructor from base-class
     """
+
+    def ref(self) -> RteEventRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return RteEventRef(ref_str, ar_enum.IdentifiableSubTypes.INIT_EVENT)
 
 
 class InternalTriggerOccurredEvent(RteEvent):
@@ -7229,6 +7379,16 @@ class InternalTriggerOccurredEvent(RteEvent):
         self.event_source: InternalTriggeringPointRef | None = None
         self._assign_optional("event_source", event_source, InternalTriggeringPointRef)
 
+    def ref(self) -> RteEventRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return RteEventRef(ref_str, ar_enum.IdentifiableSubTypes.INTERNAL_TRIGGER_OCCURRED_EVENT)
+
 
 class ModeSwitchedAckEvent(RteEvent):
     """
@@ -7245,6 +7405,16 @@ class ModeSwitchedAckEvent(RteEvent):
         # .EVENT-SOURCE-REF
         self.event_source: ModeSwitchPointRef | None = None
         self._assign_optional("event_source", event_source, ModeSwitchPointRef)
+
+    def ref(self) -> RteEventRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return RteEventRef(ref_str, ar_enum.IdentifiableSubTypes.MODE_SWITCHED_ACK_EVENT)
 
 
 class OperationInvokedEvent(RteEvent):
@@ -7278,6 +7448,16 @@ class OperationInvokedEvent(RteEvent):
         """
         operation = POperationInAtomicSwcInstanceRef(context_port, target_provided_operation)
         return cls(name, start_on_event, operation, **kwargs)
+
+    def ref(self) -> RteEventRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return RteEventRef(ref_str, ar_enum.IdentifiableSubTypes.OPERATION_INVOKED_EVENT)
 
 
 SwcModeSwitchEventModeType = Union[RModeInAtomicSwcInstanceRef,
@@ -7313,6 +7493,16 @@ class SwcModeManagerErrorEvent(RteEvent):
         """
         mode_group = PModeGroupInAtomicSwcInstanceRef(context_port, context_mode_declaration_group_prototype)
         return cls(name, start_on_event, mode_group, **kwargs)
+
+    def ref(self) -> RteEventRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return RteEventRef(ref_str, ar_enum.IdentifiableSubTypes.SWC_MODE_MANAGER_ERROR_EVENT)
 
 
 class SwcModeSwitchEvent(RteEvent):
@@ -7370,6 +7560,16 @@ class SwcModeSwitchEvent(RteEvent):
                                            target_mode_declaration)
         return cls(name, start_on_event, activation, mode, **kwargs)
 
+    def ref(self) -> RteEventRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return RteEventRef(ref_str, ar_enum.IdentifiableSubTypes.SWC_MODE_SWITCH_EVENT)
+
 
 class TimingEvent(RteEvent):
     """
@@ -7391,6 +7591,16 @@ class TimingEvent(RteEvent):
 
         self._assign_optional("offset", offset, float)
         self._assign_optional("period", period, float)
+
+    def ref(self) -> RteEventRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return RteEventRef(ref_str, ar_enum.IdentifiableSubTypes.TIMING_EVENT)
 
 
 class TransformerHardErrorEvent(RteEvent):
@@ -7417,6 +7627,16 @@ class TransformerHardErrorEvent(RteEvent):
         self._assign_optional_strict("operation", operation, POperationInAtomicSwcInstanceRef)
         self._assign_optional_strict("required_trigger", required_trigger, RTriggerInAtomicSwcInstanceRef)
         self._assign_optional_strict("trigger", trigger, PTriggerInAtomicSwcTypeInstanceRef)
+
+    def ref(self) -> RteEventRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return RteEventRef(ref_str, ar_enum.IdentifiableSubTypes.TRANSFORMER_HARD_ERROR_EVENT)
 
 
 class PortDefinedArgumentValue(ARObject):
