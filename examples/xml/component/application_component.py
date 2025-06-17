@@ -56,7 +56,7 @@ def create_platform_types(workspace: autosar.xml.Workspace):
                                                   category="TEXTTABLE",
                                                   int_to_phys=computation)
     workspace.add_element("PlatformCompuMethods", boolean_compu_method)
-    sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref=uint8_base_type.ref(),
+    sw_data_def_props = ar_element.SwDataDefPropsConditional(base_type_ref=boolean_base_type.ref(),
                                                              data_constraint_ref=boolean_data_constr.ref(),
                                                              compu_method_ref=boolean_compu_method.ref())
     boolean_impl_type = ar_element.ImplementationDataType("boolean",

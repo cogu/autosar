@@ -4054,6 +4054,10 @@ class ProvidePortComSpec(ARObject):
         If interface has multiple operations: kwargs is a dict of dict where
                                               outer dict keys are operation names and each value
                                               is another dict containing key-value pairs for one com-spec
+
+        For ModeSwitchInterface:
+        kwargs is a dict with key-value pairs for one com-spec
+        Note: Avoid manually setting the mode_group_ref option, it will be automatically set for you.
         """
         if isinstance(port_interface, SenderReceiverInterface):
             if len(port_interface.data_elements) == 0:
@@ -4109,6 +4113,11 @@ class ProvidePortComSpec(ARObject):
                     operations = ', '.join(list(unprocessed))
                     raise ValueError(f"{port_interface.name}: Operation(s) not found in port interface: '{operations}'")
                 return com_spec_list
+        elif isinstance(port_interface, ModeSwitchInterface):
+            if port_interface.mode_group is None:
+                raise ValueError(f"{port_interface.name}: Port interface doesn't have a mode group set")
+            assert port_interface.mode_group.ref() is not None
+            return ModeSwitchSenderComSpec(mode_group_ref=port_interface.mode_group.ref(), **kwargs)
         else:
             raise NotImplementedError(str(type(port_interface)))
 
@@ -6747,14 +6756,20 @@ class RunnableEntity(ExecutableEntity):
         if data_element is None:
             raise RuntimeError(f"Unable to find a matching data element '{element_name}' "
                                f"in port interface '{port_interface.name}'")
+        name: str | None = None
+        if access_point_args is not None and "name" in access_point_args:
+            name = access_point_args["name"]
+            del access_point_args["name"]
         if isinstance(port, RequirePortPrototype):
             if access_type == ar_enum.PortAccess.IMPLICIT:
-                name = "_".join([settings.get_value("data_read_access_prefix"), port.name, data_element.name])
+                if name is None:
+                    name = "_".join([settings.get_value("data_read_access_prefix"), port.name, data_element.name])
                 variable_access = VariableAccess.make_from_port_with_args(name, port.ref(), data_element.ref(),
                                                                           access_point_args)
                 self.append_data_read_access(variable_access)
             else:
-                name = "_".join([settings.get_value("data_receive_point_prefix"), port.name, data_element.name])
+                if name is None:
+                    name = "_".join([settings.get_value("data_receive_point_prefix"), port.name, data_element.name])
                 variable_access = VariableAccess.make_from_port_with_args(name, port.ref(), data_element.ref(),
                                                                           access_point_args)
                 if result_type == ar_enum.ReadResult.BY_VALUE:
@@ -6763,12 +6778,14 @@ class RunnableEntity(ExecutableEntity):
                     self.append_data_receive_point_by_argument(variable_access)
         elif isinstance(port, ProvidePortPrototype):
             if access_type == ar_enum.PortAccess.IMPLICIT:
-                name = "_".join([settings.get_value("data_write_access_prefix"), port.name, data_element.name])
+                if name is None:
+                    name = "_".join([settings.get_value("data_write_access_prefix"), port.name, data_element.name])
                 variable_access = VariableAccess.make_from_port_with_args(name, port.ref(), data_element.ref(),
                                                                           access_point_args)
                 self.append_data_write_access(variable_access)
             else:
-                name = "_".join([settings.get_value("data_send_point_prefix"), port.name, data_element.name])
+                if name is None:
+                    name = "_".join([settings.get_value("data_send_point_prefix"), port.name, data_element.name])
                 variable_access = VariableAccess.make_from_port_with_args(name, port.ref(), data_element.ref(),
                                                                           access_point_args)
                 self.append_data_send_point(variable_access)
@@ -6798,13 +6815,18 @@ class RunnableEntity(ExecutableEntity):
         if mode_group is None:
             raise RuntimeError(f"Unable to find a ModeDeclarationGroupPrototype named '{mode_group_name}' "
                                f"in port interface '{port_interface.name}'")
+        name: str | None = None
         access_point = None
+        if access_point_args is not None and "name" in access_point_args:
+            name = access_point_args["name"]
+            del access_point_args["name"]
         if isinstance(port, RequirePortPrototype):
             mode_group_iref = RModeGroupInAtomicSwcInstanceRef(port.ref(), mode_group.ref())
             if access_type is None:
                 access_point = ModeAccessPoint(mode_group=mode_group_iref)
             elif access_type == ar_enum.ModeAccess.ACCESS:
-                name = "_".join([settings.get_value("mode_access_point_prefix"), port.name, mode_group.name])
+                if name is None:
+                    name = "_".join([settings.get_value("mode_access_point_prefix"), port.name, mode_group.name])
                 ident = ModeAccessPointIdent.make_with_args(name, access_point_args)
                 access_point = ModeAccessPoint(ident=ident, mode_group=mode_group_iref)
         elif isinstance(port, ProvidePortPrototype):
@@ -6812,11 +6834,13 @@ class RunnableEntity(ExecutableEntity):
             if access_type is None:
                 access_point = ModeAccessPoint(mode_group=mode_group_iref)
             elif access_type == ar_enum.ModeAccess.ACCESS:
-                name = "_".join([settings.get_value("mode_access_point_prefix"), port.name, mode_group.name])
+                if name is None:
+                    name = "_".join([settings.get_value("mode_access_point_prefix"), port.name, mode_group.name])
                 ident = ModeAccessPointIdent.make_with_args(name, access_point_args)
                 access_point = ModeAccessPoint(ident=ident, mode_group=mode_group_iref)
             else:
-                name = "_".join([settings.get_value("mode_switch_point_prefix"), port.name, mode_group.name])
+                if name is None:
+                    name = "_".join([settings.get_value("mode_switch_point_prefix"), port.name, mode_group.name])
                 if access_point_args is not None:
                     switch_point = ModeSwitchPoint(name, mode_group_iref, **access_point_args)
                 else:
@@ -6847,9 +6871,14 @@ class RunnableEntity(ExecutableEntity):
                                f"in port interface '{port_interface.name}'")
         parameter_iref = ParameterInAtomicSwcTypeInstanceRef(port_prototype=port.ref(),
                                                              target_data_prototype=target_data.ref())
-        name = "_".join([settings.get_value("parameter_access_prefix"),
-                         port.name,
-                         target_data.name])
+        name: str | None = None
+        if access_point_args is not None and "name" in access_point_args:
+            name = access_point_args["name"]
+            del access_point_args["name"]
+        if name is None:
+            name = "_".join([settings.get_value("parameter_access_prefix"),
+                            port.name,
+                            target_data.name])
         if access_point_args is not None:
             parameter_access = ParameterAccess(name,
                                                AutosarParameterRef(autosar_parameter=parameter_iref),
@@ -6879,9 +6908,14 @@ class RunnableEntity(ExecutableEntity):
         if operation is None:
             raise RuntimeError(f"Unable to find a matching operation '{operation_name}' "
                                f"in port interface '{port_interface.name}'")
+        name: str | None = None
+        if access_point_args is not None and "name" in access_point_args:
+            name = access_point_args["name"]
+            del access_point_args["name"]
         if isinstance(port, (RequirePortPrototype, PRPortPrototype)):
             access_point = None
-            name = "_".join([settings.get_value("server_call_point_prefix"), port.name, operation.name])
+            if name is None:
+                name = "_".join([settings.get_value("server_call_point_prefix"), port.name, operation.name])
             operation_iref = ROperationInAtomicSwcInstanceRef(port.ref(), operation.ref())
             if access_point_args is not None:
                 if call_type == ar_enum.CallPoint.ASYNC:
