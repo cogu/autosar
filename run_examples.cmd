@@ -15,9 +15,12 @@ python examples\xml\component\application_component.py
 python examples\xml\component\composition_component.py
 python examples\xml\reader\print_errors.py
 python examples\xml\reference\reference_example.py
+python examples/xml/port/explicit_send_receive.py
+python examples/xml/port/implicit_read_write.py
+python examples/xml/port/mode_switch.py
+python examples/xml/port/port_api_options.py
 python examples\template\generate_xml_using_config.py
 python examples\template\generate_xml_without_config.py
 python examples\generator\data_types\gen_type_defs_scalar.py
 python examples\generator\data_types\gen_type_defs_array.py
 python examples\generator\data_types\gen_type_defs_record.py
-

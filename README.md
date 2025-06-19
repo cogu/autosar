@@ -272,19 +272,22 @@ Below is a rough roadmap of planned releases.
 
 **v0.5.5** SwcInternalBehavior - advanced
 
-* Data Type Mapping Sets
-* Exclusive Areas
-* Port-access
+* Data type mapping references
+* Exclusive areas
+* Port access
 * Port-API options
 
-**v0.5.6** Fixes and refactoring
+**v0.5.6** Add some missing elements and functions that wasn't prioritized before.
 
-* Fix some early design mistakes
+**v0.5.7** Fixes and refactoring
+
+* Fix some early design mistakes.
 * Harmonize some member names to better match "qualified name" from XSD (BREAKING CHANGE)
-  * For the most part this means that several class members will have its "_ref" suffix stripped from its name.
-* Attempt to break apart large Python files into smaller ones.
+  * For the most part this means that some class members will have its "_ref" suffix stripped from its name.
 
-**v0.5.7** Add some missing elements and functions that wasn't prioritized before.
+**v0.5.8** More refactoring
+
+* Attempt to break apart large Python files into smaller ones.
 
 **v0.6.0:** Stable version, publish to PyPI.
 
