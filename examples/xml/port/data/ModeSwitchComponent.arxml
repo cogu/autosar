@@ -57,7 +57,7 @@
                       <SHORT-NAME>SWITCH_VehicleMode_mode</SHORT-NAME>
                       <MODE-GROUP-IREF>
                         <CONTEXT-P-PORT-REF DEST="P-PORT-PROTOTYPE">/ComponentTypes/ModeSwitchComponent/VehicleMode</CONTEXT-P-PORT-REF>
-                        <CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF DEST="MODE-DECLARATION-GROUP-PROTOTYPE">/PortInterfaces/VehicleMode_I/mode</CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF>
+                        <TARGET-MODE-GROUP-REF DEST="MODE-DECLARATION-GROUP-PROTOTYPE">/PortInterfaces/VehicleMode_I/mode</TARGET-MODE-GROUP-REF>
                       </MODE-GROUP-IREF>
                     </MODE-SWITCH-POINT>
                   </MODE-SWITCH-POINTS>

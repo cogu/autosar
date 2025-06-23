@@ -3887,7 +3887,7 @@ class Writer(_XMLWriter):
                 self._write_abstract_provided_port_prototype_ref(elem.context_port, "CONTEXT-P-PORT-REF")
             if elem.target_mode_group is not None:
                 self._write_mode_declaration_group_prototype_ref(elem.target_mode_group,
-                                                                 "CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF")
+                                                                 "TARGET-MODE-GROUP-REF")
             self._leave_child()
 
     def _write_p_operation_in_atomic_swc_instance_ref(self,
