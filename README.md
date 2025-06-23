@@ -9,10 +9,9 @@ It also has some support for parsing AUTOSAR XML files.
 
 **Important notes:**
 
-1. Python AUTOSAR v0.5+ uses a new API and is incompatible with earlier versions.
+1. Python AUTOSAR v0.5+ uses a new API and is incompatible with the v0.4 API.
 2. For Python AUTOSAR v0.4, see the [v0.4 maintenance branch](https://github.com/cogu/autosar/tree/maintenance/0.4).
-3. At this point most elements are supported except for SwcInternalBehavior. Due to its massive size, that element won't have proper support until v0.5.5.
-4. There's no offical documentation yet for v0.5. The [documentation](https://autosar.readthedocs.io/en/latest/) found at Read the Docs is for v0.4.
+3. There's no offical documentation yet for v0.5. The [documentation](https://autosar.readthedocs.io/en/latest/) found at Read the Docs is for v0.4.
 
 ## Major design changes
 
@@ -22,20 +21,20 @@ AUTOSAR v0.5 has been rewritten and modernized.
 
 * New class hierachy
   * Follows the structure of the AUTOSAR XML schema where possible.
-* Snake-case naming of variables and methods (Follow PEP8 standard).
+* Snake-case naming of variables and methods (Follows PEP8 standard).
 * Modern type hinting (this unfortunately requires Python 3.10 or later).
 * Python Enum classes for enumeration types.
 * Improved XML reading and writing using lxml.
 * Linting support
   * Source code is checked with both Pylint and flake8.
 * New unit test suite
-  * More comprehensive unit tests for every element.
+  * More comprehensive unit tests for XML elements.
   * Much faster to run as it uses the new XML reader and writer.
 
 ## Supported AUTOSAR versions
 
 The implementation tries to follow release R22-11. However, the generated ARXML validates against all versions listed below.
-When saving, use the `schema_version` parameter to select desired version (integer with value 48-51).
+When calling `write_documents`, use the `schema_version` parameter to select desired version (integer with value 48-51).
 
 * 48 (R19-11, Classic AUTOSAR 4.5)
 * 49 (R20-11, Classic AUTOSAR 4.6)

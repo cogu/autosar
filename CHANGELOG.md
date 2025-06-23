@@ -5,7 +5,7 @@ The first name in a bullet point below is the Python class name while the second
 Elements marked as `collectable` means that they are allowed to be added as sub-elements in a package.
 Non-collectable elements are various sub-elements to collectable elements.
 
-## [Unreleased]
+## [v0.5.5] - 2025-06-23
 
 ### Added
 
