@@ -486,13 +486,12 @@ class TestModeAccessPoint(unittest.TestCase):
             context_port=context_port,
             target_mode_group=context_mode_decl_group_ref_str)
         element = ar_element.ModeAccessPoint(mode_group=mode_group_iref)
-
-        inner_tag = "CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF"
+        long_tag = "TARGET-MODE-GROUP-REF"
         xml = f'''<MODE-ACCESS-POINT>
   <MODE-GROUP-IREF>
     <P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF>
       <CONTEXT-P-PORT-REF DEST="P-PORT-PROTOTYPE">{context_port_ref_str}</CONTEXT-P-PORT-REF>
-      <{inner_tag} DEST="MODE-DECLARATION-GROUP-PROTOTYPE">{context_mode_decl_group_ref_str}</{inner_tag}>
+      <{long_tag} DEST="MODE-DECLARATION-GROUP-PROTOTYPE">{context_mode_decl_group_ref_str}</{long_tag}>
     </P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF>
   </MODE-GROUP-IREF>
 </MODE-ACCESS-POINT>'''
@@ -516,12 +515,11 @@ class TestModeAccessPoint(unittest.TestCase):
             target_mode_group=target_mode_group_ref)
         element = ar_element.ModeAccessPoint(mode_group=mode_group_iref)
 
-        inner_tag = "TARGET-MODE-GROUP-REF"
         xml = f'''<MODE-ACCESS-POINT>
   <MODE-GROUP-IREF>
     <R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF>
       <CONTEXT-R-PORT-REF DEST="R-PORT-PROTOTYPE">{context_port_ref_str}</CONTEXT-R-PORT-REF>
-      <{inner_tag} DEST="MODE-DECLARATION-GROUP-PROTOTYPE">{target_mode_group_ref_str}</{inner_tag}>
+      <TARGET-MODE-GROUP-REF DEST="MODE-DECLARATION-GROUP-PROTOTYPE">{target_mode_group_ref_str}</TARGET-MODE-GROUP-REF>
     </R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF>
   </MODE-GROUP-IREF>
 </MODE-ACCESS-POINT>'''
@@ -558,13 +556,12 @@ class TestModeSwitchPoint(unittest.TestCase):
             context_port=context_port,
             target_mode_group=context_mode_decl_group_ref_str)
         element = ar_element.ModeSwitchPoint("MyName", mode_group=mode_group_iref)
-
-        inner_tag = "CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF"
+        long_tag = "TARGET-MODE-GROUP-REF"
         xml = f'''<MODE-SWITCH-POINT>
   <SHORT-NAME>MyName</SHORT-NAME>
   <MODE-GROUP-IREF>
     <CONTEXT-P-PORT-REF DEST="P-PORT-PROTOTYPE">{context_port_ref_str}</CONTEXT-P-PORT-REF>
-    <{inner_tag} DEST="MODE-DECLARATION-GROUP-PROTOTYPE">{context_mode_decl_group_ref_str}</{inner_tag}>
+    <{long_tag} DEST="MODE-DECLARATION-GROUP-PROTOTYPE">{context_mode_decl_group_ref_str}</{long_tag}>
   </MODE-GROUP-IREF>
 </MODE-SWITCH-POINT>'''
         writer = autosar.xml.Writer()
@@ -2064,7 +2061,7 @@ class TestRunnableEntity(unittest.TestCase):
         mode_access1 = ar_element.ModeAccessPoint(ar_element.ModeAccessPointIdent("MyAccessPoint1"), mode_group_iref1)
         mode_access2 = ar_element.ModeAccessPoint(ar_element.ModeAccessPointIdent("MyAccessPoint2"), mode_group_iref2)
         element = ar_element.RunnableEntity("MyName", mode_access_point=[mode_access1, mode_access2])
-        long_tag = "CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF"
+        long_tag = "TARGET-MODE-GROUP-REF"
         writer = autosar.xml.Writer()
         xml = f'''<RUNNABLE-ENTITY>
   <SHORT-NAME>MyName</SHORT-NAME>
@@ -2117,7 +2114,6 @@ class TestRunnableEntity(unittest.TestCase):
         mode_group_iref = ar_element.PModeGroupInAtomicSwcInstanceRef(port_prototype_ref, mode_group_ref_str)
         mode_switch = ar_element.ModeSwitchPoint("MyModeSwitchPoint", mode_group_iref)
         element = ar_element.RunnableEntity("MyName", mode_switch_point=mode_switch)
-        long_tag = "CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF"
         writer = autosar.xml.Writer()
         xml = f'''<RUNNABLE-ENTITY>
   <SHORT-NAME>MyName</SHORT-NAME>
@@ -2126,7 +2122,7 @@ class TestRunnableEntity(unittest.TestCase):
       <SHORT-NAME>MyModeSwitchPoint</SHORT-NAME>
       <MODE-GROUP-IREF>
         <CONTEXT-P-PORT-REF DEST="{port_dest_str}">{port_ref_str}</CONTEXT-P-PORT-REF>
-        <{long_tag} DEST="{mode_dest_str}">{mode_group_ref_str}</{long_tag}>
+        <TARGET-MODE-GROUP-REF DEST="{mode_dest_str}">{mode_group_ref_str}</TARGET-MODE-GROUP-REF>
       </MODE-GROUP-IREF>
     </MODE-SWITCH-POINT>
   </MODE-SWITCH-POINTS>
@@ -2154,7 +2150,6 @@ class TestRunnableEntity(unittest.TestCase):
         mode_switch1 = ar_element.ModeSwitchPoint("MyModeSwitchPoint1", mode_group_iref1)
         mode_switch2 = ar_element.ModeSwitchPoint("MyModeSwitchPoint2", mode_group_iref2)
         element = ar_element.RunnableEntity("MyName", mode_switch_point=[mode_switch1, mode_switch2])
-        long_tag = "CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF"
         writer = autosar.xml.Writer()
         xml = f'''<RUNNABLE-ENTITY>
   <SHORT-NAME>MyName</SHORT-NAME>
@@ -2163,14 +2158,14 @@ class TestRunnableEntity(unittest.TestCase):
       <SHORT-NAME>MyModeSwitchPoint1</SHORT-NAME>
       <MODE-GROUP-IREF>
         <CONTEXT-P-PORT-REF DEST="{port_dest_str}">{port_ref_str1}</CONTEXT-P-PORT-REF>
-        <{long_tag} DEST="{mode_dest_str}">{mode_group_ref_str1}</{long_tag}>
+        <TARGET-MODE-GROUP-REF DEST="{mode_dest_str}">{mode_group_ref_str1}</TARGET-MODE-GROUP-REF>
       </MODE-GROUP-IREF>
     </MODE-SWITCH-POINT>
     <MODE-SWITCH-POINT>
       <SHORT-NAME>MyModeSwitchPoint2</SHORT-NAME>
       <MODE-GROUP-IREF>
         <CONTEXT-P-PORT-REF DEST="{port_dest_str}">{port_ref_str2}</CONTEXT-P-PORT-REF>
-        <{long_tag} DEST="{mode_dest_str}">{mode_group_ref_str2}</{long_tag}>
+        <TARGET-MODE-GROUP-REF DEST="{mode_dest_str}">{mode_group_ref_str2}</TARGET-MODE-GROUP-REF>
       </MODE-GROUP-IREF>
     </MODE-SWITCH-POINT>
   </MODE-SWITCH-POINTS>
@@ -3423,12 +3418,12 @@ class TestSwcModeManagerErrorEvent(unittest.TestCase):
             target_mode_group=context_mode_decl_group_ref_str)
         element = ar_element.SwcModeManagerErrorEvent('MyName',
                                                       mode_group=mode_instance)
-        tag = "CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF"
+        long_tag = "TARGET-MODE-GROUP-REF"
         xml = f'''<SWC-MODE-MANAGER-ERROR-EVENT>
   <SHORT-NAME>MyName</SHORT-NAME>
   <MODE-GROUP-IREF>
     <CONTEXT-P-PORT-REF DEST="P-PORT-PROTOTYPE">{context_port_ref_str}</CONTEXT-P-PORT-REF>
-    <{tag} DEST="MODE-DECLARATION-GROUP-PROTOTYPE">{context_mode_decl_group_ref_str}</{tag}>
+    <{long_tag} DEST="MODE-DECLARATION-GROUP-PROTOTYPE">{context_mode_decl_group_ref_str}</{long_tag}>
   </MODE-GROUP-IREF>
 </SWC-MODE-MANAGER-ERROR-EVENT>'''
         writer = autosar.xml.Writer()
@@ -3449,13 +3444,13 @@ class TestSwcModeManagerErrorEvent(unittest.TestCase):
                                                            start_on_event_ref_str,
                                                            context_port,
                                                            context_mode_decl_group_ref_str)
-        tag = "CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF"
+        long_tag = "TARGET-MODE-GROUP-REF"
         xml = f'''<SWC-MODE-MANAGER-ERROR-EVENT>
   <SHORT-NAME>MyName</SHORT-NAME>
   <START-ON-EVENT-REF DEST="RUNNABLE-ENTITY">{start_on_event_ref_str}</START-ON-EVENT-REF>
   <MODE-GROUP-IREF>
     <CONTEXT-P-PORT-REF DEST="P-PORT-PROTOTYPE">{context_port_ref_str}</CONTEXT-P-PORT-REF>
-    <{tag} DEST="MODE-DECLARATION-GROUP-PROTOTYPE">{context_mode_decl_group_ref_str}</{tag}>
+    <{long_tag} DEST="MODE-DECLARATION-GROUP-PROTOTYPE">{context_mode_decl_group_ref_str}</{long_tag}>
   </MODE-GROUP-IREF>
 </SWC-MODE-MANAGER-ERROR-EVENT>'''
         writer = autosar.xml.Writer()

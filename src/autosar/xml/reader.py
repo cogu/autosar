@@ -4488,7 +4488,7 @@ class Reader:
         xml_child = child_elements.get("CONTEXT-P-PORT-REF")
         if xml_child is not None:
             data["context_port"] = self._read_abstract_provided_port_prototype_ref(xml_child)
-        xml_child = child_elements.get("CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF")
+        xml_child = child_elements.get("TARGET-MODE-GROUP-REF")
         if xml_child is not None:
             child_element = self._read_mode_declaration_group_prototype_ref(xml_child)
             data["target_mode_group"] = child_element

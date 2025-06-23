@@ -5587,7 +5587,7 @@ class PModeGroupInAtomicSwcInstanceRef(ModeGroupInAtomicSwcInstanceRef):
                  ) -> None:
         # .CONTEXT-P-PORT-REF
         self.context_port: AbstractProvidedPortPrototypeRef | None = None
-        # .CONTEXT-MODE-DECLARATION-GROUP-PROTOTYPE-REF (keep name consistent in similar classes)
+        # .TARGET-MODE-GROUP-REF
         self.target_mode_group: ModeDeclarationGroupPrototypeRef | None = None
 
         self._assign_optional("context_port", context_port, AbstractProvidedPortPrototypeRef)
