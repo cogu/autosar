@@ -7,7 +7,6 @@ import autosar.xml.element as ar_element
 from autosar.model import ImplementationModel
 import autosar.generator
 
-
 def main():
     """
     Create workspace and print type header to stdout

@@ -39,7 +39,6 @@ class SwBaseTypeTemplate(ar_template.ElementTemplate):
                                      size=self.bit_size,
                                      encoding=self.encoding,
                                      native_declaration=self.native_declaration)
-
         return elem
 
 

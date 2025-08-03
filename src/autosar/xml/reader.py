@@ -572,9 +572,12 @@ class Reader:
         """
         Reads Complex-type AR:SD
         """
-        key = xml_element.attrib['GID']
-        value = xml_element.text
-        return {key: value}
+        if 'GID' in xml_element.attrib:
+            key = xml_element.attrib['GID']
+            value = xml_element.text
+            return {key: value}
+        else:
+            return xml_element.text
 
     # --- AUTOSAR Document
 
