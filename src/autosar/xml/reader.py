@@ -237,6 +237,8 @@ class Reader:
             'SUB': self._read_subscript,
             'TT': self._read_technical_term,
             'VERBATIM': self._read_multi_language_verbatim,
+            # AdminData elements
+            'SDG': self._read_special_data_group,
             # CompuMethod elements
             'COMPU-INTERNAL-TO-PHYS': self._read_computation,
             'COMPU-RATIONAL-COEFFS': self._read_compu_rational,
@@ -533,6 +535,45 @@ class Reader:
     # AdminData
 
     # These read methods needs additional refactoring before they are useful
+
+    def _read_special_data_group(self, xml_element: ElementTree.Element) -> ar_element.SpecialDataGroup:
+        """
+        Reads complex type AR:SDG
+        Tag variants: 'SDG'
+        """
+        data = {}
+        self._read_special_data_group_internal(xml_element, data)
+        return ar_element.SpecialDataGroup(**data)
+
+    def _read_special_data_group_internal(self, xml_element: ElementTree.Element, data: dict) -> None:
+        """
+        Reads group AR:SDG
+        """
+        if "GID" in xml_element.attrib:
+            data["gid"] = xml_element.attrib["GID"]
+        xml_child = xml_element.find("./SDG-CAPTION")
+        if xml_child is not None:
+            data["caption"] = xml_child.text
+        content = []
+        for xml_child in xml_element.findall("./*"):
+            if xml_child.tag == "SD":
+                gid = xml_child.attrib.get("GID")
+                if gid:
+                    content.append((xml_child.text, gid))
+                else:
+                    content.append(xml_child.text)
+            elif xml_child.tag == "SDF":
+                gid = xml_child.attrib.get("GID")
+                value = self._read_number(xml_child.text)
+                if gid:
+                    content.append((value, gid))
+                else:
+                    content.append(value)
+            elif xml_child.tag == "SDG":
+                child = self._read_special_data_group(xml_child)
+                content.append({"gid": child.gid, "caption": child.caption, "content": child.content})
+        if len(content) > 0:
+            data["content"] = content
 
     def _read_admin_data(self, xml_element: ElementTree.Element) -> ar_element.AdminData:
         """

@@ -170,5 +170,169 @@ class TestCode(unittest.TestCase):
         self.assertEqual(artifact_descriptor.category, "SWSRC")
 
 
+class TestSpecialDataGroup(unittest.TestCase):
+
+    def test_empty(self):
+        element = ar_element.SpecialDataGroup()
+        xml = '<SDG/>'
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SpecialDataGroup = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SpecialDataGroup)
+
+    def test_gid(self):
+        element = ar_element.SpecialDataGroup(gid="MyGID")
+        xml = '<SDG GID="MyGID"/>'
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SpecialDataGroup = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SpecialDataGroup)
+        self.assertEqual(elem.gid, "MyGID")
+
+    def test_caption(self):
+        element = ar_element.SpecialDataGroup(caption="MyCaption")
+        xml = '''<SDG>
+  <SDG-CAPTION>MyCaption</SDG-CAPTION>
+</SDG>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SpecialDataGroup = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SpecialDataGroup)
+        self.assertEqual(elem.caption, "MyCaption")
+
+    def test_content_from_string(self):
+        element = ar_element.SpecialDataGroup(content="MyContent")
+        xml = '''<SDG>
+  <SD>MyContent</SD>
+</SDG>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SpecialDataGroup = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SpecialDataGroup)
+        self.assertEqual(len(elem.content), 1)
+        child: ar_element.SpecialDataElement = elem.content[0]
+        self.assertEqual(child.text, "MyContent")
+        self.assertIsNone(child.gid)
+
+    def test_content_from_tuple(self):
+        element = ar_element.SpecialDataGroup(content=("MyContent", "MyGID"))
+        xml = '''<SDG>
+  <SD GID="MyGID">MyContent</SD>
+</SDG>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SpecialDataGroup = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SpecialDataGroup)
+        self.assertEqual(len(elem.content), 1)
+        child: ar_element.SpecialDataElement = elem.content[0]
+        self.assertEqual(child, ar_element.SpecialDataElement("MyContent", "MyGID"))
+
+    def test_content_from_named_tuple(self):
+        element = ar_element.SpecialDataGroup(content=ar_element.SpecialDataElement("MyContent", "MyGID"))
+        xml = '''<SDG>
+  <SD GID="MyGID">MyContent</SD>
+</SDG>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SpecialDataGroup = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SpecialDataGroup)
+        self.assertEqual(len(elem.content), 1)
+        child: ar_element.SpecialDataElement = elem.content[0]
+        self.assertEqual(child, ar_element.SpecialDataElement("MyContent", "MyGID"))
+
+    def test_content_from_int(self):
+        element = ar_element.SpecialDataGroup(content=100)
+        xml = '''<SDG>
+  <SDF>100</SDF>
+</SDG>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SpecialDataGroup = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SpecialDataGroup)
+        self.assertEqual(len(elem.content), 1)
+        child: ar_element.SpecialDataValue = elem.content[0]
+        self.assertEqual(child, ar_element.SpecialDataValue(100))
+
+    def test_content_from_float(self):
+        element = ar_element.SpecialDataGroup(content=0.5)
+        xml = '''<SDG>
+  <SDF>0.5</SDF>
+</SDG>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SpecialDataGroup = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SpecialDataGroup)
+        self.assertEqual(len(elem.content), 1)
+        child: ar_element.SpecialDataValue = elem.content[0]
+        self.assertEqual(child, ar_element.SpecialDataValue(0.5))
+
+    def test_content_from_list(self):
+        element = ar_element.SpecialDataGroup(gid="MyGID0",
+                                              content=["MyContent1",
+                                                       ("MyContent2", "MyGID2"),
+                                                       ar_element.SpecialDataElement("MyContent3"),
+                                                       ar_element.SpecialDataElement("MyContent4", "MyGID4"),
+                                                       "true",
+                                                       50,
+                                                       (0.125, "MyGID6")])
+        xml = '''<SDG GID="MyGID0">
+  <SD>MyContent1</SD>
+  <SD GID="MyGID2">MyContent2</SD>
+  <SD>MyContent3</SD>
+  <SD GID="MyGID4">MyContent4</SD>
+  <SD>true</SD>
+  <SDF>50</SDF>
+  <SDF GID="MyGID6">0.125</SDF>
+</SDG>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SpecialDataGroup = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SpecialDataGroup)
+        self.assertEqual(len(elem.content), 7)
+        child: ar_element.SpecialDataElement = elem.content[0]
+        self.assertEqual(child, ar_element.SpecialDataElement("MyContent1"))
+        child = elem.content[1]
+        self.assertEqual(child, ar_element.SpecialDataElement("MyContent2", "MyGID2"))
+        child = elem.content[2]
+        self.assertEqual(child, ar_element.SpecialDataElement("MyContent3"))
+        child = elem.content[3]
+        self.assertEqual(child, ar_element.SpecialDataElement("MyContent4", "MyGID4"))
+        child = elem.content[4]
+        self.assertEqual(child, ar_element.SpecialDataElement("true"))
+        child2: ar_element.SpecialDataValue = elem.content[5]
+        self.assertEqual(child2, ar_element.SpecialDataValue(50))
+        child2 = elem.content[6]
+        self.assertEqual(child2, ar_element.SpecialDataValue(0.125, "MyGID6"))
+
+    def test_nested_content_string(self):
+        element = ar_element.SpecialDataGroup(gid="OuterGID", content={"gid": "InnerGID", "content": "InnerContent"})
+        xml = '''<SDG GID="OuterGID">
+  <SDG GID="InnerGID">
+    <SD>InnerContent</SD>
+  </SDG>
+</SDG>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SpecialDataGroup = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SpecialDataGroup)
+        self.assertEqual(elem.gid, "OuterGID")
+        self.assertEqual(len(elem.content), 1)
+        child: ar_element.SpecialDataGroup = elem.content[0]
+        self.assertEqual(child.gid, "InnerGID")
+        self.assertEqual(len(child.content), 1)
+        grand_child: ar_element.SpecialDataElement = child.content[0]
+        self.assertEqual(grand_child, ar_element.SpecialDataElement("InnerContent"))
+
+
 if __name__ == '__main__':
     unittest.main()

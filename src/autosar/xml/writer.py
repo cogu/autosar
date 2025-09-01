@@ -72,7 +72,7 @@ class _XMLWriter:
     def _add_inline_text(self, text):
         self.fh.write(text)
 
-    def _add_child(self, tag: str, attr: TupleList = None):
+    def _add_child(self, tag: str, attr: TupleList | None = None):
         if attr:
             self._add_line(f'<{tag} {self._attr_to_str(attr)}>')
         else:
@@ -85,7 +85,7 @@ class _XMLWriter:
         self._dedent()
         self._add_line(f'</{tag}>')
 
-    def _begin_line(self, tag: str, attr: None | TupleList = None):
+    def _begin_line(self, tag: str, attr: TupleList | None = None):
         if self.line_number > 1:
             self.fh.write('\n')
         self.line_number += 1
@@ -100,7 +100,7 @@ class _XMLWriter:
         text = f'</{tag}>'
         self.fh.write(text)
 
-    def _add_content(self, tag: str, content: str = '', attr: TupleList = None, inline: bool = False):
+    def _add_content(self, tag: str, content: str = '', attr: TupleList | None = None, inline: bool = False):
         assert isinstance(content, str)
         if attr:
             if content:
@@ -290,6 +290,8 @@ class Writer(_XMLWriter):
             'Superscript': self._write_superscript,
             'Subscript': self._write_subscript,
             'TechnicalTerm': self._write_technical_term,
+            # AdminData elements
+            'SpecialDataGroup': self._write_special_data_group,
             # CompuMethod elements
             'Computation': self._write_computation,
             'CompuRational': self._write_compu_rational,
@@ -486,10 +488,63 @@ class Writer(_XMLWriter):
 
     # AdminData
 
+    def _write_special_data_group(self, elem: ar_element.SpecialDataGroup) -> None:
+        """
+        Writes complex type AR:SDG
+        Tag variants: 'SDG
+        """
+        tag = "SDG"
+        assert isinstance(elem, ar_element.SpecialDataGroup)
+        attr: TupleList = []
+        if elem.gid is not None:
+            attr.append(('GID', elem.gid))
+        if elem.is_empty_with_ignore({"gid"}):
+            self._add_content(tag, attr=attr)
+            return
+        self._add_child(tag, attr)
+        self._write_special_data_group_internal(elem)
+        self._leave_child()
+
+    def _write_special_data_group_internal(self, elem: ar_element.SpecialDataGroup) -> None:
+        """
+        Writes group AR:SDG
+        """
+        if elem.caption is not None:
+            self._add_content('SDG-CAPTION', elem.caption)
+        if elem.content:
+            for child in elem.content:
+                if isinstance(child, ar_element.SpecialDataElement):
+                    self._write_special_data_element(child)
+                elif isinstance(child, ar_element.SpecialDataValue):
+                    self._write_special_data_value(child)
+                elif isinstance(child, ar_element.SpecialDataGroup):
+                    self._write_special_data_group(child)
+
+    def _write_special_data_element(self, elem: ar_element.SpecialDataElement) -> None:
+        """
+        Writes special data content
+        Tag variants: 'SD'
+        """
+        assert isinstance(elem, ar_element.SpecialDataElement)
+        if elem.gid is None:
+            self._add_content("SD", elem.text)
+        else:
+            self._add_content("SD", elem.text, [("GID", elem.gid)])
+
+    def _write_special_data_value(self, elem: ar_element.SpecialDataValue) -> None:
+        """
+        Writes numerical special data content
+        Tag variants: 'SDF'
+        """
+        assert isinstance(elem, ar_element.SpecialDataValue)
+        if elem.gid is None:
+            self._add_content("SDF", self._format_float(elem.value))
+        else:
+            self._add_content("SDF", self._format_float(elem.value), [("GID", elem.gid)])
+
     def _write_admin_data(self, data: dict) -> None:
         """
-        Writes Complex-type AR:ADMIN-DATA
-        Type: Concrete
+        Writes Complex type AR:ADMIN-DATA
         Tag variants: 'ADMIN-DATA'
         """
 
@@ -520,7 +575,6 @@ class Writer(_XMLWriter):
     def _write_package(self, package: ar_element.Package) -> None:
         """
         Writes AR-PACKAGE
-        Type: Concrete
         Tag variants: 'AR-PACKAGE'
         """
         assert isinstance(package, ar_element.Package)

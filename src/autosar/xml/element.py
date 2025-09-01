@@ -3,10 +3,10 @@ Classes related to AUTOSAR XML Elements
 """
 
 import re
+from collections import OrderedDict
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
-from typing import Any, Union
-from collections import OrderedDict
+from typing import Any, Union, NamedTuple
 
 
 from autosar.base import split_ref, split_ref_strict, Searchable
@@ -331,6 +331,113 @@ def make_unique_name_in_list(elements: list[Referrable], base_name: str):
 
 
 # Common structure elements
+
+class SpecialDataElement(NamedTuple):
+    """
+    Special data element:
+    Tag variant: 'SD'
+    """
+    text: str
+    gid: str | None = None
+
+
+class SpecialDataValue(NamedTuple):
+    """
+    Numerical special data element:
+    Tag variant: 'SDF'
+    """
+    value: int | float
+    gid: str | None = None
+
+
+SpecialDataGroupContent = Union[str,
+                                int,
+                                float,
+                                tuple[str, str],
+                                tuple[int | float, str],
+                                SpecialDataElement,
+                                "SpecialDataGroup",
+                                dict]
+
+
+class SpecialDataGroup(ARObject):
+    """
+    Complex type: AR:SDG
+    Tag variants: 'SDG'
+
+    The content can be one of:
+    1. string: simple SD element with text and no GID.
+        XML: <SD>content</SD>
+    2. int or float: An SDF element with a numerical value.
+        XML: <SDF>value</SDF>
+    3. tuple[str, str]: SD element with text as first element and GID as second element.
+       XML: <SD GID="content[1]>content[0]</SD>
+    4. tuple[str, int | float]: SDF element with value as first element and GID as second element.
+       XML: <SDF GID="content[1]>content[0]</SDF>
+    5. An instance of SpecialDataElement which is the named tuple version of (3) above
+    6. An instance of SpecialDataValue which is the named tuple version of (4) above
+    7. A dictionary representing a nested SpecialDataGroup (<SDG> inside <SDG>)
+    8. A list of any combination of (1) to (7) above
+    """
+    def __init__(self,
+                 gid: str | None = None,
+                 caption: str | None = None,
+                 content: SpecialDataGroupContent | None = None) -> None:
+        super().__init__()
+        # GID attribute
+        self.gid: str | None = None
+        # .SDG-CAPTION
+        self.caption: str | None = None
+        # SDG-CONTENTS
+        self.content: list[SpecialDataElement | SpecialDataGroup] = []
+        self._assign_optional("gid", gid, str)
+        self._assign_optional("caption", caption, str)
+        if content is not None:
+            if isinstance(content, list):
+                for elem in content:
+                    self.append_content(elem)
+            else:
+                self.append_content(content)
+
+    def append_content(self, content: SpecialDataGroupContent) -> None:
+        """
+        Adds new content to internal content list.
+
+        When adding nested content (SpecialDataGroup inside SpecialDataGroup) use the dict type.
+        Valid dictionary keys are:
+        - gid: str
+        - caption: str
+        - content: str | tuple[str, str] | SpecialDataElement | list | dict
+        """
+        if isinstance(content, dict):
+            gid = content.get("gid")
+            caption = content.get("caption")
+            content = content.get("content")
+            nested = SpecialDataGroup(gid, caption, content)
+            self.content.append(nested)
+        elif isinstance(content, (SpecialDataElement, SpecialDataGroup)):
+            self.content.append(content)
+        elif isinstance(content, str):
+            self.content.append(SpecialDataElement(content))
+        elif isinstance(content, (int, float)):
+            self.content.append(SpecialDataValue(content))
+        elif isinstance(content, tuple):
+            if len(content) != 2:
+                raise ValueError("content: Length of tuple must be exactly 2")
+            if not isinstance(content[1], str):
+                msg1 = "content: Second tuple element must be of type string."
+                msg2 = f" Got {str(type(content[1]))}"
+                raise TypeError(msg1 + msg2)
+            if isinstance(content[0], str):
+                self.content.append(SpecialDataElement(content[0], content[1]))
+            elif isinstance(content[0], (int, float)):
+                self.content.append(SpecialDataValue(content[0], content[1]))
+            else:
+                msg1 = "content: First tuple element must be of type string, int or float."
+                msg2 = f" Got {str(type(content[0]))}"
+                raise TypeError(msg1 + msg2)
+        else:
+            raise TypeError(f"content: Unsupported type '{str(type(content))}'")
 
 
 class AdminData(ARObject):
