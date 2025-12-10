@@ -290,8 +290,14 @@ class Writer(_XMLWriter):
             'Superscript': self._write_superscript,
             'Subscript': self._write_subscript,
             'TechnicalTerm': self._write_technical_term,
+            'MultiLanguagePlainText': self._write_multi_language_plain_text,
+            'Date': self._write_date,
+            'RevisionLabelString': self._write_revision_label_string,
             # AdminData elements
             'SpecialDataGroup': self._write_special_data_group,
+            'Modification': self._write_modification,
+            'DocRevision': self._write_doc_revision,
+            'AdminData': self._write_admin_data,
             # CompuMethod elements
             'Computation': self._write_computation,
             'CompuRational': self._write_compu_rational,
@@ -542,11 +548,97 @@ class Writer(_XMLWriter):
         else:
             self._add_content("SDF", self._format_float(elem.value), [("GID", elem.gid)])
 
-    def _write_admin_data(self, data: dict) -> None:
+    def _write_modification(self, elem: ar_element.Modification) -> None:
+        """
+        Writes complex type AR:MODIFICATION
+        Tag variants: 'MODIFICATION'
+        """
+        tag = "MODIFICATION"
+        assert isinstance(elem, ar_element.Modification)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_modification_group(elem)
+            self._leave_child()
+
+    def _write_modification_group(self, elem: ar_element.Modification) -> None:
+        """
+        Writes group AR:MODIFICATION
+        """
+        if elem.change is not None:
+            self._write_multi_language_overview_paragraph(elem.change, "CHANGE")
+        if elem.reason is not None:
+            self._write_multi_language_overview_paragraph(elem.reason, "REASON")
+
+    def _write_doc_revision(self, elem: ar_element.DocRevision) -> None:
+        """
+        Writes complex type AR:DOC-REVISION
+        Tag variants: 'DOC-REVISION'
+        """
+        tag = "DOC-REVISION"
+        assert isinstance(elem, ar_element.DocRevision)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_doc_revision_group(elem)
+            self._leave_child()
+
+    def _write_doc_revision_group(self, elem: ar_element.DocRevision) -> None:
+        """
+        Writes group AR:DOC-REVISION
+        """
+        if elem.revision_label is not None:
+            self._write_revision_label_string(elem.revision_label, "REVISION-LABEL")
+        if elem.revision_label_p1 is not None:
+            self._write_revision_label_string(elem.revision_label_p1, "REVISION-LABEL-P1")
+        if elem.revision_label_p2 is not None:
+            self._write_revision_label_string(elem.revision_label_p2, "REVISION-LABEL-P2")
+        if elem.state is not None:
+            self._add_content("STATE", elem.state)
+        if elem.issued_by is not None:
+            self._add_content("ISSUED-BY", elem.issued_by)
+        if elem.date is not None:
+            self._write_date(elem.date)
+        if elem.modifications:
+            self._add_child("MODIFICATIONS")
+            for modification in elem.modifications:
+                self._write_modification(modification)
+            self._leave_child()
+
+    def _write_admin_data(self, elem: ar_element.AdminData) -> None:
         """
         Writes Complex type AR:ADMIN-DATA
         Tag variants: 'ADMIN-DATA'
         """
+        tag = "ADMIN-DATA"
+        assert isinstance(elem, ar_element.AdminData)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_admin_data_group(elem)
+            self._leave_child()
+
+    def _write_admin_data_group(self, elem: ar_element.AdminData) -> None:
+        """
+        Writes group AR:ADMIN-DATA
+        """
+        if elem.language is not None:
+            self._add_content("LANGUAGE", ar_enum.enum_to_xml(elem.language))
+        if elem.used_languages is not None:
+            self._write_multi_language_plain_text(elem.used_languages, "USED-LANGUAGES")
+        if elem.doc_revisions:
+            self._add_child("DOC-REVISIONS")
+            for revision in elem.doc_revisions:
+                self._write_doc_revision(revision)
+            self._leave_child()
+        if elem.sdgs:
+            self._add_child("SDGS")
+            for sdg in elem.sdgs:
+                self._write_special_data_group(sdg)
+            self._leave_child()
 
     # AUTOSAR Document
 
@@ -1001,6 +1093,48 @@ class Writer(_XMLWriter):
             self._write_documentation_block(elem.introduction, "INTRODUCTION")
         if elem.admin_data is not None:
             self._write_admin_data(elem.admin_data)
+
+    def _write_language_plain_text(self, elem: ar_element.LanguagePlainText) -> None:
+        """
+        Writes complex type AR:L-PLAIN-TEXT
+        Tag variants: 'L-10'
+        """
+        assert isinstance(elem, ar_element.LanguagePlainText)
+        attr: TupleList = []
+        self._collect_language_specific_attr(elem, attr)
+        self._add_content("L-10", elem.text, attr)
+
+    def _write_multi_language_plain_text(self, elem: ar_element.MultiLanguagePlainText, tag: str) -> None:
+        """
+        Writes Complex type AR:MULTI-LANGUAGE-PLAIN-TEXT
+        Tag variants: 'USED-LANGUAGES' | 'TEX-MATH' | 'GENERIC-MATH'
+        """
+        assert isinstance(elem, ar_element.MultiLanguagePlainText)
+        if elem.is_empty:
+            self._add_content(tag)
+            return
+        self._add_child(tag)
+        for element in elem.elements:
+            self._write_language_plain_text(element)
+        self._leave_child()
+
+    def _write_date(self, elem: ar_element.Date) -> None:
+        """
+        Writes Complex type AR:DATE
+        Tag variants: 'DATE'
+        """
+        assert isinstance(elem, ar_element.Date)
+        self._add_content("DATE", str(elem))
+
+    def _write_revision_label_string(self, elem: ar_element.RevisionLabelString, tag: str) -> None:
+        """
+        Writes complex type AR:REVISION-LABEL-STRING
+        Tag variants: 'AR-RELEASE-VERSION' | 'REVISION-LABEL' | 'REVISION-LABEL-P1' | 'REVISION-LABEL-P2' |
+                  'ECUC-DEF-EDITION' | 'SW-VERSION' | 'PRODUCT-RELEASE' | 'MINIMUM-SUPPORTED-UCM-VERSION' |
+                  'ECU-EXTRACT-VERSION' | 'SYSTEM-VERSION'
+        """
+        assert isinstance(elem, ar_element.RevisionLabelString)
+        self._add_content(tag, str(elem))
 
     # CompuMethod elements
 

@@ -19,6 +19,8 @@ python examples/xml/port/explicit_send_receive.py
 python examples/xml/port/implicit_read_write.py
 python examples/xml/port/mode_switch.py
 python examples/xml/port/port_api_options.py
+python examples/xml/common_structure/write_admin_data.py
+python examples/xml/common_structure/read_admin_data.py
 python examples/template/generate_xml_using_config.py
 python examples/template/generate_xml_without_config.py
 python examples/generator/data_types/gen_type_defs_scalar.py

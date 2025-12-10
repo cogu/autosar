@@ -128,6 +128,15 @@ class Workspace(ar_element.PackageCollection):
         for package_key, package_ref in mapping.items():
             self.package_map[package_key] = self.make_packages(package_ref)
 
+    def update_package_map(self, mapping: dict[str, str]) -> None:
+        """
+        Update basic package map without clearing it.
+
+        Use in conjunction with the add_element and find_element methods.
+        """
+        for package_key, package_ref in mapping.items():
+            self.package_map[package_key] = self.make_packages(package_ref)
+
     def add_element(self, package_key: str, element: ar_element.ARObject):
         """
         Adds element to package specified by package_key

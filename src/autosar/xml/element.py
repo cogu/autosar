@@ -2,6 +2,7 @@
 Classes related to AUTOSAR XML Elements
 """
 
+import datetime
 import re
 from collections import OrderedDict
 from collections.abc import Iterable, Iterator
@@ -69,6 +70,9 @@ alignment_type_re = re.compile(
 display_format_str_re = re.compile(
     r"%[ \-+#]?[0-9]*(\.[0-9]+)?[diouxXfeEgGcs]")
 
+date_re = re.compile(r"([0-9]{4}-[0-9]{2}-[0-9]{2})(T[0-9]{2}:[0-9]{2}:[0-9]{2}(Z|([+\-][0-9]{2}:[0-9]{2})))?")
+
+revision_label_string_re = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+([\._;].*)?")
 # Type aliases
 
 BaseReference = BaseRef  # This line is simply here to suppress an unused import warning
@@ -97,6 +101,7 @@ InitValueArgType = Union["int",
                          "ValueSpecificationElement",
                          "ConstantRef"]
 
+SingleLanguageText = tuple[ar_enum.Language, str]
 # Helper classes
 
 
@@ -233,16 +238,15 @@ class Identifiable(MultiLanguageReferrable):
                  desc: Union["MultiLanguageOverviewParagraph", tuple[ar_enum.Language, str], str, None] = None,
                  category: str | None = None,
                  uuid: str | None = None,
-                 admin_data: Union["AdminData", None] = None,
+                 admin_data: "AdminData | SpecialDataGroup | list[SpecialDataGroup] | None" = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
         self.desc: MultiLanguageOverviewParagraph | None = None
-        self.category = None
-        self.admin_data = None
+        self.category: str | None = None
         self.introduction = None
         self.annotations = None
-        self.uuid = None
-        self.admin_data: Union["AdminData", None] = None
+        self.uuid: str | None = None
+        self.admin_data: AdminData | None = None
         if desc is not None:
             if isinstance(desc, MultiLanguageOverviewParagraph):
                 self.desc = desc
@@ -254,6 +258,15 @@ class Identifiable(MultiLanguageReferrable):
                 raise TypeError(f"Invalid type for argument 'desc': {str(type(desc))}")
         self._assign_optional('category', category, str)
         self._assign_optional('uuid', uuid, str)
+        if admin_data is not None:
+            if isinstance(admin_data, AdminData):
+                self.admin_data = admin_data
+            elif isinstance(admin_data, (SpecialDataGroup, Iterable)):
+                self.admin_data = AdminData(admin_data)
+            else:
+                expected_type = "AdminData"
+                actual_type = str(type(admin_data))
+                raise TypeError(f"admin_data: Expected type {expected_type}. Got {actual_type}")
 
     def update_ref_parts(self, ref_parts: list[str]):
         """
@@ -308,7 +321,7 @@ def make_unique_name_in_list(elements: list[Referrable], base_name: str):
     If an element with the name base_name already exists in the list it will
     append "_0" to the existing element and any newly added element will have
     its suffix automatically increased by 1.
-    Returns a new name which is guaranteed to be unique in the given list
+    Returns a new name which is guaranteed to be unique in the given list.
     """
     has_index = False
     highest_index = 0
@@ -329,13 +342,14 @@ def make_unique_name_in_list(elements: list[Referrable], base_name: str):
     else:
         return base_name
 
+# --- Admin Data Elements
 
-# Common structure elements
 
 class SpecialDataElement(NamedTuple):
     """
-    Special data element:
-    Tag variant: 'SD'
+    Complex type AR:SD
+
+    Tag variants: 'SD'
     """
     text: str
     gid: str | None = None
@@ -343,8 +357,9 @@ class SpecialDataElement(NamedTuple):
 
 class SpecialDataValue(NamedTuple):
     """
-    Numerical special data element:
-    Tag variant: 'SDF'
+    Complex type AR:SDF
+
+    Tag variants: 'SDF'
     """
     value: int | float
     gid: str | None = None
@@ -362,7 +377,8 @@ SpecialDataGroupContent = Union[str,
 
 class SpecialDataGroup(ARObject):
     """
-    Complex type: AR:SDG
+    Complex type AR:SDG
+
     Tag variants: 'SDG'
 
     The content can be one of:
@@ -370,9 +386,9 @@ class SpecialDataGroup(ARObject):
         XML: <SD>content</SD>
     2. int or float: An SDF element with a numerical value.
         XML: <SDF>value</SDF>
-    3. tuple[str, str]: SD element with text as first element and GID as second element.
-       XML: <SD GID="content[1]>content[0]</SD>
-    4. tuple[str, int | float]: SDF element with value as first element and GID as second element.
+    3. tuple[str, str]: SD element with GID as first element and content as second element.
+       XML: <SD GID="content[0]>content[1]</SD>
+    4. tuple[str, int | float]: SDF element with GID as first element and value as second element.
        XML: <SDF GID="content[1]>content[0]</SDF>
     5. An instance of SpecialDataElement which is the named tuple version of (3) above
     6. An instance of SpecialDataValue which is the named tuple version of (4) above
@@ -381,8 +397,8 @@ class SpecialDataGroup(ARObject):
     """
     def __init__(self,
                  gid: str | None = None,
-                 caption: str | None = None,
-                 content: SpecialDataGroupContent | None = None) -> None:
+                 content: SpecialDataGroupContent | None = None,
+                 caption: str | None = None,) -> None:
         super().__init__()
         # GID attribute
         self.gid: str | None = None
@@ -410,10 +426,10 @@ class SpecialDataGroup(ARObject):
         - content: str | tuple[str, str] | SpecialDataElement | list | dict
         """
         if isinstance(content, dict):
-            gid = content.get("gid")
-            caption = content.get("caption")
-            content = content.get("content")
-            nested = SpecialDataGroup(gid, caption, content)
+            child_gid = content.get("gid")
+            child_content = content.get("content")
+            child_caption = content.get("caption")
+            nested = SpecialDataGroup(child_gid, child_content, child_caption)
             self.content.append(nested)
         elif isinstance(content, (SpecialDataElement, SpecialDataGroup)):
             self.content.append(content)
@@ -424,30 +440,232 @@ class SpecialDataGroup(ARObject):
         elif isinstance(content, tuple):
             if len(content) != 2:
                 raise ValueError("content: Length of tuple must be exactly 2")
-            if not isinstance(content[1], str):
-                msg1 = "content: Second tuple element must be of type string."
-                msg2 = f" Got {str(type(content[1]))}"
-                raise TypeError(msg1 + msg2)
-            if isinstance(content[0], str):
-                self.content.append(SpecialDataElement(content[0], content[1]))
-            elif isinstance(content[0], (int, float)):
-                self.content.append(SpecialDataValue(content[0], content[1]))
+            if not isinstance(content[0], str):
+                expected_type = "string"
+                actual_type = str(type(content[0]))
+                raise TypeError(f"content: First tuple element must be of type {expected_type}. Got {actual_type}")
+            if isinstance(content[1], str):
+                self.content.append(SpecialDataElement(content[1], gid=content[0]))
+            elif isinstance(content[1], (int, float)):
+                self.content.append(SpecialDataValue(content[1], gid=content[0]))
             else:
-                msg1 = "content: First tuple element must be of type string, int or float."
-                msg2 = f" Got {str(type(content[0]))}"
-                raise TypeError(msg1 + msg2)
+                expected_type = "string, int or float"
+                actual_type = str(type(content[1]))
+                raise TypeError(f"content: Second tuple element must be of type {expected_type}. Got {actual_type}")
         else:
             raise TypeError(f"content: Unsupported type '{str(type(content))}'")
+
+
+class Modification(ARObject):
+    """
+    Complex type AR:MODIFICATION
+
+    Tag variants: 'MODIFICATION'
+    """
+
+    def __init__(self,
+                 change: "MultiLanguageOverviewParagraph | tuple[ar_enum.Language, str] | None" = None,
+                 reason: "MultiLanguageOverviewParagraph | tuple[ar_enum.Language, str] | None" = None) -> None:
+        # .CHANGE
+        self.change: MultiLanguageOverviewParagraph | None = None
+        # .REASON
+        self.reason: MultiLanguageOverviewParagraph | None = None
+        expected_type = "MultiLanguageOverviewParagraph or tuple[enum Language, str]"
+        if change is not None:
+            if isinstance(change, MultiLanguageOverviewParagraph):
+                self.change = change
+            elif isinstance(change, tuple):
+                self.change = MultiLanguageOverviewParagraph(change)
+            else:
+                actual_change_type = str(type(change))
+                raise TypeError(f"change: Expected type {expected_type}, got {actual_change_type}")
+        if reason is not None:
+            if isinstance(reason, MultiLanguageOverviewParagraph):
+                self.reason = reason
+            elif isinstance(reason, tuple):
+                self.reason = MultiLanguageOverviewParagraph(reason)
+            else:
+                actual_reason_type = str(type(reason))
+                raise TypeError(f"reason: Expected type {expected_type}, got {actual_reason_type}")
+
+
+ModificationsArgumentType = Union[tuple[ar_enum.Language, str],
+                                  list[tuple[ar_enum.Language, str]],
+                                  Modification,
+                                  list[Modification]]
+
+
+class DocRevision(ARObject):
+    """
+    Complex type AR:DOC-REVISION
+
+    Tag variants: 'DOC-REVISION'
+    """
+
+    def __init__(self,
+                 revision_label: "str | RevisionLabelString | None" = None,
+                 revision_label_p1: "str | RevisionLabelString | None" = None,
+                 revision_label_p2: "str | RevisionLabelString | None" = None,
+                 state: str | None = None,
+                 issued_by: str | None = None,
+                 date: "str | Date | datetime.date | datetime.datetime | None" = None,
+                 modifications: ModificationsArgumentType | None = None
+                 ) -> None:
+        # .REVISION-LABEL
+        self.revision_label: str | RevisionLabelString | None = None
+        # .REVISION-LABEL-P-1
+        self.revision_label_p1: str | RevisionLabelString | None = None
+        # .REVISION-LABEL-P-2
+        self.revision_label_p2: str | RevisionLabelString | None = None
+        # .STATE
+        self.state: str | None = None
+        # .ISSUED-BY
+        self.issued_by: str | None = None
+        # .DATE
+        self.date: Date | None = None
+        # .MODIFICATIONS
+        self.modifications: list[Modification] = []
+        revision_error = "{0}: Expected str or RevisionLabelString. Got {1}"
+        if revision_label is not None:
+            if isinstance(revision_label, RevisionLabelString):
+                self.revision_label = revision_label
+            elif isinstance(revision_label, str):
+                self.revision_label = RevisionLabelString(revision_label)
+            else:
+                raise TypeError(revision_error.format("revision_label", str(type(revision_label))))
+        if revision_label_p1 is not None:
+            if isinstance(revision_label_p1, RevisionLabelString):
+                self.revision_label_p1 = revision_label_p1
+            elif isinstance(revision_label_p1, str):
+                self.revision_label_p1 = RevisionLabelString(revision_label_p1)
+            else:
+                raise TypeError(revision_error.format("revision_label_p1", str(type(revision_label_p1))))
+        if revision_label_p2 is not None:
+            if isinstance(revision_label_p2, RevisionLabelString):
+                self.revision_label_p2 = revision_label_p2
+            elif isinstance(revision_label_p2, str):
+                self.revision_label_p2 = RevisionLabelString(revision_label_p2)
+            else:
+                raise TypeError(revision_error.format("revision_label_p2", str(type(revision_label_p2))))
+        self._assign_optional_strict("state", state, str)
+        self._assign_optional_strict("issued_by", issued_by, str)
+        if date is not None:
+            if isinstance(date, Date):
+                self.date = date
+            elif isinstance(date, (str, datetime.date, datetime.datetime)):
+                self.date = Date(date)
+            else:
+                raise TypeError(f"date: Expected type str, Date, date or datetime. Got {str(type(date))}")
+        if modifications is not None:
+            if isinstance(modifications, (tuple, Modification)):
+                self.append_modification(modifications)
+            elif isinstance(modifications, Iterable):
+                for modification in modifications:
+                    self.append_modification(modification)
+            else:
+                raise TypeError(f"modifications: Expected tuple, Modification or list. Got {str(type(modifications))}")
+
+    def append_modification(self, modification: tuple[ar_enum.Language, str] | Modification) -> None:
+        """
+        Appends modification to internal list of modifications
+        """
+        if isinstance(modification, Modification):
+            self.modifications.append(modification)
+        elif isinstance(modification, tuple) and len(modification) == 2:
+            self.modifications.append(Modification(change=MultiLanguageOverviewParagraph(modification)))
+        else:
+            expected_type = "tuple[enum 'Language', str] or Modification"
+            actual_type = str(type(modification))
+            raise TypeError(f"modification: Expected {expected_type}. Got {actual_type}")
+
+
+UsedLanguageArgtype = Union["MultiLanguagePlainText",
+                            SingleLanguageText,
+                            "LanguagePlainText",
+                            list[SingleLanguageText],
+                            list["LanguagePlainText"],
+                            ar_enum.Language,
+                            list[ar_enum.Language]]
 
 
 class AdminData(ARObject):
     """
     Complex type AR:ADMIN-DATA
+
     Tag variants: 'ADMIN-DATA'
     """
 
-    def __init__(self, data: dict | None = None) -> None:
-        self.data = data
+    def __init__(self,
+                 sdgs: SpecialDataGroup | list[SpecialDataGroup] | None = None,
+                 language: ar_enum.Language | None = None,
+                 used_languages: UsedLanguageArgtype | None = None,
+                 doc_revisions: DocRevision | list[DocRevision] | None = None
+                 ) -> None:
+        # .SDGS
+        self.sdgs: list[SpecialDataGroup] = []
+        # .LANGUAGE
+        self.language: ar_enum.Language | None = None
+        # .USED-LANGUAGES
+        self.used_languages: MultiLanguagePlainText | None = None
+        # .DOC-REVISIONS
+        self.doc_revisions: list[DocRevision] = []
+
+        self._assign_optional("language", language, ar_enum.Language)
+        if used_languages is not None:
+            if isinstance(used_languages, MultiLanguagePlainText):
+                self.used_languages = used_languages
+            elif isinstance(used_languages, (tuple, LanguagePlainText)):
+                self.used_languages = MultiLanguagePlainText(used_languages)
+            elif isinstance(used_languages, ar_enum.Language):
+                part = SingleLanguageText(used_languages)
+                self.used_languages = MultiLanguagePlainText(part)
+            elif isinstance(used_languages, Iterable):
+                elements = []
+                for element in used_languages:
+                    if isinstance(element, (tuple, LanguagePlainText)):
+                        elements.append(element)
+                    elif isinstance(element, ar_enum.Language):
+                        elements.append(LanguagePlainText(element))
+                    else:
+                        raise TypeError(f"used_languages: Failed to add part from type {str(type(element))}")
+                self.used_languages = MultiLanguagePlainText(elements)
+            else:
+                raise TypeError(f"used_languages: Unsupported type {str(type(used_languages))}")
+
+        if doc_revisions is not None:
+            if isinstance(doc_revisions, Iterable):
+                for revision in doc_revisions:
+                    self.append_doc_revision(revision)
+            else:
+                self.append_doc_revision(doc_revisions)
+
+        if sdgs is not None:
+            if isinstance(sdgs, Iterable):
+                for sdg in sdgs:
+                    self.append_specia_data_group(sdg)
+            else:
+                self.append_specia_data_group(sdgs)
+
+    def append_doc_revision(self, revision: DocRevision) -> None:
+        """
+        Appends a DocRevision to this AdminData object
+        """
+        if isinstance(revision, DocRevision):
+            self.doc_revisions.append(revision)
+        else:
+            raise TypeError(f"revision: Expected type DocRevision. Got {str(type(revision))}")
+
+    def append_specia_data_group(self, sdg: SpecialDataGroup) -> None:
+        """
+        Appends a special data grouup to this AdminData object
+        """
+        if isinstance(sdg, SpecialDataGroup):
+            self.sdgs.append(sdg)
+        else:
+            raise TypeError(f"sdg: Expected type SpecialDataGroup. Got {str(type(sdg))}")
+
+
+# -- Common structure elements
 
 
 class DataFilter(ARObject):
@@ -577,7 +795,6 @@ class Implementation(ARElement):
         else:
             raise TypeError("code_descriptors must be of type Code")
 
-
 # --- Documentation Elements
 
 
@@ -588,6 +805,65 @@ class Break(ARObject):
 
     Same function as the html element.
     """
+
+
+class Date(ARObject):
+    """
+    Complex type AR:DATE
+    Tag variants: 'DATE'
+
+    Examples:
+
+    2009-07-23
+
+    2009-07-23T14:38:00+01:00
+
+    2009-07-23T13:38:00Z
+    """
+
+    def __init__(self, value: str | datetime.datetime | datetime.date) -> None:
+        self.value: datetime.date | datetime.datetime
+        if isinstance(value, str):
+            self.value = self._create_from_string(value)
+        elif isinstance(value, (datetime.date, datetime.datetime)):
+            self.value = value
+        else:
+            raise TypeError(f"value: Expected string or datetime object. Got {str(type(value))}")
+
+    def _create_from_string(self, value: str) -> datetime.date | datetime.datetime:
+        match = date_re.match(value)
+        if match is None or len(match.group(0)) != len(value):
+            raise ValueError(f"Date string '{value}' doesn't pass regular expression check")
+        if match.lastindex == 1:
+            return datetime.date.fromisoformat(value)
+        text = value
+        if text.endswith("Z"):
+            text = text[:-1] + "+00:00"
+        return datetime.datetime.fromisoformat(text)
+
+    def __str__(self) -> str:
+        text = self.value.isoformat()
+        if text.endswith("+00:00"):
+            text = text[:-6] + "Z"
+        return text
+
+
+class RevisionLabelString(ARObject):
+    """
+    Complex type AR:REVISION-LABEL-STRING
+    Tag variants: 'AR-RELEASE-VERSION' | 'REVISION-LABEL' | 'REVISION-LABEL-P1' | 'REVISION-LABEL-P2' |
+                  'ECUC-DEF-EDITION' | 'SW-VERSION' | 'PRODUCT-RELEASE' | 'MINIMUM-SUPPORTED-UCM-VERSION' |
+                  'ECU-EXTRACT-VERSION' | 'SYSTEM-VERSION'
+    """
+
+    def __init__(self, value: str):
+        match = revision_label_string_re.match(value)
+        if match is None or len(match.group(0)) != len(value):
+            raise ValueError(f"RevisionLabelString string '{value}' doesn't pass regular expression check")
+        self.value = value
+
+    def __str__(self):
+        return self.value
 
 
 class EmphasisText(ARObject):
@@ -1192,12 +1468,62 @@ class Describable(ARObject):
         self._assign_optional_strict('admin_data', admin_data, AdminData)
 
 
+class LanguagePlainText(LanguageSpecific):
+    """
+    Complex type AR:L-PLAIN-TEXT
+
+    Tag variants: 'L-10'
+    """
+    def __init__(self, language: ar_enum.Language, text: str = "") -> None:
+        super().__init__(language)
+        self.text = text
+
+
+LanguagePlainTextArgType = SingleLanguageText | LanguagePlainText | list[SingleLanguageText] | list[LanguagePlainText]
+
+
+class MultiLanguagePlainText(ARObject):
+    """
+    Complex type AR:MULTI-LANGUAGE-PLAIN-TEXT
+
+    Tag variants: 'USED-LANGUAGES' | 'TEX-MATH' | 'GENERIC-MATH'
+    """
+    def __init__(self,
+                 elements: LanguagePlainTextArgType | None = None) -> None:
+        super().__init__()
+        self.elements: list[LanguagePlainText] = []
+        if elements:
+            if isinstance(elements, (tuple, LanguagePlainText)):
+                self.append(elements)
+            elif isinstance(elements, Iterable):
+                for part in elements:
+                    self.append(part)
+            else:
+                expected_type = "tuple[enum Language, str], LanguagePlainText or list"
+                actual_type = str(type(elements))
+                raise TypeError(f"elements: Expected {expected_type}. Got {actual_type}")
+
+    def append(self, element: SingleLanguageText | LanguagePlainText) -> None:
+        """
+        Append element to internal list of elements
+        """
+        if isinstance(element, tuple):
+            self.elements.append(LanguagePlainText(*element))
+        elif isinstance(element, LanguagePlainText):
+            self.elements.append(element)
+        else:
+            expected_type = "tuple[enum Language, str] or LanguagePlainText"
+            actual_type = str(type(element))
+            raise TypeError(f"element: Expected type {expected_type}, got {actual_type}")
+
+
 # --- Computation method elements
 
 
 class CompuRational(ARObject):
     """
     Complex type AR:COMPU-RATIONAL-COEFFS
+
     Tag variants: 'COMPU-RATIONAL-COEFFS'
     """
 

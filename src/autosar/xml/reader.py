@@ -237,8 +237,14 @@ class Reader:
             'SUB': self._read_subscript,
             'TT': self._read_technical_term,
             'VERBATIM': self._read_multi_language_verbatim,
+            'USED-LANGUAGES': self._read_multi_language_plain_text,
+            'DATE': self._read_date,
+            'REVISION-LABEL': self._read_revision_label_string,
             # AdminData elements
             'SDG': self._read_special_data_group,
+            'MODIFICATION': self._read_modification,
+            'DOC-REVISION': self._read_doc_revision,
+            'ADMIN-DATA': self._read_admin_data,
             # CompuMethod elements
             'COMPU-INTERNAL-TO-PHYS': self._read_computation,
             'COMPU-RATIONAL-COEFFS': self._read_compu_rational,
@@ -534,8 +540,6 @@ class Reader:
 
     # AdminData
 
-    # These read methods needs additional refactoring before they are useful
-
     def _read_special_data_group(self, xml_element: ElementTree.Element) -> ar_element.SpecialDataGroup:
         """
         Reads complex type AR:SDG
@@ -559,14 +563,14 @@ class Reader:
             if xml_child.tag == "SD":
                 gid = xml_child.attrib.get("GID")
                 if gid:
-                    content.append((xml_child.text, gid))
+                    content.append((gid, xml_child.text))
                 else:
                     content.append(xml_child.text)
             elif xml_child.tag == "SDF":
                 gid = xml_child.attrib.get("GID")
                 value = self._read_number(xml_child.text)
                 if gid:
-                    content.append((value, gid))
+                    content.append((gid, value))
                 else:
                     content.append(value)
             elif xml_child.tag == "SDG":
@@ -575,47 +579,109 @@ class Reader:
         if len(content) > 0:
             data["content"] = content
 
+    def _read_modification(self, xml_element: ElementTree.Element) -> ar_element.Modification:
+        """
+        Reads complex type AR:MODIFICATION
+        Tag variants: 'MODIFICATION'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_modification_group(child_elements, data)
+        return ar_element.Modification(**data)
+
+    def _read_modification_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:MODIFICATION
+        Tag variants: 'MODIFICATION'
+        """
+        xml_child = child_elements.get("CHANGE")
+        if xml_child is not None:
+            data["change"] = self._read_multi_language_overview_paragraph(xml_child)
+        xml_child = child_elements.get("REASON")
+        if xml_child is not None:
+            data["reason"] = self._read_multi_language_overview_paragraph(xml_child)
+
+    def _read_doc_revision(self, xml_element: ElementTree.Element) -> ar_element.DocRevision:
+        """
+        Reads complex type AR:DOC-REVISION
+        Tag variants: 'DOC-REVISION'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_doc_revision_group(child_elements, data)
+        return ar_element.DocRevision(**data)
+
+    def _read_doc_revision_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:DOC-REVISION
+        """
+        xml_child = child_elements.get("REVISION-LABEL")
+        if xml_child is not None:
+            data["revision_label"] = self._read_revision_label_string(xml_child)
+        xml_child = child_elements.get("REVISION-LABEL-P1")
+        if xml_child is not None:
+            data["revision_label_p1"] = self._read_revision_label_string(xml_child)
+        xml_child = child_elements.get("REVISION-LABEL-P2")
+        if xml_child is not None:
+            data["revision_label_p2"] = self._read_revision_label_string(xml_child)
+        xml_child = child_elements.get("STATE")
+        if xml_child is not None:
+            data["state"] = xml_child.text
+        xml_child = child_elements.get("ISSUED-BY")
+        if xml_child is not None:
+            data["issued_by"] = xml_child.text
+        xml_child = child_elements.get("DATE")
+        if xml_child is not None:
+            data["date"] = self._read_date(xml_child)
+        xml_child = child_elements.get("MODIFICATIONS")
+        if xml_child is not None:
+            elements = []
+            for xml_grand_child in xml_child.findall("./MODIFICATION"):
+                elements.append(self._read_modification(xml_grand_child))
+            data["modifications"] = elements
+
     def _read_admin_data(self, xml_element: ElementTree.Element) -> ar_element.AdminData:
         """
         Reads Complex-type AR:ADMIN-DATA
-        Type: Concrete
+
+        Tag variants: 'ADMIN-DATA'
         """
         data = {}
-        element_map = ChildElementMap(xml_element)
-        element_map.skip('LANGUAGE')  # Implement later
-        element_map.skip('USED-LANGUAGES')  # Implement later
-        element_map.skip('DOC-REVISIONS')  # Implement later
-        xml_sdgs = element_map.get('SDGS')
-        if len(xml_sdgs):
-            data['data'] = self._read_admin_data_sdgs(xml_sdgs)
+        child_elements = ChildElementMap(xml_element)
+        self._read_admin_data_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.AdminData(**data)
+
+    def _read_admin_data_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:ADMIN-DATA
+        """
+        xml_child = child_elements.get('LANGUAGE')
+        if xml_child is not None:
+            data["language"] = ar_enum.xml_to_enum("Language", xml_child.text)
+        xml_child = child_elements.get('USED-LANGUAGES')
+        if xml_child is not None:
+            data["used_languages"] = self._read_multi_language_plain_text(xml_child)
+        xml_child = child_elements.get("DOC-REVISIONS")
+        if xml_child is not None:
+            elements = []
+            for xml_grand_child in xml_child.findall("./DOC-REVISION"):
+                elements.append(self._read_doc_revision(xml_grand_child))
+            data["doc_revisions"] = elements
+        xml_child = child_elements.get('SDGS')
+        if xml_child is not None:
+            data['sdgs'] = self._read_admin_data_sdgs(xml_child)
         return ar_element.AdminData(**data)
 
     def _read_admin_data_sdgs(self, xml_element: ElementTree.Element) -> list:
         """
-        Reads Complex-type AR:SDGS
+        Reads SDGS element in ADMIN-DATA
         """
-        data = []
+        sdg_list = []
         for xml_child in xml_element.findall('./SDG'):
-            sdg = self._read_admin_data_sdg(xml_child)
-            data.append(sdg)
-        return data
-
-    def _read_admin_data_sdg(self, xml_element: ElementTree.Element) -> dict[str, dict]:
-        """
-        Reads Complex-type AR:SDG
-        """
-        group_key = xml_element.attrib['GID']
-        xml_sd = xml_element.find('./SD')
-        special_data = self._read_admin_data_sd(xml_sd)
-        return {group_key: special_data}
-
-    def _read_admin_data_sd(self, xml_element: ElementTree.Element) -> dict[str, str]:
-        """
-        Reads Complex-type AR:SD
-        """
-        key = xml_element.attrib['GID']
-        value = xml_element.text
-        return {key: value}
+            sdg = self._read_special_data_group(xml_child)
+            sdg_list.append(sdg)
+        return sdg_list
 
     # --- AUTOSAR Document
 
@@ -641,15 +707,6 @@ class Reader:
     #     Parse AR:FILE-INFO-COMMENT
     #     """
     #     sdg_list = self._read_special_data_groups(xml_node)
-
-    # def _read_special_data_groups(self, xml_node : ElementTree.Element) -> dict:
-    #     """
-    #     Reads AR:SDGS
-    #     """
-    #     result = {}
-    #     for xml_elem in xml_node.findall('SDGS/SDG'):
-    #         BUILD A Dictionary containing other dictionaries
-    #
 
     # AUTOSAR Package
 
@@ -1181,6 +1238,43 @@ class Reader:
         if xml_child is not None:
             data["introduction"] = self._read_documentation_block(xml_child)
         child_elements.skip("ADMIN-DATA")  # To be implemented
+
+    def _read_language_plain_text(self, xml_element: ElementTree.Element) -> ar_element.LanguagePlainText:
+        """
+        Writes complex type AR:L-PLAIN-TEXT
+        Tag variants: 'L-10'
+        """
+        data = {}
+        self._read_language_specific_attr(xml_element.attrib, data)
+        return ar_element.LanguagePlainText(data["language"], xml_element.text)
+
+    def _read_multi_language_plain_text(self, xml_element: ElementTree.Element) -> ar_element.MultiLanguagePlainText:
+        """
+        Writes complex type AR:MULTI-LANGUAGE-PLAIN-TEXT
+        Tag variants: 'USED-LANGUAGES' | 'TEX-MATH' | 'GENERIC-MATH'
+        """
+        data = {}
+        elements = []
+        for xml_child in xml_element.findall("./L-10"):
+            elements.append(self._read_language_plain_text(xml_child))
+        data["elements"] = elements
+        return ar_element.MultiLanguagePlainText(**data)
+
+    def _read_date(self, xml_element: ElementTree.Element) -> ar_element.Date:
+        """
+        Reads complex type AR:DATE
+        Tag variant: 'DATE'
+        """
+        return ar_element.Date(xml_element.text)
+
+    def _read_revision_label_string(self, xml_element: ElementTree.Element) -> ar_element.RevisionLabelString:
+        """
+        Reads complex type AR:REVISION-LABEL-STRING
+        Tag variants: 'AR-RELEASE-VERSION' | 'REVISION-LABEL' | 'REVISION-LABEL-P1' | 'REVISION-LABEL-P2' |
+                  'ECUC-DEF-EDITION' | 'SW-VERSION' | 'PRODUCT-RELEASE' | 'MINIMUM-SUPPORTED-UCM-VERSION' |
+                  'ECU-EXTRACT-VERSION' | 'SYSTEM-VERSION'
+        """
+        return ar_element.RevisionLabelString(xml_element.text)
 
     # --- CompuMethod elements
 

@@ -318,7 +318,7 @@ class KeepWithPrevious(Enum):
 
 class Language(Enum):
     """
-    SimpleType AR:L-ENUM--SIMPLE
+    AR:L-ENUM--SIMPLE
     """
 
     AA = 0  # Afar

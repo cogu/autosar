@@ -1,1 +1,1 @@
-python -m unittest discover -v tests test_*.py
+python -m unittest discover -v tests "test_*.py"
