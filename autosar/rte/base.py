@@ -120,7 +120,7 @@ class ProvidePort(Port):
       shortname='_'.join([self.parent.rte_prefix, call_type, self.name, rte_data_element.name])
       type_arg=type2arg(data_type,pointer)
       func=C.function(fname, 'Std_ReturnType')
-      func.add_arg(type_arg)
+      func.add_param(type_arg)
       if shortname not in self.portAPI:
          rte_port_func = None
          initValue = None
@@ -157,7 +157,7 @@ class RequirePort(Port):
       data_type = rte_data_element.dataType
       type_arg=type2arg(data_type,pointer)
       func=C.function(fname, 'Std_ReturnType')
-      func.add_arg(type_arg)
+      func.add_param(type_arg)
       if shortname not in self.portAPI:
          rte_port_func = None
          initValue = None
@@ -191,7 +191,7 @@ class RequirePort(Port):
       return_type = 'Std_ReturnType' if len(operation.inner.errorRefs)>0 else 'void'
       proto = C.function(func_name, return_type)
       for argument in operation.arguments:
-         proto.add_arg(argument)
+         proto.add_param(argument)
       port_func = CallPortFunction(shortname, proto, operation)
       self.portAPI[shortname] = port_func
       return port_func
@@ -228,7 +228,7 @@ class RteTypeManager:
       for dataType in self.typeMap.values():
          if isinstance(dataType, autosar.datatype.RecordDataType) or isinstance(dataType, autosar.datatype.ArrayDataType):
             complexTypes.add(dataType.ref)
-         elif isinstance(dataType, autosar.portinterface.ModeDeclarationGroup):
+         elif isinstance(dataType, autosar.mode.ModeDeclarationGroup):
             modeTypes.add(dataType.ref)
          else:
             basicTypes.add(dataType.ref)
@@ -291,7 +291,7 @@ class SetReadDataFunction:
       func_name='%s_SetReadData_%s_%s_%s'%(prefix, component.name, port.name, data_element.name)
       shortname='%s_SetReadData_%s_%s'%(prefix, port.name, data_element.name)
       proto=C.function(func_name, 'void')
-      proto.add_arg(C.variable('data', data_type.name, pointer=data_type.isComplexType))
+      proto.add_param(C.variable('data', data_type.name, pointer=data_type.isComplexType))
       self.shortname = shortname
       self.data_element = data_element
       self.proto=proto
@@ -311,7 +311,7 @@ class SetReadResultFunction:
       shortname='%s_SetReadResult_%s_%s'%(prefix, port.name, data_element.name)
       proto=C.function(func_name, 'void')
       
-      proto.add_arg(C.variable('value', 'Std_ReturnType'))
+      proto.add_param(C.variable('value', 'Std_ReturnType'))
       self.shortname = shortname
       self.proto=proto
       self.data_element = data_element
@@ -408,7 +408,7 @@ class OperationInvokedEvent(Event):
       self.port = port
       self.operation = operation      
       return_type = 'Std_ReturnType' if len(operation.inner.errorRefs)>0 else 'void'
-      self.runnable.prototype=C.function(runnable.symbol, return_type, args=operation.arguments)
+      self.runnable.prototype=C.function(runnable.symbol, return_type, params=operation.arguments)
 
 class ModeSwitchEvent(Event):
    """
@@ -439,7 +439,7 @@ class ModeSwitchFunction:
       self.body = C.block(innerIndent = innerIndentDefault)
       self.calls = {}
       self.typename = 'Rte_ModeType_'+event.mode
-      self.proto = C.function('Rte_SetMode_'+event.mode, 'void', args = [C.variable('newMode', self.typename)])
+      self.proto = C.function('Rte_SetMode_'+event.mode, 'void', params=[C.variable('newMode', self.typename)])
       self.static_var = C.variable('m_'+event.mode, self.typename, static=True)
       self._init_body(event)
    

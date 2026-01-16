@@ -142,7 +142,7 @@ class OsConfigGenerator:
          task = self.cfg.find_os_task_by_runnable(event.runnable)
          if task is not None:
             if (task.name, event.name) not in generated:               
-               block.append(C.statement(C.fcall('os_task_setEvent', params=['&m_os_task_%s'%task.name, 'EVENT_MASK_%s_%s'%(task.name, event.name)])))
+               block.append(C.statement(C.fcall('os_task_setEvent', args=['&m_os_task_%s'%task.name, 'EVENT_MASK_%s_%s'%(task.name, event.name)])))
                generated.add((task.name, event.name))
       code.append(block)
       return code

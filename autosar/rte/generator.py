@@ -87,14 +87,15 @@ class TypeGenerator:
                      if compuMethod is not None:
                         lines1=[]
                         lines2=[]
-                        if isinstance(compuMethod,autosar.datatype.CompuMethodConst):
-                           for elem in compuMethod.elements:
-                              if isUnsigned:
-                                 value = str(elem.upperLimit)+'u'
-                              else:
-                                 value = str(elem.upperLimit)
-                              lines1.append('#define RTE_CONST_%s (%s)'%(elem.textValue,value))
-                              lines2.append('#define %s ((%s)%s)'%(elem.textValue,typename,value))
+                        if compuMethod.intToPhys is not None:
+                           for elem in compuMethod.intToPhys.elements:
+                              if elem.textValue:
+                                 if isUnsigned:
+                                    value = str(elem.upperLimit)+'u'
+                                 else:
+                                    value = str(elem.upperLimit)
+                                 lines1.append('#define RTE_CONST_%s (%s)'%(elem.textValue,value))
+                                 lines2.append('#define %s ((%s)%s)'%(elem.textValue,typename,value))
                         if len(lines2)>0:
                            tmp=lines1+[C.blank()]+lines2
                         else:
@@ -328,7 +329,7 @@ class RteGenerator:
          body = C.block(innerIndent=innerIndentDefault)
          if port_func.data_element.com_access['Receive'] is not None:
             com_func = port_func.data_element.com_access['Receive']
-            body.code.append(C.statement('return '+str(C.fcall(com_func.name, params=[port_func.proto.args[0].name]))))
+            body.code.append(C.statement('return '+str(C.fcall(com_func.name, args=[port_func.proto.args[0].name]))))
          else:
             body.code.append(C.statement('*%s = %s'%(port_func.proto.args[0].name, port_func.data_element.symbol)))
             if port_func.data_element.result_var is not None:
@@ -347,7 +348,7 @@ class RteGenerator:
             body.code.append(C.statement('%s = %s'%(port_func.data_element.symbol, port_func.proto.args[0].name)))
          if port_func.data_element.com_access['Send'] is not None:
             com_func = port_func.data_element.com_access['Send']
-            body.code.append(C.statement('return '+str(C.fcall(com_func.name, params=[port_func.proto.args[0].name]))))
+            body.code.append(C.statement('return '+str(C.fcall(com_func.name, args=[port_func.proto.args[0].name]))))
          else:
             if port_func.data_element.result_var is not None:
                body.code.append(C.statement('return %s'%port_func.data_element.result_var.name))
@@ -603,7 +604,7 @@ class MockRteGenerator(RteGenerator):
       tmp_proto = C.fptr.from_func(port_func.proto, type_name)
 
       self.typedefs[type_name] = 'typedef %s'%str(tmp_proto)
-      proto = C.function(func_name, 'void', args=[C.variable('handler_func', type_name, pointer=True)])
+      proto = C.function(func_name, 'void', params=[C.variable('handler_func', type_name, pointer=True)])
       func = autosar.rte.base.SetCallHandlerFunction(short_name, proto, operation, var_name)
       self.extra_public_functions[short_name]=func
       static_var = C.variable(var_name, type_name, static=True, pointer=True)
@@ -617,8 +618,8 @@ class MockRteGenerator(RteGenerator):
       body.append(C.line('if (%s != 0)'%(var_name)))
       inner = C.block(innerIndent=innerIndentDefault)
       fcall = C.fcall(var_name)
-      for arg in proto.args:
-         fcall.add_param(arg.name)
+      for param in proto.params:
+         fcall.add_arg(param.name)
       if proto.typename != 'void':
          inner.append(C.statement('return %s'%str(fcall)))
       else:

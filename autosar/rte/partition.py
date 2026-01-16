@@ -433,7 +433,7 @@ class Partition:
                      proto = C.function(
                      "%s_Send_%s_%s"%(component.inner.name, remote_port.name, data_element.name),
                      'Std_ReturnType',
-                     args = [C.variable('value', data_element.dataType.name, pointer=isPointer)])
+                     params = [C.variable('value', data_element.dataType.name, pointer=isPointer)])
                      data_element.com_access['Send'] = proto
                      component.inner.addSendInterface(proto, port, data_element)
             for port in component.providePorts:
@@ -442,7 +442,7 @@ class Partition:
                   proto = C.function(
                   "%s_Receive_%s_%s"%(component.inner.name, remote_port.name, data_element.name),
                   'Std_ReturnType',
-                  args = [C.variable('value', data_element.dataType.name, pointer=isPointer)])
+                  params = [C.variable('value', data_element.dataType.name, pointer=isPointer)])
                   data_element.com_access['Receive'] = proto
                   component.inner.addReceiveInterface(proto, port, data_element)
                   #remove from internal RTE variables
