@@ -2284,14 +2284,20 @@ class Reader:
     def _read_read_data_type_mapping_set_group(self, child_elements: ChildElementMap, data: dict) -> None:
         """
         Reads group AR:DATA-TYPE-MAPPING-SET
-        Type: Abstract
+        Tag variants: 'DATA-TYPE-MAPPING-SET'
         """
         xml_child = child_elements.get("DATA-TYPE-MAPS")
         if xml_child is not None:
             data_type_maps = []
-            for xml_data_type_map_element in xml_child.findall("./DATA-TYPE-MAP"):
-                data_type_maps.append(self._read_data_type_map(xml_data_type_map_element))
+            for xml_grand_child in xml_child.findall("./DATA-TYPE-MAP"):
+                data_type_maps.append(self._read_data_type_map(xml_grand_child))
             data["data_type_maps"] = data_type_maps
+        xml_child = child_elements.get("MODE-REQUEST-TYPE-MAPS")
+        if xml_child is not None:
+            mode_request_type_maps = []
+            for xml_grand_child in xml_child.findall("./MODE-REQUEST-TYPE-MAP"):
+                mode_request_type_maps.append(self._read_mode_request_type_map(xml_grand_child))
+            data["mode_request_type_maps"] = mode_request_type_maps
 
     def _read_value_list(self, xml_element: ElementTree.Element) -> ar_element.ValueList:
         """

@@ -2004,7 +2004,6 @@ class Writer(_XMLWriter):
     def _write_data_type_mapping_set(self, elem: ar_element.DataTypeMappingSet) -> None:
         """
         Writes DataTypeMappingSet
-        Type: Concrete
         Tag variants: 'DATA-TYPE-MAPPING-SET'
         """
         assert isinstance(elem, ar_element.DataTypeMappingSet)
@@ -2019,7 +2018,11 @@ class Writer(_XMLWriter):
             for child_elem in elem.data_type_maps:
                 self._write_data_type_map(child_elem)
             self._leave_child()
-        # .MODE-REQUEST-TYPE-MAPS not yet implemented
+        if len(elem.mode_request_type_maps) > 0:
+            self._add_child("MODE-REQUEST-TYPE-MAPS")
+            for child_elem in elem.mode_request_type_maps:
+                self._write_mode_request_type_map(child_elem)
+            self._leave_child()
         self._leave_child()
 
     def _write_value_list(self, elem: ar_element.ValueList) -> None:

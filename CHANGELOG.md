@@ -24,6 +24,9 @@ Non-collectable elements are various sub-elements to collectable elements.
 #### Properly implemented XML Elements
 
 * AdminData | ADMIN-DATA
+  - AdminData class should now be fully supported
+* DataTypeMappingSet | DATA-TYPE-MAPPING-SET
+  - ModeRequestTypeMap are now supported
 
 ## [v0.5.5] - 2025-06-23
 
