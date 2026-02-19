@@ -2762,20 +2762,33 @@ class DataTypeMappingSet(ARElement):
     def __init__(self,
                  name: str,
                  data_type_maps: DataTypeMap | list[DataTypeMap] | None = None,
+                 mode_request_type_maps: "ModeRequestTypeMap | list[ModeRequestTypeMap] | None" = None,
                  **kwargs: dict) -> None:
         super().__init__(name, **kwargs)
-        self.data_type_maps: list[DataTypeMap] = []  # .DATA-TYPE-MAPS
-        self.mode_request_type_maps = []  # .MODE-REQUEST-TYPE-MAPS (Not yet implemented)
+        # .DATA-TYPE-MAPS
+        self.data_type_maps: list[DataTypeMap] = []
+        # .MODE-REQUEST-TYPE-MAPS
+        self.mode_request_type_maps = []
+
         if data_type_maps is not None:
             if isinstance(data_type_maps, DataTypeMap):
                 self.append(data_type_maps)
-            elif isinstance(data_type_maps, list):
+            elif isinstance(data_type_maps, Iterable):
                 for data_type_map in data_type_maps:
                     self.append(data_type_map)
             else:
                 raise TypeError(f'data_type_maps: Invalid type "{str(type(data_type_maps))}"')
 
-    def append(self, element: DataTypeMap) -> None:
+        if mode_request_type_maps is not None:
+            if isinstance(mode_request_type_maps, ModeRequestTypeMap):
+                self.append(mode_request_type_maps)
+            elif isinstance(mode_request_type_maps, Iterable):
+                for mode_request_type_map in mode_request_type_maps:
+                    self.append(mode_request_type_map)
+            else:
+                raise TypeError(f'mode_request_type_maps: Invalid type "{str(type(mode_request_type_maps))}"')
+
+    def append(self, element: "DataTypeMap | ModeRequestTypeMap") -> None:
         """
         Appends element to one of the inner lists based on parameter type
         Currently, appending to mode_request_type_maps isn't
@@ -2783,6 +2796,8 @@ class DataTypeMappingSet(ARElement):
         """
         if isinstance(element, DataTypeMap):
             self.data_type_maps.append(element)
+        elif isinstance(element, ModeRequestTypeMap):
+            self.mode_request_type_maps.append(element)
         else:
             raise TypeError(f'Unexpected type: "{str(type(element))}"')
 
@@ -3598,7 +3613,7 @@ class ModeTransition(Identifiable):
         self._assign_optional("exited_mode_ref", exited_mode_ref, ModeDeclarationRef)
 
 
-MODE_DECLARATION_TYPES = ModeDeclaration | list[ModeDeclaration] | list[str] | list[tuple[str, int]]
+ModeDeclarationType = ModeDeclaration | list[ModeDeclaration] | list[str] | list[tuple[str, int]]
 
 
 class ModeDeclarationGroup(ARElement):
@@ -3609,7 +3624,7 @@ class ModeDeclarationGroup(ARElement):
 
     def __init__(self,
                  name: str,
-                 mode_declarations: MODE_DECLARATION_TYPES | None = None,
+                 mode_declarations: ModeDeclarationType | None = None,
                  initial_mode_ref: ModeDeclarationRef | None = None,
                  mode_manager_error_behavior: ModeErrorBehavior | None = None,
                  mode_transitions: ModeTransition | list[ModeTransition] | None = None,

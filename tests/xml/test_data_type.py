@@ -1882,7 +1882,7 @@ class TestDataTypeMap(unittest.TestCase):
 
 class TestDataTypeMappingSet(unittest.TestCase):
 
-    def test_read_write_empty(self):
+    def test_empty(self):
         element = ar_element.DataTypeMappingSet("ShortName")
         writer = autosar.xml.Writer()
         xml = '''<DATA-TYPE-MAPPING-SET>
@@ -1893,20 +1893,20 @@ class TestDataTypeMappingSet(unittest.TestCase):
         elem: ar_element.DataTypeMappingSet = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.DataTypeMappingSet)
 
-    def test_read_write_data_type_maps(self):
+    def test_data_type_maps(self):
+        appl_type_ref = "/ApplicationTypes/ShortName"
+        impl_type_ref = "/ImplementationTypes/ShortName"
         data_type_map = ar_element.DataTypeMap(
             appl_data_type_ref=ar_element.ApplicationDataTypeRef(
-                "/ApplicationTypes/ShortName", ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE),
-            impl_data_type_ref=ar_element.ImplementationDataTypeRef("/ImplementationTypes/ShortName"))
+                appl_type_ref, ar_enum.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE),
+            impl_data_type_ref=ar_element.ImplementationDataTypeRef(impl_type_ref))
         element = ar_element.DataTypeMappingSet("MappingSet", data_type_maps=data_type_map)
-        xml = '''<DATA-TYPE-MAPPING-SET>
+        xml = f'''<DATA-TYPE-MAPPING-SET>
   <SHORT-NAME>MappingSet</SHORT-NAME>
   <DATA-TYPE-MAPS>
     <DATA-TYPE-MAP>
-      <APPLICATION-DATA-TYPE-REF DEST="APPLICATION-PRIMITIVE-DATA-TYPE">\
-/ApplicationTypes/ShortName</APPLICATION-DATA-TYPE-REF>
-      <IMPLEMENTATION-DATA-TYPE-REF DEST="IMPLEMENTATION-DATA-TYPE">\
-/ImplementationTypes/ShortName</IMPLEMENTATION-DATA-TYPE-REF>
+      <APPLICATION-DATA-TYPE-REF DEST="APPLICATION-PRIMITIVE-DATA-TYPE">{appl_type_ref}</APPLICATION-DATA-TYPE-REF>
+      <IMPLEMENTATION-DATA-TYPE-REF DEST="IMPLEMENTATION-DATA-TYPE">{impl_type_ref}</IMPLEMENTATION-DATA-TYPE-REF>
     </DATA-TYPE-MAP>
   </DATA-TYPE-MAPS>
 </DATA-TYPE-MAPPING-SET>'''
@@ -1925,6 +1925,36 @@ class TestDataTypeMappingSet(unittest.TestCase):
                          "/ImplementationTypes/ShortName")
         self.assertEqual(data_type_map.impl_data_type_ref.dest,
                          ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE)
+
+    def test_mode_request_type_maps(self):
+        impl_ref = "/ImplementationTypes/ShortName"
+        mode_ref = "/ModeGroups/MyModeDeclarationGroup"
+        mode_request_type_map = ar_element.ModeRequestTypeMap(
+            implementation_data_type=ar_element.ImplementationDataTypeRef(impl_ref),
+            mode_group=ar_element.ModeDeclarationGroupRef(mode_ref))
+        element = ar_element.DataTypeMappingSet("MappingSet", mode_request_type_maps=mode_request_type_map)
+        xml = f'''<DATA-TYPE-MAPPING-SET>
+  <SHORT-NAME>MappingSet</SHORT-NAME>
+  <MODE-REQUEST-TYPE-MAPS>
+    <MODE-REQUEST-TYPE-MAP>
+      <IMPLEMENTATION-DATA-TYPE-REF DEST="IMPLEMENTATION-DATA-TYPE">{impl_ref}</IMPLEMENTATION-DATA-TYPE-REF>
+      <MODE-GROUP-REF DEST="MODE-DECLARATION-GROUP">{mode_ref}</MODE-GROUP-REF>
+    </MODE-REQUEST-TYPE-MAP>
+  </MODE-REQUEST-TYPE-MAPS>
+</DATA-TYPE-MAPPING-SET>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DataTypeMappingSet = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DataTypeMappingSet)
+        self.assertEqual(len(elem.mode_request_type_maps), 1)
+        mode_request_type_map: ar_element.ModeRequestTypeMap = elem.mode_request_type_maps[0]
+        self.assertEqual(str(mode_request_type_map.implementation_data_type), impl_ref)
+        self.assertEqual(mode_request_type_map.implementation_data_type.dest,
+                         ar_enum.IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE)
+        self.assertEqual(str(mode_request_type_map.mode_group), mode_ref)
+        self.assertEqual(mode_request_type_map.mode_group.dest,
+                         ar_enum.IdentifiableSubTypes.MODE_DECLARATION_GROUP)
 
 
 class TestValueList(unittest.TestCase):
