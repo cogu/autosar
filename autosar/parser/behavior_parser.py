@@ -61,7 +61,9 @@ class BehaviorParser(ElementParser):
                             raise ValueError('event')
                 elif xmlNode.tag == 'PORT-API-OPTIONS':
                     for xmlOption in xmlNode.findall('./PORT-API-OPTION'):
-                        portAPIOption = autosar.behavior.PortAPIOption(self.parseTextNode(xmlOption.find('PORT-REF')),self.parseBooleanNode(xmlOption.find('ENABLE-TAKE-ADDRESS')),self.parseBooleanNode(xmlOption.find('INDIRECT-API')))
+                        portAPIOption = autosar.behavior.PortAPIOption(self.parseTextNode(xmlOption.find('PORT-REF')),
+                                                                       self.parseBooleanNode(xmlOption.find('ENABLE-TAKE-ADDRESS')),
+                                                                       self.parseBooleanNode(xmlOption.find('INDIRECT-API')))
                         if portAPIOption is not None: internalBehavior.portAPIOptions.append(portAPIOption)
                 elif xmlNode.tag == 'RUNNABLES':
                     for xmRunnable in xmlNode.findall('./RUNNABLE-ENTITY'):
@@ -145,7 +147,8 @@ class BehaviorParser(ElementParser):
                             internalBehavior.events.append(event)
                 elif xmlElem.tag == 'PORT-API-OPTIONS':
                     for xmlOption in xmlElem.findall('./PORT-API-OPTION'):
-                        portAPIOption = autosar.behavior.PortAPIOption(self.parseTextNode(xmlOption.find('PORT-REF')),self.parseBooleanNode(xmlOption.find('ENABLE-TAKE-ADDRESS')),self.parseBooleanNode(xmlOption.find('INDIRECT-API')))
+                        portRef, takeAddress, indirectAPI, errorHandling = self.parsePortAPIOptions(xmlOption)
+                        portAPIOption = autosar.behavior.PortAPIOption(portRef, takeAddress, indirectAPI, errorHandling)
                         if portAPIOption is not None: internalBehavior.portAPIOptions.append(portAPIOption)
                 elif xmlElem.tag == 'RUNNABLES':
                     for xmRunnable in xmlElem.findall('./RUNNABLE-ENTITY'):
@@ -192,6 +195,19 @@ class BehaviorParser(ElementParser):
                 else:
                     raise NotImplementedError(xmlElem.tag)
             return internalBehavior
+
+    def parsePortAPIOptions(self, xmlElem):
+        portRef = self.parseTextNode(xmlElem.find('PORT-REF'))
+        takeAddress = self.parseBooleanNode(xmlElem.find('ENABLE-TAKE-ADDRESS'))
+        indirectAPI = self.parseBooleanNode(xmlElem.find('INDIRECT-API'))
+        errorHandling = self.parseTextNode(xmlElem.find('ERROR-HANDLING'))
+        errorHandlingEnabled = None
+        if errorHandling:
+            if errorHandling == "TRANSFORMER-ERROR-HANDLING":
+                errorHandlingEnabled = True
+            elif errorHandling == "NO-TRANSFORMER-ERROR-HANDLING":
+                errorHandlingEnabled = False
+        return portRef, takeAddress, indirectAPI, errorHandlingEnabled
 
     def parseRunnableEntity(self, xmlRoot, parent):
         xmlDataReceivePoints = None

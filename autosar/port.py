@@ -1,7 +1,7 @@
 """
 Python autosar Ports and ComSpec classes.
 
-Copyright (c) 2019-2021 Conny Gustafsson.
+Copyright (c) 2019-2026 Conny Gustafsson.
 See LICENSE file for additional information.
 """
 
@@ -11,6 +11,7 @@ import autosar.constant
 import autosar.builder
 import copy
 import collections
+from typing import Optional
 
 sender_receiver_com_spec_arguments_ar4 = {'dataElement', 'initValue', 'initValueRef', 'aliveTimeout', 'queueLength'}
 sender_receiver_com_spec_arguments_ar3 = {'dataElement', 'canInvalidate', 'initValueRef', 'aliveTimeout', 'queueLength'}
@@ -22,10 +23,21 @@ valid_com_spec_arguments_ar4 = set().union(sender_receiver_com_spec_arguments_ar
     mode_switch_com_spec_arguments, parameter_com_spec_arguments, nv_data_com_spec_arguments)
 valid_com_spec_arguments_ar3 = set().union(sender_receiver_com_spec_arguments_ar3, client_server_com_spec_arguments, parameter_com_spec_arguments)
 
+class portOptions:
+    """
+    Data class that allows the user to store port API options
+    to be used later during SwcInternalBehavior creation.
+    """
+    def __init__(self) -> None:
+        self.takeAddress: Optional[bool] = None
+        self.indirectAPI: Optional[bool] = None
+        self.transformerErrorHandling: Optional[bool] = None
+
 class Port(Element):
-    def __init__(self, name, portInterfaceRef, comspec=None, autoCreateComspec = True, parent=None, adminData=None):
+    def __init__(self, name, portInterfaceRef, comspec=None, autoCreateComspec = True, options=None, parent=None, adminData=None):
         super().__init__(name, parent, adminData)
         self.comspec=[]
+        self.options=portOptions()
         if portInterfaceRef is not None and not isinstance(portInterfaceRef,str):
             raise ValueError('portInterfaceRef needs to be of type None or str')
         self.portInterfaceRef = portInterfaceRef
@@ -54,6 +66,22 @@ class Port(Element):
                     self.comspec.append(comspecObj)
             else:
                 raise NotImplementedError("not supported")
+
+        if options is not None:
+            if not isinstance(options, dict):
+                raise TypeError("optionsDict must be a of type None or dict")
+            for key, value in options.items():
+                if key == "takeAddress":
+                    self.options.takeAddress = bool(value)
+                elif key == "indirectAPI":
+                    self.options.indirectAPI = bool(value)
+                elif key == "transformerErrorHandling":
+                    if value is not None:
+                        self.options.transformerErrorHandling = bool(value)
+                    else:
+                        self.options.transformerErrorHandling = value
+                else:
+                    raise ValueError("Invalid option '{0}'".format(key))
 
     def _createComSpecFromDict(self, ws, portInterface, comspec):
         """
@@ -301,14 +329,14 @@ class Port(Element):
 
 class RequirePort(Port):
     def tag(self,version=None): return "R-PORT-PROTOTYPE"
-    def __init__(self,name , portInterfaceRef=None, comspec=None, autoCreateComSpec = True, parent=None):
+    def __init__(self,name , portInterfaceRef=None, comspec=None, autoCreateComSpec = True, optionsDict=None,parent=None):
         if isinstance(name, str):
             #normal constructor
-            super().__init__(name, portInterfaceRef, comspec, autoCreateComSpec, parent)
+            super().__init__(name, portInterfaceRef, comspec, autoCreateComSpec, optionsDict,parent)
         elif isinstance(name, (RequirePort, ProvidePort)):
             other=name #alias
             #copy constructor
-            super().__init__(other.name, other.portInterfaceRef, None, False, parent)
+            super().__init__(other.name, other.portInterfaceRef, None, False, other.options, parent)
             self.comspec=copy.deepcopy(other.comspec)
         else:
             raise NotImplementedError(type(name))
@@ -328,14 +356,14 @@ class RequirePort(Port):
 
 class ProvidePort(Port):
     def tag(self,version=None): return "P-PORT-PROTOTYPE"
-    def __init__(self, name, portInterfaceRef = None, comspec = None, autoCreateComSpec = True, parent = None):
+    def __init__(self, name, portInterfaceRef = None, comspec = None, autoCreateComSpec = True, optionsDict=None, parent = None):
         if isinstance(name, str):
         #normal constructor
-            super().__init__(name, portInterfaceRef, comspec, autoCreateComSpec, parent)
+            super().__init__(name, portInterfaceRef, comspec, autoCreateComSpec, optionsDict, parent)
         elif isinstance(name, (RequirePort, ProvidePort)):
             other=name #alias
             #copy constructor
-            super().__init__(other.name, other.portInterfaceRef, None, False, parent)
+            super().__init__(other.name, other.portInterfaceRef, None, False, other.options,parent)
             self.comspec=copy.deepcopy(other.comspec)
         else:
             raise NotImplementedError(type(name))

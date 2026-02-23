@@ -183,10 +183,14 @@ class ProvideModeGroupInstanceRef(ModeGroupInstanceRef):
             raise RuntimeError('Not supported in v%.1f'%version)
 
 class PortAPIOption():
-    def __init__(self,portRef,takeAddress=False,indirectAPI=False):
+    def __init__(self,portRef, takeAddress=False, indirectAPI=False, transformerErrorHandling=None):
         self.portRef = portRef
         self.takeAddress = bool(takeAddress)
         self.indirectAPI = bool(indirectAPI)
+        if transformerErrorHandling is not None:
+            self.transformerErrorHandling = bool(transformerErrorHandling)
+        else:
+            self.transformerErrorHandling = None
     def asdict(self):
         data={'type': self.__class__.__name__,'takeAddress':self.takeAddress, 'indirectAPI':self.indirectAPI, 'portRef':self.portRef}
         return data
@@ -653,9 +657,14 @@ class InternalBehaviorCommon(Element):
         self.portAPIOptions = []
         self._initSWC()
         ws = self.rootWS()
-        tmp = self.swc.providePorts+self.swc.requirePorts
+        tmp = self.swc.providePorts + self.swc.requirePorts
         for port in sorted(tmp,key=lambda x: x.name.lower()):
-            self.portAPIOptions.append(PortAPIOption(port.ref))
+            options = port.options
+            portAPIOptions = PortAPIOption(port.ref,
+                                           options.takeAddress,
+                                           options.indirectAPI,
+                                           options.transformerErrorHandling)
+            self.portAPIOptions.append(portAPIOptions)
 
     def _initSWC(self):
         """

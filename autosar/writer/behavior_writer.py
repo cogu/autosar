@@ -337,13 +337,14 @@ class XMLBehaviorWriter(ElementWriter):
 
     def _writePortAPIOption(self, ws,option):
         lines=['<%s>'%option.tag(self.version)]
-        lines.append(self.indent('<ENABLE-TAKE-ADDRESS>%s</ENABLE-TAKE-ADDRESS>'%('true' if option.takeAddress else 'false'),1))
-        if ws.profile.errorHandlingOpt:
-            lines.append(self.indent('<ERROR-HANDLING>NO-TRANSFORMER-ERROR-HANDLING</ERROR-HANDLING>',1))
-        lines.append(self.indent('<INDIRECT-API>%s</INDIRECT-API>'%('true' if option.indirectAPI else 'false'),1))
         port = ws.find(option.portRef)
         if port is None:
             raise ValueError('invalid reference: '+option.portRef)
+        lines.append(self.indent('<ENABLE-TAKE-ADDRESS>%s</ENABLE-TAKE-ADDRESS>'%('true' if option.takeAddress else 'false'),1))
+        if option.transformerErrorHandling is not None:
+            value = "TRANSFORMER-ERROR-HANDLING" if option.transformerErrorHandling else "NO-TRANSFORMER-ERROR-HANDLING"
+            lines.append(self.indent('<ERROR-HANDLING>{0}</ERROR-HANDLING>'.format(value),1))
+        lines.append(self.indent('<INDIRECT-API>%s</INDIRECT-API>'%('true' if option.indirectAPI else 'false'),1))
         lines.append(self.indent('<PORT-REF DEST="%s">%s</PORT-REF>'%(port.tag(self.version),port.ref),1))
         lines.append('</%s>'%option.tag(self.version))
         return lines

@@ -49,7 +49,6 @@ class WorkspaceProfile:
     def __init__(self):
         self.compuMethodSuffix = ''
         self.dataConstraintSuffix = '_DataConstr'
-        self.errorHandlingOpt = False
         self.swCalibrationAccessDefault = 'NOT-ACCESSIBLE'
         self.modeSwitchEnhancedModeDefault = False
         self.modeSwitchSupportAsyncDefault = False

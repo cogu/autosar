@@ -225,6 +225,102 @@ class ARXML4BehaviorTest(ARXMLTestClass):
         self.assertEqual(event2.startOnEventRef, ackRunnable1.ref)
         self.assertEqual(event2.eventSourceRef, switchRunnable1.modeSwitchPoints[0].ref)
 
+    def test_port_api_option_take_address(self):
+        ws = _init_ws()
+        swc1 = ws['ComponentTypes'].createApplicationSoftwareComponent('MyApplication')
+        swc1.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV', options={"takeAddress": True})
+        swc1.behavior.createRunnable('Run', portAccess=['VehicleSpeed'])
+        swc1.behavior.createTimerEvent('Run', 20)
+        file_name = 'ar4_port_api_option_take_address.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'behavior', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
+
+        ws2 = autosar.workspace(ws.version_str)
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        swc2 = ws2.find(swc1.ref)
+        self.assertIsInstance(swc2, autosar.component.ApplicationSoftwareComponent)
+        self.assertEqual(len(swc2.behavior.portAPIOptions), 1)
+        portAPIOptions = swc2.behavior.portAPIOptions[0]
+        self.assertTrue(portAPIOptions.takeAddress)
+
+    def test_port_api_option_indirect_api(self):
+        ws = _init_ws()
+        swc1 = ws['ComponentTypes'].createApplicationSoftwareComponent('MyApplication')
+        swc1.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV', options={"indirectAPI": True})
+        swc1.behavior.createRunnable('Run', portAccess=['VehicleSpeed'])
+        swc1.behavior.createTimerEvent('Run', 20)
+        file_name = 'ar4_port_api_option_indirect_api.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'behavior', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
+
+        ws2 = autosar.workspace(ws.version_str)
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        swc2 = ws2.find(swc1.ref)
+        self.assertIsInstance(swc2, autosar.component.ApplicationSoftwareComponent)
+        self.assertEqual(len(swc2.behavior.portAPIOptions), 1)
+        portAPIOptions = swc2.behavior.portAPIOptions[0]
+        self.assertTrue(portAPIOptions.indirectAPI)
+
+    def test_port_api_option_transformer_error_handling_none(self):
+        ws = _init_ws()
+        swc1 = ws['ComponentTypes'].createApplicationSoftwareComponent('MyApplication')
+        swc1.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV', options={"transformerErrorHandling": None})
+        swc1.behavior.createRunnable('Run', portAccess=['VehicleSpeed'])
+        swc1.behavior.createTimerEvent('Run', 20)
+        file_name = 'ar4_port_api_option_transformer_error_handling_none.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'behavior', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
+
+        ws2 = autosar.workspace(ws.version_str)
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        swc2 = ws2.find(swc1.ref)
+        self.assertIsInstance(swc2, autosar.component.ApplicationSoftwareComponent)
+        self.assertEqual(len(swc2.behavior.portAPIOptions), 1)
+        portAPIOptions = swc2.behavior.portAPIOptions[0]
+        self.assertIsNone(portAPIOptions.transformerErrorHandling)
+
+    def test_port_api_option_transformer_error_handling_false(self):
+        ws = _init_ws()
+        swc1 = ws['ComponentTypes'].createApplicationSoftwareComponent('MyApplication')
+        swc1.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV', options={"transformerErrorHandling": False})
+        swc1.behavior.createRunnable('Run', portAccess=['VehicleSpeed'])
+        swc1.behavior.createTimerEvent('Run', 20)
+        file_name = 'ar4_port_api_option_transformer_error_handling_false.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'behavior', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
+
+        ws2 = autosar.workspace(ws.version_str)
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        swc2 = ws2.find(swc1.ref)
+        self.assertIsInstance(swc2, autosar.component.ApplicationSoftwareComponent)
+        self.assertEqual(len(swc2.behavior.portAPIOptions), 1)
+        portAPIOptions = swc2.behavior.portAPIOptions[0]
+        self.assertIsNotNone(portAPIOptions.transformerErrorHandling)
+
+
+    def test_port_api_option_transformer_error_handling_true(self):
+        ws = _init_ws()
+        swc1 = ws['ComponentTypes'].createApplicationSoftwareComponent('MyApplication')
+        swc1.createRequirePort('VehicleSpeed', 'VehicleSpeed_I', initValueRef = 'VehicleSpeed_IV', options={"transformerErrorHandling": True})
+        swc1.behavior.createRunnable('Run', portAccess=['VehicleSpeed'])
+        swc1.behavior.createTimerEvent('Run', 20)
+        file_name = 'ar4_port_api_option_transformer_error_handling_true.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'behavior', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/ComponentTypes'])
+
+        ws2 = autosar.workspace(ws.version_str)
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        swc2 = ws2.find(swc1.ref)
+        self.assertIsInstance(swc2, autosar.component.ApplicationSoftwareComponent)
+        self.assertEqual(len(swc2.behavior.portAPIOptions), 1)
+        portAPIOptions = swc2.behavior.portAPIOptions[0]
+        self.assertIsNotNone(portAPIOptions.transformerErrorHandling)
+
 if __name__ == '__main__':
 
     unittest.main()

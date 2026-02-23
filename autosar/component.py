@@ -47,8 +47,9 @@ class ComponentType(Element):
         Parameters:
 
         - name: Name of the port
-        - portInterfaceRef: Reference to existing port interface
-        - comspec: This is an advanced way to create comspecs directly in the port.
+        - portInterfaceRef (str): Reference to existing port interface
+        - comspec (dict): This is an advanced way to create comspecs directly in the port.
+        - options (dict): Used for adding custom API options
 
         For SenderReceiver port interfaces which contains exactly one data element there is another way of creating ComSpecs.
         - comspec: Should be left as None.
@@ -71,6 +72,12 @@ class ComponentType(Element):
         - ramBlockInitValueRef (str): Used when you want an existing constant specification as your initValue.
         - romBlockInitValue (int, float, str): Used to set an init value literal.
         - romBlockInitValueRef (str): Used when you want an existing constant specification as your initValue.
+
+        For port API options you can give a named argument called 'options' containing key-value pairs for various options.
+        Supported option keys are:
+        - takeAddress (bool, None): Instructs the RTE that you need to take the address of the accessor function (Read/Write etc.)
+        - indirectAPI (bool, None): Instructs the RTE that you indend to use indirect port access using port handles.
+        - transformerErrorHandling (bool, None): Enables E2E transformer error handling for this port
         """
 
         comspec = kwargs.get('comspec', None)
@@ -89,11 +96,17 @@ class ComponentType(Element):
         portInterface = ws.find(portInterfaceRef, role='PortInterface')
         if portInterface is None:
             raise autosar.base.InvalidPortInterfaceRef(portInterfaceRef)
+        optionsDict = kwargs.get('options', None)
         if comspecList is None:
-            comspecDict = kwargs if len(kwargs) > 0 else None
-            port = autosar.port.ProvidePort(name, portInterface.ref, comspecDict, parent=self)
+            if len(kwargs) > 0:
+                comspecDict = kwargs
+                if 'options' in comspecDict:
+                    del comspecDict['options']
+            else:
+                comspecDict = None
+            port = autosar.port.ProvidePort(name, portInterface.ref, comspecDict, optionsDict=optionsDict,parent=self)
         else:
-            port = autosar.port.ProvidePort(name, portInterface.ref, comspecList, parent=self)
+            port = autosar.port.ProvidePort(name, portInterface.ref, comspecList, optionsDict=optionsDict,parent=self)
         assert(isinstance(port, autosar.port.Port))
         self.providePorts.append(port)
         return port
@@ -125,6 +138,8 @@ class ComponentType(Element):
         For NvDataInterface port interfaces which contains one data element there is another way of creating ComSpecs.
         - initValue (int, float, str): Used to set an init value literal.
         - initValueRef (str): Used when you want an existing constant specification as your initValue.
+
+        For information about port API options see createProvidePort above.
         """
         comspec = kwargs.get('comspec', None)
         if comspec is not None:
@@ -137,11 +152,17 @@ class ComponentType(Element):
         portInterface = ws.find(portInterfaceRef, role='PortInterface')
         if portInterface is None:
             raise autosar.base.InvalidPortInterfaceRef(portInterfaceRef)
+        optionsDict = kwargs.get('options', None)
         if comspecList is None:
-            comspecDict = kwargs if len(kwargs) > 0 else None
-            port = autosar.port.RequirePort(name, portInterface.ref, comspecDict, parent=self)
+            if len(kwargs) > 0:
+                comspecDict = kwargs
+                if 'options' in comspecDict:
+                    del comspecDict['options']
+            else:
+                comspecDict = None
+            port = autosar.port.RequirePort(name, portInterface.ref, comspecDict, optionsDict=optionsDict,parent=self)
         else:
-            port = autosar.port.RequirePort(name, portInterface.ref, comspecList, parent=self)
+            port = autosar.port.RequirePort(name, portInterface.ref, comspecList, optionsDict=optionsDict,parent=self)
         assert(isinstance(port, autosar.port.Port))
         self.requirePorts.append(port)
         return port
