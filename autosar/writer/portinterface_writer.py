@@ -81,9 +81,9 @@ class XMLPortInterfaceWriter(ElementWriter):
         lines.append('<CALPRM-INTERFACE>')
         lines.append(self.indent('<SHORT-NAME>%s</SHORT-NAME>'%portInterface.name,1))
         lines.append(self.indent('<IS-SERVICE>%s</IS-SERVICE>'%self.toBooleanStr(portInterface.isService),1))
-        if len(portInterface.elements)>0:
+        if len(portInterface.parameters)>0:
             lines.append(self.indent('<CALPRM-ELEMENTS>',1))
-            for elem in portInterface.elements:
+            for elem in portInterface.parameters:
                 lines.extend(self.indent(self.writeCalParamElementXML(elem),2))
             lines.append(self.indent('</CALPRM-ELEMENTS>',1))
         else:

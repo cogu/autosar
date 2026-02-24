@@ -1469,20 +1469,6 @@ class RoleBasedPortAssignment:
 
     def tag(self, version): return 'ROLE-BASED-PORT-ASSIGNMENT'
 
-class ParameterDataPrototype(Element):
-    """
-    Represents <PARAMETER-DATA-PROTOTYPE> (AUTOSAR 4)
-    """
-    def __init__(self, name, typeRef, swAddressMethodRef=None, swCalibrationAccess=None, initValue = None, initValueRef = None, parent=None, adminData=None):
-        super().__init__(name, parent, adminData)
-        self.typeRef = typeRef
-        self.swAddressMethodRef = swAddressMethodRef
-        self.swCalibrationAccess = swCalibrationAccess
-        self.initValue = initValue
-        self.initValueRef = initValueRef
-
-    def tag(self, version): return 'PARAMETER-DATA-PROTOTYPE'
-
 class ParameterInstanceRef:
     """
     Represents <AUTOSAR-PARAMETER-IREF> (AUTOSAR 4)
@@ -1726,7 +1712,7 @@ class NvBlockRamBlock(autosar.element.DataElement):
     def tag(self, version):
         return 'RAM-BLOCK'
 
-class NvBlockRomBlock(ParameterDataPrototype):
+class NvBlockRomBlock(autosar.element.ParameterDataPrototype):
     """
     Represents <ROM-BLOCK>
     """
@@ -1735,9 +1721,9 @@ class NvBlockRomBlock(ParameterDataPrototype):
         super().__init__(name=name, parent=parent, typeRef=typeRef, swAddressMethodRef=swAddressMethodRef, swCalibrationAccess=swCalibrationAccess, initValue=initValue, initValueRef=initValueRef, adminData=adminData)
 
     @classmethod
-    def cast(cls, romBlock: ParameterDataPrototype):
+    def cast(cls, romBlock: autosar.element.ParameterDataPrototype):
         """Cast an ParameterDataPrototype into a NvBlockRomBlock."""
-        assert isinstance(romBlock, ParameterDataPrototype)
+        assert isinstance(romBlock, autosar.element.ParameterDataPrototype)
         romBlock.__class__ = cls
         assert isinstance(romBlock, NvBlockRomBlock)
         return romBlock

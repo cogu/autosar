@@ -996,6 +996,30 @@ class Package(object):
             adminData
         )
 
+    def createImplementationTypeReference(self, name, implementationTypeRef, lowerLimit = None, upperLimit = None, valueTable = None, bitmask = None, offset = None, scaling = None, unit = None, forceFloat = False, dataConstraint = '', swCalibrationAccess = '', typeEmitter = None, lowerLimitType = None, upperLimitType = None, category = 'TYPE_REFERENCE', adminData = None):
+        """
+        AUTOSAR4
+
+        Alias for createImplementationDataTypeRef
+        """
+        return self.createImplementationDataTypeRef(name,
+                                                    implementationTypeRef,
+                                                    lowerLimit,
+                                                    upperLimit,
+                                                    valueTable,
+                                                    bitmask,
+                                                    offset,
+                                                    scaling,
+                                                    unit,
+                                                    forceFloat,
+                                                    dataConstraint,
+                                                    swCalibrationAccess,
+                                                    typeEmitter,
+                                                    lowerLimitType,
+                                                    upperLimitType,
+                                                    category,
+                                                    adminData)
+
     def createImplementationDataTypePtr(self, name, baseTypeRef, swImplPolicy=None, category = 'DATA_REFERENCE', targetCategory = 'VALUE', adminData = None):
         """
         Creates an implementation type that is a C-type pointer to another type

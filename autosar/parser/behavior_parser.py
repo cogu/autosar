@@ -806,7 +806,7 @@ class BehaviorParser(ElementParser):
                 typeRef = self.parseTextNode(xmlElem)
             else:
                 self.baseHandler(xmlElem)
-        obj = autosar.behavior.ParameterDataPrototype(self.name, typeRef=typeRef,
+        obj = autosar.element.ParameterDataPrototype(self.name, typeRef=typeRef,
                     swAddressMethodRef=swAddressMethodRef, swCalibrationAccess=swCalibrationAccess,
                     initValue=initValue, initValueRef=initValueRef, parent=parent, adminData=self.adminData)
         self.pop(obj)

@@ -112,12 +112,13 @@ class ParameterDataPrototype(Element):
     Represents <CALPRM-ELEMENT-PROTOTYPE> (AUTOSAR 3)
     """
 
-    def __init__(self, name, typeRef, swAddressMethodRef=None, swCalibrationAccess=None, initValue = None, parent=None, adminData=None):
+    def __init__(self, name, typeRef, swAddressMethodRef=None, swCalibrationAccess=None, initValue = None, initValueRef = None, parent=None, adminData=None):
         super().__init__(name, parent, adminData)
         self.typeRef = typeRef
         self.swAddressMethodRef = swAddressMethodRef
         self.swCalibrationAccess = swCalibrationAccess
         self.initValue = initValue
+        self.initValueRef = initValueRef
 
     def tag(self, version):
         return "PARAMETER-DATA-PROTOTYPE" if version >=4.0 else "CALPRM-ELEMENT-PROTOTYPE"
