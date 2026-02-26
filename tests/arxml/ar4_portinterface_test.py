@@ -93,6 +93,24 @@ class ARXML4PortInterfaceTest(ARXMLTestClass):
         self.assertIsInstance(pif2, autosar.portinterface.SenderReceiverInterface)
         self.assertEqual(len(pif2.dataElements), 3)
 
+    def test_create_queued_sender_receiver_interface_single_element(self):
+        ws = autosar.workspace(version="4.2.2")
+        _init_ws(ws)
+        package = ws.find('/PortInterfaces')
+        pif1 =  package.createSenderReceiverInterface('MyQueuedSignal_I', autosar.element.DataElement('MyQueuedSignal', 'OffOn_T', isQueued=True))
+        self.assertEqual(pif1.dataElements[0].typeRef, '/DataTypes/OffOn_T')
+        file_name = 'ar4_queued_sender_receiver_interface_single_element.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'portinterface', file_name)
+        self.save_and_check(ws, expected_file, generated_file)
+        ws2 = autosar.workspace(version="4.2.2")
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        pif2 = portInterface = ws2.find(pif1.ref)
+        self.assertIsInstance(pif2, autosar.portinterface.SenderReceiverInterface)
+        self.assertEqual(len(pif2.dataElements), 1)
+        self.assertTrue(pif2.dataElements[0].isQueued)
+
+
     def test_create_client_server_interface_single_operation_no_return_no_service(self):
         ws = autosar.workspace(version="4.2.2")
         _init_ws(ws)

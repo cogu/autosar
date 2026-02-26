@@ -306,9 +306,9 @@ class Computation:
                     (mask, symbol) = elem
                     (lowerLimit, upperLimit) = (mask, mask)
                 else:
-                    raise ValueError('invalid length: %d'%len(elem))
+                    raise ValueError("Invalid tuple length: {0:d}".format(elem))
             else:
-                raise ValueError('type not supported:%s'%str(type(elem)))
+                raise ValueError("Each element must be of type tuple[int,str]")
             label = symbol if autoLabel else None
             self.elements.append(CompuScaleElement(lowerLimit, upperLimit, lowerLimitType, upperLimitType, symbol = symbol, label = label, mask = mask))
 
