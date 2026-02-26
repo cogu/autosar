@@ -99,9 +99,9 @@ class ComponentType(Element):
         optionsDict = kwargs.get('options', None)
         if comspecList is None:
             if len(kwargs) > 0:
-                comspecDict = kwargs
-                if 'options' in comspecDict:
-                    del comspecDict['options']
+                comspecDict = {k:v for k,v in kwargs.items() if k!='options'}
+                if len(comspecDict) == 0:
+                    comspecDict = None
             else:
                 comspecDict = None
             port = autosar.port.ProvidePort(name, portInterface.ref, comspecDict, optionsDict=optionsDict,parent=self)
@@ -156,8 +156,9 @@ class ComponentType(Element):
         if comspecList is None:
             if len(kwargs) > 0:
                 comspecDict = kwargs
-                if 'options' in comspecDict:
-                    del comspecDict['options']
+                comspecDict = {k:v for k,v in kwargs.items() if k!='options'}
+                if len(comspecDict) == 0:
+                    comspecDict = None
             else:
                 comspecDict = None
             port = autosar.port.RequirePort(name, portInterface.ref, comspecDict, optionsDict=optionsDict,parent=self)
