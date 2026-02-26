@@ -19,7 +19,7 @@
                   <FIELDS>
                     <TEXT-VALUE-SPECIFICATION>
                       <SHORT-LABEL>AlarmEnabled</SHORT-LABEL>
-                      <VALUE>True</VALUE>
+                      <VALUE>TRUE</VALUE>
                     </TEXT-VALUE-SPECIFICATION>
                     <NUMERICAL-VALUE-SPECIFICATION>
                       <SHORT-LABEL>AlarmTime</SHORT-LABEL>

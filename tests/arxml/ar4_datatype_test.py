@@ -735,5 +735,112 @@ class ARXML4DataTypeTest(ARXMLTestClass):
         self.assertEqual(dt1.name, dt2.name)
         self.assertIsNone(dt2.size)
 
+class ComputationTest(ARXMLTestClass):
+
+    def test_get_text_from_value_table_built_from_string(self):
+        ws = autosar.workspace(version="4.2.2")
+        _create_packages(ws)
+        _create_base_types(ws)
+
+        package = ws['DataTypes']
+        dataType = package.createImplementationDataTypeRef('OffOn_T','/DataTypes/uint8', valueTable=['Value1',
+                                                                                                     'Value2',
+                                                                                                     'Value3',
+                                                                                                     'Value4'])
+        computMethod = ws.find(dataType.variantProps[0].compuMethodRef)
+        computation = computMethod.intToPhys
+        self.assertEqual(computation.getTextValueFromInteger(0), 'Value1')
+        self.assertEqual(computation.getTextValueFromInteger(1), 'Value2')
+        self.assertEqual(computation.getTextValueFromInteger(2), 'Value3')
+        self.assertEqual(computation.getTextValueFromInteger(3), 'Value4')
+        self.assertIsNone(computation.getTextValueFromInteger(4))
+
+    def test_get_text_from_value_table_built_from_2_tuple(self):
+        ws = autosar.workspace(version="4.2.2")
+        _create_packages(ws)
+        _create_base_types(ws)
+
+        package = ws['DataTypes']
+        dataType = package.createImplementationDataTypeRef('OffOn_T','/DataTypes/uint8', valueTable=[(1, 'Value1'),
+                                                                                                     (2, 'Value2'),
+                                                                                                     (4, 'Value3'),
+                                                                                                     (8, 'Value4')])
+        computMethod = ws.find(dataType.variantProps[0].compuMethodRef)
+        computation = computMethod.intToPhys
+        self.assertIsNone(computation.getTextValueFromInteger(0))
+        self.assertEqual(computation.getTextValueFromInteger(1), 'Value1')
+        self.assertEqual(computation.getTextValueFromInteger(2), 'Value2')
+        self.assertIsNone(computation.getTextValueFromInteger(3))
+        self.assertEqual(computation.getTextValueFromInteger(4), 'Value3')
+        self.assertEqual(computation.getTextValueFromInteger(8), 'Value4')
+
+    def test_get_text_from_value_table_built_from_3_tuple(self):
+        ws = autosar.workspace(version="4.2.2")
+        _create_packages(ws)
+        _create_base_types(ws)
+
+        package = ws['DataTypes']
+        dataType = package.createImplementationDataTypeRef('OffOn_T','/DataTypes/uint8', valueTable=[(0, 2, 'Value1'),
+                                                                                                     (3, 5, 'Value2'),
+                                                                                                     (6, 7, 'Value3'),
+                                                                                                     (8, 9, 'Value4')])
+        computMethod = ws.find(dataType.variantProps[0].compuMethodRef)
+        computation = computMethod.intToPhys
+        self.assertEqual(computation.getTextValueFromInteger(0), 'Value1')
+        self.assertEqual(computation.getTextValueFromInteger(1), 'Value1')
+        self.assertEqual(computation.getTextValueFromInteger(2), 'Value1')
+        self.assertEqual(computation.getTextValueFromInteger(3), 'Value2')
+        self.assertEqual(computation.getTextValueFromInteger(4), 'Value2')
+        self.assertEqual(computation.getTextValueFromInteger(5), 'Value2')
+        self.assertEqual(computation.getTextValueFromInteger(6), 'Value3')
+        self.assertEqual(computation.getTextValueFromInteger(7), 'Value3')
+        self.assertEqual(computation.getTextValueFromInteger(8), 'Value4')
+        self.assertEqual(computation.getTextValueFromInteger(9), 'Value4')
+        self.assertIsNone(computation.getTextValueFromInteger(10))
+
+    def test_verify_text_value_case_sensitive(self):
+        ws = autosar.workspace(version="4.2.2")
+        _create_packages(ws)
+        _create_base_types(ws)
+
+        package = ws['DataTypes']
+        dataType = package.createImplementationDataTypeRef('OffOn_T','/DataTypes/uint8', valueTable=['Value1',
+                                                                                                     'Value2',
+                                                                                                     'Value3',
+                                                                                                     'Value4'])
+        computMethod = ws.find(dataType.variantProps[0].compuMethodRef)
+        computation = computMethod.intToPhys
+        caseSensitive=True
+        self.assertTrue(computation.verifyTextValue('Value1', caseSensitive))
+        self.assertTrue(computation.verifyTextValue('Value2', caseSensitive))
+        self.assertTrue(computation.verifyTextValue('Value3', caseSensitive))
+        self.assertTrue(computation.verifyTextValue('Value4', caseSensitive))
+        self.assertFalse(computation.verifyTextValue('value1', caseSensitive))
+        self.assertFalse(computation.verifyTextValue('value2', caseSensitive))
+        self.assertFalse(computation.verifyTextValue('value3', caseSensitive))
+        self.assertFalse(computation.verifyTextValue('value4', caseSensitive))
+
+    def test_verify_text_value_case_insensitive(self):
+        ws = autosar.workspace(version="4.2.2")
+        _create_packages(ws)
+        _create_base_types(ws)
+
+        package = ws['DataTypes']
+        dataType = package.createImplementationDataTypeRef('OffOn_T','/DataTypes/uint8', valueTable=['Value1',
+                                                                                                     'Value2',
+                                                                                                     'Value3',
+                                                                                                     'Value4'])
+        computMethod = ws.find(dataType.variantProps[0].compuMethodRef)
+        computation = computMethod.intToPhys
+        caseInsensitive=False
+        self.assertTrue(computation.verifyTextValue('Value1', caseInsensitive))
+        self.assertTrue(computation.verifyTextValue('Value2', caseInsensitive))
+        self.assertTrue(computation.verifyTextValue('Value3', caseInsensitive))
+        self.assertTrue(computation.verifyTextValue('Value4', caseInsensitive))
+        self.assertTrue(computation.verifyTextValue('value1', caseInsensitive))
+        self.assertTrue(computation.verifyTextValue('value2', caseInsensitive))
+        self.assertTrue(computation.verifyTextValue('value3', caseInsensitive))
+        self.assertTrue(computation.verifyTextValue('value4', caseInsensitive))
+
 if __name__ == '__main__':
     unittest.main()

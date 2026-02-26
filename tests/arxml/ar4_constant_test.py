@@ -14,20 +14,34 @@ def _create_packages(ws):
     package.createSubPackage('DataConstrs', role='DataConstraint')
     package.createSubPackage('Units', role='Unit')
     package.createSubPackage('BaseTypes')
+    package.createSubPackage('ImplementationTypes')
     ws.createPackage('Constants', role='Constant')
 
 def _create_base_types(ws):
-    basetypes = ws.find('/DataTypes/BaseTypes')
-    basetypes.createSwBaseType('boolean', 1, 'BOOLEAN')
-    basetypes.createSwBaseType('uint8', 8, nativeDeclaration='uint8')
-    basetypes.createSwBaseType('uint16', 16, nativeDeclaration='uint16')
-    basetypes.createSwBaseType('uint32', 32, nativeDeclaration='uint32')
-    basetypes.createSwBaseType('float32', 32, encoding='IEEE754')
-    package = ws.find('DataTypes')
-    package.createImplementationDataType('boolean', valueTable=['FALSE','TRUE'], baseTypeRef='/DataTypes/BaseTypes/boolean', typeEmitter='Platform_Type')
-    package.createImplementationDataType('uint8', lowerLimit=0, upperLimit=255, baseTypeRef='/DataTypes/BaseTypes/uint8', typeEmitter='Platform_Type')
-    package.createImplementationDataType('uint16', lowerLimit=0, upperLimit=65535, baseTypeRef='/DataTypes/BaseTypes/uint16', typeEmitter='Platform_Type')
-    package.createImplementationDataType('uint32', lowerLimit=0, upperLimit=4294967295, baseTypeRef='/DataTypes/BaseTypes/uint32', typeEmitter='Platform_Type')
+    baseTypes = ws.find('/DataTypes/BaseTypes')
+    booleanBase = baseTypes.createSwBaseType('boolean', 1, 'BOOLEAN')
+    uint8Base = baseTypes.createSwBaseType('uint8', 8, nativeDeclaration='uint8')
+    uint16Base = baseTypes.createSwBaseType('uint16', 16, nativeDeclaration='uint16')
+    uint32Base = baseTypes.createSwBaseType('uint32', 32, nativeDeclaration='uint32')
+    baseTypes.createSwBaseType('float32', 32, encoding='IEEE754')
+    implTypes = ws.find('DataTypes/ImplementationTypes')
+    implTypes.createImplementationDataType('boolean', valueTable=['FALSE','TRUE'], baseTypeRef=booleanBase.ref, typeEmitter='Platform_Type')
+    implTypes.createImplementationDataType('uint8', lowerLimit=0, upperLimit=255, baseTypeRef=uint8Base.ref, typeEmitter='Platform_Type')
+    implTypes.createImplementationDataType('uint16', lowerLimit=0, upperLimit=65535, baseTypeRef=uint16Base.ref, typeEmitter='Platform_Type')
+    implTypes.createImplementationDataType('uint32', lowerLimit=0, upperLimit=4294967295, baseTypeRef=uint32Base.ref, typeEmitter='Platform_Type')
+
+def _create_enum_types(ws):
+    baseTypes = ws.find('/DataTypes/BaseTypes')
+    implTypes = ws.find('/DataTypes/ImplementationTypes')
+    uint8Impl = implTypes.find("uint8")
+    uint8Base = baseTypes.find("uint8")
+    implTypes.createImplementationDataTypeRef('OffOn_T', implementationTypeRef = uint8Impl.ref, valueTable = ['OffOn_Off',
+                                                                                                              'OffOn_On',
+                                                                                                              'OffOn_Error',
+                                                                                                              'OffOn_NotAvailable'])
+    implTypes.createImplementationDataType('SparseInactiveActive_T', baseTypeRef=uint8Base.ref, valueTable=[(0, 'SparseInactiveActive_InActive'),
+                                                                                                            (1, 'SparseInactiveActive_Active'),
+                                                                                                            (3, 'SparseInactiveActive_NotAvailable')])
 
 def _init_ws(ws):
     _create_packages(ws)
@@ -54,10 +68,11 @@ class ARXML4ConstantTest(ARXMLTestClass):
     def test_create_array_constant(self):
         ws = autosar.workspace(version="4.2.2")
         _init_ws(ws)
-        package = ws['DataTypes']
-        package.createImplementationArrayDataType('u8Array2_T', '/DataTypes/uint8', 2)
+        implTypes = ws['DataTypes/ImplementationTypes']
+        uint8Impl = implTypes.find("uint8")
+        arrayType=implTypes.createImplementationArrayDataType('u8Array2_T', uint8Impl.ref, 2)
         package = ws['Constants']
-        c1 = package.createConstant('u8Array2_IV', 'u8Array2_T', [0,0])
+        c1 = package.createConstant('u8Array2_IV', arrayType.ref, [0,0])
         self.assertIsInstance(c1, autosar.constant.Constant)
         file_name = 'ar4_array_constant.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
@@ -72,10 +87,11 @@ class ARXML4ConstantTest(ARXMLTestClass):
     def test_create_impl_string_constant(self):
         ws = autosar.workspace(version="4.2.2")
         _init_ws(ws)
-        package = ws['DataTypes']
-        package.createImplementationArrayDataType('UserName_T', '/DataTypes/uint8', 32)
+        implTypes = ws['DataTypes/ImplementationTypes']
+        uint8Impl = implTypes.find("uint8")
+        arrayType=implTypes.createImplementationArrayDataType('UserName_T', uint8Impl.ref, 32)
         package = ws['Constants']
-        c1 = package.createConstant('UserName_IV','UserName_T', '')
+        c1 = package.createConstant('UserName_IV', arrayType.ref, '')
         self.assertIsInstance(c1, autosar.constant.Constant)
         file_name = 'ar4_impl_string_constant.arxml'
         generated_file = os.path.join(self.output_dir, file_name)
@@ -91,12 +107,13 @@ class ARXML4ConstantTest(ARXMLTestClass):
     def test_create_record_constant1(self):
         ws = autosar.workspace(version="4.2.2")
         _init_ws(ws)
-        package = ws['DataTypes']
-        package.createImplementationDataTypeRef('U32Test_T', '/DataTypes/uint32')
-        package.createImplementationArrayDataType('Array4_T', '/DataTypes/U32Test_T', 4)
-        package.createImplementationRecordDataType('RecordType1_T', [('Elem1', '/DataTypes/Array4_T'), ('Elem2', '/DataTypes/U32Test_T')] )
+        implTypes = ws['DataTypes/ImplementationTypes']
+        uint32Impl = implTypes.find("uint32")
+        refType = implTypes.createImplementationDataTypeRef('U32Test_T', uint32Impl.ref)
+        arrayType = implTypes.createImplementationArrayDataType('Array4_T', refType.ref, 4)
+        recordType = implTypes.createImplementationRecordDataType('RecordType1_T', [('Elem1', arrayType.ref), ('Elem2', refType.ref)] )
         package = ws['Constants']
-        c1 = package.createConstant('Record1_IV','/DataTypes/RecordType1_T', {'Elem1': [2**32-1,2**32-1,0,0], 'Elem2': 2**32-1})
+        c1 = package.createConstant('Record1_IV', recordType.ref, {'Elem1': [2**32-1,2**32-1,0,0], 'Elem2': 2**32-1})
         self.assertIsInstance(c1, autosar.constant.Constant)
 
         file_name = 'ar4_record_constant1.arxml'
@@ -112,12 +129,14 @@ class ARXML4ConstantTest(ARXMLTestClass):
     def test_create_record_constant2(self):
         ws = autosar.workspace(version="4.2.2")
         _init_ws(ws)
-        package = ws['DataTypes']
-        package.createImplementationDataTypeRef('U32Type_T', '/DataTypes/uint32')
-        package.createImplementationArrayDataType('UserName_T', '/DataTypes/uint8', 32)
-        package.createImplementationRecordDataType('RecordType2_T', [('Elem1', '/DataTypes/U32Type_T'), ('Elem2', '/DataTypes/UserName_T')] )
+        implTypes = ws['DataTypes/ImplementationTypes']
+        uint8Impl = implTypes.find("uint8")
+        uint32Impl = implTypes.find("uint32")
+        refType = implTypes.createImplementationDataTypeRef('U32Type_T', uint32Impl.ref)
+        arrayType = implTypes.createImplementationArrayDataType('UserName_T', uint8Impl.ref, 32)
+        recordType = implTypes.createImplementationRecordDataType('RecordType2_T', [('Elem1', refType.ref), ('Elem2', arrayType.ref)] )
         package = ws['Constants']
-        c1 = package.createConstant('Record2_IV','/DataTypes/RecordType2_T', {'Elem1': 2**32-1, 'Elem2': 'Default'})
+        c1 = package.createConstant('Record2_IV', recordType.ref, {'Elem1': 2**32-1, 'Elem2': 'Default'})
         self.assertIsInstance(c1, autosar.constant.Constant)
 
         file_name = 'ar4_record_constant2.arxml'
@@ -134,12 +153,14 @@ class ARXML4ConstantTest(ARXMLTestClass):
         #same as test_create_record_constant2 but uses an empty string as initializer
         ws = autosar.workspace(version="4.2.2")
         _init_ws(ws)
-        package = ws['DataTypes']
-        package.createImplementationDataTypeRef('U32Type_T', '/DataTypes/uint32')
-        package.createImplementationArrayDataType('UserName_T', '/DataTypes/uint8', 32)
-        package.createImplementationRecordDataType('RecordType2_T', [('Elem1', '/DataTypes/U32Type_T'), ('Elem2', '/DataTypes/UserName_T')] )
+        implTypes = ws['DataTypes/ImplementationTypes']
+        uint8Impl = implTypes.find("uint8")
+        uint32Impl = implTypes.find("uint32")
+        refType = implTypes.createImplementationDataTypeRef('U32Type_T', uint32Impl.ref)
+        arrayType = implTypes.createImplementationArrayDataType('UserName_T', uint8Impl.ref, 32)
+        recordType = implTypes.createImplementationRecordDataType('RecordType2_T', [('Elem1', refType.ref), ('Elem2', arrayType.ref)] )
         package = ws['Constants']
-        c1 = package.createConstant('Record2_IV','/DataTypes/RecordType2_T', {'Elem1': 2**32-1, 'Elem2': ''})
+        c1 = package.createConstant('Record2_IV', recordType.ref, {'Elem1': 2**32-1, 'Elem2': ''})
         self.assertIsInstance(c1, autosar.constant.Constant)
 
         file_name = 'ar4_record_constant3.arxml'
@@ -152,17 +173,43 @@ class ARXML4ConstantTest(ARXMLTestClass):
         c2 = ws2.find(c1.ref)
         self.assertIsInstance(c2, autosar.constant.Constant)
 
+    def test_create_record_constant4(self):
+        """
+        Tests record constants containing enum values
+        """
+        ws = autosar.workspace(version="4.2.2")
+        _init_ws(ws)
+        _create_enum_types(ws)
+        implTypes = ws['DataTypes/ImplementationTypes']
+        OffOn_T = implTypes.find("OffOn_T")
+        SparseInactiveActive_T = implTypes.find("SparseInactiveActive_T")
+        RecordType_T = implTypes.createImplementationRecordDataType('RecordType_T', [('Elem1', OffOn_T.ref), ('Elem2', SparseInactiveActive_T.ref)] )
+        package = ws['Constants']
+        c1 = package.createConstant('Record_IV', RecordType_T.ref, {'Elem1': 0, 'Elem2': 3})
+        self.assertIsInstance(c1, autosar.constant.Constant)
+
+        file_name = 'ar4_record_constant4.arxml'
+        generated_file = os.path.join(self.output_dir, file_name)
+        expected_file = os.path.join( 'expected_gen', 'constant', file_name)
+        self.save_and_check(ws, expected_file, generated_file, ['/Constants'])
+
+        ws2 = autosar.workspace(ws.version_str)
+        ws2.loadXML(os.path.join(os.path.dirname(__file__), expected_file))
+        c2 = ws2.find(c1.ref)
+        self.assertIsInstance(c2, autosar.constant.Constant)
+
     def test_create_array_of_record_constant(self):
         ws = autosar.workspace(version="4.2.2")
         _init_ws(ws)
-        package = ws['DataTypes']
-        package.createImplementationRecordDataType('ServiceResult_T', [
-            ('ServiceId', '/DataTypes/uint8'),
-            ('RequestResult', '/DataTypes/uint8'),
+        implTypes = ws['DataTypes/ImplementationTypes']
+        uint8Impl = implTypes.find("uint8")
+        recordType = implTypes.createImplementationRecordDataType('ServiceResult_T', [
+            ('ServiceId', uint8Impl.ref),
+            ('RequestResult', uint8Impl.ref),
         ])
-        package.createImplementationArrayDataType('ServiceResultList_T', '/DataTypes/ServiceResult_T', 2)
+        arrayType = implTypes.createImplementationArrayDataType('ServiceResultList_T', recordType.ref, 2)
         package = ws['Constants']
-        c1 = package.createConstant('CDiagNv_NvMServiceRequestType','/DataTypes/ServiceResultList_T',
+        c1 = package.createConstant('CDiagNv_NvMServiceRequestType', arrayType.ref,
         [
             {'ServiceId': 0, 'RequestResult': 0},
             {'ServiceId': 1, 'RequestResult': 0}
@@ -177,14 +224,19 @@ class ARXML4ConstantTest(ARXMLTestClass):
     def test_create_record_in_record_constant(self):
         ws = autosar.workspace(version="4.2.2")
         _init_ws(ws)
-        package = ws['DataTypes']
-        package.createImplementationDataTypeRef('Active_T', '/DataTypes/boolean')
-        package.createImplementationDataTypeRef('AlarmTime_T', '/DataTypes/uint32')
-        package.createImplementationDataTypeRef('AlarmId_T', '/DataTypes/uint32')
-        package.createImplementationRecordDataType('RecordType1_T', [('AlarmEnabled', '/DataTypes/Active_T'), ('AlarmTime', '/DataTypes/AlarmTime_T')])
-        package.createImplementationRecordDataType('RecordType2_T', [('AlarmId', '/DataTypes/AlarmId_T'), ('AlarmProps', '/DataTypes/RecordType1_T')])
+        implTypes = ws['DataTypes/ImplementationTypes']
+        booleanImpl = implTypes.find("boolean")
+        uint32Impl = implTypes.find("uint32")
+        Active_T = implTypes.createImplementationDataTypeRef('Active_T', booleanImpl.ref)
+        AlarmTime_T = implTypes.createImplementationDataTypeRef('AlarmTime_T', uint32Impl.ref)
+        AlarmId_T = implTypes.createImplementationDataTypeRef('AlarmId_T', uint32Impl.ref)
+        RecordType1_T = implTypes.createImplementationRecordDataType('RecordType1_T', [('AlarmEnabled', Active_T.ref),
+                                                                                       ('AlarmTime', AlarmTime_T.ref)])
+        RecordType2_T = implTypes.createImplementationRecordDataType('RecordType2_T', [('AlarmId', AlarmId_T.ref),
+                                                                                       ('AlarmProps', RecordType1_T.ref)])
         package = ws['Constants']
-        c1 = package.createConstant('RecordInRecord_IV','/DataTypes/RecordType2_T', {'AlarmId': 1, 'AlarmProps': {"AlarmEnabled": True, "AlarmTime": 10000}})
+        c1 = package.createConstant('RecordInRecord_IV', RecordType2_T.ref, {'AlarmId': 1,
+                                                                             'AlarmProps': {"AlarmEnabled": True, "AlarmTime": 10000}})
         self.assertIsInstance(c1, autosar.constant.Constant)
 
         file_name = 'ar4_record_in_record_constant.arxml'
@@ -200,12 +252,13 @@ class ARXML4ConstantTest(ARXMLTestClass):
     def test_array_in_array_constant(self):
         ws = autosar.workspace(version="4.2.2")
         _init_ws(ws)
-        package = ws['DataTypes']
-        package.createImplementationDataTypeRef('Number_T', '/DataTypes/uint8')
-        package.createImplementationArrayDataType('ArrayType1_T', '/DataTypes/Number_T', 4)
-        package.createImplementationArrayDataType('ArrayType2_T', '/DataTypes/ArrayType1_T', 2)
+        implTypes = ws['DataTypes/ImplementationTypes']
+        uint8Impl = implTypes.find("uint8")
+        Number_T = implTypes.createImplementationDataTypeRef('Number_T', uint8Impl.ref)
+        ArrayType1_T = implTypes.createImplementationArrayDataType('ArrayType1_T', Number_T.ref, 4)
+        ArrayType2_T = implTypes.createImplementationArrayDataType('ArrayType2_T', ArrayType1_T.ref, 2)
         package = ws['Constants']
-        c1 = package.createConstant('ArrayInArray_IV', '/DataTypes/ArrayType2_T', [[1, 2, 3, 4], [5, 6, 7, 8]])
+        c1 = package.createConstant('ArrayInArray_IV', ArrayType2_T.ref, [[1, 2, 3, 4], [5, 6, 7, 8]])
         self.assertIsInstance(c1, autosar.constant.Constant)
 
         file_name = 'ar4_array_of_array_constant.arxml'
@@ -330,6 +383,8 @@ class ARXML4ConstantTest(ARXMLTestClass):
         ws3.loadXML(os.path.join(os.path.dirname(__file__), explicit_array_size_file_path))
         c3 = ws3.find(c1.ref)
         self.assertIsInstance(c3, autosar.constant.Constant)
+
+
 
 if __name__ == '__main__':
     unittest.main()

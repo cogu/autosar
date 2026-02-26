@@ -37,8 +37,22 @@ class ValueBuilder:
                     if compuMethod is None:
                         raise ValueError('{0.name}: Invalid CompuMethod reference: {1.compuMethodRef}'.format(dataType, variantProps))
                     if compuMethod.category == 'TEXTTABLE':
-                        #TODO: check textValue value here
-                        value = autosar.constant.TextValue(label, str(rawValue))
+                        if compuMethod.intToPhys is not None:
+                            computation = compuMethod.intToPhys
+                        elif compuMethod.physToInt is not None:
+                            computation = compuMethod.physToInt
+                        else:
+                            raise ValueError("CompuMethod {0.name} doesn't have any valid computations")
+                        if isinstance(rawValue, int):
+                            textValue = computation.getTextValueFromInteger(rawValue)
+                            if textValue is None:
+                                raise ValueError("Could not find any range in CompuMethod {0.name} matching value {1}".format(compuMethod, rawValue))
+                        elif isinstance(rawValue, str):
+                            if not computation.verifyTextValue(rawValue):
+                                raise ValueError("'{0}' is not a valid value of CompuMethod {1.name}".format(rawValue, compuMethod))
+                            textValue = rawValue
+
+                        value = autosar.constant.TextValue(label, str(textValue))
                     else:
                         #TODO: check rawValue here
                         value = autosar.constant.NumericalValue(label, rawValue)

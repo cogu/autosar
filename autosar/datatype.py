@@ -312,6 +312,46 @@ class Computation:
             label = symbol if autoLabel else None
             self.elements.append(CompuScaleElement(lowerLimit, upperLimit, lowerLimitType, upperLimitType, symbol = symbol, label = label, mask = mask))
 
+    def getTextValueFromInteger(self, value):
+        """
+        When the computation is a value-table (parent CompuMethod category is 'TEXTTABLE').
+        This function will return the text value that best matches the integer value
+
+        value (int): Input value
+        returns: str if value is found or None if no value is found
+        """
+        for element in self.elements:
+            assert element.lowerLimitType == 'CLOSED'
+            assert element.upperLimitType == 'CLOSED'
+            if (value >= element.lowerLimit) and (value <= element.upperLimit):
+                if element.textValue is None:
+                    raise ValueError("A text value has not been set for this CompuScaleElement. value={:d}".format(value))
+                return element.textValue
+        return None
+
+    def verifyTextValue(self, textValue, caseSensitive=False):
+        """
+        Verifies that the given textValue matches one of the existing text values
+        in this Computation.
+
+        textValue (str): The value to check
+        caseSensitive (bool): The value must also match the exact case (default false)
+        returns: bool
+        """
+        textValueLower = textValue.lower()
+        for element in self.elements:
+            assert element.lowerLimitType == 'CLOSED'
+            assert element.upperLimitType == 'CLOSED'
+            if isinstance(element.textValue, str):
+                if caseSensitive:
+                    if element.textValue == textValue:
+                        return True
+                else:
+                    if element.textValue.lower() == textValueLower:
+                        return True
+        return False
+
+
 class CompuMethod(Element):
     """
     CompuMethod class
