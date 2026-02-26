@@ -23,7 +23,7 @@ import xml.etree.ElementTree as ElementTree
 def workspace(version=3.0, patch = 2, schema=None, attributes=None, useDefaultWriters=True):
    if schema is None and ( (version == 3.0 and patch == 2) or (version == "3.0.2") ):
       schema = 'autosar_302_ext.xsd'
-   return autosar.Workspace(version, patch, schema, attributes, useDefaultWriters)
+   return autosar.Workspace(version, patch, schema, None, attributes, useDefaultWriters)
 
 
 
