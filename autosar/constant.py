@@ -201,7 +201,7 @@ class ConstantReference(ValueAR4):
 class RecordValueAR4(ValueAR4):
     def tag(self,version=None): return "RECORD-VALUE-SPECIFICATION"
 
-    def __init__(self, label, typeRef=None, elements=None, category = None, parent = None, adminData = None):
+    def __init__(self, label=None, typeRef=None, elements=None, category = None, parent = None, adminData = None):
         super().__init__(label, parent, adminData, category)
         self.typeRef=typeRef
         if elements is None:
