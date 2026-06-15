@@ -5595,7 +5595,7 @@ class AtomicSoftwareComponentType(SwComponentType):
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
         self._internal_behavior: SwcInternalBehavior | None = None
-        self.symbol_props = None  # AR:SYMBOL-PROPS
+        self.symbol_props: SymbolProps | None = None  # AR:SYMBOL-PROPS
         self._assign_optional_strict("_internal_behavior", internal_behavior, SwcInternalBehavior)
         self._assign_optional_strict("symbol_props", symbol_props, SymbolProps)
 
@@ -5647,6 +5647,120 @@ class ApplicationSoftwareComponentType(AtomicSoftwareComponentType):
         if ref_str is None:
             return None
         return SwComponentTypeRef(ref_str, ar_enum.IdentifiableSubTypes.APPLICATION_SW_COMPONENT_TYPE)
+
+
+class ComplexDeviceDriverSwComponentType(AtomicSoftwareComponentType):
+    """
+    Complex type AR:COMPLEX-DEVICE-DRIVER-SW-COMPONENT-TYPE
+    Tag variants: 'COMPLEX-DEVICE-DRIVER-SW-COMPONENT-TYPE'
+
+    Same constructor as parent class
+    """
+
+    def ref(self) -> SwComponentTypeRef | None:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return SwComponentTypeRef(ref_str, ar_enum.IdentifiableSubTypes.COMPLEX_DEVICE_DRIVER_SW_COMPONENT_TYPE)
+
+
+class EcuAbstractionSwComponentType(AtomicSoftwareComponentType):
+    """
+    Complex type AR:ECU-ABSTRACTION-SW-COMPONENT-TYPE
+    Tag variants: 'ECU-ABSTRACTION-SW-COMPONENT-TYPE'
+
+    Same constructor as parent class
+    """
+
+    def ref(self) -> SwComponentTypeRef | None:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return SwComponentTypeRef(ref_str, ar_enum.IdentifiableSubTypes.ECU_ABSTRACTION_SW_COMPONENT_TYPE)
+
+
+class NvBlockSwComponentType(AtomicSoftwareComponentType):
+    """
+    Complex type AR:NV-BLOCK-SW-COMPONENT-TYPE
+    Tag variants: 'NV-BLOCK-SW-COMPONENT-TYPE'
+
+    Same constructor as parent class
+    """
+
+    def ref(self) -> SwComponentTypeRef | None:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return SwComponentTypeRef(ref_str, ar_enum.IdentifiableSubTypes.NV_BLOCK_SW_COMPONENT_TYPE)
+
+
+class SensorActuatorSwComponentType(AtomicSoftwareComponentType):
+    """
+    Complex type AR:SENSOR-ACTUATOR-SW-COMPONENT-TYPE
+    Tag variants: 'SENSOR-ACTUATOR-SW-COMPONENT-TYPE'
+
+    Same constructor as parent class
+    """
+
+    def ref(self) -> SwComponentTypeRef | None:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return SwComponentTypeRef(ref_str, ar_enum.IdentifiableSubTypes.SENSOR_ACTUATOR_SW_COMPONENT_TYPE)
+
+
+class ServiceSwComponentType(AtomicSoftwareComponentType):
+    """
+    Complex type AR:SERVICE-SW-COMPONENT-TYPE
+    Tag variants: 'SERVICE-SW-COMPONENT-TYPE'
+
+    Same constructor as parent class
+    """
+
+    def ref(self) -> SwComponentTypeRef | None:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return SwComponentTypeRef(ref_str, ar_enum.IdentifiableSubTypes.SERVICE_SW_COMPONENT_TYPE)
+
+
+class ServiceProxySwComponentType(AtomicSoftwareComponentType):
+    """
+    Complex type AR:SERVICE-PROXY-SW-COMPONENT-TYPE
+    Tag variants: 'SERVICE-PROXY-SW-COMPONENT-TYPE'
+
+    Same constructor as parent class
+    """
+
+    def ref(self) -> SwComponentTypeRef | None:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return SwComponentTypeRef(ref_str, ar_enum.IdentifiableSubTypes.SERVICE_PROXY_SW_COMPONENT_TYPE)
 
 
 class SwComponentPrototype(Identifiable):

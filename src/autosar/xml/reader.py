@@ -170,6 +170,12 @@ class Reader:
 
             # Software component elements
             'APPLICATION-SW-COMPONENT-TYPE': self._read_application_sw_component_type,
+            'COMPLEX-DEVICE-DRIVER-SW-COMPONENT-TYPE': self._read_complex_device_driver_sw_component_type,
+            'NV-BLOCK-SW-COMPONENT-TYPE': self._read_nv_block_sw_component_type,
+            'ECU-ABSTRACTION-SW-COMPONENT-TYPE': self._read_ecu_abstraction_sw_component_type,
+            'SENSOR-ACTUATOR-SW-COMPONENT-TYPE': self._read_sensor_actuator_sw_component_type,
+            'SERVICE-SW-COMPONENT-TYPE': self._read_service_sw_component_type,
+            'SERVICE-PROXY-SW-COMPONENT-TYPE': self._read_service_proxy_sw_component_type,
             'COMPOSITION-SW-COMPONENT-TYPE': self._read_composition_sw_component_type,
             'SWC-IMPLEMENTATION': self._read_swc_implementation,
 
@@ -4430,6 +4436,108 @@ class Reader:
         self._read_atomic_sw_component_type(child_elements, data)
         self._report_unprocessed_elements(child_elements)
         return ar_element.ApplicationSoftwareComponentType(**data)
+
+    def _read_complex_device_driver_sw_component_type(self,
+                                                      xml_element: ElementTree.Element
+                                                      ) -> ar_element.ComplexDeviceDriverSwComponentType:
+        """
+        Reads complex type AR:COMPLEX-DEVICE-DRIVER-SW-COMPONENT-TYPE
+        Tag variants: 'COMPLEX-DEVICE-DRIVER-SW-COMPONENT-TYPE'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_sw_component_type(child_elements, data)
+        self._read_atomic_sw_component_type(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ComplexDeviceDriverSwComponentType(**data)
+
+    def _read_nv_block_sw_component_type(self,
+                                         xml_element: ElementTree.Element
+                                         ) -> ar_element.NvBlockSwComponentType:
+        """
+        Reads complex type AR:NV-BLOCK-SW-COMPONENT-TYPE
+        Tag variants: 'NV-BLOCK-SW-COMPONENT-TYPE'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_sw_component_type(child_elements, data)
+        self._read_atomic_sw_component_type(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.NvBlockSwComponentType(**data)
+
+    def _read_ecu_abstraction_sw_component_type(self,
+                                                xml_element: ElementTree.Element
+                                                ) -> ar_element.EcuAbstractionSwComponentType:
+        """
+        Reads complex type AR:ECU-ABSTRACTION-SW-COMPONENT-TYPE
+        Tag variants: 'ECU-ABSTRACTION-SW-COMPONENT-TYPE'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_sw_component_type(child_elements, data)
+        self._read_atomic_sw_component_type(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.EcuAbstractionSwComponentType(**data)
+
+    def _read_sensor_actuator_sw_component_type(self,
+                                                xml_element: ElementTree.Element
+                                                ) -> ar_element.SensorActuatorSwComponentType:
+        """
+        Reads complex type AR:SENSOR-ACTUATOR-SW-COMPONENT-TYPE
+        Tag variants: 'SENSOR-ACTUATOR-SW-COMPONENT-TYPE'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_sw_component_type(child_elements, data)
+        self._read_atomic_sw_component_type(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.SensorActuatorSwComponentType(**data)
+
+    def _read_service_sw_component_type(self,
+                                        xml_element: ElementTree.Element
+                                        ) -> ar_element.ServiceSwComponentType:
+        """
+        Reads complex type AR:SERVICE-SW-COMPONENT-TYPE
+        Tag variants: 'SERVICE-SW-COMPONENT-TYPE'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_sw_component_type(child_elements, data)
+        self._read_atomic_sw_component_type(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ServiceSwComponentType(**data)
+
+    def _read_service_proxy_sw_component_type(self,
+                                              xml_element: ElementTree.Element
+                                              ) -> ar_element.ServiceProxySwComponentType:
+        """
+        Reads complex type AR:SERVICE-PROXY-SW-COMPONENT-TYPE
+        Tag variants: 'SERVICE-PROXY-SW-COMPONENT-TYPE'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_sw_component_type(child_elements, data)
+        self._read_atomic_sw_component_type(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ServiceProxySwComponentType(**data)
 
     def _read_sw_component_prototype(self, xml_element: ElementTree.Element) -> ar_element.SwComponentPrototype:
         """
