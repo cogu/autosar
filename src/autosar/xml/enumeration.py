@@ -245,55 +245,61 @@ class IdentifiableSubTypes(Enum):
     BSW_MODULE_ENTRY = 23
     CLIENT_SERVER_INTERFACE = 24
     CLIENT_SERVER_OPERATION = 25
-    COMPOSITION_SW_COMPONENT_TYPE = 26
-    COMPU_METHOD = 27
-    CONSTANT_SPECIFICATION = 28
-    DATA_CONSTR = 29
-    DATA_PROTOTYPE = 30
-    DATA_RECEIVE_ERROR_EVENT = 31
-    DATA_RECEIVED_EVENT = 32
-    DATA_SEND_COMPLETED_EVENT = 33
-    DATA_TYPE_MAPPING_SET = 34
-    DATA_WRITE_COMPLETED_EVENT = 35
-    E2E_PROFILE_COMPATIBILITY_PROPS = 36
-    EXCLUSIVE_AREA = 37
-    EXCLUSIVE_AREA_NESTING_ORDER = 38
-    EXTERNAL_TRIGGER_OCCURRED_EVENT = 39
-    IMPLEMENTATION_DATA_TYPE = 40
-    IMPLEMENTATION_DATA_TYPE_ELEMENT = 41
-    INIT_EVENT = 42
-    INTERNAL_TRIGGER_OCCURRED_EVENT = 43
-    INTERNAL_TRIGGERING_POINT = 44
-    MODE_DECLARATION = 45
-    MODE_DECLARATION_GROUP = 46
-    MODE_DECLARATION_GROUP_PROTOTYPE = 47
-    MODE_SWITCH_INTERFACE = 48
-    MODE_SWITCH_POINT = 49
-    MODE_SWITCHED_ACK_EVENT = 50
-    NV_DATA_INTERFACE = 51
-    OPERATION_INVOKED_EVENT = 52
-    P_PORT_PROTOTYPE = 53
-    PARAMETER_DATA_PROTOTYPE = 54
-    PARAMETER_INTERFACE = 55
-    PHYSICAL_DIMENSION = 56
-    PORT_PROTOTYPE = 57
-    PR_PORT_PROTOTYPE = 58
-    R_PORT_PROTOTYPE = 59
-    RUNNABLE_ENTITY = 60
-    SENDER_RECEIVER_INTERFACE = 61
-    SW_ADDR_METHOD = 62
-    SW_BASE_TYPE = 63
-    SW_COMPONENT_PROTOTYPE = 64
-    SWC_IMPLEMENTATION = 65
-    SWC_INTERNAL_BEHAVIOR = 66
-    SWC_MODE_MANAGER_ERROR_EVENT = 67
-    SWC_MODE_SWITCH_EVENT = 68
-    TIMING_EVENT = 69
-    TRANSFORMER_HARD_ERROR_EVENT = 70
-    TRIGGER = 71
-    UNIT = 72
-    VARIABLE_ACCESS = 73
-    VARIABLE_DATA_PROTOTYPE = 74
+    COMPLEX_DEVICE_DRIVER_SW_COMPONENT_TYPE = 26
+    COMPOSITION_SW_COMPONENT_TYPE = 27
+    COMPU_METHOD = 28
+    CONSTANT_SPECIFICATION = 29
+    DATA_CONSTR = 30
+    DATA_PROTOTYPE = 31
+    DATA_RECEIVE_ERROR_EVENT = 32
+    DATA_RECEIVED_EVENT = 33
+    DATA_SEND_COMPLETED_EVENT = 34
+    DATA_TYPE_MAPPING_SET = 35
+    DATA_WRITE_COMPLETED_EVENT = 36
+    ECU_ABSTRACTION_SW_COMPONENT_TYPE = 37
+    E2E_PROFILE_COMPATIBILITY_PROPS = 38
+    EXCLUSIVE_AREA = 39
+    EXCLUSIVE_AREA_NESTING_ORDER = 40
+    EXTERNAL_TRIGGER_OCCURRED_EVENT = 41
+    IMPLEMENTATION_DATA_TYPE = 42
+    IMPLEMENTATION_DATA_TYPE_ELEMENT = 43
+    INIT_EVENT = 44
+    INTERNAL_TRIGGER_OCCURRED_EVENT = 45
+    INTERNAL_TRIGGERING_POINT = 46
+    MODE_DECLARATION = 47
+    MODE_DECLARATION_GROUP = 48
+    MODE_DECLARATION_GROUP_PROTOTYPE = 49
+    MODE_SWITCH_INTERFACE = 50
+    MODE_SWITCH_POINT = 51
+    MODE_SWITCHED_ACK_EVENT = 52
+    NV_BLOCK_SW_COMPONENT_TYPE = 53
+    NV_DATA_INTERFACE = 54
+    OPERATION_INVOKED_EVENT = 55
+    P_PORT_PROTOTYPE = 56
+    PARAMETER_DATA_PROTOTYPE = 57
+    PARAMETER_INTERFACE = 58
+    PHYSICAL_DIMENSION = 59
+    PORT_PROTOTYPE = 60
+    PR_PORT_PROTOTYPE = 61
+    R_PORT_PROTOTYPE = 62
+    RUNNABLE_ENTITY = 63
+    SENDER_RECEIVER_INTERFACE = 64
+    SENSOR_ACTUATOR_SW_COMPONENT_TYPE = 65
+    SERVICE_PROXY_SW_COMPONENT_TYPE = 66
+    SERVICE_SW_COMPONENT_TYPE = 67
+    SW_ADDR_METHOD = 68
+    SW_BASE_TYPE = 69
+    SW_COMPONENT_PROTOTYPE = 70
+    SWC_IMPLEMENTATION = 71
+    SWC_INTERNAL_BEHAVIOR = 72
+    SWC_MODE_MANAGER_ERROR_EVENT = 73
+    SWC_MODE_SWITCH_EVENT = 74
+    TIMING_EVENT = 75
+    TRANSFORMER_HARD_ERROR_EVENT = 76
+    TRIGGER = 77
+    UNIT = 78
+    VARIABLE_ACCESS = 79
+    VARIABLE_DATA_PROTOTYPE = 80
 
 
 class IntervalType(Enum):
@@ -846,6 +852,7 @@ xml_to_enum_map: dict[str, dict] = {
         "BSW-MODULE-ENTRY": IdentifiableSubTypes.BSW_MODULE_ENTRY,
         "CLIENT-SERVER-INTERFACE": IdentifiableSubTypes.CLIENT_SERVER_INTERFACE,
         "CLIENT-SERVER-OPERATION": IdentifiableSubTypes.CLIENT_SERVER_OPERATION,
+        "COMPLEX-DEVICE-DRIVER-SW-COMPONENT-TYPE": IdentifiableSubTypes.COMPLEX_DEVICE_DRIVER_SW_COMPONENT_TYPE,
         "COMPOSITION-SW-COMPONENT-TYPE": IdentifiableSubTypes.COMPOSITION_SW_COMPONENT_TYPE,
         "COMPU-METHOD": IdentifiableSubTypes.COMPU_METHOD,
         "CONSTANT-SPECIFICATION": IdentifiableSubTypes.CONSTANT_SPECIFICATION,
@@ -856,6 +863,7 @@ xml_to_enum_map: dict[str, dict] = {
         "DATA-SEND-COMPLETED-EVENT": IdentifiableSubTypes.DATA_SEND_COMPLETED_EVENT,
         "DATA-TYPE-MAPPING-SET": IdentifiableSubTypes.DATA_TYPE_MAPPING_SET,
         "DATA-WRITE-COMPLETED-EVENT": IdentifiableSubTypes.DATA_WRITE_COMPLETED_EVENT,
+        "ECU-ABSTRACTION-SW-COMPONENT-TYPE": IdentifiableSubTypes.ECU_ABSTRACTION_SW_COMPONENT_TYPE,
         "E-2-E-PROFILE-COMPATIBILITY-PROPS": IdentifiableSubTypes.E2E_PROFILE_COMPATIBILITY_PROPS,
         "EXCLUSIVE-AREA": IdentifiableSubTypes.EXCLUSIVE_AREA,
         "EXCLUSIVE-AREA-NESTING-ORDER": IdentifiableSubTypes.EXCLUSIVE_AREA_NESTING_ORDER,
@@ -871,6 +879,7 @@ xml_to_enum_map: dict[str, dict] = {
         "MODE-SWITCH-INTERFACE": IdentifiableSubTypes.MODE_SWITCH_INTERFACE,
         "MODE-SWITCH-POINT": IdentifiableSubTypes.MODE_SWITCH_POINT,
         "MODE-SWITCHED-ACK-EVENT": IdentifiableSubTypes.MODE_SWITCHED_ACK_EVENT,
+        "NV-BLOCK-SW-COMPONENT-TYPE": IdentifiableSubTypes.NV_BLOCK_SW_COMPONENT_TYPE,
         "NV-DATA-INTERFACE": IdentifiableSubTypes.NV_DATA_INTERFACE,
         "OPERATION-INVOKED-EVENT": IdentifiableSubTypes.OPERATION_INVOKED_EVENT,
         "P-PORT-PROTOTYPE": IdentifiableSubTypes.P_PORT_PROTOTYPE,
@@ -882,6 +891,9 @@ xml_to_enum_map: dict[str, dict] = {
         "R-PORT-PROTOTYPE": IdentifiableSubTypes.R_PORT_PROTOTYPE,
         "RUNNABLE-ENTITY": IdentifiableSubTypes.RUNNABLE_ENTITY,
         "SENDER-RECEIVER-INTERFACE": IdentifiableSubTypes.SENDER_RECEIVER_INTERFACE,
+        "SENSOR-ACTUATOR-SW-COMPONENT-TYPE": IdentifiableSubTypes.SENSOR_ACTUATOR_SW_COMPONENT_TYPE,
+        "SERVICE-PROXY-SW-COMPONENT-TYPE": IdentifiableSubTypes.SERVICE_PROXY_SW_COMPONENT_TYPE,
+        "SERVICE-SW-COMPONENT-TYPE": IdentifiableSubTypes.SERVICE_SW_COMPONENT_TYPE,
         "SW-ADDR-METHOD": IdentifiableSubTypes.SW_ADDR_METHOD,
         "SW-BASE-TYPE": IdentifiableSubTypes.SW_BASE_TYPE,
         "SW-COMPONENT-PROTOTYPE": IdentifiableSubTypes.SW_COMPONENT_PROTOTYPE,
@@ -1254,55 +1266,61 @@ enum_to_xml_map: dict[str, list] = {
         "BSW-MODULE-ENTRY",                              # 23
         "CLIENT-SERVER-INTERFACE",                       # 24
         "CLIENT-SERVER-OPERATION",                       # 25
-        "COMPOSITION-SW-COMPONENT-TYPE",                 # 26
-        "COMPU-METHOD",                                  # 27
-        "CONSTANT-SPECIFICATION",                        # 28
-        "DATA-CONSTR",                                   # 29
-        "DATA-PROTOTYPE",                                # 30
-        "DATA-RECEIVE-ERROR-EVENT",                      # 31
-        "DATA-RECEIVED-EVENT",                           # 32
-        "DATA-SEND-COMPLETED-EVENT",                     # 33
-        "DATA-TYPE-MAPPING-SET",                         # 34
-        "DATA-WRITE-COMPLETED-EVENT",                    # 35
-        "E-2-E-PROFILE-COMPATIBILITY-PROPS",             # 36
-        "EXCLUSIVE-AREA",                                # 37
-        "EXCLUSIVE-AREA-NESTING-ORDER",                  # 38
-        "EXTERNAL-TRIGGER-OCCURRED-EVENT",               # 39
-        "IMPLEMENTATION-DATA-TYPE",                      # 40
-        "IMPLEMENTATION-DATA-TYPE-ELEMENT",              # 41
-        "INIT-EVENT",                                    # 42
-        "INTERNAL-TRIGGER-OCCURRED-EVENT",               # 43
-        "INTERNAL-TRIGGERING-POINT",                     # 44
-        "MODE-DECLARATION",                              # 45
-        "MODE-DECLARATION-GROUP",                        # 46
-        "MODE-DECLARATION-GROUP-PROTOTYPE",              # 47
-        "MODE-SWITCH-INTERFACE",                         # 48
-        "MODE-SWITCH-POINT",                             # 49
-        "MODE-SWITCHED-ACK-EVENT",                       # 50
-        "NV-DATA-INTERFACE",                             # 51
-        "OPERATION-INVOKED-EVENT",                       # 52
-        "P-PORT-PROTOTYPE",                              # 53
-        "PARAMETER-DATA-PROTOTYPE",                      # 54
-        "PARAMETER-INTERFACE",                           # 55
-        "PHYSICAL-DIMENSION",                            # 56
-        "PORT-PROTOTYPE",                                # 57
-        "PR-PORT-PROTOTYPE",                             # 58
-        "R-PORT-PROTOTYPE",                              # 59
-        "RUNNABLE-ENTITY",                               # 60
-        "SENDER-RECEIVER-INTERFACE",                     # 61
-        "SW-ADDR-METHOD",                                # 62
-        "SW-BASE-TYPE",                                  # 63
-        "SW-COMPONENT-PROTOTYPE",                        # 64
-        "SWC-IMPLEMENTATION",                            # 65
-        "SWC-INTERNAL-BEHAVIOR",                         # 66
-        "SWC-MODE-MANAGER-ERROR-EVENT",                  # 67
-        "SWC-MODE-SWITCH-EVENT",                         # 68
-        "TIMING-EVENT",                                  # 69
-        "TRANSFORMER-HARD-ERROR-EVENT",                  # 70
-        "TRIGGER",                                       # 71
-        "UNIT",                                          # 72
-        "VARIABLE-ACCESS",                               # 73
-        "VARIABLE-DATA-PROTOTYPE",                       # 74
+        "COMPLEX-DEVICE-DRIVER-SW-COMPONENT-TYPE",       # 26
+        "COMPOSITION-SW-COMPONENT-TYPE",                 # 27
+        "COMPU-METHOD",                                  # 28
+        "CONSTANT-SPECIFICATION",                        # 29
+        "DATA-CONSTR",                                   # 30
+        "DATA-PROTOTYPE",                                # 31
+        "DATA-RECEIVE-ERROR-EVENT",                      # 32
+        "DATA-RECEIVED-EVENT",                           # 33
+        "DATA-SEND-COMPLETED-EVENT",                     # 34
+        "DATA-TYPE-MAPPING-SET",                         # 35
+        "DATA-WRITE-COMPLETED-EVENT",                    # 36
+        "ECU-ABSTRACTION-SW-COMPONENT-TYPE",             # 37
+        "E-2-E-PROFILE-COMPATIBILITY-PROPS",             # 38
+        "EXCLUSIVE-AREA",                                # 39
+        "EXCLUSIVE-AREA-NESTING-ORDER",                  # 40
+        "EXTERNAL-TRIGGER-OCCURRED-EVENT",               # 41
+        "IMPLEMENTATION-DATA-TYPE",                      # 42
+        "IMPLEMENTATION-DATA-TYPE-ELEMENT",              # 43
+        "INIT-EVENT",                                    # 44
+        "INTERNAL-TRIGGER-OCCURRED-EVENT",               # 45
+        "INTERNAL-TRIGGERING-POINT",                     # 46
+        "MODE-DECLARATION",                              # 47
+        "MODE-DECLARATION-GROUP",                        # 48
+        "MODE-DECLARATION-GROUP-PROTOTYPE",              # 49
+        "MODE-SWITCH-INTERFACE",                         # 50
+        "MODE-SWITCH-POINT",                             # 51
+        "MODE-SWITCHED-ACK-EVENT",                       # 52
+        "NV-BLOCK-SW-COMPONENT-TYPE",                    # 53
+        "NV-DATA-INTERFACE",                             # 54
+        "OPERATION-INVOKED-EVENT",                       # 55
+        "P-PORT-PROTOTYPE",                              # 56
+        "PARAMETER-DATA-PROTOTYPE",                      # 57
+        "PARAMETER-INTERFACE",                           # 58
+        "PHYSICAL-DIMENSION",                            # 59
+        "PORT-PROTOTYPE",                                # 60
+        "PR-PORT-PROTOTYPE",                             # 61
+        "R-PORT-PROTOTYPE",                              # 62
+        "RUNNABLE-ENTITY",                               # 63
+        "SENDER-RECEIVER-INTERFACE",                     # 64
+        "SENSOR-ACTUATOR-SW-COMPONENT-TYPE",             # 65
+        "SERVICE-PROXY-SW-COMPONENT-TYPE",               # 66
+        "SERVICE-SW-COMPONENT-TYPE",                     # 67
+        "SW-ADDR-METHOD",                                # 68
+        "SW-BASE-TYPE",                                  # 69
+        "SW-COMPONENT-PROTOTYPE",                        # 70
+        "SWC-IMPLEMENTATION",                            # 71
+        "SWC-INTERNAL-BEHAVIOR",                         # 72
+        "SWC-MODE-MANAGER-ERROR-EVENT",                  # 73
+        "SWC-MODE-SWITCH-EVENT",                         # 74
+        "TIMING-EVENT",                                  # 75
+        "TRANSFORMER-HARD-ERROR-EVENT",                  # 76
+        "TRIGGER",                                       # 77
+        "UNIT",                                          # 78
+        "VARIABLE-ACCESS",                               # 79
+        "VARIABLE-DATA-PROTOTYPE",                       # 80
     ],
     "IntervalType": [
         "CLOSED",  # 0

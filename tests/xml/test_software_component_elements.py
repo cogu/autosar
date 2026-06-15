@@ -1521,6 +1521,96 @@ class TestApplicationSoftwareComponentType(unittest.TestCase):
         self.assertEqual(port.name, "PRPort")
 
 
+class TestAtomicSoftwareComponent(unittest.TestCase):
+    """
+    Tests reading and writing of atomic software component elements.
+    """
+
+    def test_application_software_component(self):
+        element = ar_element.ApplicationSoftwareComponentType("MyName")
+        writer = autosar.xml.Writer()
+        xml = '''<APPLICATION-SW-COMPONENT-TYPE>
+  <SHORT-NAME>MyName</SHORT-NAME>
+</APPLICATION-SW-COMPONENT-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationSoftwareComponentType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationSoftwareComponentType)
+        self.assertEqual(elem.name, "MyName")
+
+    def test_complex_device_driver_software_component(self):
+        element = ar_element.ComplexDeviceDriverSwComponentType("MyName")
+        writer = autosar.xml.Writer()
+        xml = '''<COMPLEX-DEVICE-DRIVER-SW-COMPONENT-TYPE>
+  <SHORT-NAME>MyName</SHORT-NAME>
+</COMPLEX-DEVICE-DRIVER-SW-COMPONENT-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ComplexDeviceDriverSwComponentType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ComplexDeviceDriverSwComponentType)
+        self.assertEqual(elem.name, "MyName")
+
+    def test_ecu_abstraction_software_component(self):
+        element = ar_element.EcuAbstractionSwComponentType("MyName")
+        writer = autosar.xml.Writer()
+        xml = '''<ECU-ABSTRACTION-SW-COMPONENT-TYPE>
+  <SHORT-NAME>MyName</SHORT-NAME>
+</ECU-ABSTRACTION-SW-COMPONENT-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.EcuAbstractionSwComponentType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.EcuAbstractionSwComponentType)
+        self.assertEqual(elem.name, "MyName")
+
+    def test_nv_block_software_component(self):
+        element = ar_element.NvBlockSwComponentType("MyName")
+        writer = autosar.xml.Writer()
+        xml = '''<NV-BLOCK-SW-COMPONENT-TYPE>
+  <SHORT-NAME>MyName</SHORT-NAME>
+</NV-BLOCK-SW-COMPONENT-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.NvBlockSwComponentType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.NvBlockSwComponentType)
+        self.assertEqual(elem.name, "MyName")
+
+    def test_sensor_actuator_software_component(self):
+        element = ar_element.SensorActuatorSwComponentType("MyName")
+        writer = autosar.xml.Writer()
+        xml = '''<SENSOR-ACTUATOR-SW-COMPONENT-TYPE>
+  <SHORT-NAME>MyName</SHORT-NAME>
+</SENSOR-ACTUATOR-SW-COMPONENT-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SensorActuatorSwComponentType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SensorActuatorSwComponentType)
+        self.assertEqual(elem.name, "MyName")
+
+    def test_service_software_component(self):
+        element = ar_element.ServiceSwComponentType("MyName")
+        writer = autosar.xml.Writer()
+        xml = '''<SERVICE-SW-COMPONENT-TYPE>
+  <SHORT-NAME>MyName</SHORT-NAME>
+</SERVICE-SW-COMPONENT-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ServiceSwComponentType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ServiceSwComponentType)
+        self.assertEqual(elem.name, "MyName")
+
+    def test_service_proxy_software_component(self):
+        element = ar_element.ServiceProxySwComponentType("MyName")
+        writer = autosar.xml.Writer()
+        xml = '''<SERVICE-PROXY-SW-COMPONENT-TYPE>
+  <SHORT-NAME>MyName</SHORT-NAME>
+</SERVICE-PROXY-SW-COMPONENT-TYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ServiceProxySwComponentType = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ServiceProxySwComponentType)
+        self.assertEqual(elem.name, "MyName")
+
+
 class TestSwComponentPrototype(unittest.TestCase):
 
     def test_name_only(self):

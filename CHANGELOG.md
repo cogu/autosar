@@ -19,6 +19,15 @@ Non-collectable elements are various sub-elements to collectable elements.
 * SpecialDataGroup | SDG
 * SpecialDataValue | SDF
 
+#### XML - Software component Elements
+
+* ComplexDeviceDriverSoftwareComponent | COMPLEX-DEVICE-DRIVER-SW-COMPONENT-TYPE | `collectable`
+* EcuAbstractionSwComponentType | ECU-ABSTRACTION-SW-COMPONENT-TYPE | `collectable`
+* NvBlockSwComponentType | NV-BLOCK-SW-COMPONENT-TYPE | `collectable`
+* SensorActuatorSwComponentType | SENSOR-ACTUATOR-SW-COMPONENT-TYPE | `collectable`
+* ServiceSwComponentType | SERVICE-SW-COMPONENT-TYPE | `collectable`
+* ServiceProxySwComponentType | SERVICE-PROXY-SW-COMPONENT-TYPE | `collectable`
+
 ### Changed
 
 #### Properly implemented XML Elements

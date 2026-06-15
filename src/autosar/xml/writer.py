@@ -223,6 +223,12 @@ class Writer(_XMLWriter):
             'E2EProfileCompatibilityProps': self._write_e2e_profile_compatibility_props,
             # Software component elements
             'ApplicationSoftwareComponentType': self._write_application_software_component_type,
+            'ComplexDeviceDriverSwComponentType': self._write_complex_device_driver_sw_component_type,
+            'NvBlockSwComponentType': self._write_nv_block_sw_component_type,
+            'EcuAbstractionSwComponentType': self._write_ecu_abstraction_sw_component_type,
+            'SensorActuatorSwComponentType': self._write_sensor_actuator_sw_component_type,
+            'ServiceSwComponentType': self._write_service_sw_component_type,
+            'ServiceProxySwComponentType': self._write_service_proxy_sw_component_type,
             'CompositionSwComponentType': self._write_composition_sw_component_type,
             'SwcImplementation': self._write_swc_implementation,
         }
@@ -3899,6 +3905,91 @@ class Writer(_XMLWriter):
         """
         assert isinstance(elem, ar_element.ApplicationSoftwareComponentType)
         self._add_child("APPLICATION-SW-COMPONENT-TYPE")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_sw_component_type(elem)
+        self._write_atomic_sw_component_type(elem)
+        self._leave_child()
+
+    def _write_complex_device_driver_sw_component_type(self,
+                                                       elem: ar_element.ComplexDeviceDriverSwComponentType) -> None:
+        """
+        Writes complex type AR:COMPLEX-DEVICE-DRIVER-SW-COMPONENT-TYPE
+        Tag variants: 'COMPLEX-DEVICE-DRIVER-SW-COMPONENT-TYPE'
+        """
+        assert isinstance(elem, ar_element.ComplexDeviceDriverSwComponentType)
+        self._add_child("COMPLEX-DEVICE-DRIVER-SW-COMPONENT-TYPE")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_sw_component_type(elem)
+        self._write_atomic_sw_component_type(elem)
+        self._leave_child()
+
+    def _write_nv_block_sw_component_type(self, elem: ar_element.NvBlockSwComponentType) -> None:
+        """
+        Writes complex type AR:NV-BLOCK-SW-COMPONENT-TYPE
+        Tag variants: 'NV-BLOCK-SW-COMPONENT-TYPE'
+        """
+        assert isinstance(elem, ar_element.NvBlockSwComponentType)
+        self._add_child("NV-BLOCK-SW-COMPONENT-TYPE")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_sw_component_type(elem)
+        self._write_atomic_sw_component_type(elem)
+        self._leave_child()
+
+    def _write_ecu_abstraction_sw_component_type(self, elem: ar_element.EcuAbstractionSwComponentType) -> None:
+        """
+        Writes complex type AR:ECU-ABSTRACTION-SW-COMPONENT-TYPE
+        Tag variants: 'ECU-ABSTRACTION-SW-COMPONENT-TYPE'
+        """
+        assert isinstance(elem, ar_element.EcuAbstractionSwComponentType)
+        self._add_child("ECU-ABSTRACTION-SW-COMPONENT-TYPE")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_sw_component_type(elem)
+        self._write_atomic_sw_component_type(elem)
+        self._leave_child()
+
+    def _write_sensor_actuator_sw_component_type(self, elem: ar_element.SensorActuatorSwComponentType) -> None:
+        """
+        Writes complex type AR:SENSOR-ACTUATOR-SW-COMPONENT-TYPE
+        Tag variants: 'SENSOR-ACTUATOR-SW-COMPONENT-TYPE'
+        """
+        assert isinstance(elem, ar_element.SensorActuatorSwComponentType)
+        self._add_child("SENSOR-ACTUATOR-SW-COMPONENT-TYPE")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_sw_component_type(elem)
+        self._write_atomic_sw_component_type(elem)
+        self._leave_child()
+
+    def _write_service_sw_component_type(self, elem: ar_element.ServiceSwComponentType) -> None:
+        """
+        Writes complex type AR:SERVICE-SW-COMPONENT-TYPE
+        Tag variants: 'SERVICE-SW-COMPONENT-TYPE'
+        """
+        assert isinstance(elem, ar_element.ServiceSwComponentType)
+        self._add_child("SERVICE-SW-COMPONENT-TYPE")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_sw_component_type(elem)
+        self._write_atomic_sw_component_type(elem)
+        self._leave_child()
+
+    def _write_service_proxy_sw_component_type(self, elem: ar_element.ServiceProxySwComponentType) -> None:
+        """
+        Writes complex type AR:SERVICE-PROXY-SW-COMPONENT-TYPE
+        Tag variants: 'SERVICE-PROXY-SW-COMPONENT-TYPE'
+        """
+        assert isinstance(elem, ar_element.ServiceProxySwComponentType)
+        self._add_child("SERVICE-PROXY-SW-COMPONENT-TYPE")
         self._write_referrable(elem)
         self._write_multilanguage_referrable(elem)
         self._write_identifiable(elem)
