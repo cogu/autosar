@@ -297,9 +297,10 @@ class IdentifiableSubTypes(Enum):
     TIMING_EVENT = 75
     TRANSFORMER_HARD_ERROR_EVENT = 76
     TRIGGER = 77
-    UNIT = 78
-    VARIABLE_ACCESS = 79
-    VARIABLE_DATA_PROTOTYPE = 80
+    TRIGGER_INTERFACE = 78
+    UNIT = 79
+    VARIABLE_ACCESS = 80
+    VARIABLE_DATA_PROTOTYPE = 81
 
 
 class IntervalType(Enum):
@@ -904,6 +905,7 @@ xml_to_enum_map: dict[str, dict] = {
         "TIMING-EVENT": IdentifiableSubTypes.TIMING_EVENT,
         "TRANSFORMER-HARD-ERROR-EVENT": IdentifiableSubTypes.TRANSFORMER_HARD_ERROR_EVENT,
         "TRIGGER": IdentifiableSubTypes.TRIGGER,
+        "TRIGGER-INTERFACE": IdentifiableSubTypes.TRIGGER_INTERFACE,
         "UNIT": IdentifiableSubTypes.UNIT,
         "VARIABLE-ACCESS": IdentifiableSubTypes.VARIABLE_ACCESS,
         "VARIABLE-DATA-PROTOTYPE": IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE,
@@ -1318,9 +1320,10 @@ enum_to_xml_map: dict[str, list] = {
         "TIMING-EVENT",                                  # 75
         "TRANSFORMER-HARD-ERROR-EVENT",                  # 76
         "TRIGGER",                                       # 77
-        "UNIT",                                          # 78
-        "VARIABLE-ACCESS",                               # 79
-        "VARIABLE-DATA-PROTOTYPE",                       # 80
+        "TRIGGER-INTERFACE",                             # 78
+        "UNIT",                                          # 79
+        "VARIABLE-ACCESS",                               # 80
+        "VARIABLE-DATA-PROTOTYPE",                       # 81
     ],
     "IntervalType": [
         "CLOSED",  # 0

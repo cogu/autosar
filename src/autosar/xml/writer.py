@@ -197,6 +197,7 @@ class Writer(_XMLWriter):
             'DataFilter': self._write_data_filter,
             'AutosarEngineeringObject': self._write_autosar_engineering_object,
             'Code': self._write_code,
+            'Trigger': self._write_trigger,
             # Data type elements
             'ApplicationArrayDataType': self._write_application_array_data_type,
             'ApplicationRecordDataType': self._write_application_record_data_type,
@@ -217,6 +218,7 @@ class Writer(_XMLWriter):
             'SenderReceiverInterface': self._write_sender_receiver_interface,
             'ClientServerInterface': self._write_client_server_interface,
             'ModeSwitchInterface': self._write_mode_switch_interface,
+            'TriggerInterface': self._write_trigger_interface,
             # Mode declaration elements
             'ModeDeclarationGroup': self._write_mode_declaration_group,
             # System template elements
@@ -333,6 +335,7 @@ class Writer(_XMLWriter):
             'SwValues': self._write_sw_values,
             'SwAxisCont': self._write_sw_axis_cont,
             'SwValueCont': self._write_sw_value_cont,
+            'MultidimensionalTime': self._write_multidimensional_time,
             # Reference elements
             'PhysicalDimensionRef': self._write_physical_dimension_ref,
             'ApplicationDataTypeRef': self._write_application_data_type_ref,
@@ -1547,6 +1550,30 @@ class Writer(_XMLWriter):
         # .SWC-BSW-MAPPING-REF not yet supported
         # .USED-CODE-GENERATOR not yet supported
         # .VENDOR-ID not yet supported
+
+    def _write_trigger(self, elem: ar_element.Trigger) -> None:
+        """
+        Writes complex type AR:TRIGGER
+        Tag variants: 'TRIGGER'
+        """
+        assert isinstance(elem, ar_element.Trigger)
+        attr: TupleList = []
+        self._collect_identifiable_attributes(elem, attr)
+        self._add_child('TRIGGER', attr)
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_trigger_group(elem)
+        self._leave_child()
+
+    def _write_trigger_group(self, elem: ar_element.Trigger) -> None:
+        """
+        Writes group AR:TRIGGER
+        """
+        if elem.sw_impl_policy is not None:
+            self._add_content("SW-IMPL-POLICY", ar_enum.enum_to_xml(elem.sw_impl_policy))
+        if elem.trigger_period:
+            self._write_multidimensional_time(elem.trigger_period, "TRIGGER-PERIOD")
 
     # Data type elements
 
@@ -2973,6 +3000,21 @@ class Writer(_XMLWriter):
         if elem.sw_values_phys is not None:
             self._write_sw_values(elem.sw_values_phys)
 
+    def _write_multidimensional_time(self, elem: ar_element.MultidimensionalTime, tag: str) -> None:
+        """
+        Writes complex-type AR:MULTIDIMENSIONAL-TIME
+        """
+        assert isinstance(elem, ar_element.MultidimensionalTime)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.time_base is not None:
+                self._add_content("CSE-CODE", str(elem.time_base))
+            if elem.scaling_factor is not None:
+                self._add_content("CSE-CODE-FACTOR", str(elem.scaling_factor))
+            self._leave_child()
+
     # --- ModeDeclaration elements
 
     def _write_mode_declaration(self, elem: ar_element.ModeDeclaration) -> None:
@@ -3301,6 +3343,24 @@ class Writer(_XMLWriter):
         self._write_port_interface(elem)
         if elem.mode_group is not None:
             self._write_mode_declaration_group_prototype(elem.mode_group, "MODE-GROUP")
+        self._leave_child()
+
+    def _write_trigger_interface(self, elem: ar_element.TriggerInterface) -> None:
+        """
+        Writes complex type AR:TRIGGER-INTERFACE
+        Tag variants: 'TRIGGER-INTERFACE'
+        """
+        assert isinstance(elem, ar_element.TriggerInterface)
+        self._add_child("TRIGGER-INTERFACE")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_port_interface(elem)
+        if elem.triggers:
+            self._add_child("TRIGGERS")
+            for trigger in elem.triggers:
+                self._write_trigger(trigger)
+            self._leave_child()
         self._leave_child()
 
     # --- System template elements

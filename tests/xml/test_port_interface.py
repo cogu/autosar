@@ -910,5 +910,88 @@ class TestModeSwitchInterface(unittest.TestCase):
         self.assertEqual(str(elem.mode_group.type_ref), mode_declaration_ref)
 
 
+class TestTriggerInterface(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.TriggerInterface("InterfaceName")
+        writer = autosar.xml.Writer()
+        xml = '''<TRIGGER-INTERFACE>
+  <SHORT-NAME>InterfaceName</SHORT-NAME>
+</TRIGGER-INTERFACE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.TriggerInterface = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.TriggerInterface)
+        self.assertEqual(elem.name, "InterfaceName")
+
+    def test_create_interface_with_one_element_using_constructor(self):
+        element = ar_element.TriggerInterface("InterfaceName", ar_element.Trigger("Trigger1"))
+        writer = autosar.xml.Writer()
+        xml = '''<TRIGGER-INTERFACE>
+  <SHORT-NAME>InterfaceName</SHORT-NAME>
+  <TRIGGERS>
+    <TRIGGER>
+      <SHORT-NAME>Trigger1</SHORT-NAME>
+    </TRIGGER>
+  </TRIGGERS>
+</TRIGGER-INTERFACE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.TriggerInterface = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.TriggerInterface)
+        self.assertEqual(elem.name, "InterfaceName")
+        self.assertEqual(len(elem.triggers), 1)
+        self.assertEqual(elem.triggers[0].name, "Trigger1")
+
+    def test_create_interface_with_two_elements_using_constructor(self):
+        element = ar_element.TriggerInterface("InterfaceName", [ar_element.Trigger("Trigger1"),
+                                                                ar_element.Trigger("Trigger2")])
+        writer = autosar.xml.Writer()
+        xml = '''<TRIGGER-INTERFACE>
+  <SHORT-NAME>InterfaceName</SHORT-NAME>
+  <TRIGGERS>
+    <TRIGGER>
+      <SHORT-NAME>Trigger1</SHORT-NAME>
+    </TRIGGER>
+    <TRIGGER>
+      <SHORT-NAME>Trigger2</SHORT-NAME>
+    </TRIGGER>
+  </TRIGGERS>
+</TRIGGER-INTERFACE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.TriggerInterface = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.TriggerInterface)
+        self.assertEqual(elem.name, "InterfaceName")
+        self.assertEqual(len(elem.triggers), 2)
+        self.assertEqual(elem.triggers[0].name, "Trigger1")
+        self.assertEqual(elem.triggers[1].name, "Trigger2")
+
+    def test_create_interface_with_two_elements_using_append_method(self):
+        element = ar_element.TriggerInterface("InterfaceName")
+        element.append_trigger(ar_element.Trigger("Trigger1"))
+        element.append_trigger(ar_element.Trigger("Trigger2"))
+        writer = autosar.xml.Writer()
+        xml = '''<TRIGGER-INTERFACE>
+  <SHORT-NAME>InterfaceName</SHORT-NAME>
+  <TRIGGERS>
+    <TRIGGER>
+      <SHORT-NAME>Trigger1</SHORT-NAME>
+    </TRIGGER>
+    <TRIGGER>
+      <SHORT-NAME>Trigger2</SHORT-NAME>
+    </TRIGGER>
+  </TRIGGERS>
+</TRIGGER-INTERFACE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.TriggerInterface = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.TriggerInterface)
+        self.assertEqual(elem.name, "InterfaceName")
+        self.assertEqual(len(elem.triggers), 2)
+        self.assertEqual(elem.triggers[0].name, "Trigger1")
+        self.assertEqual(elem.triggers[1].name, "Trigger2")
+
+
 if __name__ == '__main__':
     unittest.main()

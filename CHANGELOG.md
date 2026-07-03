@@ -13,11 +13,17 @@ Non-collectable elements are various sub-elements to collectable elements.
 
 * Date | DATE
 * DocRevision | DOC-REVISION
+* MultidimensionalTime | MULTIDIMENSIONAL-TIME
 * Modification | MODIFICATION
 * RevisionLabelString | REVISION-LABEL-STRING
 * SpecialDataElement | SD
 * SpecialDataGroup | SDG
 * SpecialDataValue | SDF
+* Trigger | TRIGGER
+
+#### XML - Port interface elements
+
+* TriggerInterface | TRIGGER-INTERFACE | `collectable`
 
 #### XML - Software component Elements
 
