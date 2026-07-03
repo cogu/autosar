@@ -170,5 +170,110 @@ class TestCode(unittest.TestCase):
         self.assertEqual(artifact_descriptor.category, "SWSRC")
 
 
+class TestMultidimensionalTime(unittest.TestCase):
+
+    def test_empty(self):
+        element = ar_element.MultidimensionalTime()
+        writer = autosar.xml.Writer()
+        xml = '''<TRIGGER-PERIOD/>'''
+        self.assertEqual(writer.write_str_elem(element, "TRIGGER-PERIOD"), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.Code = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.MultidimensionalTime)
+
+    def test_time_base(self):
+        element = ar_element.MultidimensionalTime(time_base=10)
+        writer = autosar.xml.Writer()
+        xml = '''<TRIGGER-PERIOD>
+  <CSE-CODE>10</CSE-CODE>
+</TRIGGER-PERIOD>'''
+        self.assertEqual(writer.write_str_elem(element, "TRIGGER-PERIOD"), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.MultidimensionalTime = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.MultidimensionalTime)
+        self.assertEqual(elem.time_base, 10)
+
+    def test_scaling_factor(self):
+        element = ar_element.MultidimensionalTime(scaling_factor=2)
+        writer = autosar.xml.Writer()
+        xml = '''<TRIGGER-PERIOD>
+  <CSE-CODE-FACTOR>2</CSE-CODE-FACTOR>
+</TRIGGER-PERIOD>'''
+        self.assertEqual(writer.write_str_elem(element, "TRIGGER-PERIOD"), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.MultidimensionalTime = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.MultidimensionalTime)
+        self.assertEqual(elem.scaling_factor, 2)
+
+
+class TestTrigger(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.Trigger("MyTrigger")
+        writer = autosar.xml.Writer()
+        xml = '''<TRIGGER>
+  <SHORT-NAME>MyTrigger</SHORT-NAME>
+</TRIGGER>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.Trigger = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.Trigger)
+        self.assertEqual(elem.name, "MyTrigger")
+
+    def test_sw_impl_policy(self):
+        element = ar_element.Trigger("MyTrigger",
+                                     sw_impl_policy=ar_enum.SwImplPolicy.QUEUED)
+        writer = autosar.xml.Writer()
+        xml = '''<TRIGGER>
+  <SHORT-NAME>MyTrigger</SHORT-NAME>
+  <SW-IMPL-POLICY>QUEUED</SW-IMPL-POLICY>
+</TRIGGER>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.Trigger = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.Trigger)
+        self.assertEqual(elem.sw_impl_policy, ar_enum.SwImplPolicy.QUEUED)
+
+    def test_trigger_period(self):
+        element = ar_element.Trigger("MyTrigger",
+                                     trigger_period=ar_element.MultidimensionalTime(time_base=10,
+                                                                                    scaling_factor=2))
+        writer = autosar.xml.Writer()
+        xml = '''<TRIGGER>
+  <SHORT-NAME>MyTrigger</SHORT-NAME>
+  <TRIGGER-PERIOD>
+    <CSE-CODE>10</CSE-CODE>
+    <CSE-CODE-FACTOR>2</CSE-CODE-FACTOR>
+  </TRIGGER-PERIOD>
+</TRIGGER>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.Trigger = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.Trigger)
+        self.assertIsInstance(elem.trigger_period, ar_element.MultidimensionalTime)
+        self.assertEqual(elem.trigger_period.time_base, 10)
+        self.assertEqual(elem.trigger_period.scaling_factor, 2)
+
+    def test_all_attributes(self):
+        element = ar_element.Trigger("MyTrigger",
+                                     sw_impl_policy=ar_enum.SwImplPolicy.STANDARD,
+                                     trigger_period=ar_element.MultidimensionalTime(time_base=5))
+        writer = autosar.xml.Writer()
+        xml = '''<TRIGGER>
+  <SHORT-NAME>MyTrigger</SHORT-NAME>
+  <SW-IMPL-POLICY>STANDARD</SW-IMPL-POLICY>
+  <TRIGGER-PERIOD>
+    <CSE-CODE>5</CSE-CODE>
+  </TRIGGER-PERIOD>
+</TRIGGER>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.Trigger = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.Trigger)
+        self.assertEqual(elem.name, "MyTrigger")
+        self.assertEqual(elem.sw_impl_policy, ar_enum.SwImplPolicy.STANDARD)
+        self.assertEqual(elem.trigger_period.time_base, 5)
+
+
 if __name__ == '__main__':
     unittest.main()

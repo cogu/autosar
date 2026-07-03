@@ -448,7 +448,7 @@ class PortInterfaceRef(BaseRef):
     """
     References to PORT-INTERFACE--SUBTYPES-ENUM
 
-    Only a small piece of the enum is currently implemented
+    Only a subset of the enum is currently implemented
     """
 
     @classmethod
@@ -459,6 +459,7 @@ class PortInterfaceRef(BaseRef):
                 ar_enum.IdentifiableSubTypes.NV_DATA_INTERFACE,
                 ar_enum.IdentifiableSubTypes.PARAMETER_INTERFACE,
                 ar_enum.IdentifiableSubTypes.SENDER_RECEIVER_INTERFACE,
+                ar_enum.IdentifiableSubTypes.TRIGGER_INTERFACE,
                 }
 
 

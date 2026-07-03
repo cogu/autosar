@@ -135,6 +135,7 @@ class Reader:
             'DATA-FILTER': self._read_data_filter,
             'AUTOSAR-ENGINEERING-OBJECT': self._read_autosar_engineering_object,
             'CODE': self._read_code,
+            'TRIGGER': self._read_trigger,
 
             # DataType and DataDictionary elements
             'APPLICATION-ARRAY-DATA-TYPE': self._read_application_array_data_type,
@@ -155,6 +156,7 @@ class Reader:
             'SENDER-RECEIVER-INTERFACE': self._read_sender_receiver_interface,
             'CLIENT-SERVER-INTERFACE': self._read_client_server_interface,
             'MODE-SWITCH-INTERFACE': self._read_mode_switch_interface,
+            'TRIGGER-INTERFACE': self._read_trigger_interface,
 
             # Unit elements
             'UNIT': self._read_unit,
@@ -277,6 +279,7 @@ class Reader:
             'SW-VALUES-PHYS': self._read_sw_values,
             'SW-AXIS-CONT': self._read_sw_axis_cont,
             'SW-VALUE-CONT': self._read_sw_value_cont,
+            'TRIGGER-PERIOD': self._read_multidimensional_time,
             # Reference elements
             'PHYSICAL-DIMENSION-REF': self._read_physical_dimension_ref,
             'APPLICATION-DATA-TYPE-REF': self._read_application_data_type_ref,
@@ -1724,6 +1727,31 @@ class Reader:
         child_elements.skip("SWC-BSW-MAPPING-REF")
         child_elements.skip("USED-CODE-GENERATOR")
         child_elements.skip("VENDOR-ID")
+
+    def _read_trigger(self, xml_element: ElementTree.Element) -> ar_element.Trigger:
+        """
+        Reads complex type AR:TRIGGER
+        Tag variants: 'TRIGGER'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_trigger_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.Trigger(**data)
+
+    def _read_trigger_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:TRIGGER
+        """
+        xml_child = child_elements.get('SW-IMPL-POLICY')
+        if xml_child is not None:
+            data['sw_impl_policy'] = ar_enum.xml_to_enum('SwImplPolicy', xml_child.text)
+        xml_child = child_elements.get('TRIGGER-PERIOD')
+        if xml_child is not None:
+            data['trigger_period'] = self._read_multidimensional_time(xml_child)
 
     # --- Data type elements
 
@@ -3335,6 +3363,23 @@ class Reader:
         if xml_child is not None:
             data["sw_values_phys"] = self._read_sw_values(xml_child)
 
+    def _read_multidimensional_time(self,
+                                    xml_element: ElementTree.Element) -> ar_element.MultidimensionalTime:
+        """
+        Reads complex-type AR:MULTIDIMENSIONAL-TIME
+
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        xml_child = child_elements.get("CSE-CODE")
+        if xml_child is not None:
+            data["time_base"] = int(xml_child.text, 0)
+        xml_child = child_elements.get("CSE-CODE-FACTOR")
+        if xml_child is not None:
+            data["scaling_factor"] = int(xml_child.text, 0)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.MultidimensionalTime(**data)
+
         # --- ModeDeclaration elements
 
     def _read_mode_declaration(self, xml_element: ElementTree.Element) -> ar_element.ModeDeclaration:
@@ -3715,6 +3760,27 @@ class Reader:
             data['mode_group'] = self._read_mode_declaration_group_prototype(xml_child)
         self._report_unprocessed_elements(child_elements)
         return ar_element.ModeSwitchInterface(**data)
+
+    def _read_trigger_interface(self, xml_element: ElementTree.Element) -> ar_element.TriggerInterface:
+        """
+        Reads complex type AR:TRIGGER-INTERFACE
+        Tag variants: 'TRIGGER-INTERFACE'
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_port_interface(child_elements, data)
+        xml_child = child_elements.get('TRIGGERS')
+        if xml_child is not None:
+            triggers = []
+            data['triggers'] = triggers
+            for xml_grand_child in xml_child.findall('./*'):
+                if xml_grand_child.tag == 'TRIGGER':
+                    triggers.append(self._read_trigger(xml_grand_child))
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.TriggerInterface(**data)
 
     # --- System template elements
 

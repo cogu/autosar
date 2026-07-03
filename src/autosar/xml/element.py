@@ -665,7 +665,7 @@ class AdminData(ARObject):
             raise TypeError(f"sdg: Expected type SpecialDataGroup. Got {str(type(sdg))}")
 
 
-# -- Common structure elements
+# --- Common structure elements
 
 
 class DataFilter(ARObject):
@@ -794,6 +794,50 @@ class Implementation(ARElement):
             self.code_descriptors.append(code_descriptors)
         else:
             raise TypeError("code_descriptors must be of type Code")
+
+
+class MultidimensionalTime(ARObject):
+    """
+    Complex type AR:MULTIDIMENSIONAL-TIME
+    Tag variants: 'MINIMUM' | 'MAXIMUM' | 'BEST-CASE-EXECUTION-TIME' | 'WORST-CASE-EXECUTION-TIME' |
+                  'MINIMUM-INTER-ARRIVAL-TIME' | 'PATTERN-JITTER' | 'PATTERN-LENGTH' | 'PATTERN-PERIOD' |
+                  'LOWER-BOUND' | 'UPPER-BOUND' | 'AGE' | 'JITTER' | 'PERIOD' | 'SIGNAL-AGE' |
+                  'ESTIMATED-EXECUTION-TIME' | 'MAXIMUM-EXECUTION-TIME' | 'MINIMUM-EXECUTION-TIME' |
+                  'NOMINAL-EXECUTION-TIME' | 'SW-REFRESH-TIMING' | 'TOLERANCE' | 'ACCURACY-EXT' |
+                  'ACCURACY-INT' | 'ACCURACY' | 'TRIGGER-PERIOD'
+
+    """
+
+    def __init__(self, time_base: int | None = None, scaling_factor: int | None = None) -> None:
+        # .CSE-CODE
+        self.time_base: int | None = None
+        # .CSE-CODE-FACTOR
+        self.scaling_factor: int | None = None
+
+        self._assign_optional("time_base", time_base, int)
+        self._assign_optional("scaling_factor", scaling_factor, int)
+
+
+class Trigger(Identifiable):
+    """
+    Complex type AR:TRIGGER
+    Tag variants: 'TRIGGER'
+    """
+
+    def __init__(self,
+                 name: str,
+                 sw_impl_policy: ar_enum.SwImplPolicy | None = None,
+                 trigger_period: MultidimensionalTime | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .SW-IMPL-POLICY
+        self.sw_impl_policy: ar_enum.SwImplPolicy | None = None
+        # .TRIGGER-PERIOD
+        self.trigger_period: MultidimensionalTime | None = None
+
+        self._assign_optional("sw_impl_policy", sw_impl_policy, ar_enum.SwImplPolicy)
+        self._assign_optional_strict("trigger_period", trigger_period, MultidimensionalTime)
+
 
 # --- Documentation Elements
 
@@ -2861,6 +2905,7 @@ class SwAddrMethod(ARElement):
         ref_str = self._calc_ref_string()
         return None if ref_str is None else SwAddrMethodRef(ref_str)
 
+
 # --- Calibration data elements
 
 
@@ -4336,6 +4381,47 @@ class ModeSwitchInterface(PortInterface):
         self.mode_group = ModeDeclarationGroupPrototype(name, type_ref, calibration_access, **kwargs)
         self.mode_group.parent = self
         return self.mode_group
+
+
+class TriggerInterface(PortInterface):
+    """
+    Complex type AR:TRIGGER-INTERFACE
+    Tag variants: 'TRIGGER-INTERFACE'
+    """
+
+    def __init__(self,
+                 name: str,
+                 triggers: Trigger | list[Trigger] | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .TRIGGERS
+        self.triggers: list[Trigger] = []
+        if triggers is not None:
+            if isinstance(triggers, list):
+                for trigger in triggers:
+                    self.append_trigger(trigger)
+            else:
+                self.append_trigger(triggers)
+
+    def append_trigger(self, trigger: Trigger) -> None:
+        """Appends trigger to internal list of triggers"""
+        if isinstance(trigger, Trigger):
+            self.triggers.append(trigger)
+            trigger.parent = self
+        else:
+            msg = f"trigger: Invalid type '{str(type(trigger))}'"
+            raise TypeError(msg)
+
+    def ref(self) -> PortInterfaceRef | None:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return PortInterfaceRef(ref_str, ar_enum.IdentifiableSubTypes.TRIGGER_INTERFACE)
+
 
 # --- System Template Elements
 
