@@ -34,6 +34,20 @@ Non-collectable elements are various sub-elements to collectable elements.
 * ServiceSwComponentType | SERVICE-SW-COMPONENT-TYPE | `collectable`
 * ServiceProxySwComponentType | SERVICE-PROXY-SW-COMPONENT-TYPE | `collectable`
 
+#### Trigger interface support
+
+The `SwcInternalBehavior` class has new methods for creating trigger events:
+
+* `create_external_trigger_event`
+* `create_internal_trigger_event`
+
+The `RunnableEntity` class has a new method for adding internal trigger points:
+
+* `create_internal_triggering_point`
+
+For external trigger points, the existing method `create_port_access` has been updated to
+support trigger ports.
+
 ### Changed
 
 #### Properly implemented XML Elements

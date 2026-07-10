@@ -139,6 +139,15 @@ class DisplayPresentation(Enum):
     DISCRETE = 1
 
 
+class EmphasisFont(Enum):
+    """
+    E-ENUM-FONT--SIMPLE
+    """
+
+    DEFAULT = 0
+    MONO = 1
+
+
 class EmphasisType(Enum):
     """
     E-ENUM--SIMPLE
@@ -148,15 +157,6 @@ class EmphasisType(Enum):
     BOLDITALIC = 1
     ITALIC = 2
     PLAIN = 3
-
-
-class EmphasisFont(Enum):
-    """
-    E-ENUM-FONT--SIMPLE
-    """
-
-    DEFAULT = 0
-    MONO = 1
 
 
 class Float(Enum):
@@ -674,6 +674,15 @@ class TransmissionMode(Enum):
     CYCLIC = 0
     CYCLIC_AND_ON_CHANGE = 1
     TRIGGERED = 2
+
+
+class TriggerPoint(Enum):
+    """
+    Used internally to differentiate between trigger points
+    """
+
+    EXTERNAL = 0
+    INTERNAL = 1
 
 
 class ValueFormat(Enum):

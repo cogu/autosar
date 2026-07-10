@@ -838,6 +838,14 @@ class Trigger(Identifiable):
         self._assign_optional("sw_impl_policy", sw_impl_policy, ar_enum.SwImplPolicy)
         self._assign_optional_strict("trigger_period", trigger_period, MultidimensionalTime)
 
+    def ref(self) -> TriggerRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        return None if ref_str is None else TriggerRef(ref_str)
+
 
 # --- Documentation Elements
 
@@ -3450,13 +3458,14 @@ class BehaviorSettings:
         self.swc_mode_manager_error_event_prefix: str | None = None  # SwcModeManagerErrorEvent name prefix
         self.swc_mode_switch_event_prefix: str | None = None  # SwcModeSwitchEvent name prefix
         self.timing_event_prefix: str | None = None  # TimingEvent name prefix
+        self.external_trigger_event_prefix: str | None = None  # ExternalTriggerOccurredEvent name prefix
+        self.internal_trigger_event_prefix: str | None = None  # InternalTriggerOccurredEvent name prefix
         # Runnables
         self.data_read_access_prefix: str | None = None  # DATA-READ-ACCESS name prefix
         # (DATA-RECEIVE-POINT-BY-ARGUMENT and DATA-RECEIVE-POINT-BY-VALUE) name prefix
         self.data_receive_point_prefix: str | None = None
         self.data_send_point_prefix: str | None = None  # DATA-SEND-POINT name prefix
         self.data_write_access_prefix: str | None = None  # DATA-WRITE-ACCESSS name prefix
-
         self.external_triggering_point_prefix: str | None = None  # EXTERNAL-TRIGGERING-POINT name prefix
         self.internal_triggering_point_prefix: str | None = None  # INTERNAL-TRIGGERING-POINT name prefix
         self.mode_access_point_prefix: str | None = None  # MODE-ACCESS-POINT name prefix
@@ -5668,6 +5677,33 @@ class SwComponentType(ARElement, Searchable):
             raise TypeError(f"port: Expected a port referencing a ModeSwitchInterface, got {str(type(port_interface))}")
         return None
 
+    def get_trigger_in_port(self,
+                            port: RequirePortPrototype | ProvidePortPrototype,
+                            trigger_name: str | None = None,
+                            ) -> Trigger | None:
+        """
+        Finds specific trigger in given port
+        """
+        workspace = port.root_collection()
+        assert workspace is not None
+        port_interface = workspace.find(port.port_interface_ref)
+        if port_interface is None:
+            raise ar_except.InvalidReferenceError(str(port.port_interface_ref))
+        if isinstance(port_interface, TriggerInterface):
+            if not trigger_name:
+                if not len(port_interface.triggers) == 1:
+                    msg = "trigger_name: Undefined value is not allowed when "\
+                          "the port interface has more than one trigger"
+                    raise ValueError(msg)
+                return port_interface.triggers[0]
+            else:
+                for trigger in port_interface.triggers:
+                    if trigger.name == trigger_name:
+                        return trigger
+        else:
+            raise TypeError(f"port: Expected a port referencing a TriggerInterface, got {str(type(port_interface))}")
+        return None
+
 
 class AtomicSoftwareComponentType(SwComponentType):
     """
@@ -6845,6 +6881,15 @@ class ExternalTriggeringPointIdent(AbstractAccessPoint):
     Use constructor from base class
     """
 
+    @classmethod
+    def make_with_args(cls, name: str, args: dict[str, Any] | None) -> "ExternalTriggeringPointIdent":
+        """
+        #convenience-method
+
+        Enables creation of ExternalTriggeringPointIdent by giving extra arguments as an optional dictionary
+        """
+        return cls(name, **args) if args is not None else cls(name)
+
 
 class ExternalTriggeringPoint(ARObject):
     """
@@ -6882,6 +6927,14 @@ class InternalTriggeringPoint(AbstractAccessPoint):
 
         self._assign_optional("sw_impl_policy", sw_impl_policy, ar_enum.SwImplPolicy)
 
+    def ref(self) -> InternalTriggeringPointRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        return None if ref_str is None else InternalTriggeringPointRef(ref_str)
+
 
 class ModeAccessPointIdent(AbstractAccessPoint):
     """
@@ -6893,7 +6946,7 @@ class ModeAccessPointIdent(AbstractAccessPoint):
     @classmethod
     def make_with_args(cls, name: str, args: dict[str, Any] | None) -> "ModeAccessPointIdent":
         """
-        #convenienct-method
+        #convenience-method
 
         Enables creation of ModeAccessPointIdent by giving extra arguments as an optional dictionary
         """
@@ -7068,6 +7121,7 @@ class PortAccessOptions:
     result: ar_enum.ReadResult = ar_enum.ReadResult.BY_ARGUMENT
     mode: ar_enum.ModeAccess | None = None
     call: ar_enum.CallPoint = ar_enum.CallPoint.SYNC
+    trigger: ar_enum.TriggerPoint = ar_enum.TriggerPoint.EXTERNAL
 
 
 class RunnableEntity(ExecutableEntity):
@@ -7304,6 +7358,15 @@ class RunnableEntity(ExecutableEntity):
                 * "ACCESS" (default) : ModeAccessPoint
                 * "SWITCH" :  ModeSwitchpoint
 
+        Trigger Interface:
+            String formats:
+                1. "<prefix>:<port-name>/<trigger-name>"
+                2. "<prefix>:<trigger-name>
+                3. "<port-name>/<trigger-name>"
+                4. "<port-name>"
+
+            Accepted Prefixes:
+                * "EXTERNAL" | "EXTERN" | "EXT" (default) : ExternalTriggeringPoint
         """
         behavior = self.get_valid_parent()
         swc = behavior.get_valid_parent()
@@ -7333,6 +7396,16 @@ class RunnableEntity(ExecutableEntity):
             port_interface = workspace.get_port_interface(port.port_interface_ref)
             self._create_port_access_internal(port, port_interface, ref[2], settings, options, access_point_args)
 
+    def create_internal_triggering_point(self,
+                                         trigger_name: str,
+                                         sw_impl_policy: ar_enum.SwImplPolicy | None = None,
+                                         **kwargs) -> None:
+        """
+        Create a new internal triggering point for this runnable entity
+        """
+        triggering_point = InternalTriggeringPoint(trigger_name, sw_impl_policy, **kwargs)
+        self.append_internal_triggering_point(triggering_point)
+
     def _parse_port_access_prefix(self, text: str, options: PortAccessOptions) -> None:
         """
         Parses port access prefix
@@ -7355,6 +7428,8 @@ class RunnableEntity(ExecutableEntity):
             options.mode = ar_enum.ModeAccess.ACCESS
         elif text == "SWITCH":
             options.mode = ar_enum.ModeAccess.SWITCH
+        elif text in ["EXTERNAL", "EXTERN", "EXT"]:
+            options.trigger = ar_enum.TriggerPoint.EXTERNAL
         else:
             raise ValueError(f"Unrecognized access option: '{text}'")
 
@@ -7379,6 +7454,9 @@ class RunnableEntity(ExecutableEntity):
         elif isinstance(port_interface, ClientServerInterface):
             self._create_client_server_port_access(port, port_interface, element_name,
                                                    settings, options.call, access_point_args)
+        elif isinstance(port_interface, TriggerInterface):
+            self._create_trigger_port_access(port, port_interface, element_name,
+                                             settings, options.trigger, access_point_args)
         else:
             raise NotImplementedError(str(type(port_interface)))
 
@@ -7578,6 +7656,75 @@ class RunnableEntity(ExecutableEntity):
                     access_point = SynchronousServerCallPoint(name, operation=operation_iref)
             if access_point:
                 self.append_server_call_point(access_point)
+
+    def _create_trigger_port_access(self,
+                                    port: PortPrototypeElement,
+                                    port_interface: TriggerInterface,
+                                    trigger_name: str,
+                                    settings: BehaviorSettings,
+                                    trigger_point_type: ar_enum.TriggerPoint,
+                                    access_point_args: dict[str, Any] | None) -> None:
+        """
+        Creates port access for trigger interfaces
+        """
+        trigger = None
+        if len(trigger_name) == 0:
+            if len(port_interface.triggers) == 1:
+                trigger = port_interface.triggers[0]
+        else:
+            for element in port_interface.triggers:
+                if element.name == trigger_name:
+                    trigger = element
+        if trigger is None:
+            raise RuntimeError(f"Unable to find a matching trigger '{trigger_name}' "
+                               f"in port interface '{port_interface.name}'")
+        if isinstance(port, (ProvidePortPrototype, PRPortPrototype)):
+            triggering_point = None
+            if trigger_point_type == ar_enum.TriggerPoint.EXTERNAL:
+                triggering_point = self._create_external_triggering_point(port, trigger, settings, access_point_args)
+            else:
+                triggering_point = self._create_internal_triggering_point(port, trigger, settings, access_point_args)
+            self.append_external_triggering_point(triggering_point)
+
+    def _create_external_triggering_point(self,
+                                          port: PortPrototypeElement,
+                                          trigger: Trigger,
+                                          settings: BehaviorSettings,
+                                          access_point_args: dict[str, Any] | None) -> ExternalTriggeringPoint:
+
+        """
+        Creates an ExternalTriggeringPoint object
+                 context_port: AbstractProvidedPortPrototypeRef | None = None,
+                 target_trigger: TriggerRef | str | None = None,
+        """
+        name: str | None = None
+        if access_point_args is not None and "name" in access_point_args:
+            name = access_point_args["name"]
+            del access_point_args["name"]
+        if name is None:
+            name = "_".join([settings.get_value("external_triggering_point_prefix"), port.name, trigger.name])
+        ident = ExternalTriggeringPointIdent.make_with_args(name, access_point_args)
+        instance_trigger = PTriggerInAtomicSwcTypeInstanceRef(port.ref(), trigger.ref())
+        return ExternalTriggeringPoint(ident=ident, trigger=instance_trigger)
+
+    def _create_internal_triggering_point(self,
+                                          port: PortPrototypeElement,
+                                          trigger: Trigger,
+                                          settings: BehaviorSettings,
+                                          access_point_args: dict[str, Any] | None) -> InternalTriggeringPoint:
+        """
+        Creates an InternalTriggeringPoint object
+        """
+        name: str | None = None
+        if access_point_args is not None and "name" in access_point_args:
+            name = access_point_args["name"]
+            del access_point_args["name"]
+        if name is None:
+            name = "_".join([settings.get_value("internal_triggering_point_prefix"), port.name, trigger.name])
+        if access_point_args is not None:
+            return InternalTriggeringPoint(name, **access_point_args)
+        else:
+            return InternalTriggeringPoint(name)
 
     def append_argument(self, argument: RunnableEntityArgument) -> None:
         """
@@ -9094,6 +9241,79 @@ class SwcInternalBehavior(InternalBehavior):
         self.append_event(event)
         return event
 
+    def create_external_trigger_event(self,
+                                      runnable_name: str,
+                                      trigger_ref: str,
+                                      event_name: str | None = None,
+                                      **kwargs
+                                      ) -> ExternalTriggerOccurredEvent:
+        """
+        Adds a new ExternalTriggerOccurredEvent to this SwcInternalBehavior object
+
+        #convenience-method
+        """
+        swc = self.get_valid_parent()
+        runnable = self.find_runnable(runnable_name)
+        if runnable is None:
+            raise KeyError(f"Found no runnable with name '{runnable_name}'")
+        name_parts = split_ref_strict(trigger_ref)
+        if len(name_parts) == 1:
+            port_name, trigger_name = name_parts[0], None
+        else:
+            port_name, trigger_name = name_parts[0], name_parts[1]
+        context_port = swc.find_r_port(port_name)
+        if context_port is None:
+            raise ValueError(f"port_name: '{port_name}' does not name an existing P-PORT or PR-PORT")
+        target_trigger = swc.get_trigger_in_port(context_port, trigger_name)
+        if target_trigger is None:
+            raise ValueError(f"trigger_ref: '{trigger_ref}' does not name a valid trigger in port interface")
+        if event_name is None:
+            behavior_settings = self.get_valid_behavior_settings()
+            if behavior_settings.external_trigger_event_prefix:
+                event_name = behavior_settings.external_trigger_event_prefix + "_" + runnable_name
+            else:
+                msg = "event_name: Unable to dynamically create event name,"\
+                      " external_trigger_event_prefix is not set in behavior settings"
+                raise RuntimeError(msg)
+        assert isinstance(event_name, str)
+        unique_event_name = self._make_unique_event_name(event_name)
+        instance_ref = RTriggerInAtomicSwcInstanceRef(context_port.ref(), target_trigger.ref())
+        event = ExternalTriggerOccurredEvent(unique_event_name, runnable.ref(), instance_ref, **kwargs)
+        self.append_event(event)
+        return event
+
+    def create_internal_trigger_event(self,
+                                      runnable_name: str,
+                                      source_name: str,
+                                      event_name: str | None = None,
+                                      **kwargs
+                                      ) -> InternalTriggerOccurredEvent:
+        """
+        Adds a new InternalTriggerOccurredEvent to this SwcInternalBehavior object
+
+        #convenience-method
+        """
+        runnable = self.find_runnable(runnable_name)
+        if runnable is None:
+            raise KeyError(f"Found no runnable with name '{runnable_name}'")
+        if event_name is None:
+            behavior_settings = self.get_valid_behavior_settings()
+            if behavior_settings.internal_trigger_event_prefix:
+                event_name = behavior_settings.internal_trigger_event_prefix + "_" + runnable_name
+            else:
+                msg = "event_name: Unable to dynamically create event name,"\
+                      " internal_trigger_event_prefix is not set in behavior settings"
+                raise RuntimeError(msg)
+        assert isinstance(event_name, str)
+        unique_event_name = self._make_unique_event_name(event_name)
+        event_source_ref = self._find_internal_trigger_point(source_name)
+        if event_source_ref is None:
+            msg = f"source_name: '{source_name}' does not name a valid internal trigger point in this object"
+            raise ValueError(msg)
+        event = InternalTriggerOccurredEvent(unique_event_name, runnable.ref(), event_source_ref, **kwargs)
+        self.append_event(event)
+        return event
+
     def _get_swc_mode_switch_event_args(self,
                                         workspace: PackageCollection,
                                         swc: AtomicSoftwareComponentType,
@@ -9121,6 +9341,16 @@ class SwcInternalBehavior(InternalBehavior):
         if target_mode_declaration is None:
             raise ValueError(f"mode_ref: '{mode_ref}' does not name a valid mode declaration in ModeDeclarationGroup")
         return context_port, context_mode_declaration_group, target_mode_declaration
+
+    def _find_internal_trigger_point(self, trigger_point_name: str) -> InternalTriggeringPointRef | None:
+        """
+        Helper function for create_internal_trigger_event
+        """
+        for runnable in self.runnables:
+            for trigger_point in runnable.internal_triggering_point:
+                if trigger_point.name == trigger_point_name:
+                    return trigger_point.ref()
+        return None
 
     def create_port_api_options(self,
                                 port_name: str | list[str],
