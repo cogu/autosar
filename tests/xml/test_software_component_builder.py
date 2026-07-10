@@ -232,6 +232,15 @@ def create_sensor_interface(packages: dict[str, ar_element.Package]) -> ar_eleme
     return port_interface
 
 
+def create_trigger_interface(packages: dict[str, ar_element.Package]) -> ar_element.TriggerInterface:
+    """
+    Create trigger interface
+    """
+    port_interface = ar_element.TriggerInterface("ExternalTrigger_I", ar_element.Trigger("Trigger"))
+    packages["PortInterfaces"].append(port_interface)
+    return port_interface
+
+
 def create_init_value(packages, name: str, value: Any) -> ar_element.ConstantSpecification:
     """
     Creates VehicleSpeed init value
@@ -448,11 +457,13 @@ class TestEventCreationAPI(unittest.TestCase):
         vehicle_mode_interface = create_vehicle_mode_interface(packages)
         application_mode_interface = create_application_mode_interface(packages)
         alive_supervision_interface = create_check_point_interface(packages)
+        external_trigger_interface = create_trigger_interface(packages)
         swc = create_application_swc(packages)
         swc.create_r_port("EngineSpeed", engine_speed_interface, com_spec={'init_value': 65535})
         swc.create_r_port("VehicleMode", vehicle_mode_interface, com_spec={'supports_async': False})
         swc.create_p_port("ApplicationMode", application_mode_interface)
         swc.create_p_port("AliveSupervision", alive_supervision_interface)
+        swc.create_r_port("TriggerPort", external_trigger_interface)
         return swc
 
     def test_create_background_event(self):
@@ -646,6 +657,47 @@ class TestEventCreationAPI(unittest.TestCase):
         self.assertAlmostEqual(event.period, 0.02)
         self.assertIsNone(event.offset)
 
+    def test_external_trigger_event_with_trigger_name(self):
+        workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("external_trigger_event_prefix", "ETT")
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        behavior.create_runnable("MyApplication_Run")
+        event = behavior.create_external_trigger_event("MyApplication_Run", "TriggerPort/Trigger")
+        self.assertIsInstance(event, ar_element.ExternalTriggerOccurredEvent)
+        self.assertEqual(event.name, "ETT_MyApplication_Run")
+        self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/MyApplication_Run")
+        self.assertEqual(str(event.trigger.context_port), "/ComponentTypes/MyApplication/TriggerPort")
+        self.assertEqual(str(event.trigger.target_trigger), "/PortInterfaces/ExternalTrigger_I/Trigger")
+
+    def test_external_trigger_event_with_port_name(self):
+        workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("external_trigger_event_prefix", "ETT")
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        behavior.create_runnable("MyApplication_Run")
+        event = behavior.create_external_trigger_event("MyApplication_Run", "TriggerPort")
+        self.assertIsInstance(event, ar_element.ExternalTriggerOccurredEvent)
+        self.assertEqual(event.name, "ETT_MyApplication_Run")
+        self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/MyApplication_Run")
+        self.assertEqual(str(event.trigger.context_port), "/ComponentTypes/MyApplication/TriggerPort")
+        self.assertEqual(str(event.trigger.target_trigger), "/PortInterfaces/ExternalTrigger_I/Trigger")
+
+    def test_internal_trigger_event(self):
+        workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("internal_trigger_event_prefix", "ITT")
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        runnable1 = behavior.create_runnable("Runnable1")
+        runnable1.create_internal_triggering_point("MyEvent")
+        behavior.create_runnable("Runnable2")
+        event = behavior.create_internal_trigger_event("Runnable2", "MyEvent")
+        self.assertIsInstance(event, ar_element.InternalTriggerOccurredEvent)
+        self.assertEqual(event.name, "ITT_Runnable2")
+        self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/Runnable2")
+        ref = "/ComponentTypes/MyApplication/MyApplication_InternalBehavior/Runnable1/MyEvent"
+        self.assertEqual(str(event.event_source), ref)
+
 
 class TestRunnableEntityAPI(unittest.TestCase):
 
@@ -663,6 +715,7 @@ class TestRunnableEntityAPI(unittest.TestCase):
         vehicle_mode_interface = create_vehicle_mode_interface(packages)
         application_mode_interface = create_application_mode_interface(packages)
         timer_interface = create_timer_interface(packages)
+        external_trigger_interface = create_trigger_interface(packages)
 
         swc = create_application_swc(packages)
         swc.create_p_port("VehicleSpeed", vehicle_speed_interface, com_spec={"init_value": 65535})
@@ -677,6 +730,7 @@ class TestRunnableEntityAPI(unittest.TestCase):
         swc.create_pr_port("SafeState", safe_state_interface, provided_com_spec={"init_value": False})
         swc.create_r_port("VehicleMode", vehicle_mode_interface, com_spec={'supports_async': False})
         swc.create_p_port("ApplicationMode", application_mode_interface)
+        swc.create_p_port("TriggerPort", external_trigger_interface)
 
         return swc
 
@@ -862,7 +916,46 @@ class TestRunnableEntityAPI(unittest.TestCase):
         self.assertEqual(str(variable.port_prototype_ref), "/ComponentTypes/MyApplication/Actuator")
         self.assertEqual(str(variable.target_data_prototype_ref), "/PortInterfaces/Actuator_I/Primary")
 
-    # # TODO: implement unit test for external_triggering_point and internal_triggering_point
+    def test_create_default_triggering_point(self):
+        workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("external_triggering_point_prefix", "EXTERNAL")
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+
+        runnable = behavior.create_runnable("MyApplication_Run")
+        runnable.create_port_access(["TriggerPort"])
+        self.assertEqual(len(runnable.external_triggering_point), 1)
+        child: ar_element.ExternalTriggeringPoint = runnable.external_triggering_point[0]
+        self.assertEqual(child.ident.name, "EXTERNAL_TriggerPort_Trigger")
+        self.assertEqual(str(child.trigger.context_port), "/ComponentTypes/MyApplication/TriggerPort")
+        self.assertEqual(str(child.trigger.target_trigger), "/PortInterfaces/ExternalTrigger_I/Trigger")
+
+    def test_create_external_triggering_point(self):
+        workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("external_triggering_point_prefix", "EXTERNAL")
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+
+        runnable = behavior.create_runnable("MyApplication_Run")
+        runnable.create_port_access(["EXTERNAL:TriggerPort"])
+        self.assertEqual(len(runnable.external_triggering_point), 1)
+        child: ar_element.ExternalTriggeringPoint = runnable.external_triggering_point[0]
+        self.assertEqual(child.ident.name, "EXTERNAL_TriggerPort_Trigger")
+        self.assertEqual(str(child.trigger.context_port), "/ComponentTypes/MyApplication/TriggerPort")
+        self.assertEqual(str(child.trigger.target_trigger), "/PortInterfaces/ExternalTrigger_I/Trigger")
+
+    def test_create_internal_triggering_point(self):
+        workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("internal_triggering_point_prefix", "INTERNAL")
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+
+        runnable = behavior.create_runnable("MyApplication_Run")
+        runnable.create_internal_triggering_point("MyTriggeringPoint", ar_enum.SwImplPolicy.QUEUED)
+        self.assertEqual(len(runnable.internal_triggering_point), 1)
+        child: ar_element.InternalTriggeringPoint = runnable.internal_triggering_point[0]
+        self.assertEqual(child.name, "MyTriggeringPoint")
+        self.assertEqual(child.sw_impl_policy, ar_enum.SwImplPolicy.QUEUED)
 
     def test_create_default_mode_access_point(self):
         workspace = autosar.xml.Workspace()
