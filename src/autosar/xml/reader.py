@@ -1246,7 +1246,9 @@ class Reader:
         xml_child = child_elements.get("INTRODUCTION")
         if xml_child is not None:
             data["introduction"] = self._read_documentation_block(xml_child)
-        child_elements.skip("ADMIN-DATA")  # To be implemented
+        xml_child = child_elements.get("ADMIN-DATA")
+        if xml_child is not None:
+            data["admin_data"] = self._read_admin_data(xml_child)
 
     def _read_language_plain_text(self, xml_element: ElementTree.Element) -> ar_element.LanguagePlainText:
         """

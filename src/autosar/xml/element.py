@@ -599,8 +599,17 @@ class AdminData(ARObject):
                  sdgs: SpecialDataGroup | list[SpecialDataGroup] | None = None,
                  language: ar_enum.Language | None = None,
                  used_languages: UsedLanguageArgtype | None = None,
-                 doc_revisions: DocRevision | list[DocRevision] | None = None
+                 doc_revisions: DocRevision | list[DocRevision] | None = None,
+                 gid: str | None = None,
+                 content: SpecialDataGroupContent | None = None,
                  ) -> None:
+        """
+        AdminData constructor.
+
+        You can use the `sdgs` parameter for full support of special data groups.
+        Alternatively, use the `gid` and `content` parameters to conveniently
+        create AdminData with a single special data group.
+        """
         # .SDGS
         self.sdgs: list[SpecialDataGroup] = []
         # .LANGUAGE
@@ -639,7 +648,10 @@ class AdminData(ARObject):
             else:
                 self.append_doc_revision(doc_revisions)
 
-        if sdgs is not None:
+        if sdgs is None:
+            if gid is not None or content is not None:
+                self.append_specia_data_group(SpecialDataGroup(gid, content))
+        else:
             if isinstance(sdgs, Iterable):
                 for sdg in sdgs:
                     self.append_specia_data_group(sdg)

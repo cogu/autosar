@@ -11,6 +11,9 @@ import autosar # noqa E402
 
 
 class TestEndToEndTransformationComSpecProps(unittest.TestCase):
+    """
+    This primarily tests the Describable group, which is used by EndToEndTransformationComSpecProps.
+    """
 
     def test_empty(self):
         element = ar_element.EndToEndTransformationComSpecProps()
@@ -21,7 +24,7 @@ class TestEndToEndTransformationComSpecProps(unittest.TestCase):
         elem: ar_element.EndToEndTransformationComSpecProps = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.EndToEndTransformationComSpecProps)
 
-    # Test group Describable, EndToEndTransformationComSpecProps is the first element to use it
+    # Start Describable tests
 
     def test_desc_from_str(self):
         element = ar_element.EndToEndTransformationComSpecProps(desc="Description")
@@ -89,7 +92,43 @@ class TestEndToEndTransformationComSpecProps(unittest.TestCase):
         self.assertEqual(
             elem.introduction.elements[0].elements[0].parts[0], "Paragraph Text")
 
-# TODO: Add unit test for ADMIN-DATA once it has been implemented
+    def test_admin_data(self):
+        admin_data = ar_element.AdminData(
+            doc_revisions=ar_element.DocRevision(revision_label="1.0.0", issued_by="Author1", date="2024-01-01"),
+            sdgs=ar_element.SpecialDataGroup("GID1", ("Inner1", "MyContent1")),
+        )
+        element = ar_element.EndToEndTransformationComSpecProps(admin_data=admin_data)
+        writer = autosar.xml.Writer()
+        xml = '''<END-TO-END-TRANSFORMATION-COM-SPEC-PROPS>
+  <ADMIN-DATA>
+    <DOC-REVISIONS>
+      <DOC-REVISION>
+        <REVISION-LABEL>1.0.0</REVISION-LABEL>
+        <ISSUED-BY>Author1</ISSUED-BY>
+        <DATE>2024-01-01</DATE>
+      </DOC-REVISION>
+    </DOC-REVISIONS>
+    <SDGS>
+      <SDG GID="GID1">
+        <SD GID="Inner1">MyContent1</SD>
+      </SDG>
+    </SDGS>
+  </ADMIN-DATA>
+</END-TO-END-TRANSFORMATION-COM-SPEC-PROPS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.EndToEndTransformationComSpecProps = reader.read_str_elem(xml)
+        admin_data2 = elem.admin_data
+        self.assertIsNotNone(admin_data2)
+        self.assertEqual(str(admin_data2.doc_revisions[0].revision_label),
+                         str(admin_data.doc_revisions[0].revision_label))
+        self.assertEqual(admin_data2.doc_revisions[0].issued_by,
+                         admin_data.doc_revisions[0].issued_by)
+        self.assertEqual(str(admin_data2.doc_revisions[0].date),
+                         str(admin_data.doc_revisions[0].date))
+
+    # End Describable tests
+    # Start EndToEndTransformationComSpecProps tests
 
     def test_clear_from_valid_to_invalid(self):
         element = ar_element.EndToEndTransformationComSpecProps(clear_from_valid_to_invalid=False)
@@ -297,6 +336,8 @@ class TestEndToEndTransformationComSpecProps(unittest.TestCase):
         elem: ar_element.EndToEndTransformationComSpecProps = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.EndToEndTransformationComSpecProps)
         self.assertEqual(elem.window_size_valid, 1)
+
+    # End EndToEndTransformationComSpecProps tests
 
 
 class TestE2EProfileCompatibilityProps(unittest.TestCase):

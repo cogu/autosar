@@ -11,8 +11,8 @@ def create_component(workspace: autosar.xml.Workspace) -> None:
     Creates an SWC with simple admin data
     """
     workspace.update_package_map({"ComponentTypes": "ComponentTypes"})
-    sdg = ar_element.SpecialDataGroup("Master", "true")
-    swc = ar_element.ApplicationSoftwareComponentType("SWC", admin_data=sdg)
+    admin_data = ar_element.AdminData(gid="Settings", content=("Enabled", "true"))
+    swc = ar_element.ApplicationSoftwareComponentType("SWC", admin_data=admin_data)
     workspace.add_element("ComponentTypes", swc)
 
 

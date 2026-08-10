@@ -16,7 +16,10 @@ def main():
     for sdg in admin_data.sdgs:
         print(f"GID = {sdg.gid}")
         for sd in sdg.content:
-            print(sd.text)
+            if sd.gid is not None:
+                print(f"  GID = {sd.gid}, Value = {sd.text}")
+            else:
+                print(sd.text)
 
 
 if __name__ == "__main__":
