@@ -8,8 +8,8 @@
           <SHORT-NAME>SWC</SHORT-NAME>
           <ADMIN-DATA>
             <SDGS>
-              <SDG GID="Master">
-                <SD>true</SD>
+              <SDG GID="Settings">
+                <SD GID="Enabled">true</SD>
               </SDG>
             </SDGS>
           </ADMIN-DATA>

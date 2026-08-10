@@ -605,6 +605,44 @@ class TestAdminData(unittest.TestCase):
         self.assertEqual(child.gid, "Outer2")
         self.assertEqual(child.content[0], ar_element.SpecialDataValue(2, "Inner2"))
 
+    def test_gid_content_simple(self):
+        element = ar_element.AdminData(gid="VENDOR:DEV", content=("VENDOR:ImportModePreset", "Keep"))
+        xml = '''<ADMIN-DATA>
+  <SDGS>
+    <SDG GID="VENDOR:DEV">
+      <SD GID="VENDOR:ImportModePreset">Keep</SD>
+    </SDG>
+  </SDGS>
+</ADMIN-DATA>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.AdminData = reader.read_str_elem(xml)
+        self.assertEqual(len(elem.sdgs), 1)
+        child = elem.sdgs[0]
+        self.assertEqual(child.gid, "VENDOR:DEV")
+        self.assertEqual(child.content[0], ar_element.SpecialDataElement("Keep", "VENDOR:ImportModePreset"))
+
+    def test_gid_with_multi_content(self):
+        element = ar_element.AdminData(gid="SDG", content=[("AutoServiceNeedNameHdlg", "1"), ("BlockSize", "0")])
+        xml = '''<ADMIN-DATA>
+  <SDGS>
+    <SDG GID="SDG">
+      <SD GID="AutoServiceNeedNameHdlg">1</SD>
+      <SD GID="BlockSize">0</SD>
+    </SDG>
+  </SDGS>
+</ADMIN-DATA>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.AdminData = reader.read_str_elem(xml)
+        self.assertEqual(len(elem.sdgs), 1)
+        child = elem.sdgs[0]
+        self.assertEqual(child.gid, "SDG")
+        self.assertEqual(child.content[0], ar_element.SpecialDataElement("1", "AutoServiceNeedNameHdlg"))
+        self.assertEqual(child.content[1], ar_element.SpecialDataElement("0", "BlockSize"))
+
 
 if __name__ == '__main__':
     unittest.main()
