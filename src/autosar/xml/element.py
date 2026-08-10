@@ -650,13 +650,13 @@ class AdminData(ARObject):
 
         if sdgs is None:
             if gid is not None or content is not None:
-                self.append_specia_data_group(SpecialDataGroup(gid, content))
+                self.append_special_data_group(SpecialDataGroup(gid, content))
         else:
             if isinstance(sdgs, Iterable):
                 for sdg in sdgs:
-                    self.append_specia_data_group(sdg)
+                    self.append_special_data_group(sdg)
             else:
-                self.append_specia_data_group(sdgs)
+                self.append_special_data_group(sdgs)
 
     def append_doc_revision(self, revision: DocRevision) -> None:
         """
@@ -667,7 +667,7 @@ class AdminData(ARObject):
         else:
             raise TypeError(f"revision: Expected type DocRevision. Got {str(type(revision))}")
 
-    def append_specia_data_group(self, sdg: SpecialDataGroup) -> None:
+    def append_special_data_group(self, sdg: SpecialDataGroup) -> None:
         """
         Appends a special data grouup to this AdminData object
         """
@@ -3128,23 +3128,23 @@ class ValueSpecification(ARObject):
             if not isinstance(value[0], str):
                 raise TypeError("First element of a list must be a string")
             if value[0].upper() in ("A", "ARRAY"):
-                return ValueSpecification._make_array_value_spefication(label, value[1:])
+                return ValueSpecification._make_array_value_specification(label, value[1:])
             elif value[0].upper() in ("R", "RECORD"):
-                return ValueSpecification._make_record_value_spefication(label, value[1:])
+                return ValueSpecification._make_record_value_specification(label, value[1:])
             else:
                 raise ValueError(f"Invalid element type: {str(type(value[0]))}")
         else:
             raise TypeError(f"Invalid value type: {str(type(value))}")
 
     @classmethod
-    def _make_array_value_spefication(cls, label: str | None, values: list) -> "ArrayValueSpecification":
+    def _make_array_value_specification(cls, label: str | None, values: list) -> "ArrayValueSpecification":
         elements = []
         for value in values:
             elements.append(ValueSpecification.make_value(value))
         return ArrayValueSpecification(label, elements)
 
     @classmethod
-    def _make_record_value_spefication(cls, label: str | None, values: list) -> "RecordValueSpecification":
+    def _make_record_value_specification(cls, label: str | None, values: list) -> "RecordValueSpecification":
         fields = []
         for value in values:
             fields.append(ValueSpecification.make_value(value))
@@ -3712,11 +3712,11 @@ class ModeDeclarationGroup(ARElement):
         expected_types = "Expected 'ModeDeclaration', list[ModeDeclaration], list[str], list[tuple[str,int]]"
         if mode_declarations is not None:
             if isinstance(mode_declarations, ModeDeclaration):
-                self.append_mode_declaratation(mode_declarations)
+                self.append_mode_declaration(mode_declarations)
             elif isinstance(mode_declarations, list):
                 for mode_declaration in mode_declarations:
                     if isinstance(mode_declaration, ModeDeclaration):
-                        self.append_mode_declaratation(mode_declaration)
+                        self.append_mode_declaration(mode_declaration)
                     elif isinstance(mode_declaration, str):
                         self.create_mode_declaration(mode_declaration)
                     elif isinstance(mode_declaration, tuple):
@@ -3750,7 +3750,7 @@ class ModeDeclarationGroup(ARElement):
                 return mode_transition
         return None
 
-    def append_mode_declaratation(self, mode_declaration: ModeDeclaration) -> None:
+    def append_mode_declaration(self, mode_declaration: ModeDeclaration) -> None:
         """
         Appends mode declaratopm to internal list of mode declarations
         """
@@ -3771,7 +3771,7 @@ class ModeDeclarationGroup(ARElement):
         Adds a new mode declaration to this group
         """
         mode_declaration = ModeDeclaration(name, value, **kwargs)
-        self.append_mode_declaratation(mode_declaration)
+        self.append_mode_declaration(mode_declaration)
         return mode_declaration
 
     def append_mode_transition(self, mode_transition: ModeTransition) -> None:
