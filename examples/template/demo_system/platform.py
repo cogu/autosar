@@ -30,19 +30,32 @@ class ImplementationTypes:
 
     _boolean_constraint = factory.DataConstraintInternalTemplate("boolean_DataConstr", NAMESPACE, 0, 1)
     _uint8_constraint = factory.DataConstraintInternalTemplate("uint8_DataConstr", NAMESPACE, 0, 255)
+    _sint8_constraint = factory.DataConstraintInternalTemplate("sint8_DataConstr", NAMESPACE, -128, 127)
     _uint16_constraint = factory.DataConstraintInternalTemplate("uint16_DataConstr", NAMESPACE, 0, 65535)
+    _sint16_constraint = factory.DataConstraintInternalTemplate("sint16_DataConstr", NAMESPACE, -32768, 32767)
     _uint32_constraint = factory.DataConstraintInternalTemplate("uint32_DataConstr", NAMESPACE, 0, 4294967295)
+    _sint32_constraint = factory.DataConstraintInternalTemplate("sint32_DataConstr", NAMESPACE, -2147483648, 2147483647)
     _uint64_constraint = factory.DataConstraintInternalTemplate("uint64_DataConstr", NAMESPACE,
                                                                 0, 18446744073709551615)
+    _sint64_constraint = factory.DataConstraintInternalTemplate("sint64_DataConstr", NAMESPACE,
+                                                                -9223372036854775808, 9223372036854775807)
     _boolean_compumethod = factory.CompuMethodEnumTemplate("boolean_CompuMethod", NAMESPACE, ["FALSE", "TRUE"])
 
     boolean = factory.ImplementationValueTypeTemplate("boolean", NAMESPACE, BaseTypes.boolean, _boolean_constraint,
                                                       _boolean_compumethod, type_emitter="Platform_Type")
     uint8 = factory.ImplementationValueTypeTemplate("uint8", NAMESPACE, BaseTypes.uint8, _uint8_constraint,
                                                     type_emitter="Platform_Type")
+    sint8 = factory.ImplementationValueTypeTemplate("sint8", NAMESPACE, BaseTypes.sint8, _sint8_constraint,
+                                                    type_emitter="Platform_Type")
     uint16 = factory.ImplementationValueTypeTemplate("uint16", NAMESPACE, BaseTypes.uint16, _uint16_constraint,
+                                                     type_emitter="Platform_Type")
+    sint16 = factory.ImplementationValueTypeTemplate("sint16", NAMESPACE, BaseTypes.sint16, _sint16_constraint,
                                                      type_emitter="Platform_Type")
     uint32 = factory.ImplementationValueTypeTemplate("uint32", NAMESPACE, BaseTypes.uint32, _uint32_constraint,
                                                      type_emitter="Platform_Type")
+    sint32 = factory.ImplementationValueTypeTemplate("sint32", NAMESPACE, BaseTypes.sint32, _sint32_constraint,
+                                                     type_emitter="Platform_Type")
     uint64 = factory.ImplementationValueTypeTemplate("uint64", NAMESPACE, BaseTypes.uint64, _uint64_constraint,
+                                                     type_emitter="Platform_Type")
+    sint64 = factory.ImplementationValueTypeTemplate("sint64", NAMESPACE, BaseTypes.sint64, _sint64_constraint,
                                                      type_emitter="Platform_Type")
