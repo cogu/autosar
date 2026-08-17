@@ -27,7 +27,7 @@ Non-collectable elements are various sub-elements to collectable elements.
 
 #### XML - Software component Elements
 
-* ComplexDeviceDriverSoftwareComponent | COMPLEX-DEVICE-DRIVER-SW-COMPONENT-TYPE | `collectable`
+* ComplexDeviceDriverSwComponentType | COMPLEX-DEVICE-DRIVER-SW-COMPONENT-TYPE | `collectable`
 * EcuAbstractionSwComponentType | ECU-ABSTRACTION-SW-COMPONENT-TYPE | `collectable`
 * NvBlockSwComponentType | NV-BLOCK-SW-COMPONENT-TYPE | `collectable`
 * SensorActuatorSwComponentType | SENSOR-ACTUATOR-SW-COMPONENT-TYPE | `collectable`
@@ -53,9 +53,22 @@ support trigger ports.
 #### Properly implemented XML Elements
 
 * AdminData | ADMIN-DATA
-  - AdminData class should now be fully supported
+  - AdminData class should now be fully supported.
+  - AdminData can now be added to any element that supports it.
+  - Calling `AdminData(gid=..., content=....)` adds a convenient way to create AdminData objects.
 * DataTypeMappingSet | DATA-TYPE-MAPPING-SET
-  - ModeRequestTypeMap are now supported
+  - ModeRequestTypeMap are now supported.
+
+#### Other changes
+
+* Spelling corrections in method names.
+  - For example, `append_mode_declatation` is now `append_mode_declaration`.
+* Added support for signed integer types in the template demo project.
+
+### Fixed
+
+* Fixed incorrect usage `ifdef __cplusplus` in the RTE code generator.
+
 
 ## [v0.5.5] - 2025-06-23
 
