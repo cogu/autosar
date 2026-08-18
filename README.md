@@ -278,7 +278,11 @@ Below is a rough roadmap of planned releases.
 
 **v0.5.6** Add some missing elements and functions that wasn't prioritized before.
 
-**v0.5.7** Fixes and refactoring
+**0.5.7** SwcInternalBehavior - improved
+
+* Support even more child elements of the SwcInternalBehavior class.
+
+**v0.5.8** Fixes and refactoring
 
 * Fix some early design mistakes.
 * Harmonize some member names to better match "qualified name" from XSD (BREAKING CHANGE)
