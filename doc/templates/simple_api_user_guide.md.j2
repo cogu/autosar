@@ -1,0 +1,69 @@
+# Simple API - User Guide
+
+This is a short user guide how to create packages and elements using the simple API.
+
+## Simple API
+
+The simple API doesn't use namespaces as seen in the advanced API. Instead it relies on
+a key-value (dictionary) data-structure to create and reference packages.
+
+Here's a list of methods offered by the API:
+
+* Workspace.create_package_map
+* Workspace.add_element
+* Workspace.find_element
+* Workspace.get_package
+
+## Workspace
+
+Create a new workspace object.
+
+{{ include_code("usage_tests/intro/1_workspace.py") }}
+
+## Creating packages
+
+Use the `Workspace.create_package_map` to create packages.
+The input argument is a dictionary where each value is a package reference string (of arbitrary depth)
+and the key is a string of your choice which allows you to simply access the package later.
+
+Use the `Workspace.get_package` method for accessing the package object by using the same key as
+was used during the call to `Workspace.create_package_map`.
+
+{{ include_code("usage_tests/basic_use/1_packages.py") }}
+
+Output
+
+{{ run_code("usage_tests/basic_use/1_packages.py") }}
+
+## Creating data types
+
+Let's start by creating a `SwBaseType` followed by an `ImplementationDataType` referencing the previously created base type.
+
+References are custom objects returned by the `ref`-method provided by all classes derived from `ARElement`.
+All newly created elements must be added to a package before references can be created. Otherwise the `ref`-method will return `None`.
+
+To quickly add an element to a package you created by calling the `Workspace.create_package_map` method,
+use the `Workspace.add_element`-method.
+
+In the example below we also save the `DataTypes`-package and all its sub-packages into a document titled `data/datatypes.arxml`.
+Before you try the code, make sure you've created the directory `data` in same place as your Python-script.
+
+{{ include_code("usage_tests/basic_use/2_datatypes.py") }}
+
+## Creating ImplementationDataType with Compumethod
+
+Let's add a `TEXTTABLE` `CompuMethod` to our `InactiveActive_T` implementation data type.
+Here we take advantage of the `Computation.make_value_table` convenience-method to let Python fill
+in the right properties of the object.
+
+{{ include_code("usage_tests/basic_use/3_datatype_with_compumethod.py") }}
+
+### Reading XML files
+
+Use the Reader class to read ARXML from files or strings. The read-methods produce `Document` objects.
+
+{{ include_code("usage_tests/basic_use/4_read_xml.py") }}
+
+Output
+
+{{ run_code("usage_tests/basic_use/4_read_xml.py") }}
