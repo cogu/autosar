@@ -3800,6 +3800,7 @@ class TestInternalBehavior(unittest.TestCase):
     """
     Use SwcInternalBehavior as test class since InternalBehavior is abstract.
     """
+
     # IMPLEMENT LATER: CONSTANT-MEMORYS
     # IMPLEMENT LATER: CONSTANT-VALUE-MAPPING-REFS
 
@@ -3872,7 +3873,6 @@ class TestInternalBehavior(unittest.TestCase):
         self.assertEqual(str(mapping_set), ref_str2)
 
     def test_data_exclusive_area_from_element(self):
-        self.maxDiff = None
         exclusive_area = ar_element.ExclusiveArea("MyExclusiveArea")
         element = ar_element.SwcInternalBehavior("MyName", exclusive_areas=exclusive_area)
         xml = '''<SWC-INTERNAL-BEHAVIOR>
@@ -3894,7 +3894,6 @@ class TestInternalBehavior(unittest.TestCase):
         self.assertEqual(exclusive_area.name, "MyExclusiveArea")
 
     def test_data_exclusive_area_from_list(self):
-        self.maxDiff = None
         exclusive_area1 = ar_element.ExclusiveArea("MyExclusiveArea1")
         exclusive_area2 = ar_element.ExclusiveArea("MyExclusiveArea2")
         element = ar_element.SwcInternalBehavior("MyName", exclusive_areas=[exclusive_area1, exclusive_area2])
