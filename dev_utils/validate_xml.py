@@ -4,6 +4,7 @@
 Validates AUTOSAR XML (*.arxml, *.xml) against schemas in doc/schema.
 """
 
+# pylint: disable=duplicate-code
 import argparse
 import os
 import sys
