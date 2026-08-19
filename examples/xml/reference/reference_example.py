@@ -160,6 +160,7 @@ def save_xml_files(workspace: autosar.xml.Workspace):
 
 
 def print_references(workspace: autosar.xml.Workspace):
+    """Print element reference strings from the workspace."""
     data_Type = workspace.find_element("PlatformImplementationDataTypes", "uint16")
     print(data_Type.ref())
     port_interface = workspace.find_element("PortInterfaces", "VehicleSpeed_I")
