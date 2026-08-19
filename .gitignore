@@ -7,6 +7,5 @@ usage_tests/
 **/data/validate_all.sh
 **/generated/*.xsd
 **/generated/validate_all.sh
-doc/**/*.xsd
 google_credentials.json
 wiki/
