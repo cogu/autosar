@@ -466,14 +466,12 @@ class Writer(_XMLWriter):
     def _write_referrable(self, elem: ar_element.MultiLanguageReferrable):
         """
         Writes group AR:REFERRABLE
-        Type: Abstract
         """
         self._add_content('SHORT-NAME', elem.name)
 
     def _write_multilanguage_referrable(self, elem: ar_element.MultiLanguageReferrable):
         """
         Writes AR:MULTILANGUAGE-REFFERABLE
-        Type: Abstract
         """
         if elem.long_name is not None:
             self._write_multi_language_long_name(elem.long_name, 'LONG-NAME')
@@ -488,7 +486,6 @@ class Writer(_XMLWriter):
     def _write_identifiable(self, elem: ar_element.Identifiable) -> None:
         """
         Writes group AR:IDENTIFIABLE
-        Type: Abstract
         """
         if elem.desc:
             self._write_multi_language_overview_paragraph(elem.desc, 'DESC')
@@ -506,7 +503,7 @@ class Writer(_XMLWriter):
     def _write_special_data_group(self, elem: ar_element.SpecialDataGroup) -> None:
         """
         Writes complex type AR:SDG
-        Tag variants: 'SDG
+        Multi-tagged: False
         """
         tag = "SDG"
         assert isinstance(elem, ar_element.SpecialDataGroup)
@@ -538,7 +535,6 @@ class Writer(_XMLWriter):
     def _write_special_data_element(self, elem: ar_element.SpecialDataElement) -> None:
         """
         Writes special data content
-        Tag variants: 'SD'
         """
         assert isinstance(elem, ar_element.SpecialDataElement)
         if elem.gid is None:
@@ -549,7 +545,6 @@ class Writer(_XMLWriter):
     def _write_special_data_value(self, elem: ar_element.SpecialDataValue) -> None:
         """
         Writes numerical special data content
-        Tag variants: 'SDF'
         """
         assert isinstance(elem, ar_element.SpecialDataValue)
         if elem.gid is None:
@@ -560,7 +555,7 @@ class Writer(_XMLWriter):
     def _write_modification(self, elem: ar_element.Modification) -> None:
         """
         Writes complex type AR:MODIFICATION
-        Tag variants: 'MODIFICATION'
+        Multi-tagged: False
         """
         tag = "MODIFICATION"
         assert isinstance(elem, ar_element.Modification)
@@ -583,7 +578,7 @@ class Writer(_XMLWriter):
     def _write_doc_revision(self, elem: ar_element.DocRevision) -> None:
         """
         Writes complex type AR:DOC-REVISION
-        Tag variants: 'DOC-REVISION'
+        Multi-tagged: False
         """
         tag = "DOC-REVISION"
         assert isinstance(elem, ar_element.DocRevision)
@@ -618,8 +613,8 @@ class Writer(_XMLWriter):
 
     def _write_admin_data(self, elem: ar_element.AdminData) -> None:
         """
-        Writes Complex type AR:ADMIN-DATA
-        Tag variants: 'ADMIN-DATA'
+        Writes complex type AR:ADMIN-DATA
+        Multi-tagged: False
         """
         tag = "ADMIN-DATA"
         assert isinstance(elem, ar_element.AdminData)
@@ -675,8 +670,8 @@ class Writer(_XMLWriter):
 
     def _write_package(self, package: ar_element.Package) -> None:
         """
-        Writes AR-PACKAGE
-        Tag variants: 'AR-PACKAGE'
+        Writes complex type AR:AR-PACKAGE
+        Multi-tagged: False
         """
         assert isinstance(package, ar_element.Package)
         attr: TupleList = []
@@ -714,7 +709,6 @@ class Writer(_XMLWriter):
     def _write_annotation(self, elem: ar_element.Annotation) -> None:
         """
         Writes AR:ANNOTATION
-        Type: Concrete
         """
         assert isinstance(elem, ar_element.Annotation)
         tag = 'ANNOTATION'
@@ -741,7 +735,6 @@ class Writer(_XMLWriter):
     def _write_break(self, elem: ar_element.Break, inline=True) -> None:
         """
         Writes AR:BR
-        Type: Concrete
         """
         assert isinstance(elem, ar_element.Break)
         self._add_content('BR', '', inline=inline)
@@ -749,8 +742,6 @@ class Writer(_XMLWriter):
     def _write_documentation_block(self, elem: ar_element.DocumentationBlock, tag: str):
         """
         Writes AR:DOCUMENTATION-BLOCK
-        Type: Concrete
-        Tag Variants: Too many to list
         """
         assert isinstance(elem, ar_element.DocumentationBlock)
         if not elem.elements:
@@ -769,7 +760,7 @@ class Writer(_XMLWriter):
     def _write_emphasis_text(self, elem: ar_element.EmphasisText, inline=True):
         """
         Writes AR:EMPHASIS-TEXT
-        Type: Concrete
+
         TagName: E
         """
         assert isinstance(elem, ar_element.EmphasisText)
@@ -795,7 +786,6 @@ class Writer(_XMLWriter):
     def _write_index_entry(self, elem: ar_element.IndexEntry, inline=True):
         """
         Writes IndexEntry (AR:INDEX-ENTRY)
-        Type: Concrete
         """
         assert isinstance(elem, ar_element.IndexEntry)
         self._add_content('IE', elem.text, inline=inline)
@@ -803,7 +793,7 @@ class Writer(_XMLWriter):
     def _write_technical_term(self, elem: ar_element.TechnicalTerm, inline=True):
         """
         Writes AR:TT
-        Type: Concrete
+
         TagName: TT
         """
         assert isinstance(elem, ar_element.TechnicalTerm)
@@ -813,7 +803,7 @@ class Writer(_XMLWriter):
 
     def _collect_technical_term_attributes(self, elem: ar_element.TechnicalTerm, attr: TupleList):
         """
-        Collects attributes from attributeGroup AR:TT
+        Writes group AR:TT
         """
         if elem.tex_render is not None:
             attr.append(('TEX-RENDER', elem.tex_render))
@@ -823,7 +813,6 @@ class Writer(_XMLWriter):
     def _write_superscript(self, elem: ar_element.Superscript, inline=True):
         """
         Writes Superscript (AR:SUPSCRIPT)
-        Type: Concrete
         """
         assert isinstance(elem, ar_element.Superscript)
         self._add_content('SUP', elem.text, inline=inline)
@@ -831,16 +820,14 @@ class Writer(_XMLWriter):
     def _write_subscript(self, elem: ar_element.Subscript, inline=True):
         """
         Writes Subscript (AR:SUPSCRIPT)
-        Type: Concrete
         """
         assert isinstance(elem, ar_element.Subscript)
         self._add_content('SUB', elem.text, inline=inline)
 
     def _write_multi_language_long_name(self, elem: ar_element.MultilanguageLongName, tag: str) -> None:
         """
-        Writes complexType AR:MULTILANGUAGE-LONG-NAME
-        Type: Concrete
-        Tag variants: 'LABEL' | 'LONG-NAME'
+        Writes complex type AR:MULTILANGUAGE-LONG-NAME
+        Multi-tagged: True
         """
         # assert isinstance(elem.tag, str)
         self._add_child(tag)
@@ -850,8 +837,8 @@ class Writer(_XMLWriter):
 
     def _write_language_long_name(self, elem: ar_element.LanguageLongName):
         """
-        Writes complexType AR:L-LONG-NAME
-        Type: Concrete
+        Writes complex type AR:L-LONG-NAME
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.LanguageLongName)
         attr: TupleList = []
@@ -877,16 +864,15 @@ class Writer(_XMLWriter):
 
     def _collect_language_specific_attr(self, elem: ar_element.LanguageSpecific, attr: TupleList) -> None:
         """
-        Collects attributes from attributeGroup AR:LANGUAGE-SPECIFIC
+        Writes group AR:LANGUAGE-SPECIFIC
         """
         attr.append(('L', ar_enum.enum_to_xml(elem.language))
                     )  # The L attribute is mandatory
 
     def _write_multi_language_overview_paragraph(self, elem: MultiLanguageOverviewParagraph, tag: str) -> None:
         """
-        Writes complexType AR:MULTI-LANGUAGE-OVERVIEW-PARAGRAPH
-        Type: Concrete
-        Tag variants: 'DESC' | 'ITEM-LABEL' | 'CHANGE' | 'REASON'
+        Writes complex type AR:MULTI-LANGUAGE-OVERVIEW-PARAGRAPH
+        Multi-tagged: True
         """
         assert isinstance(elem, MultiLanguageOverviewParagraph)
         if tag not in {'DESC', 'ITEM-LABEL', 'CHANGE', 'REASON'}:
@@ -898,9 +884,8 @@ class Writer(_XMLWriter):
 
     def _write_multi_language_verbatim(self, elem: ar_element.MultiLanguageVerbatim) -> None:
         """
-        Writes complexType AR:MULTI-LANGUAGE-VERBATIM
-        Type: Concrete
-        Tag variants: 'VERBATIM'
+        Writes complex type AR:MULTI-LANGUAGE-VERBATIM
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.MultiLanguageVerbatim)
         attr: TupleList = []
@@ -916,7 +901,7 @@ class Writer(_XMLWriter):
                                                     elem: ar_element.MultiLanguageVerbatim,
                                                     attr: TupleList):
         """
-        Collects attributes from attributeGroup AR:MULTI-LANGUAGE-VERBATIM
+        Writes group AR:MULTI-LANGUAGE-VERBATIM
         """
         if elem.allow_break is not None:
             attr.append(('ALLOW-BREAK', elem.allow_break))
@@ -929,9 +914,8 @@ class Writer(_XMLWriter):
 
     def _write_language_overview_paragraph(self, elem: ar_element.LanguageOverviewParagraph) -> None:
         """
-        Writes complexType AR:L-OVERVIEW-PARAGRAPH
-        Type: Concrete
-        Tag variants: 'L-2'
+        Writes complex type AR:L-OVERVIEW-PARAGRAPH
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.LanguageOverviewParagraph)
         attr: TupleList = []
@@ -959,9 +943,8 @@ class Writer(_XMLWriter):
 
     def _write_language_paragraph(self, elem: ar_element.LanguageParagraph) -> None:
         """
-        Writes complexType AR:L-PARAGRAPH
-        Type: Concrete
-        Tag variants: 'L-1'
+        Writes complex type AR:L-PARAGRAPH
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.LanguageParagraph)
         attr: TupleList = []
@@ -989,9 +972,8 @@ class Writer(_XMLWriter):
 
     def _write_language_verbatim(self, elem: ar_element.LanguageVerbatim) -> None:
         """
-        Writes complexType AR:L-VERBATIM
-        Type: Concrete
-        Tag variants: 'L-5'
+        Writes complex type AR:L-VERBATIM
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.LanguageVerbatim)
         attr: TupleList = []
@@ -1013,9 +995,8 @@ class Writer(_XMLWriter):
 
     def _write_multi_language_paragraph(self, elem: ar_element.MultiLanguageParagraph) -> None:
         """
-        Writes complexType AR:MULTI-LANGUAGE-PARAGRAPH
-        Type: Concrete
-        Tag variants: 'P'
+        Writes complex type AR:MULTI-LANGUAGE-PARAGRAPH
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.MultiLanguageParagraph)
         attr: TupleList = []
@@ -1031,7 +1012,7 @@ class Writer(_XMLWriter):
                                                      elem: ar_element.MultiLanguageParagraph,
                                                      attr: TupleList):
         """
-        Collects attributes from attributeGroup AR:MULTI-LANGUAGE-PARAGRAPH
+        Writes group AR:MULTI-LANGUAGE-PARAGRAPH
         """
         if elem.help_entry is not None:
             attr.append(('HELP-ENTRY', elem.help_entry))
@@ -1040,7 +1021,7 @@ class Writer(_XMLWriter):
                                                      elem: ar_element.DocumentViewSelectable,
                                                      attr: TupleList):
         """
-        Collects attributes from attributeGroup AR:DOCUMENT-VIEW-SELECTABLE
+        Writes group AR:DOCUMENT-VIEW-SELECTABLE
         """
         if elem.semantic_information is not None:
             attr.append(('SI', elem.semantic_information))
@@ -1051,7 +1032,7 @@ class Writer(_XMLWriter):
                                          elem: ar_element.Paginateable,
                                          attr: TupleList):
         """
-        Collects attributes from attributeGroup AR:PAGINATEABLE
+        Writes group AR:PAGINATEABLE
         """
         if elem.page_break is not None:
             attr.append(('BREAK', ar_enum.enum_to_xml(elem.page_break)))
@@ -1061,7 +1042,7 @@ class Writer(_XMLWriter):
 
     def _write_general_annotation(self, elem: ar_element.GeneralAnnotation) -> None:
         """
-        Writes Group AR:GENERAL-ANNOTATION
+        Writes group AR:GENERAL-ANNOTATION
         """
         if elem.label is not None:
             self._write_multi_language_long_name(elem.label, 'LABEL')
@@ -1073,7 +1054,8 @@ class Writer(_XMLWriter):
     def _write_single_language_unit_names(self, elem: ar_element.SingleLanguageUnitNames, tag: str) -> None:
         """
         Writes complex type AR:SINGLE-LANGUAGE-UNIT-NAMES
-        Type: Concrete
+        Multi-tagged: True
+
         Tab variants: 'PRM-UNIT' | 'UNIT-DISPLAY-NAME' | 'UNIT-DISPLAY-NAME' | 'DISPLAY-NAME'
         """
         assert isinstance(elem, ar_element.SingleLanguageUnitNames)
@@ -1106,7 +1088,7 @@ class Writer(_XMLWriter):
     def _write_language_plain_text(self, elem: ar_element.LanguagePlainText) -> None:
         """
         Writes complex type AR:L-PLAIN-TEXT
-        Tag variants: 'L-10'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.LanguagePlainText)
         attr: TupleList = []
@@ -1115,8 +1097,8 @@ class Writer(_XMLWriter):
 
     def _write_multi_language_plain_text(self, elem: ar_element.MultiLanguagePlainText, tag: str) -> None:
         """
-        Writes Complex type AR:MULTI-LANGUAGE-PLAIN-TEXT
-        Tag variants: 'USED-LANGUAGES' | 'TEX-MATH' | 'GENERIC-MATH'
+        Writes complex type AR:MULTI-LANGUAGE-PLAIN-TEXT
+        Multi-tagged: True
         """
         assert isinstance(elem, ar_element.MultiLanguagePlainText)
         if elem.is_empty:
@@ -1129,8 +1111,8 @@ class Writer(_XMLWriter):
 
     def _write_date(self, elem: ar_element.Date) -> None:
         """
-        Writes Complex type AR:DATE
-        Tag variants: 'DATE'
+        Writes complex type AR:DATE
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.Date)
         self._add_content("DATE", str(elem))
@@ -1138,9 +1120,7 @@ class Writer(_XMLWriter):
     def _write_revision_label_string(self, elem: ar_element.RevisionLabelString, tag: str) -> None:
         """
         Writes complex type AR:REVISION-LABEL-STRING
-        Tag variants: 'AR-RELEASE-VERSION' | 'REVISION-LABEL' | 'REVISION-LABEL-P1' | 'REVISION-LABEL-P2' |
-                  'ECUC-DEF-EDITION' | 'SW-VERSION' | 'PRODUCT-RELEASE' | 'MINIMUM-SUPPORTED-UCM-VERSION' |
-                  'ECU-EXTRACT-VERSION' | 'SYSTEM-VERSION'
+        Multi-tagged: True
         """
         assert isinstance(elem, ar_element.RevisionLabelString)
         self._add_content(tag, str(elem))
@@ -1150,7 +1130,8 @@ class Writer(_XMLWriter):
     def _write_compu_method(self, elem: ar_element.CompuMethod) -> None:
         """
         Writes complex type AR:COMPU-METHOD
-        Type: Concrete
+        Multi-tagged: False
+
         Tab variants: 'COMPU-METHOD'
         """
         assert isinstance(elem, ar_element.CompuMethod)
@@ -1179,8 +1160,6 @@ class Writer(_XMLWriter):
     def _write_computation(self, elem: ar_element.Computation, tag: str) -> None:
         """
         Writes AR:COMPU
-        Type: Concrete
-        Tag variants: 'COMPU-INTERNAL-TO-PHYS', 'COMPU-PHYS-TO-INTERNAL'
         """
         self._add_child(tag)
         if elem.compu_scales is not None:
@@ -1195,8 +1174,6 @@ class Writer(_XMLWriter):
     def _write_compu_scale(self, elem: ar_element.CompuScale) -> None:
         """
         Writes AR:COMPU-SCALE
-        Type: Concrete
-        Tag variants: 'COMPU-SCALE'
         """
         assert isinstance(elem, ar_element.CompuScale)
         tag = "COMPU-SCALE"
@@ -1243,8 +1220,6 @@ class Writer(_XMLWriter):
     def _write_compu_const(self, elem: ar_element.CompuConst, tag) -> None:
         """
         Writes AR:COMPU-CONST
-        Type: Concrete
-        Tag variants: 'COMPU-CONST', 'COMPU-INVERSE-VALUE', 'COMPU-DEFAULT-VALUE'
         """
         assert isinstance(elem, ar_element.CompuConst)
         self._add_child(tag)
@@ -1261,8 +1236,6 @@ class Writer(_XMLWriter):
     def _write_compu_rational(self, elem: ar_element.CompuRational) -> None:
         """
         Writes AR:COMPU-RATIONAL-COEFFS
-        Type: Concrete
-        Tag variants: 'COMPU-RATIONAL-COEFFS'
         """
         assert isinstance(elem, ar_element.CompuRational)
         tag = 'COMPU-RATIONAL-COEFFS'
@@ -1300,7 +1273,8 @@ class Writer(_XMLWriter):
     def _write_data_constraint(self, elem: ar_element.DataConstraint) -> None:
         """
         Writes complex type AR:DATA-CONSTR
-        Type: Concrete
+        Multi-tagged: False
+
         Tab variants: 'DATA-CONSTR-RULE'
         """
         assert isinstance(elem, ar_element.DataConstraint)
@@ -1316,7 +1290,6 @@ class Writer(_XMLWriter):
     def _write_data_constraint_group(self, elem: ar_element.DataConstraint) -> None:
         """
         Writes group AR:DATA-CONSTR-RULE
-        Type: Abstract
         """
         if elem.rules:
             self._add_child("DATA-CONSTR-RULES")
@@ -1327,8 +1300,7 @@ class Writer(_XMLWriter):
     def _write_data_constraint_rule(self, elem: ar_element.DataConstraintRule) -> None:
         """
         Writes complex type AR:DATA-CONSTR-RULE
-        Type: Concrete
-        Tag variants: 'DATA-CONSTR-RULE'
+        Multi-tagged: False
         """
         tag = "DATA-CONSTR-RULE"
         assert isinstance(elem, ar_element.DataConstraintRule)
@@ -1347,8 +1319,7 @@ class Writer(_XMLWriter):
     def _write_internal_constraint(self, elem: ar_element.InternalConstraint) -> None:
         """
         Writes complex type AR:INTERNAL-CONSTRS
-        Type: Concrete
-        Tag variants: 'INTERNAL-CONSTRS'
+        Multi-tagged: False
         """
         tag = "INTERNAL-CONSTRS"
         assert isinstance(elem, ar_element.InternalConstraint)
@@ -1362,8 +1333,7 @@ class Writer(_XMLWriter):
     def _write_physical_constraint(self, elem: ar_element.PhysicalConstraint) -> None:
         """
         Writes complex type AR:PHYS-CONSTRS
-        Type: Concrete
-        Tag variants: 'PHYS-CONSTRS'
+        Multi-tagged: False
         """
         tag = "PHYS-CONSTRS"
         assert isinstance(elem, ar_element.PhysicalConstraint)
@@ -1380,7 +1350,6 @@ class Writer(_XMLWriter):
                                elem: ar_element.InternalConstraint | ar_element.PhysicalConstraint) -> None:
         """
         Writes elements common for both AR:INTERNAL-CONSTRS and AR:PHYS-CONSTRS
-        Type: Abstract
         """
         if elem.lower_limit is not None:
             self._write_limit("LOWER-LIMIT", elem.lower_limit, elem.lower_limit_type)
@@ -1401,8 +1370,7 @@ class Writer(_XMLWriter):
     def _write_scale_constraint(self, elem: ar_element.ScaleConstraint) -> None:
         """
         Writes complex type AR:SCALE-CONSTR
-        Type: Concrete
-        Tag variants: 'SCALE-CONSTR'
+        Multi-tagged: False
         """
         tag = "SCALE-CONSTR"
         assert isinstance(elem, ar_element.ScaleConstraint)
@@ -1428,8 +1396,7 @@ class Writer(_XMLWriter):
     def _write_unit(self, elem: ar_element.Unit) -> None:
         """
         Writes complex type AR:UNIT
-        Type: Concrete
-        Tag variants: 'UNIT'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.Unit)
         attr: TupleList = []
@@ -1456,7 +1423,7 @@ class Writer(_XMLWriter):
     def _write_data_filter(self, elem: ar_element.DataFilter, tag: str) -> None:
         """
         Writes complex type AR:DATA-FILTER
-        Tag variants: 'FILTER', 'DATA-FILTER'
+        Multi-tagged: True
         """
         assert isinstance(elem, ar_element.DataFilter)
         if elem.is_empty:
@@ -1497,7 +1464,7 @@ class Writer(_XMLWriter):
     def _write_autosar_engineering_object(self, elem: ar_element.AutosarEngineeringObject, tag: str) -> None:
         """
         Writes complex type AR:AUTOSAR-ENGINEERING-OBJECT
-        Tag variants: 'AUTOSAR-ENGINEERING-OBJECT' | 'ARTIFACT-DESCRIPTOR'
+        Multi-tagged: True
         """
         assert isinstance(elem, ar_element.AutosarEngineeringObject)
         if elem.is_empty:
@@ -1510,7 +1477,7 @@ class Writer(_XMLWriter):
     def _write_code(self, elem: ar_element.Code) -> None:
         """
         Writes complex type AR:CODE
-        Tag variants: 'CODE'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.Code)
         attr: TupleList = []
@@ -1529,7 +1496,7 @@ class Writer(_XMLWriter):
 
     def _write_implementtion(self, elem: ar_element.Implementation) -> None:
         """
-        Writes Group AR:IMPLEMENTATION
+        Writes group AR:IMPLEMENTATION
         """
         # .BUILD-ACTION-MANIFESTS not yet supported
         if elem.code_descriptors:
@@ -1554,7 +1521,7 @@ class Writer(_XMLWriter):
     def _write_trigger(self, elem: ar_element.Trigger) -> None:
         """
         Writes complex type AR:TRIGGER
-        Tag variants: 'TRIGGER'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.Trigger)
         attr: TupleList = []
@@ -1580,8 +1547,7 @@ class Writer(_XMLWriter):
     def _write_sw_addr_method(self, elem: ar_element.SwAddrMethod) -> None:
         """
         Writes complex type AR:SW-ADDR-METHOD
-        Type: Concrete
-        Tag variants: 'SW-ADDR-METHOD'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.SwAddrMethod)
         attr: TupleList = []
@@ -1608,9 +1574,8 @@ class Writer(_XMLWriter):
 
     def _write_sw_base_type(self, elem: ar_element.SwBaseType) -> None:
         """
-        Writes Complex-type AR:SW-BASE-TYPE
-        Type: Concrete
-        Tag variants: 'SW-BASE-TYPE'
+        Writes complex type AR:SW-BASE-TYPE
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.SwBaseType)
         attr: TupleList = []
@@ -1644,8 +1609,7 @@ class Writer(_XMLWriter):
     def _write_sw_data_def_props(self, elem: ar_element.SwDataDefProps, tag: str) -> None:
         """
         Writes complex type AR:SW-DATA-DEF-PROPS
-        Type: Concrete
-        Tag Variants: 'SW-DATA-DEF-PROPS', 'NETWORK-REPRESENTATION'
+        Multi-tagged: True
         """
         assert isinstance(elem, ar_element.SwDataDefProps)
         if elem.is_empty:
@@ -1661,9 +1625,8 @@ class Writer(_XMLWriter):
 
     def _write_sw_data_def_props_conditional(self, elem: ar_element.SwDataDefPropsConditional) -> None:
         """
-        Writes Complex-type AR:SW-DATA-DEF-PROPS-CONDITIONAL
-        Type: Concrete
-        Tag variants: 'SW-DATA-DEF-PROPS-CONDITIONAL'
+        Writes complex type AR:SW-DATA-DEF-PROPS-CONDITIONAL
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.SwDataDefPropsConditional)
         tag = 'SW-DATA-DEF-PROPS-CONDITIONAL'
@@ -1676,8 +1639,7 @@ class Writer(_XMLWriter):
 
     def _write_sw_data_def_props_content(self, elem: ar_element.SwDataDefPropsConditional) -> None:
         """
-        Writes Group SW-DATA-DEF-PROPS-CONTENT
-        Type: Abstract
+        Writes group AR:SW-DATA-DEF-PROPS-CONTENT
         """
         if elem.display_presentation is not None:
             self._add_content('DISPLAY-PRESENTATION',
@@ -1728,8 +1690,6 @@ class Writer(_XMLWriter):
     def _write_sw_bit_represenation(self, elem: ar_element.SwBitRepresentation) -> None:
         """
         Writes AR:SW-BIT-REPRESENTATION
-        Type: Concrete
-        Tag Variants: 'SW-BIT-REPRESENTATION'
         """
         tag = 'SW-BIT-REPRESENTATION'
         if elem.is_empty:
@@ -1745,8 +1705,6 @@ class Writer(_XMLWriter):
     def _write_sw_text_props(self, elem: ar_element.SwTextProps) -> None:
         """
         Writes AR:SW-TEXT-PROPS
-        Type: Concrete
-        Tag Variants: 'SW-TEXT-PROPS'
         """
         tag = 'SW-TEXT-PROPS'
         if elem.is_empty:
@@ -1766,8 +1724,6 @@ class Writer(_XMLWriter):
     def _write_sw_pointer_target_props(self, elem: ar_element.SwPointerTargetProps) -> None:
         """
         Writes AR:SW-POINTER-TARGET-PROPS
-        Type: Concrete
-        Tag Variants: 'SW-POINTER-TARGET-PROPS'
         """
         tag = 'SW-POINTER-TARGET-PROPS'
         if elem.is_empty:
@@ -1785,8 +1741,7 @@ class Writer(_XMLWriter):
     def _write_symbol_props(self, elem: ar_element.SymbolProps, tag: str) -> None:
         """
         Writes complex type AR:SYMBOL-PROPS
-        Type: Concrete
-        Tag Variants: 'SYMBOL-PROPS', 'EVENT-SYMBOL-PROPS'
+        Multi-tagged: True
         """
         assert isinstance(elem, ar_element.SymbolProps)
         self._add_child(tag)
@@ -1797,7 +1752,6 @@ class Writer(_XMLWriter):
     def _write_implementation_props(self, elem: ar_element.ImplementationProps) -> None:
         """
         Writes group AR:IMPLEMENTATION-PROPS
-        Type: Abstract
         """
         if elem.symbol is not None:
             self._add_content("SYMBOL", str(elem.symbol))
@@ -1805,8 +1759,7 @@ class Writer(_XMLWriter):
     def _write_implementation_data_type_element(self, elem: ar_element.ImplementationDataTypeElement) -> None:
         """
         Writes complex type AR:IMPLEMENTATION-DATA-TYPE-ELEMENT
-        Type: Concrete
-        Tag variants: 'IMPLEMENTATION-DATA-TYPE-ELEMENT'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ImplementationDataTypeElement)
         self._add_child("IMPLEMENTATION-DATA-TYPE-ELEMENT")
@@ -1819,7 +1772,6 @@ class Writer(_XMLWriter):
     def __write_implementation_data_type_element_group(self, elem: ar_element.ImplementationDataTypeElement) -> None:
         """
         Writes group AR:IMPLEMENTATION-DATA-TYPE-ELEMENT
-        Type: Abstract
         """
         if elem.array_impl_policy is not None:
             self._add_content("ARRAY-IMPL-POLICY", ar_enum.enum_to_xml(elem.array_impl_policy))
@@ -1842,8 +1794,7 @@ class Writer(_XMLWriter):
     def _write_implementation_data_type(self, elem: ar_element.ImplementationDataType) -> None:
         """
         Writes complex type AR:IMPLEMENTATION-DATA-TYPE
-        Type: Concrete
-        Tag variants: 'IMPLEMENTATION-DATA-TYPE'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ImplementationDataType)
         self._add_child("IMPLEMENTATION-DATA-TYPE")
@@ -1857,7 +1808,6 @@ class Writer(_XMLWriter):
     def _write_implementation_data_type_group(self, elem: ar_element.ImplementationDataType) -> None:
         """
         Writes group AR:IMPLEMENTATION-DATA-TYPE
-        Type: Abstract
         """
         if elem.dynamic_array_size_profile is not None:
             self._add_content("DYNAMIC-ARRAY-SIZE-PROFILE", str(elem.dynamic_array_size_profile))
@@ -1877,7 +1827,6 @@ class Writer(_XMLWriter):
     def _write_autosar_data_type(self, elem: ar_element.AutosarDataType) -> None:
         """
         Writes group AR:AUTOSAR-DATA-TYPE
-        Type: Abstract
         """
         if elem.sw_data_def_props is not None:
             self._write_sw_data_def_props(elem.sw_data_def_props, "SW-DATA-DEF-PROPS")
@@ -1885,7 +1834,6 @@ class Writer(_XMLWriter):
     def _write_data_prototype(self, elem: ar_element.DataPrototype) -> None:
         """
         Writes group AR:DATA-PROTOTYPE
-        Type: Abstract
         """
         if elem.sw_data_def_props is not None:
             self._write_sw_data_def_props(elem.sw_data_def_props, "SW-DATA-DEF-PROPS")
@@ -1893,8 +1841,7 @@ class Writer(_XMLWriter):
     def _write_application_primitive_data_type(self, elem: ar_element.ApplicationPrimitiveDataType) -> None:
         """
         Writes complex type AR:APPLICATION-PRIMITIVE-DATA-TYPE
-        Type: Concrete
-        Tag variants: 'APPLICATION-PRIMITIVE-DATA-TYPE'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ApplicationPrimitiveDataType)
         self._add_child("APPLICATION-PRIMITIVE-DATA-TYPE")
@@ -1909,7 +1856,6 @@ class Writer(_XMLWriter):
             elem: ar_element.ApplicationCompositeElementDataPrototype) -> None:
         """
         Writes group AR:APPLICATION-COMPOSITE-ELEMENT-DATA-PROTOTYPE
-        Type: Abstract
         """
         assert isinstance(elem, ar_element.ApplicationCompositeElementDataPrototype)
         if elem.type_ref is not None:
@@ -1918,8 +1864,7 @@ class Writer(_XMLWriter):
     def _write_application_array_element(self, elem: ar_element.ApplicationArrayElement) -> None:
         """
         Writes complex type AR:APPLICATION-ARRAY-ELEMENT
-        Type: Concrete
-        Tag variants: 'ELEMENT'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ApplicationArrayElement)
         self._add_child("ELEMENT")
@@ -1934,7 +1879,6 @@ class Writer(_XMLWriter):
     def _write_application_array_element_group(self, elem: ar_element.ApplicationArrayElement) -> None:
         """
         Writes group AR:APPLICATION-ARRAY-ELEMENT
-        Type: Abstract
         """
         if elem.array_size_handling is not None:
             self._add_content("ARRAY-SIZE-HANDLING", ar_enum.enum_to_xml(elem.array_size_handling))
@@ -1948,8 +1892,7 @@ class Writer(_XMLWriter):
     def _write_application_record_element(self, elem: ar_element.ApplicationRecordElement) -> None:
         """
         Writes complex type AR:APPLICATION-RECORD-ELEMENT
-        Type: Concrete
-        Tag variants: 'APPLICATION-RECORD-ELEMENT'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ApplicationRecordElement)
         self._add_child("APPLICATION-RECORD-ELEMENT")
@@ -1964,7 +1907,6 @@ class Writer(_XMLWriter):
     def _write_application_record_element_group(self, elem: ar_element.ApplicationRecordElement) -> None:
         """
         Writes group AR:APPLICATION-RECORD-ELEMENT
-        Type: Abstract
         """
         if elem.is_optional is not None:
             self._add_content('IS-OPTIONAL', self._format_boolean(elem.is_optional))
@@ -1972,8 +1914,7 @@ class Writer(_XMLWriter):
     def _write_application_array_data_type(self, elem: ar_element.ApplicationArrayDataType) -> None:
         """
         Writes complex type AR:APPLICATION-ARRAY-DATA-TYPE
-        Type: Concrete
-        Tag variants: 'APPLICATION-ARRAY-DATA-TYPE'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ApplicationArrayDataType)
         self._add_child("APPLICATION-ARRAY-DATA-TYPE")
@@ -1987,7 +1928,6 @@ class Writer(_XMLWriter):
     def _write_application_array_data_type_group(self, elem: ar_element.ApplicationArrayDataType) -> None:
         """
         Writes group AR:APPLICATION-ARRAY-DATA-TYPE
-        Type: Abstract
         """
         if elem.dynamic_array_size_profile is not None:
             self._add_content("DYNAMIC-ARRAY-SIZE-PROFILE", str(elem.dynamic_array_size_profile))
@@ -1997,8 +1937,7 @@ class Writer(_XMLWriter):
     def _write_application_record_data_type(self, elem: ar_element.ApplicationRecordDataType) -> None:
         """
         Writes complex type AR:APPLICATION-RECORD-DATA-TYPE
-        Type: Concrete
-        Tag variants: 'APPLICATION-RECORD-DATA-TYPE'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ApplicationRecordDataType)
         self._add_child("APPLICATION-RECORD-DATA-TYPE")
@@ -2012,7 +1951,6 @@ class Writer(_XMLWriter):
     def _write_application_record_data_type_group(self, elem: ar_element.ApplicationRecordDataType) -> None:
         """
         Writes group AR:APPLICATION-RECORD-DATA-TYPE
-        Type: Abstract
         """
         if len(elem.elements) > 0:
             self._add_child("ELEMENTS")
@@ -2022,9 +1960,8 @@ class Writer(_XMLWriter):
 
     def _write_data_type_map(self, elem: ar_element.DataTypeMap) -> None:
         """
-        Writes DataTypeMap
-        Type: Concrete
-        Tag variants: 'DATA-TYPE-MAP'
+        Writes complex type AR:DATA-TYPE-MAP
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.DataTypeMap)
         self._add_child("DATA-TYPE-MAP")
@@ -2036,8 +1973,8 @@ class Writer(_XMLWriter):
 
     def _write_data_type_mapping_set(self, elem: ar_element.DataTypeMappingSet) -> None:
         """
-        Writes DataTypeMappingSet
-        Tag variants: 'DATA-TYPE-MAPPING-SET'
+        Writes complex type AR:DATA-TYPE-MAPPING-SET
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.DataTypeMappingSet)
         attr: TupleList = []
@@ -2060,9 +1997,8 @@ class Writer(_XMLWriter):
 
     def _write_value_list(self, elem: ar_element.ValueList) -> None:
         """
-        Writes complex-type AR:VALUE-LIST
-        Type: Concrete
-        Tag variants: 'SW-ARRAYSIZE'
+        Writes complex type AR:VALUE-LIST
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ValueList)
         tag = "SW-ARRAYSIZE"
@@ -2076,7 +2012,6 @@ class Writer(_XMLWriter):
     def _write_value_list_group(self, elem: ar_element.SwValues) -> None:
         """
         Writes group AR:VALUE-LIST
-        Type: abstract
         """
         for value in elem.values:
             content = self._format_number(value)
@@ -2085,16 +2020,14 @@ class Writer(_XMLWriter):
     def _write_autosar_data_prototype(self, elem: ar_element.AutosarDataPrototype) -> None:
         """
         Writes group AR:AUTOSAR-DATA-PROTOTYPE
-        Type: Abstract
         """
         if elem.type_ref is not None:
             self._write_autosar_data_type_ref(elem.type_ref, "TYPE-TREF")
 
     def _write_variable_data_prototype(self, elem: ar_element.VariableDataPrototype, tag: str) -> None:
         """
-        Reads complex-type AR:VARIABLE-DATA-PROTOTYPE
-        Type: Concrete
-        Tag variants: 'VARIABLE-DATA-PROTOTYPE' | 'BULK-NV-BLOCK' | 'RAM-BLOCK'
+        Writes complex type AR:VARIABLE-DATA-PROTOTYPE
+        Multi-tagged: True
         """
         assert isinstance(elem, ar_element.VariableDataPrototype)
         attr: TupleList = []
@@ -2110,8 +2043,7 @@ class Writer(_XMLWriter):
 
     def _write_variable_data_prototype_group(self, elem: ar_element.VariableDataPrototype) -> None:
         """
-        Reads group AR:VARIABLE-DATA-PROTOTYPE
-        Type: Abstract
+        Writes group AR:VARIABLE-DATA-PROTOTYPE
         """
         if elem.init_value is not None:
             self._add_child("INIT-VALUE")
@@ -2120,9 +2052,8 @@ class Writer(_XMLWriter):
 
     def _write_parameter_data_prototype(self, elem: ar_element.ParameterDataPrototype, tag: str) -> None:
         """
-        Reads complex-type AR:PARAMETER-DATA-PROTOTYPE
-        Type: Concrete
-        Tag variants: 'PARAMETER-DATA-PROTOTYPE' | 'ROM-BLOCK'
+        Writes complex type AR:PARAMETER-DATA-PROTOTYPE
+        Multi-tagged: True
         """
         assert isinstance(elem, ar_element.ParameterDataPrototype)
         attr: TupleList = []
@@ -2138,8 +2069,7 @@ class Writer(_XMLWriter):
 
     def _write_parameter_data_prototype_group(self, elem: ar_element.ParameterDataPrototype) -> None:
         """
-        Reads group AR:PARAMETER-DATA-PROTOTYPE
-        Type: Abstract
+        Writes group AR:PARAMETER-DATA-PROTOTYPE
         """
         if elem.init_value is not None:
             self._add_child("INIT-VALUE")
@@ -2148,9 +2078,8 @@ class Writer(_XMLWriter):
 
     def _write_argument_data_prototype(self, elem: ar_element.ArgumentDataPrototype) -> None:
         """
-        Reads complex-type AR:ARGUMENT-DATA-PROTOTYPE
-        Type: Concrete
-        Tag variants: 'ARGUMENT-DATA-PROTOTYPE'
+        Writes complex type AR:ARGUMENT-DATA-PROTOTYPE
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ArgumentDataPrototype)
         attr: TupleList = []
@@ -2166,8 +2095,7 @@ class Writer(_XMLWriter):
 
     def _write_argument_data_prototype_group(self, elem: ar_element.ArgumentDataPrototype) -> None:
         """
-        Reads group AR:ARGUMENT-DATA-PROTOTYPE
-        Type: Abstract
+        Writes group AR:ARGUMENT-DATA-PROTOTYPE
         """
         if elem.direction is not None:
             self._add_content("DIRECTION", ar_enum.enum_to_xml(elem.direction))
@@ -2177,7 +2105,7 @@ class Writer(_XMLWriter):
     def _write_mode_request_type_map(self, elem: ar_element.ModeRequestTypeMap) -> None:
         """
         Writes complex type AR:MODE-REQUEST-TYPE-MAP
-        Tag variants: 'MODE-REQUEST-TYPE-MAP'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ModeRequestTypeMap)
         tag = "MODE-REQUEST-TYPE-MAP"
@@ -2206,11 +2134,9 @@ class Writer(_XMLWriter):
     def _write_compu_method_ref(self, elem: ar_element.CompuMethodRef) -> None:
         """
         Writes complex type AR:COMPU-METHOD-REF
-        Type: Concrete
-        Tag variants: 'COMPU-METHOD-REF'
+        Multi-tagged: False
 
         Note: The name of the complex-type is anonymous in the XML schema.
-
         """
         assert isinstance(elem, ar_element.CompuMethodRef)
         attr: TupleList = []
@@ -2220,11 +2146,9 @@ class Writer(_XMLWriter):
     def _write_data_constraint_ref(self, elem: ar_element.DataConstraintRef) -> None:
         """
         Writes complex type AR:DATA-CONSTR-REF
-        Type: Concrete
-        Tag variants: 'DATA-CONSTR-REF'
+        Multi-tagged: False
 
         Note: The name of the complex-type is anonymous in the XML schema.
-
         """
         assert isinstance(elem, ar_element.DataConstraintRef)
         attr: TupleList = []
@@ -2234,11 +2158,9 @@ class Writer(_XMLWriter):
     def _write_function_ptr_signature_ref(self, elem: ar_element.FunctionPtrSignatureRef) -> None:
         """
         Writes complex type AR:FunctionPtrSignatureRef
-        Type: Concrete
-        Tag variants: 'FunctionPtrSignatureRef'
+        Multi-tagged: False
 
         Note: The name of the complex-type is anonymous in the XML schema.
-
         """
         assert isinstance(elem, ar_element.FunctionPtrSignatureRef)
         attr: TupleList = []
@@ -2248,10 +2170,8 @@ class Writer(_XMLWriter):
     def _write_impl_data_type_ref(self, elem: ar_element.ImplementationDataTypeRef, tag: str) -> None:
         """
         Writes reference to AR:IMPLEMENTATION-DATA-TYPE-REF
-        Tag variants: 'IMPLEMENTATION-DATA-TYPE-REF' | 'VALUE-TYPE-TREF'
 
         Note: The name of the complex-type is anonymous in the XML schema.
-
         """
         assert isinstance(elem, ar_element.ImplementationDataTypeRef)
         attr: TupleList = []
@@ -2261,11 +2181,9 @@ class Writer(_XMLWriter):
     def _write_sw_base_type_ref(self, elem: ar_element.SwBaseTypeRef) -> None:
         """
         Writes complex type AR:SW-BASE-TYPE-REF
-        Type: Concrete
-        Tag variants: 'BASE-TYPE-REF'
+        Multi-tagged: False
 
         Note: The name of the complex-type is anonymous in the XML schema.
-
         """
         assert isinstance(elem, ar_element.SwBaseTypeRef)
         attr: TupleList = []
@@ -2275,7 +2193,6 @@ class Writer(_XMLWriter):
     def _write_sw_addr_method_ref(self, elem: ar_element.SwAddrMethodRef) -> None:
         """
         Writes reference to AR:SW-ADDR-METHOD--SUBTYPES-ENUM
-        Tag variants: 'SW-ADDR-METHOD-REF'
         """
         assert isinstance(elem, ar_element.SwAddrMethodRef)
         attr: TupleList = []
@@ -2285,8 +2202,7 @@ class Writer(_XMLWriter):
     def _write_unit_ref(self, elem: ar_element.UnitRef) -> None:
         """
         Writes complex type AR:UNIT-REF
-        Type: Concrete
-        Tag variants: 'UNIT-REF'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.UnitRef)
         attr: TupleList = []
@@ -2296,8 +2212,6 @@ class Writer(_XMLWriter):
     def _write_physical_dimension_ref(self, elem: ar_element.PhysicalDimensionRef) -> None:
         """
         Writes PHYSICAL-DIMENSION-REF
-        Type: Concrete
-        Tag variants: 'PHYSICAL-DIMENSION-REF'
         """
         assert isinstance(elem, ar_element.PhysicalDimensionRef)
         attr: TupleList = []
@@ -2307,8 +2221,6 @@ class Writer(_XMLWriter):
     def _write_index_data_type_ref(self, elem: ar_element.IndexDataTypeRef) -> None:
         """
         Writes reference to IndexDataType
-        Type: Concrete
-        Tag variants: 'INDEX-DATA-TYPE-REF'
         """
         assert isinstance(elem, ar_element.IndexDataTypeRef)
         attr: TupleList = []
@@ -2318,8 +2230,6 @@ class Writer(_XMLWriter):
     def _write_application_data_type_ref(self, elem: ar_element.ApplicationDataTypeRef, tag: str) -> None:
         """
         Writes reference to ApplicationDataType
-        Type: Concrete
-        Tag variants: 'TYPE-TREF', 'APPLICATION-DATA-TYPE-REF'
         """
         assert isinstance(elem, ar_element.ApplicationDataTypeRef)
         attr: TupleList = []
@@ -2329,8 +2239,6 @@ class Writer(_XMLWriter):
     def _write_constant_ref(self, elem: ar_element.ApplicationDataTypeRef, tag: str) -> None:
         """
         Writes reference to ConstantSpecification
-        Type: Concrete
-        Tag variants: 'CONSTANT-REF'
 
         Don't confuse this with the ConstantReference class.
         """
@@ -2342,12 +2250,6 @@ class Writer(_XMLWriter):
     def _write_autosar_data_type_ref(self, elem: ar_element.AutosarDataTypeRef, tag: str) -> None:
         """
         Writes reference to AutosarDataTypeRef
-        Type: Concrete
-        Tag variants: 'TYPE-TREF',
-                      'AUTOSAR-DATA-TYPE-REF',
-                      'DATA-TYPE-REF,
-                      'CURRENT-DATA-TYPE-REF',
-                      'PREVIOUS-DATA-TYPE-REF'
         """
         assert isinstance(elem, ar_element.AutosarDataTypeRef)
         attr: TupleList = []
@@ -2357,8 +2259,6 @@ class Writer(_XMLWriter):
     def _write_variable_data_prototype_ref(self, elem: ar_element.VariableDataPrototypeRef, tag: str) -> None:
         """
         Write reference to VariableDataPrototype
-        Type: Concrete
-        Tag variants: Too many to list
         """
         assert isinstance(elem, ar_element.VariableDataPrototypeRef)
         attr: TupleList = []
@@ -2368,8 +2268,6 @@ class Writer(_XMLWriter):
     def _write_parameter_data_prototype_ref(self, elem: ar_element.ParameterDataPrototypeRef, tag: str) -> None:
         """
         Write reference ParameterDataPrototype
-        Type: Concrete
-        Tag variants: Too many to list
         """
         assert isinstance(elem, ar_element.ParameterDataPrototypeRef)
         attr: TupleList = []
@@ -2379,8 +2277,6 @@ class Writer(_XMLWriter):
     def _write_application_error_ref(self, elem: ar_element.ApplicationErrorRef, tag: str) -> None:
         """
         Writes reference to ApplicationError
-        Type: Concrete
-        Tag variants: 'POSSIBLE-ERROR-REF' | 'FIRST-APPLICATION-ERROR-REF' | 'SECOND-APPLICATION-ERROR-REF'
         """
         assert isinstance(elem, ar_element.ApplicationErrorRef)
         attr: TupleList = []
@@ -2390,8 +2286,6 @@ class Writer(_XMLWriter):
     def _write_mode_declaration_ref(self, elem: ar_element.ModeDeclarationRef, tag: str) -> None:
         """
         Writes reference to ModeDeclaration
-        Type: Concrete
-        Tag variants: Too many to list
         """
         assert isinstance(elem, ar_element.ModeDeclarationRef)
         attr: TupleList = []
@@ -2401,8 +2295,6 @@ class Writer(_XMLWriter):
     def _write_mode_declaration_group_ref(self, elem: ar_element.ModeDeclarationGroupRef, tag: str) -> None:
         """
         Writes reference to ModeDeclaration
-        Type: Concrete
-        Tag variants: Too many to list
         """
         assert isinstance(elem, ar_element.ModeDeclarationGroupRef)
         attr: TupleList = []
@@ -2414,7 +2306,6 @@ class Writer(_XMLWriter):
                                                     tag: str) -> None:
         """
         Writes reference to ModeDeclarationGroupPrototype
-        Tag variants: Too many to list
         """
         assert isinstance(elem, ar_element.ModeDeclarationGroupPrototypeRef)
         attr: TupleList = []
@@ -2437,7 +2328,6 @@ class Writer(_XMLWriter):
                                                    ) -> None:
         """
         Writes reference to E2EProfileCompatibilityProps
-        Tag variants: 'E-2-E-PROFILE-COMPATIBILITY-PROPS-REF'
         """
         assert isinstance(elem, ar_element.E2EProfileCompatibilityPropsRef)
         attr: TupleList = []
@@ -2559,8 +2449,6 @@ class Writer(_XMLWriter):
                                                     tag: str) -> None:
         """
         Writes references to AR:ABSTRACT-REQUIRED-PORT'-PROTOTYPE--SUBTYPES-ENUM
-        Tag variants: 'REQUIRED-OUTER-PORT-REF' | 'CONTEXT-R-PORT-REF' | 'CONTEXT-PORT-REF'
-                      'TARGET-R-PORT-REF' |
         """
         assert isinstance(elem, ar_element.AbstractRequiredPortPrototypeRef)
         self._write_ref_content(elem, tag)
@@ -2570,7 +2458,6 @@ class Writer(_XMLWriter):
                                                     tag: str) -> None:
         """
         Writes references to AR:ABSTRACT-PROVIDED-PORT-PROTOTYPE--SUBTYPES-ENUM
-        Tag variants: 'CONTEXT-P-PORT-REF' | 'TARGET-P-PORT-REF' | 'PROVIDED-OUTER-PORT-REF'
         """
         assert isinstance(elem, ar_element.AbstractProvidedPortPrototypeRef)
         self._write_ref_content(elem, tag)
@@ -2600,7 +2487,6 @@ class Writer(_XMLWriter):
                                    tag: str) -> None:
         """
         Writes references to AR:VARIABLE-ACCESS--SUBTYPES-ENUM
-        Tag variants: 'EVENT-SOURCE-REF' | 'VARIABLE-ACCESS-REF' | 'TARGET-VARIABLE-ACCESS-REF'
         """
         assert isinstance(elem, ar_element.VariableAccessRef)
         self._write_ref_content(elem, tag)
@@ -2610,7 +2496,6 @@ class Writer(_XMLWriter):
                                      ) -> None:
         """
         Writes references to AR:MODE-SWITCH-POINT--SUBTYPES-ENUM
-        Tag variants: 'EVENT-SOURCE-REF'
         """
         assert isinstance(elem, ar_element.ModeSwitchPointRef)
         self._write_ref_content(elem, "EVENT-SOURCE-REF")
@@ -2620,7 +2505,6 @@ class Writer(_XMLWriter):
                                            ) -> None:
         """
         Writes references to AR:ASYNCHRONOUS-SERVER-CALL-POINT--SUBTYPES-ENUM
-        Tag variants: 'ASYNCHRONOUS-SERVER-CALL-POINT-REF'
         """
         assert isinstance(elem, ar_element.AsynchronousServerCallPointRef)
         self._write_ref_content(elem, "ASYNCHRONOUS-SERVER-CALL-POINT-REF")
@@ -2630,7 +2514,6 @@ class Writer(_XMLWriter):
                                                   ) -> None:
         """
         Writes references to AR:ASYNCHRONOUS-SERVER-CALL-RESULT-POINT--SUBTYPES-ENUM
-        Tag variants: 'EVENT-SOURCE-REF'
         """
         assert isinstance(elem, ar_element.AsynchronousServerCallResultPointRef)
         self._write_ref_content(elem, "EVENT-SOURCE-REF")
@@ -2640,9 +2523,6 @@ class Writer(_XMLWriter):
                            tag: str) -> None:
         """
         Writes references to AR:TRIGGER--SUBTYPES-ENUM
-        Tag variants: 'TRIGGER-REF' | 'RELEASED-TRIGGER-REF' | 'MASTERED-TRIGGER-REF' |
-                      'TARGET-TRIGGER-REF' | 'SOURCE-TRIGGER-REF' | 'BSW-TRIGGER-REF' |
-                      'FIRST-TRIGGER-REF' | 'SECOND-TRIGGER-REF'
         """
         assert isinstance(elem, ar_element.TriggerRef)
         self._write_ref_content(elem, tag)
@@ -2652,7 +2532,6 @@ class Writer(_XMLWriter):
                                              ) -> None:
         """
         Writes references to AR:INTERNAL-TRIGGERING-POINT--SUBTYPES-ENUM
-        Tag variants: 'EVENT-SOURCE-REF'
         """
         assert isinstance(elem, ar_element.InternalTriggeringPointRef)
         self._write_ref_content(elem, "EVENT-SOURCE-REF")
@@ -2662,7 +2541,6 @@ class Writer(_XMLWriter):
                              tag: str) -> None:
         """
         Writes references to AR:RTE-EVENT--SUBTYPES-ENUM
-        Tag variants: 'TARGET-EVENT-REF' | 'TARGET-RTE-EVENT-REF' | 'TRIGGER-REF'
         """
         assert isinstance(elem, ar_element.RteEventRef)
         self._write_ref_content(elem, tag)
@@ -2672,7 +2550,6 @@ class Writer(_XMLWriter):
                                          tag: str) -> None:
         """
         Writes references to AR:DATA-TYPE-MAPPING-SET--SUBTYPES-ENUM
-        Tag variants: 'DATA-TYPE-MAPPING-REF' | 'DATA-TYPE-MAPPING-SET-REF'
         """
         assert isinstance(elem, ar_element.DataTypeMappingSetRef)
         self._write_ref_content(elem, tag)
@@ -2680,7 +2557,6 @@ class Writer(_XMLWriter):
     def _write_argument_data_prototype_ref(self, elem: ar_element.ArgumentDataPrototypeRef, tag: str) -> None:
         """
         Writes references to AR:ARGUMENT-DATA-PROTOTYPE--SUBTYPES-ENUM
-        Tag variants: 'ARGUMENT-REF' | 'ROOT-ARGUMENT-DATA-PROTOTYPE-REF' | 'TLV-ARGUMENT-REF'
         """
         assert isinstance(elem, ar_element.ArgumentDataPrototypeRef)
         self._write_ref_content(elem, tag)
@@ -2688,7 +2564,6 @@ class Writer(_XMLWriter):
     def _write_application_array_element_ref(self, elem: ar_element.ApplicationArrayElementRef) -> None:
         """
         Writes references to AR:APPLICATION-ARRAY-ELEMENT--SUBTYPES-ENUM
-        Tag variants: 'APPLICATION-ARRAY-ELEMENT-REF'
         """
         assert isinstance(elem, ar_element.ApplicationArrayElementRef)
         self._write_ref_content(elem, "APPLICATION-ARRAY-ELEMENT-REF")
@@ -2696,7 +2571,6 @@ class Writer(_XMLWriter):
     def _write_application_record_element_ref(self, elem: ar_element.ApplicationRecordElementRef, tag: str) -> None:
         """
         Writes references to AR:APPLICATION-RECORD-ELEMENT--SUBTYPES-ENUM
-        Tag variants: 'APPLICATION-RECORD-ELEMENT-REF' | 'TLV-RECORD-ELEMENT-REF'
         """
         assert isinstance(elem, ar_element.ApplicationRecordElementRef)
         self._write_ref_content(elem, tag)
@@ -2706,8 +2580,6 @@ class Writer(_XMLWriter):
     def _write_text_value_specification(self, elem: ar_element.TextValueSpecification) -> None:
         """
         Writes AR:TEXT-VALUE-SPECIFICATION
-        Type: Concrete
-        Tag variants: 'TEXT-VALUE-SPECIFICATION'
         """
         assert isinstance(elem, ar_element.TextValueSpecification)
         tag = "TEXT-VALUE-SPECIFICATION"
@@ -2723,8 +2595,6 @@ class Writer(_XMLWriter):
     def _write_numerical_value_specification(self, elem: ar_element.NumericalValueSpecification) -> None:
         """
         Writes AR:NUMERICAL-VALUE-SPECIFICATION
-        Type: Concrete
-        Tag variants: 'NUMERICAL-VALUE-SPECIFICATION'
         """
         assert isinstance(elem, ar_element.NumericalValueSpecification)
         tag = "NUMERICAL-VALUE-SPECIFICATION"
@@ -2740,8 +2610,6 @@ class Writer(_XMLWriter):
     def _write_not_available_value_specification(self, elem: ar_element.NotAvailableValueSpecification) -> None:
         """
         Writes AR:NOT-AVAILABLE-VALUE-SPECIFICATION
-        Type: Concrete
-        Tag variants: 'NOT-AVAILABLE-VALUE-SPECIFICATION'
         """
         assert isinstance(elem, ar_element.NotAvailableValueSpecification)
         tag = "NOT-AVAILABLE-VALUE-SPECIFICATION"
@@ -2756,9 +2624,8 @@ class Writer(_XMLWriter):
 
     def _write_array_value_specification(self, elem: ar_element.ArrayValueSpecification) -> None:
         """
-        Writes complex-type AR:ARRAY-VALUE-SPECIFICATION
-        Type: Concrete
-        Tag variants: 'ARRAY-VALUE-SPECIFICATION'
+        Writes complex type AR:ARRAY-VALUE-SPECIFICATION
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ArrayValueSpecification)
         tag = "ARRAY-VALUE-SPECIFICATION"
@@ -2773,7 +2640,6 @@ class Writer(_XMLWriter):
     def _write_array_value_specification_group(self, elem: ar_element.ArrayValueSpecification) -> None:
         """
         Writes group AR:ARRAY-VALUE-SPECIFICATION
-        Type: Abstract
         """
         if elem.elements:
             self._add_child("ELEMENTS")
@@ -2783,9 +2649,8 @@ class Writer(_XMLWriter):
 
     def _write_record_value_specification(self, elem: ar_element.RecordValueSpecification) -> None:
         """
-        Writes complex-type AR:RECORD-VALUE-SPECIFICATION
-        Type: Concrete
-        Tag variants: 'RECORD-VALUE-SPECIFICATION'
+        Writes complex type AR:RECORD-VALUE-SPECIFICATION
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.RecordValueSpecification)
         tag = "RECORD-VALUE-SPECIFICATION"
@@ -2800,7 +2665,6 @@ class Writer(_XMLWriter):
     def _write_record_value_specification_group(self, elem: ar_element.RecordValueSpecification) -> None:
         """
         Writes group AR:RECORD-VALUE-SPECIFICATION
-        Type: Abstract
         """
         if elem.fields:
             self._add_child("FIELDS")
@@ -2810,7 +2674,8 @@ class Writer(_XMLWriter):
 
     def _write_application_value_specification(self, elem: ar_element.ApplicationValueSpecification) -> None:
         """
-        Writes complex-type AR:APPLICATION-VALUE-SPECIFICATION
+        Writes complex type AR:APPLICATION-VALUE-SPECIFICATION
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ApplicationValueSpecification)
         tag = "APPLICATION-VALUE-SPECIFICATION"
@@ -2839,7 +2704,6 @@ class Writer(_XMLWriter):
     def _write_value_specification_group(self, elem: ar_element.ValueSpecification) -> None:
         """
         Writes group AR:VALUE-SPECIFICATION
-        Type: Abstract
         """
         if elem.label is not None:
             self._add_content("SHORT-LABEL", str(elem.label))
@@ -2858,6 +2722,7 @@ class Writer(_XMLWriter):
     def _write_constant_specification(self, elem: ar_element.ConstantSpecification) -> None:
         """
         Writes complex type AR:CONSTANT-SPECIFICATION
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ConstantSpecification)
         attr: TupleList = []
@@ -2881,6 +2746,7 @@ class Writer(_XMLWriter):
     def _write_constant_reference(self, elem: ar_element.ConstantReference) -> None:
         """
         Writes complex type AR:CONSTANT-REFERENCE
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ConstantReference)
         tag = "CONSTANT-REFERENCE"
@@ -2897,9 +2763,8 @@ class Writer(_XMLWriter):
 
     def _write_sw_values(self, elem: ar_element.SwValues) -> None:
         """
-        Writes complex-type AR:SW-VALUES
-        Type: Concrete
-        Tag variants: 'SW-VALUES-PHYS'
+        Writes complex type AR:SW-VALUES
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.SwValues)
         tag = "SW-VALUES-PHYS"
@@ -2912,8 +2777,7 @@ class Writer(_XMLWriter):
 
     def _write_sw_values_group(self, elem: ar_element.SwValues) -> None:
         """
-        Writes group AR:SW-VALUES (also used part of AR:VALUE-GROUP)
-        Type: abstract
+        Writes group AR:SW-VALUES
         """
         for value in elem.values:
             if isinstance(value, str):
@@ -2927,8 +2791,8 @@ class Writer(_XMLWriter):
 
     def _write_value_group(self, elem: ar_element.ValueGroup, tag: str) -> None:
         """
-        Writes complex-type AR:VALUE-GROUP
-        Type: Concrete
+        Writes complex type AR:VALUE-GROUP
+        Multi-tagged: True
         """
         assert isinstance(elem, ar_element.ValueGroup)
         if elem.is_empty:
@@ -2942,8 +2806,8 @@ class Writer(_XMLWriter):
 
     def _write_sw_axis_cont(self, elem: ar_element.SwAxisCont) -> None:
         """
-        Writes Complex-type SW-AXIS-CONT
-        Type: Concrete
+        Writes complex type AR:SW-AXIS-CONT
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.SwAxisCont)
         tag = "SW-AXIS-CONT"
@@ -2956,8 +2820,7 @@ class Writer(_XMLWriter):
 
     def _write_sw_axis_cont_group(self, elem: ar_element.SwAxisCont) -> None:
         """
-        Writes group SW-AXIS-CONT
-        Type: Concrete
+        Writes group AR:SW-AXIS-CONT
         """
         if elem.category is not None:
             self._add_content("CATEGORY", ar_enum.enum_to_xml(elem.category))
@@ -2974,8 +2837,8 @@ class Writer(_XMLWriter):
 
     def _write_sw_value_cont(self, elem: ar_element.SwValueCont) -> None:
         """
-        Writes Complex-type SW-VALUE-CONT
-        Type: Concrete
+        Writes complex type AR:SW-VALUE-CONT
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.SwValueCont)
         tag = "SW-VALUE-CONT"
@@ -2988,8 +2851,7 @@ class Writer(_XMLWriter):
 
     def _write_sw_value_cont_group(self, elem: ar_element.SwValueCont) -> None:
         """
-        Writes group SW-VALUE-CONT
-        Type: Concrete
+        Writes group AR:SW-VALUE-CONT
         """
         if elem.unit_ref is not None:
             self._write_unit_ref(elem.unit_ref)
@@ -3002,7 +2864,8 @@ class Writer(_XMLWriter):
 
     def _write_multidimensional_time(self, elem: ar_element.MultidimensionalTime, tag: str) -> None:
         """
-        Writes complex-type AR:MULTIDIMENSIONAL-TIME
+        Writes complex type AR:MULTIDIMENSIONAL-TIME
+        Multi-tagged: True
         """
         assert isinstance(elem, ar_element.MultidimensionalTime)
         if elem.is_empty:
@@ -3020,7 +2883,7 @@ class Writer(_XMLWriter):
     def _write_mode_declaration(self, elem: ar_element.ModeDeclaration) -> None:
         """
         Writes complex type AR:MODE-DECLARATION
-        Tag variants: 'MODE-DECLARATION'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ModeDeclaration)
         self._add_child("MODE-DECLARATION")
@@ -3034,7 +2897,7 @@ class Writer(_XMLWriter):
     def _write_mode_error_behavior(self, elem: ar_element.ModeErrorBehavior, tag: str) -> None:
         """
         Writes complex type AR:MODE-ERROR-BEHAVIOR
-        Tag variants: 'MODE-MANAGER-ERROR-BEHAVIOR' | 'MODE-USER-ERROR-BEHAVIOR'
+        Multi-tagged: True
         """
         assert isinstance(elem, ar_element.ModeErrorBehavior)
         if elem.is_empty:
@@ -3049,8 +2912,8 @@ class Writer(_XMLWriter):
 
     def _write_mode_transition(self, elem: ar_element.ModeTransition) -> None:
         """
-        Complex type AR:MODE-TRANSITION
-        tag variants: 'MODE-TRANSITION'
+        Writes complex type AR:MODE-TRANSITION
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ModeTransition)
         self._add_child("MODE-TRANSITION")
@@ -3072,7 +2935,7 @@ class Writer(_XMLWriter):
     def _write_mode_declaration_group(self, elem: ar_element.ModeDeclarationGroup) -> None:
         """
         Writes complex type AR:MODE-DECLARATION-GROUP
-        Tag variants: 'MODE-DECLARATION-GROUP'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ModeDeclarationGroup)
         attr: TupleList = []
@@ -3110,8 +2973,7 @@ class Writer(_XMLWriter):
     def _write_mode_declaration_group_prototype(self, elem: ar_element.ModeDeclarationGroupPrototype, tag: str) -> None:
         """
         Writes complex type AR:MODE-DECLARATION-GROUP-PROTOTYPE
-        Tag variants: 'MODE-DECLARATION-GROUP-PROTOTYPE' | 'MODE-GROUP'
-                      | 'PROCESS-STATE-MACHINE' | 'STATE-MACHINE'
+        Multi-tagged: True
         """
         assert isinstance(elem, ar_element.ModeDeclarationGroupPrototype)
         attr: TupleList = []
@@ -3138,7 +3000,6 @@ class Writer(_XMLWriter):
     def _write_port_interface(self, elem: ar_element.PortInterface) -> None:
         """
         Writes group AR:PORTINTERFACE
-        Type: Abstract
         """
         if elem.is_service is not None:
             self._add_content("IS-SERVICE", self._format_boolean(elem.is_service))
@@ -3148,7 +3009,7 @@ class Writer(_XMLWriter):
     def _write_nv_data_interface(self, elem: ar_element.NvDataInterface) -> None:
         """
         Writes complex type AR:NV-DATA-INTERFACE
-        Type: Concrete
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.NvDataInterface)
         self._add_child("NV-DATA-INTERFACE")
@@ -3162,7 +3023,6 @@ class Writer(_XMLWriter):
     def _write_nv_data_interface_group(self, elem: ar_element.NvDataInterface) -> None:
         """
         Writes group AR:NV-DATA-INTERFACE
-        Type: Abstract
         """
         if elem.data_elements:
             self._add_child("NV-DATAS")
@@ -3173,7 +3033,7 @@ class Writer(_XMLWriter):
     def _write_parameter_interface(self, elem: ar_element.ParameterInterface) -> None:
         """
         Writes complex type AR:PARAMETER-INTERFACE
-        Type: Concrete
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ParameterInterface)
         self._add_child("PARAMETER-INTERFACE")
@@ -3187,7 +3047,6 @@ class Writer(_XMLWriter):
     def _write_parameter_interface_group(self, elem: ar_element.ParameterInterface) -> None:
         """
         Writes group AR:PARAMETER-INTERFACE
-        Type: Abstract
         """
         if elem.parameters:
             self._add_child("PARAMETERS")
@@ -3198,7 +3057,7 @@ class Writer(_XMLWriter):
     def _write_sender_receiver_interface(self, elem: ar_element.SenderReceiverInterface) -> None:
         """
         Writes complex type AR:SENDER-RECEIVER-INTERFACE
-        Type: Concrete
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.SenderReceiverInterface)
         self._add_child("SENDER-RECEIVER-INTERFACE")
@@ -3212,7 +3071,6 @@ class Writer(_XMLWriter):
     def _write_sender_receiver_interface_group(self, elem: ar_element.SenderReceiverInterface) -> None:
         """
         Writes group AR:SENDER-RECEIVER-INTERFACE
-        Type: Abstract
         """
         if elem.data_elements:
             self._add_child("DATA-ELEMENTS")
@@ -3228,7 +3086,7 @@ class Writer(_XMLWriter):
     def _write_invalidation_policy(self, elem: ar_element.InvalidationPolicy) -> None:
         """
         Writes complex type AR:INVALIDATION-POLICY
-        Type: Concrete
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.InvalidationPolicy)
         tag = "INVALIDATION-POLICY"
@@ -3242,7 +3100,6 @@ class Writer(_XMLWriter):
     def _write_invalidation_policy_group(self, elem: ar_element.InvalidationPolicy) -> None:
         """
         Writes group AR:INVALIDATION-POLICY
-        Type: Concrete
         """
         if elem.data_element_ref is not None:
             self._write_variable_data_prototype_ref(elem.data_element_ref, "DATA-ELEMENT-REF")
@@ -3252,7 +3109,7 @@ class Writer(_XMLWriter):
     def _write_application_error(self, elem: ar_element.ApplicationError) -> None:
         """
         Writes complex type AR:APPLICATION-ERROR
-        Tag variants: 'APPLICATION-ERROR'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ApplicationError)
         self._add_child("APPLICATION-ERROR")
@@ -3272,7 +3129,7 @@ class Writer(_XMLWriter):
     def _write_client_server_operation(self, elem: ar_element.ClientServerOperation) -> None:
         """
         Writes complex type AR:CLIENT-SERVER-OPERATION
-        Tag variants: 'CLIENT-SERVER-OPERATION'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ClientServerOperation)
         self._add_child("CLIENT-SERVER-OPERATION")
@@ -3304,7 +3161,7 @@ class Writer(_XMLWriter):
     def _write_client_server_interface(self, elem: ar_element.ClientServerInterface) -> None:
         """
         Writes complex type AR:CLIENT-SERVER-INTERFACE
-        Tag variants: 'CLIENT-SERVER-INTERFACE'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ClientServerInterface)
         self._add_child("CLIENT-SERVER-INTERFACE")
@@ -3333,7 +3190,7 @@ class Writer(_XMLWriter):
     def _write_mode_switch_interface(self, elem: ar_element.ModeSwitchInterface) -> None:
         """
         Writes complex type AR:MODE-SWITCH-INTERFACE
-        Tag variants: 'MODE-SWITCH-INTERFACE'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ModeSwitchInterface)
         self._add_child("MODE-SWITCH-INTERFACE")
@@ -3348,7 +3205,7 @@ class Writer(_XMLWriter):
     def _write_trigger_interface(self, elem: ar_element.TriggerInterface) -> None:
         """
         Writes complex type AR:TRIGGER-INTERFACE
-        Tag variants: 'TRIGGER-INTERFACE'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.TriggerInterface)
         self._add_child("TRIGGER-INTERFACE")
@@ -3368,7 +3225,7 @@ class Writer(_XMLWriter):
     def _write_e2e_transformation_com_spec_props(self, elem: ar_element.EndToEndTransformationComSpecProps) -> None:
         """
         Writes complex type AR:END-TO-END-TRANSFORMATION-COM-SPEC-PROPS
-        Tag variants: 'END-TO-END-TRANSFORMATION-COM-SPEC-PROPS'
+        Multi-tagged: False
         """
         tag = "END-TO-END-TRANSFORMATION-COM-SPEC-PROPS"
         assert isinstance(elem, ar_element.EndToEndTransformationComSpecProps)
@@ -3422,8 +3279,8 @@ class Writer(_XMLWriter):
 
     def _write_e2e_profile_compatibility_props(self, elem: ar_element.E2EProfileCompatibilityProps) -> None:
         """
-        Reads complex type AR:E-2-E-PROFILE-COMPATIBILITY-PROPS
-        Tag variants: 'E-2-E-PROFILE-COMPATIBILITY-PROPS'
+        Writes complex type AR:E-2-E-PROFILE-COMPATIBILITY-PROPS
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.E2EProfileCompatibilityProps)
         self._add_child("E-2-E-PROFILE-COMPATIBILITY-PROPS")
@@ -3439,7 +3296,7 @@ class Writer(_XMLWriter):
     def _write_mode_switched_ack_request(self, elem: ar_element.ModeSwitchedAckRequest) -> None:
         """
         Writes complex type AR:MODE-SWITCHED-ACK-REQUEST
-        Tag variants: 'MODE-SWITCHED-ACK'
+        Multi-tagged: False
         """
         tag = "MODE-SWITCHED-ACK"
         assert isinstance(elem, ar_element.ModeSwitchedAckRequest)
@@ -3454,7 +3311,7 @@ class Writer(_XMLWriter):
     def _write_mode_switch_sender_com_spec(self, elem: ar_element.ModeSwitchSenderComSpec) -> None:
         """
         Writes complex type AR:MODE-SWITCH-SENDER-COM-SPEC
-        Tag variants: 'MODE-SWITCH-SENDER-COM-SPEC'
+        Multi-tagged: False
         """
         tag = "MODE-SWITCH-SENDER-COM-SPEC"
         assert isinstance(elem, ar_element.ModeSwitchSenderComSpec)
@@ -3483,7 +3340,7 @@ class Writer(_XMLWriter):
     def _write_transmission_acknowledgement_request(self, elem: ar_element.TransmissionAcknowledgementRequest) -> None:
         """
         Writes complex type AR:TRANSMISSION-ACKNOWLEDGEMENT-REQUEST
-        Tag variants: 'TRANSMISSION-ACKNOWLEDGE'
+        Multi-tagged: False
         """
         tag = "TRANSMISSION-ACKNOWLEDGE"
         assert isinstance(elem, ar_element.TransmissionAcknowledgementRequest)
@@ -3498,7 +3355,7 @@ class Writer(_XMLWriter):
     def _write_tranmsission_com_spec_props(self, elem: ar_element.TransmissionComSpecProps) -> None:
         """
         Writes complex type AR:TRANSMISSION-COM-SPEC-PROPS
-        Tag variants: 'TRANSMISSION-PROPS'
+        Multi-tagged: False
         """
         tag = "TRANSMISSION-PROPS"
         assert isinstance(elem, ar_element.TransmissionComSpecProps)
@@ -3535,7 +3392,7 @@ class Writer(_XMLWriter):
     def _write_queued_sender_com_spec(self, elem: ar_element.QueuedSenderComSpec) -> None:
         """
         Writes complex type AR:QUEUED-SENDER-COM-SPEC
-        Tag variants: 'QUEUED-SENDER-COM-SPEC'
+        Multi-tagged: False
         """
         tag = "QUEUED-SENDER-COM-SPEC"
         assert isinstance(elem, ar_element.QueuedSenderComSpec)
@@ -3549,7 +3406,7 @@ class Writer(_XMLWriter):
     def _write_non_queued_sender_com_spec(self, elem: ar_element.NonqueuedSenderComSpec) -> None:
         """
         Writes complex type AR:NONQUEUED-SENDER-COM-SPEC
-        Tag variants: 'NONQUEUED-SENDER-COM-SPEC'
+        Multi-tagged: False
         """
         tag = "NONQUEUED-SENDER-COM-SPEC"
         assert isinstance(elem, ar_element.NonqueuedSenderComSpec)
@@ -3575,7 +3432,7 @@ class Writer(_XMLWriter):
     def _write_nv_provide_com_spec(self, elem: ar_element.NonqueuedSenderComSpec) -> None:
         """
         Writes complex type AR:NV-PROVIDE-COM-SPEC
-        Tag variants: 'NV-PROVIDE-COM-SPEC'
+        Multi-tagged: False
         """
         tag = "NV-PROVIDE-COM-SPEC"
         assert isinstance(elem, ar_element.NvProvideComSpec)
@@ -3598,7 +3455,7 @@ class Writer(_XMLWriter):
     def _write_parameter_provide_com_spec(self, elem: ar_element.ParameterProvideComSpec) -> None:
         """
         Writes complex type AR:PARAMETER-PROVIDE-COM-SPEC
-        Tag variants: 'PARAMETER-PROVIDE-COM-SPEC'
+        Multi-tagged: False
         """
         tag = "PARAMETER-PROVIDE-COM-SPEC"
         assert isinstance(elem, ar_element.ParameterProvideComSpec)
@@ -3617,7 +3474,7 @@ class Writer(_XMLWriter):
     def _write_server_com_spec(self, elem: ar_element.ServerComSpec) -> None:
         """
         Writes complex type AR:SERVER-COM-SPEC
-        Tag variants: 'SERVER-COM-SPEC'
+        Multi-tagged: False
         """
         tag = "SERVER-COM-SPEC"
         assert isinstance(elem, ar_element.ServerComSpec)
@@ -3639,7 +3496,7 @@ class Writer(_XMLWriter):
     def _write_reception_com_spec_props(self, elem: ar_element.ReceptionComSpecProps):
         """
         Writes complex type AR:RECEPTION-COM-SPEC-PROPS
-        Tag variants: 'RECEPTION-PROPS'
+        Multi-tagged: False
         """
         tag = "RECEPTION-PROPS"
         assert isinstance(elem, ar_element.ReceptionComSpecProps)
@@ -3686,7 +3543,7 @@ class Writer(_XMLWriter):
     def _write_queued_receiver_com_spec(self, elem: ar_element.QueuedReceiverComSpec) -> None:
         """
         Writes complex type AR:QUEUED-RECEIVER-COM-SPEC
-        Tag variants: 'QUEUED-RECEIVER-COM-SPEC'
+        Multi-tagged: False
         """
         tag = "QUEUED-RECEIVER-COM-SPEC"
         assert isinstance(elem, ar_element.QueuedReceiverComSpec)
@@ -3702,7 +3559,7 @@ class Writer(_XMLWriter):
     def _write_nonqueued_receiver_com_spec(self, elem: ar_element.NonqueuedReceiverComSpec) -> None:
         """
         Writes complex type AR:NONQUEUED-RECEIVER-COM-SPEC
-        Tag variants: 'NONQUEUED-RECEIVER-COM-SPEC'
+        Multi-tagged: False
         """
         tag = "NONQUEUED-RECEIVER-COM-SPEC"
         assert isinstance(elem, ar_element.NonqueuedReceiverComSpec)
@@ -3741,8 +3598,8 @@ class Writer(_XMLWriter):
 
     def _write_nv_require_com_spec(self, elem: ar_element.NvRequireComSpec) -> None:
         """
-        Writes Complex type AR:NV-REQUIRE-COM-SPEC
-        Tag variants: 'NV-REQUIRE-COM-SPEC'
+        Writes complex type AR:NV-REQUIRE-COM-SPEC
+        Multi-tagged: False
         """
         tag = "NV-REQUIRE-COM-SPEC"
         assert isinstance(elem, ar_element.NvRequireComSpec)
@@ -3761,7 +3618,7 @@ class Writer(_XMLWriter):
     def _write_parameter_require_com_spec(self, elem: ar_element.ParameterRequireComSpec) -> None:
         """
         Writes complex type AR:PARAMETER-REQUIRE-COM-SPEC
-        Tag variants: 'PARAMETER-REQUIRE-COM-SPEC'
+        Multi-tagged: False
         """
         tag = "PARAMETER-REQUIRE-COM-SPEC"
         assert isinstance(elem, ar_element.ParameterRequireComSpec)
@@ -3780,7 +3637,7 @@ class Writer(_XMLWriter):
     def _write_mode_switch_receiver_com_spec(self, elem: ar_element.ModeSwitchReceiverComSpec) -> None:
         """
         Writes complex type AR:MODE-SWITCH-RECEIVER-COM-SPEC
-        Tag variants: 'MODE-SWITCH-RECEIVER-COM-SPEC'
+        Multi-tagged: False
         """
         tag = "MODE-SWITCH-RECEIVER-COM-SPEC"
         assert isinstance(elem, ar_element.ModeSwitchReceiverComSpec)
@@ -3799,8 +3656,8 @@ class Writer(_XMLWriter):
 
     def _write_client_com_spec(self, elem: ar_element.ClientComSpec) -> None:
         """
-        Writes Complex type AR:CLIENT-COM-SPEC
-        Tag variants: 'CLIENT-COM-SPEC'
+        Writes complex type AR:CLIENT-COM-SPEC
+        Multi-tagged: False
         """
         tag = "CLIENT-COM-SPEC"
         assert isinstance(elem, ar_element.ClientComSpec)
@@ -3845,7 +3702,7 @@ class Writer(_XMLWriter):
     def _write_provide_port_prototype(self, elem: ar_element.ProvidePortPrototype) -> None:
         """
         Writes complex type AR:P-PORT-PROTOTYPE
-        Tag variants: 'P-PORT-PROTOTYPE'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ProvidePortPrototype)
         self._add_child("P-PORT-PROTOTYPE")
@@ -3870,7 +3727,7 @@ class Writer(_XMLWriter):
     def _write_require_port_prototype(self, elem: ar_element.RequirePortPrototype) -> None:
         """
         Writes complex type AR:R-PORT-PROTOTYPE
-        Tag variants: 'R-PORT-PROTOTYPE'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.RequirePortPrototype)
         self._add_child("R-PORT-PROTOTYPE")
@@ -3897,7 +3754,7 @@ class Writer(_XMLWriter):
     def _write_pr_port_prototype(self, elem: ar_element.PRPortPrototype) -> None:
         """
         Writes complex type AR:PR-PORT-PROTOTYPE
-        Tag variants: 'PR-PORT-PROTOTYPE'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.PRPortPrototype)
         self._add_child("PR-PORT-PROTOTYPE")
@@ -3961,7 +3818,7 @@ class Writer(_XMLWriter):
     def _write_application_software_component_type(self, elem: ar_element.ApplicationSoftwareComponentType) -> None:
         """
         Writes complex type AR:APPLICATION-SW-COMPONENT-TYPE
-        Tag variants: 'APPLICATION-SW-COMPONENT-TYPE'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ApplicationSoftwareComponentType)
         self._add_child("APPLICATION-SW-COMPONENT-TYPE")
@@ -3976,7 +3833,7 @@ class Writer(_XMLWriter):
                                                        elem: ar_element.ComplexDeviceDriverSwComponentType) -> None:
         """
         Writes complex type AR:COMPLEX-DEVICE-DRIVER-SW-COMPONENT-TYPE
-        Tag variants: 'COMPLEX-DEVICE-DRIVER-SW-COMPONENT-TYPE'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ComplexDeviceDriverSwComponentType)
         self._add_child("COMPLEX-DEVICE-DRIVER-SW-COMPONENT-TYPE")
@@ -3990,7 +3847,7 @@ class Writer(_XMLWriter):
     def _write_nv_block_sw_component_type(self, elem: ar_element.NvBlockSwComponentType) -> None:
         """
         Writes complex type AR:NV-BLOCK-SW-COMPONENT-TYPE
-        Tag variants: 'NV-BLOCK-SW-COMPONENT-TYPE'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.NvBlockSwComponentType)
         self._add_child("NV-BLOCK-SW-COMPONENT-TYPE")
@@ -4004,7 +3861,7 @@ class Writer(_XMLWriter):
     def _write_ecu_abstraction_sw_component_type(self, elem: ar_element.EcuAbstractionSwComponentType) -> None:
         """
         Writes complex type AR:ECU-ABSTRACTION-SW-COMPONENT-TYPE
-        Tag variants: 'ECU-ABSTRACTION-SW-COMPONENT-TYPE'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.EcuAbstractionSwComponentType)
         self._add_child("ECU-ABSTRACTION-SW-COMPONENT-TYPE")
@@ -4018,7 +3875,7 @@ class Writer(_XMLWriter):
     def _write_sensor_actuator_sw_component_type(self, elem: ar_element.SensorActuatorSwComponentType) -> None:
         """
         Writes complex type AR:SENSOR-ACTUATOR-SW-COMPONENT-TYPE
-        Tag variants: 'SENSOR-ACTUATOR-SW-COMPONENT-TYPE'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.SensorActuatorSwComponentType)
         self._add_child("SENSOR-ACTUATOR-SW-COMPONENT-TYPE")
@@ -4032,7 +3889,7 @@ class Writer(_XMLWriter):
     def _write_service_sw_component_type(self, elem: ar_element.ServiceSwComponentType) -> None:
         """
         Writes complex type AR:SERVICE-SW-COMPONENT-TYPE
-        Tag variants: 'SERVICE-SW-COMPONENT-TYPE'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ServiceSwComponentType)
         self._add_child("SERVICE-SW-COMPONENT-TYPE")
@@ -4046,7 +3903,7 @@ class Writer(_XMLWriter):
     def _write_service_proxy_sw_component_type(self, elem: ar_element.ServiceProxySwComponentType) -> None:
         """
         Writes complex type AR:SERVICE-PROXY-SW-COMPONENT-TYPE
-        Tag variants: 'SERVICE-PROXY-SW-COMPONENT-TYPE'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ServiceProxySwComponentType)
         self._add_child("SERVICE-PROXY-SW-COMPONENT-TYPE")
@@ -4060,7 +3917,7 @@ class Writer(_XMLWriter):
     def _write_sw_component_prototype(self, elem: ar_element.SwComponentPrototype) -> None:
         """
         Writes complex type AR:SW-COMPONENT-PROTOTYPE
-        Tag variants: 'SW-COMPONENT-PROTOTYPE'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.SwComponentPrototype)
         self._add_child("SW-COMPONENT-PROTOTYPE")
@@ -4075,10 +3932,9 @@ class Writer(_XMLWriter):
                                                      elem: ar_element.PortInCompositionTypeInstanceRef,
                                                      elem_tag: str) -> None:
         """
-        Writes merge of complex types AR:P-PORT-IN-COMPOSITION-INSTANCE-REF
+        Writes merge of complex types AR:P-PORT-IN-COMPOSITION-INSTANCE-REF and R-PORT-IN-COMPOSITION-INSTANCE-REF
+
         and R-PORT-IN-COMPOSITION-INSTANCE-REF
-        Tag variants: 'PROVIDER-IREF' | 'P-PORT-IN-COMPOSITION-INSTANCE-REF' |
-                      'REQUESTER-IREF'| 'R-PORT-IN-COMPOSITION-INSTANCE-REF'
         """
         assert isinstance(elem, ar_element.PortInCompositionTypeInstanceRef)
         if elem.is_empty:
@@ -4103,7 +3959,7 @@ class Writer(_XMLWriter):
     def _write_assembly_sw_connector(self, elem: ar_element.AssemblySwConnector) -> None:
         """
         Writes complex type AR:ASSEMBLY-SW-CONNECTOR
-        Tag variants: 'ASSEMBLY-SW-CONNECTOR'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.AssemblySwConnector)
         self._add_child("ASSEMBLY-SW-CONNECTOR")
@@ -4119,7 +3975,7 @@ class Writer(_XMLWriter):
     def _write_delegation_sw_connector(self, elem: ar_element.DelegationSwConnector) -> None:
         """
         Writes complex type AR:DELEGATION-SW-CONNECTOR
-        Tag variants: 'DELEGATION-SW-CONNECTOR'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.DelegationSwConnector)
         self._add_child("DELEGATION-SW-CONNECTOR")
@@ -4141,7 +3997,7 @@ class Writer(_XMLWriter):
     def _write_passthrough_sw_connector(self, elem: ar_element.PassThroughSwConnector) -> None:
         """
         Writes complex type AR:PASS-THROUGH-SW-CONNECTOR
-        Tag variants: 'PASS-THROUGH-SW-CONNECTOR'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.PassThroughSwConnector)
         self._add_child("PASS-THROUGH-SW-CONNECTOR")
@@ -4157,7 +4013,7 @@ class Writer(_XMLWriter):
     def _write_composition_sw_component_type(self, elem: ar_element.CompositionSwComponentType) -> None:
         """
         Writes complex type AR:COMPOSITION-SW-COMPONENT-TYPE
-        Tag variants: 'COMPOSITION-SW-COMPONENT-TYPE'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.CompositionSwComponentType)
         self._add_child("COMPOSITION-SW-COMPONENT-TYPE")
@@ -4191,7 +4047,7 @@ class Writer(_XMLWriter):
     def _write_swc_implementation(self, elem: ar_element.SwcImplementation) -> None:
         """
         Writes complex type AR:SWC-IMPLEMENTATION
-        Tag variants: 'SWC-IMPLEMENTATION'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.SwcImplementation)
         self._add_child("SWC-IMPLEMENTATION")
@@ -4217,8 +4073,7 @@ class Writer(_XMLWriter):
                                                        tag: str) -> None:
         """
         Writes complex type AR:P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF
-        Tag variants: 'P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF' | 'MODE-GROUP-IREF' |
-                      'SWC-MODE-GROUP-IREF'
+        Multi-tagged: True
         """
         assert isinstance(elem, ar_element.PModeGroupInAtomicSwcInstanceRef)
         if elem.is_empty:
@@ -4237,7 +4092,7 @@ class Writer(_XMLWriter):
                                                       ) -> None:
         """
         Writes complex type AR:P-OPERATION-IN-ATOMIC-SWC-INSTANCE-REF
-        Tag variants: 'OPERATION-IREF'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.POperationInAtomicSwcInstanceRef)
         tag = "OPERATION-IREF"
@@ -4258,8 +4113,7 @@ class Writer(_XMLWriter):
                                                     ) -> None:
         """
         Writes complex type AR:P-TRIGGER-IN-ATOMIC-SWC-TYPE-INSTANCE-REF
-        Tag variants: 'P-TRIGGER-IN-ATOMIC-SWC-TYPE-INSTANCE-REF' | 'SWC-TRIGGER-IREF' |
-                  'TRIGGER-IREF'
+        Multi-tagged: True
         """
         assert isinstance(elem, ar_element.PTriggerInAtomicSwcTypeInstanceRef)
         if elem.is_empty:
@@ -4275,7 +4129,7 @@ class Writer(_XMLWriter):
     def _write_r_mode_in_atomic_swc_instance_ref(self, elem: ar_element.RModeInAtomicSwcInstanceRef, tag: str) -> None:
         """
         Writes complex type AR:R-MODE-IN-ATOMIC-SWC-INSTANCE-REF
-        Tag variants: 'DISABLED-MODE-IREF' | 'MODE-IREF'
+        Multi-tagged: True
         """
         assert isinstance(elem, ar_element.RModeInAtomicSwcInstanceRef)
         if elem.is_empty:
@@ -4295,7 +4149,7 @@ class Writer(_XMLWriter):
                                                        elem: ar_element.RModeGroupInAtomicSwcInstanceRef) -> None:
         """
         Writes complex type AR:R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF
-        Tag variants: 'R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.RModeGroupInAtomicSwcInstanceRef)
         tag = "R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF"
@@ -4314,7 +4168,7 @@ class Writer(_XMLWriter):
                                                       ) -> None:
         """
         Writes complex type AR:R-OPERATION-IN-ATOMIC-SWC-INSTANCE-REF
-        Tag variants: 'OPERATION-IREF'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ROperationInAtomicSwcInstanceRef)
         tag = "OPERATION-IREF"
@@ -4334,7 +4188,7 @@ class Writer(_XMLWriter):
                                                      ) -> None:
         """
         Writes complex type AR:R-VARIABLE-IN-ATOMIC-SWC-INSTANCE-REF
-        Tag variants: 'DATA-IREF'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.RVariableInAtomicSwcInstanceRef)
         tag = "DATA-IREF"
@@ -4353,8 +4207,8 @@ class Writer(_XMLWriter):
                                                     tag: str
                                                     ) -> None:
         """
-        Write complex type AR:R-TRIGGER-IN-ATOMIC-SWC-INSTANCE-REF
-        Tag variants: 'TRIGGER-IREF' | 'REQUIRED-TRIGGER-IREF'
+        Writes complex type AR:R-TRIGGER-IN-ATOMIC-SWC-INSTANCE-REF
+        Multi-tagged: True
         """
         assert isinstance(elem, ar_element.RTriggerInAtomicSwcInstanceRef)
         if elem.is_empty:
@@ -4373,8 +4227,8 @@ class Writer(_XMLWriter):
                                                   elem: ar_element.ArVariableInImplementationDataInstanceRef,
                                                   tag: str) -> None:
         """
-        Complex type AR:AR-VARIABLE-IN-IMPLEMENTATION-DATA-INSTANCE-REF
-        Tag variants: 'AUTOSAR-VARIABLE-IN-IMPL-DATATYPE' | 'IMPLEMENTATION-DATA-TYPE-ELEMENT'
+        Writes complex type AR:AR-VARIABLE-IN-IMPLEMENTATION-DATA-INSTANCE-REF
+        Multi-tagged: True
         """
         assert isinstance(elem, ar_element.ArVariableInImplementationDataInstanceRef)
         if elem.is_empty:
@@ -4400,8 +4254,8 @@ class Writer(_XMLWriter):
                                                         elem: ar_element.VariableInAtomicSWCTypeInstanceRef
                                                         ) -> None:
         """
-        Complex type AR:VARIABLE-IN-ATOMIC-SWC-TYPE-INSTANCE-REF
-        Tag variants: 'AUTOSAR-VARIABLE-IREF'
+        Writes complex type AR:VARIABLE-IN-ATOMIC-SWC-TYPE-INSTANCE-REF
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.VariableInAtomicSWCTypeInstanceRef)
         tag = "AUTOSAR-VARIABLE-IREF"
@@ -4426,9 +4280,7 @@ class Writer(_XMLWriter):
                                     tag: str) -> None:
         """
         Writes complex type AR:AUTOSAR-VARIABLE-REF
-        Tag variants: 'VARIABLE-INSTANCE' | 'NV-RAM-BLOCK-ELEMENT' | 'READ-NV-DATA' |
-                      'WRITTEN-NV-DATA' | 'WRITTEN-READ-NV-DATA' | 'USED-DATA-ELEMENT' |
-                      'AUTOSAR-VARIABLE' | 'ACCESSED-VARIABLE'
+        Multi-tagged: True
         """
         assert isinstance(elem, ar_element.AutosarVariableRef)
         if elem.is_empty:
@@ -4448,7 +4300,7 @@ class Writer(_XMLWriter):
     def _write_variable_access(self, elem: ar_element.VariableAccess, tag: str) -> None:
         """
         Writes complex type AR:VARIABLE-ACCESS
-        Tag variants: 'REPLACE-WITH' | 'VARIABLE-ACCESS'
+        Multi-tagged: True
         """
         assert isinstance(elem, ar_element.VariableAccess)
         self._add_child(tag)
@@ -4464,7 +4316,7 @@ class Writer(_XMLWriter):
     def _write_runnable_entity_argument(self, elem: ar_element.RunnableEntityArgument) -> None:
         """
         Writes complex type AR:RUNNABLE-ENTITY-ARGUMENT
-        Tag variants: 'RUNNABLE-ENTITY-ARGUMENT'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.RunnableEntityArgument)
         tag = "RUNNABLE-ENTITY-ARGUMENT"
@@ -4480,7 +4332,7 @@ class Writer(_XMLWriter):
                                                    elem: ar_element.ExecutableEntityActivationReason) -> None:
         """
         Writes complex type AR:EXECUTABLE-ENTITY-ACTIVATION-REASON
-        Tag variants: 'EXECUTABLE-ENTITY-ACTIVATION-REASON'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ExecutableEntityActivationReason)
         self._add_child("EXECUTABLE-ENTITY-ACTIVATION-REASON")
@@ -4494,7 +4346,7 @@ class Writer(_XMLWriter):
                                               elem: ar_element.ExclusiveAreaRefConditional) -> None:
         """
         Writes complex type AR:EXCLUSIVE-AREA-REF-CONDITIONAL
-        Tag variants: 'EXCLUSIVE-AREA-REF-CONDITIONAL'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ExclusiveAreaRefConditional)
         tag = "EXCLUSIVE-AREA-REF-CONDITIONAL"
@@ -4524,8 +4376,8 @@ class Writer(_XMLWriter):
 
     def _write_async_server_call_point(self, elem: ar_element.AsynchronousServerCallPoint) -> None:
         """
-        Writes complex type: AR:ASYNCHRONOUS-SERVER-CALL-POINT
-        Tag variants: 'ASYNCHRONOUS-SERVER-CALL-POINT'
+        Writes complex type AR:ASYNCHRONOUS-SERVER-CALL-POINT
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.AsynchronousServerCallPoint)
         self._add_child("ASYNCHRONOUS-SERVER-CALL-POINT")
@@ -4538,8 +4390,8 @@ class Writer(_XMLWriter):
 
     def _write_sync_server_call_point(self, elem: ar_element.SynchronousServerCallPoint) -> None:
         """
-        Writes complex type: AR:SYNCHRONOUS-SERVER-CALL-POINT
-        Tag variants: 'SYNCHRONOUS-SERVER-CALL-POINT'
+        Writes complex type AR:SYNCHRONOUS-SERVER-CALL-POINT
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.SynchronousServerCallPoint)
         self._add_child("SYNCHRONOUS-SERVER-CALL-POINT")
@@ -4555,8 +4407,8 @@ class Writer(_XMLWriter):
 
     def _write_async_server_call_result_point(self, elem: ar_element.AsynchronousServerCallResultPoint) -> None:
         """
-        Writes complex type: AR:ASYNCHRONOUS-SERVER-CALL-RESULT-POINT
-        Tag variants: 'ASYNCHRONOUS-SERVER-CALL-RESULT-POINT'
+        Writes complex type AR:ASYNCHRONOUS-SERVER-CALL-RESULT-POINT
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.AsynchronousServerCallResultPoint)
         self._add_child("ASYNCHRONOUS-SERVER-CALL-RESULT-POINT")
@@ -4569,15 +4421,15 @@ class Writer(_XMLWriter):
 
     def _write_async_server_call_result_point_group(self, elem: ar_element.AsynchronousServerCallResultPoint) -> None:
         """
-        Writes group: AR:ASYNCHRONOUS-SERVER-CALL-RESULT-POINT
+        Writes group AR:ASYNCHRONOUS-SERVER-CALL-RESULT-POINT
         """
         if elem.async_server_call_point is not None:
             self._write_async_server_call_point_ref(elem.async_server_call_point)
 
     def _write_external_triggering_point_ident(self, elem: ar_element.ExternalTriggeringPointIdent) -> None:
         """
-        Complex type AR:EXTERNAL-TRIGGERING-POINT-IDENT
-        Tag variants: 'IDENT'
+        Writes complex type AR:EXTERNAL-TRIGGERING-POINT-IDENT
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ExternalTriggeringPointIdent)
         self._add_child("IDENT")
@@ -4590,7 +4442,7 @@ class Writer(_XMLWriter):
     def _write_external_triggering_point(self, elem: ar_element.ExternalTriggeringPoint) -> None:
         """
         Writes complex type AR:EXTERNAL-TRIGGERING-POINT
-        Tag variants: 'EXTERNAL-TRIGGERING-POINT'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ExternalTriggeringPoint)
         tag = "EXTERNAL-TRIGGERING-POINT"
@@ -4607,7 +4459,7 @@ class Writer(_XMLWriter):
     def _write_internal_triggering_point(self, elem: ar_element.InternalTriggeringPoint) -> None:
         """
         Writes complex type AR:INTERNAL-TRIGGERING-POINT
-        Tag variants: 'INTERNAL-TRIGGERING-POINT'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.InternalTriggeringPoint)
         self._add_child("INTERNAL-TRIGGERING-POINT")
@@ -4621,8 +4473,8 @@ class Writer(_XMLWriter):
 
     def _write_mode_access_point_ident(self, elem: ar_element.ModeAccessPointIdent) -> None:
         """
-        Complex type AR:MODE-ACCESS-POINT-IDENT
-        Tag variants: 'IDENT'
+        Writes complex type AR:MODE-ACCESS-POINT-IDENT
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ModeAccessPointIdent)
         self._add_child("IDENT")
@@ -4635,7 +4487,7 @@ class Writer(_XMLWriter):
     def _write_mode_access_point(self, elem: ar_element.ModeAccessPoint) -> None:
         """
         Writes complex type AR:MODE-ACCESS-POINT
-        Tag variants: 'MODE-ACCESS-POINT'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ModeAccessPoint)
         tag = "MODE-ACCESS-POINT"
@@ -4659,8 +4511,8 @@ class Writer(_XMLWriter):
 
     def _write_mode_switch_point(self, elem: ar_element.ModeSwitchPoint) -> None:
         """
-        Writes complex Type AR:MODE-SWITCH-POINT
-        Tag variants: 'MODE-SWITCH-POINT'
+        Writes complex type AR:MODE-SWITCH-POINT
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ModeSwitchPoint)
         self._add_child("MODE-SWITCH-POINT")
@@ -4677,7 +4529,7 @@ class Writer(_XMLWriter):
                                                          ) -> None:
         """
         Writes complex type AR:PARAMETER-IN-ATOMIC-SWC-TYPE-INSTANCE-REF
-        Tag variants: 'AUTOSAR-PARAMETER-IREF'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ParameterInAtomicSwcTypeInstanceRef)
         tag = "AUTOSAR-PARAMETER-IREF"
@@ -4699,7 +4551,7 @@ class Writer(_XMLWriter):
     def _write_autosar_parameter_ref(self, elem: ar_element.AutosarParameterRef, tag: str) -> None:
         """
         Writes complex type AR:AUTOSAR-PARAMETER-REF
-        Tag variants: 'PARAMETER-INSTANCE' | 'ACCESSED-PARAMETER' | 'USED-PARAMETER-ELEMENT' | 'AR-PARAMETER'
+        Multi-tagged: True
         """
         assert isinstance(elem, ar_element.AutosarParameterRef)
         if elem.is_empty:
@@ -4715,7 +4567,7 @@ class Writer(_XMLWriter):
     def _write_parameter_access(self, elem: ar_element.ParameterAccess) -> None:
         """
         Writes complex type AR:PARAMETER-ACCESS
-        Tag variants: 'PARAMETER-ACCESS'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ParameterAccess)
         self._add_child("PARAMETER-ACCESS")
@@ -4738,7 +4590,7 @@ class Writer(_XMLWriter):
     def _write_wait_point(self, elem: ar_element.WaitPoint) -> None:
         """
         Writes complex type AR:WAIT-POINT
-        Tag variants: 'WAIT-POINT'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.WaitPoint)
         self._add_child("WAIT-POINT")
@@ -4810,7 +4662,7 @@ class Writer(_XMLWriter):
     def _write_runnable_entity(self, elem: ar_element.RunnableEntity) -> None:
         """
         Writes complex type AR:RUNNABLE-ENTITY
-        Tag variants: 'RUNNABLE-ENTITY'
+        Multi-tagged: False
 
         This is in early stage, most will be implemented later
         """
@@ -4930,7 +4782,7 @@ class Writer(_XMLWriter):
     def _write_async_server_call_returns_event(self, elem: ar_element.AsynchronousServerCallReturnsEvent) -> None:
         """
         Writes complex type AR:ASYNCHRONOUS-SERVER-CALL-RETURNS-EVENT
-        Tag variants: 'ASYNCHRONOUS-SERVER-CALL-RETURNS-EVENT'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.AsynchronousServerCallReturnsEvent)
         self._add_child("ASYNCHRONOUS-SERVER-CALL-RETURNS-EVENT")
@@ -4944,8 +4796,8 @@ class Writer(_XMLWriter):
 
     def _write_background_event(self, elem: ar_element.BackgroundEvent) -> None:
         """
-        Writes complex Type AR:BACKGROUND-EVENT
-        Tag variants: 'BACKGROUND-EVENT'
+        Writes complex type AR:BACKGROUND-EVENT
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.BackgroundEvent)
         self._add_child("BACKGROUND-EVENT")
@@ -4957,8 +4809,8 @@ class Writer(_XMLWriter):
 
     def _write_data_receive_error_event(self, elem: ar_element.DataReceiveErrorEvent) -> None:
         """
-        Writes complex Type AR:DATA-RECEIVE-ERROR-EVENT
-        Tag variants: 'DATA-RECEIVE-ERROR-EVENT'
+        Writes complex type AR:DATA-RECEIVE-ERROR-EVENT
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.DataReceiveErrorEvent)
         self._add_child("DATA-RECEIVE-ERROR-EVENT")
@@ -4972,8 +4824,8 @@ class Writer(_XMLWriter):
 
     def _write_data_received_event(self, elem: ar_element.DataReceivedEvent) -> None:
         """
-        Writes complex Type AR:DATA-RECEIVED-EVENT
-        Tag variants: 'DATA-RECEIVED-EVENT'
+        Writes complex type AR:DATA-RECEIVED-EVENT
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.DataReceivedEvent)
         self._add_child("DATA-RECEIVED-EVENT")
@@ -4987,8 +4839,8 @@ class Writer(_XMLWriter):
 
     def _write_data_send_completed_event(self, elem: ar_element.DataSendCompletedEvent) -> None:
         """
-        Writes complex Type AR:DATA-SEND-COMPLETED-EVENT
-        Tag variants: 'DATA-SEND-COMPLETED-EVENT'
+        Writes complex type AR:DATA-SEND-COMPLETED-EVENT
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.DataSendCompletedEvent)
         self._add_child("DATA-SEND-COMPLETED-EVENT")
@@ -5002,8 +4854,8 @@ class Writer(_XMLWriter):
 
     def _write_data_write_completed_event(self, elem: ar_element.DataWriteCompletedEvent) -> None:
         """
-        Writes complex Type AR:DATA-WRITE-COMPLETED-EVENT
-        Tag variants: 'DATA-WRITE-COMPLETED-EVENT'
+        Writes complex type AR:DATA-WRITE-COMPLETED-EVENT
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.DataWriteCompletedEvent)
         self._add_child("DATA-WRITE-COMPLETED-EVENT")
@@ -5017,8 +4869,8 @@ class Writer(_XMLWriter):
 
     def _write_external_trigger_occured_event(self, elem: ar_element.ExternalTriggerOccurredEvent) -> None:
         """
-        Writes complex Type AR:EXTERNAL-TRIGGER-OCCURRED-EVENT
-        Tag variants: 'EXTERNAL-TRIGGER-OCCURRED-EVENT'
+        Writes complex type AR:EXTERNAL-TRIGGER-OCCURRED-EVENT
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ExternalTriggerOccurredEvent)
         self._add_child("EXTERNAL-TRIGGER-OCCURRED-EVENT")
@@ -5033,7 +4885,7 @@ class Writer(_XMLWriter):
     def _write_init_event(self, elem: ar_element.InitEvent) -> None:
         """
         Writes complex type AR:INIT-EVENT
-        Tag variants: 'INIT-EVENT'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.InitEvent)
         self._add_child("INIT-EVENT")
@@ -5046,7 +4898,7 @@ class Writer(_XMLWriter):
     def _write_internal_trigger_occured_event(self, elem: ar_element.InternalTriggerOccurredEvent) -> None:
         """
         Writes complex type AR:INTERNAL-TRIGGER-OCCURRED-EVENT
-        Tag variants: 'INTERNAL-TRIGGER-OCCURRED-EVENT'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.InternalTriggerOccurredEvent)
         self._add_child("INTERNAL-TRIGGER-OCCURRED-EVENT")
@@ -5060,8 +4912,8 @@ class Writer(_XMLWriter):
 
     def _write_mode_switched_ack_event(self, elem: ar_element.ModeSwitchedAckEvent) -> None:
         """
-        Writes complex type MODE-SWITCHED-ACK-EVENT
-        Tag variants: 'MODE-SWITCHED-ACK-EVENT'
+        Writes complex type AR:MODE-SWITCHED-ACK-EVENT
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.ModeSwitchedAckEvent)
         self._add_child("MODE-SWITCHED-ACK-EVENT")
@@ -5076,7 +4928,7 @@ class Writer(_XMLWriter):
     def _write_operation_invoked_event(self, elem: ar_element.OperationInvokedEvent) -> None:
         """
         Writes complex type AR:OPERATION-INVOKED-EVENT
-        Tag variants: 'OPERATION-INVOKED-EVENT'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.OperationInvokedEvent)
         self._add_child("OPERATION-INVOKED-EVENT")
@@ -5091,7 +4943,7 @@ class Writer(_XMLWriter):
     def _write_swc_mode_manager_error_event(self, elem: ar_element.SwcModeManagerErrorEvent) -> None:
         """
         Writes complex type AR:SWC-MODE-MANAGER-ERROR-EVENT
-        Tag variants: 'SWC-MODE-MANAGER-ERROR-EVENT'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.SwcModeManagerErrorEvent)
         self._add_child("SWC-MODE-MANAGER-ERROR-EVENT")
@@ -5106,7 +4958,7 @@ class Writer(_XMLWriter):
     def _write_swc_mode_switch_event(self, elem: ar_element.SwcModeSwitchEvent) -> None:
         """
         Writes complex type AR:SWC-MODE-SWITCH-EVENT
-        Tag variants: 'SWC-MODE-SWITCH-EVENT'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.SwcModeSwitchEvent)
         self._add_child("SWC-MODE-SWITCH-EVENT")
@@ -5135,7 +4987,7 @@ class Writer(_XMLWriter):
     def _write_timing_event(self, elem: ar_element.TimingEvent) -> None:
         """
         Writes complex type AR:TIMING-EVENT
-        Tag variants: 'TIMING-EVENT'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.TimingEvent)
         self._add_child("TIMING-EVENT")
@@ -5152,7 +5004,7 @@ class Writer(_XMLWriter):
     def _write_transformer_hard_error_event(self, elem: ar_element.TransformerHardErrorEvent) -> None:
         """
         Writes complex type AR:TRANSFORMER-HARD-ERROR-EVENT
-        Tag variants: 'TRANSFORMER-HARD-ERROR-EVENT'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.TransformerHardErrorEvent)
         self._add_child("TRANSFORMER-HARD-ERROR-EVENT")
@@ -5174,7 +5026,7 @@ class Writer(_XMLWriter):
     def _write_port_defined_argument_value(self, elem: ar_element.PortDefinedArgumentValue) -> None:
         """
         Writes complex type AR:PORT-DEFINED-ARGUMENT-VALUE
-        Tag variants: 'PORT-DEFINED-ARGUMENT-VALUE'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.PortDefinedArgumentValue)
         tag = "PORT-DEFINED-ARGUMENT-VALUE"
@@ -5193,7 +5045,7 @@ class Writer(_XMLWriter):
     def _write_communication_buffer_locking(self, elem: ar_element.CommunicationBufferLocking) -> None:
         """
         Writes complex type AR:COMMUNICATION-BUFFER-LOCKING
-        Tag variantS: 'COMMUNICATION-BUFFER-LOCKING'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.CommunicationBufferLocking)
         tag = "COMMUNICATION-BUFFER-LOCKING"
@@ -5208,7 +5060,7 @@ class Writer(_XMLWriter):
     def _write_port_api_option(self, elem: ar_element.PortApiOption) -> None:
         """
         Writes complex type AR:PORT-API-OPTION
-        Tag variants: 'PORT-API-OPTION'
+        Multi-tagged: False
         """
         assert isinstance(elem, ar_element.PortApiOption)
         tag = "PORT-API-OPTION"
@@ -5222,7 +5074,6 @@ class Writer(_XMLWriter):
     def _write_port_api_option_group(self, elem: ar_element.PortApiOption) -> None:
         """
         Writes group AR:PORT-API-OPTION
-        Tag variants: 'PORT-API-OPTION'
         """
         if elem.enable_take_address is not None:
             self._add_content("ENABLE-TAKE-ADDRESS", self._format_boolean(elem.enable_take_address))
@@ -5251,7 +5102,7 @@ class Writer(_XMLWriter):
     def _write_exclusive_area(self, elem: ar_element.ExclusiveArea) -> None:
         """
         Writes complex type AR:EXCLUSIVE-AREA
-        Tag variants: 'EXCLUSIVE-AREA'
+        Multi-tagged: False
         """
         self._add_child("EXCLUSIVE-AREA")
         self._write_referrable(elem)
@@ -5262,7 +5113,7 @@ class Writer(_XMLWriter):
     def _write_swc_internal_behavior(self, elem: ar_element.SwcInternalBehavior) -> None:
         """
         Writes complex type AR:SWC-INTERNAL-BEHAVIOR
-        Tag variants: 'SWC-INTERNAL-BEHAVIOR'
+        Multi-tagged: False
         """
         self._add_child("SWC-INTERNAL-BEHAVIOR")
         self._write_referrable(elem)
@@ -5290,6 +5141,7 @@ class Writer(_XMLWriter):
     def _write_swc_internal_behavior_group(self, elem: ar_element.SwcInternalBehavior) -> None:
         """
         Writes group AR:SWC-INTERNAL-BEHAVIOR
+
         Most of it will be implemented in a future version
         """
         if elem.events:
