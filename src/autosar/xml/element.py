@@ -348,9 +348,9 @@ def make_unique_name_in_list(elements: list[Referrable], base_name: str):
 class SpecialDataElement(NamedTuple):
     """
     Complex type AR:SD
-
     Tag variants: 'SD'
     """
+
     text: str
     gid: str | None = None
 
@@ -358,9 +358,9 @@ class SpecialDataElement(NamedTuple):
 class SpecialDataValue(NamedTuple):
     """
     Complex type AR:SDF
-
     Tag variants: 'SDF'
     """
+
     value: int | float
     gid: str | None = None
 
@@ -378,7 +378,6 @@ SpecialDataGroupContent = Union[str,
 class SpecialDataGroup(ARObject):
     """
     Complex type AR:SDG
-
     Tag variants: 'SDG'
 
     The content can be one of:
@@ -395,6 +394,7 @@ class SpecialDataGroup(ARObject):
     7. A dictionary representing a nested SpecialDataGroup (<SDG> inside <SDG>)
     8. A list of any combination of (1) to (7) above
     """
+
     def __init__(self,
                  gid: str | None = None,
                  content: SpecialDataGroupContent | None = None,
@@ -604,7 +604,7 @@ class AdminData(ARObject):
                  content: SpecialDataGroupContent | None = None,
                  ) -> None:
         """
-        AdminData constructor.
+        Initialize AdminData.
 
         You can use the `sdgs` parameter for full support of special data groups.
         Alternatively, use the `gid` and `content` parameters to conveniently
@@ -683,7 +683,7 @@ class AdminData(ARObject):
 class DataFilter(ARObject):
     """
     Complex type AR:DATA-FILTER
-    Tag variants: 'FILTER' | 'DATA-FILTER'
+    Tag variants: 'DATA-FILTER' | 'FILTER'
     """
 
     def __init__(self,
@@ -730,7 +730,7 @@ class EngineeringObject(ARObject):
 class AutosarEngineeringObject(EngineeringObject):
     """
     Complex type AR:AUTOSAR-ENGINEERING-OBJECT
-    Tag variants: 'AUTOSAR-ENGINEERING-OBJECT' | 'ARTIFACT-DESCRIPTOR'
+    Tag variants: 'ARTIFACT-DESCRIPTOR' | 'AUTOSAR-ENGINEERING-OBJECT'
 
     Same constructor as parent class
     """
@@ -811,12 +811,14 @@ class Implementation(ARElement):
 class MultidimensionalTime(ARObject):
     """
     Complex type AR:MULTIDIMENSIONAL-TIME
-    Tag variants: 'MINIMUM' | 'MAXIMUM' | 'BEST-CASE-EXECUTION-TIME' | 'WORST-CASE-EXECUTION-TIME' |
-                  'MINIMUM-INTER-ARRIVAL-TIME' | 'PATTERN-JITTER' | 'PATTERN-LENGTH' | 'PATTERN-PERIOD' |
-                  'LOWER-BOUND' | 'UPPER-BOUND' | 'AGE' | 'JITTER' | 'PERIOD' | 'SIGNAL-AGE' |
-                  'ESTIMATED-EXECUTION-TIME' | 'MAXIMUM-EXECUTION-TIME' | 'MINIMUM-EXECUTION-TIME' |
-                  'NOMINAL-EXECUTION-TIME' | 'SW-REFRESH-TIMING' | 'TOLERANCE' | 'ACCURACY-EXT' |
-                  'ACCURACY-INT' | 'ACCURACY' | 'TRIGGER-PERIOD'
+    Tag variants: 'ACCURACY' | 'ACCURACY-EXT' | 'ACCURACY-INT' | 'AGE' |
+                  'BEST-CASE-EXECUTION-TIME' | 'ESTIMATED-EXECUTION-TIME' | 'JITTER' |
+                  'LOWER-BOUND' | 'MAXIMUM' | 'MAXIMUM-EXECUTION-TIME' |
+                  'MAXIMUM-INTER-ARRIVAL-TIME' | 'MINIMUM' | 'MINIMUM-EXECUTION-TIME' |
+                  'MINIMUM-INTER-ARRIVAL-TIME' | 'NOMINAL' | 'NOMINAL-EXECUTION-TIME' |
+                  'PATTERN-JITTER' | 'PATTERN-LENGTH' | 'PATTERN-PERIOD' | 'PERIOD' |
+                  'SIGNAL-AGE' | 'SW-REFRESH-TIMING' | 'TIME-VALUE' | 'TOLERANCE' |
+                  'TRIGGER-PERIOD' | 'UPPER-BOUND' | 'WORST-CASE-EXECUTION-TIME'
 
     """
 
@@ -865,7 +867,7 @@ class Trigger(Identifiable):
 class Break(ARObject):
     """
     Complex type AR:BR
-    Tag variants: BR
+    Tag variants: 'BR'
 
     Same function as the html element.
     """
@@ -877,11 +879,8 @@ class Date(ARObject):
     Tag variants: 'DATE'
 
     Examples:
-
     2009-07-23
-
     2009-07-23T14:38:00+01:00
-
     2009-07-23T13:38:00Z
     """
 
@@ -906,6 +905,7 @@ class Date(ARObject):
         return datetime.datetime.fromisoformat(text)
 
     def __str__(self) -> str:
+        """Convert to ISO format date/time string."""
         text = self.value.isoformat()
         if text.endswith("+00:00"):
             text = text[:-6] + "Z"
@@ -915,9 +915,9 @@ class Date(ARObject):
 class RevisionLabelString(ARObject):
     """
     Complex type AR:REVISION-LABEL-STRING
-    Tag variants: 'AR-RELEASE-VERSION' | 'REVISION-LABEL' | 'REVISION-LABEL-P1' | 'REVISION-LABEL-P2' |
-                  'ECUC-DEF-EDITION' | 'SW-VERSION' | 'PRODUCT-RELEASE' | 'MINIMUM-SUPPORTED-UCM-VERSION' |
-                  'ECU-EXTRACT-VERSION' | 'SYSTEM-VERSION'
+    Tag variants: 'AR-RELEASE-VERSION' | 'ECU-EXTRACT-VERSION' | 'ECUC-DEF-EDITION' |
+                  'PRODUCT-RELEASE' | 'REVISION-LABEL' | 'REVISION-LABEL-P-1' |
+                  'REVISION-LABEL-P-2' | 'SW-VERSION' | 'SYSTEM-VERSION'
     """
 
     def __init__(self, value: str):
@@ -926,14 +926,15 @@ class RevisionLabelString(ARObject):
             raise ValueError(f"RevisionLabelString string '{value}' doesn't pass regular expression check")
         self.value = value
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Convert to string representation."""
         return self.value
 
 
 class EmphasisText(ARObject):
     """
     Complex type AR:EMPHASIS-TEXT
-    Tag variants: E
+    Tag variants: 'E'
 
     Emphasized text
 
@@ -959,7 +960,7 @@ class EmphasisText(ARObject):
 class IndexEntry(ARObject):
     """
     Complex type AR:INDEX-ENTRY
-    Tag variants: IE
+    Tag variants: 'IE'
 
     Index Entry
 
@@ -973,7 +974,7 @@ class IndexEntry(ARObject):
 class TechnicalTerm(ARObject):
     """
     Complex type AR:TT
-    Tag variants: TT
+    Tag variants: 'TT'
 
     Technical Term
 
@@ -991,7 +992,7 @@ class TechnicalTerm(ARObject):
 class Subscript(ARObject):
     """
     Complex type AR:SUPSCRIPT
-    Tag variants: SUB
+    Tag variants: 'SUB'
 
     Subscript is based on the same Complex type as superscript
 
@@ -1004,7 +1005,7 @@ class Subscript(ARObject):
 class Superscript(ARObject):
     """
     Complex type AR:SUPSCRIPT
-    Tag variants: SUP
+    Tag variants: 'SUP'
 
     Superscript
     """
@@ -1021,7 +1022,7 @@ class Superscript(ARObject):
 
 class LanguageSpecific(ARObject):
     """
-    Complex type AR:LANGUAGE-SPECIFIC
+    Group AR:LANGUAGE-SPECIFIC
     """
 
     def __init__(self, language: ar_enum.Language) -> None:
@@ -1074,7 +1075,7 @@ class MixedContentForOverviewParagraph(LanguageSpecific):
 class LanguageLongName(MixedContentForLongName):
     """
     Complex type AR:L-LONG-NAME
-    Tag variants: L-4
+    Tag variants: 'L-4'
 
     Longname for a specific language.
 
@@ -1156,7 +1157,7 @@ class LanguageOverviewParagraph(MixedContentForOverviewParagraph):
 class MultiLanguageOverviewParagraph(ARObject):
     """
     Complex type AR:MULTI-LANGUAGE-OVERVIEW-PARAGRAPH
-    Tag variants: 'DESC' | 'ITEM-LABEL' | 'CHANGE' | 'REASON'
+    Tag variants: 'CHANGE' | 'DESC' | 'ITEM-LABEL' | 'REASON'
     """
 
     def __init__(self,
@@ -1398,7 +1399,7 @@ class MultiLanguageVerbatim(Paginateable):
 
 class MixedContentForUnitNames(ARObject):
     """
-    Group MIXED-CONTENT-FOR-UNIT-NAMES
+    Group AR:MIXED-CONTENT-FOR-UNIT-NAMES
     """
 
     def __init__(self) -> None:
@@ -1418,7 +1419,7 @@ class MixedContentForUnitNames(ARObject):
 class SingleLanguageUnitNames(MixedContentForUnitNames):
     """
     Complex type AR:SINGLE-LANGUAGE-UNIT-NAMES
-    Tag variants: 'PRM-UNIT' | 'UNIT-DISPLAY-NAME' | 'DISPLAY-NAME'
+    Tag variants: 'DISPLAY-NAME' | 'PRM-UNIT' | 'UNIT-DISPLAY-NAME'
     """
 
     def __init__(self, parts: str | list | None = None) -> None:
@@ -1449,9 +1450,11 @@ class SingleLanguageUnitNames(MixedContentForUnitNames):
 class DocumentationBlock(ARObject):
     """
     Complex type AR:DOCUMENTATION-BLOCK
-    Tag Variants: 'INTRODUCTION', 'DEF', 'VALUE', 'ANNOTATION-TEXT', 'REMARK'
-                  'COND', 'DESCRICPTION', 'RATIONALE', 'DEPENDENCIES', 'USE-CASE',
-                  'CONFLICTS', 'SUPPORTING-MATERIAL', 'SW-GENERIC-AXIS-DESC'
+    Tag variants: 'ANNOTATION-TEXT' | 'BLUEPRINT-CONDITION' | 'BLUEPRINT-DERIVATION-GUIDE' |
+                  'BLUEPRINT-MAPPING-GUIDE' | 'COND' | 'CONFLICTS' | 'DEF' | 'DEPENDENCIES' |
+                  'DESCRIPTION' | 'INTRODUCTION' | 'MSR-QUERY-RESULT-P-2' | 'RATIONALE' |
+                  'REMARK' | 'SUPPORTING-MATERIAL' | 'SW-GENERIC-AXIS-DESC' | 'USE-CASE' |
+                  'VALUE'
     """
 
     def __init__(self,
@@ -1535,9 +1538,9 @@ class Describable(ARObject):
 class LanguagePlainText(LanguageSpecific):
     """
     Complex type AR:L-PLAIN-TEXT
-
     Tag variants: 'L-10'
     """
+
     def __init__(self, language: ar_enum.Language, text: str = "") -> None:
         super().__init__(language)
         self.text = text
@@ -1549,9 +1552,9 @@ LanguagePlainTextArgType = SingleLanguageText | LanguagePlainText | list[SingleL
 class MultiLanguagePlainText(ARObject):
     """
     Complex type AR:MULTI-LANGUAGE-PLAIN-TEXT
-
-    Tag variants: 'USED-LANGUAGES' | 'TEX-MATH' | 'GENERIC-MATH'
+    Tag variants: 'GENERIC-MATH' | 'TEX-MATH' | 'USED-LANGUAGES'
     """
+
     def __init__(self,
                  elements: LanguagePlainTextArgType | None = None) -> None:
         super().__init__()
@@ -1611,7 +1614,7 @@ class CompuRational(ARObject):
 class CompuConst(ARObject):
     """
     Complex type AR:COMPU-CONST
-    Tag variant: 'COMPU-DEFAULT-VALUE' | 'COMPU-INVERSE-VALUE' | 'COMPU-CONST'
+    Tag variants: 'COMPU-CONST' | 'COMPU-DEFAULT-VALUE' | 'COMPU-INVERSE-VALUE'
 
     Handles AR:COMPU-CONST-NUMERIC-CONTENT and AR:COMPU-CONST-TEXT-CONTENT
     dynamically.
@@ -1624,7 +1627,7 @@ class CompuConst(ARObject):
 class CompuScale(ARObject):
     """
     Complex type AR:COMPU-SCALE
-    Tag variants: 'COMPU-SCALE'
+    Tag variants: 'BUFFER-COMPUTATION' | 'COMPU-SCALE'
     """
 
     def __init__(self,
@@ -1672,7 +1675,7 @@ class CompuScale(ARObject):
 
 class Computation(ARObject):
     """
-    Complex Type: AR:COMPU
+    Complex type AR:COMPU
     Tag variants: 'COMPU-INTERNAL-TO-PHYS' | 'COMPU-PHYS-TO-INTERNAL'
     """
 
@@ -1755,8 +1758,8 @@ class Computation(ARObject):
 
 class CompuMethod(ARElement):
     """
-    Complex Type: AR:COMPU-METHOD
-    Tag Variants: 'COMPU-METHOD'
+    Complex type AR:COMPU-METHOD
+    Tag variants: 'COMPU-METHOD'
     """
 
     def __init__(self, name: str,
@@ -1823,7 +1826,7 @@ class LimitObject(ARObject):
 
 class ScaleConstraint(LimitObject):
     """
-    AR:SCALE-CONSTR
+    Complex type AR:SCALE-CONSTR
     Tag variants: 'SCALE-CONSTR'
     """
 
@@ -1864,7 +1867,7 @@ class ConstraintBase(LimitObject):
 
 class InternalConstraint(ConstraintBase):
     """
-    AR:INTERNAL-CONSTRS
+    Complex type AR:INTERNAL-CONSTRS
     Tag variants: 'INTERNAL-CONSTRS'
     """
 
@@ -1889,7 +1892,7 @@ class InternalConstraint(ConstraintBase):
 
 class PhysicalConstraint(ConstraintBase):
     """
-    AR:PHYS-CONSTRS
+    Complex type AR:PHYS-CONSTRS
     Tag variants: 'PHYS-CONSTRS'
     """
 
@@ -1916,7 +1919,7 @@ class PhysicalConstraint(ConstraintBase):
 
 class DataConstraintRule(ARObject):
     """
-    AR:DATA-CONSTR-RULE
+    Complex type AR:DATA-CONSTR-RULE
     Tag variants: 'DATA-CONSTR-RULE'
     """
 
@@ -1931,7 +1934,7 @@ class DataConstraintRule(ARObject):
 
 class DataConstraint(ARElement):
     """
-    AR:DATA-CONSTR
+    Complex type AR:DATA-CONSTR
     Tag variants: 'DATA-CONSTR'
     """
 
@@ -2060,8 +2063,8 @@ class Unit(ARElement):
 
 class BaseType(ARElement):
     """
-    Merge of Complex types AR:BASE-TYPE, AR:BASE-TYPE-DEFINITION,
-    AR:BASE-TYPE-DIRECT-DEFINITION
+    Group AR:BASE-TYPE
+    Merge of Groups AR:BASE-TYPE, AR:BASE-TYPE-DEFINITION, and AR:BASE-TYPE-DIRECT-DEFINITION
     """
 
     def __init__(self, name: str, **kwargs: dict) -> None:
@@ -2077,7 +2080,7 @@ class BaseType(ARElement):
 class SwBaseType(BaseType):
     """
     Complex type AR:SW-BASE-TYPE
-    Tag variants: SW-BASE-TYPE
+    Tag variants: 'SW-BASE-TYPE'
     """
 
     def __init__(self,
@@ -2108,8 +2111,8 @@ class SwBaseType(BaseType):
 
 class SwBitRepresentation(ARObject):
     """
-    Complex Type AR:SW-BIT-REPRESENTATION
-    Tag variants: SW-BIT-REPRESENTATION
+    Complex type AR:SW-BIT-REPRESENTATION
+    Tag variants: 'SW-BIT-REPRESENTATION'
     """
 
     def __init__(self,
@@ -2125,7 +2128,7 @@ class SwBitRepresentation(ARObject):
 class SwTextProps(ARObject):
     """
     Complex type AR:SW-TEXT-PROPS
-    Tag Variants: 'SW-TEXT-PROPS'
+    Tag variants: 'SW-TEXT-PROPS'
     """
 
     def __init__(self,
@@ -2147,7 +2150,7 @@ class SwTextProps(ARObject):
 class SwPointerTargetProps(ARObject):
     """
     Complex type AR:SW-POINTER-TARGET-PROPS
-    Tag Variants: 'SW-POINTER-TARGET-PROPS'
+    Tag variants: 'SW-POINTER-TARGET-PROPS'
     """
 
     def __init__(self,
@@ -2171,9 +2174,9 @@ class SwPointerTargetProps(ARObject):
 
 class SwDataDefPropsConditional(ARObject):
     """
-    Merge of Complex types AR:SW-DATA-DEF-PROPS-CONDITIONAL and
-    AR:SW-DATA-DEF-PROPS-CONTENT
-    Tag Variants: SW-DATA-DEF-PROPS-CONDITIONAL
+    Complex type AR:SW-DATA-DEF-PROPS-CONDITIONAL
+    Merge of Complex type AR:SW-DATA-DEF-PROPS-CONDITIONAL and group AR:SW-DATA-DEF-PROPS-CONTENT
+    Tag variants: 'SW-DATA-DEF-PROPS-CONDITIONAL'
     """
 
     def __init__(self,  # pylint: disable=R0917
@@ -2291,8 +2294,8 @@ class SwDataDefPropsConditional(ARObject):
 class SwDataDefProps(ARObject):
     """
     Complex type AR:SW-DATA-DEF-PROPS
-    Tag variants: 'SW-DATA-DEF-PROPS' | 'NETWORK-REPRESENTATION' |
-                  'NETWORK-REPRESENTATION-PROPS' | 'PHYSICAL-PROPS'
+    Tag variants: 'NETWORK-REPRESENTATION' | 'NETWORK-REPRESENTATION-PROPS' | 'PHYSICAL-PROPS' |
+                  'RESULTING-PROPERTIES' | 'SW-DATA-DEF-PROPS'
     """
 
     def __init__(self, variants: SwDataDefPropsConditional | list[SwDataDefPropsConditional] | None = None) -> None:
@@ -2371,7 +2374,7 @@ class ImplementationProps(Referrable):
 class SymbolProps(ImplementationProps):
     """
     Complex type AR:SYMBOL-PROPS
-    Tag Variants: 'SYMBOL-PROPS', 'EVENT-SYMBOL-PROPS'
+    Tag variants: 'EVENT-SYMBOL-NAME' | 'SYMBOL-PROPS'
 
     Base class already supports everything we need
     """
@@ -2441,7 +2444,7 @@ class ImplementationDataTypeElement(Identifiable):
 class ImplementationDataType(AutosarDataType):
     """
     Complex type AR:IMPLEMENTATION-DATA-TYPE
-    Tag Variants: 'IMPLEMENTATION-DATA-TYPE'
+    Tag variants: 'IMPLEMENTATION-DATA-TYPE'
 
     Skip parent class AbstractImplementationDataType since it doesn't have any properties
     of its own.
@@ -2536,7 +2539,7 @@ class AutosarDataPrototype(DataPrototype):
 class VariableDataPrototype(AutosarDataPrototype):
     """
     Complex type AR:VARIABLE-DATA-PROTOTYPE
-    Tag variants: 'VARIABLE-DATA-PROTOTYPE' | 'BULK-NV-BLOCK' | 'RAM-BLOCK'
+    Tag variants: 'BULK-NV-BLOCK' | 'RAM-BLOCK' | 'VARIABLE-DATA-PROTOTYPE'
     """
 
     def __init__(self,
@@ -2907,7 +2910,7 @@ class ValueList(ARObject):
 class SwAddrMethod(ARElement):
     """
     Complex type AR:SW-ADDR-METHOD
-    Tag Variants: 'SW-ADDR-METHOD'
+    Tag variants: 'SW-ADDR-METHOD'
     """
 
     def __init__(self, name: str, **kwargs) -> None:
@@ -3040,7 +3043,7 @@ class SwValueCont(ARObject):
 
 class ValueSpecification(ARObject):
     """
-    Group AR:VALUE-SPECIFCATION
+    Group AR:VALUE-SPECIFICATION
     Base class for value specifications
     """
 
@@ -3154,7 +3157,7 @@ class ValueSpecification(ARObject):
 class TextValueSpecification(ValueSpecification):
     """
     Complex type AR:TEXT-VALUE-SPECIFICATION
-    Tag variants: 'TEXT-VALUE-SPECIFICATION'
+    Tag variants: 'META-DATA-ITEM-TYPE' | 'TEXT-VALUE-SPECIFICATION'
     """
 
     def __init__(self, label: str | None = None, value: str | None = None) -> None:
@@ -3250,7 +3253,7 @@ class RecordValueSpecification(ValueSpecification):
 class ApplicationValueSpecification(ValueSpecification):
     """
     Complex type AR:APPLICATION-VALUE-SPECIFICATION
-    Tag variants: APPLICATION-VALUE-SPECIFICATION
+    Tag variants: 'APPLICATION-VALUE-SPECIFICATION'
     """
 
     def __init__(self,
@@ -3283,7 +3286,7 @@ class ApplicationValueSpecification(ValueSpecification):
 class ConstantSpecification(ARElement):
     """
     Complex type AR:CONSTANT-SPECIFICATION
-    Tag Variants: 'CONSTANT-SPECIFICATION'
+    Tag variants: 'CONSTANT-SPECIFICATION'
     """
 
     def __init__(self, name: str, value: ValueSpecificationElement | None = None, **kwargs) -> None:
@@ -3321,7 +3324,7 @@ class ConstantSpecification(ARElement):
 class ConstantReference(ValueSpecification):
     """
     Complex type AR:CONSTANT-REFERENCE
-    Tag variants 'CONSTANT-REFERENCE'
+    Tag variants: 'CONSTANT-REFERENCE'
 
     It's easy to confuse this with the ConstantRef class.
     This class is just a wrapper around an instance of ConstantRef.
@@ -3346,7 +3349,8 @@ class ConstantReference(ValueSpecification):
 
 class Package(CollectableElement):
     """
-    AR:AR-PACKAGE
+    Complex type AR:AR-PACKAGE
+    Tag variants: 'AR-PACKAGE'
     """
 
     def __init__(self, name: str, **kwargs: dict) -> None:
@@ -3664,7 +3668,7 @@ class ModeErrorBehavior(ARObject):
 class ModeTransition(Identifiable):
     """
     Complex type AR:MODE-TRANSITION
-    tag variants: 'MODE-TRANSITION'
+    Tag variants: 'MODE-TRANSITION'
     """
 
     def __init__(self,
@@ -3798,7 +3802,6 @@ class ModeDeclarationGroupPrototype(Identifiable):
     """
     Complex type AR:MODE-DECLARATION-GROUP-PROTOTYPE
     Tag variants: 'MODE-DECLARATION-GROUP-PROTOTYPE' | 'MODE-GROUP'
-                  | 'PROCESS-STATE-MACHINE' | 'STATE-MACHINE'
     """
 
     def __init__(self,
@@ -3826,6 +3829,7 @@ class ModeRequestTypeMap(ARObject):
     Complex type AR:MODE-REQUEST-TYPE-MAP
     Tag variants: 'MODE-REQUEST-TYPE-MAP'
     """
+
     def __init__(self,
                  implementation_data_type: ImplementationDataTypeRef | None = None,
                  mode_group: ModeDeclarationGroupRef | None = None) -> None:
@@ -3860,7 +3864,7 @@ class PortInterface(ARElement):
 
 class DataInterface(PortInterface):
     """
-    Group AR-DATA-INTERFACE
+    Group AR:DATA-INTERFACE
 
     Base class for data-based interfaces (as opposed to operations-based)
     """
@@ -5922,10 +5926,10 @@ class SwComponentPrototype(Identifiable):
 
 class PortInCompositionTypeInstanceRef(ARObject):
     """
-    Merge of complex types AR:P-PORT-IN-COMPOSITION-INSTANCE-REF
-    and R-PORT-IN-COMPOSITION-INSTANCE-REF
-    Tag variants: 'PROVIDER-IREF' | 'P-PORT-IN-COMPOSITION-INSTANCE-REF' |
-                  'REQUESTER-IREF'| 'R-PORT-IN-COMPOSITION-INSTANCE-REF'
+    Complex type AR:P-PORT-IN-COMPOSITION-INSTANCE-REF
+    Merge of Complex Types AR:P-PORT-IN-COMPOSITION-INSTANCE-REF and AR:R-PORT-IN-COMPOSITION-INSTANCE-REF
+    Tag variants: 'P-PORT-IN-COMPOSITION-INSTANCE-REF' | 'PROVIDER-IREF' |
+                  'R-PORT-IN-COMPOSITION-INSTANCE-REF' | 'REQUESTER-IREF'
     """
 
     def __init__(self,
@@ -6273,7 +6277,7 @@ class POperationInAtomicSwcInstanceRef(ARObject):
 class PModeGroupInAtomicSwcInstanceRef(ModeGroupInAtomicSwcInstanceRef):
     """
     Complex type AR:P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF
-    Tag variants: 'P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF' | 'MODE-GROUP-IREF' |
+    Tag variants: 'MODE-GROUP-IREF' | 'P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF' |
                   'SWC-MODE-GROUP-IREF'
     """
 
@@ -6395,7 +6399,7 @@ class RVariableInAtomicSwcInstanceRef(ARObject):
 class RTriggerInAtomicSwcInstanceRef(ARObject):
     """
     Complex type AR:R-TRIGGER-IN-ATOMIC-SWC-INSTANCE-REF
-    Tag variants: 'TRIGGER-IREF' | 'REQUIRED-TRIGGER-IREF'
+    Tag variants: 'REQUIRED-TRIGGER-IREF' | 'TRIGGER-IREF'
     """
 
     def __init__(self,
@@ -6512,9 +6516,9 @@ class VariableInAtomicSWCTypeInstanceRef(ARObject):
 class AutosarVariableRef(ARObject):
     """
     Complex type AR:AUTOSAR-VARIABLE-REF
-    Tag variants: 'VARIABLE-INSTANCE' | 'NV-RAM-BLOCK-ELEMENT' | 'READ-NV-DATA' |
-                  'WRITTEN-NV-DATA' | 'WRITTEN-READ-NV-DATA' | 'USED-DATA-ELEMENT' |
-                  'AUTOSAR-VARIABLE' | 'ACCESSED-VARIABLE'
+    Tag variants: 'ACCESSED-VARIABLE' | 'AUTOSAR-VARIABLE' | 'NV-RAM-BLOCK-ELEMENT' |
+                  'READ-NV-DATA' | 'USED-DATA-ELEMENT' | 'VARIABLE-INSTANCE' |
+                  'WRITTEN-NV-DATA' | 'WRITTEN-READ-NV-DATA'
     """
 
     def __init__(self,
@@ -6828,7 +6832,7 @@ class ServerCallPoint(AbstractAccessPoint):
 
 class AsynchronousServerCallPoint(ServerCallPoint):
     """
-    Complex type: AR:ASYNCHRONOUS-SERVER-CALL-POINT
+    Complex type AR:ASYNCHRONOUS-SERVER-CALL-POINT
     Tag variants: 'ASYNCHRONOUS-SERVER-CALL-POINT'
     Use constructor from base class
     """
@@ -6844,7 +6848,7 @@ class AsynchronousServerCallPoint(ServerCallPoint):
 
 class AsynchronousServerCallResultPoint(AbstractAccessPoint):
     """
-    Complex type: AR:ASYNCHRONOUS-SERVER-CALL-RESULT-POINT
+    Complex type AR:ASYNCHRONOUS-SERVER-CALL-RESULT-POINT
     Tag variants: 'ASYNCHRONOUS-SERVER-CALL-RESULT-POINT'
     """
 
@@ -6869,7 +6873,7 @@ class AsynchronousServerCallResultPoint(AbstractAccessPoint):
 
 class SynchronousServerCallPoint(ServerCallPoint):
     """
-    Complex type: AR:SYNCHRONOUS-SERVER-CALL-POINT
+    Complex type AR:SYNCHRONOUS-SERVER-CALL-POINT
     Tag variants: 'SYNCHRONOUS-SERVER-CALL-POINT'
     """
 
@@ -6995,7 +6999,7 @@ class ModeAccessPoint(ARObject):
 
 class ModeSwitchPoint(AbstractAccessPoint):
     """
-    Complex Type AR:MODE-SWITCH-POINT
+    Complex type AR:MODE-SWITCH-POINT
     Tag variants: 'MODE-SWITCH-POINT'
     """
 
@@ -7051,7 +7055,8 @@ class ParameterInAtomicSwcTypeInstanceRef(ARObject):
 class AutosarParameterRef(ARObject):
     """
     Complex type AR:AUTOSAR-PARAMETER-REF
-    Tag variants: 'PARAMETER-INSTANCE' | 'ACCESSED-PARAMETER' | 'USED-PARAMETER-ELEMENT' | 'AR-PARAMETER'
+    Tag variants: 'ACCESSED-PARAMETER' | 'AR-PARAMETER' | 'PARAMETER-INSTANCE' |
+                  'USED-PARAMETER-ELEMENT'
     """
 
     def __init__(self,
@@ -7703,7 +7708,6 @@ class RunnableEntity(ExecutableEntity):
                                           trigger: Trigger,
                                           settings: BehaviorSettings,
                                           access_point_args: dict[str, Any] | None) -> ExternalTriggeringPoint:
-
         """
         Creates an ExternalTriggeringPoint object
                  context_port: AbstractProvidedPortPrototypeRef | None = None,
@@ -7909,7 +7913,7 @@ class RunnableEntity(ExecutableEntity):
 
     def append_wait_point(self, element: WaitPoint) -> None:
         """
-        WaitPoint associated with the RunnableEntity
+        Append a WaitPoint associated with the RunnableEntity.
         """
         if isinstance(element, WaitPoint):
             make_unique_name_in_list(self.wait_point, element.name)
@@ -7990,7 +7994,7 @@ class AsynchronousServerCallReturnsEvent(RteEvent):
 
 class BackgroundEvent(RteEvent):
     """
-    Complex Type AR:BACKGROUND-EVENT
+    Complex type AR:BACKGROUND-EVENT
     Tag variants: 'BACKGROUND-EVENT'
     Inherits constructor from base-class
     """
@@ -8008,7 +8012,7 @@ class BackgroundEvent(RteEvent):
 
 class DataReceiveErrorEvent(RteEvent):
     """
-    Complex Type AR:DATA-RECEIVE-ERROR-EVENT
+    Complex type AR:DATA-RECEIVE-ERROR-EVENT
     Tag variants: 'DATA-RECEIVE-ERROR-EVENT'
     """
 
@@ -8051,7 +8055,7 @@ class DataReceiveErrorEvent(RteEvent):
 
 class DataReceivedEvent(RteEvent):
     """
-    Complex Type AR:DATA-RECEIVED-EVENT
+    Complex type AR:DATA-RECEIVED-EVENT
     Tag variants: 'DATA-RECEIVED-EVENT'
     """
 
@@ -8094,7 +8098,7 @@ class DataReceivedEvent(RteEvent):
 
 class DataSendCompletedEvent(RteEvent):
     """
-    Complex Type AR:DATA-SEND-COMPLETED-EVENT
+    Complex type AR:DATA-SEND-COMPLETED-EVENT
     Tag variants: 'DATA-SEND-COMPLETED-EVENT'
     """
 
@@ -8121,7 +8125,7 @@ class DataSendCompletedEvent(RteEvent):
 
 class DataWriteCompletedEvent(RteEvent):
     """
-    Complex Type AR:DATA-WRITE-COMPLETED-EVENT
+    Complex type AR:DATA-WRITE-COMPLETED-EVENT
     Tag variants: 'DATA-WRITE-COMPLETED-EVENT'
     """
 
@@ -8148,7 +8152,7 @@ class DataWriteCompletedEvent(RteEvent):
 
 class ExternalTriggerOccurredEvent(RteEvent):
     """
-    Complex Type AR:EXTERNAL-TRIGGER-OCCURRED-EVENT
+    Complex type AR:EXTERNAL-TRIGGER-OCCURRED-EVENT
     Tag variants: 'EXTERNAL-TRIGGER-OCCURRED-EVENT'
     """
 
@@ -8188,7 +8192,7 @@ class ExternalTriggerOccurredEvent(RteEvent):
 
 class InitEvent(RteEvent):
     """
-    Complex Type AR:INIT-EVENT
+    Complex type AR:INIT-EVENT
     Tag variants: 'INIT-EVENT'
     Inherits constructor from base-class
     """
@@ -8483,7 +8487,7 @@ class TransformerHardErrorEvent(RteEvent):
 class PortDefinedArgumentValue(ARObject):
     """
     Complex type AR:PORT-DEFINED-ARGUMENT-VALUE
-    Tag variantS: 'PORT-DEFINED-ARGUMENT-VALUE'
+    Tag variants: 'PORT-DEFINED-ARGUMENT-VALUE'
     """
 
     def __init__(self,
@@ -8508,7 +8512,7 @@ class SwcSupportedFeature(ARObject):
 class CommunicationBufferLocking(SwcSupportedFeature):
     """
     Complex type AR:COMMUNICATION-BUFFER-LOCKING
-    Tag variantS: 'COMMUNICATION-BUFFER-LOCKING'
+    Tag variants: 'COMMUNICATION-BUFFER-LOCKING'
     """
 
     def __init__(self,
@@ -8597,7 +8601,7 @@ class PortApiOption(ARObject):
 
 class ExclusiveArea(Identifiable):
     """
-    Complex Type AR:EXCLUSIVE-AREA
+    Complex type AR:EXCLUSIVE-AREA
     Tag variants: 'EXCLUSIVE-AREA'
     Inherits constructor from parent class
     """
@@ -8616,6 +8620,7 @@ class InternalBehavior(Identifiable):
     Group AR:INTERNAL-BEHAVIOR
     Implementation is very limited for now
     """
+
     def __init__(self,
                  name: str,
                  data_type_mappings: str | DataTypeMappingSetRef | list[DataTypeMappingSetRef] | None = None,

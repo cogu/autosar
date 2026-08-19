@@ -496,7 +496,6 @@ class Reader:
     def _read_referrable(self, element_map: ChildElementMap, data: dict) -> None:
         """
         Reads group AR:REFERRABLE
-        Type: Abstract
         """
         short_name = element_map.get('SHORT-NAME')
         if short_name is not None:
@@ -512,7 +511,6 @@ class Reader:
     def _read_multi_language_referrable(self, element_map: ChildElementMap, data: dict) -> None:
         """
         Reads group AR:MULTILANGUAGE-REFERRABLE
-        Type: Abstract
         """
         xml_long_name = element_map.get('LONG-NAME')
         if xml_long_name is not None:
@@ -521,7 +519,6 @@ class Reader:
     def _read_identifiable(self, element_map: ChildElementMap, attr: dict, data: dict) -> None:
         """
         Reads group AR:IDENTIFIABLE
-        Type: Abstract
         """
         self._read_identifiable_attributes(attr, data)
         xml_child: ElementTree.Element | None = None
@@ -552,7 +549,7 @@ class Reader:
     def _read_special_data_group(self, xml_element: ElementTree.Element) -> ar_element.SpecialDataGroup:
         """
         Reads complex type AR:SDG
-        Tag variants: 'SDG'
+        Multi-tagged: False
         """
         data = {}
         self._read_special_data_group_internal(xml_element, data)
@@ -591,7 +588,7 @@ class Reader:
     def _read_modification(self, xml_element: ElementTree.Element) -> ar_element.Modification:
         """
         Reads complex type AR:MODIFICATION
-        Tag variants: 'MODIFICATION'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -601,7 +598,6 @@ class Reader:
     def _read_modification_group(self, child_elements: ChildElementMap, data: dict) -> None:
         """
         Reads group AR:MODIFICATION
-        Tag variants: 'MODIFICATION'
         """
         xml_child = child_elements.get("CHANGE")
         if xml_child is not None:
@@ -613,7 +609,7 @@ class Reader:
     def _read_doc_revision(self, xml_element: ElementTree.Element) -> ar_element.DocRevision:
         """
         Reads complex type AR:DOC-REVISION
-        Tag variants: 'DOC-REVISION'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -651,9 +647,8 @@ class Reader:
 
     def _read_admin_data(self, xml_element: ElementTree.Element) -> ar_element.AdminData:
         """
-        Reads Complex-type AR:ADMIN-DATA
-
-        Tag variants: 'ADMIN-DATA'
+        Reads complex type AR:ADMIN-DATA
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -739,7 +734,6 @@ class Reader:
     def _read_package_group(self, element_map: ChildElementMap, package: ar_element.Package) -> None:
         """
         Reads group AR:AR-PACKAGE
-        Type: Utility
         """
         # REFERECE-BASES not implemented
         xml_elements = element_map.get('ELEMENTS')
@@ -753,7 +747,6 @@ class Reader:
     def _read_package_elements(self, package: ar_element.Package, xml_elements: ElementTree.Element) -> None:
         """
         Reads AR:AR-PACKAGE.ELEMENTS
-        Type: Utility
         """
         for xml_child_elem in xml_elements.findall('./*'):
             read_method = self.switcher_collectable.get(
@@ -782,7 +775,6 @@ class Reader:
     def _read_sub_packages(self, package: ar_element.Package, xml_packages: ElementTree.Element) -> None:
         """
         Reads AR:AR-PACKAGE.ELEMENTS
-        Type: Utility
         """
         for xml_child_package in xml_packages.findall('./AR-PACKAGE'):
             child_package = self._read_package(xml_child_package)
@@ -793,7 +785,8 @@ class Reader:
 
     def _read_annotation(self, xml_elem: ElementTree.Element) -> ar_element.Annotation:
         """
-        Reads Complex-type AR:ANNOTATION
+        Reads complex type AR:ANNOTATION
+        Multi-tagged: False
         """
         data = {}
         self._read_general_annotation(xml_elem, data)
@@ -811,7 +804,7 @@ class Reader:
 
     def _read_general_annotation(self, xml_elem: ElementTree.Element, data: dict) -> None:
         """
-        Reads Group AR:GENERAL-ANNOTATION
+        Reads group AR:GENERAL-ANNOTATION
         """
         xml_label = xml_elem.find('./LABEL')
         xml_origin = xml_elem.find('./ANNOTATION-ORIGIN')
@@ -826,15 +819,15 @@ class Reader:
 
     def _read_break(self, xml_elem: ElementTree.Element) -> ar_element.Break:  # pylint: disable=unused-argument
         """
-        Reads complexType AR:BR
-        Type: Concrete
+        Reads complex type AR:BR
+        Multi-tagged: False
         """
         return ar_element.Break()
 
     def _read_documentation_block(self, xml_elem: ElementTree.Element) -> ar_element.DocumentationBlock:
         """
-        Reads complexType AR:DOCUMENTATION-BLOCK
-        Type: Concrete
+        Reads complex type AR:DOCUMENTATION-BLOCK
+        Multi-tagged: True
         """
         elem = ar_element.DocumentationBlock()
         for xml_child_elem in xml_elem.findall('./*'):
@@ -849,10 +842,10 @@ class Reader:
 
     def _read_emphasis_text(self, elem: ElementTree.Element) -> ar_element.EmphasisText:
         """
-        Reads complexType AR:EMPHASIS-TEXT
-        We only support plain elements for now. No nesting (mixed-content) supported.
+        Reads complex type AR:EMPHASIS-TEXT
+        Multi-tagged: False
 
-        Type: Concrete
+        We only support plain elements for now. No nesting (mixed-content) supported.
         """
         data = {}
         self._read_emphasis_text_attr(elem.attrib, data)
@@ -864,7 +857,7 @@ class Reader:
 
     def _read_emphasis_text_attr(self, attrib: dict, data: dict) -> None:
         """
-        Reads attributeGroup AR:EMPHASIS-TEXT
+        Reads group AR:EMPHASIS-TEXT
         """
         if 'COLOR' in attrib:
             data['color'] = str(attrib['COLOR'])
@@ -877,17 +870,18 @@ class Reader:
 
     def _read_index_entry(self, elem: ElementTree.Element) -> ar_element.IndexEntry:
         """
-        Reads complexType AR:INDEX-ENTRY
+        Reads complex type AR:INDEX-ENTRY
+        Multi-tagged: False
+
         Limitations: Doesn't support child-elements even though it's allowed in the scehema
-        Type: Concrete
         """
         return ar_element.IndexEntry(elem.text)
 
     def _read_technical_term(self,
                              elem: ElementTree.Element) -> ar_element.TechnicalTerm:
         """
-        Reads complexType AR:TT
-        Type: Concrete
+        Reads complex type AR:TT
+        Multi-tagged: False
         """
         data = {}
         self._read_technical_term_attr(elem.attrib, data)
@@ -899,7 +893,7 @@ class Reader:
 
     def _read_technical_term_attr(self, attrib: dict, data: dict) -> None:
         """
-        Reads attributes from attribute group AR:TT
+        Reads group AR:TT
         """
         if 'TEX-RENDER' in attrib:
             data['tex_render'] = str(attrib['TEX-RENDER'])
@@ -908,23 +902,22 @@ class Reader:
 
     def _read_superscript(self, elem: ElementTree.Element) -> ar_element.TechnicalTerm:
         """
-        Reads complexType AR:SUPSCRIPT for tag SUP
-        Type: Concrete
+        Reads complex type AR:SUPSCRIPT
+        Multi-tagged: False
         """
         return ar_element.Superscript(elem.text)
 
     def _read_subscript(self, elem: ElementTree.Element) -> ar_element.TechnicalTerm:
         """
-        Reads complexType AR:SUPSCRIPT for tag SUB
-        Type: Concrete
+        Reads complex type AR:SUPSCRIPT
+        Multi-tagged: False
         """
         return ar_element.Subscript(elem.text)
 
     def _read_multi_language_long_name(self, xml_elem: ElementTree.Element) -> ar_element.MultilanguageLongName:
         """
-        Reads complexType AR:MULTILANGUAGE-LONG-NAME
-        Type: Concrete
-        Tag variants: 'LABEL' | 'LONG-NAME'
+        Reads complex type AR:MULTILANGUAGE-LONG-NAME
+        Multi-tagged: True
         """
         assert xml_elem.tag in {'LONG-NAME', 'LABEL'}
         elem = ar_element.MultilanguageLongName()
@@ -935,8 +928,8 @@ class Reader:
 
     def _read_language_long_name(self, xml_elem: ElementTree.Element) -> ar_element.LanguageLongName:
         """
-        Reads complexType AR:L-LONG-NAME (L-4 tags)
-        Type: Concrete
+        Reads complex type AR:L-LONG-NAME
+        Multi-tagged: False
         """
         data = {}
         self._read_language_specific_attr(xml_elem.attrib, data)
@@ -946,7 +939,7 @@ class Reader:
 
     def _read_language_specific_attr(self, attrib: dict, data: dict) -> None:
         """
-        Reads attributeGroup AR:LANGUAGE-SPECIFIC
+        Reads group AR:LANGUAGE-SPECIFIC
         """
         data['language'] = ar_enum.xml_to_enum(
             'Language', attrib['L'])  # L is a mandatory attribute
@@ -959,8 +952,6 @@ class Reader:
 
         This includes reading mixed content from L-LONG-NAME or
         SINGLE-LANGUAGE-LONG-NAME
-
-        Type: Abstract
         """
         if xml_elem.text:
             elem.append(xml_elem.text)
@@ -984,9 +975,8 @@ class Reader:
     def _read_multi_language_overview_paragraph(self,
                                                 xml_elem: ElementTree.Element) -> MultiLanguageOverviewParagraph:
         """
-        Reads complexType AR:MULTI-LANGUAGE-OVERVIEW-PARAGRAPH
-        Type: Concrete
-        Tag variants: 'DESC' | 'ITEM-LABEL' | 'CHANGE' | 'REASON'
+        Reads complex type AR:MULTI-LANGUAGE-OVERVIEW-PARAGRAPH
+        Multi-tagged: True
         """
         assert xml_elem.tag in {'DESC', 'ITEM-LABEL', 'CHANGE', 'REASON'}
         elem = MultiLanguageOverviewParagraph()
@@ -999,9 +989,8 @@ class Reader:
     def _read_language_overview_paragraph(self,
                                           xml_elem: ElementTree.Element) -> ar_element.LanguageOverviewParagraph:
         """
-        Reads complexType AR:L-OVERVIEW-PARAGRAPH
-        Type: Concrete
-        Tag variants: 'L-2'
+        Reads complex type AR:L-OVERVIEW-PARAGRAPH
+        Multi-tagged: False
         """
         data = {}
         self._read_language_specific_attr(xml_elem.attrib, data)
@@ -1014,8 +1003,6 @@ class Reader:
                                                    elem: ar_element.LanguageOverviewParagraph) -> None:
         """
         Reads group AR:MIXED-CONTENT-FOR-OVERVIEW-PARAGRAPH
-
-        Type: Abstract
         """
         if xml_elem.text:
             elem.append(xml_elem.text)
@@ -1043,9 +1030,8 @@ class Reader:
 
     def _read_language_paragraph(self, xml_elem: ElementTree.Element) -> ar_element.LanguageParagraph:
         """
-        Reads complexType AR:L-PARAGRAPH
-        Type: Concrete
-        Tag variants: 'L-1'
+        Reads complex type AR:L-PARAGRAPH
+        Multi-tagged: False
         """
         data = {}
         self._read_language_specific_attr(xml_elem.attrib, data)
@@ -1055,9 +1041,8 @@ class Reader:
 
     def _read_language_verbatim(self, xml_elem: ElementTree.Element) -> ar_element.LanguageVerbatim:
         """
-        Reads complexType AR:L-VERBATIM
-        Type: Concrete
-        Tag variants: 'L-5'
+        Reads complex type AR:L-VERBATIM
+        Multi-tagged: False
         """
         data = {}
         self._read_language_specific_attr(xml_elem.attrib, data)
@@ -1070,7 +1055,6 @@ class Reader:
                                           elem: ar_element.LanguageParagraph) -> None:
         """
         Reads group AR:MIXED-CONTENT-FOR-PARAGRAPH
-        Type: Abstract
         """
         if xml_elem.text:
             elem.append(xml_elem.text)
@@ -1107,7 +1091,6 @@ class Reader:
                                          elem: ar_element.LanguageVerbatim) -> None:
         """
         Reads group AR:MIXED-CONTENT-FOR-VERBATIM
-        Type: Abstract
         """
         if xml_elem.text:
             elem.append(xml_elem.text)
@@ -1130,9 +1113,8 @@ class Reader:
     def _read_multi_language_paragraph(self,
                                        xml_elem: ElementTree.Element) -> ar_element.MultiLanguageParagraph:
         """
-        Reads complexType AR:MULTI-LANGUAGE-PARAGRAPH
-        Type: Concrete
-        Tag variants: 'P'
+        Reads complex type AR:MULTI-LANGUAGE-PARAGRAPH
+        Multi-tagged: False
         """
         attr = {}
         self._read_document_view_selectable_attrib(xml_elem.attrib, attr)
@@ -1146,7 +1128,7 @@ class Reader:
 
     def _read_document_view_selectable_attrib(self, attrib: dict, data: dict) -> None:
         """
-        Reads attributes from AttributeGroup AR:DOCUMENT-VIEW-SELECTABLE
+        Reads group AR:DOCUMENT-VIEW-SELECTABLE
         """
         if 'SI' in attrib:
             data['semantic_information'] = str(attrib['SI'])
@@ -1155,7 +1137,7 @@ class Reader:
 
     def _read_paginateable_attrib(self, attrib: dict, data: dict) -> None:
         """
-        Reads attributes from AttributeGroup AR:PAGINATEABLE
+        Reads group AR:PAGINATEABLE
         """
         if 'BREAK' in attrib:
             data['page_break'] = ar_enum.xml_to_enum(
@@ -1166,7 +1148,7 @@ class Reader:
 
     def _read_multi_language_paragraph_attrib(self, attrib: dict, data: dict) -> None:
         """
-        Reads attributes from AttributeGroup AR:MULTI-LANGUAGE-PARAGRAPH
+        Reads group AR:MULTI-LANGUAGE-PARAGRAPH
         """
         if 'HELP-ENTRY' in attrib:
             data['help_entry'] = str(attrib['HELP-ENTRY'])
@@ -1174,9 +1156,8 @@ class Reader:
     def _read_multi_language_verbatim(self,
                                       xml_elem: ElementTree.Element) -> ar_element.MultiLanguageVerbatim:
         """
-        Reads complexType AR:MULTI-LANGUAGE-VERBATIM
-        Type: Concrete
-        Tag variants: 'VERBATIM'
+        Reads complex type AR:MULTI-LANGUAGE-VERBATIM
+        Multi-tagged: False
         """
         attr = {}
         self._read_document_view_selectable_attrib(xml_elem.attrib, attr)
@@ -1190,7 +1171,7 @@ class Reader:
 
     def _read_multi_language_verbatim_attrib(self, attrib: dict, data: dict) -> None:
         """
-        Reads attributes from AttributeGroup AR:MULTI-LANGUAGE-VERBATIM
+        Reads group AR:MULTI-LANGUAGE-VERBATIM
         """
         if 'ALLOW-BREAK' in attrib:
             data['allow_break'] = str(attrib['ALLOW-BREAK'])
@@ -1205,8 +1186,7 @@ class Reader:
     def _read_single_language_unit_names(self, xml_element: ElementTree.Element) -> ar_element.SingleLanguageUnitNames:
         """
         Reads complex type AR:SINGLE-LANGUAGE-UNIT-NAMES
-        Type: concrete
-        Tag variants: 'PRM-UNIT' | 'UNIT-DISPLAY-NAME' | 'UNIT-DISPLAY-NAME' | 'DISPLAY-NAME'
+        Multi-tagged: True
         """
         elem = ar_element.SingleLanguageUnitNames()
         self._read_mixed_content_for_unit_names(xml_element, elem)
@@ -1217,7 +1197,6 @@ class Reader:
                                            elem: ar_element.SingleLanguageUnitNames) -> None:
         """
         Reads group AR:MIXED-CONTENT-FOR-UNIT-NAMES
-        Type: Abstract
         """
         if xml_element.text:
             elem.append(xml_element.text)
@@ -1252,8 +1231,8 @@ class Reader:
 
     def _read_language_plain_text(self, xml_element: ElementTree.Element) -> ar_element.LanguagePlainText:
         """
-        Writes complex type AR:L-PLAIN-TEXT
-        Tag variants: 'L-10'
+        Reads complex type AR:L-PLAIN-TEXT
+        Multi-tagged: False
         """
         data = {}
         self._read_language_specific_attr(xml_element.attrib, data)
@@ -1261,8 +1240,8 @@ class Reader:
 
     def _read_multi_language_plain_text(self, xml_element: ElementTree.Element) -> ar_element.MultiLanguagePlainText:
         """
-        Writes complex type AR:MULTI-LANGUAGE-PLAIN-TEXT
-        Tag variants: 'USED-LANGUAGES' | 'TEX-MATH' | 'GENERIC-MATH'
+        Reads complex type AR:MULTI-LANGUAGE-PLAIN-TEXT
+        Multi-tagged: True
         """
         data = {}
         elements = []
@@ -1274,16 +1253,14 @@ class Reader:
     def _read_date(self, xml_element: ElementTree.Element) -> ar_element.Date:
         """
         Reads complex type AR:DATE
-        Tag variant: 'DATE'
+        Multi-tagged: False
         """
         return ar_element.Date(xml_element.text)
 
     def _read_revision_label_string(self, xml_element: ElementTree.Element) -> ar_element.RevisionLabelString:
         """
         Reads complex type AR:REVISION-LABEL-STRING
-        Tag variants: 'AR-RELEASE-VERSION' | 'REVISION-LABEL' | 'REVISION-LABEL-P1' | 'REVISION-LABEL-P2' |
-                  'ECUC-DEF-EDITION' | 'SW-VERSION' | 'PRODUCT-RELEASE' | 'MINIMUM-SUPPORTED-UCM-VERSION' |
-                  'ECU-EXTRACT-VERSION' | 'SYSTEM-VERSION'
+        Multi-tagged: True
         """
         return ar_element.RevisionLabelString(xml_element.text)
 
@@ -1291,9 +1268,8 @@ class Reader:
 
     def _read_compu_method(self, xml_element: ElementTree.Element) -> ar_element.CompuMethod:
         """
-        Reads Complex type AR:COMPU-METHOD
-        Type: Concrete
-        Tag variants: 'COMPU-METHOD'
+        Reads complex type AR:COMPU-METHOD
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -1306,9 +1282,7 @@ class Reader:
 
     def _read_compu_method_group(self, child_elements: ChildElementMap, data: dict) -> None:
         """
-        Reads group type AR:COMPU-METHOD
-        Type: Abstract
-        Tag variants: 'COMPU-METHOD'
+        Reads group AR:type
         """
         xml_child = child_elements.get("DISPLAY-FORMAT")
         if xml_child is not None:
@@ -1326,8 +1300,6 @@ class Reader:
     def _read_computation(self, xml_element: ElementTree.Element) -> ar_element.Computation:
         """
         Reads AR:COMPUTATION
-        Type: Concrete
-        Tag variants: 'COMPU-INT-TO-PHYS', 'COMPU-PHYS-TO-INT'
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -1343,8 +1315,6 @@ class Reader:
     def _read_compu_scales(self, xml_element: ElementTree.Element) -> list[ar_element.CompuScale]:
         """
         Reads AR:COMPU-SCALES
-        Type: Concrete
-        Tag variants: 'COMPU-SCALES'
         """
         compu_scales = []
         for xml_child in xml_element.findall("./COMPU-SCALE"):
@@ -1354,8 +1324,6 @@ class Reader:
     def _read_compu_scale(self, xml_element: ElementTree.Element) -> list[ar_element.CompuScale]:
         """
         Reads AR:COMPU-SCALE
-        Type: Concrete
-        Tag variants: 'COMPU-SCALE'
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -1410,8 +1378,6 @@ class Reader:
     def _read_compu_const(self, xml_element: ElementTree.Element) -> ar_element.CompuConst:
         """
         Reads AR:COMPU-CONST
-        Type: Concrete
-        Tag variants: 'COMPU-CONST'
         """
         v_xml = xml_element.find("V")
         vt_xml = xml_element.find("VT")
@@ -1429,8 +1395,6 @@ class Reader:
     def _read_compu_rational(self, xml_element: ElementTree.Element) -> ar_element.CompuRational:
         """
         Reads AR:COMPU-RATIONAL-COEFFS
-        Type: Concrete
-        Tag variants: 'COMPU-RATIONAL-COEFFS'
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -1446,8 +1410,6 @@ class Reader:
     def _read_compu_numerator_denominator_values(self, xml_element: ElementTree.Element) -> tuple:
         """
         Reads AR:COMPU-NOMINATOR-DENOMINATOR
-        Type: Concrete
-        Tag variants: 'COMPU-NUMERATOR' | 'COMPU-DENOMINATOR'
         """
         values = []
         for xml_child in xml_element.findall('./V'):
@@ -1459,9 +1421,8 @@ class Reader:
 
     def _read_data_constraint(self, xml_element: ElementTree.Element) -> ar_element.DataConstraint:
         """
-        Writes complex type AR:DATA-CONSTRS
-        Type: Concrete
-        Tag variants: 'DATA-CONSTRS'
+        Reads complex type AR:DATA-CONSTRS
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -1474,8 +1435,7 @@ class Reader:
 
     def _read_data_constraint_group(self, child_elements: ChildElementMap, data: dict) -> None:
         """
-        Reads group type AR:DATA-CONSTRS
-        Type: Abstract
+        Reads group AR:type
         """
         xml_child = child_elements.get("DATA-CONSTR-RULES")
         if xml_child is not None:
@@ -1486,9 +1446,8 @@ class Reader:
 
     def _read_data_constraint_rule(self, xml_element: ElementTree.Element) -> ar_element.DataConstraintRule:
         """
-        Writes complex type AR:INTERNAL-CONSTRS
-        Type: Concrete
-        Tag variants: 'INTERNAL-CONSTRS'
+        Reads complex type AR:INTERNAL-CONSTRS
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -1505,9 +1464,8 @@ class Reader:
 
     def _read_internal_constraint(self, xml_element: ElementTree.Element) -> ar_element.InternalConstraint:
         """
-        Writes complex type AR:INTERNAL-CONSTRS
-        Type: Concrete
-        Tag variants: 'INTERNAL-CONSTRS'
+        Reads complex type AR:INTERNAL-CONSTRS
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -1516,9 +1474,8 @@ class Reader:
 
     def _read_physical_constraint(self, xml_element: ElementTree.Element) -> ar_element.PhysicalConstraint:
         """
-        Writes complex type AR:PHYS-CONSTRS
-        Type: Concrete
-        Tag variants: 'PHYS-CONSTRS'
+        Reads complex type AR:PHYS-CONSTRS
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -1531,7 +1488,6 @@ class Reader:
     def _read_constraint_base(self, child_elements: ChildElementMap, data: dict[str, Any]) -> None:
         """
         Reads elements common for both AR:INTERNAL-CONSTRS and AR:PHYS-CONSTRS
-        Type: Abstract
         """
         xml_child = child_elements.get("LOWER-LIMIT")
         if xml_child is not None:
@@ -1559,8 +1515,6 @@ class Reader:
     def _read_scale_constraints(self, xml_element: ElementTree.Element) -> list[ar_element.ScaleConstraint]:
         """
         Reads SCALE-CONSTRS (list of AR:SCALE-CONSTR)
-        Type: Concrete
-        Tag variant: Not applicable
         """
         scale_constrs = []
         for xml_child in xml_element.findall('./SCALE-CONSTR'):
@@ -1571,9 +1525,8 @@ class Reader:
 
     def _read_scale_constraint(self, xml_element: ElementTree.Element) -> ar_element.ScaleConstraint:
         """
-        Writes complex type AR:SCALE-CONSTR
-        Type: Concrete
-        Tag variants: 'SCALE-CONSTR'
+        Reads complex type AR:SCALE-CONSTR
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -1599,9 +1552,8 @@ class Reader:
 
     def _read_unit(self, xml_element: ElementTree.Element) -> ar_element.Unit:
         """
-        Reads Complex type AR:UNIT
-        Type: Concrete
-        Tag variants: 'UNIT'
+        Reads complex type AR:UNIT
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -1615,7 +1567,6 @@ class Reader:
     def _read_unit_group(self, child_elements: ChildElementMap, data: dict) -> None:
         """
         Reads group AR:SW-ADDR-METHOD
-        Type: Utility
         """
         xml_child = child_elements.get("DISPLAY-NAME")
         if xml_child is not None:
@@ -1635,7 +1586,7 @@ class Reader:
     def _read_data_filter(self, xml_element: ElementTree.Element) -> ar_element.DataFilter:
         """
         Reads complex type AR:DATA-FILTER
-        Tag variants: 'FILTER' | 'DATA-FILTER'
+        Multi-tagged: True
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -1676,8 +1627,8 @@ class Reader:
 
     def _read_autosar_engineering_object(self, xml_element: ElementTree.Element) -> ar_element.AutosarEngineeringObject:
         """
-        Complex type AR:AUTOSAR-ENGINEERING-OBJECT
-        Tag variants: 'AUTOSAR-ENGINEERING-OBJECT' | 'ARTIFACT-DESCRIPTOR'
+        Reads complex type AR:AUTOSAR-ENGINEERING-OBJECT
+        Multi-tagged: True
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -1688,7 +1639,7 @@ class Reader:
     def _read_code(self, xml_element: ElementTree.Element) -> ar_element.Code:
         """
         Reads complex type AR:CODE
-        Tag variants: 'CODE'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -1733,7 +1684,7 @@ class Reader:
     def _read_trigger(self, xml_element: ElementTree.Element) -> ar_element.Trigger:
         """
         Reads complex type AR:TRIGGER
-        Tag variants: 'TRIGGER'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -1759,9 +1710,8 @@ class Reader:
 
     def _read_sw_addr_method(self, xml_element: ElementTree.Element) -> ar_element.SwAddrMethod:
         """
-        Reads Complex type AR:SW-ADDR-METHOD
-        Type: Concrete
-        Tag variants: 'SW-ADDR-METHOD'
+        Reads complex type AR:SW-ADDR-METHOD
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -1775,7 +1725,6 @@ class Reader:
     def _read_sw_addr_method_group(self, child_elements: ChildElementMap, _: dict) -> None:
         """
         Reads group AR:SW-ADDR-METHOD
-        Type: Utility
         """
         child_elements.skip('MEMORY-ALLOCATION-KEYWORD-POLICY')  # Not implemented
         child_elements.skip('OPTIONS')  # Not implemented
@@ -1784,9 +1733,8 @@ class Reader:
 
     def _read_sw_base_type(self, xml_element: ElementTree.Element) -> ar_element.SwBaseType:
         """
-        Reads Complex-type AR:SW-BASE-TYPE
-        Type: Concrete
-        Tag variants: 'SW-BASE-TYPE'
+        Reads complex type AR:SW-BASE-TYPE
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -1800,7 +1748,6 @@ class Reader:
     def _read_base_type(self, child_elements: ChildElementMap, data: dict) -> None:
         """
         Reads groups AR:BASE-TYPE and AR:BASE-TYPE-DIRECT-DEFINITION
-        Type: Abstract
         """
         xml_child: ElementTree.Element | None = None
         xml_child = child_elements.get('BASE-TYPE-SIZE')
@@ -1826,7 +1773,6 @@ class Reader:
     def _read_sw_bit_representation(self, xml_element: ElementTree.Element) -> ar_element.SwBitRepresentation:
         """
         Reads AR:SW-BIT-REPRESENTATION
-        Type: Concrete
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -1842,8 +1788,7 @@ class Reader:
     def _read_sw_data_def_props(self, xml_element: ElementTree.Element) -> ar_element.SwDataDefProps:
         """
         Reads complex type AR:SW-DATA-DEF-PROPS
-        Type: Concrete
-        Tag Variants: 'SW-DATA-DEF-PROPS', 'NETWORK-REPRESENTATION'
+        Multi-tagged: True
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -1856,7 +1801,6 @@ class Reader:
                                          xml_elem: ElementTree.Element) -> list[ar_element.SwDataDefPropsConditional]:
         """
         Reads SW-DATA-DEF-PROPS-VARIANTS
-        Type: Concrete
         """
         variants = []
         for xml_child in xml_elem.findall('./SW-DATA-DEF-PROPS-CONDITIONAL'):
@@ -1868,9 +1812,8 @@ class Reader:
     def _read_sw_data_def_props_conditional(self,
                                             xml_elem: ElementTree.Element) -> ar_element.SwDataDefPropsConditional:
         """
-        Reads complexType AR:SW-DATA-DEF-PROPS-CONDITIONAL
-        Type: Concrete
-        Tag variants: 'AR:SW-DATA-DEF-PROPS-CONDITIONAL'
+        Reads complex type AR:SW-DATA-DEF-PROPS-CONDITIONAL
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_elem)
@@ -1880,8 +1823,7 @@ class Reader:
 
     def _read_sw_data_def_props_content(self, child_elements: ChildElementMap, data: dict[str, Any]) -> None:
         """
-        Reads Group SW-DATA-DEF-PROPS-CONTENT
-        Type: Abstract
+        Reads group AR:SW-DATA-DEF-PROPS-CONTENT
         """
         xml_child: ElementTree.Element = child_elements.get('DISPLAY-PRESENTATION')
         if xml_child is not None:
@@ -1956,8 +1898,6 @@ class Reader:
     def _read_sw_text_props(self, xml_element: ElementTree.Element) -> ar_element.SwBitRepresentation:
         """
         Reads AR:SW-TEXT-PROPS
-        Type: Concrete
-        Tag variants: 'SW-TEXT-PROPS'
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -1979,8 +1919,6 @@ class Reader:
     def _read_sw_pointer_target_props(self, xml_element: ElementTree.Element) -> ar_element.SwPointerTargetProps:
         """
         Reads AR:SW-POINTER-TARGET-PROPS
-        Type: Concrete
-        Tag variants: 'SW-POINTER-TARGET-PROPS'
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -1999,8 +1937,7 @@ class Reader:
     def _read_symbol_props(self, xml_element: ElementTree.Element) -> ar_element.SymbolProps:
         """
         Reads complex type AR:SYMBOL-PROPS
-        Type: Concrete
-        Tag variants: 'SYMBOL-PROPS', 'EVENT-SYMBOL-PROPS'
+        Multi-tagged: True
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -2014,7 +1951,6 @@ class Reader:
                                    data: dict) -> None:
         """
         Reads group AR:IMPLEMENTATION-PROPS
-        Type: Abstract
         """
         xml_child = child_elements.get('SYMBOL')
         if xml_child is not None:
@@ -2024,8 +1960,7 @@ class Reader:
             xml_element: ElementTree.Element) -> ar_element.ImplementationDataTypeElement:  # noqa E128
         """
         Reads complex type AR:IMPLEMENTATION-DATA-TYPE-ELEMENT
-        Type: Concrete
-        Tag variants: 'IMPLEMENTATION-DATA-TYPE-ELEMENT'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -2041,7 +1976,6 @@ class Reader:
                                                      data: dict) -> None:
         """
         Reads group AR:IMPLEMENTATION-DATA-TYPE-ELEMENT
-        Type: Abstract
         """
         xml_child = child_elements.get("ARRAY-IMPL-POLICY")
         if xml_child is not None:
@@ -2072,8 +2006,7 @@ class Reader:
     def _read_implementation_data_type(self, xml_element: ElementTree.Element) -> ar_element.ImplementationDataType:
         """
         Reads complex type AR:IMPLEMENTATION-DATA-TYPE
-        Type: Concrete
-        Tag Variants: 'IMPLEMENTATION-DATA-TYPE'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -2088,7 +2021,6 @@ class Reader:
     def _read_implementation_data_type_group(self, child_elements: ChildElementMap, data: dict) -> None:
         """
         Reads group AR:IMPLEMENTATION-DATA-TYPE
-        Type: Abstract
         """
         xml_child = child_elements.get("DYNAMIC-ARRAY-SIZE-PROFILE")
         if xml_child is not None:
@@ -2112,7 +2044,6 @@ class Reader:
     def _read_autosar_data_type(self, child_elements: ChildElementMap, data: dict) -> None:
         """
         Reads group AR:AUTOSAR-DATA-TYPE
-        Type: Abstract
         """
         xml_child = child_elements.get("SW-DATA-DEF-PROPS")
         if xml_child is not None:
@@ -2121,7 +2052,6 @@ class Reader:
     def _read_data_prototype(self, child_elements: ChildElementMap, data: dict) -> None:
         """
         Reads group AR:DATA-PROTOTYPE
-        Type: Abstract
         """
         xml_child = child_elements.get("SW-DATA-DEF-PROPS")
         if xml_child is not None:
@@ -2132,8 +2062,7 @@ class Reader:
             xml_element: ElementTree.Element) -> ar_element.ApplicationPrimitiveDataType:
         """
         Reads complex type AR:APPLICATION-PRIMITIVE-DATA-TYPE
-        Type: Concrete
-        Tag variants: 'APPLICATION-PRIMITIVE-DATA-TYPE'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -2149,7 +2078,6 @@ class Reader:
             child_elements: ChildElementMap, data: dict) -> None:
         """
         Reads group AR:APPLICATION-COMPOSITE-ELEMENT-DATA-PROTOTYPE
-        Type: Abstract
         """
         xml_child = child_elements.get("TYPE-TREF")
         if xml_child is not None:
@@ -2160,7 +2088,6 @@ class Reader:
             child_elements: ChildElementMap, data: dict) -> None:
         """
         Reads group AR:AUTOSAR-DATA-PROTOTYPE
-        Type: Abstract
         """
         xml_child = child_elements.get("TYPE-TREF")
         if xml_child is not None:
@@ -2169,8 +2096,7 @@ class Reader:
     def _read_application_array_element(self, xml_element: ElementTree.Element) -> ar_element.ApplicationArrayElement:
         """
         Reads complex type AR:APPLICATION-ARRAY-ELEMENT
-        Type: Concrete
-        Tag variants: 'ELEMENT'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -2186,7 +2112,7 @@ class Reader:
     def _read_application_array_element_group(self, child_elements: ChildElementMap, data: dict) -> None:
         """
         Reads complex type AR:APPLICATION-ARRAY-ELEMENT
-        Type: Abstract
+        Multi-tagged: False
         """
         xml_child = child_elements.get("ARRAY-SIZE-HANDLING")
         if xml_child is not None:
@@ -2204,8 +2130,7 @@ class Reader:
     def _read_application_record_element(self, xml_element: ElementTree.Element) -> ar_element.ApplicationRecordElement:
         """
         Reads complex type AR:APPLICATION-RECORD-ELEMENT
-        Type: Concrete
-        Tag variants: 'APPLICATION-RECORD-ELEMENT'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -2221,7 +2146,7 @@ class Reader:
     def _read_application_record_element_group(self, child_elements: ChildElementMap, data: dict) -> None:
         """
         Reads complex type AR:APPLICATION-RECORD-ELEMENT
-        Type: Abstract
+        Multi-tagged: False
         """
         xml_child = child_elements.get("IS-OPTIONAL")
         if xml_child is not None:
@@ -2232,8 +2157,7 @@ class Reader:
             xml_element: ElementTree.Element) -> ar_element.ApplicationArrayDataType:
         """
         Reads complex type AR:APPLICATION-ARRAY-DATA-TYPE
-        Type: Concrete
-        Tag variants: 'APPLICATION-ARRAY-DATA-TYPE'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -2261,8 +2185,7 @@ class Reader:
             xml_element: ElementTree.Element) -> ar_element.ApplicationRecordDataType:
         """
         Reads complex type AR:APPLICATION-RECORD-DATA-TYPE
-        Type: Concrete
-        Tag variants: 'APPLICATION-RECORD-DATA-TYPE'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -2288,8 +2211,6 @@ class Reader:
     def _read_data_type_map(self, xml_element: ElementTree.Element) -> ar_element.DataTypeMap:
         """
         Reads AR:DATA-TYPE-MAP
-        Type: Concrete
-        Tag variants: 'DATA-TYPE-MAP'
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -2304,8 +2225,6 @@ class Reader:
     def _read_data_type_mapping_set(self, xml_element: ElementTree.Element) -> ar_element.DataTypeMappingSet:
         """
         Reads AR:DATA-TYPE-MAPPING-SET
-        Type: Concrete
-        Tag variants: 'DATA-TYPE-MAPPING-SET'
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -2320,7 +2239,6 @@ class Reader:
     def _read_read_data_type_mapping_set_group(self, child_elements: ChildElementMap, data: dict) -> None:
         """
         Reads group AR:DATA-TYPE-MAPPING-SET
-        Tag variants: 'DATA-TYPE-MAPPING-SET'
         """
         xml_child = child_elements.get("DATA-TYPE-MAPS")
         if xml_child is not None:
@@ -2337,9 +2255,8 @@ class Reader:
 
     def _read_value_list(self, xml_element: ElementTree.Element) -> ar_element.ValueList:
         """
-        Reads complex-type AR:VALUE-LIST
-        Type: Concrete
-        Tag variants: 'SW-ARRAYSIZE'
+        Reads complex type AR:VALUE-LIST
+        Multi-tagged: False
         """
         values = []
         data = {"values": values}
@@ -2356,8 +2273,8 @@ class Reader:
 
     def _read_parameter_data_prototype(self, elem: ElementTree.Element) -> ar_element.ParameterDataPrototype:
         """
-        Reads complex-type AR:PARAMETER-DATA-PROTOTYPE
-        Type: Concrete
+        Reads complex type AR:PARAMETER-DATA-PROTOTYPE
+        Multi-tagged: True
         """
         data = {}
         child_elements = ChildElementMap(elem)
@@ -2386,8 +2303,8 @@ class Reader:
 
     def _read_variable_data_prototype(self, elem: ElementTree.Element) -> ar_element.VariableDataPrototype:
         """
-        Reads complex-type AR:VARIABLE-DATA-PROTOTYPE
-        Type: Concrete
+        Reads complex type AR:VARIABLE-DATA-PROTOTYPE
+        Multi-tagged: True
         """
         data = {}
         child_elements = ChildElementMap(elem)
@@ -2416,8 +2333,8 @@ class Reader:
 
     def _read_argument_data_prototype(self, elem: ElementTree.Element) -> ar_element.ArgumentDataPrototype:
         """
-        Reads complex-type AR:ARGUMENT-DATA-PROTOTYPE
-        Type: Concrete
+        Reads complex type AR:ARGUMENT-DATA-PROTOTYPE
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(elem)
@@ -2446,7 +2363,7 @@ class Reader:
     def _read_mode_request_type_map(self, xml_element: ElementTree.Element) -> ar_element.ModeRequestTypeMap:
         """
         Reads complex type AR:MODE-REQUEST-TYPE-MAP
-        Tag variants: 'MODE-REQUEST-TYPE-MAP'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -2477,7 +2394,6 @@ class Reader:
     def _read_compu_method_ref(self, xml_elem: ElementTree.Element) -> ar_element.CompuMethodRef:
         """
         Reads AR:COMPU-METHOD-REF
-        Tag Variants: 'COMPU-METHOD-REF'
         """
         data = {}
         self._read_base_ref_attributes(xml_elem.attrib, data)
@@ -2488,8 +2404,6 @@ class Reader:
     def _read_data_constraint_ref(self, xml_elem: ElementTree.Element) -> ar_element.DataConstraintRef:
         """
         Reads AR:DATA-CONSTR-REF
-        Type: Concrete
-        Tag Variants: 'DATA-CONSTR-REF'
 
         Note: the name of this complex type is anonymous in the XML achema
         """
@@ -2502,8 +2416,6 @@ class Reader:
     def _read_function_ptr_signature_ref(self, xml_elem: ElementTree.Element) -> ar_element.FunctionPtrSignatureRef:
         """
         Reads AR:FUNCTION-POINTER-SIGNATURE-REF
-        Type: Concrete
-        Tag Variants: 'FUNCTION-POINTER-SIGNATURE-REF'
 
         Note: the name of this complex type is anonymous in the XML achema
         """
@@ -2516,8 +2428,6 @@ class Reader:
     def _read_impl_data_type_ref(self, xml_elem: ElementTree.Element) -> ar_element.ImplementationDataTypeRef:
         """
         Reads AR:IMPLEMENTATION-DATA-TYPE-REF
-        Type: Concrete
-        Tag Variants: 'IMPLEMENTATION-DATA-TYPE-REF'
 
         Note: the name of this complex type is anonymous in the XML achema
         """
@@ -2531,8 +2441,6 @@ class Reader:
     def _read_sw_base_type_ref(self, xml_elem: ElementTree.Element) -> ar_element.SwAddrMethodRef:
         """
         Reads AR:SW-BASE-TYPE-REF
-        Type: Concrete
-        Tag Variants: 'SW-BASE-TYPE-REF'
 
         Note: the name of this complex type is anonymous in the XML achema
         """
@@ -2545,8 +2453,6 @@ class Reader:
     def _read_sw_addr_method_ref(self, xml_elem: ElementTree.Element) -> ar_element.SwAddrMethodRef:
         """
         Reads AR:SW-ADDR-METHOD-REF
-        Type: Concrete
-        Tag variants: 'SW-ADDR-METHOD-REF'
         """
         data = {}
         self._read_base_ref_attributes(xml_elem.attrib, data)
@@ -2557,8 +2463,6 @@ class Reader:
     def _read_unit_ref(self, xml_elem: ElementTree.Element):
         """
         Reads AR:UNIT-REF
-        Type: Concrete
-        Tag variants: 'UNIT-REF'
         """
         data = {}
         self._read_base_ref_attributes(xml_elem.attrib, data)
@@ -2569,8 +2473,6 @@ class Reader:
     def _read_physical_dimension_ref(self, xml_elem: ElementTree.Element) -> ar_element.PhysicalDimensionRef:
         """
         Reads PHYSICAL-DIMENSION-REF
-        Type: Concrete
-        Tag variants: 'PHYSICAL-DIMENSION-REF'
         """
         data = {}
         self._read_base_ref_attributes(xml_elem.attrib, data)
@@ -2582,8 +2484,6 @@ class Reader:
     def _read_index_data_type_ref(self, xml_elem: ElementTree.Element) -> ar_element.IndexDataTypeRef:
         """
         Reads reference to IndexDataType
-        Type: Concrete
-        Tag variants: 'INDEX-DATA-TYPE-REF'
         """
         data = {}
         self._read_base_ref_attributes(xml_elem.attrib, data)
@@ -2597,8 +2497,6 @@ class Reader:
             xml_elem: ElementTree.Element) -> ar_element.ApplicationDataTypeRef:
         """
         Reads reference to ApplicationDataType
-        Type: Concrete
-        Tag variants: 'TYPE-TREF', 'APPLICATION-DATA-TYPE-REF'
         """
         data = {}
         self._read_base_ref_attributes(xml_elem.attrib, data)
@@ -2610,8 +2508,6 @@ class Reader:
             xml_elem: ElementTree.Element) -> ar_element.AutosarDataTypeRef:
         """
         Reads reference to AutosarDataType
-        Type: Concrete
-        Tag variants: 'TYPE-TREF'
         """
         data = {}
         self._read_base_ref_attributes(xml_elem.attrib, data)
@@ -2623,8 +2519,6 @@ class Reader:
                            ) -> ar_element.ConstantRef:
         """
         Reads reference to ConstantSpecification
-        Type: Concrete
-        Tag variants: 'CONSTANT-REF'
         """
         data = {}
         self._read_base_ref_attributes(xml_elem.attrib, data)
@@ -2638,7 +2532,6 @@ class Reader:
             xml_elem: ElementTree.Element) -> ar_element.VariableDataPrototypeRef:
         """
         Reads reference to VariableDataPrototype
-        Type: Concrete
         """
         data = {}
         self._read_base_ref_attributes(xml_elem.attrib, data)
@@ -2652,7 +2545,6 @@ class Reader:
             xml_elem: ElementTree.Element) -> ar_element.ParameterDataPrototypeRef:
         """
         Reads reference to ParameterDataPrototype
-        Type: Concrete
         """
         data = {}
         self._read_base_ref_attributes(xml_elem.attrib, data)
@@ -2666,7 +2558,6 @@ class Reader:
             xml_elem: ElementTree.Element) -> ar_element.ApplicationErrorRef:
         """
         Reads reference to ApplicationError
-        Type: Concrete
         """
         data = {}
         self._read_base_ref_attributes(xml_elem.attrib, data)
@@ -2680,7 +2571,6 @@ class Reader:
             xml_elem: ElementTree.Element) -> ar_element.ModeDeclarationRef:
         """
         Reads reference to ModeDeclaration
-        Type: Concrete
         """
         data = {}
         self._read_base_ref_attributes(xml_elem.attrib, data)
@@ -2694,7 +2584,6 @@ class Reader:
             xml_elem: ElementTree.Element) -> ar_element.ModeDeclarationGroupRef:
         """
         Reads reference to ModeDeclarationGroup
-        Type: Concrete
         """
         data = {}
         self._read_base_ref_attributes(xml_elem.attrib, data)
@@ -2899,7 +2788,6 @@ class Reader:
                                   ) -> ar_element.VariableAccessRef:
         """
         Reads references to AR:VARIABLE-ACCESS--SUBTYPES-ENUM
-        Tag variants: 'EVENT-SOURCE-REF' | 'VARIABLE-ACCESS-REF' | 'TARGET-VARIABLE-ACCESS-REF'
         """
         dest_enum = self._read_ref_dest(xml_elem)
         return ar_element.VariableAccessRef(xml_elem.text, dest_enum)
@@ -2909,7 +2797,6 @@ class Reader:
                                     ) -> ar_element.TriggerRef:
         """
         Reads references to AR:MODE-SWITCH-POINT--SUBTYPES-ENUM
-        Tag variants: 'EVENT-SOURCE-REF'
         """
         dest_enum = self._read_ref_dest(xml_elem)
         return ar_element.ModeSwitchPointRef(xml_elem.text, dest_enum)
@@ -2919,7 +2806,6 @@ class Reader:
                                           ) -> ar_element.AsynchronousServerCallPointRef:
         """
         Reads references to AR:ASYNCHRONOUS-SERVER-CALL-POINT--SUBTYPES-ENUM
-        Tag variants: 'ASYNCHRONOUS-SERVER-CALL-POINT-REF'
         """
         dest_enum = self._read_ref_dest(xml_elem)
         return ar_element.AsynchronousServerCallPointRef(xml_elem.text, dest_enum)
@@ -2929,7 +2815,6 @@ class Reader:
                                                  ) -> ar_element.AsynchronousServerCallResultPointRef:
         """
         Reads references to AR:ASYNCHRONOUS-SERVER-CALL-RESULT-POINT--SUBTYPES-ENUM
-        Tag variants: 'EVENT-SOURCE-REF'
         """
         dest_enum = self._read_ref_dest(xml_elem)
         return ar_element.AsynchronousServerCallResultPointRef(xml_elem.text, dest_enum)
@@ -2939,9 +2824,6 @@ class Reader:
                           ) -> ar_element.TriggerRef:
         """
         Reads references to AR:TRIGGER--SUBTYPES-ENUM
-        Tag variants: 'TRIGGER-REF' | 'RELEASED-TRIGGER-REF' | 'MASTERED-TRIGGER-REF' |
-                      'TARGET-TRIGGER-REF' | 'SOURCE-TRIGGER-REF' | 'BSW-TRIGGER-REF' |
-                      'FIRST-TRIGGER-REF' | 'SECOND-TRIGGER-REF'
         """
         dest_enum = self._read_ref_dest(xml_elem)
         return ar_element.TriggerRef(xml_elem.text, dest_enum)
@@ -2951,7 +2833,6 @@ class Reader:
                                             ) -> ar_element.InternalTriggeringPointRef:
         """
         Reads references to AR:INTERNAL-TRIGGERING-POINT--SUBTYPES-ENUM
-        Tag variants: 'EVENT-SOURCE-REF'
         """
         dest_enum = self._read_ref_dest(xml_elem)
         return ar_element.InternalTriggeringPointRef(xml_elem.text, dest_enum)
@@ -2961,7 +2842,6 @@ class Reader:
                             ) -> ar_element.RteEventRef:
         """
         Reads references to AR:RTE-EVENT--SUBTYPES-ENUM
-        Tag variants: 'TARGET-EVENT-REF' | 'TARGET-RTE-EVENT-REF' | 'TRIGGER-REF'
         """
         dest_enum = self._read_ref_dest(xml_elem)
         return ar_element.RteEventRef(xml_elem.text, dest_enum)
@@ -2971,7 +2851,6 @@ class Reader:
                                         ) -> ar_element.DataTypeMappingSetRef:
         """
         Reads references to AR:DATA-TYPE-MAPPING-SET--SUBTYPES-ENUM
-        Tag variants: 'DATA-TYPE-MAPPING-REF' | 'DATA-TYPE-MAPPING-SET-REF'
         """
         dest_enum = self._read_ref_dest(xml_elem)
         return ar_element.DataTypeMappingSetRef(xml_elem.text, dest_enum)
@@ -2981,7 +2860,6 @@ class Reader:
                                           ) -> ar_element.ArgumentDataPrototypeRef:
         """
         Reads reference to AR:ARGUMENT-DATA-PROTOTYPE--SUBTYPES-ENUM
-        Tag variants: 'ARGUMENT-REF' | 'ROOT-ARGUMENT-DATA-PROTOTYPE-REF' | 'TLV-ARGUMENT-REF'
         """
         dest_enum = self._read_ref_dest(xml_elem)
         return ar_element.ArgumentDataPrototypeRef(xml_elem.text, dest_enum)
@@ -2991,7 +2869,6 @@ class Reader:
                                             ) -> ar_element.ApplicationArrayElementRef:
         """
         Reads references to AR:APPLICATION-ARRAY-ELEMENT--SUBTYPES-ENUM
-        Tag variants: 'APPLICATION-ARRAY-ELEMENT-REF'
         """
         dest_enum = self._read_ref_dest(xml_elem)
         return ar_element.ApplicationArrayElementRef(xml_elem.text, dest_enum)
@@ -3001,7 +2878,6 @@ class Reader:
                                              ) -> ar_element.ApplicationRecordElementRef:
         """
         Reads references to AR:APPLICATION-RECORD-ELEMENT--SUBTYPES-ENUM
-        Tag variants: 'APPLICATION-RECORD-ELEMENT-REF' | 'TLV-RECORD-ELEMENT-REF'
         """
         dest_enum = self._read_ref_dest(xml_elem)
         return ar_element.ApplicationRecordElementRef(xml_elem.text, dest_enum)
@@ -3011,9 +2887,8 @@ class Reader:
     def _read_text_value_specification(self,
                                        xml_element: ElementTree.Element) -> ar_element.TextValueSpecification:
         """
-        Reads complex-type AR:TEXT-VALUE-SPECIFICATION
-        Type: Concrete
-        Tag variants: 'TEXT-VALUE-SPECIFICATION'
+        Reads complex type AR:TEXT-VALUE-SPECIFICATION
+        Multi-tagged: True
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3036,9 +2911,8 @@ class Reader:
                                             xml_element: ElementTree.Element
                                             ) -> ar_element.NumericalValueSpecification:
         """
-        Reads complex-type AR:NUMERICAL-VALUE-SPECIFICATION
-        Type: Concrete
-        Tag variants: 'NUMERICAL-VALUE-SPECIFICATION'
+        Reads complex type AR:NUMERICAL-VALUE-SPECIFICATION
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3061,9 +2935,8 @@ class Reader:
                                                 xml_element: ElementTree.Element
                                                 ) -> ar_element.NotAvailableValueSpecification:
         """
-        Reads complex-type AR:NOT-AVAILABLE-VALUE-SPECIFICATION
-        Type: Concrete
-        Tag variants: 'NOT-AVAILABLE-VALUE-SPECIFICATION'
+        Reads complex type AR:NOT-AVAILABLE-VALUE-SPECIFICATION
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3087,9 +2960,8 @@ class Reader:
     def _read_array_value_specification(self,
                                         xml_element: ElementTree.Element) -> ar_element.ArrayValueSpecification:
         """
-        Reads complex-type AR:ARRAY-VALUE-SPECIFICATION
-        Type: Concrete
-        Tag variants: 'ARRAY-VALUE-SPECIFICATION'
+        Reads complex type AR:ARRAY-VALUE-SPECIFICATION
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3114,9 +2986,8 @@ class Reader:
     def _read_record_value_specification(self,
                                          xml_element: ElementTree.Element) -> ar_element.RecordValueSpecification:
         """
-        Reads complex-type AR:RECORD-VALUE-SPECIFICATION
-        Type: Concrete
-        Tag variants: 'RECORD-VALUE-SPECIFICATION'
+        Reads complex type AR:RECORD-VALUE-SPECIFICATION
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3150,8 +3021,8 @@ class Reader:
                                               xml_element: ElementTree.Element
                                               ) -> ar_element.ApplicationValueSpecification:
         """
-        Reads complex-type AR:APPLICATION-VALUE-SPECIFICATION
-        Type: Concrete
+        Reads complex type AR:APPLICATION-VALUE-SPECIFICATION
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3195,7 +3066,7 @@ class Reader:
                                      xml_element: ElementTree.Element) -> ar_element.ConstantSpecification:
         """
         Reads complex type AR:CONSTANT-SPECIFICATION
-        Type: Concrete
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3220,7 +3091,8 @@ class Reader:
                                  xml_element: ElementTree.Element
                                  ) -> ar_element.ConstantReference:
         """
-        Reads complex-type AR:CONSTANT-REFERENCE
+        Reads complex type AR:CONSTANT-REFERENCE
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3243,9 +3115,8 @@ class Reader:
     def _read_sw_values(self,
                         xml_element: ElementTree.Element) -> ar_element.SwValues:
         """
-        Reads complex-type AR:SW-VALUES
-        Type: Concrete
-        Tag variants: 'SW-VALUES-PHYS'
+        Reads complex type AR:SW-VALUES
+        Multi-tagged: False
         """
         data = {}
         child_elements = list(xml_element.findall("./*"))
@@ -3258,7 +3129,6 @@ class Reader:
                               data: dict) -> None:
         """
         Reads group AR:SW-VALUES
-        Type: Abstract
 
         XML elements not supported:
 
@@ -3287,7 +3157,8 @@ class Reader:
 
     def _read_value_group(self, xml_element: ElementTree.Element) -> ar_element.ValueGroup:
         """
-        Reads complex-type AR:VALUE-GROUP
+        Reads complex type AR:VALUE-GROUP
+        Multi-tagged: False
         """
         data = {}
         child_elements = list(xml_element.findall("./*"))
@@ -3299,8 +3170,8 @@ class Reader:
 
     def _read_sw_axis_cont(self, xml_element: ElementTree.Element) -> ar_element.SwAxisCont:
         """
-        Reads complex-type AR:SW-AXIS-CONT
-        Type: Concrete
+        Reads complex type AR:SW-AXIS-CONT
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3338,8 +3209,8 @@ class Reader:
 
     def _read_sw_value_cont(self, xml_element: ElementTree.Element) -> ar_element.SwValueCont:
         """
-        Reads complex-type AR:SW-VALUE-CONT
-        Type: Concrete
+        Reads complex type AR:SW-VALUE-CONT
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3368,8 +3239,8 @@ class Reader:
     def _read_multidimensional_time(self,
                                     xml_element: ElementTree.Element) -> ar_element.MultidimensionalTime:
         """
-        Reads complex-type AR:MULTIDIMENSIONAL-TIME
-
+        Reads complex type AR:MULTIDIMENSIONAL-TIME
+        Multi-tagged: True
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3387,7 +3258,7 @@ class Reader:
     def _read_mode_declaration(self, xml_element: ElementTree.Element) -> ar_element.ModeDeclaration:
         """
         Reads complex type AR:MODE-DECLARATION
-        Tag variants: 'MODE-DECLARATION'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3405,7 +3276,7 @@ class Reader:
     def _read_mode_error_behavior(self, xml_element: ElementTree.Element) -> ar_element.ModeErrorBehavior:
         """
         Reads complex type AR:MODE-ERROR-BEHAVIOR
-        Tag variants: 'MODE-ERROR-BEHAVIOR'
+        Multi-tagged: True
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3420,7 +3291,7 @@ class Reader:
     def _read_mode_transition(self, xml_element: ElementTree.Element) -> ar_element.ModeTransition:
         """
         Reads complex type AR:MODE-TRANSITION
-        Tag variants: 'MODE-TRANSITION'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3444,9 +3315,8 @@ class Reader:
 
     def _read_mode_declaration_group(self, xml_element: ElementTree.Element) -> ar_element.ModeDeclarationGroup:
         """
-        Reads Complex type AR:MODE-DECLARATION-GROUP
-        Type: Concrete
-        Tag variants: 'MODE-DECLARATION-GROUP'
+        Reads complex type AR:MODE-DECLARATION-GROUP
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3494,9 +3364,8 @@ class Reader:
                                                xml_element: ElementTree.Element
                                                ) -> ar_element.ModeDeclarationGroupPrototype:
         """
-        Reads Complex type AR:MODE-DECLARATION-GROUP-PROTOTYPE
-        Tag variants: 'MODE-DECLARATION-GROUP-PROTOTYPE' | 'MODE-GROUP'
-                  | 'PROCESS-STATE-MACHINE' | 'STATE-MACHINE'
+        Reads complex type AR:MODE-DECLARATION-GROUP-PROTOTYPE
+        Multi-tagged: True
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3525,7 +3394,6 @@ class Reader:
     def _read_port_interface(self, xml_elements: ChildElementMap, data: dict) -> None:
         """
         Reads group AR:PORT-INTERFACE
-        Type: Abstract
         """
         inner_elem = xml_elements.get('IS-SERVICE')
         if inner_elem is not None:
@@ -3536,7 +3404,7 @@ class Reader:
     def _read_nv_data_interface(self, xml_element: ElementTree.Element) -> ar_element.NvDataInterface:
         """
         Reads complex type AR:NV-DATA-INTERFACE
-        Type: Concrete
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3551,7 +3419,6 @@ class Reader:
     def _read_nv_data_interface_group(self, child_elements: ChildElementMap, data: dict) -> None:
         """
         Reads group AR:NV-DATA-INTERFACE
-        Type: Abstract
         """
         xml_child = child_elements.get('NV-DATAS')
         if xml_child is not None:
@@ -3565,7 +3432,7 @@ class Reader:
     def _read_parameter_interface(self, xml_element: ElementTree.Element) -> ar_element.ParameterInterface:
         """
         Reads complex type AR:PARAMETER-INTERFACE
-        Type: Concrete
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3580,7 +3447,6 @@ class Reader:
     def _read_parameter_interface_group(self, child_elements: ChildElementMap, data: dict) -> None:
         """
         Reads group AR:PARAMETER-INTERFACE
-        Type: Abstract
         """
         xml_child = child_elements.get('PARAMETERS')
         if xml_child is not None:
@@ -3594,7 +3460,7 @@ class Reader:
     def _read_sender_receiver_interface(self, xml_element: ElementTree.Element) -> ar_element.SenderReceiverInterface:
         """
         Reads complex type AR:SENDER-RECEIVER-INTERFACE
-        Type: Concrete
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3609,7 +3475,6 @@ class Reader:
     def _read_sender_receiver_interface_group(self, child_elements: ChildElementMap, data: dict) -> None:
         """
         Reads group AR:AR-SENDER-RECEIVER-INTERFACE
-        Type: Abstract
         """
         xml_child = child_elements.get('DATA-ELEMENTS')
         if xml_child is not None:
@@ -3631,8 +3496,8 @@ class Reader:
 
     def _read_invalidation_policy(self, xml_element: ElementTree.Element) -> ar_element.InvalidationPolicy:
         """
-        Reads complex-type AR:INVALIDATION-POLICY
-        Type: Concrete
+        Reads complex type AR:INVALIDATION-POLICY
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3647,7 +3512,7 @@ class Reader:
     def _read_application_error(self, xml_element: ElementTree.Element) -> ar_element.ApplicationError:
         """
         Reads complex type AR:APPLICATION-ERROR
-        Tag variants: 'APPLICATION-ERROR'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3669,7 +3534,7 @@ class Reader:
     def _read_client_server_operation(self, xml_element: ElementTree.Element) -> ar_element.ClientServerOperation:
         """
         Reads complex type AR:CLIENT-SERVER-OPERATION
-        Tag variants: 'CLIENT-SERVER-OPERATION'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3713,7 +3578,7 @@ class Reader:
     def _read_client_server_interface(self, xml_element: ElementTree.Element) -> ar_element.ClientServerInterface:
         """
         Reads complex type AR:CLIENT-SERVER-INTERFACE
-        Tag variants: 'CLIENT-SERVER-INTERFACE'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3749,7 +3614,7 @@ class Reader:
     def _read_mode_switch_interface(self, xml_element: ElementTree.Element) -> ar_element.ModeSwitchInterface:
         """
         Reads complex type AR:MODE-SWITCH-INTERFACE
-        Tag variants: 'MODE-SWITCH-INTERFACE'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3766,7 +3631,7 @@ class Reader:
     def _read_trigger_interface(self, xml_element: ElementTree.Element) -> ar_element.TriggerInterface:
         """
         Reads complex type AR:TRIGGER-INTERFACE
-        Tag variants: 'TRIGGER-INTERFACE'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3790,8 +3655,8 @@ class Reader:
                                                 xml_element: ElementTree.Element
                                                 ) -> ar_element.EndToEndTransformationComSpecProps:
         """
-        Writes complex type AR:END-TO-END-TRANSFORMATION-COM-SPEC-PROPS
-        Tag variants: 'END-TO-END-TRANSFORMATION-COM-SPEC-PROPS'
+        Reads complex type AR:END-TO-END-TRANSFORMATION-COM-SPEC-PROPS
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3861,7 +3726,7 @@ class Reader:
                                               ) -> ar_element.E2EProfileCompatibilityProps:
         """
         Reads complex type AR:E-2-E-PROFILE-COMPATIBILITY-PROPS
-        Tag variants: 'E-2-E-PROFILE-COMPATIBILITY-PROPS'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3885,7 +3750,7 @@ class Reader:
     def _read_mode_switched_ack_request(self, xml_element: ElementTree.Element) -> ar_element.ModeSwitchedAckRequest:
         """
         Reads complex type AR:MODE-SWITCHED-ACK-REQUEST
-        Tag variants: 'MODE-SWITCHED-ACK'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3898,7 +3763,7 @@ class Reader:
     def _read_mode_switch_sender_com_spec(self, xml_element: ElementTree.Element) -> ar_element.ModeSwitchSenderComSpec:
         """
         Reads complex type AR:MODE-SWITCH-SENDER-COM-SPEC
-        Tag variants: 'MODE-SWITCH-SENDER-COM-SPEC'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3922,7 +3787,7 @@ class Reader:
                                                    ) -> ar_element.TransmissionAcknowledgementRequest:
         """
         Reads complex type AR:TRANSMISSION-ACKNOWLEDGEMENT-REQUEST
-        Tag variants: 'TRANSMISSION-ACKNOWLEDGE'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3937,7 +3802,7 @@ class Reader:
                                           ) -> ar_element.TransmissionComSpecProps:
         """
         Reads complex type AR:TRANSMISSION-COM-SPEC-PROPS
-        Tag variants: 'TRANSMISSION-PROPS'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3984,7 +3849,7 @@ class Reader:
                                      ) -> ar_element.QueuedSenderComSpec:
         """
         Reads complex type AR:QUEUED-SENDER-COM-SPEC
-        Tag variants: 'QUEUED-SENDER-COM-SPEC'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -3997,7 +3862,7 @@ class Reader:
                                         ) -> ar_element.NonqueuedSenderComSpec:
         """
         Reads complex type AR:NONQUEUED-SENDER-COM-SPEC
-        Tag variants: 'NONQUEUED-SENDER-COM-SPEC'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4027,7 +3892,7 @@ class Reader:
                                    ) -> ar_element.NvProvideComSpec:
         """
         Reads complex type AR:NV-PROVIDE-COM-SPEC
-        Tag variants: 'NV-PROVIDE-COM-SPEC'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4064,7 +3929,7 @@ class Reader:
                                          ) -> ar_element.ParameterProvideComSpec:
         """
         Reads complex type AR:PARAMETER-PROVIDE-COM-SPEC
-        Tag variants: 'PARAMETER-PROVIDE-COM-SPEC'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4086,8 +3951,8 @@ class Reader:
                               xml_element: ElementTree.Element
                               ) -> ar_element.ServerComSpec:
         """
-        Complex type AR:SERVER-COM-SPEC
-        Tag variants: 'SERVER-COM-SPEC'
+        Reads complex type AR:SERVER-COM-SPEC
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4116,8 +3981,8 @@ class Reader:
 
     def _read_reception_com_spec_props(self, xml_element: ElementTree.Element) -> ar_element.ReceptionComSpecProps:
         """
-        Reads Complex type AR:RECEPTION-COM-SPEC-PROPS
-        Tag variants: 'RECEPTION-PROPS'
+        Reads complex type AR:RECEPTION-COM-SPEC-PROPS
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4179,7 +4044,7 @@ class Reader:
     def _read_queued_receiver_com_spec(self, xml_element: ElementTree.Element) -> ar_element.QueuedReceiverComSpec:
         """
         Reads complex type AR:QUEUED-RECEIVER-COM-SPEC
-        Tag variants: 'QUEUED-RECEIVER-COM-SPEC'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4194,7 +4059,7 @@ class Reader:
                                           xml_element: ElementTree.Element) -> ar_element.NonqueuedReceiverComSpec:
         """
         Reads complex type AR:NONQUEUED-RECEIVER-COM-SPEC
-        Tag variants: 'NONQUEUED-RECEIVER-COM-SPEC'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4245,7 +4110,7 @@ class Reader:
     def _read_nv_require_com_spec(self, xml_element: ElementTree.Element) -> ar_element.NvRequireComSpec:
         """
         Reads complex type AR:NV-REQUIRE-COM-SPEC
-        Tag variants: 'NV-REQUIRE-COM-SPEC'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4268,7 +4133,7 @@ class Reader:
                                          ) -> ar_element.ParameterRequireComSpec:
         """
         Reads complex type AR:PARAMETER-REQUIRE-COM-SPEC
-        Tag variants: 'PARAMETER-REQUIRE-COM-SPEC'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4291,7 +4156,7 @@ class Reader:
                                             ) -> ar_element.ModeSwitchReceiverComSpec:
         """
         Reads complex type AR:MODE-SWITCH-RECEIVER-COM-SPEC
-        Tag variants: 'MODE-SWITCH-RECEIVER-COM-SPEC'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4311,8 +4176,8 @@ class Reader:
                               xml_element: ElementTree.Element
                               ) -> ar_element.ClientComSpec:
         """
-        Reads Complex type AR:CLIENT-COM-SPEC
-        Tag variants: 'CLIENT-COM-SPEC'
+        Reads complex type AR:CLIENT-COM-SPEC
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4363,7 +4228,7 @@ class Reader:
     def _read_provide_port_prototype(self, xml_element: ElementTree.Element) -> ar_element.ProvidePortPrototype:
         """
         Reads complex type AR:P-PORT-PROTOTYPE
-        Tag variants: 'P-PORT-PROTOTYPE'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4391,7 +4256,7 @@ class Reader:
     def _read_require_port_prototype(self, xml_element: ElementTree.Element) -> ar_element.RequirePortPrototype:
         """
         Reads complex type AR:R-PORT-PROTOTYPE
-        Tag variants: 'R-PORT-PROTOTYPE'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4422,7 +4287,7 @@ class Reader:
     def _read_pr_port_prototype(self, xml_element: ElementTree.Element) -> ar_element.PRPortPrototype:
         """
         Reads complex type AR:PR-PORT-PROTOTYPE
-        Tag variants: 'PR-PORT-PROTOTYPE'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4493,7 +4358,7 @@ class Reader:
                                             ) -> ar_element.ApplicationSoftwareComponentType:
         """
         Reads complex type AR:APPLICATION-SW-COMPONENT-TYPE
-        Tag variants: 'APPLICATION-SW-COMPONENT-TYPE'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4510,7 +4375,7 @@ class Reader:
                                                       ) -> ar_element.ComplexDeviceDriverSwComponentType:
         """
         Reads complex type AR:COMPLEX-DEVICE-DRIVER-SW-COMPONENT-TYPE
-        Tag variants: 'COMPLEX-DEVICE-DRIVER-SW-COMPONENT-TYPE'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4527,7 +4392,7 @@ class Reader:
                                          ) -> ar_element.NvBlockSwComponentType:
         """
         Reads complex type AR:NV-BLOCK-SW-COMPONENT-TYPE
-        Tag variants: 'NV-BLOCK-SW-COMPONENT-TYPE'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4544,7 +4409,7 @@ class Reader:
                                                 ) -> ar_element.EcuAbstractionSwComponentType:
         """
         Reads complex type AR:ECU-ABSTRACTION-SW-COMPONENT-TYPE
-        Tag variants: 'ECU-ABSTRACTION-SW-COMPONENT-TYPE'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4561,7 +4426,7 @@ class Reader:
                                                 ) -> ar_element.SensorActuatorSwComponentType:
         """
         Reads complex type AR:SENSOR-ACTUATOR-SW-COMPONENT-TYPE
-        Tag variants: 'SENSOR-ACTUATOR-SW-COMPONENT-TYPE'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4578,7 +4443,7 @@ class Reader:
                                         ) -> ar_element.ServiceSwComponentType:
         """
         Reads complex type AR:SERVICE-SW-COMPONENT-TYPE
-        Tag variants: 'SERVICE-SW-COMPONENT-TYPE'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4595,7 +4460,7 @@ class Reader:
                                               ) -> ar_element.ServiceProxySwComponentType:
         """
         Reads complex type AR:SERVICE-PROXY-SW-COMPONENT-TYPE
-        Tag variants: 'SERVICE-PROXY-SW-COMPONENT-TYPE'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4609,8 +4474,8 @@ class Reader:
 
     def _read_sw_component_prototype(self, xml_element: ElementTree.Element) -> ar_element.SwComponentPrototype:
         """
-        Complex type AR:SW-COMPONENT-PROTOTYPE
-        Tag variants: 'SW-COMPONENT-PROTOTYPE'
+        Reads complex type AR:SW-COMPONENT-PROTOTYPE
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4628,10 +4493,9 @@ class Reader:
                                                     xml_element: ElementTree.Element
                                                     ) -> ar_element.PortInCompositionTypeInstanceRef:
         """
-        Writes merge of complex types AR:P-PORT-IN-COMPOSITION-INSTANCE-REF
+        Reads merge of complex types AR:P-PORT-IN-COMPOSITION-INSTANCE-REF and R-PORT-IN-COMPOSITION-INSTANCE-REF
+
         and R-PORT-IN-COMPOSITION-INSTANCE-REF
-        Tag variants: 'PROVIDER-IREF' | 'P-PORT-IN-COMPOSITION-INSTANCE-REF' |
-                      'REQUESTER-IREF'| 'R-PORT-IN-COMPOSITION-INSTANCE-REF'
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4653,7 +4517,7 @@ class Reader:
     def _read_assembly_sw_connector(self, xml_element: ElementTree.Element) -> ar_element.AssemblySwConnector:
         """
         Reads complex type AR:ASSEMBLY-SW-CONNECTOR
-        Tag variants: 'ASSEMBLY-SW-CONNECTOR'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4680,7 +4544,7 @@ class Reader:
     def _read_delegation_sw_connector(self, xml_element: ElementTree.Element) -> ar_element.DelegationSwConnector:
         """
         Reads complex type AR:DELEGATION-SW-CONNECTOR
-        Tag variants: 'DELEGATION-SW-CONNECTOR'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4702,8 +4566,8 @@ class Reader:
 
     def _read_pass_through_sw_connector(self, xml_element: ElementTree.Element) -> ar_element.PassThroughSwConnector:
         """
-        Complex type AR:PASS-THROUGH-SW-CONNECTOR
-        Tag variants: 'PASS-THROUGH-SW-CONNECTOR'
+        Reads complex type AR:PASS-THROUGH-SW-CONNECTOR
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4726,7 +4590,7 @@ class Reader:
                                             ) -> ar_element.CompositionSwComponentType:
         """
         Reads complex type AR:COMPOSITION-SW-COMPONENT-TYPE
-        Tag variants: 'COMPOSITION-SW-COMPONENT-TYPE'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4768,7 +4632,7 @@ class Reader:
                                  ) -> ar_element.SwcImplementation:
         """
         Reads complex type AR:SWC-IMPLEMENTATION
-        Tag variants: 'SWC-IMPLEMENTATION'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4797,8 +4661,7 @@ class Reader:
                                                       ) -> ar_element.PModeGroupInAtomicSwcInstanceRef:
         """
         Reads complex type AR:P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF
-        Tag variants: 'P-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF' | 'MODE-GROUP-IREF' |
-                      'SWC-MODE-GROUP-IREF'
+        Multi-tagged: True
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4815,8 +4678,8 @@ class Reader:
                                                      xml_element: ElementTree.Element
                                                      ) -> ar_element.POperationInAtomicSwcInstanceRef:
         """
-        Complex type AR:P-OPERATION-IN-ATOMIC-SWC-INSTANCE-REF
-        Tag variants: 'OPERATION-IREF'
+        Reads complex type AR:P-OPERATION-IN-ATOMIC-SWC-INSTANCE-REF
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4834,8 +4697,7 @@ class Reader:
                                                    ) -> ar_element.PTriggerInAtomicSwcTypeInstanceRef:
         """
         Reads complex type AR:P-TRIGGER-IN-ATOMIC-SWC-TYPE-INSTANCE-REF
-        Tag variants: 'P-TRIGGER-IN-ATOMIC-SWC-TYPE-INSTANCE-REF' | 'SWC-TRIGGER-IREF' |
-                      'TRIGGER-IREF'
+        Multi-tagged: True
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4853,7 +4715,7 @@ class Reader:
                                                 ) -> ar_element.RModeInAtomicSwcInstanceRef:
         """
         Reads complex type AR:R-MODE-IN-ATOMIC-SWC-INSTANCE-REF
-        Tag variants: 'DISABLED-MODE-IREF' | 'MODE-IREF'
+        Multi-tagged: True
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4874,8 +4736,8 @@ class Reader:
                                                       xml_element: ElementTree.Element
                                                       ) -> ar_element.RModeGroupInAtomicSwcInstanceRef:
         """
-        Complex type AR:R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF
-        Tag variants: 'R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF'
+        Reads complex type AR:R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4892,8 +4754,8 @@ class Reader:
                                                      xml_element: ElementTree.Element
                                                      ) -> ar_element.ROperationInAtomicSwcInstanceRef:
         """
-        Complex type AR:R-OPERATION-IN-ATOMIC-SWC-INSTANCE-REF
-        Tag variants: 'OPERATION-IREF'
+        Reads complex type AR:R-OPERATION-IN-ATOMIC-SWC-INSTANCE-REF
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4911,7 +4773,7 @@ class Reader:
                                                     ) -> ar_element.RVariableInAtomicSwcInstanceRef:
         """
         Reads complex type AR:R-VARIABLE-IN-ATOMIC-SWC-INSTANCE-REF
-        Tag variants: 'DATA-IREF'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4929,7 +4791,7 @@ class Reader:
                                                    ) -> ar_element.RTriggerInAtomicSwcInstanceRef:
         """
         Reads complex type AR:R-TRIGGER-IN-ATOMIC-SWC-INSTANCE-REF
-        Tag variants: 'TRIGGER-IREF' | 'REQUIRED-TRIGGER-IREF'
+        Multi-tagged: True
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4949,7 +4811,7 @@ class Reader:
                                                  ) -> ar_element.ArVariableInImplementationDataInstanceRef:
         """
         Reads complex type AR:AR-VARIABLE-IN-IMPLEMENTATION-DATA-INSTANCE-REF
-        Tag variants: 'AUTOSAR-VARIABLE-IN-IMPL-DATATYPE' | 'IMPLEMENTATION-DATA-TYPE-ELEMENT'
+        Multi-tagged: True
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -4981,8 +4843,8 @@ class Reader:
                                                        xml_element: ElementTree.Element
                                                        ) -> ar_element.VariableInAtomicSWCTypeInstanceRef:
         """
-        Reads Complex type AR:VARIABLE-IN-ATOMIC-SWC-TYPE-INSTANCE-REF
-        Tag variants: 'AUTOSAR-VARIABLE-IREF'
+        Reads complex type AR:VARIABLE-IN-ATOMIC-SWC-TYPE-INSTANCE-REF
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5009,7 +4871,7 @@ class Reader:
     def _read_variable_access(self, xml_element: ElementTree.Element) -> ar_element.VariableAccess:
         """
         Reads complex type AR:VARIABLE-ACCESS
-        Tag variants: 'REPLACE-WITH' | 'VARIABLE-ACCESS'
+        Multi-tagged: True
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5033,10 +4895,8 @@ class Reader:
 
     def _read_autosar_variable_ref(self, xml_element: ElementTree.Element) -> ar_element.AutosarVariableRef:
         """
-        Reads Complex type AR:AUTOSAR-VARIABLE-REF
-        Tag variants: 'VARIABLE-INSTANCE' | 'NV-RAM-BLOCK-ELEMENT' | 'READ-NV-DATA' |
-                      'WRITTEN-NV-DATA' | 'WRITTEN-READ-NV-DATA' | 'USED-DATA-ELEMENT' |
-                      'AUTOSAR-VARIABLE' | 'ACCESSED-VARIABLE'
+        Reads complex type AR:AUTOSAR-VARIABLE-REF
+        Multi-tagged: True
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5064,7 +4924,7 @@ class Reader:
                                                   ) -> ar_element.ExecutableEntityActivationReason:
         """
         Reads complex type AR:EXECUTABLE-ENTITY-ACTIVATION-REASON
-        Tag variants: 'EXECUTABLE-ENTITY-ACTIVATION-REASON'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5081,7 +4941,7 @@ class Reader:
                                              ) -> ar_element.ExclusiveAreaRefConditional:
         """
         Reads complex type AR:EXCLUSIVE-AREA-REF-CONDITIONAL
-        Tag variants: 'EXCLUSIVE-AREA-REF-CONDITIONAL'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5095,7 +4955,7 @@ class Reader:
     def _read_runnable_entity_argument(self, xml_element: ElementTree.Element) -> ar_element.RunnableEntityArgument:
         """
         Reads complex type AR:RUNNABLE-ENTITY-ARGUMENT
-        Tag variants: 'RUNNABLE-ENTITY-ARGUMENT'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5127,8 +4987,8 @@ class Reader:
 
     def _read_async_server_call_point(self, xml_element: ElementTree.Element) -> ar_element.AsynchronousServerCallPoint:
         """
-        Reads complex type: AR:ASYNCHRONOUS-SERVER-CALL-POINT
-        Tag variants: 'ASYNCHRONOUS-SERVER-CALL-POINT'
+        Reads complex type AR:ASYNCHRONOUS-SERVER-CALL-POINT
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5142,8 +5002,8 @@ class Reader:
 
     def _read_sync_server_call_point(self, xml_element: ElementTree.Element) -> ar_element.SynchronousServerCallPoint:
         """
-        Reads complex type: AR:SYNCHRONOUS-SERVER-CALL-POINT
-        Tag variants: 'SYNCHRONOUS-SERVER-CALL-POINT'
+        Reads complex type AR:SYNCHRONOUS-SERVER-CALL-POINT
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5162,8 +5022,8 @@ class Reader:
                                              xml_element: ElementTree.Element
                                              ) -> ar_element.AsynchronousServerCallResultPoint:
         """
-        Reads complex type: AR:ASYNCHRONOUS-SERVER-CALL-RESULT-POINT
-        Tag variants: 'ASYNCHRONOUS-SERVER-CALL-RESULT-POINT'
+        Reads complex type AR:ASYNCHRONOUS-SERVER-CALL-RESULT-POINT
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5188,7 +5048,7 @@ class Reader:
                                               ) -> ar_element.ExternalTriggeringPointIdent:
         """
         Reads complex type AR:EXTERNAL-TRIGGERING-POINT-IDENT
-        Tag variants: 'IDENT'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5201,7 +5061,7 @@ class Reader:
     def _read_external_triggering_point(self, xml_element: ElementTree.Element) -> ar_element.ExternalTriggeringPoint:
         """
         Reads complex type AR:EXTERNAL-TRIGGERING-POINT
-        Tag variants: 'EXTERNAL-TRIGGERING-POINT'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5218,7 +5078,7 @@ class Reader:
     def _read_internal_triggering_point(self, xml_element: ElementTree.Element) -> ar_element.InternalTriggeringPoint:
         """
         Reads complex type AR:INTERNAL-TRIGGERING-POINT
-        Tag variants: 'INTERNAL-TRIGGERING-POINT'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5237,8 +5097,8 @@ class Reader:
                                       xml_element: ElementTree.Element
                                       ) -> ar_element.ModeAccessPointIdent:
         """
-        Complex type AR:MODE-ACCESS-POINT-IDENT
-        Tag variants: 'IDENT'
+        Reads complex type AR:MODE-ACCESS-POINT-IDENT
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5252,7 +5112,7 @@ class Reader:
     def _read_mode_access_point(self, xml_element: ElementTree.Element) -> ar_element.ModeAccessPoint:
         """
         Reads complex type AR:MODE-ACCESS-POINT
-        Tag variants: 'MODE-ACCESS-POINT'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5272,8 +5132,8 @@ class Reader:
 
     def _read_mode_switch_point(self, xml_element: ElementTree.Element) -> ar_element.ModeSwitchPoint:
         """
-        Reads complex Type AR:MODE-SWITCH-POINT
-        Tag variants: 'MODE-SWITCH-POINT'
+        Reads complex type AR:MODE-SWITCH-POINT
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5293,7 +5153,7 @@ class Reader:
                                                         ) -> ar_element.ParameterInAtomicSwcTypeInstanceRef:
         """
         Reads complex type AR:PARAMETER-IN-ATOMIC-SWC-TYPE-INSTANCE-REF
-        Tag variants: 'AUTOSAR-PARAMETER-IREF'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5317,7 +5177,7 @@ class Reader:
     def _read_autosar_parameter_ref(self, xml_element: ElementTree.Element) -> ar_element.AutosarParameterRef:
         """
         Reads complex type AR:AUTOSAR-PARAMETER-REF
-        Tag variants: 'PARAMETER-INSTANCE' | 'ACCESSED-PARAMETER' | 'USED-PARAMETER-ELEMENT' | 'AR-PARAMETER'
+        Multi-tagged: True
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5333,7 +5193,7 @@ class Reader:
     def _read_parameter_access(self, xml_element: ElementTree.Element) -> ar_element.ParameterAccess:
         """
         Reads complex type AR:PARAMETER-ACCESS
-        Tag variants: 'PARAMETER-ACCESS'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5360,7 +5220,7 @@ class Reader:
     def _read_wait_point(self, xml_element: ElementTree.Element) -> ar_element.WaitPoint:
         """
         Reads complex type AR:WAIT-POINT
-        Tag variants: 'WAIT-POINT'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5445,7 +5305,7 @@ class Reader:
     def _read_runnable_entity(self, xml_element: ElementTree.Element) -> ar_element.RunnableEntity:
         """
         Reads complex type AR:RUNNABLE-ENTITY
-        Tag variants: 'RUNNABLE-ENTITY'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5588,7 +5448,7 @@ class Reader:
                                               ) -> ar_element.AsynchronousServerCallReturnsEvent:
         """
         Reads complex type AR:ASYNCHRONOUS-SERVER-CALL-RETURNS-EVENT
-        Tag variants: 'ASYNCHRONOUS-SERVER-CALL-RETURNS-EVENT'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5606,8 +5466,8 @@ class Reader:
                                xml_element: ElementTree.Element
                                ) -> ar_element.BackgroundEvent:
         """
-        Reads complex Type AR:BACKGROUND-EVENT
-        Tag variants: 'BACKGROUND-EVENT'
+        Reads complex type AR:BACKGROUND-EVENT
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5622,8 +5482,8 @@ class Reader:
                                        xml_element: ElementTree.Element
                                        ) -> ar_element.DataReceiveErrorEvent:
         """
-        Reads complex Type AR:DATA-RECEIVE-ERROR-EVENT
-        Tag variants: 'DATA-RECEIVE-ERROR-EVENT'
+        Reads complex type AR:DATA-RECEIVE-ERROR-EVENT
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5641,8 +5501,8 @@ class Reader:
                                   xml_element: ElementTree.Element
                                   ) -> ar_element.DataReceivedEvent:
         """
-        Reads complex Type AR:DATA-RECEIVED-EVENT
-        Tag variants: 'DATA-RECEIVED-EVENT'
+        Reads complex type AR:DATA-RECEIVED-EVENT
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5660,8 +5520,8 @@ class Reader:
                                         xml_element: ElementTree.Element
                                         ) -> ar_element.DataSendCompletedEvent:
         """
-        Reads complex Type AR:DATA-SEND-COMPLETED-EVENT
-        Tag variants: 'DATA-SEND-COMPLETED-EVENT'
+        Reads complex type AR:DATA-SEND-COMPLETED-EVENT
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5680,7 +5540,7 @@ class Reader:
                                          ) -> ar_element.DataWriteCompletedEvent:
         """
         Reads complex type AR:DATA-WRITE-COMPLETED-EVENT
-        Tag variants: 'DATA-WRITE-COMPLETED-EVENT'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5698,8 +5558,8 @@ class Reader:
                                              xml_element: ElementTree.Element
                                              ) -> ar_element.ExternalTriggerOccurredEvent:
         """
-        Writes complex type AR:R-TRIGGER-IN-ATOMIC-SWC-INSTANCE-REF
-        Tag variants: 'TRIGGER-IREF' | 'REQUIRED-TRIGGER-IREF'
+        Reads complex type AR:EXTERNAL-TRIGGER-OCCURRED-EVENT
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5717,8 +5577,8 @@ class Reader:
                          xml_element: ElementTree.Element
                          ) -> ar_element.InitEvent:
         """
-        Reads complex Type AR:INIT-EVENT
-        Tag variants: 'INIT-EVENT''
+        Reads complex type AR:INIT-EVENT
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5734,7 +5594,7 @@ class Reader:
                                              ) -> ar_element.InternalTriggerOccurredEvent:
         """
         Reads complex type AR:INTERNAL-TRIGGER-OCCURRED-EVENT
-        Tag variants: 'INTERNAL-TRIGGER-OCCURRED-EVENT'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5752,8 +5612,8 @@ class Reader:
                                       xml_element: ElementTree.Element
                                       ) -> ar_element.ModeSwitchedAckEvent:
         """
-        Reads Complex type MODE-SWITCHED-ACK-EVENT
-        Tag variants: 'MODE-SWITCHED-ACK-EVENT'
+        Reads complex type AR:MODE-SWITCHED-ACK-EVENT
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5771,8 +5631,8 @@ class Reader:
                                       xml_element: ElementTree.Element
                                       ) -> ar_element.OperationInvokedEvent:
         """
-        Complex type AR:OPERATION-INVOKED-EVENT
-        Tag variants: 'OPERATION-INVOKED-EVENT'
+        Reads complex type AR:OPERATION-INVOKED-EVENT
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5791,7 +5651,7 @@ class Reader:
                                            ) -> ar_element.SwcModeManagerErrorEvent:
         """
         Reads complex type AR:SWC-MODE-MANAGER-ERROR-EVENT
-        Tag variants: 'SWC-MODE-MANAGER-ERROR-EVENT'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5810,7 +5670,7 @@ class Reader:
                                     ) -> ar_element.SwcModeSwitchEvent:
         """
         Reads complex type AR:SWC-MODE-SWITCH-EVENT
-        Tag variants: 'SWC-MODE-SWITCH-EVENT'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5848,7 +5708,7 @@ class Reader:
                            ) -> ar_element.TimingEvent:
         """
         Reads complex type AR:TIMING-EVENT
-        Tag variants: 'TIMING-EVENT'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5870,7 +5730,7 @@ class Reader:
                                            ) -> ar_element.TransformerHardErrorEvent:
         """
         Reads complex type AR:TRANSFORMER-HARD-ERROR-EVENT
-        Tag variants: 'TRANSFORMER-HARD-ERROR-EVENT'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5901,7 +5761,7 @@ class Reader:
                                           ) -> ar_element.PortDefinedArgumentValue:
         """
         Reads complex type AR:PORT-DEFINED-ARGUMENT-VALUE
-        Tag variants: 'PORT-DEFINED-ARGUMENT-VALUE'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5924,7 +5784,7 @@ class Reader:
                                            ) -> ar_element.CommunicationBufferLocking:
         """
         Reads complex type AR:COMMUNICATION-BUFFER-LOCKING
-        Tag variantS: 'COMMUNICATION-BUFFER-LOCKING'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5939,7 +5799,7 @@ class Reader:
                               ) -> ar_element.PortApiOption:
         """
         Reads complex type AR:PORT-API-OPTION
-        Tag variants: 'PORT-API-OPTION'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5987,7 +5847,7 @@ class Reader:
     def _read_exclusive_area(self, xml_element: ElementTree.Element) -> ar_element.ExclusiveArea:
         """
         Reads complex type AR:EXCLUSIVE-AREA
-        Tag variants: 'EXCLUSIVE-AREA'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -5999,7 +5859,7 @@ class Reader:
     def _read_swc_internal_behavior(self, xml_element: ElementTree.Element) -> ar_element.SwcInternalBehavior:
         """
         Reads complex type AR:SWC-INTERNAL-BEHAVIOR
-        Tag variants: 'SWC-INTERNAL-BEHAVIOR'
+        Multi-tagged: False
         """
         data = {}
         child_elements = ChildElementMap(xml_element)
@@ -6036,6 +5896,7 @@ class Reader:
     def _read_swc_internal_behavior_group(self, child_elements: ChildElementMap, data: dict) -> None:
         """
         Reads group AR:SWC-INTERNAL-BEHAVIOR
+
         Most of it will be implemented in a future version
         """
         child_elements.skip("AR-TYPED-PER-INSTANCE-MEMORYS")
