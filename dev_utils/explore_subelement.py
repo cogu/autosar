@@ -5,8 +5,8 @@ This utility helps track what classes need to be implemented in Python for a giv
 AUTOSAR complex type sub-element in Classic Platform (CP). It traverses child
 complex types in the XSD, detects dependencies, checks docstring implementation
 status from `element.py`, extracts canonical class names from schema `mmt.qualifiedName`
-tags, filters out Adaptive Platform (AP) only elements, and computes a bottom-up
-implementation order (leaves first).
+tags, tracks schema deprecation/status tags (`atp.Status`), filters out Adaptive
+Platform (AP) only elements, and computes a bottom-up implementation order (leaves first).
 
 Usage:
     python dev_utils/explore_subelement.py SWC-INTERNAL-BEHAVIOR/AR-TYPED-PER-INSTANCE-MEMORYS
@@ -114,6 +114,14 @@ def parse_appinfo_tags(elem: Optional[ET._Element]) -> Dict[str, str]:
     return tags
 
 
+def get_atp_status(elem: Optional[ET._Element]) -> Optional[str]:
+    """Extract atp.Status tag ('draft', 'candidate', 'obsolete', 'removed', 'valid') if present."""
+    if elem is None:
+        return None
+    tags = parse_appinfo_tags(elem)
+    return tags.get('atp.Status')
+
+
 def is_classic_platform(elem: Optional[ET._Element]) -> bool:
     """Return False if element/type is explicitly restricted to Adaptive Platform (AP) only."""
     if elem is None:
@@ -138,17 +146,19 @@ def get_qualified_name(elem: Optional[ET._Element], default_name: str = "") -> s
 
 
 class SchemaInspector:
-    """Inspects AUTOSAR XSD schemas and tracks type dependencies."""
+    """Inspects AUTOSAR XSD schemas and tracks type dependencies with atp.Status support."""
 
     def __init__(self,
                  xsd_path: str,
                  refresh: bool = False,
                  classic_only: bool = True,
-                 include_ignored: bool = False):
-        """Initialize schema inspector and index XSD types and groups."""
+                 include_ignored: bool = False,
+                 include_deprecated: bool = False):
+        """Initialize schema inspector and index XSD types, groups, and status tags."""
         self.xsd_path = os.path.abspath(xsd_path)
         self.classic_only = classic_only
         self.include_ignored = include_ignored
+        self.include_deprecated = include_deprecated
         if not os.path.exists(self.xsd_path):
             raise FileNotFoundError(f"Schema file not found: {self.xsd_path}")
 
@@ -175,6 +185,21 @@ class SchemaInspector:
             if name:
                 self.simple_types[name] = st
 
+        # Index atp.Status on types, groups, and simpleTypes
+        self.type_status: Dict[str, str] = {}
+        for name, ct in self.complex_types.items():
+            st = get_atp_status(ct)
+            if st:
+                self.type_status[name] = st
+        for name, grp in self.groups.items():
+            st = get_atp_status(grp)
+            if st and name not in self.type_status:
+                self.type_status[name] = st
+        for name, st_el in self.simple_types.items():
+            st = get_atp_status(st_el)
+            if st and name not in self.type_status:
+                self.type_status[name] = st
+
         # Index ignored types (VariantHandling & StandardizationTemplate / Blueprints) from XSD comments
         self.ignored_types: Set[str] = set()
         self.ignored_groups: Set[str] = set()
@@ -184,6 +209,7 @@ class SchemaInspector:
         mode_str = "Classic Platform (CP only)" if self.classic_only else "All Standards (CP + AP)"
         print(f"Schema indexed: {len(self.complex_types)} complexTypes, "
               f"{len(self.groups)} groups, {len(self.simple_types)} simpleTypes. [{mode_str}]")
+        print(f"Status tags found: {len(self.type_status)} types/groups with explicit atp.Status")
         print(f"Ignored by design: {len(self.ignored_types)} complexTypes, {len(self.ignored_groups)} groups "
               f"(VariantHandling & StandardizationTemplate/Blueprints)\n")
 
@@ -217,18 +243,66 @@ class SchemaInspector:
                         self.ignored_categories[name] = 'Blueprint' if 'StandardizationTemplate' in pat else 'Variant'
                         break
 
+    def get_type_status(self, type_name: str) -> Optional[str]:
+        """Return atp.Status for an AUTOSAR type/group if explicitly tagged, else None (standard/valid)."""
+        clean = type_name.replace('AR:', '')
+        if clean in self.type_status:
+            return self.type_status[clean]
+        ct = self.complex_types.get(clean)
+        st = get_atp_status(ct)
+        if st:
+            return st
+        grp = self.groups.get(clean)
+        st = get_atp_status(grp)
+        if st:
+            return st
+        st_el = self.simple_types.get(clean)
+        st = get_atp_status(st_el)
+        if st:
+            return st
+        return None
+
+    def get_effective_status(self,
+                             elem: Optional[ET._Element],
+                             type_name: Optional[str] = None,
+                             parent_status: Optional[str] = None) -> Optional[str]:
+        """Determine effective status considering element tag first, then referenced type, then parent status."""
+        el_status = get_atp_status(elem)
+        if el_status:
+            return el_status
+        if type_name:
+            clean = type_name.replace('AR:', '')
+            t_status = self.get_type_status(clean)
+            if t_status:
+                return t_status
+        if parent_status in ('removed', 'obsolete'):
+            return parent_status
+        return None
+
+    @staticmethod
+    def is_deprecated_status(status: Optional[str]) -> bool:
+        """Check if status is 'removed' or 'obsolete'."""
+        return status in ('removed', 'obsolete')
+
     def is_ignored_type(self, type_name: str) -> bool:
-        """Check if a type is ignored by design (VariantHandling or Blueprint) and not mapped to primitive."""
+        """Check if a type is ignored by design (VariantHandling, Blueprint, or deprecated unless requested)."""
         clean = type_name.replace('AR:', '')
         if clean in PRIMITIVE_TYPES:
             return False
         if clean in self.ignored_types or clean in self.ignored_groups:
             return True
-        return clean in ('VARIATION-POINT', 'VARIATION-POINT-PROXY')
+        if clean in ('VARIATION-POINT', 'VARIATION-POINT-PROXY'):
+            return True
+        if not self.include_deprecated and self.is_deprecated_status(self.get_type_status(clean)):
+            return True
+        return False
 
     def get_ignored_category(self, type_name: str) -> str:
-        """Return category string ('Variant' or 'Blueprint') for an ignored type."""
+        """Return category string ('Removed', 'Obsolete', 'Blueprint', 'Variant') for an ignored type."""
         clean = type_name.replace('AR:', '')
+        st = self.get_type_status(clean)
+        if st and self.is_deprecated_status(st):
+            return st.capitalize()
         return self.ignored_categories.get(clean, 'Variant')
 
     def _load_python_cache(self, force_refresh: bool = False):
@@ -465,6 +539,7 @@ class SchemaInspector:
     def _extract_wrapper_inner_elements(self, el: ET._Element, is_wrapper_list: bool) -> List[dict]:
         """Extract inner elements defined within a wrapper element."""
         inner_elements = el.xpath('.//xsd:element', namespaces=NS)
+        wrapper_status = get_atp_status(el)
         sub_elems = []
         for ie in inner_elements:
             if not self.is_standard_supported(ie):
@@ -474,6 +549,7 @@ class SchemaInspector:
             ie_type = ie.attrib.get('type', '').replace('AR:', '')
             ie_min, ie_max, ie_is_list = self._get_effective_cardinality(ie, el)
             ie_qname = get_qualified_name(ie)
+            ie_status = self.get_effective_status(ie, ie_type, parent_status=wrapper_status)
 
             ie_ct = self.complex_types.get(ie_type)
             if ie_ct is not None and not self.is_standard_supported(ie_ct):
@@ -496,6 +572,7 @@ class SchemaInspector:
             sub_elems.append({
                 'name': ie_name,
                 'type': ie_type,
+                'status': ie_status,
                 'is_complex': sub_is_complex,
                 'is_simple': sub_is_simple,
                 'is_ref': False,
@@ -521,6 +598,7 @@ class SchemaInspector:
             qname = get_qualified_name(el)
 
             clean_type = el_type.replace('AR:', '') if el_type else ''
+            el_status = self.get_effective_status(el, clean_type if clean_type else None)
 
             if clean_type:
                 target_ct = self.complex_types.get(clean_type)
@@ -546,6 +624,7 @@ class SchemaInspector:
                 results.append({
                     'name': el_name,
                     'type': clean_type,
+                    'status': el_status,
                     'is_complex': is_complex,
                     'is_simple': is_simple,
                     'is_ref': is_ref,
@@ -564,6 +643,7 @@ class SchemaInspector:
                     results.append({
                         'name': el_name,
                         'type': f"{base} -> {dest_type}" if dest_type else base,
+                        'status': el_status,
                         'is_complex': False,
                         'is_simple': False,
                         'is_ref': True,
@@ -588,6 +668,7 @@ class SchemaInspector:
                     results.append({
                         'name': el_name,
                         'type': f"(wrapper of {len(sub_elems)} type{'s' if len(sub_elems) > 1 else ''})",
+                        'status': el_status,
                         'is_complex': False,
                         'is_simple': False,
                         'is_ref': False,
@@ -607,19 +688,27 @@ class SchemaInspector:
         return self.extract_child_elements(grp)
 
     def list_children(self, complex_type_name: str, include_inherited: bool = True):
-        """List all child elements for a given complex type organized by group."""
+        """List all child elements for a given complex type organized by group with status indicators."""
         clean_name = complex_type_name.replace('AR:', '')
         ct = self.complex_types.get(clean_name)
         grp = self.groups.get(clean_name)
 
         ct_impl = self.get_implementation_info(clean_name)
         canonical_cls = self.get_canonical_class_name(clean_name)
+        target_status = self.get_type_status(clean_name)
 
         print("=" * 80)
         print(f"AUTOSAR Complex Type Explorer: {clean_name}")
         print("=" * 80)
         print(f"ComplexType: {clean_name}" + (f" (line {ct.sourceline})" if ct is not None else " (not found)"))
         print(f"Group:       {clean_name}" + (f" (line {grp.sourceline})" if grp is not None else " (not found)"))
+        if target_status:
+            status_desc = f"{target_status.upper()}"
+            if target_status in ('removed', 'obsolete'):
+                status_desc += f" [DO NOT IMPLEMENT - {target_status} in schema]"
+            elif target_status == 'draft':
+                status_desc += " [DRAFT - evaluate necessity before implementing]"
+            print(f"Status:      {status_desc}")
         print(f"Target Class:{canonical_cls} (from mmt.qualifiedName)")
 
         if ct_impl and not ct_impl.get('is_primitive'):
@@ -640,7 +729,7 @@ class SchemaInspector:
             groups_to_check = [clean_name]
 
         print("\nAvailable Child Elements:")
-        print(f"{'Element Name':<38} {'Wiring Status':<18} {'Type / Details':<36} {'Card.':<6} {'Line':<6}")
+        print(f"{'Element Name':<38} {'Wiring Status':<20} {'Type / Details':<34} {'Card.':<6} {'Line':<6}")
         print("-" * 110)
 
         total_elements = 0
@@ -651,6 +740,7 @@ class SchemaInspector:
 
             grp_impl = self.get_implementation_info(gname)
             grp_canonical = self.get_canonical_class_name(gname)
+            grp_status = self.get_type_status(gname)
             if gname == clean_name:
                 grp_label = f"--- Direct group: {gname}"
             else:
@@ -660,6 +750,8 @@ class SchemaInspector:
                 grp_label += f" ({grp_impl['class_name']} in {grp_impl['file']}:{grp_impl['line']})"
             elif grp_canonical:
                 grp_label += f" (target: {grp_canonical})"
+            if grp_status:
+                grp_label += f" [{grp_status.upper()}]"
             grp_label += " ---"
             print(f"\n{grp_label}")
 
@@ -667,6 +759,7 @@ class SchemaInspector:
                 total_elements += 1
                 ename = elem['name']
                 etype = elem['type']
+                estatus = elem.get('status')
                 card = elem['cardinality']
                 sline = elem['sourceline']
 
@@ -674,33 +767,54 @@ class SchemaInspector:
                 owner_impl = grp_impl or ct_impl
                 vp_names = ('VARIATION-POINT', 'VARIATION-POINT-PROXY', 'VARIATION-POINT-PROXYS')
                 is_vp_ignored = self.is_ignored_type(etype) or ename in vp_names
-                if owner_impl:
+
+                if estatus == 'removed':
+                    status_str = "[REMOVED]"
+                elif estatus == 'obsolete':
+                    status_str = "[OBSOLETE]"
+                elif is_vp_ignored:
+                    status_str = "[Not supported]"
+                elif owner_impl:
                     if ename in owner_impl.get('implemented_subelements', []):
-                        status_str = "[Wired in init]"
+                        status_str = "[Wired in init]" if not estatus else f"[Wired: {estatus}]"
                     elif ename in owner_impl.get('unsupported_subelements', []):
                         status_str = "[Not supported]"
                     elif ename in owner_impl.get('unimplemented_subelements', []):
-                        status_str = "[Not in init]"
-                    elif is_vp_ignored:
-                        status_str = "[Not supported]"
-                elif is_vp_ignored:
-                    status_str = "[Not supported]"
+                        status_str = "[Not in init]" if not estatus else f"[{estatus.capitalize()}]"
+                    elif estatus:
+                        status_str = f"[{estatus.capitalize()}]"
+                elif estatus:
+                    status_str = f"[{estatus.capitalize()}]"
 
-                print(f"{ename:<38} {status_str:<18} {etype:<36} {card:<6} {sline:<6}")
+                print(f"{ename:<38} {status_str:<20} {etype:<34} {card:<6} {sline:<6}")
                 for sub in elem.get('sub_elements', []):
                     sub_name = f"  +-- {sub['name']}"
                     sub_type = sub['type']
+                    sub_status_tag = sub.get('status')
                     sub_card = sub['cardinality']
                     sub_line = sub['sourceline']
                     sub_impl = self.get_implementation_info(sub_type)
-                    if self.is_ignored_type(sub_type) or sub['name'] in ('VARIATION-POINT', 'VARIATION-POINT-PROXY'):
+
+                    if sub_status_tag == 'removed':
+                        sub_status = "[REMOVED]"
+                    elif sub_status_tag == 'obsolete':
+                        sub_status = "[OBSOLETE]"
+                    elif self.is_ignored_type(sub_type) or sub['name'] in ('VARIATION-POINT', 'VARIATION-POINT-PROXY'):
                         sub_status = "[Not supported]"
                     elif sub_impl:
-                        sub_status = f"[{sub_impl['class_name']}]"
+                        if sub_status_tag == 'draft':
+                            sub_status = f"[{sub_impl['class_name']}: Draft]"
+                        else:
+                            sub_status = f"[{sub_impl['class_name']}]"
                     else:
                         sub_canonical = self.get_canonical_class_name(sub_type)
-                        sub_status = f"[TODO: {sub_canonical}]"
-                    print(f"{sub_name:<38} {sub_status:<18} {sub_type:<36} {sub_card:<6} {sub_line:<6}")
+                        if sub_status_tag == 'draft':
+                            sub_status = f"[Draft: {sub_canonical}]"
+                        elif sub_status_tag == 'candidate':
+                            sub_status = f"[Cand.: {sub_canonical}]"
+                        else:
+                            sub_status = f"[TODO: {sub_canonical}]"
+                    print(f"{sub_name:<38} {sub_status:<20} {sub_type:<34} {sub_card:<6} {sub_line:<6}")
 
         print(f"\nTotal child elements across {len(groups_to_check)} groups: {total_elements}")
         print("\nTo explore a sub-element dependency tree, run:")
@@ -713,7 +827,7 @@ class SchemaInspector:
                             max_depth: int = 20,
                             leaves_only: bool = False,
                             hide_primitives: bool = False):
-        """Traverse child complex types starting from complex_type_name / child_name."""
+        """Traverse child complex types starting from complex_type_name / child_name with status filtering."""
         clean_ct = complex_type_name.replace('AR:', '')
         clean_child = child_name.replace('AR:', '')
 
@@ -721,6 +835,7 @@ class SchemaInspector:
         grp = self.groups.get(clean_ct)
         ct_impl = self.get_implementation_info(clean_ct)
         canonical_cls = self.get_canonical_class_name(clean_ct)
+        target_ct_status = self.get_type_status(clean_ct)
 
         print("=" * 80)
         print("AUTOSAR XSD Dependency Explorer")
@@ -728,6 +843,8 @@ class SchemaInspector:
         print(f"Target:        {clean_ct} / {clean_child}")
         print(f"ComplexType:   {clean_ct} (line {ct.sourceline if ct is not None else 'N/A'})")
         print(f"Group:         {clean_ct} (line {grp.sourceline if grp is not None else 'N/A'})")
+        if target_ct_status:
+            print(f"Parent Status: {target_ct_status.upper()}")
         print(f"Target Class:  {canonical_cls} (from mmt.qualifiedName)")
         if ct_impl and not ct_impl.get('is_primitive'):
             print(f"Python Class:  {ct_impl['class_name']} ({ct_impl['file']}:{ct_impl['line']}) [Implemented]")
@@ -772,6 +889,7 @@ class SchemaInspector:
         # Report where the element was found
         grp_impl = self.get_implementation_info(found_in_group)
         sline = target_element['sourceline']
+        el_status = target_element.get('status')
         if found_in_group == clean_ct:
             print(f"\nFound element '{clean_child}' (line {sline}) in direct group '{found_in_group}':")
         else:
@@ -782,6 +900,13 @@ class SchemaInspector:
                   f"{grp_desc}:")
 
         print(f"  Type / Details: {target_element['type']}")
+        if el_status:
+            status_alert = f"  Status:         {el_status.upper()}"
+            if el_status in ('removed', 'obsolete'):
+                status_alert += f" [DO NOT IMPLEMENT - {el_status} in schema]"
+            elif el_status == 'draft':
+                status_alert += " [DRAFT - evaluate necessity before implementing]"
+            print(status_alert)
         is_list_str = ' (unbounded list)' if target_element['is_list'] else ''
         print(f"  Cardinality:    {target_element['cardinality']}{is_list_str}")
 
@@ -792,14 +917,21 @@ class SchemaInspector:
             elif clean_child in owner_impl.get('unimplemented_subelements', []):
                 print(f"  Field Wiring:   Marked NOT YET IMPLEMENTED in {owner_impl['class_name']}.__init__")
 
-        initial_types: List[str] = []
+        initial_types: List[Tuple[str, Optional[str]]] = []
         if target_element['is_complex']:
-            initial_types.append(target_element['type'])
+            if self.include_deprecated or not self.is_deprecated_status(el_status):
+                initial_types.append((target_element['type'], el_status))
+            else:
+                print(f"\nTarget element is {el_status.upper()}. "
+                      "Omitted from traversal by default (use --include-deprecated to force).")
         for sub in target_element.get('sub_elements', []):
             if sub['is_complex']:
-                initial_types.append(sub['type'])
+                sub_st = sub.get('status')
+                if self.include_deprecated or not self.is_deprecated_status(sub_st):
+                    initial_types.append((sub['type'], sub_st))
 
-        types_summary = ', '.join(initial_types) if initial_types else 'None (primitive/leaf/ref)'
+        types_summary = (', '.join([t for t, _ in initial_types])
+                         if initial_types else 'None (primitive/leaf/ref/deprecated)')
         print(f"  Referenced complex types: {types_summary}\n")
 
         if not initial_types:
@@ -817,6 +949,8 @@ class SchemaInspector:
         def walk(type_name: str, depth: int, path: List[str]):
             impl_info = self.get_implementation_info(type_name)
             canonical = self.get_canonical_class_name(type_name)
+            t_status = self.get_type_status(type_name)
+
             if impl_info:
                 if impl_info.get('is_primitive'):
                     status_str = f"[Implicit: {impl_info['class_name']}]"
@@ -825,12 +959,20 @@ class SchemaInspector:
             else:
                 status_str = f"[TODO: {canonical}]"
 
+            status_tag = ""
+            if t_status == 'draft':
+                status_tag = " [DRAFT]"
+            elif t_status == 'candidate':
+                status_tag = " [CANDIDATE]"
+            elif t_status in ('removed', 'obsolete'):
+                status_tag = f" [{t_status.upper()}]"
+
             ct_obj = self.complex_types.get(type_name)
             line_str = f"(xsd:{ct_obj.sourceline})" if ct_obj is not None else ""
 
             if type_name in path:
                 indent = "  " * depth
-                print(f"{indent}+-- [CYCLE] {type_name} {status_str}")
+                print(f"{indent}+-- [CYCLE] {type_name} {status_str}{status_tag}")
                 return
 
             is_first_visit = type_name not in visited_nodes
@@ -839,10 +981,10 @@ class SchemaInspector:
             indent = "  " * depth
             branch_sym = "+-- " if depth > 0 else ""
             if not is_first_visit:
-                print(f"{indent}{branch_sym}{type_name} {line_str} {status_str} (see above)")
+                print(f"{indent}{branch_sym}{type_name} {line_str} {status_str}{status_tag} (see above)")
                 return
 
-            print(f"{indent}{branch_sym}{type_name} {line_str} {status_str}")
+            print(f"{indent}{branch_sym}{type_name} {line_str} {status_str}{status_tag}")
 
             if depth >= max_depth:
                 print(f"{indent}  +-- [MAX DEPTH REACHED]")
@@ -856,34 +998,50 @@ class SchemaInspector:
             if not g_list:
                 g_list = [type_name]
 
-            child_refs: List[Tuple[str, str, str, bool]] = []
+            child_refs: List[Tuple[str, str, str, bool, Optional[str]]] = []
 
             for gname in g_list:
                 elems = self.get_group_elements(gname)
                 for el in elems:
                     ename = el['name']
+                    est = el.get('status')
                     if el['is_complex']:
-                        child_refs.append((ename, el['type'], 'complex', el['is_list']))
+                        child_refs.append((ename, el['type'], 'complex', el['is_list'], est))
                     elif el['is_ref']:
-                        child_refs.append((ename, el['type'], 'ref', el['is_list']))
+                        child_refs.append((ename, el['type'], 'ref', el['is_list'], est))
                     elif el['is_simple']:
-                        child_refs.append((ename, el['type'], 'simple', el['is_list']))
+                        child_refs.append((ename, el['type'], 'simple', el['is_list'], est))
                     for sub in el.get('sub_elements', []):
+                        sub_st = sub.get('status')
                         if sub['is_complex']:
-                            child_refs.append((f"{ename}/{sub['name']}", sub['type'], 'complex', sub['is_list']))
+                            child_refs.append(
+                                (f"{ename}/{sub['name']}", sub['type'], 'complex', sub['is_list'], sub_st)
+                            )
                         elif sub['is_simple']:
-                            child_refs.append((f"{ename}/{sub['name']}", sub['type'], 'simple', sub['is_list']))
+                            child_refs.append((f"{ename}/{sub['name']}", sub['type'], 'simple', sub['is_list'], sub_st))
 
             type_info[type_name] = {
                 'sourceline': ct_obj.sourceline if ct_obj is not None else None,
                 'implemented': impl_info is not None,
                 'impl_info': impl_info,
+                'status': t_status,
                 'children': child_refs
             }
 
-            for ename, ctype, kind, _ in child_refs:
+            for ename, ctype, kind, _, c_status in child_refs:
+                effective_c_status = c_status or self.get_type_status(ctype)
+                c_status_tag = ""
+                if effective_c_status == 'draft':
+                    c_status_tag = " [DRAFT]"
+                elif effective_c_status == 'candidate':
+                    c_status_tag = " [CANDIDATE]"
+
                 if kind == 'complex':
-                    if not self.include_ignored and self.is_ignored_type(ctype):
+                    if not self.include_deprecated and self.is_deprecated_status(effective_c_status):
+                        child_indent = "  " * (depth + 1)
+                        cat = self.get_ignored_category(ctype)
+                        print(f"{child_indent}+-- [NOT SUPPORTED: {cat}] {ename} ({ctype})")
+                    elif not self.include_ignored and self.is_ignored_type(ctype):
                         child_indent = "  " * (depth + 1)
                         cat = self.get_ignored_category(ctype)
                         print(f"{child_indent}+-- [NOT SUPPORTED: {cat}] {ename} ({ctype})")
@@ -892,15 +1050,23 @@ class SchemaInspector:
                         walk(ctype, depth + 1, path + [type_name])
                 elif kind == 'ref':
                     child_indent = "  " * (depth + 1)
-                    print(f"{child_indent}+-- [REF] {ename} -> {ctype}")
+                    if not self.include_deprecated and self.is_deprecated_status(effective_c_status):
+                        cat = effective_c_status.capitalize() if effective_c_status else "Deprecated"
+                        print(f"{child_indent}+-- [NOT SUPPORTED: {cat} REF] {ename} -> {ctype}")
+                    else:
+                        print(f"{child_indent}+-- [REF] {ename} -> {ctype}{c_status_tag}")
                 elif kind == 'simple':
                     prim = self.detect_primitive_type(ctype)
                     prim_label = f"({prim})" if prim else ""
                     if not hide_primitives:
                         child_indent = "  " * (depth + 1)
-                        print(f"{child_indent}+-- [PRIMITIVE] {ename}: {ctype} {prim_label}")
+                        if not self.include_deprecated and self.is_deprecated_status(effective_c_status):
+                            cat = effective_c_status.capitalize() if effective_c_status else "Deprecated"
+                            print(f"{child_indent}+-- [NOT SUPPORTED: {cat}] {ename}: {ctype} {prim_label}")
+                        else:
+                            print(f"{child_indent}+-- [PRIMITIVE] {ename}: {ctype} {prim_label}{c_status_tag}")
 
-        for init_t in initial_types:
+        for init_t, _ in initial_types:
             walk(init_t, 0, [])
 
         print("\n" + "=" * 80)
@@ -923,20 +1089,32 @@ class SchemaInspector:
             visited_topo.add(node)
             topo_order.append(node)
 
-        for init_t in initial_types:
+        for init_t, _ in initial_types:
             topo_dfs(init_t, set())
 
         implemented_count = 0
         pending_count = 0
         primitive_count = 0
+        draft_pending_count = 0
+        candidate_pending_count = 0
+        deprecated_pending_count = 0
         leaf_unimplemented = []
 
         item_idx = 0
         for tname in topo_order:
             impl_info = self.get_implementation_info(tname)
             canonical = self.get_canonical_class_name(tname)
+            t_status = self.get_type_status(tname)
             is_imp = impl_info is not None
             is_prim = impl_info.get('is_primitive', False) if impl_info else False
+
+            status_tag = ""
+            if t_status == 'draft':
+                status_tag = " [DRAFT]"
+            elif t_status == 'candidate':
+                status_tag = " [CANDIDATE]"
+            elif t_status in ('removed', 'obsolete'):
+                status_tag = f" [{t_status.upper()}]"
 
             if is_prim:
                 primitive_count += 1
@@ -946,12 +1124,18 @@ class SchemaInspector:
                 status = f"[✓ {impl_info['class_name']}]"
             else:
                 pending_count += 1
+                if t_status == 'draft':
+                    draft_pending_count += 1
+                elif t_status == 'candidate':
+                    candidate_pending_count += 1
+                elif t_status in ('removed', 'obsolete'):
+                    deprecated_pending_count += 1
                 status = f"[✗ TODO: {canonical}]"
 
             deps = dependency_graph.get(tname, set())
             is_leaf = len(deps) == 0
             if is_leaf and not is_imp and not is_prim:
-                leaf_unimplemented.append((tname, canonical))
+                leaf_unimplemented.append((tname, canonical, t_status))
 
             if leaves_only and not is_leaf:
                 continue
@@ -964,7 +1148,8 @@ class SchemaInspector:
             dep_str = f"(depends on: {', '.join(dep_names)})" if dep_names else "(LEAF - no complex dependencies)"
             ct_obj = self.complex_types.get(tname)
             sline = f"xsd:{ct_obj.sourceline}" if ct_obj is not None else ""
-            print(f" {item_idx:2d}. {status:<44} {tname:<42} {sline:<10} {dep_str}")
+            status_combined = f"{status}{status_tag}"
+            print(f" {item_idx:2d}. {status_combined:<44} {tname:<42} {sline:<10} {dep_str}")
 
         print("\n" + "-" * 80)
         print("Summary:")
@@ -973,12 +1158,22 @@ class SchemaInspector:
         if primitive_count > 0:
             print(f"  Implicit Primitives (str/int):{primitive_count}")
         print(f"  Pending Classes to Implement: {pending_count}")
+        valid_pending = pending_count - draft_pending_count - candidate_pending_count - deprecated_pending_count
+        if pending_count > 0:
+            print(f"    - Standard (Valid) Classes: {valid_pending}")
+            if draft_pending_count > 0:
+                print(f"    - Draft Classes (Evaluate): {draft_pending_count}")
+            if candidate_pending_count > 0:
+                print(f"    - Candidate (AP) Classes:   {candidate_pending_count}")
+            if deprecated_pending_count > 0:
+                print(f"    - Deprecated (DO NOT IMPL): {deprecated_pending_count}")
         if leaf_unimplemented:
             print(f"  Unimplemented Leaf Classes:   {len(leaf_unimplemented)} (start with these!)")
-            for utype, ucls in leaf_unimplemented:
+            for utype, ucls, ust in leaf_unimplemented:
                 uct = self.complex_types.get(utype)
                 usline = f"xsd:{uct.sourceline}" if uct is not None else ""
-                print(f"    - class {ucls:<36} ({utype}, {usline})")
+                ust_tag = f" [{ust.upper()}]" if ust else ""
+                print(f"    - class {ucls:<36} ({utype}, {usline}){ust_tag}")
         print("-" * 80 + "\n")
 
 
@@ -1029,6 +1224,11 @@ def main():
         help="Also traverse and include VariantHandling and Blueprint types instead of marking them [NOT SUPPORTED]"
     )
     parser.add_argument(
+        "--include-deprecated",
+        action="store_true",
+        help="Also traverse and include deprecated (removed/obsolete) types instead of marking them [NOT SUPPORTED]"
+    )
+    parser.add_argument(
         "--refresh", "-r",
         action="store_true",
         help="Force re-parsing element.py and enumeration.py docstrings and update the cache"
@@ -1047,7 +1247,8 @@ def main():
         xsd_path,
         refresh=args.refresh,
         classic_only=not args.all_standards,
-        include_ignored=args.include_ignored
+        include_ignored=args.include_ignored,
+        include_deprecated=args.include_deprecated
     )
 
     target = args.target.strip()

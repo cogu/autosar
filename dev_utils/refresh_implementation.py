@@ -70,11 +70,14 @@ def _extract_subelements(class_lines: List[str]) -> Tuple[List[str], List[str], 
                     line_low = line.lower()
                     is_unsupported = any(p in line_low for p in [
                         'not yet implemented', 'not yet supported',
-                        'not supported', 'not fully implemented'
+                        'not supported', 'not fully implemented',
+                        'removed', 'obsolete'
                     ])
                     known = implemented + unsupported + unimplemented
                     if not is_unsupported and tag not in known:
                         implemented.append(tag)
+                    elif is_unsupported and tag not in known:
+                        unsupported.append(tag)
 
     return implemented, unsupported, unimplemented
 
