@@ -35,7 +35,15 @@ python dev_utils/explore_subelement.py SWC-INTERNAL-BEHAVIOR/RUNNABLES -d 1
 
 # Include variant handling / blueprint elements (omitted by default)
 python dev_utils/explore_subelement.py SWC-INTERNAL-BEHAVIOR --include-ignored
+
+# Include deprecated (removed/obsolete) elements (omitted by default)
+python dev_utils/explore_subelement.py APPLICATION-ENDPOINT --include-deprecated
 ```
+
+### Deprecation & Status Handling (`atp.Status`)
+- **`removed` / `obsolete`**: Filtered out and marked `[REMOVED]` / `[OBSOLETE]` (or `[NOT SUPPORTED: Removed/Obsolete]`) to prevent implementing obsolete elements.
+- **`draft` / `candidate`**: Tagged clearly as `[DRAFT]` / `[CANDIDATE]` across child listings, dependency trees, bottom-up order, and implementation summaries.
+
 
 ---
 
