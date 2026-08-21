@@ -342,7 +342,7 @@ def make_unique_name_in_list(elements: list[Referrable], base_name: str):
     else:
         return base_name
 
-# --- Admin Data Elements
+# --- Admin data elements
 
 
 class SpecialDataElement(NamedTuple):
@@ -861,7 +861,7 @@ class Trigger(Identifiable):
         return None if ref_str is None else TriggerRef(ref_str)
 
 
-# --- Documentation Elements
+# --- Documentation elements
 
 
 class Break(ARObject):
@@ -1783,7 +1783,7 @@ class CompuMethod(ARElement):
         return None if ref_str is None else CompuMethodRef(ref_str)
 
 
-# Constraint elements
+# --- Constraint elements
 
 
 class LimitObject(ARObject):
@@ -2012,7 +2012,7 @@ class DataConstraint(ARElement):
                                                               upper_limit_type))
         return cls(name, [rule], **kwargs)
 
-# Unit elements
+# --- Unit elements
 
 
 class Unit(ARElement):
@@ -2058,7 +2058,7 @@ class Unit(ARElement):
         return None if ref_str is None else UnitRef(ref_str)
 
 
-# --- DataDictionary and DataType elements
+# --- Data type elements (also includes data dictionary elements)
 
 
 class BaseType(ARElement):
@@ -2907,7 +2907,7 @@ class ValueList(ARObject):
             raise TypeError(f"Invalid type for value: {str(type(value))}")
 
 
-# --- Auxillary Objects
+# --- Auxillary object elements
 
 
 class SwAddrMethod(ARElement):
@@ -3041,7 +3041,7 @@ class SwValueCont(ARObject):
         self._assign_optional_strict('sw_values_phys', sw_values_phys, SwValues)
 
 
-# --- Constant and value specifications
+# --- Constant elements
 
 
 class ValueSpecification(ARObject):
@@ -3348,7 +3348,7 @@ class ConstantReference(ValueSpecification):
                 raise ar_except.AssignmentTypeError("constant_ref", ("ConstantRef", "str"), constant_ref)
 
 
-# --- Package (Partly implemented)
+# --- Package elements (Partly implemented)
 
 
 class Package(CollectableElement):
@@ -3626,7 +3626,7 @@ class PackageCollection:
             raise ar_except.InvalidReferenceError(f"Invalid port interface reference: '{str(port_interface)}'")
         return port_interface
 
-# --- ModeDeclaration elements
+# --- Mode declaration elements
 
 
 class ModeDeclaration(Identifiable):
@@ -3845,7 +3845,7 @@ class ModeRequestTypeMap(ARObject):
         self._assign_optional('mode_group', mode_group, ModeDeclarationGroupRef)
 
 
-# --- Port Interface elements
+# --- Port interface elements
 
 
 class PortInterface(ARElement):
@@ -4452,7 +4452,7 @@ class TriggerInterface(PortInterface):
         return PortInterfaceRef(ref_str, ar_enum.IdentifiableSubTypes.TRIGGER_INTERFACE)
 
 
-# --- System Template Elements
+# --- System template elements
 
 
 class E2EProfileCompatibilityProps(ARElement):
@@ -4557,7 +4557,7 @@ class EndToEndTransformationComSpecProps(Describable):
         self._assign_optional_positive_int("window_size_valid", window_size_valid)
 
 
-# --- SoftwareComponent elements
+# --- Software component elements
 
 
 class ModeSwitchedAckRequest(ARObject):
@@ -6432,7 +6432,7 @@ class RTriggerInAtomicSwcInstanceRef(ARObject):
         self._assign_optional("target_trigger", target_trigger, TriggerRef)
 
 
-# --- SWC internal behavior elements
+# --- Internal behavior elements
 
 
 class ArVariableInImplementationDataInstanceRef(ARObject):

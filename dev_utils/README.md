@@ -10,6 +10,7 @@ This directory contains developer tooling and utility scripts for developing, ex
 |---|---|---|
 | [`explore_subelement.py`](explore_subelement.py) | Schema inspection, child element analysis, and dependency tree explorer. | — |
 | [`refresh_implementation.py`](refresh_implementation.py) | AST scanner that indexes implemented classes and enums into `.implementation_cache.json`. | — |
+| [`wiki/generate_wiki_page.py`](wiki/generate_wiki_page.py) | Generates GitHub Wiki XML Tag Index (`xml_index.md`) from `.implementation_cache.json`. | — |
 | [`validate_xml.py`](validate_xml.py) | Multi-schema XSD validator (`00048`–`00051`) using `lxml` and `doc/schema/`. | `validate_xml.cmd`, `validate_xml.sh` |
 | [`build_docs.py`](build_docs.py) | Jinja2 documentation generator that embeds tested code and captured output. | `build_docs.cmd`, `build_docs.sh` |
 
@@ -104,3 +105,21 @@ build_docs.cmd                 # Windows
 # Check if markdown documentation is up-to-date (exits with code 1 if diff exists)
 python dev_utils/build_docs.py --check
 ```
+
+---
+
+## 5. Wiki Tag Index Generator: `dev_utils/wiki/`
+
+Generates GitHub Wiki documentation page [`xml_index.md`](wiki/xml_index.md) directly from `.implementation_cache.json`.
+
+```bash
+# Generate wiki page
+python dev_utils/wiki/generate_wiki_page.py
+
+# Force-refresh cache and generate wiki page in one step
+python dev_utils/wiki/generate_wiki_page.py --refresh
+
+# Run tag consistency diagnostic
+python dev_utils/wiki/inspect_tags.py
+```
+
