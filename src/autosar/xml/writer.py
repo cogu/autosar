@@ -1593,8 +1593,6 @@ class Writer(_XMLWriter):
         """
         if elem.size is not None:
             self._add_content('BASE-TYPE-SIZE', str(elem.size))
-        if elem.max_size is not None:
-            self._add_content('MAX-BASE-TYPE-SIZE', str(elem.max_size))
         if elem.encoding is not None:
             self._add_content('BASE-TYPE-ENCODING', str(elem.encoding))
         if elem.alignment is not None:
@@ -3150,8 +3148,6 @@ class Writer(_XMLWriter):
             self._leave_child()
         if elem.diag_arg_integrity is not None:
             self._add_content("DIAG-ARG-INTEGRITY", self._format_boolean(elem.diag_arg_integrity))
-        if elem.fire_and_forget is not None:
-            self._add_content("FIRE-AND-FORGET", self._format_boolean(elem.fire_and_forget))
         if elem.possible_error_refs:
             self._add_child("POSSIBLE-ERROR-REFS")
             for possible_error_ref in elem.possible_error_refs:
@@ -3268,8 +3264,6 @@ class Writer(_XMLWriter):
             self._add_content("MIN-OK-STATE-VALID", str(elem.min_ok_state_valid))
         if elem.sync_counter_init is not None:
             self._add_content("SYNC-COUNTER-INIT", str(elem.sync_counter_init))
-        if elem.window_size is not None:
-            self._add_content("WINDOW-SIZE", str(elem.window_size))
         if elem.window_size_init is not None:
             self._add_content("WINDOW-SIZE-INIT", str(elem.window_size_init))
         if elem.window_size_invalid is not None:
@@ -5020,8 +5014,6 @@ class Writer(_XMLWriter):
             self._write_p_operation_in_atomic_swc_instance_ref(elem.operation)
         if elem.required_trigger is not None:
             self._write_r_trigger_in_atomic_swc_instance_ref(elem.required_trigger, "REQUIRED-TRIGGER-IREF")
-        if elem.trigger is not None:
-            self._write_p_trigger_in_atomic_swc_instance_ref(elem.trigger, "TRIGGER-IREF")
 
     def _write_port_defined_argument_value(self, elem: ar_element.PortDefinedArgumentValue) -> None:
         """

@@ -2069,12 +2069,17 @@ class BaseType(ARElement):
 
     def __init__(self, name: str, **kwargs: dict) -> None:
         super().__init__(name, **kwargs)
-        self.size: int | None = None  # .BASE-TYPE-SIZE
-        self.max_size: int | None = None  # .MAX-BASE-TYPE-SIZE
-        self.encoding: str | None = None  # .BASE-TYPE-ENCODING
-        self.alignment: int | None = None  # .MEM-ALIGNMENT
-        self.byte_order: ar_enum.ByteOrder | None = None  # .BYTE-ORDER
-        self.native_declaration: str | None = None  # .NATIVE-DECLARATION
+        # .BASE-TYPE-SIZE
+        self.size: int | None = None
+        # .MAX-BASE-TYPE-SIZE --- REMOVED
+        # .BASE-TYPE-ENCODING
+        self.encoding: str | None = None
+        # .MEM-ALIGNMENT
+        self.alignment: int | None = None
+        # .BYTE-ORDER
+        self.byte_order: ar_enum.ByteOrder | None = None
+        # .NATIVE-DECLARATION
+        self.native_declaration: str | None = None
 
 
 class SwBaseType(BaseType):
@@ -2086,7 +2091,6 @@ class SwBaseType(BaseType):
     def __init__(self,
                  name: str,
                  size: int | None = None,
-                 max_size: int | None = None,
                  encoding: str | None = None,
                  alignment: int | None = None,
                  byte_order: ar_enum.ByteOrder | None = None,
@@ -2094,7 +2098,6 @@ class SwBaseType(BaseType):
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
         self.size = size
-        self.max_size = max_size
         self.encoding = encoding
         self.alignment = alignment
         self.byte_order = byte_order
@@ -3180,6 +3183,7 @@ class NotAvailableValueSpecification(ValueSpecification):
     """
     Complex type AR:NOT-AVAILABLE-VALUE-SPECIFICATION
     Tag variants: 'NOT-AVAILABLE-VALUE-SPECIFICATION'
+    Status: Draft (AUTOSAR R20-11 / schema 50)
     """
 
     def __init__(self,
@@ -4136,20 +4140,21 @@ class ClientServerOperation(Identifiable):
                  name: str,
                  arguments: ArgumentDataPrototype | list[ArgumentDataPrototype] | None = None,
                  diag_arg_integrity: bool | None = None,
-                 fire_and_forget: bool | None = None,
                  possible_error_refs: PossibleErrorRefsTypes | None = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
-        self.arguments: list[ArgumentDataPrototype] = []  # .ARGUMENTS
-        self.diag_arg_integrity: bool | None = None  # .DIAG-ARG-INTEGRITY
-        self.fire_and_forget: bool | None = None  # .FIRE-AND-FORGET
-        # .POSSIBLE-AP-ERROR-REFS not supported
-        # .POSSIBLE-AP-ERROR-SET-REFS not supported
-        self.possible_error_refs: list[ApplicationErrorRef] = []  # .POSSIBLE-ERROR-REFS
-        # .VARIATION-POINT not supported
+        # .ARGUMENTS
+        self.arguments: list[ArgumentDataPrototype] = []
+        # .DIAG-ARG-INTEGRITY
+        self.diag_arg_integrity: bool | None = None
+        # .FIRE-AND-FORGET --- NOT SUPPORTED (AP)
+        # .POSSIBLE-AP-ERROR-REFS --- NOT SUPPORTED (AP)
+        # .POSSIBLE-AP-ERROR-SET-REFS --- NOT SUPPORTED (AP)
+        # .POSSIBLE-ERROR-REFS
+        self.possible_error_refs: list[ApplicationErrorRef] = []
+        # .VARIATION-POINT --- NOT SUPPORTED (VARIANT)
 
         self._assign_optional_strict("diag_arg_integrity", diag_arg_integrity, bool)
-        self._assign_optional_strict("fire_and_forget", fire_and_forget, bool)
         if arguments is not None:
             if isinstance(arguments, ArgumentDataPrototype):
                 self.append_argument(arguments)
@@ -4337,7 +4342,6 @@ class ClientServerInterface(PortInterface):
                          name: str,
                          arguments: ArgumentDataPrototype | list[ArgumentDataPrototype] | None = None,
                          diag_arg_integrity: bool | None = None,
-                         fire_and_forget: bool | None = None,
                          possible_error_refs: ApplicationErrorRef | list[ApplicationErrorRef] | None = None,
                          **kwargs) -> ClientServerOperation:
         """
@@ -4345,7 +4349,7 @@ class ClientServerInterface(PortInterface):
 
         Adds a new operation to this port interface
         """
-        operation = ClientServerOperation(name, arguments, diag_arg_integrity, fire_and_forget, possible_error_refs,
+        operation = ClientServerOperation(name, arguments, diag_arg_integrity, possible_error_refs,
                                           **kwargs)
         self.append_operation(operation)
         return operation
@@ -4496,30 +4500,44 @@ class EndToEndTransformationComSpecProps(Describable):
                  min_ok_state_invalid: int | None = None,
                  min_ok_state_valid: int | None = None,
                  sync_counter_init: int | None = None,
-                 window_size: int | None = None,
                  window_size_init: int | None = None,
                  window_size_invalid: int | None = None,
                  window_size_valid: int | None = None,
                  **kwargs) -> None:
         super().__init__(**kwargs)
-        self.clear_from_valid_to_invalid: bool | None = None  # .CLEAR-FROM-VALID-TO-INVALID
-        self.disable_e2e_check: bool | None = None  # .DISABLE-END-TO-END-CHECK
-        self.disable_e2e_state_machine: bool | None = None  # .DISABLE-END-TO-END-STATE-MACHINE
+        # .CLEAR-FROM-VALID-TO-INVALID
+        self.clear_from_valid_to_invalid: bool | None = None
+        # .DISABLE-END-TO-END-CHECK
+        self.disable_e2e_check: bool | None = None
+        # .DISABLE-END-TO-END-STATE-MACHINE
+        self.disable_e2e_state_machine: bool | None = None
         # .E-2-E-PROFILE-COMPATIBILITY-PROPS-REF
         self.e2e_profile_compatibility_props_ref: E2EProfileCompatibilityPropsRef | None = None
-        self.max_delta_counter: int | None = None  # .MAX-DELTA-COUNTER
-        self.max_error_state_init: int | None = None  # .MAX-ERROR-STATE-INIT
-        self.max_error_state_invalid: int | None = None   # .MAX-ERROR-STATE-INVALID
-        self.max_error_state_valid: int | None = None   # .MAX-ERROR-STATE-VALID
-        self.max_no_new_repeated_data: int | None = None   # .MAX-NO-NEW-OR-REPEATED-DATA
-        self.min_ok_state_init: int | None = None   # .MIN-OK-STATE-INIT
-        self.min_ok_state_invalid: int | None = None   # .MIN-OK-STATE-INVALID
-        self.min_ok_state_valid: int | None = None   # .MIN-OK-STATE-VALID
-        self.sync_counter_init: int | None = None   # .SYNC-COUNTER-INIT
-        self.window_size: int | None = None   # .WINDOW-SIZE
-        self.window_size_init: int | None = None   # .WINDOW-SIZE-INIT
-        self.window_size_invalid: int | None = None   # .WINDOW-SIZE-INVALID
-        self.window_size_valid: int | None = None   # .WINDOW-SIZE-VALID
+        # .MAX-DELTA-COUNTER
+        self.max_delta_counter: int | None = None
+        # .MAX-ERROR-STATE-INIT
+        self.max_error_state_init: int | None = None
+        # .MAX-ERROR-STATE-INVALID
+        self.max_error_state_invalid: int | None = None
+        # .MAX-ERROR-STATE-VALID
+        self.max_error_state_valid: int | None = None
+        # .MAX-NO-NEW-OR-REPEATED-DATA
+        self.max_no_new_repeated_data: int | None = None
+        # .MIN-OK-STATE-INIT
+        self.min_ok_state_init: int | None = None
+        # .MIN-OK-STATE-INVALID
+        self.min_ok_state_invalid: int | None = None
+        # .MIN-OK-STATE-VALID
+        self.min_ok_state_valid: int | None = None
+        # .SYNC-COUNTER-INIT
+        self.sync_counter_init: int | None = None
+        # .WINDOW-SIZE --- REMOVED
+        # .WINDOW-SIZE-INIT
+        self.window_size_init: int | None = None
+        # .WINDOW-SIZE-INVALID
+        self.window_size_invalid: int | None = None
+        # .WINDOW-SIZE-VALID
+        self.window_size_valid: int | None = None
         self._assign_optional_strict("clear_from_valid_to_invalid", clear_from_valid_to_invalid, bool)
         self._assign_optional_strict("disable_e2e_check", disable_e2e_check, bool)
         self._assign_optional_strict("disable_e2e_state_machine", disable_e2e_state_machine, bool)
@@ -4534,7 +4552,6 @@ class EndToEndTransformationComSpecProps(Describable):
         self._assign_optional_positive_int("min_ok_state_invalid", min_ok_state_invalid)
         self._assign_optional_positive_int("min_ok_state_valid", min_ok_state_valid)
         self._assign_optional_positive_int("sync_counter_init", sync_counter_init)
-        self._assign_optional_positive_int("window_size", window_size)
         self._assign_optional_positive_int("window_size_init", window_size_init)
         self._assign_optional_positive_int("window_size_invalid", window_size_invalid)
         self._assign_optional_positive_int("window_size_valid", window_size_valid)
@@ -8459,19 +8476,16 @@ class TransformerHardErrorEvent(RteEvent):
                  start_on_event: RunnableEntityRef | str | None = None,
                  operation: POperationInAtomicSwcInstanceRef | None = None,
                  required_trigger: RTriggerInAtomicSwcInstanceRef | None = None,
-                 trigger: PTriggerInAtomicSwcTypeInstanceRef | None = None,
                  **kwargs) -> None:
         super().__init__(name, start_on_event, **kwargs)
         # .OPERATION-IREF
         self.operation: POperationInAtomicSwcInstanceRef | None = None
         # .REQUIRED-TRIGGER-IREF
         self.required_trigger: RTriggerInAtomicSwcInstanceRef | None = None
-        # .TRIGGER-IREF
-        self.trigger: PTriggerInAtomicSwcTypeInstanceRef | None = None
+        # .TRIGGER-IREF --- REMOVED
 
         self._assign_optional_strict("operation", operation, POperationInAtomicSwcInstanceRef)
         self._assign_optional_strict("required_trigger", required_trigger, RTriggerInAtomicSwcInstanceRef)
-        self._assign_optional_strict("trigger", trigger, PTriggerInAtomicSwcTypeInstanceRef)
 
     def ref(self) -> RteEventRef | None:
         """

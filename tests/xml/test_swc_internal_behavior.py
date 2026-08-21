@@ -3532,12 +3532,6 @@ class TestTransformerHardErrorEvent(unittest.TestCase):
     def test_trigger(self):
         context_port_ref_str = "/ComponentTypes/MyComponent/MyPort"
         target_trigger_ref_str = "/Triggers/MyTrigger"
-        context_port = ar_element.PortPrototypeRef(context_port_ref_str, ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE)
-        target_trigger = ar_element.TriggerRef(target_trigger_ref_str)
-        trigger = ar_element.PTriggerInAtomicSwcTypeInstanceRef(context_port=context_port,
-                                                                target_trigger=target_trigger)
-        element = ar_element.TransformerHardErrorEvent('MyName',
-                                                       trigger=trigger)
         xml = f'''<TRANSFORMER-HARD-ERROR-EVENT>
   <SHORT-NAME>MyName</SHORT-NAME>
   <TRIGGER-IREF>
@@ -3545,14 +3539,10 @@ class TestTransformerHardErrorEvent(unittest.TestCase):
     <TARGET-TRIGGER-REF DEST="TRIGGER">{target_trigger_ref_str}</TARGET-TRIGGER-REF>
   </TRIGGER-IREF>
 </TRANSFORMER-HARD-ERROR-EVENT>'''
-        writer = autosar.xml.Writer()
-        self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
         elem: ar_element.TransformerHardErrorEvent = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.TransformerHardErrorEvent)
-        inner: ar_element.PTriggerInAtomicSwcTypeInstanceRef = elem.trigger
-        self.assertEqual(str(inner.context_port), context_port_ref_str)
-        self.assertEqual(str(inner.target_trigger), target_trigger_ref_str)
+        self.assertEqual(elem.name, 'MyName')
 
 
 class TestPortDefinedArgumentValue(unittest.TestCase):

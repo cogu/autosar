@@ -599,7 +599,7 @@ class ServerArgImplPolicy(Enum):
     """
 
     USE_ARGUMENT_TYPE = 0
-    USE_ARRAY_BASED_TYPE = 1
+    # USE_ARRAY_BASED_TYPE --- REMOVED
     USE_VOID = 2
 
 
@@ -1109,7 +1109,6 @@ xml_to_enum_map: dict[str, dict] = {
     },
     "ServerArgImplPolicy": {
         "USE-ARGUMENT-TYPE": ServerArgImplPolicy.USE_ARGUMENT_TYPE,
-        "USE-ARRAY-BASE-TYPE": ServerArgImplPolicy.USE_ARRAY_BASED_TYPE,
         "USE-VOID": ServerArgImplPolicy.USE_VOID
     },
     "SupportBufferLocking": {
@@ -1523,9 +1522,9 @@ enum_to_xml_map: dict[str, list] = {
         "VALID"           # 3
     ],
     "ServerArgImplPolicy": [
-        "USE-ARGUMENT-TYPE",    # 0
-        "USE-ARRAY-BASE-TYPE",  # 1
-        "USE-VOID",             # 2
+        "USE-ARGUMENT-TYPE",  # 0
+        None,                 # 1 (removed)
+        "USE-VOID",           # 2
     ],
     "SupportBufferLocking": [
         "DOES-NOT-SUPPORT-BUFFER-LOCKING",  # 0
