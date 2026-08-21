@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Scan AUTOSAR Python codebase and cache implemented XML complexTypes, groups, and enums.
+"""Scan AUTOSAR Python codebase and cache implemented XML complexTypes, groups, enums, and tag variants.
 
 This script parses class docstrings and code annotations in `src/autosar/xml/` using AST,
 mapping each Python class to its corresponding AUTOSAR XML Schema (XSD) complexType,
-group, or enumeration. The results are saved to `dev_utils/.implementation_cache.json`.
+group, enumeration, and XML tag variants. The results are saved to `dev_utils/.implementation_cache.json`.
 
 Usage:
     python dev_utils/refresh_implementation.py
@@ -14,8 +14,9 @@ import ast
 import json
 import os
 import re
+import subprocess
 import sys
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 # Ensure UTF-8 output encoding across platforms
 if hasattr(sys.stdout, 'reconfigure'):
@@ -24,11 +25,109 @@ if hasattr(sys.stdout, 'reconfigure'):
     except (ValueError, OSError, AttributeError):
         pass
 
+DEFAULT_RELEASE_VERSION = "v0.5.6"
+
 
 def get_default_cache_path() -> str:
     """Return the absolute path to .implementation_cache.json in dev_utils."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(script_dir, ".implementation_cache.json")
+
+
+def _extract_category(raw_comment: str) -> str:
+    """Extract and format category name from a grouping comment line (e.g. '# --- Port interface elements').
+
+    Stops at the word 'element' or 'elements' (ignoring any subsequent text) and CamelCases preceding words.
+    """
+    text = raw_comment.lstrip('# -').strip()
+    parts = re.split(r'\belements?\b', text, flags=re.IGNORECASE)
+    before_elements = parts[0].strip()
+    words = re.findall(r'[A-Za-z0-9]+', before_elements)
+    category = ''.join(w.capitalize() for w in words)
+    return category or "CommonStructure"
+
+
+def _extract_tag_variants(doc: str) -> List[str]:
+    """Extract XML tag variant strings from class docstring supporting multi-line definitions."""
+    m = re.search(r"Tag [Vv]ariants?:\s*(.+)", doc, re.DOTALL)
+    if not m:
+        return []
+    rest = m.group(1)
+    lines = rest.splitlines()
+    variant_lines: List[str] = []
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            break
+        # Tag variant lines contain quotes or '|'
+        if "'" in stripped or '"' in stripped or "|" in stripped:
+            variant_lines.append(stripped)
+        else:
+            break
+
+    combined = " ".join(variant_lines)
+    # Extract all quoted strings
+    quoted = re.findall(r"['\"]([A-Z0-9\-_]+)['\"]", combined)
+    if quoted:
+        return quoted
+    # Fallback to split by |
+    parts = [p.strip(" '\"\t\r\n") for p in combined.split("|")]
+    return [p for p in parts if p]
+
+
+def _get_git_class_versions(repo_root: str) -> Dict[str, str]:
+    """Resolve earliest git release tag containing each class in element.py."""
+    git_tags = ['v0.5.0', 'v0.5.1', 'v0.5.2', 'v0.5.3', 'v0.5.4', 'v0.5.5', 'v0.5.6']
+    tag_classes: Dict[str, Set[str]] = {}
+
+    try:
+        raw_tags = subprocess.check_output(
+            ['git', 'tag', '-l', 'v0.5.*'],
+            cwd=repo_root,
+            encoding='utf-8',
+            errors='ignore'
+        ).splitlines()
+        if raw_tags:
+            # Sort version tags if needed
+            git_tags = [t.strip() for t in raw_tags if t.strip()]
+    except Exception:
+        pass
+
+    for t in git_tags:
+        try:
+            content = subprocess.check_output(
+                ['git', 'show', f'{t}:src/autosar/xml/element.py'],
+                cwd=repo_root,
+                encoding='utf-8',
+                errors='ignore'
+            )
+            classes = set(re.findall(r'^class\s+([A-Za-z0-9_]+)', content, flags=re.MULTILINE))
+            tag_classes[t] = classes
+        except Exception:
+            continue
+
+    return tag_classes, git_tags
+
+
+def _is_package_element(
+    class_name: str,
+    classes_bases: Dict[str, List[str]],
+    visited: Optional[Set[str]] = None
+) -> bool:
+    """Determine recursively if a class inherits from ARElement or CollectableElement."""
+    if visited is None:
+        visited = set()
+    if class_name in visited:
+        return False
+    visited.add(class_name)
+
+    if class_name in ('ARElement', 'CollectableElement'):
+        return True
+
+    for base in classes_bases.get(class_name, []):
+        if _is_package_element(base, classes_bases, visited):
+            return True
+    return False
 
 
 def _extract_subelements(class_lines: List[str]) -> Tuple[List[str], List[str], List[str]]:
@@ -82,13 +181,33 @@ def _extract_subelements(class_lines: List[str]) -> Tuple[List[str], List[str], 
     return implemented, unsupported, unimplemented
 
 
-def parse_element_file(filepath: str) -> Dict[str, Any]:
+def parse_element_file(filepath: str, repo_root: Optional[str] = None) -> Dict[str, Any]:
     """Parse src/autosar/xml/element.py and extract class definitions and docstring mappings."""
+    if repo_root is None:
+        repo_root = os.path.abspath(os.path.join(os.path.dirname(filepath), "..", "..", ".."))
+
     with open(filepath, "r", encoding="utf-8") as f:
         code = f.read()
 
     tree = ast.parse(code)
     lines = code.splitlines()
+
+    # Map line number to active section category
+    sec_by_line: Dict[int, str] = {}
+    curr_category = "CommonStructure"
+    for i, line in enumerate(lines, 1):
+        stripped = line.strip()
+        if stripped.startswith('# ---'):
+            curr_category = _extract_category(stripped)
+        sec_by_line[i] = curr_category
+
+    tag_classes, git_tags = _get_git_class_versions(repo_root)
+
+    # Collect class inheritance map
+    classes_bases: Dict[str, List[str]] = {}
+    for node in tree.body:
+        if isinstance(node, ast.ClassDef):
+            classes_bases[node.name] = [b.id for b in node.bases if isinstance(b, ast.Name)]
 
     classes: Dict[str, Any] = {}
     complex_types: Dict[str, str] = {}  # XSD complexType name -> Python class name
@@ -100,7 +219,7 @@ def parse_element_file(filepath: str) -> Dict[str, Any]:
             continue
 
         doc = ast.get_docstring(node) or ""
-        bases = [b.id for b in node.bases if isinstance(b, ast.Name)]
+        bases = classes_bases.get(node.name, [])
 
         # 1. Complex Type patterns in docstrings
         ct_matches = re.findall(
@@ -127,11 +246,8 @@ def parse_element_file(filepath: str) -> Dict[str, Any]:
         # 2. Group patterns in docstrings
         grp_matches = re.findall(r'Group\s+(?:AR:)?([A-Z0-9\-]+)', doc, re.IGNORECASE)
 
-        # 3. Tag variants: 'VAR1' | 'VAR2'
-        variants = []
-        tv_match = re.search(r'Tag [Vv]ariants:\s*([^\n]+)', doc)
-        if tv_match:
-            variants = [t.strip("'\" ") for t in tv_match.group(1).split('|')]
+        # 3. Tag variants
+        variants = _extract_tag_variants(doc)
 
         # 4. Constructor sub-element comments inspection
         start_line = node.lineno
@@ -140,6 +256,18 @@ def parse_element_file(filepath: str) -> Dict[str, Any]:
 
         implemented_subelements, unsupported_subelements, unimplemented_subelements = _extract_subelements(class_lines)
 
+        # 5. Category & Package Element status & Version
+        category = sec_by_line.get(node.lineno, "CommonStructure")
+        package_elem = _is_package_element(node.name, classes_bases)
+
+        since_ver = None
+        for t in git_tags:
+            if node.name in tag_classes.get(t, set()):
+                since_ver = t
+                break
+        if since_ver is None:
+            since_ver = git_tags[-1] if git_tags else DEFAULT_RELEASE_VERSION
+
         class_info = {
             "name": node.name,
             "line": node.lineno,
@@ -147,6 +275,9 @@ def parse_element_file(filepath: str) -> Dict[str, Any]:
             "complex_types": ct_matches,
             "groups": grp_matches,
             "tag_variants": variants,
+            "category": category,
+            "package_element": package_elem,
+            "since_version": since_ver,
             "implemented_subelements": implemented_subelements,
             "unsupported_subelements": unsupported_subelements,
             "unimplemented_subelements": unimplemented_subelements,
@@ -228,7 +359,7 @@ def refresh_cache(repo_root: Optional[str] = None, output_path: Optional[str] = 
         raise FileNotFoundError(f"Cannot find element.py at {element_py}")
 
     print(f"Scanning element.py ({element_py})...")
-    elem_data = parse_element_file(element_py)
+    elem_data = parse_element_file(element_py, repo_root=repo_root)
 
     enum_data: Dict[str, Any] = {"enums": {}, "type_to_enum": {}}
     if os.path.exists(enum_py):
@@ -256,6 +387,7 @@ def refresh_cache(repo_root: Optional[str] = None, output_path: Optional[str] = 
     print(f"  Classes in element.py:      {len(elem_data['classes'])}")
     print(f"  Mapped XML Complex Types:   {len(elem_data['complex_types'])}")
     print(f"  Mapped XML Groups:          {len(elem_data['groups'])}")
+    print(f"  Mapped Tag Variants:        {len(elem_data['tag_variants'])}")
     print(f"  Enumerations indexed:       {len(enum_data['enums'])}")
     print(f"  Mapped XML Enum Types:      {len(enum_data['type_to_enum'])}\n")
 

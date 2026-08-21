@@ -8,5 +8,4 @@ usage_tests/
 **/generated/*.xsd
 **/generated/validate_all.sh
 google_credentials.json
-wiki/
 .implementation_cache.json

@@ -1,0 +1,27 @@
+This is an index of currently implemented XML tags.
+
+Each Python class implements one complex type from the XML schema. Each complex type can represent one or more XML tags. The choice of XML tag depends on the element position in the XML tree (i.e. it depends on its parent XML element).
+
+The XML schema that is currently being implemented is `AUTOSAR_00051.xsd` from AUTOSAR release R22-11.
+
+There are some exceptions to the above rule:
+
+* On a few occasions, a Python class implements two complex types.
+* On one occasion a complex type has been split in two separate python classes (see `Subscript` and `Superscript`).
+
+Unfortunately, the column for the XSD complex type name couldn't fit the Wiki page formatting so I had to remove it.
+If you're interested you can find it in the class docstring of the referenced class in the `xml.element` module.
+
+The `Element Category` is just something I made up in order to categorize different elements into element groups.
+
+## Package Elements
+
+Package elements are XML elements that can be directly added to an AR-PACKAGE.
+
+{{ package_elements_table }}
+
+## Child elements
+
+Child elements are XML elements that in one way or another is a child element to one or more package elements.
+
+{{ child_elements_table }}
