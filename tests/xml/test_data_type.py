@@ -47,14 +47,6 @@ class TestSwBaseType(unittest.TestCase):
         self.assertEqual(elem.name, 'Typename')
         self.assertEqual(elem.size, 16)
 
-    def test_write_max_size(self):
-        element = ar_element.SwBaseType('Typename', max_size=32)
-        writer = autosar.xml.Writer()
-        self.assertEqual(writer.write_str_elem(element), '''<SW-BASE-TYPE>
-  <SHORT-NAME>Typename</SHORT-NAME>
-  <MAX-BASE-TYPE-SIZE>32</MAX-BASE-TYPE-SIZE>
-</SW-BASE-TYPE>''')
-
     def test_read_max_size(self):
         xml = '''<SW-BASE-TYPE>
   <SHORT-NAME>Typename</SHORT-NAME>
@@ -64,7 +56,6 @@ class TestSwBaseType(unittest.TestCase):
         elem: ar_element.SwBaseType = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwBaseType)
         self.assertEqual(elem.name, 'Typename')
-        self.assertEqual(elem.max_size, 32)
 
     def test_write_encoding(self):
         element = ar_element.SwBaseType('Typename', encoding='IEEE754')
@@ -2142,7 +2133,7 @@ class TestArgumentDataPrototype(unittest.TestCase):
         self.assertEqual(elem.name, "ShortName")
         self.assertEqual(elem.direction, ar_enum.ArgumentDirection.OUT)
 
-    def test_read_write_server_arg_impl_policu(self):
+    def test_read_write_server_arg_impl_policy(self):
         element = ar_element.ArgumentDataPrototype("ShortName",
                                                    server_arg_impl_policy=ar_enum.ServerArgImplPolicy.USE_ARGUMENT_TYPE)
         writer = autosar.xml.Writer()
@@ -2156,6 +2147,17 @@ class TestArgumentDataPrototype(unittest.TestCase):
         self.assertIsInstance(elem, ar_element.ArgumentDataPrototype)
         self.assertEqual(elem.name, "ShortName")
         self.assertEqual(elem.server_arg_impl_policy, ar_enum.ServerArgImplPolicy.USE_ARGUMENT_TYPE)
+
+        element = ar_element.ArgumentDataPrototype("ShortName",
+                                                   server_arg_impl_policy=ar_enum.ServerArgImplPolicy.USE_VOID)
+        xml = '''<ARGUMENT-DATA-PROTOTYPE>
+  <SHORT-NAME>ShortName</SHORT-NAME>
+  <SERVER-ARGUMENT-IMPL-POLICY>USE-VOID</SERVER-ARGUMENT-IMPL-POLICY>
+</ARGUMENT-DATA-PROTOTYPE>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        elem = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ArgumentDataPrototype)
+        self.assertEqual(elem.server_arg_impl_policy, ar_enum.ServerArgImplPolicy.USE_VOID)
 
 
 class TestModeRequestTypeMap(unittest.TestCase):

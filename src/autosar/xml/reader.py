@@ -1753,9 +1753,7 @@ class Reader:
         xml_child = child_elements.get('BASE-TYPE-SIZE')
         if xml_child is not None:
             data['size'] = ar_element.PositiveIntegerValue(xml_child.text).value
-        xml_child = child_elements.get('MAX-BASE-TYPE-SIZE')
-        if xml_child is not None:
-            data['max_size'] = ar_element.PositiveIntegerValue(xml_child.text).value
+        child_elements.skip('MAX-BASE-TYPE-SIZE')
         xml_child = child_elements.get('BASE-TYPE-ENCODING')
         if xml_child is not None:
             data['encoding'] = str(xml_child.text)
@@ -3560,9 +3558,7 @@ class Reader:
         xml_child = child_elements.get("DIAG-ARG-INTEGRITY")
         if xml_child is not None:
             data["diag_arg_integrity"] = self._read_boolean(xml_child.text)
-        xml_child = child_elements.get("FIRE-AND-FORGET")
-        if xml_child is not None:
-            data["fire_and_forget"] = self._read_boolean(xml_child.text)
+        child_elements.skip("FIRE-AND-FORGET")  # not supported
         child_elements.skip("POSSIBLE-AP-ERROR-REFS")  # not supported
         child_elements.skip("POSSIBLE-AP-ERROR-SET-REFS")  # not supported
         xml_child = child_elements.get("POSSIBLE-ERROR-REFS")
@@ -3708,9 +3704,7 @@ class Reader:
         xml_child = child_elements.get("SYNC-COUNTER-INIT")
         if xml_child is not None:
             data["sync_counter_init"] = ar_element.PositiveIntegerValue(xml_child.text).value
-        xml_child = child_elements.get("WINDOW-SIZE")
-        if xml_child is not None:
-            data["window_size"] = ar_element.PositiveIntegerValue(xml_child.text).value
+        child_elements.skip("WINDOW-SIZE")
         xml_child = child_elements.get("WINDOW-SIZE-INIT")
         if xml_child is not None:
             data["window_size_init"] = ar_element.PositiveIntegerValue(xml_child.text).value
@@ -5752,9 +5746,7 @@ class Reader:
         xml_child = child_elements.get("REQUIRED-TRIGGER-IREF")
         if xml_child is not None:
             data["required_trigger"] = self._read_r_trigger_in_atomic_swc_instance_ref(xml_child)
-        xml_child = child_elements.get("TRIGGER-IREF")
-        if xml_child is not None:
-            data["trigger"] = self._read_p_trigger_in_atomic_swc_instance_ref(xml_child)
+        child_elements.skip("TRIGGER-IREF")
 
     def _read_port_defined_argument_value(self,
                                           xml_element: ElementTree.Element

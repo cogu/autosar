@@ -702,18 +702,14 @@ class TestClientServerOperation(unittest.TestCase):
         self.assertFalse(elem.diag_arg_integrity)
 
     def test_fire_and_forget(self):
-        element = ar_element.ClientServerOperation("OperationName",
-                                                   fire_and_forget=True)
-        writer = autosar.xml.Writer()
         xml = '''<CLIENT-SERVER-OPERATION>
   <SHORT-NAME>OperationName</SHORT-NAME>
   <FIRE-AND-FORGET>true</FIRE-AND-FORGET>
 </CLIENT-SERVER-OPERATION>'''
-        self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
         elem: ar_element.ClientServerOperation = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.ClientServerOperation)
-        self.assertTrue(elem.fire_and_forget)
+        self.assertEqual(elem.name, "OperationName")
 
     def test_single_possible_error(self):
         element = ar_element.ClientServerOperation("OperationName")

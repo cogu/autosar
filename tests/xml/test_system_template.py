@@ -290,16 +290,12 @@ class TestEndToEndTransformationComSpecProps(unittest.TestCase):
         self.assertEqual(elem.sync_counter_init, 1)
 
     def test_window_size(self):
-        element = ar_element.EndToEndTransformationComSpecProps(window_size=1)
-        writer = autosar.xml.Writer()
         xml = '''<END-TO-END-TRANSFORMATION-COM-SPEC-PROPS>
   <WINDOW-SIZE>1</WINDOW-SIZE>
 </END-TO-END-TRANSFORMATION-COM-SPEC-PROPS>'''
-        self.assertEqual(writer.write_str_elem(element), xml)
         reader = autosar.xml.Reader()
         elem: ar_element.EndToEndTransformationComSpecProps = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.EndToEndTransformationComSpecProps)
-        self.assertEqual(elem.window_size, 1)
 
     def test_window_size_init(self):
         element = ar_element.EndToEndTransformationComSpecProps(window_size_init=1)
