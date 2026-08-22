@@ -7,10 +7,35 @@ import autosar.xml.element as ar_element
 from autosar.model import ImplementationModel
 import autosar.generator
 
+EXPECTED_HEADER = """#ifndef RTE_TYPE_H_
+#define RTE_TYPE_H_
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+/***********************************
+*             INCLUDES             *
+************************************/
+#include "Rte.h"
+
+/***********************************
+*     CONSTANTS AND DATA TYPES     *
+************************************/
+
+typedef uint8 InactiveActive_T;
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
+#endif // RTE_TYPE_H_
+"""
+
 
 def main():
     """
-    Create workspace and print type header to stdout
+    Create workspace and generate type header
     """
     workspace = autosar.xml.Workspace()
     packages = dict(zip(["BaseTypes", "ImplementationDataTypes"],
@@ -27,7 +52,8 @@ def main():
     implementation = ImplementationModel(workspace)
     implementation.create_from_element(inactive_active_t)
     type_generator = autosar.generator.TypeGenerator(implementation)
-    print(type_generator.write_type_header_str())
+    header_str = type_generator.write_type_header_str()
+    assert header_str == EXPECTED_HEADER, f"Generated header mismatch:\n{header_str}"
 
 
 if __name__ == "__main__":

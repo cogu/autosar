@@ -24,4 +24,5 @@ if __name__ == "__main__":
     reader = autosar.xml.Reader()
     document = reader.read_file(file_path)
     data_type = document.find('/BaseTypes/Typename')
-    print(f"{data_type.name}: {str(type(data_type))}")
+    assert isinstance(data_type, ar_element.SwBaseType)
+    assert data_type.name == 'Typename'

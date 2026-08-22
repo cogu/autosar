@@ -24,4 +24,5 @@ if __name__ == "__main__":
     reader = autosar.xml.Reader()
     document = reader.read_file(file_path)
     addr_method = document.find('/SwAddrMethod/DEFAULT')
-    print(f"{addr_method.name}: {str(type(addr_method))}")
+    assert isinstance(addr_method, ar_element.SwAddrMethod)
+    assert addr_method.name == 'DEFAULT'

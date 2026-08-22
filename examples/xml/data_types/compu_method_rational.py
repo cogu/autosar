@@ -31,4 +31,5 @@ if __name__ == "__main__":
     reader = autosar.xml.Reader()
     document = reader.read_file(file_path)
     compu_method = document.find('/CompuMethods/VehicleSpeed_T')
-    print(f"{compu_method.name}: {str(type(compu_method))}")
+    assert isinstance(compu_method, ar_element.CompuMethod)
+    assert compu_method.name == 'VehicleSpeed_T'

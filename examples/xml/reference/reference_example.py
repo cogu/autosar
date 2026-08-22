@@ -159,16 +159,16 @@ def save_xml_files(workspace: autosar.xml.Workspace):
     workspace.write_documents()
 
 
-def print_references(workspace: autosar.xml.Workspace):
-    """Print element reference strings from the workspace."""
-    data_Type = workspace.find_element("PlatformImplementationDataTypes", "uint16")
-    print(data_Type.ref())
+def check_references(workspace: autosar.xml.Workspace):
+    """Validate element reference strings from the workspace."""
+    data_type = workspace.find_element("PlatformImplementationDataTypes", "uint16")
+    assert str(data_type.ref()) == "/AUTOSAR_Platform/ImplementationDataTypes/uint16"
     port_interface = workspace.find_element("PortInterfaces", "VehicleSpeed_I")
-    print(port_interface.ref())
+    assert str(port_interface.ref()) == "/PortInterfaces/VehicleSpeed_I"
     constant = workspace.find_element("Constants", "EngineSpeed_IV")
-    print(constant.ref())
+    assert str(constant.ref()) == "/Constants/EngineSpeed_IV"
     swc = workspace.find_element("ComponentTypes", "SenderComponent")
-    print(swc.ref())
+    assert str(swc.ref()) == "/ComponentTypes/SenderComponent"
 
 
 def main():
@@ -183,7 +183,7 @@ def main():
     create_client_server_interfaces(workspace)
     create_constants(workspace)
     create_application_component(workspace)
-    print_references(workspace)
+    check_references(workspace)
 
 
 if __name__ == "__main__":

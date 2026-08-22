@@ -7,19 +7,19 @@ import autosar
 
 def main():
     """
-    Prints some admin-data fields from XML file
+    Reads and validates admin-data fields from XML file
     """
     file_path = os.path.join(os.path.dirname(__file__), 'data', 'swc_with_admin_data.arxml')
     reader = autosar.xml.Reader()
     document = reader.read_file(file_path)
     admin_data = document.find("/ComponentTypes/SWC").admin_data
-    for sdg in admin_data.sdgs:
-        print(f"GID = {sdg.gid}")
-        for sd in sdg.content:
-            if sd.gid is not None:
-                print(f"  GID = {sd.gid}, Value = {sd.text}")
-            else:
-                print(sd.text)
+    assert admin_data is not None
+    assert len(admin_data.sdgs) == 1
+    sdg = admin_data.sdgs[0]
+    assert sdg.gid == "Settings"
+    assert len(sdg.content) == 1
+    assert sdg.content[0].gid == "Enabled"
+    assert sdg.content[0].text == "true"
 
 
 if __name__ == "__main__":

@@ -26,4 +26,5 @@ if __name__ == "__main__":
     reader = autosar.xml.Reader()
     document = reader.read_file(file_path)
     unit = document.find('/Units/KmPerHour')
-    print(f"{unit.name}: {str(type(unit))}")
+    assert isinstance(unit, ar_element.Unit)
+    assert unit.name == 'KmPerHour'
