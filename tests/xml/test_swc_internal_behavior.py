@@ -282,6 +282,64 @@ class TestExclusiveAreaRefConditional(unittest.TestCase):
         self.assertEqual(str(elem.exclusive_area), ref_str)
 
 
+class TestExclusiveArea(unittest.TestCase):
+
+    def test_read_write(self):
+        element = ar_element.ExclusiveArea("Area1")
+        writer = autosar.xml.Writer()
+        xml = '''<EXCLUSIVE-AREA>
+  <SHORT-NAME>Area1</SHORT-NAME>
+</EXCLUSIVE-AREA>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ExclusiveArea = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ExclusiveArea)
+        self.assertEqual(elem.name, "Area1")
+
+
+class TestExclusiveAreaNestingOrder(unittest.TestCase):
+
+    def test_read_write_empty(self):
+        element = ar_element.ExclusiveAreaNestingOrder("Order1")
+        writer = autosar.xml.Writer()
+        xml = '''<EXCLUSIVE-AREA-NESTING-ORDER>
+  <SHORT-NAME>Order1</SHORT-NAME>
+</EXCLUSIVE-AREA-NESTING-ORDER>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ExclusiveAreaNestingOrder = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ExclusiveAreaNestingOrder)
+        self.assertEqual(elem.name, "Order1")
+        self.assertEqual(len(elem.exclusive_areas), 0)
+
+    def test_read_write_with_exclusive_areas(self):
+        ref1 = "/Swc/Behavior/Area1"
+        ref2 = "/Swc/Behavior/Area2"
+        element = ar_element.ExclusiveAreaNestingOrder("Order1", exclusive_areas=[ref1, ref2])
+        writer = autosar.xml.Writer()
+        xml = f'''<EXCLUSIVE-AREA-NESTING-ORDER>
+  <SHORT-NAME>Order1</SHORT-NAME>
+  <EXCLUSIVE-AREA-REFS>
+    <EXCLUSIVE-AREA-REF DEST="EXCLUSIVE-AREA">{ref1}</EXCLUSIVE-AREA-REF>
+    <EXCLUSIVE-AREA-REF DEST="EXCLUSIVE-AREA">{ref2}</EXCLUSIVE-AREA-REF>
+  </EXCLUSIVE-AREA-REFS>
+</EXCLUSIVE-AREA-NESTING-ORDER>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ExclusiveAreaNestingOrder = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ExclusiveAreaNestingOrder)
+        self.assertEqual(len(elem.exclusive_areas), 2)
+        self.assertEqual(str(elem.exclusive_areas[0]), ref1)
+        self.assertEqual(str(elem.exclusive_areas[1]), ref2)
+
+    def test_append_invalid_type(self):
+        element = ar_element.ExclusiveAreaNestingOrder("Order1")
+        with self.assertRaises(ar_except.ElementTypeError):
+            element.append(123)
+        with self.assertRaises(TypeError):
+            ar_element.ExclusiveAreaNestingOrder("Order1", exclusive_areas=123)
+
+
 class TestAsynchronousServerCallPoint(unittest.TestCase):
     """
     Also tests base classes ServerCallPoint and AbstractAccessPoint
@@ -3855,6 +3913,71 @@ class TestInternalBehavior(unittest.TestCase):
         element = ar_element.SwcInternalBehavior("MyName")
         with self.assertRaises(ar_except.ElementTypeError):
             element.append_exclusive_area("NotAnExclusiveArea")
+
+    def test_append_exclusive_area_nesting_order_invalid_type(self):
+        element = ar_element.SwcInternalBehavior("MyName")
+        with self.assertRaises(ar_except.ElementTypeError):
+            element.append_exclusive_area_nesting_order("NotAnOrder")
+
+    def test_exclusive_area_nesting_orders_from_element(self):
+        order = ar_element.ExclusiveAreaNestingOrder("Order1", exclusive_areas="/Swc/Area1")
+        element = ar_element.SwcInternalBehavior("MyName", exclusive_area_nesting_orders=order)
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <EXCLUSIVE-AREA-NESTING-ORDERS>
+    <EXCLUSIVE-AREA-NESTING-ORDER>
+      <SHORT-NAME>Order1</SHORT-NAME>
+      <EXCLUSIVE-AREA-REFS>
+        <EXCLUSIVE-AREA-REF DEST="EXCLUSIVE-AREA">/Swc/Area1</EXCLUSIVE-AREA-REF>
+      </EXCLUSIVE-AREA-REFS>
+    </EXCLUSIVE-AREA-NESTING-ORDER>
+  </EXCLUSIVE-AREA-NESTING-ORDERS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.exclusive_area_nesting_orders), 1)
+        order_elem = elem.exclusive_area_nesting_orders[0]
+        self.assertIsInstance(order_elem, ar_element.ExclusiveAreaNestingOrder)
+        self.assertEqual(order_elem.name, "Order1")
+        self.assertIs(order_elem.parent, elem)
+
+    def test_exclusive_area_nesting_orders_from_list(self):
+        order1 = ar_element.ExclusiveAreaNestingOrder("Order1")
+        order2 = ar_element.ExclusiveAreaNestingOrder("Order2")
+        element = ar_element.SwcInternalBehavior("MyName", exclusive_area_nesting_orders=[order1, order2])
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <EXCLUSIVE-AREA-NESTING-ORDERS>
+    <EXCLUSIVE-AREA-NESTING-ORDER>
+      <SHORT-NAME>Order1</SHORT-NAME>
+    </EXCLUSIVE-AREA-NESTING-ORDER>
+    <EXCLUSIVE-AREA-NESTING-ORDER>
+      <SHORT-NAME>Order2</SHORT-NAME>
+    </EXCLUSIVE-AREA-NESTING-ORDER>
+  </EXCLUSIVE-AREA-NESTING-ORDERS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.exclusive_area_nesting_orders), 2)
+        self.assertEqual(elem.exclusive_area_nesting_orders[0].name, "Order1")
+        self.assertEqual(elem.exclusive_area_nesting_orders[1].name, "Order2")
+        self.assertIs(elem.exclusive_area_nesting_orders[0].parent, elem)
+        self.assertIs(elem.exclusive_area_nesting_orders[1].parent, elem)
+
+    def test_create_exclusive_area_nesting_order(self):
+        element = ar_element.SwcInternalBehavior("MyName")
+        order = element.create_exclusive_area_nesting_order("Order1", exclusive_areas="/Swc/Area1")
+        self.assertIsInstance(order, ar_element.ExclusiveAreaNestingOrder)
+        self.assertEqual(order.name, "Order1")
+        self.assertIs(order.parent, element)
+        self.assertEqual(len(element.exclusive_area_nesting_orders), 1)
+        self.assertIs(element.exclusive_area_nesting_orders[0], order)
 
     def test_append_constant_value_mapping_invalid_type(self):
         element = ar_element.SwcInternalBehavior("MyName")

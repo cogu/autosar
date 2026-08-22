@@ -330,6 +330,8 @@ class Reader:
             'ACCESSED-VARIABLE': self._read_autosar_variable_ref,
             'VARIABLE-ACCESS': self._read_variable_access,
             'EXECUTABLE-ENTITY-ACTIVATION-REASON': self._read_executable_entity_activation_reason,
+            'EXCLUSIVE-AREA': self._read_exclusive_area,
+            'EXCLUSIVE-AREA-NESTING-ORDER': self._read_exclusive_area_nesting_order,
             'EXCLUSIVE-AREA-REF-CONDITIONAL': self._read_exclusive_area_ref_conditional,
             'DISABLED-MODE-IREF': self._read_r_mode_in_atomic_swc_instance_ref,
             'SWC-INTERNAL-BEHAVIOR': self._read_swc_internal_behavior,
@@ -6219,6 +6221,30 @@ class Reader:
         self._read_identifiable(child_elements, xml_element.attrib, data)
         return ar_element.ExclusiveArea(**data)
 
+    def _read_exclusive_area_nesting_order(self,
+                                           xml_element: ElementTree.Element
+                                           ) -> ar_element.ExclusiveAreaNestingOrder:
+        """
+        Reads complex type AR:EXCLUSIVE-AREA-NESTING-ORDER
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_exclusive_area_nesting_order_group(child_elements, data)
+        return ar_element.ExclusiveAreaNestingOrder(**data)
+
+    def _read_exclusive_area_nesting_order_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:EXCLUSIVE-AREA-NESTING-ORDER
+        """
+        xml_child = child_elements.get("EXCLUSIVE-AREA-REFS")
+        if xml_child is not None:
+            exclusive_areas = []
+            for xml_grand_child in xml_child.findall("./EXCLUSIVE-AREA-REF"):
+                exclusive_areas.append(self._read_exclusive_area_ref(xml_grand_child))
+            data["exclusive_areas"] = exclusive_areas
+
     def _read_swc_internal_behavior(self, xml_element: ElementTree.Element) -> ar_element.SwcInternalBehavior:
         """
         Reads complex type AR:SWC-INTERNAL-BEHAVIOR
@@ -6262,8 +6288,13 @@ class Reader:
             for xml_grand_child in xml_child.findall("./EXCLUSIVE-AREA"):
                 exclusive_areas.append(self._read_exclusive_area(xml_grand_child))
             data["exclusive_areas"] = exclusive_areas
+        xml_child = child_elements.get("EXCLUSIVE-AREA-NESTING-ORDERS")
+        if xml_child is not None:
+            exclusive_area_nesting_orders = []
+            for xml_grand_child in xml_child.findall("./EXCLUSIVE-AREA-NESTING-ORDER"):
+                exclusive_area_nesting_orders.append(self._read_exclusive_area_nesting_order(xml_grand_child))
+            data["exclusive_area_nesting_orders"] = exclusive_area_nesting_orders
 
-        child_elements.skip("EXCLUSIVE-AREA-NESTING-ORDERS")
         child_elements.skip("STATIC-MEMORYS")
 
     def _read_swc_internal_behavior_group(self, child_elements: ChildElementMap, data: dict) -> None:

@@ -23,6 +23,10 @@ Non-collectable elements are various sub-elements to collectable elements.
 * RuleBasedValueCont | RULE-BASED-VALUE-CONT
 * RuleBasedValueSpecification | RULE-BASED-VALUE-SPECIFICATION
 
+#### XML - SWC internal behavior elements
+
+* ExclusiveAreaNestingOrder | EXCLUSIVE-AREA-NESTING-ORDER
+
 #### Developer Utilities (`dev_utils`)
 
 * Added a new collection of scripts for repo developers

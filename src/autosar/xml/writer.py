@@ -386,6 +386,8 @@ class Writer(_XMLWriter):
             'AutosarVariableRef': self._write_autosar_variable_ref,
             'VariableAccess': self._write_variable_access,
             'SwcInternalBehavior': self._write_swc_internal_behavior,
+            'ExclusiveArea': self._write_exclusive_area,
+            'ExclusiveAreaNestingOrder': self._write_exclusive_area_nesting_order,
             'ExecutableEntityActivationReason': self._write_executable_entity_activation_reason,
             'ExclusiveAreaRefConditional': self._write_exclusive_area_ref_conditional,
             'RunnableEntityArgument': self._write_runnable_entity_argument,
@@ -5416,6 +5418,26 @@ class Writer(_XMLWriter):
         self._write_identifiable(elem)
         self._leave_child()
 
+    def _write_exclusive_area_nesting_order(self, elem: ar_element.ExclusiveAreaNestingOrder) -> None:
+        """
+        Writes complex type AR:EXCLUSIVE-AREA-NESTING-ORDER
+        Multi-tagged: False
+        """
+        self._add_child("EXCLUSIVE-AREA-NESTING-ORDER")
+        self._write_referrable(elem)
+        self._write_exclusive_area_nesting_order_group(elem)
+        self._leave_child()
+
+    def _write_exclusive_area_nesting_order_group(self, elem: ar_element.ExclusiveAreaNestingOrder) -> None:
+        """
+        Writes group AR:EXCLUSIVE-AREA-NESTING-ORDER
+        """
+        if elem.exclusive_areas:
+            self._add_child("EXCLUSIVE-AREA-REFS")
+            for ref in elem.exclusive_areas:
+                self._write_exclusive_area_ref(ref, "EXCLUSIVE-AREA-REF")
+            self._leave_child()
+
     def _write_swc_internal_behavior(self, elem: ar_element.SwcInternalBehavior) -> None:
         """
         Writes complex type AR:SWC-INTERNAL-BEHAVIOR
@@ -5452,6 +5474,11 @@ class Writer(_XMLWriter):
             self._add_child("EXCLUSIVE-AREAS")
             for exclusive_area in elem.exclusive_areas:
                 self._write_exclusive_area(exclusive_area)
+            self._leave_child()
+        if elem.exclusive_area_nesting_orders:
+            self._add_child("EXCLUSIVE-AREA-NESTING-ORDERS")
+            for order in elem.exclusive_area_nesting_orders:
+                self._write_exclusive_area_nesting_order(order)
             self._leave_child()
 
     def _write_swc_internal_behavior_group(self, elem: ar_element.SwcInternalBehavior) -> None:
