@@ -8991,30 +8991,30 @@ class ExclusiveAreaNestingOrder(Referrable):
 
     def __init__(self,
                  name: str,
-                 exclusive_areas: (ExclusiveAreaRef | list[ExclusiveAreaRef] |
-                                   str | list[str] | None) = None,
+                 exclusive_area: (ExclusiveAreaRef | list[ExclusiveAreaRef] |
+                                  str | list[str] | None) = None,
                  **kwargs: dict) -> None:
         super().__init__(name, **kwargs)
         # .EXCLUSIVE-AREA-REFS
-        self.exclusive_areas: list[ExclusiveAreaRef] = []
+        self.exclusive_area: list[ExclusiveAreaRef] = []
 
-        if exclusive_areas is not None:
-            if isinstance(exclusive_areas, (ExclusiveAreaRef, str)):
-                self.append(exclusive_areas)
-            elif isinstance(exclusive_areas, Iterable):
-                for item in exclusive_areas:
+        if exclusive_area is not None:
+            if isinstance(exclusive_area, (ExclusiveAreaRef, str)):
+                self.append(exclusive_area)
+            elif isinstance(exclusive_area, Iterable):
+                for item in exclusive_area:
                     self.append(item)
             else:
-                raise TypeError(f"exclusive_areas: Invalid type {str(type(exclusive_areas))}")
+                raise TypeError(f"exclusive_area: Invalid type {str(type(exclusive_area))}")
 
     def append(self, exclusive_area: ExclusiveAreaRef | str) -> None:
         """
         Adds ExclusiveAreaRef to internal list
         """
         if isinstance(exclusive_area, str):
-            self.exclusive_areas.append(ExclusiveAreaRef(exclusive_area))
+            self.exclusive_area.append(ExclusiveAreaRef(exclusive_area))
         elif isinstance(exclusive_area, ExclusiveAreaRef):
-            self.exclusive_areas.append(exclusive_area)
+            self.exclusive_area.append(exclusive_area)
         else:
             raise ar_except.ElementTypeError("exclusive_area", ("ExclusiveAreaRef", "str"), exclusive_area)
 
@@ -9052,25 +9052,25 @@ class InternalBehavior(Identifiable):
     def __init__(self,
                  name: str,
                  constant_memory: ParameterDataPrototype | list[ParameterDataPrototype] | None = None,
-                 constant_value_mappings: (str | ConstantSpecificationMappingSetRef |
-                                           list[ConstantSpecificationMappingSetRef] | None) = None,
-                 data_type_mappings: str | DataTypeMappingSetRef | list[DataTypeMappingSetRef] | None = None,
-                 exclusive_areas: ExclusiveArea | list[ExclusiveArea] | None = None,
-                 exclusive_area_nesting_orders: (ExclusiveAreaNestingOrder |
-                                                 list[ExclusiveAreaNestingOrder] | None) = None,
+                 constant_value_mapping: (str | ConstantSpecificationMappingSetRef |
+                                          list[ConstantSpecificationMappingSetRef] | None) = None,
+                 data_type_mapping: str | DataTypeMappingSetRef | list[DataTypeMappingSetRef] | None = None,
+                 exclusive_area: ExclusiveArea | list[ExclusiveArea] | None = None,
+                 exclusive_area_nesting_order: (ExclusiveAreaNestingOrder |
+                                                list[ExclusiveAreaNestingOrder] | None) = None,
                  static_memory: VariableDataPrototype | list[VariableDataPrototype] | None = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
         # .CONSTANT-MEMORYS
         self.constant_memory: list[ParameterDataPrototype] = []
         # .CONSTANT-VALUE-MAPPING-REFS
-        self.constant_value_mappings: list[ConstantSpecificationMappingSetRef] = []
+        self.constant_value_mapping: list[ConstantSpecificationMappingSetRef] = []
         # .DATA-TYPE-MAPPING-REFS
-        self.data_type_mappings: list[DataTypeMappingSetRef] = []
+        self.data_type_mapping: list[DataTypeMappingSetRef] = []
         # .EXCLUSIVE-AREAS
-        self.exclusive_areas: list[ExclusiveArea] = []
+        self.exclusive_area: list[ExclusiveArea] = []
         # .EXCLUSIVE-AREA-NESTING-ORDERS
-        self.exclusive_area_nesting_orders: list[ExclusiveAreaNestingOrder] = []
+        self.exclusive_area_nesting_order: list[ExclusiveAreaNestingOrder] = []
         # .STATIC-MEMORYS
         self.static_memory: list[VariableDataPrototype] = []
 
@@ -9080,34 +9080,34 @@ class InternalBehavior(Identifiable):
                     self.append_constant_memory(item)
             else:
                 self.append_constant_memory(constant_memory)
-        if constant_value_mappings is not None:
-            if isinstance(constant_value_mappings, str):
-                constant_value_mappings = ConstantSpecificationMappingSetRef(constant_value_mappings)
-            if isinstance(constant_value_mappings, Iterable):
-                for mapping_set in constant_value_mappings:
+        if constant_value_mapping is not None:
+            if isinstance(constant_value_mapping, str):
+                constant_value_mapping = ConstantSpecificationMappingSetRef(constant_value_mapping)
+            if isinstance(constant_value_mapping, Iterable):
+                for mapping_set in constant_value_mapping:
                     self.append_constant_value_mapping(mapping_set)
             else:
-                self.append_constant_value_mapping(constant_value_mappings)
-        if data_type_mappings is not None:
-            if isinstance(data_type_mappings, str):
-                data_type_mappings = DataTypeMappingSetRef(data_type_mappings)
-            if isinstance(data_type_mappings, Iterable):
-                for mapping_set in data_type_mappings:
+                self.append_constant_value_mapping(constant_value_mapping)
+        if data_type_mapping is not None:
+            if isinstance(data_type_mapping, str):
+                data_type_mapping = DataTypeMappingSetRef(data_type_mapping)
+            if isinstance(data_type_mapping, Iterable):
+                for mapping_set in data_type_mapping:
                     self.append_data_type_mapping(mapping_set)
             else:
-                self.append_data_type_mapping(data_type_mappings)
-        if exclusive_areas is not None:
-            if isinstance(exclusive_areas, Iterable):
-                for exclusive_area in exclusive_areas:
-                    self.append_exclusive_area(exclusive_area)
+                self.append_data_type_mapping(data_type_mapping)
+        if exclusive_area is not None:
+            if isinstance(exclusive_area, Iterable):
+                for item in exclusive_area:
+                    self.append_exclusive_area(item)
             else:
-                self.append_exclusive_area(exclusive_areas)
-        if exclusive_area_nesting_orders is not None:
-            if isinstance(exclusive_area_nesting_orders, Iterable):
-                for order in exclusive_area_nesting_orders:
+                self.append_exclusive_area(exclusive_area)
+        if exclusive_area_nesting_order is not None:
+            if isinstance(exclusive_area_nesting_order, Iterable):
+                for order in exclusive_area_nesting_order:
                     self.append_exclusive_area_nesting_order(order)
             else:
-                self.append_exclusive_area_nesting_order(exclusive_area_nesting_orders)
+                self.append_exclusive_area_nesting_order(exclusive_area_nesting_order)
         if static_memory is not None:
             if isinstance(static_memory, Iterable):
                 for item in static_memory:
@@ -9151,13 +9151,13 @@ class InternalBehavior(Identifiable):
     @convenience_function
     def create_exclusive_area_nesting_order(self,
                                             name: str,
-                                            exclusive_areas: (ExclusiveAreaRef | list[ExclusiveAreaRef] |
-                                                              str | list[str] | None) = None,
+                                            exclusive_area: (ExclusiveAreaRef | list[ExclusiveAreaRef] |
+                                                             str | list[str] | None) = None,
                                             **kwargs) -> ExclusiveAreaNestingOrder:
         """
         Adds a new ExclusiveAreaNestingOrder to this object
         """
-        order = ExclusiveAreaNestingOrder(name, exclusive_areas, **kwargs)
+        order = ExclusiveAreaNestingOrder(name, exclusive_area, **kwargs)
         self.append_exclusive_area_nesting_order(order)
         return order
 
@@ -9183,38 +9183,38 @@ class InternalBehavior(Identifiable):
 
     def append_constant_value_mapping(self, mapping_set: ConstantSpecificationMappingSetRef) -> None:
         """
-        Appends ConstantSpecificationMappingSetRef to constant_value_mappings
+        Appends ConstantSpecificationMappingSetRef to constant_value_mapping
         """
         if isinstance(mapping_set, ConstantSpecificationMappingSetRef):
-            self.constant_value_mappings.append(mapping_set)
+            self.constant_value_mapping.append(mapping_set)
         else:
             raise ar_except.ElementTypeError("mapping_set", ConstantSpecificationMappingSetRef, mapping_set)
 
     def append_data_type_mapping(self, mapping_set: DataTypeMappingSetRef) -> None:
         """
-        Appends DataTypeMappingSetRef to data_type_mappings
+        Appends DataTypeMappingSetRef to data_type_mapping
         """
         if isinstance(mapping_set, DataTypeMappingSetRef):
-            self.data_type_mappings.append(mapping_set)
+            self.data_type_mapping.append(mapping_set)
         else:
             raise ar_except.ElementTypeError("mapping_set", DataTypeMappingSetRef, mapping_set)
 
     def append_exclusive_area(self, exclusive_area: ExclusiveArea) -> None:
         """
-        Appends ExclusiveArea to exclusive_areas
+        Appends ExclusiveArea to exclusive_area
         """
         if isinstance(exclusive_area, ExclusiveArea):
-            self.exclusive_areas.append(exclusive_area)
+            self.exclusive_area.append(exclusive_area)
             exclusive_area.parent = self
         else:
             raise ar_except.ElementTypeError("exclusive_area", ExclusiveArea, exclusive_area)
 
     def append_exclusive_area_nesting_order(self, item: ExclusiveAreaNestingOrder) -> None:
         """
-        Appends ExclusiveAreaNestingOrder to exclusive_area_nesting_orders
+        Appends ExclusiveAreaNestingOrder to exclusive_area_nesting_order
         """
         if isinstance(item, ExclusiveAreaNestingOrder):
-            self.exclusive_area_nesting_orders.append(item)
+            self.exclusive_area_nesting_order.append(item)
             item.parent = self
         else:
             raise ar_except.ElementTypeError("item", ExclusiveAreaNestingOrder, item)
@@ -9233,39 +9233,39 @@ class SwcInternalBehavior(InternalBehavior):
                  name: str,
                  ar_typed_per_instance_memory: (VariableDataPrototype |
                                                 list[VariableDataPrototype] | None) = None,
-                 events: RteEvent | list[RteEvent] | None = None,
-                 exclusive_area_policies: (SwcExclusiveAreaPolicy |
-                                           list[SwcExclusiveAreaPolicy] | None) = None,
-                 explicit_inter_runnable_variables: (VariableDataPrototype |
-                                                     list[VariableDataPrototype] | None) = None,
+                 event: RteEvent | list[RteEvent] | None = None,
+                 exclusive_area_policy: (SwcExclusiveAreaPolicy |
+                                         list[SwcExclusiveAreaPolicy] | None) = None,
+                 explicit_inter_runnable_variable: (VariableDataPrototype |
+                                                    list[VariableDataPrototype] | None) = None,
                  handle_termination_and_restart: ar_enum.HandleTerminationAndRestart | None = None,
-                 implicit_inter_runnable_variables: (VariableDataPrototype |
-                                                     list[VariableDataPrototype] | None) = None,
-                 runnables: RunnableEntity | list[RunnableEntity] | None = None,
-                 port_api_options: PortApiOption | list[PortApiOption] | None = None,
+                 implicit_inter_runnable_variable: (VariableDataPrototype |
+                                                    list[VariableDataPrototype] | None) = None,
+                 port_api_option: PortApiOption | list[PortApiOption] | None = None,
+                 runnable: RunnableEntity | list[RunnableEntity] | None = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
         # .AR-TYPED-PER-INSTANCE-MEMORYS
         self.ar_typed_per_instance_memory: list[VariableDataPrototype] = []
         # .EVENTS
-        self.events: list[RteEvent] = []
+        self.event: list[RteEvent] = []
         # .EXCLUSIVE-AREA-POLICYS
-        self.exclusive_area_policies: list[SwcExclusiveAreaPolicy] = []
+        self.exclusive_area_policy: list[SwcExclusiveAreaPolicy] = []
         # .EXPLICIT-INTER-RUNNABLE-VARIABLES
-        self.explicit_inter_runnable_variables: list[VariableDataPrototype] = []
+        self.explicit_inter_runnable_variable: list[VariableDataPrototype] = []
         # .HANDLE-TERMINATION-AND-RESTART
         self.handle_termination_and_restart: ar_enum.HandleTerminationAndRestart | None = None
         # .IMPLICIT-INTER-RUNNABLE-VARIABLES
-        self.implicit_inter_runnable_variables: list[VariableDataPrototype] = []
+        self.implicit_inter_runnable_variable: list[VariableDataPrototype] = []
         # .INCLUDED-DATA-TYPE-SETS (not yet implemented)
         # .INCLUDED-MODE-DECLARATION-GROUP-SETS (not yet implemented)
         # .INSTANTIATION-DATA-DEF-PROPSS (not yet implemented)
         # .PER-INSTANCE-MEMORYS (not yet implemented)
         # .PER-INSTANCE-PARAMETERS (not yet implemented)
         # .PORT-API-OPTIONS
-        self.port_api_options: OrderedDict[PortApiOption] = OrderedDict()
+        self.port_api_option: OrderedDict[PortApiOption] = OrderedDict()
         # .RUNNABLES
-        self.runnables: list[RunnableEntity] = []
+        self.runnable: list[RunnableEntity] = []
         # .SERVICE-DEPENDENCYS (not yet implemented)
         # .SHARED-PARAMETERS (not yet implemented)
         # .SUPPORTS-MULTIPLE-INSTANTIATION (not yet implemented)
@@ -9283,47 +9283,47 @@ class SwcInternalBehavior(InternalBehavior):
             else:
                 self.append_ar_typed_per_instance_memory(ar_typed_per_instance_memory)
 
-        if events is not None:
-            if isinstance(events, Iterable):
-                for event in events:
-                    self.append_event(event)
+        if event is not None:
+            if isinstance(event, Iterable):
+                for item in event:
+                    self.append_event(item)
             else:
-                self.append_event(events)
+                self.append_event(event)
 
-        if exclusive_area_policies is not None:
-            if isinstance(exclusive_area_policies, Iterable):
-                for policy in exclusive_area_policies:
-                    self.append_exclusive_area_policy(policy)
+        if exclusive_area_policy is not None:
+            if isinstance(exclusive_area_policy, Iterable):
+                for item in exclusive_area_policy:
+                    self.append_exclusive_area_policy(item)
             else:
-                self.append_exclusive_area_policy(exclusive_area_policies)
+                self.append_exclusive_area_policy(exclusive_area_policy)
 
-        if explicit_inter_runnable_variables is not None:
-            if isinstance(explicit_inter_runnable_variables, Iterable):
-                for item in explicit_inter_runnable_variables:
+        if explicit_inter_runnable_variable is not None:
+            if isinstance(explicit_inter_runnable_variable, Iterable):
+                for item in explicit_inter_runnable_variable:
                     self.append_explicit_inter_runnable_variable(item)
             else:
-                self.append_explicit_inter_runnable_variable(explicit_inter_runnable_variables)
+                self.append_explicit_inter_runnable_variable(explicit_inter_runnable_variable)
 
-        if implicit_inter_runnable_variables is not None:
-            if isinstance(implicit_inter_runnable_variables, Iterable):
-                for item in implicit_inter_runnable_variables:
+        if implicit_inter_runnable_variable is not None:
+            if isinstance(implicit_inter_runnable_variable, Iterable):
+                for item in implicit_inter_runnable_variable:
                     self.append_implicit_inter_runnable_variable(item)
             else:
-                self.append_implicit_inter_runnable_variable(implicit_inter_runnable_variables)
+                self.append_implicit_inter_runnable_variable(implicit_inter_runnable_variable)
 
-        if runnables is not None:
-            if isinstance(runnables, Iterable):
-                for runnable in runnables:
-                    self.append_runnable(runnable)
+        if port_api_option is not None:
+            if isinstance(port_api_option, Iterable):
+                for item in port_api_option:
+                    self.append_port_api_option(item)
             else:
-                self.append_runnable(runnables)
+                self.append_port_api_option(port_api_option)
 
-        if port_api_options is not None:
-            if isinstance(port_api_options, Iterable):
-                for port_api_option in port_api_options:
-                    self.append_port_api_option(port_api_option)
+        if runnable is not None:
+            if isinstance(runnable, Iterable):
+                for item in runnable:
+                    self.append_runnable(item)
             else:
-                self.append_port_api_option(port_api_options)
+                self.append_runnable(runnable)
 
     def get_valid_parent(self) -> SwComponentType:
         """
@@ -9381,7 +9381,7 @@ class SwcInternalBehavior(InternalBehavior):
                                                 init_value: ValueSpecificationElement | None = None,
                                                 **kwargs) -> VariableDataPrototype:
         """
-        Adds a new VariableDataPrototype to explicit_inter_runnable_variables
+        Adds a new VariableDataPrototype to explicit_inter_runnable_variable
         """
         item = VariableDataPrototype(name, init_value, **kwargs)
         self.append_explicit_inter_runnable_variable(item)
@@ -9389,10 +9389,10 @@ class SwcInternalBehavior(InternalBehavior):
 
     def append_explicit_inter_runnable_variable(self, item: VariableDataPrototype) -> None:
         """
-        Appends VariableDataPrototype to explicit_inter_runnable_variables
+        Appends VariableDataPrototype to explicit_inter_runnable_variable
         """
         if isinstance(item, VariableDataPrototype):
-            self.explicit_inter_runnable_variables.append(item)
+            self.explicit_inter_runnable_variable.append(item)
             item.parent = self
         else:
             raise ar_except.ElementTypeError("item", VariableDataPrototype, item)
@@ -9403,7 +9403,7 @@ class SwcInternalBehavior(InternalBehavior):
                                                 init_value: ValueSpecificationElement | None = None,
                                                 **kwargs) -> VariableDataPrototype:
         """
-        Adds a new VariableDataPrototype to implicit_inter_runnable_variables
+        Adds a new VariableDataPrototype to implicit_inter_runnable_variable
         """
         item = VariableDataPrototype(name, init_value, **kwargs)
         self.append_implicit_inter_runnable_variable(item)
@@ -9411,10 +9411,10 @@ class SwcInternalBehavior(InternalBehavior):
 
     def append_implicit_inter_runnable_variable(self, item: VariableDataPrototype) -> None:
         """
-        Appends VariableDataPrototype to implicit_inter_runnable_variables
+        Appends VariableDataPrototype to implicit_inter_runnable_variable
         """
         if isinstance(item, VariableDataPrototype):
-            self.implicit_inter_runnable_variables.append(item)
+            self.implicit_inter_runnable_variable.append(item)
             item.parent = self
         else:
             raise ar_except.ElementTypeError("item", VariableDataPrototype, item)
@@ -9425,7 +9425,7 @@ class SwcInternalBehavior(InternalBehavior):
                                      api_principle: ar_enum.ApiPrinciple | str | None = None
                                      ) -> SwcExclusiveAreaPolicy:
         """
-        Adds a new SwcExclusiveAreaPolicy to exclusive_area_policies
+        Adds a new SwcExclusiveAreaPolicy to exclusive_area_policy
         """
         policy = SwcExclusiveAreaPolicy(exclusive_area, api_principle)
         self.append_exclusive_area_policy(policy)
@@ -9433,10 +9433,10 @@ class SwcInternalBehavior(InternalBehavior):
 
     def append_exclusive_area_policy(self, item: SwcExclusiveAreaPolicy) -> None:
         """
-        Appends SwcExclusiveAreaPolicy to exclusive_area_policies
+        Appends SwcExclusiveAreaPolicy to exclusive_area_policy
         """
         if isinstance(item, SwcExclusiveAreaPolicy):
-            self.exclusive_area_policies.append(item)
+            self.exclusive_area_policy.append(item)
         else:
             raise ar_except.ElementTypeError("item", SwcExclusiveAreaPolicy, item)
 
@@ -9446,7 +9446,7 @@ class SwcInternalBehavior(InternalBehavior):
         """
         if isinstance(runnable, RunnableEntity):
             runnable.parent = self
-            self.runnables.append(runnable)
+            self.runnable.append(runnable)
         else:
             raise TypeError(f"runnable must be of type RunnableEntity. Got {str(type(runnable))}")
 
@@ -9456,7 +9456,7 @@ class SwcInternalBehavior(InternalBehavior):
         """
         if isinstance(event, RteEvent):
             event.parent = self
-            self.events.append(event)
+            self.event.append(event)
         else:
             raise TypeError(f"event must derive from RteEvent. Got {str(type(event))}")
 
@@ -9467,7 +9467,7 @@ class SwcInternalBehavior(InternalBehavior):
         if isinstance(element, PortApiOption):
             if element.port is not None:
                 parts = str(element.port).split("/")
-                self.port_api_options[parts[-1]] = element
+                self.port_api_option[parts[-1]] = element
         else:
             raise TypeError(f"element: Expected type PortApiOption, got '{str(type(element))}'")
 
@@ -9506,7 +9506,7 @@ class SwcInternalBehavior(InternalBehavior):
                         names[elem] = False
             if names:
                 exclusive_area_refs: ExclusiveAreaRef = []
-                for area in self.exclusive_areas:
+                for area in self.exclusive_area:
                     if area.name in names:
                         names[area.name] = True  # Marks it as handled
                         exclusive_area_refs.append(area.ref())
@@ -9536,7 +9536,7 @@ class SwcInternalBehavior(InternalBehavior):
         """
         Find runnable by name. Returns None if no runnable is found.
         """
-        for runnable in self.runnables:
+        for runnable in self.runnable:
             if runnable.name == name:
                 return runnable
         return None
@@ -9548,7 +9548,7 @@ class SwcInternalBehavior(InternalBehavior):
         Calling this function could potentially invalidate existing event references.
         Note: Not yet implemented
         """
-        return make_unique_name_in_list(self.events, event_name)
+        return make_unique_name_in_list(self.event, event_name)
 
     @convenience_function
     def create_background_event(self,
@@ -10023,7 +10023,7 @@ class SwcInternalBehavior(InternalBehavior):
         """
         Helper function for create_internal_trigger_event
         """
-        for runnable in self.runnables:
+        for runnable in self.runnable:
             for trigger_point in runnable.internal_triggering_point:
                 if trigger_point.name == trigger_point_name:
                     return trigger_point.ref()
@@ -10040,7 +10040,7 @@ class SwcInternalBehavior(InternalBehavior):
                                 transformer_status_forwarding: ar_enum.DataTransformationStatusForwarding | None = None
                                 ) -> None:
         """
-        Creates and adds new port-api-options to this SwcInternalBehavior object
+        Creates and adds new PortApiOptions to this SwcInternalBehavior object
 
         port_name: Name of the port to create options for. It can also be a list of names in case you want to use
                    identical options for multiple ports.

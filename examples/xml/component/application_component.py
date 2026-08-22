@@ -157,7 +157,7 @@ def create_application_component(workspace: autosar.xml.Workspace):
 
     # Adding port API options
     behavior.create_port_api_options("*", enable_take_address=False, indirect_api=False)
-    behavior.port_api_options["VehicleSpeed"].enable_take_address = True
+    behavior.port_api_option["VehicleSpeed"].enable_take_address = True
 
     # Create SWC Implementation object
     impl = ar_element.SwcImplementation("SenderComponent_Implementation", behavior_ref=swc.internal_behavior.ref())

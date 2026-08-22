@@ -104,11 +104,11 @@ def create_application_component(workspace: autosar.xml.Workspace):
     # Create Port API options
     # The recomended way to create port API options is to first create a set of default options
     # for all ports using the wildcard (*) port name.
-    # Once that's done you can modify individual options by accessing behavior.port_api_options as a
+    # Once that's done you can modify individual options by accessing behavior.port_api_option as a
     # dictionary as shown below.
     behavior.create_port_api_options("*", enable_take_address=False, indirect_api=False)
-    behavior.port_api_options["MyReceivePort"].enable_take_address = True
-    behavior.port_api_options["MySendPort"].enable_take_address = True
+    behavior.port_api_option["MyReceivePort"].enable_take_address = True
+    behavior.port_api_option["MySendPort"].enable_take_address = True
 
 
 def save_xml_files(workspace: autosar.xml.Workspace):
