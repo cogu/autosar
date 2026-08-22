@@ -3856,7 +3856,74 @@ class TestInternalBehavior(unittest.TestCase):
         with self.assertRaises(ar_except.ElementTypeError):
             element.append_exclusive_area("NotAnExclusiveArea")
 
-    # IMPLEMENT LATER: CONSTANT-VALUE-MAPPING-REFS
+    def test_append_constant_value_mapping_invalid_type(self):
+        element = ar_element.SwcInternalBehavior("MyName")
+        with self.assertRaises(ar_except.ElementTypeError):
+            element.append_constant_value_mapping(123)
+
+    def test_constant_value_mapping_refs_from_str(self):
+        dest_str = "CONSTANT-SPECIFICATION-MAPPING-SET"
+        ref_str = "/Constants/Mappings/MyMapping"
+        element = ar_element.SwcInternalBehavior("MyName", constant_value_mappings=ref_str)
+        xml = f'''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <CONSTANT-VALUE-MAPPING-REFS>
+    <CONSTANT-VALUE-MAPPING-REF DEST="{dest_str}">{ref_str}</CONSTANT-VALUE-MAPPING-REF>
+  </CONSTANT-VALUE-MAPPING-REFS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.constant_value_mappings), 1)
+        mapping_set = elem.constant_value_mappings[0]
+        self.assertIsInstance(mapping_set, ar_element.ConstantSpecificationMappingSetRef)
+        self.assertEqual(str(mapping_set), ref_str)
+
+    def test_constant_value_mapping_refs_from_element(self):
+        dest_str = "CONSTANT-SPECIFICATION-MAPPING-SET"
+        ref_str = "/Constants/Mappings/MyMapping"
+        mapping_set_ref = ar_element.ConstantSpecificationMappingSetRef(ref_str)
+        element = ar_element.SwcInternalBehavior("MyName", constant_value_mappings=mapping_set_ref)
+        xml = f'''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <CONSTANT-VALUE-MAPPING-REFS>
+    <CONSTANT-VALUE-MAPPING-REF DEST="{dest_str}">{ref_str}</CONSTANT-VALUE-MAPPING-REF>
+  </CONSTANT-VALUE-MAPPING-REFS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.constant_value_mappings), 1)
+        mapping_set = elem.constant_value_mappings[0]
+        self.assertIsInstance(mapping_set, ar_element.ConstantSpecificationMappingSetRef)
+        self.assertEqual(str(mapping_set), ref_str)
+
+    def test_constant_value_mapping_refs_from_list(self):
+        dest_str = "CONSTANT-SPECIFICATION-MAPPING-SET"
+        ref_str1 = "/Constants/Mappings/MyMapping1"
+        ref_str2 = "/Constants/Mappings/MyMapping2"
+        mapping_set_ref1 = ar_element.ConstantSpecificationMappingSetRef(ref_str1)
+        mapping_set_ref2 = ar_element.ConstantSpecificationMappingSetRef(ref_str2)
+        element = ar_element.SwcInternalBehavior("MyName", constant_value_mappings=[mapping_set_ref1, mapping_set_ref2])
+        xml = f'''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <CONSTANT-VALUE-MAPPING-REFS>
+    <CONSTANT-VALUE-MAPPING-REF DEST="{dest_str}">{ref_str1}</CONSTANT-VALUE-MAPPING-REF>
+    <CONSTANT-VALUE-MAPPING-REF DEST="{dest_str}">{ref_str2}</CONSTANT-VALUE-MAPPING-REF>
+  </CONSTANT-VALUE-MAPPING-REFS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.constant_value_mappings), 2)
+        self.assertEqual(str(elem.constant_value_mappings[0]), ref_str1)
+        self.assertEqual(str(elem.constant_value_mappings[1]), ref_str2)
 
     def test_data_type_mapping_refs_from_str(self):
         dest_str = "DATA-TYPE-MAPPING-SET"

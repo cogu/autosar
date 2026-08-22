@@ -163,6 +163,7 @@ class Reader:
 
             # Constant elements
             'CONSTANT-SPECIFICATION': self._read_constant_specification,
+            'CONSTANT-SPECIFICATION-MAPPING-SET': self._read_constant_specification_mapping_set,
 
             # Mode declaration elements
             'MODE-DECLARATION-GROUP': self._read_mode_declaration_group,
@@ -281,6 +282,7 @@ class Reader:
             'APPLICATION-RECORD-ELEMENT': self._read_application_record_element,
             'ARGUMENT-DATA-PROTOTYPE': self._read_argument_data_prototype,
             'DATA-TYPE-MAP': self._read_data_type_map,
+            'CONSTANT-SPECIFICATION-MAPPING': self._read_constant_specification_mapping,
             'SW-ARRAYSIZE': self._read_value_list,
             'MODE-REQUEST-TYPE-MAP': self._read_mode_request_type_map,
             # CalibrationData elements
@@ -2271,6 +2273,55 @@ class Reader:
                 mode_request_type_maps.append(self._read_mode_request_type_map(xml_grand_child))
             data["mode_request_type_maps"] = mode_request_type_maps
 
+    def _read_constant_specification_mapping(self,
+                                             xml_element: ElementTree.Element
+                                             ) -> ar_element.ConstantSpecificationMapping:
+        """
+        Reads AR:CONSTANT-SPECIFICATION-MAPPING
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_constant_specification_mapping_group(child_elements, data)
+        return ar_element.ConstantSpecificationMapping(**data)
+
+    def _read_constant_specification_mapping_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:CONSTANT-SPECIFICATION-MAPPING
+        """
+        xml_child = child_elements.get("APPL-CONSTANT-REF")
+        if xml_child is not None:
+            data["appl_constant_ref"] = self._read_constant_ref(xml_child)
+        xml_child = child_elements.get("IMPL-CONSTANT-REF")
+        if xml_child is not None:
+            data["impl_constant_ref"] = self._read_constant_ref(xml_child)
+
+    def _read_constant_specification_mapping_set(self,
+                                                 xml_element: ElementTree.Element
+                                                 ) -> ar_element.ConstantSpecificationMappingSet:
+        """
+        Reads AR:CONSTANT-SPECIFICATION-MAPPING-SET
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_constant_specification_mapping_set_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        element = ar_element.ConstantSpecificationMappingSet(**data)
+        return element
+
+    def _read_constant_specification_mapping_set_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:CONSTANT-SPECIFICATION-MAPPING-SET
+        """
+        xml_child = child_elements.get("MAPPINGS")
+        if xml_child is not None:
+            mappings = []
+            for xml_grand_child in xml_child.findall("./CONSTANT-SPECIFICATION-MAPPING"):
+                mappings.append(self._read_constant_specification_mapping(xml_grand_child))
+            data["mappings"] = mappings
+
     def _read_value_list(self, xml_element: ElementTree.Element) -> ar_element.ValueList:
         """
         Reads complex type AR:VALUE-LIST
@@ -2872,6 +2923,15 @@ class Reader:
         """
         dest_enum = self._read_ref_dest(xml_elem)
         return ar_element.DataTypeMappingSetRef(xml_elem.text, dest_enum)
+
+    def _read_constant_specification_mapping_set_ref(self,
+                                                     xml_elem: ElementTree.Element
+                                                     ) -> ar_element.ConstantSpecificationMappingSetRef:
+        """
+        Reads references to AR:CONSTANT-SPECIFICATION-MAPPING-SET--SUBTYPES-ENUM
+        """
+        dest_enum = self._read_ref_dest(xml_elem)
+        return ar_element.ConstantSpecificationMappingSetRef(xml_elem.text, dest_enum)
 
     def _read_argument_data_prototype_ref(self,
                                           xml_elem: ElementTree.Element
@@ -6184,7 +6244,12 @@ class Reader:
             for xml_grand_child in xml_child.findall("./PARAMETER-DATA-PROTOTYPE"):
                 constant_memory.append(self._read_parameter_data_prototype(xml_grand_child))
             data["constant_memory"] = constant_memory
-        child_elements.skip("CONSTANT-VALUE-MAPPING-REFS")
+        xml_child = child_elements.get("CONSTANT-VALUE-MAPPING-REFS")
+        if xml_child is not None:
+            constant_value_mappings = []
+            for xml_grand_child in xml_child.findall("./CONSTANT-VALUE-MAPPING-REF"):
+                constant_value_mappings.append(self._read_constant_specification_mapping_set_ref(xml_grand_child))
+            data["constant_value_mappings"] = constant_value_mappings
         xml_child = child_elements.get("DATA-TYPE-MAPPING-REFS")
         if xml_child is not None:
             data_type_mappings = []

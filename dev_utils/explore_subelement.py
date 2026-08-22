@@ -463,6 +463,26 @@ class SchemaInspector:
                 'is_primitive': False
             }
 
+        # 5. Check references
+        ref_cls_name = self.cache.get('type_to_ref', {}).get(clean)
+        if not ref_cls_name:
+            clean_no_subtypes = clean.replace('--SUBTYPES-ENUM', '')
+            ref_cls_name = self.cache.get('type_to_ref', {}).get(clean_no_subtypes)
+
+        if ref_cls_name:
+            ref_info = self.cache.get('references', {}).get(ref_cls_name, {})
+            return {
+                'kind': 'reference',
+                'class_name': ref_cls_name,
+                'file': 'reference.py',
+                'line': ref_info.get('line'),
+                'bases': ref_info.get('bases', []),
+                'implemented_subelements': [],
+                'unimplemented_subelements': [],
+                'is_primitive': False,
+                'is_ref': True
+            }
+
         return None
 
     def is_implemented(self, type_name: str) -> bool:
@@ -549,7 +569,31 @@ class SchemaInspector:
             ie_type = ie.attrib.get('type', '').replace('AR:', '')
             ie_min, ie_max, ie_is_list = self._get_effective_cardinality(ie, el)
             ie_qname = get_qualified_name(ie)
-            ie_status = self.get_effective_status(ie, ie_type, parent_status=wrapper_status)
+            ie_status = self.get_effective_status(ie, ie_type if ie_type else None, parent_status=wrapper_status)
+
+            if not ie_type:
+                simple_ext = ie.xpath('./xsd:complexType/xsd:simpleContent/xsd:extension', namespaces=NS)
+                if simple_ext:
+                    base = simple_ext[0].attrib.get('base', '').replace('AR:', '')
+                    dest_attr = simple_ext[0].xpath('./xsd:attribute[@name="DEST"]', namespaces=NS)
+                    dest_type = dest_attr[0].attrib.get('type', '').replace('AR:', '') if dest_attr else ''
+                    display_type = f"{base} -> {dest_type}" if dest_type else base
+                    target_type = dest_type.replace('--SUBTYPES-ENUM', '') if dest_type else ''
+                    sub_elems.append({
+                        'name': ie_name,
+                        'type': display_type,
+                        'dest_type': dest_type,
+                        'target_type': target_type,
+                        'status': ie_status,
+                        'is_complex': False,
+                        'is_simple': False,
+                        'is_ref': True,
+                        'is_list': is_wrapper_list or ie_is_list,
+                        'cardinality': f"{ie_min}..{ie_max}",
+                        'sourceline': ie.sourceline,
+                        'qualified_name': ie_qname
+                    })
+                    continue
 
             ie_ct = self.complex_types.get(ie_type)
             if ie_ct is not None and not self.is_standard_supported(ie_ct):
@@ -558,12 +602,14 @@ class SchemaInspector:
             ie_prim = self.detect_primitive_type(ie_type)
             sub_is_complex = False
             sub_is_simple = False
+            sub_is_ref = False
 
             if ie_prim is not None:
                 sub_is_simple = True
             elif ie_ct is not None:
                 if ie_ct.findall('xsd:simpleContent', NS):
-                    sub_is_simple = True
+                    sub_is_ref = 'REF' in ie_type
+                    sub_is_simple = not sub_is_ref
                 else:
                     sub_is_complex = True
             elif ie_type in self.simple_types:
@@ -575,7 +621,7 @@ class SchemaInspector:
                 'status': ie_status,
                 'is_complex': sub_is_complex,
                 'is_simple': sub_is_simple,
-                'is_ref': False,
+                'is_ref': sub_is_ref,
                 'is_list': is_wrapper_list or ie_is_list,
                 'cardinality': f"{ie_min}..{ie_max}",
                 'sourceline': ie.sourceline,
@@ -793,7 +839,7 @@ class SchemaInspector:
                     sub_status_tag = sub.get('status')
                     sub_card = sub['cardinality']
                     sub_line = sub['sourceline']
-                    sub_impl = self.get_implementation_info(sub_type)
+                    sub_impl = self.get_implementation_info(sub.get('dest_type') or sub_type)
 
                     if sub_status_tag == 'removed':
                         sub_status = "[REMOVED]"
@@ -801,6 +847,13 @@ class SchemaInspector:
                         sub_status = "[OBSOLETE]"
                     elif self.is_ignored_type(sub_type) or sub['name'] in ('VARIATION-POINT', 'VARIATION-POINT-PROXY'):
                         sub_status = "[Not supported]"
+                    elif sub.get('is_ref'):
+                        if sub_impl:
+                            sub_status = f"[{sub_impl['class_name']}]"
+                        else:
+                            target_t = sub.get('target_type') or sub_type
+                            sub_canonical = self.get_canonical_class_name(target_t)
+                            sub_status = f"[TODO Ref: {sub_canonical}]"
                     elif sub_impl:
                         if sub_status_tag == 'draft':
                             sub_status = f"[{sub_impl['class_name']}: Draft]"
@@ -933,6 +986,42 @@ class SchemaInspector:
         types_summary = (', '.join([t for t, _ in initial_types])
                          if initial_types else 'None (primitive/leaf/ref/deprecated)')
         print(f"  Referenced complex types: {types_summary}\n")
+
+        ref_subs = [sub for sub in target_element.get('sub_elements', []) if sub.get('is_ref')]
+        if target_element.get('is_ref'):
+            ref_subs.append(target_element)
+
+        if ref_subs:
+            print("=" * 80)
+            print("Target is a Reference Definition (not an owned child complex type):")
+            print("=" * 80)
+            for rsub in ref_subs:
+                rname = rsub['name']
+                rdest = rsub.get('dest_type') or rsub['type']
+                rtarget = rsub.get('target_type') or rdest.replace('--SUBTYPES-ENUM', '').replace('AR:', '')
+                r_canonical = self.get_canonical_class_name(rtarget)
+
+                ref_impl = self.get_implementation_info(rdest) or self.get_implementation_info(rname)
+                target_impl = self.get_implementation_info(rtarget)
+
+                print(f"  Element Name:     {rname}")
+                print(f"  Reference DEST:   {rdest}")
+                print(f"  Target Type:      {rtarget} (class {r_canonical})")
+                if ref_impl and ref_impl.get('kind') == 'reference':
+                    ref_loc = f"({ref_impl['file']}:{ref_impl['line']})"
+                    print(f"  Reference Class:  {ref_impl['class_name']} {ref_loc} [Implemented]")
+                else:
+                    print(f"  Reference Class:  [TODO: class {r_canonical}Ref in reference.py]")
+
+                if target_impl and not target_impl.get('is_primitive'):
+                    tgt_loc = f"({target_impl['file']}:{target_impl['line']})"
+                    print(f"  Target Class:     {target_impl['class_name']} {tgt_loc} [Implemented]")
+                else:
+                    print(f"  Target Class:     [TODO: class {r_canonical} in element.py]")
+
+                print("\n  To explore the referenced type's structure and dependencies, run:")
+                print(f"    python dev_utils/explore_subelement.py {rtarget}\n")
+            return
 
         if not initial_types:
             print("No child complex types to traverse.")

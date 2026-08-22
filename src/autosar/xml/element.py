@@ -58,6 +58,7 @@ from autosar.xml.reference import (SwBaseTypeRef,  # noqa F401
                                    InternalTriggeringPointRef,
                                    RteEventRef,
                                    DataTypeMappingSetRef,
+                                   ConstantSpecificationMappingSetRef,
                                    ArgumentDataPrototypeRef,
                                    ApplicationArrayElementRef,
                                    ApplicationRecordElementRef,
@@ -3634,6 +3635,67 @@ class CompositeRuleBasedValueSpecification(ValueSpecification):
             self.compound_primitive_arguments.append(argument)
         else:
             raise TypeError(f"Invalid type for 'argument': {str(type(argument))}")
+
+
+class ConstantSpecificationMapping(ARObject):
+    """
+    Complex type AR:CONSTANT-SPECIFICATION-MAPPING
+    Tag variants: 'CONSTANT-SPECIFICATION-MAPPING'
+    """
+
+    def __init__(self,
+                 appl_constant_ref: ConstantRef | str | None = None,
+                 impl_constant_ref: ConstantRef | str | None = None,
+                 ) -> None:
+        # .APPL-CONSTANT-REF
+        self.appl_constant_ref: ConstantRef | None = None
+        # .IMPL-CONSTANT-REF
+        self.impl_constant_ref: ConstantRef | None = None
+        self._assign_optional('appl_constant_ref', appl_constant_ref, ConstantRef)
+        self._assign_optional('impl_constant_ref', impl_constant_ref, ConstantRef)
+
+
+class ConstantSpecificationMappingSet(ARElement):
+    """
+    Complex type AR:CONSTANT-SPECIFICATION-MAPPING-SET
+    Tag variants: 'CONSTANT-SPECIFICATION-MAPPING-SET'
+    """
+
+    def __init__(self,
+                 name: str,
+                 mappings: ConstantSpecificationMapping | list[ConstantSpecificationMapping] | None = None,
+                 **kwargs: dict) -> None:
+        super().__init__(name, **kwargs)
+        # .MAPPINGS
+        self.mappings: list[ConstantSpecificationMapping] = []
+
+        if mappings is not None:
+            if isinstance(mappings, ConstantSpecificationMapping):
+                self.append(mappings)
+            elif isinstance(mappings, Iterable):
+                for mapping in mappings:
+                    self.append(mapping)
+            else:
+                raise TypeError(f'mappings: Invalid type "{str(type(mappings))}"')
+
+    def append(self, mapping: ConstantSpecificationMapping) -> None:
+        """
+        Appends ConstantSpecificationMapping to mappings list
+        """
+        if isinstance(mapping, ConstantSpecificationMapping):
+            self.mappings.append(mapping)
+        else:
+            raise TypeError(f'mapping: Expected type "ConstantSpecificationMapping", got "{str(type(mapping))}"')
+
+    def ref(self) -> ConstantSpecificationMappingSetRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return ConstantSpecificationMappingSetRef(ref_str)
 
 
 # --- Package elements (Partly implemented)
@@ -8930,13 +8992,16 @@ class InternalBehavior(Identifiable):
     def __init__(self,
                  name: str,
                  constant_memory: ParameterDataPrototype | list[ParameterDataPrototype] | None = None,
+                 constant_value_mappings: (str | ConstantSpecificationMappingSetRef |
+                                           list[ConstantSpecificationMappingSetRef] | None) = None,
                  data_type_mappings: str | DataTypeMappingSetRef | list[DataTypeMappingSetRef] | None = None,
                  exclusive_areas: ExclusiveArea | list[ExclusiveArea] | None = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
         # .CONSTANT-MEMORYS
         self.constant_memory: list[ParameterDataPrototype] = []
-        # .CONSTANT-VALUE-MAPPING-REFS (not yet implemented)
+        # .CONSTANT-VALUE-MAPPING-REFS
+        self.constant_value_mappings: list[ConstantSpecificationMappingSetRef] = []
         # .DATA-TYPE-MAPPING-REFS
         self.data_type_mappings: list[DataTypeMappingSetRef] = []
         # .EXCLUSIVE-AREAS
@@ -8950,6 +9015,14 @@ class InternalBehavior(Identifiable):
                     self.append_constant_memory(item)
             else:
                 self.append_constant_memory(constant_memory)
+        if constant_value_mappings is not None:
+            if isinstance(constant_value_mappings, str):
+                constant_value_mappings = ConstantSpecificationMappingSetRef(constant_value_mappings)
+            if isinstance(constant_value_mappings, Iterable):
+                for mapping_set in constant_value_mappings:
+                    self.append_constant_value_mapping(mapping_set)
+            else:
+                self.append_constant_value_mapping(constant_value_mappings)
         if data_type_mappings is not None:
             if isinstance(data_type_mappings, str):
                 data_type_mappings = DataTypeMappingSetRef(data_type_mappings)
@@ -8995,6 +9068,15 @@ class InternalBehavior(Identifiable):
             item.parent = self
         else:
             raise ar_except.ElementTypeError("item", ParameterDataPrototype, item)
+
+    def append_constant_value_mapping(self, mapping_set: ConstantSpecificationMappingSetRef) -> None:
+        """
+        Appends ConstantSpecificationMappingSetRef to constant_value_mappings
+        """
+        if isinstance(mapping_set, ConstantSpecificationMappingSetRef):
+            self.constant_value_mappings.append(mapping_set)
+        else:
+            raise ar_except.ElementTypeError("mapping_set", ConstantSpecificationMappingSetRef, mapping_set)
 
     def append_data_type_mapping(self, mapping_set: DataTypeMappingSetRef) -> None:
         """

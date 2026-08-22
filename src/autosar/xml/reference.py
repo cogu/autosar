@@ -738,6 +738,22 @@ class DataTypeMappingSetRef(BaseRef):
         return {ar_enum.IdentifiableSubTypes.DATA_TYPE_MAPPING_SET}
 
 
+class ConstantSpecificationMappingSetRef(BaseRef):
+    """
+    AR:CONSTANT-SPECIFICATION-MAPPING-SET--SUBTYPES-ENUM
+    """
+
+    def __init__(self, value: str,
+                 dest: ar_enum.IdentifiableSubTypes = ar_enum.IdentifiableSubTypes.CONSTANT_SPECIFICATION_MAPPING_SET
+                 ) -> None:
+        super().__init__(value, dest)
+
+    @classmethod
+    def accepted_sub_types(cls) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.CONSTANT_SPECIFICATION_MAPPING_SET}
+
+
 class ArgumentDataPrototypeRef(BaseRef):
     """
     AR:ARGUMENT-DATA-PROTOTYPE--SUBTYPES-ENUM

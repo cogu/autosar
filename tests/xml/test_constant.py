@@ -1166,5 +1166,106 @@ class TestCompositeRuleBasedValueSpecification(unittest.TestCase):
             reader.read_str_elem(xml)
 
 
+class TestConstantSpecificationMapping(unittest.TestCase):
+
+    def test_read_write_empty(self):
+        element = ar_element.ConstantSpecificationMapping()
+        writer = autosar.xml.Writer()
+        xml = '<CONSTANT-SPECIFICATION-MAPPING/>'
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ConstantSpecificationMapping = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ConstantSpecificationMapping)
+        self.assertIsNone(elem.appl_constant_ref)
+        self.assertIsNone(elem.impl_constant_ref)
+
+    def test_read_write_with_references(self):
+        appl_ref = "/Constants/ApplConstant"
+        impl_ref = "/Constants/ImplConstant"
+        element = ar_element.ConstantSpecificationMapping(
+            appl_constant_ref=appl_ref,
+            impl_constant_ref=impl_ref
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<CONSTANT-SPECIFICATION-MAPPING>
+  <APPL-CONSTANT-REF DEST="CONSTANT-SPECIFICATION">/Constants/ApplConstant</APPL-CONSTANT-REF>
+  <IMPL-CONSTANT-REF DEST="CONSTANT-SPECIFICATION">/Constants/ImplConstant</IMPL-CONSTANT-REF>
+</CONSTANT-SPECIFICATION-MAPPING>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ConstantSpecificationMapping = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ConstantSpecificationMapping)
+        self.assertIsInstance(elem.appl_constant_ref, ar_element.ConstantRef)
+        self.assertIsInstance(elem.impl_constant_ref, ar_element.ConstantRef)
+        self.assertEqual(str(elem.appl_constant_ref), appl_ref)
+        self.assertEqual(str(elem.impl_constant_ref), impl_ref)
+
+
+class TestConstantSpecificationMappingSet(unittest.TestCase):
+
+    def test_read_write_empty(self):
+        element = ar_element.ConstantSpecificationMappingSet("MappingSet")
+        writer = autosar.xml.Writer()
+        xml = '''<CONSTANT-SPECIFICATION-MAPPING-SET>
+  <SHORT-NAME>MappingSet</SHORT-NAME>
+</CONSTANT-SPECIFICATION-MAPPING-SET>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ConstantSpecificationMappingSet = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ConstantSpecificationMappingSet)
+        self.assertEqual(elem.name, "MappingSet")
+        self.assertEqual(len(elem.mappings), 0)
+
+    def test_read_write_with_mappings(self):
+        mapping1 = ar_element.ConstantSpecificationMapping(
+            appl_constant_ref="/Constants/Appl1",
+            impl_constant_ref="/Constants/Impl1"
+        )
+        mapping2 = ar_element.ConstantSpecificationMapping(
+            appl_constant_ref="/Constants/Appl2",
+            impl_constant_ref="/Constants/Impl2"
+        )
+        element = ar_element.ConstantSpecificationMappingSet("MappingSet", mappings=[mapping1, mapping2])
+        writer = autosar.xml.Writer()
+        xml = '''<CONSTANT-SPECIFICATION-MAPPING-SET>
+  <SHORT-NAME>MappingSet</SHORT-NAME>
+  <MAPPINGS>
+    <CONSTANT-SPECIFICATION-MAPPING>
+      <APPL-CONSTANT-REF DEST="CONSTANT-SPECIFICATION">/Constants/Appl1</APPL-CONSTANT-REF>
+      <IMPL-CONSTANT-REF DEST="CONSTANT-SPECIFICATION">/Constants/Impl1</IMPL-CONSTANT-REF>
+    </CONSTANT-SPECIFICATION-MAPPING>
+    <CONSTANT-SPECIFICATION-MAPPING>
+      <APPL-CONSTANT-REF DEST="CONSTANT-SPECIFICATION">/Constants/Appl2</APPL-CONSTANT-REF>
+      <IMPL-CONSTANT-REF DEST="CONSTANT-SPECIFICATION">/Constants/Impl2</IMPL-CONSTANT-REF>
+    </CONSTANT-SPECIFICATION-MAPPING>
+  </MAPPINGS>
+</CONSTANT-SPECIFICATION-MAPPING-SET>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ConstantSpecificationMappingSet = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ConstantSpecificationMappingSet)
+        self.assertEqual(len(elem.mappings), 2)
+        self.assertEqual(str(elem.mappings[0].appl_constant_ref), "/Constants/Appl1")
+        self.assertEqual(str(elem.mappings[1].impl_constant_ref), "/Constants/Impl2")
+
+    def test_ref(self):
+        ws = autosar.xml.Workspace()
+        package = ws.make_packages("Constants")
+        element = ar_element.ConstantSpecificationMappingSet("MappingSet")
+        self.assertIsNone(element.ref())
+        package.append(element)
+        ref = element.ref()
+        self.assertIsInstance(ref, ar_element.ConstantSpecificationMappingSetRef)
+        self.assertEqual(str(ref), "/Constants/MappingSet")
+        self.assertEqual(ref.dest, ar_enum.IdentifiableSubTypes.CONSTANT_SPECIFICATION_MAPPING_SET)
+
+    def test_invalid_mapping_type(self):
+        element = ar_element.ConstantSpecificationMappingSet("MappingSet")
+        with self.assertRaises(TypeError):
+            element.append("InvalidMapping")
+        with self.assertRaises(TypeError):
+            ar_element.ConstantSpecificationMappingSet("MappingSet", mappings="Invalid")
+
+
 if __name__ == '__main__':
     unittest.main()
