@@ -12,6 +12,7 @@ Non-collectable elements are various sub-elements to collectable elements.
 #### XML - Constant elements
 
 * NumericalOrText | NUMERICAL-OR-TEXT
+* ReferenceValueSpecification | REFERENCE-VALUE-SPECIFICATION
 
 #### Developer Utilities (`dev_utils`)
 

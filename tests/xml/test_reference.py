@@ -130,5 +130,18 @@ class TestPortInterfaceRef(unittest.TestCase):
         self.assertEqual(elem.port_interface_ref.dest, ar_enum.IdentifiableSubTypes.TRIGGER_INTERFACE)
 
 
+class TestDataPrototypeRef(unittest.TestCase):
+
+    def test_requires_dest(self):
+        with self.assertRaises(ValueError):
+            ar_element.DataPrototypeRef("/Component/MyPrototype")
+
+    def test_valid_dest(self):
+        ref = ar_element.DataPrototypeRef("/Component/MyPrototype",
+                                          ar_enum.IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE)
+        self.assertEqual(str(ref), "/Component/MyPrototype")
+        self.assertEqual(ref.dest, ar_enum.IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE)
+
+
 if __name__ == '__main__':
     unittest.main()

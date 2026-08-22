@@ -4,6 +4,7 @@ Demonstrates how to create ARXML constants
 import os
 import autosar.xml
 import autosar.xml.element as ar_element
+import autosar.xml.enumeration as ar_enum
 
 
 def create_numerical_constants(workspace: autosar.xml.Workspace):
@@ -53,6 +54,25 @@ def create_record_constant_using_references(workspace: autosar.xml.Workspace):
     workspace.add_element("Constants", ar_element.ConstantSpecification("RecordWithReferences", record_value))
 
 
+def create_reference_value_constants(workspace: autosar.xml.Workspace):
+    """
+    Creates constants using ReferenceValueSpecification pointing to a DataPrototype
+    """
+    ref = ar_element.DataPrototypeRef(
+        "/PortInterfaces/EngineStatus/EngineSpeed",
+        ar_enum.IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE
+    )
+    ref_value = ar_element.ReferenceValueSpecification(reference_value=ref)
+    workspace.add_element("Constants", ar_element.ConstantSpecification("RefValueConstant", ref_value))
+
+    # ReferenceValueSpecification used inside a RecordValueSpecification (e.g. pointer/reference field)
+    record_value = ar_element.RecordValueSpecification(fields=[
+        ar_element.TextValueSpecification(value="EngineSpeedRef"),
+        ar_element.ReferenceValueSpecification(label="TargetData", reference_value=ref)
+    ])
+    workspace.add_element("Constants", ar_element.ConstantSpecification("RecordWithRefValue", record_value))
+
+
 def main():
     """Main function"""
     workspace = autosar.xml.Workspace()
@@ -62,6 +82,7 @@ def main():
     create_array_constants(workspace)
     create_record_constants(workspace)
     create_record_constant_using_references(workspace)
+    create_reference_value_constants(workspace)
     workspace.set_document_root(os.path.join(os.path.dirname(__file__), "data"))
     workspace.create_document("constants.arxml", packages="/Constants")
     workspace.write_documents()

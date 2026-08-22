@@ -152,6 +152,30 @@
             </RECORD-VALUE-SPECIFICATION>
           </VALUE-SPEC>
         </CONSTANT-SPECIFICATION>
+        <CONSTANT-SPECIFICATION>
+          <SHORT-NAME>RefValueConstant</SHORT-NAME>
+          <VALUE-SPEC>
+            <REFERENCE-VALUE-SPECIFICATION>
+              <REFERENCE-VALUE-REF DEST="VARIABLE-DATA-PROTOTYPE">/PortInterfaces/EngineStatus/EngineSpeed</REFERENCE-VALUE-REF>
+            </REFERENCE-VALUE-SPECIFICATION>
+          </VALUE-SPEC>
+        </CONSTANT-SPECIFICATION>
+        <CONSTANT-SPECIFICATION>
+          <SHORT-NAME>RecordWithRefValue</SHORT-NAME>
+          <VALUE-SPEC>
+            <RECORD-VALUE-SPECIFICATION>
+              <FIELDS>
+                <TEXT-VALUE-SPECIFICATION>
+                  <VALUE>EngineSpeedRef</VALUE>
+                </TEXT-VALUE-SPECIFICATION>
+                <REFERENCE-VALUE-SPECIFICATION>
+                  <SHORT-LABEL>TargetData</SHORT-LABEL>
+                  <REFERENCE-VALUE-REF DEST="VARIABLE-DATA-PROTOTYPE">/PortInterfaces/EngineStatus/EngineSpeed</REFERENCE-VALUE-REF>
+                </REFERENCE-VALUE-SPECIFICATION>
+              </FIELDS>
+            </RECORD-VALUE-SPECIFICATION>
+          </VALUE-SPEC>
+        </CONSTANT-SPECIFICATION>
       </ELEMENTS>
     </AR-PACKAGE>
   </AR-PACKAGES>

@@ -191,7 +191,7 @@ class Reader:
             'RECORD-VALUE-SPECIFICATION': self._read_record_value_specification,
             'APPLICATION-VALUE-SPECIFICATION': self._read_application_value_specification,
             'CONSTANT-REFERENCE': self._read_constant_reference,
-
+            'REFERENCE-VALUE-SPECIFICATION': self._read_reference_value_specification,
         }
         self.switcher_provided_com_spec = {
             'QUEUED-SENDER-COM-SPEC': self._read_queued_sender_com_spec,
@@ -3109,6 +3109,29 @@ class Reader:
         xml_child = child_elements.get("CONSTANT-REF")
         if xml_child is not None:
             data["constant_ref"] = self._read_constant_ref(xml_child)
+
+    def _read_reference_value_specification(self,
+                                            xml_element: ElementTree.Element
+                                            ) -> ar_element.ReferenceValueSpecification:
+        """
+        Reads complex type AR:REFERENCE-VALUE-SPECIFICATION
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_value_specification_group(child_elements, data)
+        self._read_reference_value_specification_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        element = ar_element.ReferenceValueSpecification(**data)
+        return element
+
+    def _read_reference_value_specification_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:REFERENCE-VALUE-SPECIFICATION
+        """
+        xml_child = child_elements.get("REFERENCE-VALUE-REF")
+        if xml_child is not None:
+            data["reference_value"] = self._read_data_prototype_ref(xml_child)
 
     def _read_numerical_or_text(self,
                                 xml_element: ElementTree.Element

@@ -539,6 +539,67 @@ class TestConstantReference(unittest.TestCase):
         self.assertEqual(elem.label, "MyLabel")
 
 
+class TestReferenceValueSpecification(unittest.TestCase):
+
+    def test_read_write_empty(self):
+        element = ar_element.ReferenceValueSpecification()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<REFERENCE-VALUE-SPECIFICATION/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.ReferenceValueSpecification = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ReferenceValueSpecification)
+        self.assertIsNone(elem.reference_value)
+
+    def test_read_write_reference_value_from_object(self):
+        ref = ar_element.DataPrototypeRef("/Component/MyPrototype",
+                                          ar_enum.IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE)
+        element = ar_element.ReferenceValueSpecification(reference_value=ref)
+        writer = autosar.xml.Writer()
+        xml = '''<REFERENCE-VALUE-SPECIFICATION>
+  <REFERENCE-VALUE-REF DEST="VARIABLE-DATA-PROTOTYPE">/Component/MyPrototype</REFERENCE-VALUE-REF>
+</REFERENCE-VALUE-SPECIFICATION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ReferenceValueSpecification = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ReferenceValueSpecification)
+        self.assertIsInstance(elem.reference_value, ar_element.DataPrototypeRef)
+        self.assertEqual(str(elem.reference_value), "/Component/MyPrototype")
+        self.assertEqual(elem.reference_value.dest, ar_enum.IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE)
+
+    def test_read_write_label(self):
+        ref = ar_element.DataPrototypeRef("/Component/MyPrototype",
+                                          ar_enum.IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE)
+        element = ar_element.ReferenceValueSpecification(label="MyLabel",
+                                                         reference_value=ref)
+        writer = autosar.xml.Writer()
+        xml = '''<REFERENCE-VALUE-SPECIFICATION>
+  <SHORT-LABEL>MyLabel</SHORT-LABEL>
+  <REFERENCE-VALUE-REF DEST="VARIABLE-DATA-PROTOTYPE">/Component/MyPrototype</REFERENCE-VALUE-REF>
+</REFERENCE-VALUE-SPECIFICATION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ReferenceValueSpecification = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ReferenceValueSpecification)
+        self.assertEqual(elem.label, "MyLabel")
+        self.assertEqual(str(elem.reference_value), "/Component/MyPrototype")
+        self.assertEqual(elem.reference_value.dest, ar_enum.IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE)
+
+    def test_make_value_with_check(self):
+        ref = ar_element.DataPrototypeRef("/Component/MyPrototype",
+                                          ar_enum.IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE)
+        val = ar_element.ValueSpecification.make_value_with_check(ref)
+        self.assertIsInstance(val, ar_element.ReferenceValueSpecification)
+        self.assertEqual(str(val.reference_value), "/Component/MyPrototype")
+        self.assertEqual(val.reference_value.dest, ar_enum.IdentifiableSubTypes.VARIABLE_DATA_PROTOTYPE)
+
+    def test_invalid_reference_value_type(self):
+        with self.assertRaises(TypeError):
+            ar_element.ReferenceValueSpecification(reference_value=123)
+        with self.assertRaises(TypeError):
+            ar_element.ReferenceValueSpecification(reference_value="/Component/MyPrototype")
+
+
 class TestNumericalOrText(unittest.TestCase):
 
     def test_read_write_empty(self):
