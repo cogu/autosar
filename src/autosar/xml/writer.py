@@ -243,6 +243,7 @@ class Writer(_XMLWriter):
             'RecordValueSpecification': self._write_record_value_specification,
             'ApplicationValueSpecification': self._write_application_value_specification,
             'ConstantReference': self._write_constant_reference,
+            'ReferenceValueSpecification': self._write_reference_value_specification,
         }
         # Com-spec elements
         self.switcher_provided_com_spec = {
@@ -2758,6 +2759,28 @@ class Writer(_XMLWriter):
             if elem.constant_ref is not None:
                 self._write_constant_ref(elem.constant_ref, "CONSTANT-REF")
             self._leave_child()
+
+    def _write_reference_value_specification(self, elem: ar_element.ReferenceValueSpecification) -> None:
+        """
+        Writes complex type AR:REFERENCE-VALUE-SPECIFICATION
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.ReferenceValueSpecification)
+        tag = "REFERENCE-VALUE-SPECIFICATION"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_value_specification_group(elem)
+            self._write_reference_value_specification_group(elem)
+            self._leave_child()
+
+    def _write_reference_value_specification_group(self, elem: ar_element.ReferenceValueSpecification) -> None:
+        """
+        Writes group AR:REFERENCE-VALUE-SPECIFICATION
+        """
+        if elem.reference_value is not None:
+            self._write_data_prototype_ref(elem.reference_value, "REFERENCE-VALUE-REF")
 
     def _write_numerical_or_text(self, elem: ar_element.NumericalOrText) -> None:
         """

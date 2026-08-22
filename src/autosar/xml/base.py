@@ -7,6 +7,7 @@ import re
 from typing import Any, Type
 from enum import Enum
 import autosar.xml.enumeration as ar_enum
+import autosar.xml.exception as ar_except
 
 
 class ARObject:
@@ -99,15 +100,14 @@ class ARObject:
         if value is not None:
             self._set_attr_positive_int(attr_name, value)
 
-    def _set_attr_with_strict_type(self, attr_name: str, value: Any, type_class: type) -> None:
+    def _set_attr_with_strict_type(self, attr_name: str, value: Any, type_class: type | tuple[type, ...]) -> None:
         """
         Sets object attribute only if the value is matches given type-class
         """
         if isinstance(value, type_class):
             setattr(self, attr_name, value)
         else:
-            raise TypeError(
-                f"Invalid type for parameter '{attr_name}'. Expected type {str(type_class)}, got {str(type(value))}")
+            raise ar_except.AssignmentTypeError(attr_name, type_class, value)
 
     def _check_and_set_reference(self, attr_name: str, value: Any, ref_type: Type["BaseRef"]):
         """
@@ -179,7 +179,7 @@ class BaseRef(ARObject, abc.ABC):
                 dest = list(self.accepted_sub_types())[0]
             else:
                 msg_part1 = "Value of dest cannot be None. Accepted values are: "
-                msg_part2 = ",".join([str(x) for x in sorted(list(self.accepted_sub_types()))])
+                msg_part2 = ", ".join(sorted([str(x) for x in self.accepted_sub_types()]))
                 raise ValueError(msg_part1 + msg_part2)
         if dest in self.accepted_sub_types():
             self.dest = dest

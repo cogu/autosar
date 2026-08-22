@@ -84,7 +84,8 @@ ValueSpecificationElement = Union["TextValueSpecification",
                                   "ArrayValueSpecification",
                                   "RecordValueSpecification",
                                   "ApplicationValueSpecification",
-                                  "ConstantReference"]
+                                  "ConstantReference",
+                                  "ReferenceValueSpecification"]
 
 PortPrototypeElement = Union["ProvidePortPrototype",
                              "RequirePortPrototype",
@@ -100,7 +101,8 @@ InitValueArgType = Union["int",
                          "list",
                          "tuple",
                          "ValueSpecificationElement",
-                         "ConstantRef"]
+                         "ConstantRef",
+                         "DataPrototypeRef"]
 
 SingleLanguageText = tuple[ar_enum.Language, str]
 
@@ -678,6 +680,9 @@ class AdminData(ARObject):
             self.sdgs.append(sdg)
         else:
             raise TypeError(f"sdg: Expected type SpecialDataGroup. Got {str(type(sdg))}")
+
+
+# --- Generic structure elements
 
 
 # --- Common structure elements
@@ -3073,6 +3078,8 @@ class ValueSpecification(ARObject):
                 return value  # Already a proper init-value
             elif isinstance(value, ConstantRef):
                 return ConstantReference(value)  # Wrap inside constant reference
+            elif isinstance(value, DataPrototypeRef):
+                return ReferenceValueSpecification(value)
             elif isinstance(value, (int, float, str, list, tuple)):
                 return cls.make_value(value)  # Attempt to create a new value based on raw python data
             else:
@@ -3197,6 +3204,21 @@ class NotAvailableValueSpecification(ValueSpecification):
             raise ValueError("default_pattern must be a positive integer")
         self.default_pattern = default_pattern
         self.default_pattern_format = default_pattern_format  # Currently not used
+
+
+class ReferenceValueSpecification(ValueSpecification):
+    """
+    Complex type AR:REFERENCE-VALUE-SPECIFICATION
+    Tag variants: 'REFERENCE-VALUE-SPECIFICATION'
+    """
+
+    def __init__(self,
+                 reference_value: DataPrototypeRef | None = None,
+                 label: str | None = None) -> None:
+        super().__init__(label)
+        # .REFERENCE-VALUE-REF
+        self.reference_value: DataPrototypeRef | None = None
+        self._assign_optional_strict("reference_value", reference_value, DataPrototypeRef)
 
 
 class ArrayValueSpecification(ValueSpecification):
