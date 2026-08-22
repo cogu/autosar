@@ -3979,6 +3979,68 @@ class TestInternalBehavior(unittest.TestCase):
         self.assertEqual(len(element.exclusive_area_nesting_orders), 1)
         self.assertIs(element.exclusive_area_nesting_orders[0], order)
 
+    def test_static_memory_from_element(self):
+        var = ar_element.VariableDataPrototype("MyStaticMemory")
+        element = ar_element.SwcInternalBehavior("MyName", static_memory=var)
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <STATIC-MEMORYS>
+    <VARIABLE-DATA-PROTOTYPE>
+      <SHORT-NAME>MyStaticMemory</SHORT-NAME>
+    </VARIABLE-DATA-PROTOTYPE>
+  </STATIC-MEMORYS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.static_memory), 1)
+        var_elem = elem.static_memory[0]
+        self.assertIsInstance(var_elem, ar_element.VariableDataPrototype)
+        self.assertEqual(var_elem.name, "MyStaticMemory")
+        self.assertIs(var_elem.parent, elem)
+
+    def test_static_memory_from_list(self):
+        var1 = ar_element.VariableDataPrototype("Static1")
+        var2 = ar_element.VariableDataPrototype("Static2")
+        element = ar_element.SwcInternalBehavior("MyName", static_memory=[var1, var2])
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <STATIC-MEMORYS>
+    <VARIABLE-DATA-PROTOTYPE>
+      <SHORT-NAME>Static1</SHORT-NAME>
+    </VARIABLE-DATA-PROTOTYPE>
+    <VARIABLE-DATA-PROTOTYPE>
+      <SHORT-NAME>Static2</SHORT-NAME>
+    </VARIABLE-DATA-PROTOTYPE>
+  </STATIC-MEMORYS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.static_memory), 2)
+        self.assertEqual(elem.static_memory[0].name, "Static1")
+        self.assertEqual(elem.static_memory[1].name, "Static2")
+        self.assertIs(elem.static_memory[0].parent, elem)
+        self.assertIs(elem.static_memory[1].parent, elem)
+
+    def test_create_static_memory(self):
+        element = ar_element.SwcInternalBehavior("MyName")
+        var = element.create_static_memory("MyStatic")
+        self.assertIsInstance(var, ar_element.VariableDataPrototype)
+        self.assertEqual(var.name, "MyStatic")
+        self.assertIs(var.parent, element)
+        self.assertEqual(len(element.static_memory), 1)
+        self.assertIs(element.static_memory[0], var)
+
+    def test_append_static_memory_invalid_type(self):
+        element = ar_element.SwcInternalBehavior("MyName")
+        with self.assertRaises(ar_except.ElementTypeError):
+            element.append_static_memory("InvalidType")
+
     def test_append_constant_value_mapping_invalid_type(self):
         element = ar_element.SwcInternalBehavior("MyName")
         with self.assertRaises(ar_except.ElementTypeError):

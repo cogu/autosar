@@ -6294,8 +6294,12 @@ class Reader:
             for xml_grand_child in xml_child.findall("./EXCLUSIVE-AREA-NESTING-ORDER"):
                 exclusive_area_nesting_orders.append(self._read_exclusive_area_nesting_order(xml_grand_child))
             data["exclusive_area_nesting_orders"] = exclusive_area_nesting_orders
-
-        child_elements.skip("STATIC-MEMORYS")
+        xml_child = child_elements.get("STATIC-MEMORYS")
+        if xml_child is not None:
+            static_memory = []
+            for xml_grand_child in xml_child.findall("./VARIABLE-DATA-PROTOTYPE"):
+                static_memory.append(self._read_variable_data_prototype(xml_grand_child))
+            data["static_memory"] = static_memory
 
     def _read_swc_internal_behavior_group(self, child_elements: ChildElementMap, data: dict) -> None:
         """

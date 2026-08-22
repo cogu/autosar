@@ -9042,6 +9042,7 @@ class InternalBehavior(Identifiable):
                  exclusive_areas: ExclusiveArea | list[ExclusiveArea] | None = None,
                  exclusive_area_nesting_orders: (ExclusiveAreaNestingOrder |
                                                  list[ExclusiveAreaNestingOrder] | None) = None,
+                 static_memory: VariableDataPrototype | list[VariableDataPrototype] | None = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
         # .CONSTANT-MEMORYS
@@ -9054,7 +9055,8 @@ class InternalBehavior(Identifiable):
         self.exclusive_areas: list[ExclusiveArea] = []
         # .EXCLUSIVE-AREA-NESTING-ORDERS
         self.exclusive_area_nesting_orders: list[ExclusiveAreaNestingOrder] = []
-        # .STATIC-MEMORYS (not yet implemented)
+        # .STATIC-MEMORYS
+        self.static_memory: list[VariableDataPrototype] = []
 
         if constant_memory is not None:
             if isinstance(constant_memory, Iterable):
@@ -9090,6 +9092,12 @@ class InternalBehavior(Identifiable):
                     self.append_exclusive_area_nesting_order(order)
             else:
                 self.append_exclusive_area_nesting_order(exclusive_area_nesting_orders)
+        if static_memory is not None:
+            if isinstance(static_memory, Iterable):
+                for item in static_memory:
+                    self.append_static_memory(item)
+            else:
+                self.append_static_memory(static_memory)
 
     @convenience_function
     def create_constant_memory(self,
@@ -9101,6 +9109,18 @@ class InternalBehavior(Identifiable):
         """
         item = ParameterDataPrototype(name, init_value, **kwargs)
         self.append_constant_memory(item)
+        return item
+
+    @convenience_function
+    def create_static_memory(self,
+                             name: str,
+                             init_value: ValueSpecificationElement | None = None,
+                             **kwargs) -> VariableDataPrototype:
+        """
+        Adds a new VariableDataPrototype to static_memory
+        """
+        item = VariableDataPrototype(name, init_value, **kwargs)
+        self.append_static_memory(item)
         return item
 
     @convenience_function
@@ -9134,6 +9154,16 @@ class InternalBehavior(Identifiable):
             item.parent = self
         else:
             raise ar_except.ElementTypeError("item", ParameterDataPrototype, item)
+
+    def append_static_memory(self, item: VariableDataPrototype) -> None:
+        """
+        Appends VariableDataPrototype to static_memory
+        """
+        if isinstance(item, VariableDataPrototype):
+            self.static_memory.append(item)
+            item.parent = self
+        else:
+            raise ar_except.ElementTypeError("item", VariableDataPrototype, item)
 
     def append_constant_value_mapping(self, mapping_set: ConstantSpecificationMappingSetRef) -> None:
         """
