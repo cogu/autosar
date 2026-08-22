@@ -6349,7 +6349,12 @@ class Reader:
             for xml_grand_child in xml_child.findall("./SWC-EXCLUSIVE-AREA-POLICY"):
                 exclusive_area_policies.append(self._read_swc_exclusive_area_policy(xml_grand_child))
             data["exclusive_area_policies"] = exclusive_area_policies
-        child_elements.skip("EXPLICIT-INTER-RUNNABLE-VARIABLES")
+        xml_child = child_elements.get("EXPLICIT-INTER-RUNNABLE-VARIABLES")
+        if xml_child is not None:
+            explicit_inter_runnable_variables = []
+            for xml_grand_child in xml_child.findall("./VARIABLE-DATA-PROTOTYPE"):
+                explicit_inter_runnable_variables.append(self._read_variable_data_prototype(xml_grand_child))
+            data["explicit_inter_runnable_variables"] = explicit_inter_runnable_variables
         child_elements.skip("HANDLE-TERMINATION-AND-RESTART")
         child_elements.skip("INCLUDED-DATA-TYPE-SETS")
         child_elements.skip("INCLUDED-MODE-DECLARATION-GROUP-SETS")

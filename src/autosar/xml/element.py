@@ -9236,6 +9236,8 @@ class SwcInternalBehavior(InternalBehavior):
                  events: RteEvent | list[RteEvent] | None = None,
                  exclusive_area_policies: (SwcExclusiveAreaPolicy |
                                            list[SwcExclusiveAreaPolicy] | None) = None,
+                 explicit_inter_runnable_variables: (VariableDataPrototype |
+                                                     list[VariableDataPrototype] | None) = None,
                  runnables: RunnableEntity | list[RunnableEntity] | None = None,
                  port_api_options: PortApiOption | list[PortApiOption] | None = None,
                  **kwargs) -> None:
@@ -9246,7 +9248,8 @@ class SwcInternalBehavior(InternalBehavior):
         self.events: list[RteEvent] = []
         # .EXCLUSIVE-AREA-POLICYS
         self.exclusive_area_policies: list[SwcExclusiveAreaPolicy] = []
-        # .EXPLICIT-INTER-RUNNABLE-VARIABLES (not yet implemented)
+        # .EXPLICIT-INTER-RUNNABLE-VARIABLES
+        self.explicit_inter_runnable_variables: list[VariableDataPrototype] = []
         # .HANDLE-TERMINATION-AND-RESTART (not yet implemented)
         # .INCLUDED-DATA-TYPE-SETS (not yet implemented)
         # .INCLUDED-MODE-DECLARATION-GROUP-SETS (not yet implemented)
@@ -9283,6 +9286,13 @@ class SwcInternalBehavior(InternalBehavior):
                     self.append_exclusive_area_policy(policy)
             else:
                 self.append_exclusive_area_policy(exclusive_area_policies)
+
+        if explicit_inter_runnable_variables is not None:
+            if isinstance(explicit_inter_runnable_variables, Iterable):
+                for item in explicit_inter_runnable_variables:
+                    self.append_explicit_inter_runnable_variable(item)
+            else:
+                self.append_explicit_inter_runnable_variable(explicit_inter_runnable_variables)
 
         if runnables is not None:
             if isinstance(runnables, Iterable):
@@ -9344,6 +9354,28 @@ class SwcInternalBehavior(InternalBehavior):
         """
         if isinstance(item, VariableDataPrototype):
             self.ar_typed_per_instance_memory.append(item)
+            item.parent = self
+        else:
+            raise ar_except.ElementTypeError("item", VariableDataPrototype, item)
+
+    @convenience_function
+    def create_explicit_inter_runnable_variable(self,
+                                                name: str,
+                                                init_value: ValueSpecificationElement | None = None,
+                                                **kwargs) -> VariableDataPrototype:
+        """
+        Adds a new VariableDataPrototype to explicit_inter_runnable_variables
+        """
+        item = VariableDataPrototype(name, init_value, **kwargs)
+        self.append_explicit_inter_runnable_variable(item)
+        return item
+
+    def append_explicit_inter_runnable_variable(self, item: VariableDataPrototype) -> None:
+        """
+        Appends VariableDataPrototype to explicit_inter_runnable_variables
+        """
+        if isinstance(item, VariableDataPrototype):
+            self.explicit_inter_runnable_variables.append(item)
             item.parent = self
         else:
             raise ar_except.ElementTypeError("item", VariableDataPrototype, item)

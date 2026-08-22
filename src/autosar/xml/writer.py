@@ -5531,6 +5531,11 @@ class Writer(_XMLWriter):
             for policy in elem.exclusive_area_policies:
                 self._write_swc_exclusive_area_policy(policy)
             self._leave_child()
+        if elem.explicit_inter_runnable_variables:
+            self._add_child("EXPLICIT-INTER-RUNNABLE-VARIABLES")
+            for item in elem.explicit_inter_runnable_variables:
+                self._write_variable_data_prototype(item, "VARIABLE-DATA-PROTOTYPE")
+            self._leave_child()
         if elem.port_api_options:
             self._add_child("PORT-API-OPTIONS")
             for element in elem.port_api_options.values():
