@@ -4,10 +4,23 @@ AUTOSAR XML base classes
 
 import abc
 import re
-from typing import Any, Type
+from typing import Any, Type, TypeVar, Callable
 from enum import Enum
 import autosar.xml.enumeration as ar_enum
 import autosar.xml.exception as ar_except
+
+F = TypeVar('F', bound=Callable[..., Any])
+
+
+def convenience_function(func: F) -> F:
+    """
+    Decorator that marks a function or method as a convenience function.
+    """
+    if isinstance(func, classmethod):
+        setattr(func.__func__, "_is_convenience", True)
+    else:
+        setattr(func, "_is_convenience", True)
+    return func
 
 
 class ARObject:

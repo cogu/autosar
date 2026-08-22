@@ -11,7 +11,7 @@ from typing import Any, Union, NamedTuple
 
 
 from autosar.base import split_ref, split_ref_strict, Searchable
-from autosar.xml.base import ARObject, BaseRef
+from autosar.xml.base import ARObject, BaseRef, convenience_function
 import autosar.xml.enumeration as ar_enum
 import autosar.xml.exception as ar_except
 from autosar.xml.reference import (SwBaseTypeRef,  # noqa F401
@@ -1192,10 +1192,10 @@ class MultiLanguageOverviewParagraph(ARObject):
         assert isinstance(paragraph, LanguageOverviewParagraph)
         self.elements.append(paragraph)
 
+    @convenience_function
     @classmethod
     def make(cls, language: ar_enum.Language, paragraph: str):
         """
-        #convenience-method
 
         Simplified creation method that uses a simple string as paragraph text
         """
@@ -1701,13 +1701,13 @@ class Computation(ARObject):
         elif isinstance(default_value, (int, float, str)):
             self.default_value = CompuConst(default_value)
 
+    @convenience_function
     @classmethod
     def make_value_table(cls: "Computation",
                          elements: list[Any],
                          default_value: CompuConst | int | float | str | None = None,
                          auto_label: bool = True):
         """
-        #convenience-method
 
         Creates new CompuConst-based computation using values from a list.
 
@@ -1741,6 +1741,7 @@ class Computation(ARObject):
             compu_scales.append(CompuScale(CompuConst(value), lower_limit, upper_limit, label))
         return cls(compu_scales, default_value)
 
+    @convenience_function
     @classmethod
     def make_rational(cls: "Computation",
                       scaling_factor: int | float = 1,
@@ -1751,7 +1752,6 @@ class Computation(ARObject):
                       lower_limit_type: ar_enum.IntervalType = ar_enum.IntervalType.CLOSED,
                       upper_limit_type: ar_enum.IntervalType = ar_enum.IntervalType.CLOSED) -> None:
         """
-        #convenience-method
 
         Creates a new Computation instance with one COMPU-SCALE containing numerator
         and denominator.
@@ -1967,6 +1967,7 @@ class DataConstraint(ARElement):
         ref_str = self._calc_ref_string()
         return None if ref_str is None else DataConstraintRef(ref_str)
 
+    @convenience_function
     @classmethod
     def make_physical(cls: "DataConstraint",
                       name: str,
@@ -1981,7 +1982,6 @@ class DataConstraint(ARElement):
                       upper_limit_type: ar_enum.IntervalType = ar_enum.IntervalType.CLOSED,
                       **kwargs) -> "DataConstraint":
         """
-        #convenience-method
 
         Creates a DataConstraint which contains a single physical constraint.
         """
@@ -1996,6 +1996,7 @@ class DataConstraint(ARElement):
                                                               upper_limit_type))
         return cls(name, [rule], **kwargs)
 
+    @convenience_function
     @classmethod
     def make_internal(cls: "DataConstraint",
                       name: str,
@@ -2009,7 +2010,6 @@ class DataConstraint(ARElement):
                       upper_limit_type: ar_enum.IntervalType = ar_enum.IntervalType.CLOSED,
                       **kwargs) -> "DataConstraint":
         """
-        #convenience-method
 
         Creates a DataConstraint that contains a single internal constraint.
         """
@@ -3063,12 +3063,12 @@ class ValueSpecification(ARObject):
         self.label = label  # .SHORT-LABEL
         # .VARIATION-POINT not supported
 
+    @convenience_function
     @classmethod
     def make_value_with_check(cls,
                               value: InitValueArgType | None = None,
                               ) -> ValueSpecificationElement | None:
         """
-        #convenience-method
 
         Wrapper for checking and creating init values based on different value types
 
@@ -3091,10 +3091,10 @@ class ValueSpecification(ARObject):
                 raise TypeError(f"Unsupported type: {str(type(value))}")
         return None
 
+    @convenience_function
     @classmethod
     def make_value(cls, data: Any) -> ValueSpecificationElement:
         """
-        #convenience-method
 
         Builds value specification based on Python data
         Format 1 - data is not a tuple:
@@ -3339,6 +3339,7 @@ class ConstantSpecification(ARElement):
         ref_str = self._calc_ref_string()
         return None if ref_str is None else ConstantRef(ref_str)
 
+    @convenience_function
     @classmethod
     def make_constant(cls,
                       name: str,
@@ -3346,8 +3347,6 @@ class ConstantSpecification(ARElement):
                       **kwargs) -> "ConstantSpecification":
         """
         Creates a new constant object and populates it from Python data.
-
-        #convenience-method
         """
         value = ValueSpecification.make_value(value)
         return cls(name, value, **kwargs)
@@ -4058,12 +4057,12 @@ class ModeDeclarationGroup(ARElement):
             msg = f"mode_declaration: Invalid type '{str(type(mode_declaration))}'"
             raise TypeError(msg + ". Expected 'ModeDeclaration'")
 
+    @convenience_function
     def create_mode_declaration(self,
                                 name: str,
                                 value: int | None = None,
                                 **kwargs) -> ModeDeclaration:
         """
-        #convenience-method
 
         Adds a new mode declaration to this group
         """
@@ -4243,12 +4242,12 @@ class SenderReceiverInterface(DataInterface):
             msg = f"invalidation_policy: Invalid type '{str(type(invalidation_policy))}'"
             raise TypeError(msg + ". Expected 'InvalidationPolicy'")
 
+    @convenience_function
     def create_data_element(self,
                             name: str,
                             init_value: ValueSpecificationElement | None = None,
                             **kwargs) -> VariableDataPrototype:
         """
-        #convenience-method
 
         Adds a new data element to this port interface
         """
@@ -4256,11 +4255,11 @@ class SenderReceiverInterface(DataInterface):
         self.append_data_element(data_element)
         return data_element
 
+    @convenience_function
     def create_invalidation_policy(self,
                                    data_element_ref: VariableDataPrototypeRef | str,
                                    handle_invalid: ar_enum.HandleInvalid) -> InvalidationPolicy:
         """
-        #convenience-method
 
         Adds a new invalidation policy to this port interface
         """
@@ -4320,12 +4319,12 @@ class NvDataInterface(DataInterface):
             msg = f"nv_data: Invalid type '{str(type(nv_data))}'"
             raise TypeError(msg + ". Expected 'VariableDataPrototype'")
 
+    @convenience_function
     def create_data_element(self,
                             name: str,
                             init_value: ValueSpecificationElement | None = None,
                             **kwargs) -> VariableDataPrototype:
         """
-        #convenience-method
 
         Adds a new data element to this port interface
         """
@@ -4377,12 +4376,12 @@ class ParameterInterface(DataInterface):
             msg = f"parameter: Invalid type '{str(type(parameter))}'"
             raise TypeError(msg + ". Expected 'ParameterDataPrototype'")
 
+    @convenience_function
     def create_parameter(self,
                          name: str,
                          init_value: ValueSpecificationElement | None = None,
                          **kwargs) -> ParameterDataPrototype:
         """
-        #convenience-method
 
         Adds a new parameter to this port interface
         """
@@ -4486,13 +4485,13 @@ class ClientServerOperation(Identifiable):
             msg = f"argument: Invalid type '{str(type(argument))}'"
             raise TypeError(msg + ". Expected 'ArgumentDataPrototype'")
 
+    @convenience_function
     def create_argument(self,
                         name: str,
                         direction: ar_enum.ArgumentDirection | None = None,
                         server_arg_impl_policy: ar_enum.ServerArgImplPolicy | None = None,
                         **kwargs) -> ArgumentDataPrototype:
         """
-        #convenience-method
 
         Adds a new argument to this operation
         """
@@ -4500,12 +4499,12 @@ class ClientServerOperation(Identifiable):
         self.append_argument(argument)
         return argument
 
+    @convenience_function
     def create_in_argument(self,
                            name: str,
                            server_arg_impl_policy: ar_enum.ServerArgImplPolicy | None = None,
                            **kwargs) -> ArgumentDataPrototype:
         """
-        #convenience-method
 
         Adds a new in-argument to this operation
         """
@@ -4513,12 +4512,12 @@ class ClientServerOperation(Identifiable):
         self.append_argument(argument)
         return argument
 
+    @convenience_function
     def create_inout_argument(self,
                               name: str,
                               server_arg_impl_policy: ar_enum.ServerArgImplPolicy | None = None,
                               **kwargs) -> ArgumentDataPrototype:
         """
-        #convenience-method
 
         Adds a new inout-argument to this operation
         """
@@ -4526,12 +4525,12 @@ class ClientServerOperation(Identifiable):
         self.append_argument(argument)
         return argument
 
+    @convenience_function
     def create_out_argument(self,
                             name: str,
                             server_arg_impl_policy: ar_enum.ServerArgImplPolicy | None = None,
                             **kwargs) -> ArgumentDataPrototype:
         """
-        #convenience-method
 
         Adds a new out-argument to this operation
         """
@@ -4549,9 +4548,9 @@ class ClientServerOperation(Identifiable):
             msg = f"argument: Invalid type '{str(type(possible_error_ref))}'"
             raise TypeError(msg + ". Expected 'ApplicationErrorRef'")
 
+    @convenience_function
     def create_possible_error_ref(self, value: str) -> ApplicationErrorRef:
         """
-        #convenience-method
 
         Adds a new possible error reference to this operation
         """
@@ -4627,6 +4626,7 @@ class ClientServerInterface(PortInterface):
             msg = f"operation: Invalid type '{str(type(possible_error))}'"
             raise TypeError(msg + ". Expected 'ApplicationError'")
 
+    @convenience_function
     def create_operation(self,
                          name: str,
                          arguments: ArgumentDataPrototype | list[ArgumentDataPrototype] | None = None,
@@ -4634,7 +4634,6 @@ class ClientServerInterface(PortInterface):
                          possible_error_refs: ApplicationErrorRef | list[ApplicationErrorRef] | None = None,
                          **kwargs) -> ClientServerOperation:
         """
-        #convenience-method
 
         Adds a new operation to this port interface
         """
@@ -4643,12 +4642,12 @@ class ClientServerInterface(PortInterface):
         self.append_operation(operation)
         return operation
 
+    @convenience_function
     def create_possible_error(self,
                               name: str,
                               error_code: int | None = None,
                               **kwargs) -> ApplicationError:
         """
-        #convenience-method
 
         Adds a new possible error in this port interface
         """
@@ -4683,13 +4682,13 @@ class ModeSwitchInterface(PortInterface):
             return None
         return PortInterfaceRef(ref_str, ar_enum.IdentifiableSubTypes.MODE_SWITCH_INTERFACE)
 
+    @convenience_function
     def create_mode_group(self,
                           name: str,
                           type_ref: ModeDeclarationGroupRef | None = None,
                           calibration_access: ar_enum.SwCalibrationAccess | None = None,
                           **kwargs) -> ModeDeclarationGroupPrototype:
         """
-        #convenience-method
 
         Adds a new mode declaration group to this port interface
 
@@ -4901,10 +4900,10 @@ class ProvidePortComSpec(ARObject):
     Group AR:P-PORT-COM-SPEC
     """
 
+    @convenience_function
     @classmethod
     def make_from_port_interface(cls, port_interface: PortInterface, **kwargs) -> "ProvidePortComSpec":
         """
-        #convenience-method
 
         Creates P-PORT com-spec from port interface
 
@@ -4986,13 +4985,13 @@ class ProvidePortComSpec(ARObject):
         else:
             raise NotImplementedError(str(type(port_interface)))
 
+    @convenience_function
     @classmethod
     def make_non_queued_sender_com_spec(cls,
                                         init_value: InitValueArgType | None = None,
                                         **kwargs
                                         ) -> "NonqueuedSenderComSpec":
         """
-        #convenience-method
 
         Convenience method for creating NonqueuedSenderComSpec
         """
@@ -5212,10 +5211,10 @@ class RequirePortComSpec(ARObject):
     Group AR:R-PORT-COM-SPEC
     """
 
+    @convenience_function
     @classmethod
     def make_from_port_interface(cls, port_interface: PortInterface, **kwargs) -> "RequirePortComSpec":
         """
-        #convenience-method
 
         Creates R-PORT com-spec from port-interface
 
@@ -5303,13 +5302,13 @@ class RequirePortComSpec(ARObject):
         else:
             raise NotImplementedError(str(type(port_interface)))
 
+    @convenience_function
     @classmethod
     def make_non_queued_receiver_com_spec(cls,
                                           init_value: InitValueArgType | None = None,
                                           **kwargs
                                           ) -> "NonqueuedReceiverComSpec":
         """
-        #convenience-method
 
         Convenience method for creating NonqueuedReceiverComSpec
         """
@@ -5789,13 +5788,13 @@ class SwComponentType(ARElement, Searchable):
                 return elem
         return None
 
+    @convenience_function
     def create_p_port(self,
                       name: str,
                       port_interface: PortInterface | None = None,
                       com_spec: dict | list[tuple[str, dict]] | ProvidePortComSpec | list[ProvidePortComSpec] | None = None,  # noqa E501 pylint: disable=C0301
                       **kwargs) -> ProvidePortPrototype:
         """
-        #convenience-method
 
         Creates a new provide-port and adds it to the internal list of ports
         """
@@ -5825,18 +5824,19 @@ class SwComponentType(ARElement, Searchable):
         self.append_port(port)
         return port
 
+    @convenience_function
     def create_provide_port(self,
                             name: str,
                             port_interface: PortInterface | None = None,
                             com_spec: dict | list[tuple[str, dict]] | ProvidePortComSpec | list[ProvidePortComSpec] | None = None,  # noqa E501 pylint: disable=C0301
                             **kwargs) -> ProvidePortPrototype:
         """
-        #convenience-method
 
         Alias for create_p_port
         """
         return self.create_p_port(name, port_interface, com_spec, **kwargs)
 
+    @convenience_function
     def create_r_port(self,
                       name: str,
                       port_interface: PortInterface,
@@ -5844,7 +5844,6 @@ class SwComponentType(ARElement, Searchable):
                       allow_unconnected: bool | None = None,
                       **kwargs) -> RequirePortPrototype:
         """
-        #convenience-method
 
         Creates a new require-port and adds it to the internal list of ports
         """
@@ -5874,6 +5873,7 @@ class SwComponentType(ARElement, Searchable):
         self.append_port(port)
         return port
 
+    @convenience_function
     def create_require_port(self,
                             name: str,
                             port_interface: PortInterface,
@@ -5881,12 +5881,12 @@ class SwComponentType(ARElement, Searchable):
                             allow_unconnected: bool | None = None,
                             **kwargs) -> RequirePortPrototype:
         """
-        #convenience-method
 
         Alias for create_r_port
         """
         return self.create_r_port(name, port_interface, com_spec, allow_unconnected, **kwargs)
 
+    @convenience_function
     def create_pr_port(self,
                        name: str,
                        port_interface: PortInterface | None = None,
@@ -5894,7 +5894,6 @@ class SwComponentType(ARElement, Searchable):
                        required_com_spec: RequirePortComSpec | list[RequirePortComSpec] | None = None,
                        **kwargs) -> PRPortPrototype:
         """
-        #convenience-method
 
         Creates a new pr-port and adds it to the internal list of ports
         """
@@ -6059,13 +6058,12 @@ class AtomicSoftwareComponentType(SwComponentType):
         if value is not None:
             value.parent = self
 
+    @convenience_function
     def create_internal_behavior(self, name: str = None, **kwargs) -> "SwcInternalBehavior":
         """
         Creates an empty internal behavior object and adds it to the component.
         If the name argument is left as None, a default name will be created based on the name of
         the software component
-
-        #convenience-method
         """
         if name is None:
             name = self.name + "_InternalBehavior"
@@ -6407,12 +6405,12 @@ class CompositionSwComponentType(SwComponentType, Searchable):
                 return elem
         return super().find(ref)
 
+    @convenience_function
     def create_component_prototype(self,
                                    component_type: SwComponentType,
                                    name: str = None,
                                    **kwargs) -> SwComponentPrototype:
         """
-        #convenience-method
 
         Creates a new SwComponentPrototype object from the source SwComponentType and adds it
         to the internal list of components.
@@ -6425,12 +6423,12 @@ class CompositionSwComponentType(SwComponentType, Searchable):
         self.append_component(component_prototype)
         return component_prototype
 
+    @convenience_function
     def create_connector(self,
                          port_ref1: str,
                          port_ref2: str,
                          workspace: Searchable) -> None:
         """
-        #convenience-method
 
         Creates a connector between two ports in the composition
         port_ref1 and port_ref2 can be of any of these formats:
@@ -6871,6 +6869,7 @@ class VariableAccess(Identifiable):
         self._assign_optional_strict("accessed_variable", accessed_variable, AutosarVariableRef)
         self._assign_optional("scope", scope, ar_enum.VariableAccessScope)
 
+    @convenience_function
     @classmethod
     def make_from_port(cls,
                        name: str,
@@ -6878,7 +6877,6 @@ class VariableAccess(Identifiable):
                        target_data_prototype_ref: DataPrototypeRef,
                        **kwargs) -> "VariableAccess":
         """
-        #convenience-method
 
         Simplified creation method for use with VariableInAtomicSWCTypeInstanceRef
         """
@@ -6887,6 +6885,7 @@ class VariableAccess(Identifiable):
         autosar_variable_ref = AutosarVariableRef(ar_variable_iref=variable_iref)
         return cls(name, autosar_variable_ref, **kwargs)
 
+    @convenience_function
     @classmethod
     def make_from_port_with_args(cls,
                                  name: str,
@@ -6894,7 +6893,6 @@ class VariableAccess(Identifiable):
                                  target_data_prototype_ref: DataPrototypeRef,
                                  args: dict[str, Any] | None) -> "VariableAccess":
         """
-        #convenience-method
 
         Same as make_from_port but allows extra arguments to be given as an optional dictionary
         """
@@ -7203,10 +7201,10 @@ class ExternalTriggeringPointIdent(AbstractAccessPoint):
     Use constructor from base class
     """
 
+    @convenience_function
     @classmethod
     def make_with_args(cls, name: str, args: dict[str, Any] | None) -> "ExternalTriggeringPointIdent":
         """
-        #convenience-method
 
         Enables creation of ExternalTriggeringPointIdent by giving extra arguments as an optional dictionary
         """
@@ -7265,10 +7263,10 @@ class ModeAccessPointIdent(AbstractAccessPoint):
     Use constructor from base class
     """
 
+    @convenience_function
     @classmethod
     def make_with_args(cls, name: str, args: dict[str, Any] | None) -> "ModeAccessPointIdent":
         """
-        #convenience-method
 
         Enables creation of ModeAccessPointIdent by giving extra arguments as an optional dictionary
         """
@@ -7637,11 +7635,11 @@ class RunnableEntity(ExecutableEntity):
         ref_str = self._calc_ref_string()
         return None if ref_str is None else RunnableEntityRef(ref_str)
 
+    @convenience_function
     def create_port_access(self,
                            elements: str | list[str] | tuple[str, dict] | list[tuple[str, dict]]
                            ) -> None:
         """
-        #convenience-method
 
         Attempts to automatically create new port access points based on SWC port names.
         Before this function can be used you must first setup the necessary name prefixes in the
@@ -7719,6 +7717,7 @@ class RunnableEntity(ExecutableEntity):
             port_interface = workspace.get_port_interface(port.port_interface_ref)
             self._create_port_access_internal(port, port_interface, ref[2], settings, options, access_point_args)
 
+    @convenience_function
     def create_internal_triggering_point(self,
                                          trigger_name: str,
                                          sw_impl_policy: ar_enum.SwImplPolicy | None = None,
@@ -8332,6 +8331,7 @@ class DataReceiveErrorEvent(RteEvent):
         self.data: RVariableInAtomicSwcInstanceRef | None = None
         self._assign_optional_strict("data", data, RVariableInAtomicSwcInstanceRef)
 
+    @convenience_function
     @classmethod
     def make(cls,
              name: str,
@@ -8340,7 +8340,6 @@ class DataReceiveErrorEvent(RteEvent):
              target_data_element: VariableDataPrototypeRef | str | None = None,
              **kwargs) -> "DataReceiveErrorEvent":
         """
-        #convenience-method
 
         Simplified creation method that automatically creates
         and uses the necessary RVariableInAtomicSwcInstanceRef object
@@ -8375,6 +8374,7 @@ class DataReceivedEvent(RteEvent):
         self.data: RVariableInAtomicSwcInstanceRef | None = None
         self._assign_optional_strict("data", data, RVariableInAtomicSwcInstanceRef)
 
+    @convenience_function
     @classmethod
     def make(cls,
              name: str,
@@ -8383,7 +8383,6 @@ class DataReceivedEvent(RteEvent):
              target_data_element: VariableDataPrototypeRef | str | None = None,
              **kwargs) -> "DataReceivedEvent":
         """
-        #convenience-method
 
         Simplified creation method that automatically creates
         and uses the necessary RVariableInAtomicSwcInstanceRef object
@@ -8472,6 +8471,7 @@ class ExternalTriggerOccurredEvent(RteEvent):
         self.trigger: RTriggerInAtomicSwcInstanceRef | None = None
         self._assign_optional_strict("trigger", trigger, RTriggerInAtomicSwcInstanceRef)
 
+    @convenience_function
     @classmethod
     def make(cls,
              name: str,
@@ -8480,7 +8480,8 @@ class ExternalTriggerOccurredEvent(RteEvent):
              target_trigger: TriggerRef | str | None = None,
              **kwargs) -> "ExternalTriggerOccurredEvent":
         """
-        #convenience-method
+        Simplified creation method that automatically creates
+        and uses the necessary RTriggerInAtomicSwcInstanceRef object
         """
         trigger = RTriggerInAtomicSwcInstanceRef(context_port, target_trigger)
         return cls(name, start_on_event, trigger, **kwargs)
@@ -8584,6 +8585,7 @@ class OperationInvokedEvent(RteEvent):
         self.operation: POperationInAtomicSwcInstanceRef | None = None
         self._assign_optional_strict("operation", operation, POperationInAtomicSwcInstanceRef)
 
+    @convenience_function
     @classmethod
     def make(cls,
              name: str,
@@ -8592,7 +8594,6 @@ class OperationInvokedEvent(RteEvent):
              target_provided_operation: ClientServerOperationRef | str | None = None,
              **kwargs) -> "OperationInvokedEvent":
         """
-        #convenience-method
 
         Simplified creation method that automatically creates
         and uses the necessary POperationInAtomicSwcInstanceRef object
@@ -8632,6 +8633,7 @@ class SwcModeManagerErrorEvent(RteEvent):
         self.mode_group: PModeGroupInAtomicSwcInstanceRef | None = None
         self._assign_optional_strict("mode_group", mode_group, PModeGroupInAtomicSwcInstanceRef)
 
+    @convenience_function
     @classmethod
     def make(cls,
              name: str,
@@ -8640,7 +8642,8 @@ class SwcModeManagerErrorEvent(RteEvent):
              context_mode_declaration_group_prototype: ModeDeclarationGroupPrototypeRef | str | None = None,
              **kwargs) -> "SwcModeManagerErrorEvent":
         """
-        #convenience-method
+        Simplified creation method that automatically creates
+        and uses the necessary PModeGroupInAtomicSwcInstanceRef object
         """
         mode_group = PModeGroupInAtomicSwcInstanceRef(context_port, context_mode_declaration_group_prototype)
         return cls(name, start_on_event, mode_group, **kwargs)
@@ -8690,6 +8693,7 @@ class SwcModeSwitchEvent(RteEvent):
                 msg_part3 = f"Got {str(type(mode))}"
                 raise TypeError(msg_part1 + msg_part2 + msg_part3)
 
+    @convenience_function
     @classmethod
     def make(cls,
              name: str,
@@ -8700,7 +8704,6 @@ class SwcModeSwitchEvent(RteEvent):
              target_mode_declaration: ModeDeclarationRef | None = None,
              **kwargs) -> "SwcModeSwitchEvent":
         """
-        #convenience-method
 
         Only suitable for ON-ENTRY and ON-EXIT activation types.
         For ON-TRANSITION activation, use the class constructor instead.
@@ -8962,24 +8965,22 @@ class InternalBehavior(Identifiable):
             else:
                 self.append_exclusive_area(exclusive_areas)
 
+    @convenience_function
     def create_constant_memory(self,
                                name: str,
                                init_value: ValueSpecificationElement | None = None,
                                **kwargs) -> ParameterDataPrototype:
         """
         Adds a new ParameterDataPrototype to constant_memory
-
-        #convenience-method
         """
         item = ParameterDataPrototype(name, init_value, **kwargs)
         self.append_constant_memory(item)
         return item
 
+    @convenience_function
     def create_exclusive_area(self, name: str, **kwargs) -> ExclusiveArea:
         """
         Adds a new ExclusiveArea to this object
-
-        #convenience-method
         """
         exclusive_area = ExclusiveArea(name, **kwargs)
         self.append_exclusive_area(exclusive_area)
@@ -9132,6 +9133,7 @@ class SwcInternalBehavior(InternalBehavior):
         else:
             raise TypeError(f"element: Expected type PortApiOption, got '{str(type(element))}'")
 
+    @convenience_function
     def create_runnable(self,
                         name: str,
                         can_be_invoked_concurrently: bool | None = None,
@@ -9153,8 +9155,6 @@ class SwcInternalBehavior(InternalBehavior):
 
         can_enter_leave: If argument type is str or list[str] then it expects each string to be the
                          short-name of an existing exclusive area.
-
-        #convenience-method
         """
         if isinstance(symbol, str) and len(symbol) == 0:
             symbol = name
@@ -9212,6 +9212,7 @@ class SwcInternalBehavior(InternalBehavior):
         """
         return make_unique_name_in_list(self.events, event_name)
 
+    @convenience_function
     def create_background_event(self,
                                 runnable_name: str,
                                 event_name: str | None = None,
@@ -9219,8 +9220,6 @@ class SwcInternalBehavior(InternalBehavior):
                                 ) -> BackgroundEvent:
         """
         Adds a new BackgroundEvent to this SwcInternalBehavior object.
-
-        #convenience-method
         """
         runnable = self.find_runnable(runnable_name)
         if runnable is None:
@@ -9239,6 +9238,7 @@ class SwcInternalBehavior(InternalBehavior):
         self.append_event(event)
         return event
 
+    @convenience_function
     def create_data_receive_error_event(self,
                                         runnable_name: str,
                                         port_data_element: str,
@@ -9250,8 +9250,6 @@ class SwcInternalBehavior(InternalBehavior):
         port_data_element is a string with format '<PortName>/<DataElementName>' or
         just '<PortName>' which can be used in the special situation when the port interface
         only has a single data element.
-
-        #convenience-method
         """
         swc = self.get_valid_parent()
         runnable = self.find_runnable(runnable_name)
@@ -9290,6 +9288,7 @@ class SwcInternalBehavior(InternalBehavior):
         self.append_event(event)
         return event
 
+    @convenience_function
     def create_data_received_event(self,
                                    runnable_name: str,
                                    data_element_ref: str,
@@ -9301,8 +9300,6 @@ class SwcInternalBehavior(InternalBehavior):
         data_element_ref is a string with format '<PortName>/<DataElementName>' or
         just '<PortName>' which can be used in the special situation when the port interface
         only has a single data element.
-
-        #convenience-method
         """
         swc = self.get_valid_parent()
         runnable = self.find_runnable(runnable_name)
@@ -9341,6 +9338,7 @@ class SwcInternalBehavior(InternalBehavior):
         self.append_event(event)
         return event
 
+    @convenience_function
     def create_data_send_completed_event(self,
                                          runnable_name: str,
                                          data_element_ref: str,
@@ -9354,11 +9352,10 @@ class SwcInternalBehavior(InternalBehavior):
         only has a single data element.
         The given runnable must have a data send point referencing the port and data element.
         Note: Unable to complete implementation. Requires support for port-access in runnables.
-
-        #convenience-method
         """
         raise NotImplementedError("References to data send points are not yet supported")
 
+    @convenience_function
     def create_data_write_completed_event(self,
                                           runnable_name: str,
                                           data_element_ref: str,
@@ -9372,11 +9369,10 @@ class SwcInternalBehavior(InternalBehavior):
         only has a single data element.
         The given runnable must have a data send point referencing the port and data element.
         Note: Not implemented due to lack of support for data write access
-
-        #convenience-method
         """
         raise NotImplementedError("References to data write access are not yet supported")
 
+    @convenience_function
     def create_init_event(self,
                           runnable_name: str,
                           event_name: str | None = None,
@@ -9384,8 +9380,6 @@ class SwcInternalBehavior(InternalBehavior):
                           ) -> InitEvent:
         """
         Adds a new InitEvent to this SwcInternalBehavior object
-
-        #convenience-method
         """
         runnable = self.find_runnable(runnable_name)
         if runnable is None:
@@ -9404,6 +9398,7 @@ class SwcInternalBehavior(InternalBehavior):
         self.append_event(event)
         return event
 
+    @convenience_function
     def create_operation_invoked_event(self,
                                        runnable_name: str,
                                        operation_ref: str,
@@ -9413,8 +9408,6 @@ class SwcInternalBehavior(InternalBehavior):
         """
         Adds a new OperationInvokedEvent to this object
         operation_ref is a string with format <PortName>/<OperationName>
-
-        #convenience-method
         """
         swc = self.get_valid_parent()
         runnable = self.find_runnable(runnable_name)
@@ -9452,6 +9445,7 @@ class SwcInternalBehavior(InternalBehavior):
         self.append_event(event)
         return event
 
+    @convenience_function
     def create_swc_mode_manager_error_event(self,
                                             runnable_name: str,
                                             port_name: str,
@@ -9460,8 +9454,6 @@ class SwcInternalBehavior(InternalBehavior):
                                             ) -> SwcModeManagerErrorEvent:
         """
         Adds a new SwcModeManagerErrorEvent to this object
-
-        #convenience-method
         """
         swc = self.get_valid_parent()
         runnable = self.find_runnable(runnable_name)
@@ -9495,6 +9487,7 @@ class SwcInternalBehavior(InternalBehavior):
         self.append_event(event)
         return event
 
+    @convenience_function
     def create_swc_mode_mode_switch_event(self,
                                           runnable_name: str,
                                           mode_ref: str | list[str] | tuple[str, str],
@@ -9507,8 +9500,6 @@ class SwcInternalBehavior(InternalBehavior):
         mode_ref is a string with format '<PortName>/<ModeDeclarationName>'.
         mode_ref can also be a 2-element list or a 2-tuple containing strings with same format as above.
         The second version is used for creating events for specific mode transitions.
-
-        #convenience-method
         """
         swc = self.get_valid_parent()
         workspace = swc.root_collection()
@@ -9564,6 +9555,7 @@ class SwcInternalBehavior(InternalBehavior):
         self.append_event(event)
         return event
 
+    @convenience_function
     def create_timing_event(self,
                             runnable_name: str,
                             period: int | float | None = None,
@@ -9572,8 +9564,6 @@ class SwcInternalBehavior(InternalBehavior):
                             **kwargs) -> TimingEvent:
         """
         Adds a new TimingEvent to this object
-
-        #convenience-method
         """
         runnable = self.find_runnable(runnable_name)
         if runnable is None:
@@ -9592,6 +9582,7 @@ class SwcInternalBehavior(InternalBehavior):
         self.append_event(event)
         return event
 
+    @convenience_function
     def create_external_trigger_event(self,
                                       runnable_name: str,
                                       trigger_ref: str,
@@ -9600,8 +9591,6 @@ class SwcInternalBehavior(InternalBehavior):
                                       ) -> ExternalTriggerOccurredEvent:
         """
         Adds a new ExternalTriggerOccurredEvent to this SwcInternalBehavior object
-
-        #convenience-method
         """
         swc = self.get_valid_parent()
         runnable = self.find_runnable(runnable_name)
@@ -9633,6 +9622,7 @@ class SwcInternalBehavior(InternalBehavior):
         self.append_event(event)
         return event
 
+    @convenience_function
     def create_internal_trigger_event(self,
                                       runnable_name: str,
                                       source_name: str,
@@ -9641,8 +9631,6 @@ class SwcInternalBehavior(InternalBehavior):
                                       ) -> InternalTriggerOccurredEvent:
         """
         Adds a new InternalTriggerOccurredEvent to this SwcInternalBehavior object
-
-        #convenience-method
         """
         runnable = self.find_runnable(runnable_name)
         if runnable is None:
@@ -9703,6 +9691,7 @@ class SwcInternalBehavior(InternalBehavior):
                     return trigger_point.ref()
         return None
 
+    @convenience_function
     def create_port_api_options(self,
                                 port_name: str | list[str],
                                 enable_take_address: bool | None = None,
@@ -9718,8 +9707,6 @@ class SwcInternalBehavior(InternalBehavior):
         port_name: Name of the port to create options for. It can also be a list of names in case you want to use
                    identical options for multiple ports.
                    Special value is "*" which creates one options object per port found in parent SWC.
-
-        #convenience-method
         """
         swc = self.get_valid_parent()
         # names of ports to process.
