@@ -346,6 +346,54 @@ def parse_enumeration_file(filepath: str) -> Dict[str, Any]:
     }
 
 
+def parse_reference_file(filepath: str) -> Dict[str, Any]:
+    """Parse src/autosar/xml/reference.py and extract reference definitions and mappings."""
+    with open(filepath, "r", encoding="utf-8") as f:
+        code = f.read()
+
+    tree = ast.parse(code)
+    references: Dict[str, Any] = {}
+    type_to_ref: Dict[str, str] = {}
+
+    for node in tree.body:
+        if not isinstance(node, ast.ClassDef):
+            continue
+
+        doc = ast.get_docstring(node) or ""
+        bases = [b.id for b in node.bases if isinstance(b, ast.Name)]
+
+        # Match AR:XYZ, AR:XYZ--SUBTYPES-ENUM, etc.
+        ar_matches = re.findall(r'AR:([A-Z0-9\-]+)', doc)
+        enum_matches = re.findall(r'([A-Z0-9\-]+--SUBTYPES-ENUM)', doc)
+        ref_to_matches = re.findall(r'References?\s+to\s+([A-Za-z0-9\-]+)', doc, re.IGNORECASE)
+
+        matched_types = list(set(ar_matches + enum_matches + ref_to_matches))
+
+        ref_info = {
+            "name": node.name,
+            "line": node.lineno,
+            "bases": bases,
+            "types": matched_types,
+            "docstring": doc[:150]
+        }
+
+        references[node.name] = ref_info
+
+        type_to_ref[node.name] = node.name
+        if node.name.endswith('Ref'):
+            type_to_ref[node.name[:-3]] = node.name
+
+        for t in matched_types:
+            type_to_ref[t] = node.name
+            clean_t = t.replace("--SUBTYPES-ENUM", "")
+            type_to_ref[clean_t] = node.name
+
+    return {
+        "references": references,
+        "type_to_ref": type_to_ref
+    }
+
+
 def refresh_cache(repo_root: Optional[str] = None, output_path: Optional[str] = None) -> dict:
     """Scan the autosar Python source code and refresh the JSON cache."""
     if repo_root is None:
@@ -354,6 +402,7 @@ def refresh_cache(repo_root: Optional[str] = None, output_path: Optional[str] = 
 
     element_py = os.path.join(repo_root, "src", "autosar", "xml", "element.py")
     enum_py = os.path.join(repo_root, "src", "autosar", "xml", "enumeration.py")
+    ref_py = os.path.join(repo_root, "src", "autosar", "xml", "reference.py")
 
     if not os.path.exists(element_py):
         raise FileNotFoundError(f"Cannot find element.py at {element_py}")
@@ -366,13 +415,20 @@ def refresh_cache(repo_root: Optional[str] = None, output_path: Optional[str] = 
         print(f"Scanning enumeration.py ({enum_py})...")
         enum_data = parse_enumeration_file(enum_py)
 
+    ref_data: Dict[str, Any] = {"references": {}, "type_to_ref": {}}
+    if os.path.exists(ref_py):
+        print(f"Scanning reference.py ({ref_py})...")
+        ref_data = parse_reference_file(ref_py)
+
     cache_data = {
         "classes": elem_data["classes"],
         "complex_types": elem_data["complex_types"],
         "groups": elem_data["groups"],
         "tag_variants": elem_data["tag_variants"],
         "enums": enum_data["enums"],
-        "type_to_enum": enum_data["type_to_enum"]
+        "type_to_enum": enum_data["type_to_enum"],
+        "references": ref_data["references"],
+        "type_to_ref": ref_data["type_to_ref"]
     }
 
     if output_path is None:
@@ -389,7 +445,9 @@ def refresh_cache(repo_root: Optional[str] = None, output_path: Optional[str] = 
     print(f"  Mapped XML Groups:          {len(elem_data['groups'])}")
     print(f"  Mapped Tag Variants:        {len(elem_data['tag_variants'])}")
     print(f"  Enumerations indexed:       {len(enum_data['enums'])}")
-    print(f"  Mapped XML Enum Types:      {len(enum_data['type_to_enum'])}\n")
+    print(f"  Mapped XML Enum Types:      {len(enum_data['type_to_enum'])}")
+    print(f"  References indexed:         {len(ref_data['references'])}")
+    print(f"  Mapped Reference Types:     {len(ref_data['type_to_ref'])}\n")
 
     return cache_data
 

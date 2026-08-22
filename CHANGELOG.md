@@ -13,6 +13,8 @@ Non-collectable elements are various sub-elements to collectable elements.
 
 * ApplicationRuleBasedValueSpecification | APPLICATION-RULE-BASED-VALUE-SPECIFICATION
 * CompositeRuleBasedValueSpecification | COMPOSITE-RULE-BASED-VALUE-SPECIFICATION
+* ConstantSpecificationMapping | CONSTANT-SPECIFICATION-MAPPING
+* ConstantSpecificationMappingSet | CONSTANT-SPECIFICATION-MAPPING-SET | `collectable`
 * NumericalOrText | NUMERICAL-OR-TEXT
 * NumericalRuleBasedValueSpecification | NUMERICAL-RULE-BASED-VALUE-SPECIFICATION
 * ReferenceValueSpecification | REFERENCE-VALUE-SPECIFICATION

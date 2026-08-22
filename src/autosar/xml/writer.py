@@ -212,6 +212,7 @@ class Writer(_XMLWriter):
             'Unit': self._write_unit,
             # Constant elements
             'ConstantSpecification': self._write_constant_specification,
+            'ConstantSpecificationMappingSet': self._write_constant_specification_mapping_set,
             # Port interface elements
             'NvDataInterface': self._write_nv_data_interface,
             'ParameterInterface': self._write_parameter_interface,
@@ -334,6 +335,7 @@ class Writer(_XMLWriter):
             'ApplicationArrayElement': self._write_application_array_element,
             'ApplicationRecordElement': self._write_application_record_element,
             'DataTypeMap': self._write_data_type_map,
+            'ConstantSpecificationMapping': self._write_constant_specification_mapping,
             'ValueList': self._write_value_list,
             'VariableDataPrototype': self._write_variable_data_prototype,
             'ParameterDataPrototype': self._write_parameter_data_prototype,
@@ -350,6 +352,7 @@ class Writer(_XMLWriter):
             'PhysicalDimensionRef': self._write_physical_dimension_ref,
             'ApplicationDataTypeRef': self._write_application_data_type_ref,
             'ConstantRef': self._write_constant_ref,
+            'ConstantSpecificationMappingSetRef': self._write_constant_specification_mapping_set_ref,
             # Port interface elements
             'InvalidationPolicy': self._write_invalidation_policy,
             'ApplicationError': self._write_application_error,
@@ -1979,6 +1982,42 @@ class Writer(_XMLWriter):
             self._write_impl_data_type_ref(elem.impl_data_type_ref, "IMPLEMENTATION-DATA-TYPE-REF")
         self._leave_child()
 
+    def _write_constant_specification_mapping(self, elem: ar_element.ConstantSpecificationMapping) -> None:
+        """
+        Writes complex type AR:CONSTANT-SPECIFICATION-MAPPING
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.ConstantSpecificationMapping)
+        tag = "CONSTANT-SPECIFICATION-MAPPING"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            if elem.appl_constant_ref is not None:
+                self._write_constant_ref(elem.appl_constant_ref, "APPL-CONSTANT-REF")
+            if elem.impl_constant_ref is not None:
+                self._write_constant_ref(elem.impl_constant_ref, "IMPL-CONSTANT-REF")
+            self._leave_child()
+
+    def _write_constant_specification_mapping_set(self, elem: ar_element.ConstantSpecificationMappingSet) -> None:
+        """
+        Writes complex type AR:CONSTANT-SPECIFICATION-MAPPING-SET
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.ConstantSpecificationMappingSet)
+        attr: TupleList = []
+        self._collect_identifiable_attributes(elem, attr)
+        self._add_child("CONSTANT-SPECIFICATION-MAPPING-SET", attr)
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        if len(elem.mappings) > 0:
+            self._add_child("MAPPINGS")
+            for child_elem in elem.mappings:
+                self._write_constant_specification_mapping(child_elem)
+            self._leave_child()
+        self._leave_child()
+
     def _write_data_type_mapping_set(self, elem: ar_element.DataTypeMappingSet) -> None:
         """
         Writes complex type AR:DATA-TYPE-MAPPING-SET
@@ -2560,6 +2599,15 @@ class Writer(_XMLWriter):
         Writes references to AR:DATA-TYPE-MAPPING-SET--SUBTYPES-ENUM
         """
         assert isinstance(elem, ar_element.DataTypeMappingSetRef)
+        self._write_ref_content(elem, tag)
+
+    def _write_constant_specification_mapping_set_ref(self,
+                                                      elem: ar_element.ConstantSpecificationMappingSetRef,
+                                                      tag: str = "CONSTANT-VALUE-MAPPING-REF") -> None:
+        """
+        Writes references to AR:CONSTANT-SPECIFICATION-MAPPING-SET--SUBTYPES-ENUM
+        """
+        assert isinstance(elem, ar_element.ConstantSpecificationMappingSetRef)
         self._write_ref_content(elem, tag)
 
     def _write_argument_data_prototype_ref(self, elem: ar_element.ArgumentDataPrototypeRef, tag: str) -> None:
@@ -5389,6 +5437,11 @@ class Writer(_XMLWriter):
             self._add_child("CONSTANT-MEMORYS")
             for item in elem.constant_memory:
                 self._write_parameter_data_prototype(item, "PARAMETER-DATA-PROTOTYPE")
+            self._leave_child()
+        if elem.constant_value_mappings:
+            self._add_child("CONSTANT-VALUE-MAPPING-REFS")
+            for mapping_set in elem.constant_value_mappings:
+                self._write_constant_specification_mapping_set_ref(mapping_set, "CONSTANT-VALUE-MAPPING-REF")
             self._leave_child()
         if elem.data_type_mappings:
             self._add_child("DATA-TYPE-MAPPING-REFS")
