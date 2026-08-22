@@ -5456,9 +5456,9 @@ class Writer(_XMLWriter):
         """
         Writes group AR:EXCLUSIVE-AREA-NESTING-ORDER
         """
-        if elem.exclusive_areas:
+        if elem.exclusive_area:
             self._add_child("EXCLUSIVE-AREA-REFS")
-            for ref in elem.exclusive_areas:
+            for ref in elem.exclusive_area:
                 self._write_exclusive_area_ref(ref, "EXCLUSIVE-AREA-REF")
             self._leave_child()
 
@@ -5484,24 +5484,24 @@ class Writer(_XMLWriter):
             for item in elem.constant_memory:
                 self._write_parameter_data_prototype(item, "PARAMETER-DATA-PROTOTYPE")
             self._leave_child()
-        if elem.constant_value_mappings:
+        if elem.constant_value_mapping:
             self._add_child("CONSTANT-VALUE-MAPPING-REFS")
-            for mapping_set in elem.constant_value_mappings:
+            for mapping_set in elem.constant_value_mapping:
                 self._write_constant_specification_mapping_set_ref(mapping_set, "CONSTANT-VALUE-MAPPING-REF")
             self._leave_child()
-        if elem.data_type_mappings:
+        if elem.data_type_mapping:
             self._add_child("DATA-TYPE-MAPPING-REFS")
-            for mapping_set in elem.data_type_mappings:
+            for mapping_set in elem.data_type_mapping:
                 self._write_data_type_mapping_set_ref(mapping_set, "DATA-TYPE-MAPPING-REF")
             self._leave_child()
-        if elem.exclusive_areas:
+        if elem.exclusive_area:
             self._add_child("EXCLUSIVE-AREAS")
-            for exclusive_area in elem.exclusive_areas:
+            for exclusive_area in elem.exclusive_area:
                 self._write_exclusive_area(exclusive_area)
             self._leave_child()
-        if elem.exclusive_area_nesting_orders:
+        if elem.exclusive_area_nesting_order:
             self._add_child("EXCLUSIVE-AREA-NESTING-ORDERS")
-            for order in elem.exclusive_area_nesting_orders:
+            for order in elem.exclusive_area_nesting_order:
                 self._write_exclusive_area_nesting_order(order)
             self._leave_child()
         if elem.static_memory:
@@ -5521,37 +5521,37 @@ class Writer(_XMLWriter):
             for item in elem.ar_typed_per_instance_memory:
                 self._write_variable_data_prototype(item, "VARIABLE-DATA-PROTOTYPE")
             self._leave_child()
-        if elem.events:
+        if elem.event:
             self._add_child("EVENTS")
-            for event in elem.events:
+            for event in elem.event:
                 self._write_rte_event_element(event)
             self._leave_child()
-        if elem.exclusive_area_policies:
+        if elem.exclusive_area_policy:
             self._add_child("EXCLUSIVE-AREA-POLICYS")
-            for policy in elem.exclusive_area_policies:
+            for policy in elem.exclusive_area_policy:
                 self._write_swc_exclusive_area_policy(policy)
             self._leave_child()
-        if elem.explicit_inter_runnable_variables:
+        if elem.explicit_inter_runnable_variable:
             self._add_child("EXPLICIT-INTER-RUNNABLE-VARIABLES")
-            for item in elem.explicit_inter_runnable_variables:
+            for item in elem.explicit_inter_runnable_variable:
                 self._write_variable_data_prototype(item, "VARIABLE-DATA-PROTOTYPE")
             self._leave_child()
         if elem.handle_termination_and_restart is not None:
             self._add_content("HANDLE-TERMINATION-AND-RESTART",
                               ar_enum.enum_to_xml(elem.handle_termination_and_restart))
-        if elem.implicit_inter_runnable_variables:
+        if elem.implicit_inter_runnable_variable:
             self._add_child("IMPLICIT-INTER-RUNNABLE-VARIABLES")
-            for item in elem.implicit_inter_runnable_variables:
+            for item in elem.implicit_inter_runnable_variable:
                 self._write_variable_data_prototype(item, "VARIABLE-DATA-PROTOTYPE")
             self._leave_child()
-        if elem.port_api_options:
+        if elem.port_api_option:
             self._add_child("PORT-API-OPTIONS")
-            for element in elem.port_api_options.values():
+            for element in elem.port_api_option.values():
                 self._write_port_api_option(element)
             self._leave_child()
-        if elem.runnables:
+        if elem.runnable:
             self._add_child("RUNNABLES")
-            for runnable in elem.runnables:
+            for runnable in elem.runnable:
                 self._write_runnable_entity(runnable)
             self._leave_child()
 

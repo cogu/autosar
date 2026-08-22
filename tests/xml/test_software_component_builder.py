@@ -1141,9 +1141,9 @@ class TestPortAPIOptionAPI(unittest.TestCase):
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
         behavior.create_port_api_options("*", enable_take_address=True, indirect_api=True)
-        self.assertEqual(len(behavior.port_api_options), 10)
+        self.assertEqual(len(behavior.port_api_option), 10)
         options: ar_element.PortApiOption
-        for options in behavior.port_api_options.values():
+        for options in behavior.port_api_option.values():
             self.assertTrue(options.enable_take_address)
             self.assertTrue(options.indirect_api)
 
@@ -1152,8 +1152,8 @@ class TestPortAPIOptionAPI(unittest.TestCase):
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
         behavior.create_port_api_options("VehicleSpeed", enable_take_address=True, indirect_api=True)
-        self.assertEqual(len(behavior.port_api_options), 1)
-        options = behavior.port_api_options["VehicleSpeed"]
+        self.assertEqual(len(behavior.port_api_option), 1)
+        options = behavior.port_api_option["VehicleSpeed"]
         self.assertIsInstance(options, ar_element.PortApiOption)
         self.assertTrue(options.enable_take_address)
         self.assertTrue(options.indirect_api)
@@ -1170,9 +1170,9 @@ class TestPortAPIOptionAPI(unittest.TestCase):
         swc = self.create_swc(workspace)
         behavior = swc.internal_behavior
         behavior.create_port_api_options("*", enable_take_address=False)
-        behavior.port_api_options["VehicleSpeed"].enable_take_address = True
+        behavior.port_api_option["VehicleSpeed"].enable_take_address = True
         options: ar_element.PortApiOption
-        for key, options in behavior.port_api_options.items():
+        for key, options in behavior.port_api_option.items():
             self.assertIsInstance(options.enable_take_address, bool)
             if key == "VehicleSpeed":
                 self.assertTrue(options.enable_take_address)

@@ -310,12 +310,12 @@ class TestExclusiveAreaNestingOrder(unittest.TestCase):
         elem: ar_element.ExclusiveAreaNestingOrder = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.ExclusiveAreaNestingOrder)
         self.assertEqual(elem.name, "Order1")
-        self.assertEqual(len(elem.exclusive_areas), 0)
+        self.assertEqual(len(elem.exclusive_area), 0)
 
     def test_read_write_with_exclusive_areas(self):
         ref1 = "/Swc/Behavior/Area1"
         ref2 = "/Swc/Behavior/Area2"
-        element = ar_element.ExclusiveAreaNestingOrder("Order1", exclusive_areas=[ref1, ref2])
+        element = ar_element.ExclusiveAreaNestingOrder("Order1", exclusive_area=[ref1, ref2])
         writer = autosar.xml.Writer()
         xml = f'''<EXCLUSIVE-AREA-NESTING-ORDER>
   <SHORT-NAME>Order1</SHORT-NAME>
@@ -328,16 +328,16 @@ class TestExclusiveAreaNestingOrder(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.ExclusiveAreaNestingOrder = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.ExclusiveAreaNestingOrder)
-        self.assertEqual(len(elem.exclusive_areas), 2)
-        self.assertEqual(str(elem.exclusive_areas[0]), ref1)
-        self.assertEqual(str(elem.exclusive_areas[1]), ref2)
+        self.assertEqual(len(elem.exclusive_area), 2)
+        self.assertEqual(str(elem.exclusive_area[0]), ref1)
+        self.assertEqual(str(elem.exclusive_area[1]), ref2)
 
     def test_append_invalid_type(self):
         element = ar_element.ExclusiveAreaNestingOrder("Order1")
         with self.assertRaises(ar_except.ElementTypeError):
             element.append(123)
         with self.assertRaises(TypeError):
-            ar_element.ExclusiveAreaNestingOrder("Order1", exclusive_areas=123)
+            ar_element.ExclusiveAreaNestingOrder("Order1", exclusive_area=123)
 
 
 class TestSwcExclusiveAreaPolicy(unittest.TestCase):
@@ -3966,8 +3966,8 @@ class TestInternalBehavior(unittest.TestCase):
             element.append_exclusive_area_nesting_order("NotAnOrder")
 
     def test_exclusive_area_nesting_orders_from_element(self):
-        order = ar_element.ExclusiveAreaNestingOrder("Order1", exclusive_areas="/Swc/Area1")
-        element = ar_element.SwcInternalBehavior("MyName", exclusive_area_nesting_orders=order)
+        order = ar_element.ExclusiveAreaNestingOrder("Order1", exclusive_area="/Swc/Area1")
+        element = ar_element.SwcInternalBehavior("MyName", exclusive_area_nesting_order=order)
         xml = '''<SWC-INTERNAL-BEHAVIOR>
   <SHORT-NAME>MyName</SHORT-NAME>
   <EXCLUSIVE-AREA-NESTING-ORDERS>
@@ -3984,8 +3984,8 @@ class TestInternalBehavior(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
-        self.assertEqual(len(elem.exclusive_area_nesting_orders), 1)
-        order_elem = elem.exclusive_area_nesting_orders[0]
+        self.assertEqual(len(elem.exclusive_area_nesting_order), 1)
+        order_elem = elem.exclusive_area_nesting_order[0]
         self.assertIsInstance(order_elem, ar_element.ExclusiveAreaNestingOrder)
         self.assertEqual(order_elem.name, "Order1")
         self.assertIs(order_elem.parent, elem)
@@ -3993,7 +3993,7 @@ class TestInternalBehavior(unittest.TestCase):
     def test_exclusive_area_nesting_orders_from_list(self):
         order1 = ar_element.ExclusiveAreaNestingOrder("Order1")
         order2 = ar_element.ExclusiveAreaNestingOrder("Order2")
-        element = ar_element.SwcInternalBehavior("MyName", exclusive_area_nesting_orders=[order1, order2])
+        element = ar_element.SwcInternalBehavior("MyName", exclusive_area_nesting_order=[order1, order2])
         xml = '''<SWC-INTERNAL-BEHAVIOR>
   <SHORT-NAME>MyName</SHORT-NAME>
   <EXCLUSIVE-AREA-NESTING-ORDERS>
@@ -4010,20 +4010,20 @@ class TestInternalBehavior(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
-        self.assertEqual(len(elem.exclusive_area_nesting_orders), 2)
-        self.assertEqual(elem.exclusive_area_nesting_orders[0].name, "Order1")
-        self.assertEqual(elem.exclusive_area_nesting_orders[1].name, "Order2")
-        self.assertIs(elem.exclusive_area_nesting_orders[0].parent, elem)
-        self.assertIs(elem.exclusive_area_nesting_orders[1].parent, elem)
+        self.assertEqual(len(elem.exclusive_area_nesting_order), 2)
+        self.assertEqual(elem.exclusive_area_nesting_order[0].name, "Order1")
+        self.assertEqual(elem.exclusive_area_nesting_order[1].name, "Order2")
+        self.assertIs(elem.exclusive_area_nesting_order[0].parent, elem)
+        self.assertIs(elem.exclusive_area_nesting_order[1].parent, elem)
 
     def test_create_exclusive_area_nesting_order(self):
         element = ar_element.SwcInternalBehavior("MyName")
-        order = element.create_exclusive_area_nesting_order("Order1", exclusive_areas="/Swc/Area1")
+        order = element.create_exclusive_area_nesting_order("Order1", exclusive_area="/Swc/Area1")
         self.assertIsInstance(order, ar_element.ExclusiveAreaNestingOrder)
         self.assertEqual(order.name, "Order1")
         self.assertIs(order.parent, element)
-        self.assertEqual(len(element.exclusive_area_nesting_orders), 1)
-        self.assertIs(element.exclusive_area_nesting_orders[0], order)
+        self.assertEqual(len(element.exclusive_area_nesting_order), 1)
+        self.assertIs(element.exclusive_area_nesting_order[0], order)
 
     def test_static_memory_from_element(self):
         var = ar_element.VariableDataPrototype("MyStaticMemory")
@@ -4149,10 +4149,10 @@ class TestInternalBehavior(unittest.TestCase):
         with self.assertRaises(ar_except.ElementTypeError):
             element.append_ar_typed_per_instance_memory("InvalidType")
 
-    def test_exclusive_area_policies_from_element(self):
+    def test_exclusive_area_policy_from_element(self):
         policy = ar_element.SwcExclusiveAreaPolicy(exclusive_area="/Swc/Area1",
                                                    api_principle=ar_enum.ApiPrinciple.COMMON)
-        element = ar_element.SwcInternalBehavior("MyName", exclusive_area_policies=policy)
+        element = ar_element.SwcInternalBehavior("MyName", exclusive_area_policy=policy)
         xml = '''<SWC-INTERNAL-BEHAVIOR>
   <SHORT-NAME>MyName</SHORT-NAME>
   <EXCLUSIVE-AREA-POLICYS>
@@ -4167,18 +4167,18 @@ class TestInternalBehavior(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
-        self.assertEqual(len(elem.exclusive_area_policies), 1)
-        policy_elem = elem.exclusive_area_policies[0]
+        self.assertEqual(len(elem.exclusive_area_policy), 1)
+        policy_elem = elem.exclusive_area_policy[0]
         self.assertIsInstance(policy_elem, ar_element.SwcExclusiveAreaPolicy)
         self.assertEqual(policy_elem.api_principle, ar_enum.ApiPrinciple.COMMON)
         self.assertEqual(str(policy_elem.exclusive_area), "/Swc/Area1")
 
-    def test_exclusive_area_policies_from_list(self):
+    def test_exclusive_area_policy_from_list(self):
         policy1 = ar_element.SwcExclusiveAreaPolicy(exclusive_area="/Swc/Area1",
                                                     api_principle=ar_enum.ApiPrinciple.COMMON)
         policy2 = ar_element.SwcExclusiveAreaPolicy(exclusive_area="/Swc/Area2",
                                                     api_principle=ar_enum.ApiPrinciple.PER_EXECUTABLE)
-        element = ar_element.SwcInternalBehavior("MyName", exclusive_area_policies=[policy1, policy2])
+        element = ar_element.SwcInternalBehavior("MyName", exclusive_area_policy=[policy1, policy2])
         xml = '''<SWC-INTERNAL-BEHAVIOR>
   <SHORT-NAME>MyName</SHORT-NAME>
   <EXCLUSIVE-AREA-POLICYS>
@@ -4197,9 +4197,9 @@ class TestInternalBehavior(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
-        self.assertEqual(len(elem.exclusive_area_policies), 2)
-        self.assertEqual(elem.exclusive_area_policies[0].api_principle, ar_enum.ApiPrinciple.COMMON)
-        self.assertEqual(elem.exclusive_area_policies[1].api_principle, ar_enum.ApiPrinciple.PER_EXECUTABLE)
+        self.assertEqual(len(elem.exclusive_area_policy), 2)
+        self.assertEqual(elem.exclusive_area_policy[0].api_principle, ar_enum.ApiPrinciple.COMMON)
+        self.assertEqual(elem.exclusive_area_policy[1].api_principle, ar_enum.ApiPrinciple.PER_EXECUTABLE)
 
     def test_create_exclusive_area_policy(self):
         element = ar_element.SwcInternalBehavior("MyName")
@@ -4208,17 +4208,17 @@ class TestInternalBehavior(unittest.TestCase):
         self.assertIsInstance(policy, ar_element.SwcExclusiveAreaPolicy)
         self.assertEqual(policy.api_principle, ar_enum.ApiPrinciple.COMMON)
         self.assertEqual(str(policy.exclusive_area), "/Swc/Area1")
-        self.assertEqual(len(element.exclusive_area_policies), 1)
-        self.assertIs(element.exclusive_area_policies[0], policy)
+        self.assertEqual(len(element.exclusive_area_policy), 1)
+        self.assertIs(element.exclusive_area_policy[0], policy)
 
     def test_append_exclusive_area_policy_invalid_type(self):
         element = ar_element.SwcInternalBehavior("MyName")
         with self.assertRaises(ar_except.ElementTypeError):
             element.append_exclusive_area_policy("InvalidType")
 
-    def test_explicit_inter_runnable_variables_from_element(self):
+    def test_explicit_inter_runnable_variable_from_element(self):
         var = ar_element.VariableDataPrototype("MyVar")
-        element = ar_element.SwcInternalBehavior("MyName", explicit_inter_runnable_variables=var)
+        element = ar_element.SwcInternalBehavior("MyName", explicit_inter_runnable_variable=var)
         xml = '''<SWC-INTERNAL-BEHAVIOR>
   <SHORT-NAME>MyName</SHORT-NAME>
   <EXPLICIT-INTER-RUNNABLE-VARIABLES>
@@ -4232,16 +4232,16 @@ class TestInternalBehavior(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
-        self.assertEqual(len(elem.explicit_inter_runnable_variables), 1)
-        var_elem = elem.explicit_inter_runnable_variables[0]
+        self.assertEqual(len(elem.explicit_inter_runnable_variable), 1)
+        var_elem = elem.explicit_inter_runnable_variable[0]
         self.assertIsInstance(var_elem, ar_element.VariableDataPrototype)
         self.assertEqual(var_elem.name, "MyVar")
         self.assertIs(var_elem.parent, elem)
 
-    def test_explicit_inter_runnable_variables_from_list(self):
+    def test_explicit_inter_runnable_variable_from_list(self):
         var1 = ar_element.VariableDataPrototype("Var1")
         var2 = ar_element.VariableDataPrototype("Var2")
-        element = ar_element.SwcInternalBehavior("MyName", explicit_inter_runnable_variables=[var1, var2])
+        element = ar_element.SwcInternalBehavior("MyName", explicit_inter_runnable_variable=[var1, var2])
         xml = '''<SWC-INTERNAL-BEHAVIOR>
   <SHORT-NAME>MyName</SHORT-NAME>
   <EXPLICIT-INTER-RUNNABLE-VARIABLES>
@@ -4258,11 +4258,11 @@ class TestInternalBehavior(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
-        self.assertEqual(len(elem.explicit_inter_runnable_variables), 2)
-        self.assertEqual(elem.explicit_inter_runnable_variables[0].name, "Var1")
-        self.assertEqual(elem.explicit_inter_runnable_variables[1].name, "Var2")
-        self.assertIs(elem.explicit_inter_runnable_variables[0].parent, elem)
-        self.assertIs(elem.explicit_inter_runnable_variables[1].parent, elem)
+        self.assertEqual(len(elem.explicit_inter_runnable_variable), 2)
+        self.assertEqual(elem.explicit_inter_runnable_variable[0].name, "Var1")
+        self.assertEqual(elem.explicit_inter_runnable_variable[1].name, "Var2")
+        self.assertIs(elem.explicit_inter_runnable_variable[0].parent, elem)
+        self.assertIs(elem.explicit_inter_runnable_variable[1].parent, elem)
 
     def test_create_explicit_inter_runnable_variable(self):
         element = ar_element.SwcInternalBehavior("MyName")
@@ -4270,8 +4270,8 @@ class TestInternalBehavior(unittest.TestCase):
         self.assertIsInstance(var, ar_element.VariableDataPrototype)
         self.assertEqual(var.name, "MyVar")
         self.assertIs(var.parent, element)
-        self.assertEqual(len(element.explicit_inter_runnable_variables), 1)
-        self.assertIs(element.explicit_inter_runnable_variables[0], var)
+        self.assertEqual(len(element.explicit_inter_runnable_variable), 1)
+        self.assertIs(element.explicit_inter_runnable_variable[0], var)
 
     def test_append_explicit_inter_runnable_variable_invalid_type(self):
         element = ar_element.SwcInternalBehavior("MyName")
@@ -4330,9 +4330,9 @@ class TestInternalBehavior(unittest.TestCase):
         with self.assertRaises(ar_except.AssignmentTypeError):
             ar_element.SwcInternalBehavior("MyName", handle_termination_and_restart=123)
 
-    def test_implicit_inter_runnable_variables_from_element(self):
+    def test_implicit_inter_runnable_variable_from_element(self):
         var = ar_element.VariableDataPrototype("MyVar")
-        element = ar_element.SwcInternalBehavior("MyName", implicit_inter_runnable_variables=var)
+        element = ar_element.SwcInternalBehavior("MyName", implicit_inter_runnable_variable=var)
         xml = '''<SWC-INTERNAL-BEHAVIOR>
   <SHORT-NAME>MyName</SHORT-NAME>
   <IMPLICIT-INTER-RUNNABLE-VARIABLES>
@@ -4346,16 +4346,16 @@ class TestInternalBehavior(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
-        self.assertEqual(len(elem.implicit_inter_runnable_variables), 1)
-        var_elem = elem.implicit_inter_runnable_variables[0]
+        self.assertEqual(len(elem.implicit_inter_runnable_variable), 1)
+        var_elem = elem.implicit_inter_runnable_variable[0]
         self.assertIsInstance(var_elem, ar_element.VariableDataPrototype)
         self.assertEqual(var_elem.name, "MyVar")
         self.assertIs(var_elem.parent, elem)
 
-    def test_implicit_inter_runnable_variables_from_list(self):
+    def test_implicit_inter_runnable_variable_from_list(self):
         var1 = ar_element.VariableDataPrototype("Var1")
         var2 = ar_element.VariableDataPrototype("Var2")
-        element = ar_element.SwcInternalBehavior("MyName", implicit_inter_runnable_variables=[var1, var2])
+        element = ar_element.SwcInternalBehavior("MyName", implicit_inter_runnable_variable=[var1, var2])
         xml = '''<SWC-INTERNAL-BEHAVIOR>
   <SHORT-NAME>MyName</SHORT-NAME>
   <IMPLICIT-INTER-RUNNABLE-VARIABLES>
@@ -4372,11 +4372,11 @@ class TestInternalBehavior(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
-        self.assertEqual(len(elem.implicit_inter_runnable_variables), 2)
-        self.assertEqual(elem.implicit_inter_runnable_variables[0].name, "Var1")
-        self.assertEqual(elem.implicit_inter_runnable_variables[1].name, "Var2")
-        self.assertIs(elem.implicit_inter_runnable_variables[0].parent, elem)
-        self.assertIs(elem.implicit_inter_runnable_variables[1].parent, elem)
+        self.assertEqual(len(elem.implicit_inter_runnable_variable), 2)
+        self.assertEqual(elem.implicit_inter_runnable_variable[0].name, "Var1")
+        self.assertEqual(elem.implicit_inter_runnable_variable[1].name, "Var2")
+        self.assertIs(elem.implicit_inter_runnable_variable[0].parent, elem)
+        self.assertIs(elem.implicit_inter_runnable_variable[1].parent, elem)
 
     def test_create_implicit_inter_runnable_variable(self):
         element = ar_element.SwcInternalBehavior("MyName")
@@ -4384,8 +4384,8 @@ class TestInternalBehavior(unittest.TestCase):
         self.assertIsInstance(var, ar_element.VariableDataPrototype)
         self.assertEqual(var.name, "MyVar")
         self.assertIs(var.parent, element)
-        self.assertEqual(len(element.implicit_inter_runnable_variables), 1)
-        self.assertIs(element.implicit_inter_runnable_variables[0], var)
+        self.assertEqual(len(element.implicit_inter_runnable_variable), 1)
+        self.assertIs(element.implicit_inter_runnable_variable[0], var)
 
     def test_append_implicit_inter_runnable_variable_invalid_type(self):
         element = ar_element.SwcInternalBehavior("MyName")
@@ -4400,7 +4400,7 @@ class TestInternalBehavior(unittest.TestCase):
     def test_constant_value_mapping_refs_from_str(self):
         dest_str = "CONSTANT-SPECIFICATION-MAPPING-SET"
         ref_str = "/Constants/Mappings/MyMapping"
-        element = ar_element.SwcInternalBehavior("MyName", constant_value_mappings=ref_str)
+        element = ar_element.SwcInternalBehavior("MyName", constant_value_mapping=ref_str)
         xml = f'''<SWC-INTERNAL-BEHAVIOR>
   <SHORT-NAME>MyName</SHORT-NAME>
   <CONSTANT-VALUE-MAPPING-REFS>
@@ -4412,8 +4412,8 @@ class TestInternalBehavior(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
-        self.assertEqual(len(elem.constant_value_mappings), 1)
-        mapping_set = elem.constant_value_mappings[0]
+        self.assertEqual(len(elem.constant_value_mapping), 1)
+        mapping_set = elem.constant_value_mapping[0]
         self.assertIsInstance(mapping_set, ar_element.ConstantSpecificationMappingSetRef)
         self.assertEqual(str(mapping_set), ref_str)
 
@@ -4421,7 +4421,7 @@ class TestInternalBehavior(unittest.TestCase):
         dest_str = "CONSTANT-SPECIFICATION-MAPPING-SET"
         ref_str = "/Constants/Mappings/MyMapping"
         mapping_set_ref = ar_element.ConstantSpecificationMappingSetRef(ref_str)
-        element = ar_element.SwcInternalBehavior("MyName", constant_value_mappings=mapping_set_ref)
+        element = ar_element.SwcInternalBehavior("MyName", constant_value_mapping=mapping_set_ref)
         xml = f'''<SWC-INTERNAL-BEHAVIOR>
   <SHORT-NAME>MyName</SHORT-NAME>
   <CONSTANT-VALUE-MAPPING-REFS>
@@ -4433,8 +4433,8 @@ class TestInternalBehavior(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
-        self.assertEqual(len(elem.constant_value_mappings), 1)
-        mapping_set = elem.constant_value_mappings[0]
+        self.assertEqual(len(elem.constant_value_mapping), 1)
+        mapping_set = elem.constant_value_mapping[0]
         self.assertIsInstance(mapping_set, ar_element.ConstantSpecificationMappingSetRef)
         self.assertEqual(str(mapping_set), ref_str)
 
@@ -4444,7 +4444,7 @@ class TestInternalBehavior(unittest.TestCase):
         ref_str2 = "/Constants/Mappings/MyMapping2"
         mapping_set_ref1 = ar_element.ConstantSpecificationMappingSetRef(ref_str1)
         mapping_set_ref2 = ar_element.ConstantSpecificationMappingSetRef(ref_str2)
-        element = ar_element.SwcInternalBehavior("MyName", constant_value_mappings=[mapping_set_ref1, mapping_set_ref2])
+        element = ar_element.SwcInternalBehavior("MyName", constant_value_mapping=[mapping_set_ref1, mapping_set_ref2])
         xml = f'''<SWC-INTERNAL-BEHAVIOR>
   <SHORT-NAME>MyName</SHORT-NAME>
   <CONSTANT-VALUE-MAPPING-REFS>
@@ -4457,14 +4457,14 @@ class TestInternalBehavior(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
-        self.assertEqual(len(elem.constant_value_mappings), 2)
-        self.assertEqual(str(elem.constant_value_mappings[0]), ref_str1)
-        self.assertEqual(str(elem.constant_value_mappings[1]), ref_str2)
+        self.assertEqual(len(elem.constant_value_mapping), 2)
+        self.assertEqual(str(elem.constant_value_mapping[0]), ref_str1)
+        self.assertEqual(str(elem.constant_value_mapping[1]), ref_str2)
 
     def test_data_type_mapping_refs_from_str(self):
         dest_str = "DATA-TYPE-MAPPING-SET"
         ref_str = "/DataTypes/Mappings/MyMapping"
-        element = ar_element.SwcInternalBehavior("MyName", data_type_mappings=ref_str)
+        element = ar_element.SwcInternalBehavior("MyName", data_type_mapping=ref_str)
         xml = f'''<SWC-INTERNAL-BEHAVIOR>
   <SHORT-NAME>MyName</SHORT-NAME>
   <DATA-TYPE-MAPPING-REFS>
@@ -4476,8 +4476,8 @@ class TestInternalBehavior(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
-        self.assertEqual(len(elem.data_type_mappings), 1)
-        mapping_set = elem.data_type_mappings[0]
+        self.assertEqual(len(elem.data_type_mapping), 1)
+        mapping_set = elem.data_type_mapping[0]
         self.assertIsInstance(mapping_set, ar_element.DataTypeMappingSetRef)
         self.assertEqual(str(mapping_set), ref_str)
 
@@ -4485,7 +4485,7 @@ class TestInternalBehavior(unittest.TestCase):
         dest_str = "DATA-TYPE-MAPPING-SET"
         ref_str = "/DataTypes/Mappings/MyMapping"
         mapping_set_ref = ar_element.DataTypeMappingSetRef(ref_str)
-        element = ar_element.SwcInternalBehavior("MyName", data_type_mappings=mapping_set_ref)
+        element = ar_element.SwcInternalBehavior("MyName", data_type_mapping=mapping_set_ref)
         xml = f'''<SWC-INTERNAL-BEHAVIOR>
   <SHORT-NAME>MyName</SHORT-NAME>
   <DATA-TYPE-MAPPING-REFS>
@@ -4497,8 +4497,8 @@ class TestInternalBehavior(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
-        self.assertEqual(len(elem.data_type_mappings), 1)
-        mapping_set = elem.data_type_mappings[0]
+        self.assertEqual(len(elem.data_type_mapping), 1)
+        mapping_set = elem.data_type_mapping[0]
         self.assertIsInstance(mapping_set, ar_element.DataTypeMappingSetRef)
         self.assertEqual(str(mapping_set), ref_str)
 
@@ -4508,7 +4508,7 @@ class TestInternalBehavior(unittest.TestCase):
         ref_str2 = "/DataTypes/Mappings/MyMapping1"
         mapping_set_ref1 = ar_element.DataTypeMappingSetRef(ref_str1)
         mapping_set_ref2 = ar_element.DataTypeMappingSetRef(ref_str2)
-        element = ar_element.SwcInternalBehavior("MyName", data_type_mappings=[mapping_set_ref1, mapping_set_ref2])
+        element = ar_element.SwcInternalBehavior("MyName", data_type_mapping=[mapping_set_ref1, mapping_set_ref2])
         xml = f'''<SWC-INTERNAL-BEHAVIOR>
   <SHORT-NAME>MyName</SHORT-NAME>
   <DATA-TYPE-MAPPING-REFS>
@@ -4521,17 +4521,17 @@ class TestInternalBehavior(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
-        self.assertEqual(len(elem.data_type_mappings), 2)
-        mapping_set = elem.data_type_mappings[0]
+        self.assertEqual(len(elem.data_type_mapping), 2)
+        mapping_set = elem.data_type_mapping[0]
         self.assertIsInstance(mapping_set, ar_element.DataTypeMappingSetRef)
         self.assertEqual(str(mapping_set), ref_str1)
-        mapping_set = elem.data_type_mappings[1]
+        mapping_set = elem.data_type_mapping[1]
         self.assertIsInstance(mapping_set, ar_element.DataTypeMappingSetRef)
         self.assertEqual(str(mapping_set), ref_str2)
 
     def test_data_exclusive_area_from_element(self):
         exclusive_area = ar_element.ExclusiveArea("MyExclusiveArea")
-        element = ar_element.SwcInternalBehavior("MyName", exclusive_areas=exclusive_area)
+        element = ar_element.SwcInternalBehavior("MyName", exclusive_area=exclusive_area)
         xml = '''<SWC-INTERNAL-BEHAVIOR>
   <SHORT-NAME>MyName</SHORT-NAME>
   <EXCLUSIVE-AREAS>
@@ -4545,15 +4545,15 @@ class TestInternalBehavior(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
-        self.assertEqual(len(elem.exclusive_areas), 1)
-        exclusive_area = elem.exclusive_areas[0]
+        self.assertEqual(len(elem.exclusive_area), 1)
+        exclusive_area = elem.exclusive_area[0]
         self.assertIsInstance(exclusive_area, ar_element.ExclusiveArea)
         self.assertEqual(exclusive_area.name, "MyExclusiveArea")
 
     def test_data_exclusive_area_from_list(self):
         exclusive_area1 = ar_element.ExclusiveArea("MyExclusiveArea1")
         exclusive_area2 = ar_element.ExclusiveArea("MyExclusiveArea2")
-        element = ar_element.SwcInternalBehavior("MyName", exclusive_areas=[exclusive_area1, exclusive_area2])
+        element = ar_element.SwcInternalBehavior("MyName", exclusive_area=[exclusive_area1, exclusive_area2])
         xml = '''<SWC-INTERNAL-BEHAVIOR>
   <SHORT-NAME>MyName</SHORT-NAME>
   <EXCLUSIVE-AREAS>
@@ -4570,11 +4570,11 @@ class TestInternalBehavior(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
-        self.assertEqual(len(elem.exclusive_areas), 2)
-        exclusive_area = elem.exclusive_areas[0]
+        self.assertEqual(len(elem.exclusive_area), 2)
+        exclusive_area = elem.exclusive_area[0]
         self.assertIsInstance(exclusive_area, ar_element.ExclusiveArea)
         self.assertEqual(exclusive_area.name, "MyExclusiveArea1")
-        exclusive_area = elem.exclusive_areas[1]
+        exclusive_area = elem.exclusive_area[1]
         self.assertIsInstance(exclusive_area, ar_element.ExclusiveArea)
         self.assertEqual(exclusive_area.name, "MyExclusiveArea2")
 
@@ -4605,7 +4605,7 @@ class TestSwcInternalBehavior(unittest.TestCase):
 
     # EVENTS
     def test_init_event_from_element(self):
-        element = ar_element.SwcInternalBehavior('MyName', events=ar_element.InitEvent("MyEvent"))
+        element = ar_element.SwcInternalBehavior('MyName', event=ar_element.InitEvent("MyEvent"))
         xml = '''<SWC-INTERNAL-BEHAVIOR>
   <SHORT-NAME>MyName</SHORT-NAME>
   <EVENTS>
@@ -4619,13 +4619,13 @@ class TestSwcInternalBehavior(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
-        self.assertEqual(len(elem.events), 1)
-        event = elem.events[0]
+        self.assertEqual(len(elem.event), 1)
+        event = elem.event[0]
         self.assertIsInstance(event, ar_element.InitEvent)
         self.assertEqual(event.name, "MyEvent")
 
     def test_timing_event_from_element(self):
-        element = ar_element.SwcInternalBehavior('MyName', events=ar_element.TimingEvent("MyEvent"))
+        element = ar_element.SwcInternalBehavior('MyName', event=ar_element.TimingEvent("MyEvent"))
         xml = '''<SWC-INTERNAL-BEHAVIOR>
   <SHORT-NAME>MyName</SHORT-NAME>
   <EVENTS>
@@ -4639,8 +4639,8 @@ class TestSwcInternalBehavior(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
-        self.assertEqual(len(elem.events), 1)
-        event = elem.events[0]
+        self.assertEqual(len(elem.event), 1)
+        event = elem.event[0]
         self.assertIsInstance(event, ar_element.TimingEvent)
         self.assertEqual(event.name, "MyEvent")
 
@@ -4648,9 +4648,9 @@ class TestSwcInternalBehavior(unittest.TestCase):
         init_event = ar_element.SwcModeSwitchEvent("InitEvent")
         exit_event = ar_element.SwcModeSwitchEvent("ExitEvent")
         periodic_event = ar_element.TimingEvent("PeriodicEvent")
-        element = ar_element.SwcInternalBehavior('MyName', events=[init_event,
-                                                                   exit_event,
-                                                                   periodic_event])
+        element = ar_element.SwcInternalBehavior('MyName', event=[init_event,
+                                                                  exit_event,
+                                                                  periodic_event])
         xml = '''<SWC-INTERNAL-BEHAVIOR>
   <SHORT-NAME>MyName</SHORT-NAME>
   <EVENTS>
@@ -4670,13 +4670,13 @@ class TestSwcInternalBehavior(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
-        self.assertEqual(len(elem.events), 3)
-        self.assertIsInstance(elem.events[0], ar_element.SwcModeSwitchEvent)
-        self.assertEqual(elem.events[0].name, "InitEvent")
-        self.assertIsInstance(elem.events[1], ar_element.SwcModeSwitchEvent)
-        self.assertEqual(elem.events[1].name, "ExitEvent")
-        self.assertIsInstance(elem.events[2], ar_element.TimingEvent)
-        self.assertEqual(elem.events[2].name, "PeriodicEvent")
+        self.assertEqual(len(elem.event), 3)
+        self.assertIsInstance(elem.event[0], ar_element.SwcModeSwitchEvent)
+        self.assertEqual(elem.event[0].name, "InitEvent")
+        self.assertIsInstance(elem.event[1], ar_element.SwcModeSwitchEvent)
+        self.assertEqual(elem.event[1].name, "ExitEvent")
+        self.assertIsInstance(elem.event[2], ar_element.TimingEvent)
+        self.assertEqual(elem.event[2].name, "PeriodicEvent")
 
     # IMPLEMENT LATER: EXCLUSIVE-AREA-POLICYS
     # IMPLEMENT LATER: EXPLICIT-INTER-RUNNABLE-VARIABLES
@@ -4692,7 +4692,7 @@ class TestSwcInternalBehavior(unittest.TestCase):
         port_ref_str = "/Components/MyComponent/MyPortName"
         port_ref = ar_element.PortPrototypeRef(port_ref_str, ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE)
         options = ar_element.PortApiOption(port_ref, enable_take_address=True, indirect_api=False)
-        element = ar_element.SwcInternalBehavior('MyName', port_api_options=options)
+        element = ar_element.SwcInternalBehavior('MyName', port_api_option=options)
         xml = f'''<SWC-INTERNAL-BEHAVIOR>
   <SHORT-NAME>MyName</SHORT-NAME>
   <PORT-API-OPTIONS>
@@ -4708,8 +4708,8 @@ class TestSwcInternalBehavior(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
-        self.assertEqual(len(elem.port_api_options), 1)
-        child: ar_element.PortApiOption = elem.port_api_options["MyPortName"]
+        self.assertEqual(len(elem.port_api_option), 1)
+        child: ar_element.PortApiOption = elem.port_api_option["MyPortName"]
         self.assertIsInstance(child, ar_element.PortApiOption)
         self.assertTrue(child.enable_take_address)
         self.assertFalse(child.indirect_api)
@@ -4722,7 +4722,7 @@ class TestSwcInternalBehavior(unittest.TestCase):
         port_ref2 = ar_element.PortPrototypeRef(port_ref_str2, ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE)
         options1 = ar_element.PortApiOption(port_ref1, enable_take_address=True, indirect_api=False)
         options2 = ar_element.PortApiOption(port_ref2, enable_take_address=False, indirect_api=True)
-        element = ar_element.SwcInternalBehavior('MyName', port_api_options=[options1, options2])
+        element = ar_element.SwcInternalBehavior('MyName', port_api_option=[options1, options2])
         xml = f'''<SWC-INTERNAL-BEHAVIOR>
   <SHORT-NAME>MyName</SHORT-NAME>
   <PORT-API-OPTIONS>
@@ -4743,8 +4743,8 @@ class TestSwcInternalBehavior(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
-        self.assertEqual(len(elem.port_api_options), 2)
-        items = list(elem.port_api_options.values())
+        self.assertEqual(len(elem.port_api_option), 2)
+        items = list(elem.port_api_option.values())
         child: ar_element.PortApiOption = items[0]
         self.assertIsInstance(child, ar_element.PortApiOption)
         self.assertTrue(child.enable_take_address)
@@ -4759,7 +4759,7 @@ class TestSwcInternalBehavior(unittest.TestCase):
 
     def test_runnables_from_element(self):
         writer = autosar.xml.Writer()
-        element = ar_element.SwcInternalBehavior('MyName', runnables=ar_element.RunnableEntity("MyRunnable"))
+        element = ar_element.SwcInternalBehavior('MyName', runnable=ar_element.RunnableEntity("MyRunnable"))
         xml = '''<SWC-INTERNAL-BEHAVIOR>
   <SHORT-NAME>MyName</SHORT-NAME>
   <RUNNABLES>
@@ -4772,8 +4772,8 @@ class TestSwcInternalBehavior(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
-        self.assertEqual(len(elem.runnables), 1)
-        runnable = elem.runnables[0]
+        self.assertEqual(len(elem.runnable), 1)
+        runnable = elem.runnable[0]
         self.assertIsInstance(runnable, ar_element.RunnableEntity)
 
     def test_runnables_from_list(self):
@@ -4781,9 +4781,9 @@ class TestSwcInternalBehavior(unittest.TestCase):
         runnable1 = ar_element.RunnableEntity("MyRunnable1")
         runnable2 = ar_element.RunnableEntity("MyRunnable2")
         runnable3 = ar_element.RunnableEntity("MyRunnable3")
-        element = ar_element.SwcInternalBehavior('MyName', runnables=[runnable1,
-                                                                      runnable2,
-                                                                      runnable3])
+        element = ar_element.SwcInternalBehavior('MyName', runnable=[runnable1,
+                                                                     runnable2,
+                                                                     runnable3])
         xml = '''<SWC-INTERNAL-BEHAVIOR>
   <SHORT-NAME>MyName</SHORT-NAME>
   <RUNNABLES>
@@ -4802,14 +4802,14 @@ class TestSwcInternalBehavior(unittest.TestCase):
         reader = autosar.xml.Reader()
         elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
-        self.assertEqual(len(elem.runnables), 3)
-        runnable = elem.runnables[0]
+        self.assertEqual(len(elem.runnable), 3)
+        runnable = elem.runnable[0]
         self.assertIsInstance(runnable, ar_element.RunnableEntity)
         self.assertEqual(runnable.name, "MyRunnable1")
-        runnable = elem.runnables[1]
+        runnable = elem.runnable[1]
         self.assertIsInstance(runnable, ar_element.RunnableEntity)
         self.assertEqual(runnable.name, "MyRunnable2")
-        runnable = elem.runnables[2]
+        runnable = elem.runnable[2]
         self.assertIsInstance(runnable, ar_element.RunnableEntity)
         self.assertEqual(runnable.name, "MyRunnable3")
 

@@ -6244,7 +6244,7 @@ class Reader:
             exclusive_areas = []
             for xml_grand_child in xml_child.findall("./EXCLUSIVE-AREA-REF"):
                 exclusive_areas.append(self._read_exclusive_area_ref(xml_grand_child))
-            data["exclusive_areas"] = exclusive_areas
+            data["exclusive_area"] = exclusive_areas
 
     def _read_swc_exclusive_area_policy(self,
                                         xml_element: ElementTree.Element
@@ -6299,25 +6299,25 @@ class Reader:
             constant_value_mappings = []
             for xml_grand_child in xml_child.findall("./CONSTANT-VALUE-MAPPING-REF"):
                 constant_value_mappings.append(self._read_constant_specification_mapping_set_ref(xml_grand_child))
-            data["constant_value_mappings"] = constant_value_mappings
+            data["constant_value_mapping"] = constant_value_mappings
         xml_child = child_elements.get("DATA-TYPE-MAPPING-REFS")
         if xml_child is not None:
             data_type_mappings = []
             for xml_grand_child in xml_child.findall("./DATA-TYPE-MAPPING-REF"):
                 data_type_mappings.append(self._read_data_type_mapping_set_ref(xml_grand_child))
-            data["data_type_mappings"] = data_type_mappings
+            data["data_type_mapping"] = data_type_mappings
         xml_child = child_elements.get("EXCLUSIVE-AREAS")
         if xml_child is not None:
             exclusive_areas = []
             for xml_grand_child in xml_child.findall("./EXCLUSIVE-AREA"):
                 exclusive_areas.append(self._read_exclusive_area(xml_grand_child))
-            data["exclusive_areas"] = exclusive_areas
+            data["exclusive_area"] = exclusive_areas
         xml_child = child_elements.get("EXCLUSIVE-AREA-NESTING-ORDERS")
         if xml_child is not None:
             exclusive_area_nesting_orders = []
             for xml_grand_child in xml_child.findall("./EXCLUSIVE-AREA-NESTING-ORDER"):
                 exclusive_area_nesting_orders.append(self._read_exclusive_area_nesting_order(xml_grand_child))
-            data["exclusive_area_nesting_orders"] = exclusive_area_nesting_orders
+            data["exclusive_area_nesting_order"] = exclusive_area_nesting_orders
         xml_child = child_elements.get("STATIC-MEMORYS")
         if xml_child is not None:
             static_memory = []
@@ -6342,19 +6342,19 @@ class Reader:
             events = []
             for xml_grand_child in xml_child.findall("./*"):
                 events.append(self._read_rte_event_element(xml_grand_child))
-            data["events"] = events
+            data["event"] = events
         xml_child = child_elements.get("EXCLUSIVE-AREA-POLICYS")
         if xml_child is not None:
             exclusive_area_policies = []
             for xml_grand_child in xml_child.findall("./SWC-EXCLUSIVE-AREA-POLICY"):
                 exclusive_area_policies.append(self._read_swc_exclusive_area_policy(xml_grand_child))
-            data["exclusive_area_policies"] = exclusive_area_policies
+            data["exclusive_area_policy"] = exclusive_area_policies
         xml_child = child_elements.get("EXPLICIT-INTER-RUNNABLE-VARIABLES")
         if xml_child is not None:
             explicit_inter_runnable_variables = []
             for xml_grand_child in xml_child.findall("./VARIABLE-DATA-PROTOTYPE"):
                 explicit_inter_runnable_variables.append(self._read_variable_data_prototype(xml_grand_child))
-            data["explicit_inter_runnable_variables"] = explicit_inter_runnable_variables
+            data["explicit_inter_runnable_variable"] = explicit_inter_runnable_variables
         xml_child = child_elements.get("HANDLE-TERMINATION-AND-RESTART")
         if xml_child is not None:
             data["handle_termination_and_restart"] = ar_enum.xml_to_enum("HandleTerminationAndRestart", xml_child.text)
@@ -6363,25 +6363,24 @@ class Reader:
             implicit_inter_runnable_variables = []
             for xml_grand_child in xml_child.findall("./VARIABLE-DATA-PROTOTYPE"):
                 implicit_inter_runnable_variables.append(self._read_variable_data_prototype(xml_grand_child))
-            data["implicit_inter_runnable_variables"] = implicit_inter_runnable_variables
+            data["implicit_inter_runnable_variable"] = implicit_inter_runnable_variables
         child_elements.skip("INCLUDED-DATA-TYPE-SETS")
         child_elements.skip("INCLUDED-MODE-DECLARATION-GROUP-SETS")
         child_elements.skip("INSTANTIATION-DATA-DEF-PROPSS")
         child_elements.skip("PER-INSTANCE-MEMORYS")
         child_elements.skip("PER-INSTANCE-PARAMETERS")
-        child_elements.skip("PORT-API-OPTIONS")
         xml_child = child_elements.get("PORT-API-OPTIONS")
         if xml_child is not None:
             port_api_options = []
             for xml_grand_child in xml_child.findall("./PORT-API-OPTION"):
                 port_api_options.append(self._read_port_api_option(xml_grand_child))
-            data["port_api_options"] = port_api_options
+            data["port_api_option"] = port_api_options
         xml_child = child_elements.get("RUNNABLES")
         if xml_child is not None:
             runnables = []
             for xml_grand_child in xml_child.findall("./RUNNABLE-ENTITY"):
                 runnables.append(self._read_runnable_entity(xml_grand_child))
-            data["runnables"] = runnables
+            data["runnable"] = runnables
         child_elements.skip("SERVICE-DEPENDENCYS")
         child_elements.skip("SHARED-PARAMETERS")
         child_elements.skip("SUPPORTS-MULTIPLE-INSTANTIATION")
