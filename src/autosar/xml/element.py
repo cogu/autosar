@@ -9239,6 +9239,8 @@ class SwcInternalBehavior(InternalBehavior):
                  explicit_inter_runnable_variables: (VariableDataPrototype |
                                                      list[VariableDataPrototype] | None) = None,
                  handle_termination_and_restart: ar_enum.HandleTerminationAndRestart | None = None,
+                 implicit_inter_runnable_variables: (VariableDataPrototype |
+                                                     list[VariableDataPrototype] | None) = None,
                  runnables: RunnableEntity | list[RunnableEntity] | None = None,
                  port_api_options: PortApiOption | list[PortApiOption] | None = None,
                  **kwargs) -> None:
@@ -9253,6 +9255,8 @@ class SwcInternalBehavior(InternalBehavior):
         self.explicit_inter_runnable_variables: list[VariableDataPrototype] = []
         # .HANDLE-TERMINATION-AND-RESTART
         self.handle_termination_and_restart: ar_enum.HandleTerminationAndRestart | None = None
+        # .IMPLICIT-INTER-RUNNABLE-VARIABLES
+        self.implicit_inter_runnable_variables: list[VariableDataPrototype] = []
         # .INCLUDED-DATA-TYPE-SETS (not yet implemented)
         # .INCLUDED-MODE-DECLARATION-GROUP-SETS (not yet implemented)
         # .INSTANTIATION-DATA-DEF-PROPSS (not yet implemented)
@@ -9299,6 +9303,13 @@ class SwcInternalBehavior(InternalBehavior):
                     self.append_explicit_inter_runnable_variable(item)
             else:
                 self.append_explicit_inter_runnable_variable(explicit_inter_runnable_variables)
+
+        if implicit_inter_runnable_variables is not None:
+            if isinstance(implicit_inter_runnable_variables, Iterable):
+                for item in implicit_inter_runnable_variables:
+                    self.append_implicit_inter_runnable_variable(item)
+            else:
+                self.append_implicit_inter_runnable_variable(implicit_inter_runnable_variables)
 
         if runnables is not None:
             if isinstance(runnables, Iterable):
@@ -9382,6 +9393,28 @@ class SwcInternalBehavior(InternalBehavior):
         """
         if isinstance(item, VariableDataPrototype):
             self.explicit_inter_runnable_variables.append(item)
+            item.parent = self
+        else:
+            raise ar_except.ElementTypeError("item", VariableDataPrototype, item)
+
+    @convenience_function
+    def create_implicit_inter_runnable_variable(self,
+                                                name: str,
+                                                init_value: ValueSpecificationElement | None = None,
+                                                **kwargs) -> VariableDataPrototype:
+        """
+        Adds a new VariableDataPrototype to implicit_inter_runnable_variables
+        """
+        item = VariableDataPrototype(name, init_value, **kwargs)
+        self.append_implicit_inter_runnable_variable(item)
+        return item
+
+    def append_implicit_inter_runnable_variable(self, item: VariableDataPrototype) -> None:
+        """
+        Appends VariableDataPrototype to implicit_inter_runnable_variables
+        """
+        if isinstance(item, VariableDataPrototype):
+            self.implicit_inter_runnable_variables.append(item)
             item.parent = self
         else:
             raise ar_except.ElementTypeError("item", VariableDataPrototype, item)

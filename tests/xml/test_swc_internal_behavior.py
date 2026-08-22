@@ -4330,6 +4330,68 @@ class TestInternalBehavior(unittest.TestCase):
         with self.assertRaises(ar_except.AssignmentTypeError):
             ar_element.SwcInternalBehavior("MyName", handle_termination_and_restart=123)
 
+    def test_implicit_inter_runnable_variables_from_element(self):
+        var = ar_element.VariableDataPrototype("MyVar")
+        element = ar_element.SwcInternalBehavior("MyName", implicit_inter_runnable_variables=var)
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <IMPLICIT-INTER-RUNNABLE-VARIABLES>
+    <VARIABLE-DATA-PROTOTYPE>
+      <SHORT-NAME>MyVar</SHORT-NAME>
+    </VARIABLE-DATA-PROTOTYPE>
+  </IMPLICIT-INTER-RUNNABLE-VARIABLES>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.implicit_inter_runnable_variables), 1)
+        var_elem = elem.implicit_inter_runnable_variables[0]
+        self.assertIsInstance(var_elem, ar_element.VariableDataPrototype)
+        self.assertEqual(var_elem.name, "MyVar")
+        self.assertIs(var_elem.parent, elem)
+
+    def test_implicit_inter_runnable_variables_from_list(self):
+        var1 = ar_element.VariableDataPrototype("Var1")
+        var2 = ar_element.VariableDataPrototype("Var2")
+        element = ar_element.SwcInternalBehavior("MyName", implicit_inter_runnable_variables=[var1, var2])
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <IMPLICIT-INTER-RUNNABLE-VARIABLES>
+    <VARIABLE-DATA-PROTOTYPE>
+      <SHORT-NAME>Var1</SHORT-NAME>
+    </VARIABLE-DATA-PROTOTYPE>
+    <VARIABLE-DATA-PROTOTYPE>
+      <SHORT-NAME>Var2</SHORT-NAME>
+    </VARIABLE-DATA-PROTOTYPE>
+  </IMPLICIT-INTER-RUNNABLE-VARIABLES>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.implicit_inter_runnable_variables), 2)
+        self.assertEqual(elem.implicit_inter_runnable_variables[0].name, "Var1")
+        self.assertEqual(elem.implicit_inter_runnable_variables[1].name, "Var2")
+        self.assertIs(elem.implicit_inter_runnable_variables[0].parent, elem)
+        self.assertIs(elem.implicit_inter_runnable_variables[1].parent, elem)
+
+    def test_create_implicit_inter_runnable_variable(self):
+        element = ar_element.SwcInternalBehavior("MyName")
+        var = element.create_implicit_inter_runnable_variable("MyVar")
+        self.assertIsInstance(var, ar_element.VariableDataPrototype)
+        self.assertEqual(var.name, "MyVar")
+        self.assertIs(var.parent, element)
+        self.assertEqual(len(element.implicit_inter_runnable_variables), 1)
+        self.assertIs(element.implicit_inter_runnable_variables[0], var)
+
+    def test_append_implicit_inter_runnable_variable_invalid_type(self):
+        element = ar_element.SwcInternalBehavior("MyName")
+        with self.assertRaises(ar_except.ElementTypeError):
+            element.append_implicit_inter_runnable_variable("InvalidType")
+
     def test_append_constant_value_mapping_invalid_type(self):
         element = ar_element.SwcInternalBehavior("MyName")
         with self.assertRaises(ar_except.ElementTypeError):
