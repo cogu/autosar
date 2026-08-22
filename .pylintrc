@@ -345,7 +345,7 @@ ignore-imports=no
 ignore-signatures=no
 
 # Minimum lines number of a similarity.
-min-similarity-lines=4
+min-similarity-lines=0
 
 
 [SPELLING]

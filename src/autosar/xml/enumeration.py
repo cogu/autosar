@@ -10,6 +10,15 @@ import autosar.base as ar_base
 import autosar.xml.exception as ar_exception
 
 
+class ApiPrinciple(Enum):
+    """
+    AR:API-PRINCIPLE-ENUM--SIMPLE
+    """
+
+    COMMON = 0
+    PER_EXECUTABLE = 1
+
+
 class ArgumentDirection(Enum):
     """
     AR:ARGUMENT-DIRECTION-ENUM--SIMPLE
@@ -745,6 +754,10 @@ class VersionedTextValue:
 ###
 
 xml_to_enum_map: dict[str, dict] = {
+    "ApiPrinciple": {
+        "COMMON": ApiPrinciple.COMMON,
+        "PER-EXECUTABLE": ApiPrinciple.PER_EXECUTABLE,
+    },
     "ArgumentDirection": {
         "IN": ArgumentDirection.IN,
         "INOUT": ArgumentDirection.INOUT,
@@ -1164,6 +1177,10 @@ def xml_to_enum(enum_type_name: str, xml_text: str, schema_version: int = ar_bas
 
 
 enum_to_xml_map: dict[str, list] = {
+    "ApiPrinciple": [
+        "COMMON",          # 0
+        "PER-EXECUTABLE",  # 1
+    ],
     "ArgumentDirection": [
         "IN",  # 0
         "INOUT",  # 1

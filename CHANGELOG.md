@@ -26,6 +26,7 @@ Non-collectable elements are various sub-elements to collectable elements.
 #### XML - SWC internal behavior elements
 
 * ExclusiveAreaNestingOrder | EXCLUSIVE-AREA-NESTING-ORDER
+* SwcExclusiveAreaPolicy | SWC-EXCLUSIVE-AREA-POLICY
 
 #### Developer Utilities (`dev_utils`)
 

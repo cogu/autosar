@@ -340,6 +340,52 @@ class TestExclusiveAreaNestingOrder(unittest.TestCase):
             ar_element.ExclusiveAreaNestingOrder("Order1", exclusive_areas=123)
 
 
+class TestSwcExclusiveAreaPolicy(unittest.TestCase):
+
+    def test_empty(self):
+        element = ar_element.SwcExclusiveAreaPolicy()
+        writer = autosar.xml.Writer()
+        xml = '<SWC-EXCLUSIVE-AREA-POLICY/>'
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcExclusiveAreaPolicy = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcExclusiveAreaPolicy)
+        self.assertIsNone(elem.api_principle)
+        self.assertIsNone(elem.exclusive_area)
+
+    def test_read_write_common(self):
+        ref_str = "/Component/Behavior/Area1"
+        element = ar_element.SwcExclusiveAreaPolicy(exclusive_area=ref_str,
+                                                    api_principle=ar_enum.ApiPrinciple.COMMON)
+        writer = autosar.xml.Writer()
+        xml = f'''<SWC-EXCLUSIVE-AREA-POLICY>
+  <API-PRINCIPLE>COMMON</API-PRINCIPLE>
+  <EXCLUSIVE-AREA-REF DEST="EXCLUSIVE-AREA">{ref_str}</EXCLUSIVE-AREA-REF>
+</SWC-EXCLUSIVE-AREA-POLICY>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcExclusiveAreaPolicy = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcExclusiveAreaPolicy)
+        self.assertEqual(elem.api_principle, ar_enum.ApiPrinciple.COMMON)
+        self.assertEqual(str(elem.exclusive_area), ref_str)
+
+    def test_read_write_per_executable(self):
+        ref_str = "/Component/Behavior/Area2"
+        element = ar_element.SwcExclusiveAreaPolicy(exclusive_area=ref_str,
+                                                    api_principle=ar_enum.ApiPrinciple.PER_EXECUTABLE)
+        writer = autosar.xml.Writer()
+        xml = f'''<SWC-EXCLUSIVE-AREA-POLICY>
+  <API-PRINCIPLE>PER-EXECUTABLE</API-PRINCIPLE>
+  <EXCLUSIVE-AREA-REF DEST="EXCLUSIVE-AREA">{ref_str}</EXCLUSIVE-AREA-REF>
+</SWC-EXCLUSIVE-AREA-POLICY>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcExclusiveAreaPolicy = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcExclusiveAreaPolicy)
+        self.assertEqual(elem.api_principle, ar_enum.ApiPrinciple.PER_EXECUTABLE)
+        self.assertEqual(str(elem.exclusive_area), ref_str)
+
+
 class TestAsynchronousServerCallPoint(unittest.TestCase):
     """
     Also tests base classes ServerCallPoint and AbstractAccessPoint
@@ -4040,6 +4086,135 @@ class TestInternalBehavior(unittest.TestCase):
         element = ar_element.SwcInternalBehavior("MyName")
         with self.assertRaises(ar_except.ElementTypeError):
             element.append_static_memory("InvalidType")
+
+    def test_ar_typed_per_instance_memory_from_element(self):
+        var = ar_element.VariableDataPrototype("MyPim")
+        element = ar_element.SwcInternalBehavior("MyName", ar_typed_per_instance_memory=var)
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <AR-TYPED-PER-INSTANCE-MEMORYS>
+    <VARIABLE-DATA-PROTOTYPE>
+      <SHORT-NAME>MyPim</SHORT-NAME>
+    </VARIABLE-DATA-PROTOTYPE>
+  </AR-TYPED-PER-INSTANCE-MEMORYS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.ar_typed_per_instance_memory), 1)
+        var_elem = elem.ar_typed_per_instance_memory[0]
+        self.assertIsInstance(var_elem, ar_element.VariableDataPrototype)
+        self.assertEqual(var_elem.name, "MyPim")
+        self.assertIs(var_elem.parent, elem)
+
+    def test_ar_typed_per_instance_memory_from_list(self):
+        var1 = ar_element.VariableDataPrototype("Pim1")
+        var2 = ar_element.VariableDataPrototype("Pim2")
+        element = ar_element.SwcInternalBehavior("MyName", ar_typed_per_instance_memory=[var1, var2])
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <AR-TYPED-PER-INSTANCE-MEMORYS>
+    <VARIABLE-DATA-PROTOTYPE>
+      <SHORT-NAME>Pim1</SHORT-NAME>
+    </VARIABLE-DATA-PROTOTYPE>
+    <VARIABLE-DATA-PROTOTYPE>
+      <SHORT-NAME>Pim2</SHORT-NAME>
+    </VARIABLE-DATA-PROTOTYPE>
+  </AR-TYPED-PER-INSTANCE-MEMORYS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.ar_typed_per_instance_memory), 2)
+        self.assertEqual(elem.ar_typed_per_instance_memory[0].name, "Pim1")
+        self.assertEqual(elem.ar_typed_per_instance_memory[1].name, "Pim2")
+        self.assertIs(elem.ar_typed_per_instance_memory[0].parent, elem)
+        self.assertIs(elem.ar_typed_per_instance_memory[1].parent, elem)
+
+    def test_create_ar_typed_per_instance_memory(self):
+        element = ar_element.SwcInternalBehavior("MyName")
+        var = element.create_ar_typed_per_instance_memory("MyPim")
+        self.assertIsInstance(var, ar_element.VariableDataPrototype)
+        self.assertEqual(var.name, "MyPim")
+        self.assertIs(var.parent, element)
+        self.assertEqual(len(element.ar_typed_per_instance_memory), 1)
+        self.assertIs(element.ar_typed_per_instance_memory[0], var)
+
+    def test_append_ar_typed_per_instance_memory_invalid_type(self):
+        element = ar_element.SwcInternalBehavior("MyName")
+        with self.assertRaises(ar_except.ElementTypeError):
+            element.append_ar_typed_per_instance_memory("InvalidType")
+
+    def test_exclusive_area_policies_from_element(self):
+        policy = ar_element.SwcExclusiveAreaPolicy(exclusive_area="/Swc/Area1",
+                                                   api_principle=ar_enum.ApiPrinciple.COMMON)
+        element = ar_element.SwcInternalBehavior("MyName", exclusive_area_policies=policy)
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <EXCLUSIVE-AREA-POLICYS>
+    <SWC-EXCLUSIVE-AREA-POLICY>
+      <API-PRINCIPLE>COMMON</API-PRINCIPLE>
+      <EXCLUSIVE-AREA-REF DEST="EXCLUSIVE-AREA">/Swc/Area1</EXCLUSIVE-AREA-REF>
+    </SWC-EXCLUSIVE-AREA-POLICY>
+  </EXCLUSIVE-AREA-POLICYS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.exclusive_area_policies), 1)
+        policy_elem = elem.exclusive_area_policies[0]
+        self.assertIsInstance(policy_elem, ar_element.SwcExclusiveAreaPolicy)
+        self.assertEqual(policy_elem.api_principle, ar_enum.ApiPrinciple.COMMON)
+        self.assertEqual(str(policy_elem.exclusive_area), "/Swc/Area1")
+
+    def test_exclusive_area_policies_from_list(self):
+        policy1 = ar_element.SwcExclusiveAreaPolicy(exclusive_area="/Swc/Area1",
+                                                    api_principle=ar_enum.ApiPrinciple.COMMON)
+        policy2 = ar_element.SwcExclusiveAreaPolicy(exclusive_area="/Swc/Area2",
+                                                    api_principle=ar_enum.ApiPrinciple.PER_EXECUTABLE)
+        element = ar_element.SwcInternalBehavior("MyName", exclusive_area_policies=[policy1, policy2])
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <EXCLUSIVE-AREA-POLICYS>
+    <SWC-EXCLUSIVE-AREA-POLICY>
+      <API-PRINCIPLE>COMMON</API-PRINCIPLE>
+      <EXCLUSIVE-AREA-REF DEST="EXCLUSIVE-AREA">/Swc/Area1</EXCLUSIVE-AREA-REF>
+    </SWC-EXCLUSIVE-AREA-POLICY>
+    <SWC-EXCLUSIVE-AREA-POLICY>
+      <API-PRINCIPLE>PER-EXECUTABLE</API-PRINCIPLE>
+      <EXCLUSIVE-AREA-REF DEST="EXCLUSIVE-AREA">/Swc/Area2</EXCLUSIVE-AREA-REF>
+    </SWC-EXCLUSIVE-AREA-POLICY>
+  </EXCLUSIVE-AREA-POLICYS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.exclusive_area_policies), 2)
+        self.assertEqual(elem.exclusive_area_policies[0].api_principle, ar_enum.ApiPrinciple.COMMON)
+        self.assertEqual(elem.exclusive_area_policies[1].api_principle, ar_enum.ApiPrinciple.PER_EXECUTABLE)
+
+    def test_create_exclusive_area_policy(self):
+        element = ar_element.SwcInternalBehavior("MyName")
+        policy = element.create_exclusive_area_policy(exclusive_area="/Swc/Area1",
+                                                      api_principle=ar_enum.ApiPrinciple.COMMON)
+        self.assertIsInstance(policy, ar_element.SwcExclusiveAreaPolicy)
+        self.assertEqual(policy.api_principle, ar_enum.ApiPrinciple.COMMON)
+        self.assertEqual(str(policy.exclusive_area), "/Swc/Area1")
+        self.assertEqual(len(element.exclusive_area_policies), 1)
+        self.assertIs(element.exclusive_area_policies[0], policy)
+
+    def test_append_exclusive_area_policy_invalid_type(self):
+        element = ar_element.SwcInternalBehavior("MyName")
+        with self.assertRaises(ar_except.ElementTypeError):
+            element.append_exclusive_area_policy("InvalidType")
 
     def test_append_constant_value_mapping_invalid_type(self):
         element = ar_element.SwcInternalBehavior("MyName")
