@@ -257,6 +257,8 @@ class Reader:
             'COMPU-INTERNAL-TO-PHYS': self._read_computation,
             'COMPU-RATIONAL-COEFFS': self._read_compu_rational,
             'COMPU-SCALE': self._read_compu_scale,
+            # Constant elements
+            'VTF': self._read_numerical_or_text,
             # Constraint elements
             'SCALE-CONSTR': self._read_scale_constraint,
             'INTERNAL-CONSTRS': self._read_internal_constraint,
@@ -3108,6 +3110,38 @@ class Reader:
         if xml_child is not None:
             data["constant_ref"] = self._read_constant_ref(xml_child)
 
+    def _read_numerical_or_text(self,
+                                xml_element: ElementTree.Element
+                                ) -> ar_element.NumericalOrText:
+        """
+        Reads complex type AR:NUMERICAL-OR-TEXT
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_numerical_or_text_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        element = ar_element.NumericalOrText(**data)
+        return element
+
+    def _read_numerical_or_text_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:NUMERICAL-OR-TEXT
+        """
+        child_elements.skip("VARIATION-POINT")
+        xml_child = child_elements.get("VF")
+        if xml_child is not None and xml_child.text:
+            number = ar_element.NumericalValue(xml_child.text)
+            if number.value_format in (ar_enum.ValueFormat.HEXADECIMAL,
+                                       ar_enum.ValueFormat.BINARY,
+                                       ar_enum.ValueFormat.SCIENTIFIC):
+                data["vf"] = number
+            else:
+                data["vf"] = number.value
+        xml_child = child_elements.get("VT")
+        if xml_child is not None:
+            data["vt"] = xml_child.text
+
     # CalibrationData elements
 
     def _read_sw_values(self,
@@ -3127,16 +3161,21 @@ class Reader:
                               data: dict) -> None:
         """
         Reads group AR:SW-VALUES
-
-        XML elements not supported:
-
-        - VTF
-        - VF
         """
         values = []
         data["values"] = values
         for xml_child in xml_child_list:
-            if xml_child.tag == "VT":
+            if xml_child.tag == "VTF":
+                values.append(self._read_numerical_or_text(xml_child))
+            elif xml_child.tag == "VF":
+                number = ar_element.NumericalValue(xml_child.text)
+                if number.value_format in (ar_enum.ValueFormat.HEXADECIMAL,
+                                           ar_enum.ValueFormat.BINARY,
+                                           ar_enum.ValueFormat.SCIENTIFIC):
+                    values.append(number)
+                else:
+                    values.append(number.value)
+            elif xml_child.tag == "VT":
                 values.append(xml_child.text)
             elif xml_child.tag == "V":
                 number = ar_element.NumericalValue(xml_child.text)
@@ -3148,10 +3187,8 @@ class Reader:
                     values.append(number.value)
             elif xml_child.tag == "VG":
                 values.append(self._read_value_group(xml_child))
-            elif xml_child.tag in ("VTF", "VG"):
-                continue  # Not supported, skip
             else:
-                print(f"Unprocessed child element in VALUE-GROUP: <{xml_child.tag}>", file=sys.stderr)
+                self._report_unprocessed_element(xml_child)
 
     def _read_value_group(self, xml_element: ElementTree.Element) -> ar_element.ValueGroup:
         """
