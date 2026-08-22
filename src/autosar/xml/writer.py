@@ -5385,6 +5385,11 @@ class Writer(_XMLWriter):
         """
         Writes group AR:INTERNAL-BEHAVIOR
         """
+        if elem.constant_memory:
+            self._add_child("CONSTANT-MEMORYS")
+            for item in elem.constant_memory:
+                self._write_parameter_data_prototype(item, "PARAMETER-DATA-PROTOTYPE")
+            self._leave_child()
         if elem.data_type_mappings:
             self._add_child("DATA-TYPE-MAPPING-REFS")
             for mapping_set in elem.data_type_mappings:
