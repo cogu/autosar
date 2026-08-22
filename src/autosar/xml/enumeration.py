@@ -66,16 +66,20 @@ class CalibrationAxisCategory(Enum):
     """
     AR:CALPRM-AXIS-CATEGORY-ENUM--SIMPLE
 
-    For some reason the XML schema defines the
-    values of this eanum with both '_' and '-' separators.
-    Seems like a mistake.
+    Note: Values match schema atp.EnumerationLiteralIndex.
+    Removed/obsolete entries in schema:
+      - COM-AXIS (1)
+      - CURVE_AXIS (2)
+      - CURVE-AXIS (3)
+      - FIX-AXIS (5)
+      - RES-AXIS (7)
+      - STD-AXIS (9)
     """
 
     COM_AXIS = 0
-    CURVE_AXIS = 1
-    FIX_AXIS = 2
-    RES_AXIS = 3
-    STD_AXIS = 4
+    FIX_AXIS = 4
+    RES_AXIS = 6
+    STD_AXIS = 8
 
 
 class CallPoint(Enum):
@@ -766,8 +770,6 @@ xml_to_enum_map: dict[str, dict] = {
     "CalibrationAxisCategory": {
         "COM_AXIS": CalibrationAxisCategory.COM_AXIS,
         "COM-AXIS": CalibrationAxisCategory.COM_AXIS,
-        "CURVE_AXIS": CalibrationAxisCategory.CURVE_AXIS,
-        "CURVE-AXIS": CalibrationAxisCategory.CURVE_AXIS,
         "FIX_AXIS": CalibrationAxisCategory.FIX_AXIS,
         "FIX-AXIS": CalibrationAxisCategory.FIX_AXIS,
         "RES_AXIS": CalibrationAxisCategory.RES_AXIS,
@@ -1184,11 +1186,16 @@ enum_to_xml_map: dict[str, list] = {
         "OPAQUE",                       # 2
     ],
     "CalibrationAxisCategory": [
-        "COM-AXIS",    # 0
-        "CURVE-AXIS",  # 1
-        "FIX-AXIS",    # 2
-        "RES-AXIS",    # 3
-        "STD-AXIS"     # 4
+        "COM_AXIS",    # 0 (comAxis)
+        "COM-AXIS",    # 1 (comAxis_O - removed)
+        "CURVE_AXIS",  # 2 (curveAxis - removed)
+        "CURVE-AXIS",  # 3 (curveAxis_O - removed)
+        "FIX_AXIS",    # 4 (fixAXIS)
+        "FIX-AXIS",    # 5 (fixAXIS_O - removed)
+        "RES_AXIS",    # 6 (resAxis)
+        "RES-AXIS",    # 7 (resAxis_O - removed)
+        "STD_AXIS",    # 8 (stdAxis)
+        "STD-AXIS",    # 9 (stdAxis_O - removed)
     ],
     "DataTransformationErrorHandling": [
         "NO-TRANSFORMER-ERROR-HANDLING",

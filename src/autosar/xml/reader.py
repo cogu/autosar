@@ -193,6 +193,8 @@ class Reader:
             'CONSTANT-REFERENCE': self._read_constant_reference,
             'REFERENCE-VALUE-SPECIFICATION': self._read_reference_value_specification,
             'NUMERICAL-RULE-BASED-VALUE-SPECIFICATION': self._read_numerical_rule_based_value_specification,
+            'APPLICATION-RULE-BASED-VALUE-SPECIFICATION': self._read_application_rule_based_value_specification,
+            'COMPOSITE-RULE-BASED-VALUE-SPECIFICATION': self._read_composite_rule_based_value_specification,
         }
         self.switcher_provided_com_spec = {
             'QUEUED-SENDER-COM-SPEC': self._read_queued_sender_com_spec,
@@ -285,7 +287,10 @@ class Reader:
             'SW-VALUES-PHYS': self._read_sw_values,
             'SW-AXIS-CONT': self._read_sw_axis_cont,
             'SW-VALUE-CONT': self._read_sw_value_cont,
+            'RULE-BASED-AXIS-CONT': self._read_rule_based_axis_cont,
+            'RULE-BASED-VALUE-CONT': self._read_rule_based_value_cont,
             'TRIGGER-PERIOD': self._read_multidimensional_time,
+            'MULTIDIMENSIONAL-TIME': self._read_multidimensional_time,
             # Reference elements
             'PHYSICAL-DIMENSION-REF': self._read_physical_dimension_ref,
             'APPLICATION-DATA-TYPE-REF': self._read_application_data_type_ref,
@@ -495,6 +500,15 @@ class Reader:
             value = int(text, 0)
         except ValueError as exc:
             raise ar_exception.ParseError(f"Failed to parse integer: {text}") from exc
+        return value
+
+    def _read_positive_integer(self, text: str) -> int:
+        """
+        Reads AR:POSITIVE-INTEGER
+        """
+        value = self._read_integer(text)
+        if value < 0:
+            raise ar_exception.ParseError(f"Expected positive integer, got: {value}")
         return value
 
     # --- Abstract base classes
@@ -3162,6 +3176,80 @@ class Reader:
         if xml_child is not None:
             data["rule_based_values"] = self._read_rule_based_value_specification(xml_child)
 
+    def _read_application_rule_based_value_specification(self,
+                                                         xml_element: ElementTree.Element
+                                                         ) -> ar_element.ApplicationRuleBasedValueSpecification:
+        """
+        Reads complex type AR:APPLICATION-RULE-BASED-VALUE-SPECIFICATION
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_value_specification_group(child_elements, data)
+        self._read_application_rule_based_value_specification_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        element = ar_element.ApplicationRuleBasedValueSpecification(**data)
+        return element
+
+    def _read_application_rule_based_value_specification_group(self,
+                                                               child_elements: ChildElementMap,
+                                                               data: dict) -> None:
+        """
+        Reads group AR:APPLICATION-RULE-BASED-VALUE-SPECIFICATION
+        """
+        xml_child = child_elements.get("CATEGORY")
+        if xml_child is not None:
+            data["category"] = xml_child.text
+        xml_child = child_elements.get("SW-AXIS-CONTS")
+        if xml_child is not None:
+            elements = []
+            for xml_grand_child in xml_child.findall("./RULE-BASED-AXIS-CONT"):
+                elements.append(self._read_rule_based_axis_cont(xml_grand_child))
+            data["sw_axis_conts"] = elements
+        xml_child = child_elements.get("SW-VALUE-CONT")
+        if xml_child is not None:
+            data["sw_value_cont"] = self._read_rule_based_value_cont(xml_child)
+
+    def _read_composite_rule_based_value_specification(self,
+                                                       xml_element: ElementTree.Element
+                                                       ) -> ar_element.CompositeRuleBasedValueSpecification:
+        """
+        Reads complex type AR:COMPOSITE-RULE-BASED-VALUE-SPECIFICATION
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_value_specification_group(child_elements, data)
+        self._read_composite_rule_based_value_specification_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        element = ar_element.CompositeRuleBasedValueSpecification(**data)
+        return element
+
+    def _read_composite_rule_based_value_specification_group(self,
+                                                             child_elements: ChildElementMap,
+                                                             data: dict) -> None:
+        """
+        Reads group AR:COMPOSITE-RULE-BASED-VALUE-SPECIFICATION
+        """
+        xml_child = child_elements.get("RULE")
+        if xml_child is not None:
+            data["rule"] = xml_child.text
+        xml_child = child_elements.get("ARGUMENTS")
+        if xml_child is not None:
+            elements = []
+            for xml_grand_child in xml_child:
+                elements.append(self._read_value_specification_element(xml_grand_child))
+            data["arguments"] = elements
+        xml_child = child_elements.get("COMPOUND-PRIMITIVE-ARGUMENTS")
+        if xml_child is not None:
+            elements = []
+            for xml_grand_child in xml_child:
+                elements.append(self._read_value_specification_element(xml_grand_child))
+            data["compound_primitive_arguments"] = elements
+        xml_child = child_elements.get("MAX-SIZE-TO-FILL")
+        if xml_child is not None:
+            data["max_size_to_fill"] = self._read_positive_integer(xml_child.text)
+
     def _read_numerical_or_text(self,
                                 xml_element: ElementTree.Element
                                 ) -> ar_element.NumericalOrText:
@@ -3264,7 +3352,7 @@ class Reader:
             data["arguments"] = [self._read_rule_arguments(x) for x in xml_child.findall("./RULE-ARGUMENTS")]
         xml_child = child_elements.get("MAX-SIZE-TO-FILL")
         if xml_child is not None:
-            data["max_size_to_fill"] = int(xml_child.text)
+            data["max_size_to_fill"] = self._read_integer(xml_child.text)
 
     # CalibrationData elements
 
@@ -3394,6 +3482,68 @@ class Reader:
         xml_child = child_elements.get("SW-VALUES-PHYS")
         if xml_child is not None:
             data["sw_values_phys"] = self._read_sw_values(xml_child)
+
+    def _read_rule_based_axis_cont(self, xml_element: ElementTree.Element) -> ar_element.RuleBasedAxisCont:
+        """
+        Reads complex type AR:RULE-BASED-AXIS-CONT
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_rule_based_axis_cont_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        element = ar_element.RuleBasedAxisCont(**data)
+        return element
+
+    def _read_rule_based_axis_cont_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:RULE-BASED-AXIS-CONT
+        """
+        xml_child = child_elements.get("CATEGORY")
+        if xml_child is not None:
+            data["category"] = ar_enum.xml_to_enum("CalibrationAxisCategory", xml_child.text)
+        xml_child = child_elements.get("UNIT-REF")
+        if xml_child is not None:
+            data["unit_ref"] = self._read_unit_ref(xml_child)
+        xml_child = child_elements.get("SW-AXIS-INDEX")
+        if xml_child is not None:
+            try:
+                value = int(xml_child.text)
+            except ValueError:
+                value = xml_child.text
+            data["sw_axis_index"] = value
+        xml_child = child_elements.get("SW-ARRAYSIZE")
+        if xml_child is not None:
+            data["sw_array_size"] = self._read_value_list(xml_child)
+        xml_child = child_elements.get("RULE-BASED-VALUES")
+        if xml_child is not None:
+            data["rule_based_values"] = self._read_rule_based_value_specification(xml_child)
+
+    def _read_rule_based_value_cont(self, xml_element: ElementTree.Element) -> ar_element.RuleBasedValueCont:
+        """
+        Reads complex type AR:RULE-BASED-VALUE-CONT
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_rule_based_value_cont_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        element = ar_element.RuleBasedValueCont(**data)
+        return element
+
+    def _read_rule_based_value_cont_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:RULE-BASED-VALUE-CONT
+        """
+        xml_child = child_elements.get("UNIT-REF")
+        if xml_child is not None:
+            data["unit_ref"] = self._read_unit_ref(xml_child)
+        xml_child = child_elements.get("SW-ARRAYSIZE")
+        if xml_child is not None:
+            data["sw_array_size"] = self._read_value_list(xml_child)
+        xml_child = child_elements.get("RULE-BASED-VALUES")
+        if xml_child is not None:
+            data["rule_based_values"] = self._read_rule_based_value_specification(xml_child)
 
     def _read_multidimensional_time(self,
                                     xml_element: ElementTree.Element) -> ar_element.MultidimensionalTime:

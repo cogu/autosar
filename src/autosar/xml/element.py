@@ -86,7 +86,9 @@ ValueSpecificationElement = Union["TextValueSpecification",
                                   "ApplicationValueSpecification",
                                   "ConstantReference",
                                   "ReferenceValueSpecification",
-                                  "NumericalRuleBasedValueSpecification"]
+                                  "NumericalRuleBasedValueSpecification",
+                                  "ApplicationRuleBasedValueSpecification",
+                                  "CompositeRuleBasedValueSpecification"]
 
 PortPrototypeElement = Union["ProvidePortPrototype",
                              "RequirePortPrototype",
@@ -3459,6 +3461,61 @@ class RuleBasedValueSpecification(ARObject):
             raise TypeError(f"Invalid type for 'argument': {str(type(argument))}")
 
 
+class RuleBasedAxisCont(ARObject):
+    """
+    Complex type AR:RULE-BASED-AXIS-CONT
+    Tag variants: 'RULE-BASED-AXIS-CONT'
+    """
+
+    def __init__(self,
+                 category: ar_enum.CalibrationAxisCategory | None = None,
+                 unit_ref: UnitRef | None = None,
+                 sw_axis_index: int | str | None = None,
+                 sw_array_size: ValueList | None = None,
+                 rule_based_values: RuleBasedValueSpecification | None = None) -> None:
+        # .CATEGORY
+        self.category: ar_enum.CalibrationAxisCategory | None = None
+        # .UNIT-REF
+        self.unit_ref: UnitRef | None = None
+        # .SW-AXIS-INDEX
+        self.sw_axis_index: int | str | None = None
+        # .SW-ARRAYSIZE
+        self.sw_array_size: ValueList | None = None
+        # .RULE-BASED-VALUES
+        self.rule_based_values: RuleBasedValueSpecification | None = None
+        self._assign_optional("category", category, ar_enum.CalibrationAxisCategory)
+        self._assign_optional_strict("unit_ref", unit_ref, UnitRef)
+        if sw_axis_index is not None:
+            if isinstance(sw_axis_index, (int, str)):
+                self.sw_axis_index = sw_axis_index
+            else:
+                error_msg = "Invalid type for parameter 'sw_axis_index'. Expected 'int' or 'str', "
+                raise TypeError(error_msg + f"got '{str(type(sw_axis_index))}'")
+        self._assign_optional_strict("sw_array_size", sw_array_size, ValueList)
+        self._assign_optional_strict("rule_based_values", rule_based_values, RuleBasedValueSpecification)
+
+
+class RuleBasedValueCont(ARObject):
+    """
+    Complex type AR:RULE-BASED-VALUE-CONT
+    Tag variants: 'RULE-BASED-VALUE-CONT'
+    """
+
+    def __init__(self,
+                 unit_ref: UnitRef | None = None,
+                 sw_array_size: ValueList | None = None,
+                 rule_based_values: RuleBasedValueSpecification | None = None) -> None:
+        # .UNIT-REF
+        self.unit_ref: UnitRef | None = None
+        # .SW-ARRAYSIZE
+        self.sw_array_size: ValueList | None = None
+        # .RULE-BASED-VALUES
+        self.rule_based_values: RuleBasedValueSpecification | None = None
+        self._assign_optional_strict("unit_ref", unit_ref, UnitRef)
+        self._assign_optional_strict("sw_array_size", sw_array_size, ValueList)
+        self._assign_optional_strict("rule_based_values", rule_based_values, RuleBasedValueSpecification)
+
+
 class NumericalRuleBasedValueSpecification(ValueSpecification):
     """
     Complex type AR:NUMERICAL-RULE-BASED-VALUE-SPECIFICATION
@@ -3472,6 +3529,112 @@ class NumericalRuleBasedValueSpecification(ValueSpecification):
         # .RULE-BASED-VALUES
         self.rule_based_values: RuleBasedValueSpecification | None = None
         self._assign_optional_strict("rule_based_values", rule_based_values, RuleBasedValueSpecification)
+
+
+class ApplicationRuleBasedValueSpecification(ValueSpecification):
+    """
+    Complex type AR:APPLICATION-RULE-BASED-VALUE-SPECIFICATION
+    Tag variants: 'APPLICATION-RULE-BASED-VALUE-SPECIFICATION'
+    """
+
+    def __init__(self,
+                 category: str | None = None,
+                 sw_axis_conts: RuleBasedAxisCont | list[RuleBasedAxisCont] | None = None,
+                 sw_value_cont: RuleBasedValueCont | None = None,
+                 label: str | None = None) -> None:
+        super().__init__(label)
+        # .CATEGORY
+        self.category: str | None = None
+        # .SW-AXIS-CONTS
+        self.sw_axis_conts: list[RuleBasedAxisCont] = []
+        # .SW-VALUE-CONT
+        self.sw_value_cont: RuleBasedValueCont | None = None
+        self._assign_optional_strict("category", category, str)
+        self._assign_optional_strict("sw_value_cont", sw_value_cont, RuleBasedValueCont)
+        if sw_axis_conts is not None:
+            if isinstance(sw_axis_conts, RuleBasedAxisCont):
+                self.sw_axis_conts.append(sw_axis_conts)
+            elif isinstance(sw_axis_conts, list):
+                for elem in sw_axis_conts:
+                    if isinstance(elem, RuleBasedAxisCont):
+                        self.sw_axis_conts.append(elem)
+                    else:
+                        raise TypeError(f"Expected RuleBasedAxisCont, got {str(type(elem))}")
+            else:
+                raise TypeError(f"Invalid type for 'sw_axis_conts': {str(type(sw_axis_conts))}")
+
+    def append(self, item: RuleBasedAxisCont) -> None:
+        """
+        Appends RuleBasedAxisCont to sw_axis_conts list
+        """
+        if isinstance(item, RuleBasedAxisCont):
+            self.sw_axis_conts.append(item)
+        else:
+            raise TypeError(f"Invalid type for 'item': {str(type(item))}")
+
+
+CompoundPrimitiveArgType = Union["ApplicationRuleBasedValueSpecification", "ApplicationValueSpecification"]
+
+
+class CompositeRuleBasedValueSpecification(ValueSpecification):
+    """
+    Complex type AR:COMPOSITE-RULE-BASED-VALUE-SPECIFICATION
+    Tag variants: 'COMPOSITE-RULE-BASED-VALUE-SPECIFICATION'
+    """
+
+    def __init__(self,
+                 rule: str | None = None,
+                 arguments: list[ValueSpecificationElement] | ValueSpecificationElement | None = None,
+                 compound_primitive_arguments: list[CompoundPrimitiveArgType] | CompoundPrimitiveArgType | None = None,
+                 max_size_to_fill: int | None = None,
+                 label: str | None = None) -> None:
+        super().__init__(label)
+        # .RULE
+        self.rule: str | None = None
+        # .ARGUMENTS (XML: ARGUMENTS/...)
+        self.arguments: list[ValueSpecificationElement] = []
+        # .COMPOUND-PRIMITIVE-ARGUMENTS (XML: COMPOUND-PRIMITIVE-ARGUMENTS/...)
+        self.compound_primitive_arguments: list[CompoundPrimitiveArgType] = []
+        # .MAX-SIZE-TO-FILL
+        self.max_size_to_fill: int | None = None
+        self._assign_optional_strict("rule", rule, str)
+        if arguments is not None:
+            if isinstance(arguments, ValueSpecification):
+                self.append_argument(arguments)
+            elif isinstance(arguments, list):
+                for arg in arguments:
+                    self.append_argument(arg)
+            else:
+                raise TypeError(f"Invalid type for 'arguments': {str(type(arguments))}")
+        if compound_primitive_arguments is not None:
+            if isinstance(compound_primitive_arguments,
+                          (ApplicationRuleBasedValueSpecification, ApplicationValueSpecification)):
+                self.append_compound_primitive_argument(compound_primitive_arguments)
+            elif isinstance(compound_primitive_arguments, list):
+                for arg in compound_primitive_arguments:
+                    self.append_compound_primitive_argument(arg)
+            else:
+                raise TypeError(
+                    f"Invalid type for 'compound_primitive_arguments': {str(type(compound_primitive_arguments))}")
+        self._assign_optional_strict("max_size_to_fill", max_size_to_fill, int)
+
+    def append_argument(self, argument: ValueSpecificationElement) -> None:
+        """
+        Appends ValueSpecification to arguments list
+        """
+        if isinstance(argument, ValueSpecification):
+            self.arguments.append(argument)
+        else:
+            raise TypeError(f"Invalid type for 'argument': {str(type(argument))}")
+
+    def append_compound_primitive_argument(self, argument: CompoundPrimitiveArgType) -> None:
+        """
+        Appends compound primitive argument
+        """
+        if isinstance(argument, (ApplicationRuleBasedValueSpecification, ApplicationValueSpecification)):
+            self.compound_primitive_arguments.append(argument)
+        else:
+            raise TypeError(f"Invalid type for 'argument': {str(type(argument))}")
 
 
 # --- Package elements (Partly implemented)

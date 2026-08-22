@@ -7,6 +7,7 @@ import unittest
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
 import autosar.xml.element as ar_element # noqa E402
 import autosar.xml.enumeration as ar_enum # noqa E402
+import autosar.xml.exception as ar_exception # noqa E402
 import autosar # noqa E402
 
 
@@ -957,6 +958,212 @@ class TestNumericalRuleBasedValueSpecification(unittest.TestCase):
     def test_type_errors(self):
         with self.assertRaises(TypeError):
             ar_element.NumericalRuleBasedValueSpecification(rule_based_values=object())
+
+
+class TestApplicationRuleBasedValueSpecification(unittest.TestCase):
+
+    def test_read_write_empty(self):
+        element = ar_element.ApplicationRuleBasedValueSpecification()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<APPLICATION-RULE-BASED-VALUE-SPECIFICATION/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationRuleBasedValueSpecification = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationRuleBasedValueSpecification)
+        self.assertIsNone(elem.label)
+        self.assertIsNone(elem.category)
+        self.assertEqual(len(elem.sw_axis_conts), 0)
+        self.assertIsNone(elem.sw_value_cont)
+
+    def test_read_write_full(self):
+        axis = ar_element.RuleBasedAxisCont(
+            category=ar_enum.CalibrationAxisCategory.STD_AXIS,
+            sw_axis_index=1,
+            rule_based_values=ar_element.RuleBasedValueSpecification(
+                rule="RAMP",
+                arguments=ar_element.RuleArguments([0, 5]),
+                max_size_to_fill=5
+            )
+        )
+        val_cont = ar_element.RuleBasedValueCont(
+            sw_array_size=ar_element.ValueList([5]),
+            rule_based_values=ar_element.RuleBasedValueSpecification(
+                rule="FILL",
+                arguments=ar_element.RuleArguments(0),
+                max_size_to_fill=5
+            )
+        )
+        element = ar_element.ApplicationRuleBasedValueSpecification(
+            label="CurveValue",
+            category="CURVE",
+            sw_axis_conts=axis,
+            sw_value_cont=val_cont
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<APPLICATION-RULE-BASED-VALUE-SPECIFICATION>
+  <SHORT-LABEL>CurveValue</SHORT-LABEL>
+  <CATEGORY>CURVE</CATEGORY>
+  <SW-AXIS-CONTS>
+    <RULE-BASED-AXIS-CONT>
+      <CATEGORY>STD_AXIS</CATEGORY>
+      <SW-AXIS-INDEX>1</SW-AXIS-INDEX>
+      <RULE-BASED-VALUES>
+        <RULE>RAMP</RULE>
+        <ARGUMENTSS>
+          <RULE-ARGUMENTS>
+            <V>0</V>
+            <V>5</V>
+          </RULE-ARGUMENTS>
+        </ARGUMENTSS>
+        <MAX-SIZE-TO-FILL>5</MAX-SIZE-TO-FILL>
+      </RULE-BASED-VALUES>
+    </RULE-BASED-AXIS-CONT>
+  </SW-AXIS-CONTS>
+  <SW-VALUE-CONT>
+    <SW-ARRAYSIZE>
+      <V>5</V>
+    </SW-ARRAYSIZE>
+    <RULE-BASED-VALUES>
+      <RULE>FILL</RULE>
+      <ARGUMENTSS>
+        <RULE-ARGUMENTS>
+          <V>0</V>
+        </RULE-ARGUMENTS>
+      </ARGUMENTSS>
+      <MAX-SIZE-TO-FILL>5</MAX-SIZE-TO-FILL>
+    </RULE-BASED-VALUES>
+  </SW-VALUE-CONT>
+</APPLICATION-RULE-BASED-VALUE-SPECIFICATION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ApplicationRuleBasedValueSpecification = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ApplicationRuleBasedValueSpecification)
+        self.assertEqual(elem.label, "CurveValue")
+        self.assertEqual(elem.category, "CURVE")
+        self.assertEqual(len(elem.sw_axis_conts), 1)
+        self.assertEqual(elem.sw_axis_conts[0].category, ar_enum.CalibrationAxisCategory.STD_AXIS)
+        self.assertIsNotNone(elem.sw_value_cont)
+        self.assertEqual(elem.sw_value_cont.rule_based_values.rule, "FILL")
+
+    def test_type_errors(self):
+        with self.assertRaises(TypeError):
+            ar_element.ApplicationRuleBasedValueSpecification(category=123)
+        with self.assertRaises(TypeError):
+            ar_element.ApplicationRuleBasedValueSpecification(sw_axis_conts=object())
+        with self.assertRaises(TypeError):
+            ar_element.ApplicationRuleBasedValueSpecification(sw_value_cont=object())
+
+
+class TestCompositeRuleBasedValueSpecification(unittest.TestCase):
+
+    def test_read_write_empty(self):
+        element = ar_element.CompositeRuleBasedValueSpecification()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<COMPOSITE-RULE-BASED-VALUE-SPECIFICATION/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.CompositeRuleBasedValueSpecification = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.CompositeRuleBasedValueSpecification)
+        self.assertIsNone(elem.label)
+        self.assertIsNone(elem.rule)
+        self.assertEqual(len(elem.arguments), 0)
+        self.assertEqual(len(elem.compound_primitive_arguments), 0)
+        self.assertIsNone(elem.max_size_to_fill)
+
+    def test_read_write_arguments(self):
+        rec1 = ar_element.RecordValueSpecification(fields=[
+            ar_element.NumericalValueSpecification(value=1),
+            ar_element.TextValueSpecification(value="A")
+        ])
+        rec2 = ar_element.RecordValueSpecification(fields=[
+            ar_element.NumericalValueSpecification(value=0),
+            ar_element.TextValueSpecification(value="Default")
+        ])
+        element = ar_element.CompositeRuleBasedValueSpecification(
+            label="CompositeRuleArray",
+            rule="FILL_UNTIL_END",
+            arguments=[rec1, rec2],
+            max_size_to_fill=20
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<COMPOSITE-RULE-BASED-VALUE-SPECIFICATION>
+  <SHORT-LABEL>CompositeRuleArray</SHORT-LABEL>
+  <RULE>FILL_UNTIL_END</RULE>
+  <ARGUMENTS>
+    <RECORD-VALUE-SPECIFICATION>
+      <FIELDS>
+        <NUMERICAL-VALUE-SPECIFICATION>
+          <VALUE>1</VALUE>
+        </NUMERICAL-VALUE-SPECIFICATION>
+        <TEXT-VALUE-SPECIFICATION>
+          <VALUE>A</VALUE>
+        </TEXT-VALUE-SPECIFICATION>
+      </FIELDS>
+    </RECORD-VALUE-SPECIFICATION>
+    <RECORD-VALUE-SPECIFICATION>
+      <FIELDS>
+        <NUMERICAL-VALUE-SPECIFICATION>
+          <VALUE>0</VALUE>
+        </NUMERICAL-VALUE-SPECIFICATION>
+        <TEXT-VALUE-SPECIFICATION>
+          <VALUE>Default</VALUE>
+        </TEXT-VALUE-SPECIFICATION>
+      </FIELDS>
+    </RECORD-VALUE-SPECIFICATION>
+  </ARGUMENTS>
+  <MAX-SIZE-TO-FILL>20</MAX-SIZE-TO-FILL>
+</COMPOSITE-RULE-BASED-VALUE-SPECIFICATION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.CompositeRuleBasedValueSpecification = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.CompositeRuleBasedValueSpecification)
+        self.assertEqual(elem.label, "CompositeRuleArray")
+        self.assertEqual(elem.rule, "FILL_UNTIL_END")
+        self.assertEqual(len(elem.arguments), 2)
+        self.assertEqual(elem.max_size_to_fill, 20)
+
+    def test_read_write_compound_primitive_arguments(self):
+        app_val = ar_element.ApplicationValueSpecification(category="VALUE")
+        element = ar_element.CompositeRuleBasedValueSpecification(
+            rule="REPEAT",
+            compound_primitive_arguments=[app_val],
+            max_size_to_fill=10
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<COMPOSITE-RULE-BASED-VALUE-SPECIFICATION>
+  <RULE>REPEAT</RULE>
+  <COMPOUND-PRIMITIVE-ARGUMENTS>
+    <APPLICATION-VALUE-SPECIFICATION>
+      <CATEGORY>VALUE</CATEGORY>
+    </APPLICATION-VALUE-SPECIFICATION>
+  </COMPOUND-PRIMITIVE-ARGUMENTS>
+  <MAX-SIZE-TO-FILL>10</MAX-SIZE-TO-FILL>
+</COMPOSITE-RULE-BASED-VALUE-SPECIFICATION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.CompositeRuleBasedValueSpecification = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.CompositeRuleBasedValueSpecification)
+        self.assertEqual(len(elem.compound_primitive_arguments), 1)
+        self.assertEqual(elem.compound_primitive_arguments[0].category, "VALUE")
+
+    def test_type_errors(self):
+        with self.assertRaises(TypeError):
+            ar_element.CompositeRuleBasedValueSpecification(rule=123)
+        with self.assertRaises(TypeError):
+            ar_element.CompositeRuleBasedValueSpecification(arguments=object())
+        with self.assertRaises(TypeError):
+            ar_element.CompositeRuleBasedValueSpecification(compound_primitive_arguments=object())
+        with self.assertRaises(TypeError):
+            ar_element.CompositeRuleBasedValueSpecification(max_size_to_fill="invalid")
+
+    def test_read_invalid_max_size_to_fill(self):
+        xml = '''<COMPOSITE-RULE-BASED-VALUE-SPECIFICATION>
+  <RULE>FILL</RULE>
+  <MAX-SIZE-TO-FILL>-5</MAX-SIZE-TO-FILL>
+</COMPOSITE-RULE-BASED-VALUE-SPECIFICATION>'''
+        reader = autosar.xml.Reader()
+        with self.assertRaises(ar_exception.ParseError):
+            reader.read_str_elem(xml)
 
 
 if __name__ == '__main__':

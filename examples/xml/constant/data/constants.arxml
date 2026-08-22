@@ -211,6 +211,27 @@
             </NUMERICAL-RULE-BASED-VALUE-SPECIFICATION>
           </VALUE-SPEC>
         </CONSTANT-SPECIFICATION>
+        <CONSTANT-SPECIFICATION>
+          <SHORT-NAME>DefaultRecordArrayConstant</SHORT-NAME>
+          <VALUE-SPEC>
+            <COMPOSITE-RULE-BASED-VALUE-SPECIFICATION>
+              <RULE>FILL</RULE>
+              <ARGUMENTS>
+                <RECORD-VALUE-SPECIFICATION>
+                  <FIELDS>
+                    <NUMERICAL-VALUE-SPECIFICATION>
+                      <VALUE>0</VALUE>
+                    </NUMERICAL-VALUE-SPECIFICATION>
+                    <TEXT-VALUE-SPECIFICATION>
+                      <VALUE>Unused</VALUE>
+                    </TEXT-VALUE-SPECIFICATION>
+                  </FIELDS>
+                </RECORD-VALUE-SPECIFICATION>
+              </ARGUMENTS>
+              <MAX-SIZE-TO-FILL>32</MAX-SIZE-TO-FILL>
+            </COMPOSITE-RULE-BASED-VALUE-SPECIFICATION>
+          </VALUE-SPEC>
+        </CONSTANT-SPECIFICATION>
       </ELEMENTS>
     </AR-PACKAGE>
   </AR-PACKAGES>
