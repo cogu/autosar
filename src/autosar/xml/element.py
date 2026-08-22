@@ -8926,11 +8926,13 @@ class InternalBehavior(Identifiable):
 
     def __init__(self,
                  name: str,
+                 constant_memory: ParameterDataPrototype | list[ParameterDataPrototype] | None = None,
                  data_type_mappings: str | DataTypeMappingSetRef | list[DataTypeMappingSetRef] | None = None,
                  exclusive_areas: ExclusiveArea | list[ExclusiveArea] | None = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
-        # .CONSTANT-MEMORYS (not yet implemented)
+        # .CONSTANT-MEMORYS
+        self.constant_memory: list[ParameterDataPrototype] = []
         # .CONSTANT-VALUE-MAPPING-REFS (not yet implemented)
         # .DATA-TYPE-MAPPING-REFS
         self.data_type_mappings: list[DataTypeMappingSetRef] = []
@@ -8939,6 +8941,12 @@ class InternalBehavior(Identifiable):
         # .EXCLUSIVE-AREA-NESTING-ORDERS (not yet implemented)
         # .STATIC-MEMORYS (not yet implemented)
 
+        if constant_memory is not None:
+            if isinstance(constant_memory, Iterable):
+                for item in constant_memory:
+                    self.append_constant_memory(item)
+            else:
+                self.append_constant_memory(constant_memory)
         if data_type_mappings is not None:
             if isinstance(data_type_mappings, str):
                 data_type_mappings = DataTypeMappingSetRef(data_type_mappings)
@@ -8954,6 +8962,19 @@ class InternalBehavior(Identifiable):
             else:
                 self.append_exclusive_area(exclusive_areas)
 
+    def create_constant_memory(self,
+                               name: str,
+                               init_value: ValueSpecificationElement | None = None,
+                               **kwargs) -> ParameterDataPrototype:
+        """
+        Adds a new ParameterDataPrototype to constant_memory
+
+        #convenience-method
+        """
+        item = ParameterDataPrototype(name, init_value, **kwargs)
+        self.append_constant_memory(item)
+        return item
+
     def create_exclusive_area(self, name: str, **kwargs) -> ExclusiveArea:
         """
         Adds a new ExclusiveArea to this object
@@ -8964,24 +8985,34 @@ class InternalBehavior(Identifiable):
         self.append_exclusive_area(exclusive_area)
         return exclusive_area
 
+    def append_constant_memory(self, item: ParameterDataPrototype) -> None:
+        """
+        Appends ParameterDataPrototype to constant_memory
+        """
+        if isinstance(item, ParameterDataPrototype):
+            self.constant_memory.append(item)
+            item.parent = self
+        else:
+            raise ar_except.ElementTypeError("item", ParameterDataPrototype, item)
+
     def append_data_type_mapping(self, mapping_set: DataTypeMappingSetRef) -> None:
         """
-        Adds runnable to internal list of runnables
+        Appends DataTypeMappingSetRef to data_type_mappings
         """
         if isinstance(mapping_set, DataTypeMappingSetRef):
             self.data_type_mappings.append(mapping_set)
         else:
-            raise TypeError(f"mapping_set must be of type DataTypeMappingSetRef. Got {str(type(mapping_set))}")
+            raise ar_except.ElementTypeError("mapping_set", DataTypeMappingSetRef, mapping_set)
 
     def append_exclusive_area(self, exclusive_area: ExclusiveArea) -> None:
         """
-        Adds runnable to internal list of runnables
+        Appends ExclusiveArea to exclusive_areas
         """
         if isinstance(exclusive_area, ExclusiveArea):
             self.exclusive_areas.append(exclusive_area)
             exclusive_area.parent = self
         else:
-            raise TypeError(f"exclusive_area must be of type ExclusiveArea. Got {str(type(exclusive_area))}")
+            raise ar_except.ElementTypeError("exclusive_area", ExclusiveArea, exclusive_area)
 
 
 ModeSwitchEventArgsReturnType = tuple[RequirePortPrototype, ModeDeclarationGroupPrototype, ModeDeclaration]

@@ -6178,7 +6178,12 @@ class Reader:
         """
         Reads group AR:INTERNAL-BEHAVIOR
         """
-        child_elements.skip("CONSTANT-MEMORYS")
+        xml_child = child_elements.get("CONSTANT-MEMORYS")
+        if xml_child is not None:
+            constant_memory = []
+            for xml_grand_child in xml_child.findall("./PARAMETER-DATA-PROTOTYPE"):
+                constant_memory.append(self._read_parameter_data_prototype(xml_grand_child))
+            data["constant_memory"] = constant_memory
         child_elements.skip("CONSTANT-VALUE-MAPPING-REFS")
         xml_child = child_elements.get("DATA-TYPE-MAPPING-REFS")
         if xml_child is not None:

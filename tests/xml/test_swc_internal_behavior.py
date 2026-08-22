@@ -7,6 +7,7 @@ import unittest
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
 import autosar.xml.enumeration as ar_enum # noqa E402
 import autosar.xml.element as ar_element # noqa E402
+import autosar.xml.exception as ar_except # noqa E402
 import autosar # noqa E402
 
 
@@ -3791,7 +3792,78 @@ class TestInternalBehavior(unittest.TestCase):
     Use SwcInternalBehavior as test class since InternalBehavior is abstract.
     """
 
-    # IMPLEMENT LATER: CONSTANT-MEMORYS
+    def test_constant_memory_from_element(self):
+        param = ar_element.ParameterDataPrototype("MyConstantMemory")
+        element = ar_element.SwcInternalBehavior("MyName", constant_memory=param)
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <CONSTANT-MEMORYS>
+    <PARAMETER-DATA-PROTOTYPE>
+      <SHORT-NAME>MyConstantMemory</SHORT-NAME>
+    </PARAMETER-DATA-PROTOTYPE>
+  </CONSTANT-MEMORYS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.constant_memory), 1)
+        param_elem = elem.constant_memory[0]
+        self.assertIsInstance(param_elem, ar_element.ParameterDataPrototype)
+        self.assertEqual(param_elem.name, "MyConstantMemory")
+        self.assertIs(param_elem.parent, elem)
+
+    def test_constant_memory_from_list(self):
+        param1 = ar_element.ParameterDataPrototype("Const1")
+        param2 = ar_element.ParameterDataPrototype("Const2")
+        element = ar_element.SwcInternalBehavior("MyName", constant_memory=[param1, param2])
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <CONSTANT-MEMORYS>
+    <PARAMETER-DATA-PROTOTYPE>
+      <SHORT-NAME>Const1</SHORT-NAME>
+    </PARAMETER-DATA-PROTOTYPE>
+    <PARAMETER-DATA-PROTOTYPE>
+      <SHORT-NAME>Const2</SHORT-NAME>
+    </PARAMETER-DATA-PROTOTYPE>
+  </CONSTANT-MEMORYS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.constant_memory), 2)
+        self.assertEqual(elem.constant_memory[0].name, "Const1")
+        self.assertEqual(elem.constant_memory[1].name, "Const2")
+        self.assertIs(elem.constant_memory[0].parent, elem)
+        self.assertIs(elem.constant_memory[1].parent, elem)
+
+    def test_create_constant_memory(self):
+        element = ar_element.SwcInternalBehavior("MyName")
+        param = element.create_constant_memory("MyConstant")
+        self.assertIsInstance(param, ar_element.ParameterDataPrototype)
+        self.assertEqual(param.name, "MyConstant")
+        self.assertIs(param.parent, element)
+        self.assertEqual(len(element.constant_memory), 1)
+        self.assertIs(element.constant_memory[0], param)
+
+    def test_append_constant_memory_invalid_type(self):
+        element = ar_element.SwcInternalBehavior("MyName")
+        with self.assertRaises(ar_except.ElementTypeError):
+            element.append_constant_memory("InvalidType")
+
+    def test_append_data_type_mapping_invalid_type(self):
+        element = ar_element.SwcInternalBehavior("MyName")
+        with self.assertRaises(ar_except.ElementTypeError):
+            element.append_data_type_mapping(123)
+
+    def test_append_exclusive_area_invalid_type(self):
+        element = ar_element.SwcInternalBehavior("MyName")
+        with self.assertRaises(ar_except.ElementTypeError):
+            element.append_exclusive_area("NotAnExclusiveArea")
+
     # IMPLEMENT LATER: CONSTANT-VALUE-MAPPING-REFS
 
     def test_data_type_mapping_refs_from_str(self):
