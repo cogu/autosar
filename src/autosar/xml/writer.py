@@ -244,6 +244,7 @@ class Writer(_XMLWriter):
             'ApplicationValueSpecification': self._write_application_value_specification,
             'ConstantReference': self._write_constant_reference,
             'ReferenceValueSpecification': self._write_reference_value_specification,
+            'NumericalRuleBasedValueSpecification': self._write_numerical_rule_based_value_specification,
         }
         # Com-spec elements
         self.switcher_provided_com_spec = {
@@ -313,6 +314,8 @@ class Writer(_XMLWriter):
             'CompuScale': self._write_compu_scale,
             # Constant elements
             'NumericalOrText': self._write_numerical_or_text,
+            'RuleArguments': self._write_rule_arguments,
+            'RuleBasedValueSpecification': self._write_rule_based_value_specification,
             # Constraint elements
             'ScaleConstraint': self._write_scale_constraint,
             'InternalConstraint': self._write_internal_constraint,
@@ -2782,6 +2785,31 @@ class Writer(_XMLWriter):
         if elem.reference_value is not None:
             self._write_data_prototype_ref(elem.reference_value, "REFERENCE-VALUE-REF")
 
+    def _write_numerical_rule_based_value_specification(self,
+                                                        elem: ar_element.NumericalRuleBasedValueSpecification) -> None:
+        """
+        Writes complex type AR:NUMERICAL-RULE-BASED-VALUE-SPECIFICATION
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.NumericalRuleBasedValueSpecification)
+        tag = "NUMERICAL-RULE-BASED-VALUE-SPECIFICATION"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_value_specification_group(elem)
+            self._write_numerical_rule_based_value_specification_group(elem)
+            self._leave_child()
+
+    def _write_numerical_rule_based_value_specification_group(self,
+                                                              elem: ar_element.NumericalRuleBasedValueSpecification
+                                                              ) -> None:
+        """
+        Writes group AR:NUMERICAL-RULE-BASED-VALUE-SPECIFICATION
+        """
+        if elem.rule_based_values is not None:
+            self._write_rule_based_value_specification(elem.rule_based_values, "RULE-BASED-VALUES")
+
     def _write_numerical_or_text(self, elem: ar_element.NumericalOrText) -> None:
         """
         Writes complex type AR:NUMERICAL-OR-TEXT
@@ -2804,6 +2832,63 @@ class Writer(_XMLWriter):
             self._add_content("VF", self._format_number(elem.vf))
         if elem.vt is not None:
             self._add_content("VT", elem.vt)
+
+    def _write_rule_arguments(self, elem: ar_element.RuleArguments) -> None:
+        """
+        Writes complex type AR:RULE-ARGUMENTS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.RuleArguments)
+        tag = "RULE-ARGUMENTS"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_rule_arguments_group(elem)
+            self._leave_child()
+
+    def _write_rule_arguments_group(self, elem: ar_element.RuleArguments) -> None:
+        """
+        Writes group AR:RULE-ARGUMENTS
+        """
+        for value in elem.values:
+            if isinstance(value, ar_element.NumericalOrText):
+                self._write_numerical_or_text(value)
+            elif isinstance(value, str):
+                self._add_content("VT", value)
+            elif isinstance(value, (int, float, ar_element.NumericalValue)):
+                self._add_content("V", self._format_number(value))
+            else:
+                raise NotImplementedError(str(type(value)))
+
+    def _write_rule_based_value_specification(self,
+                                              elem: ar_element.RuleBasedValueSpecification,
+                                              tag: str = "RULE-BASED-VALUE-SPECIFICATION") -> None:
+        """
+        Writes complex type AR:RULE-BASED-VALUE-SPECIFICATION
+        Multi-tagged: True
+        """
+        assert isinstance(elem, ar_element.RuleBasedValueSpecification)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_rule_based_value_specification_group(elem)
+            self._leave_child()
+
+    def _write_rule_based_value_specification_group(self, elem: ar_element.RuleBasedValueSpecification) -> None:
+        """
+        Writes group AR:RULE-BASED-VALUE-SPECIFICATION
+        """
+        if elem.rule is not None:
+            self._add_content("RULE", elem.rule)
+        if len(elem.arguments) > 0:
+            self._add_child("ARGUMENTSS")
+            for arg in elem.arguments:
+                self._write_rule_arguments(arg)
+            self._leave_child()
+        if elem.max_size_to_fill is not None:
+            self._add_content("MAX-SIZE-TO-FILL", str(elem.max_size_to_fill))
 
 # --- CalibrationData elements
 

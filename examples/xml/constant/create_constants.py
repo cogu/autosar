@@ -73,6 +73,31 @@ def create_reference_value_constants(workspace: autosar.xml.Workspace):
     workspace.add_element("Constants", ar_element.ConstantSpecification("RecordWithRefValue", record_value))
 
 
+def create_rule_based_constants(workspace: autosar.xml.Workspace):
+    """
+    Creates constants using NumericalRuleBasedValueSpecification with rule-based array filling
+    """
+    # 1. Fill an entire array with zeros
+    zero_fill = ar_element.NumericalRuleBasedValueSpecification(
+        rule_based_values=ar_element.RuleBasedValueSpecification(
+            rule="FILL",
+            arguments=ar_element.RuleArguments(0),
+            max_size_to_fill=100
+        )
+    )
+    workspace.add_element("Constants", ar_element.ConstantSpecification("ZeroFilledArrayConstant", zero_fill))
+
+    # 2. Fill an array with explicit starting values, filling remaining elements up to 50 with trailing zero
+    fill_until_end = ar_element.NumericalRuleBasedValueSpecification(
+        rule_based_values=ar_element.RuleBasedValueSpecification(
+            rule="FILL_UNTIL_END",
+            arguments=ar_element.RuleArguments([10, 20, 30, 0]),
+            max_size_to_fill=50
+        )
+    )
+    workspace.add_element("Constants", ar_element.ConstantSpecification("FillUntilEndArrayConstant", fill_until_end))
+
+
 def main():
     """Main function"""
     workspace = autosar.xml.Workspace()
@@ -83,6 +108,7 @@ def main():
     create_record_constants(workspace)
     create_record_constant_using_references(workspace)
     create_reference_value_constants(workspace)
+    create_rule_based_constants(workspace)
     workspace.set_document_root(os.path.join(os.path.dirname(__file__), "data"))
     workspace.create_document("constants.arxml", packages="/Constants")
     workspace.write_documents()
