@@ -91,7 +91,6 @@ def main():
     apply_platform_types(workspace)
     apply_component_types(workspace)
     workspace.write_documents()
-    print("Done")
 
 
 if __name__ == "__main__":

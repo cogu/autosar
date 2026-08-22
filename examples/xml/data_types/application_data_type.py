@@ -27,4 +27,7 @@ def create_primitive_application_data_type():
 
 if __name__ == "__main__":
     create_primitive_application_data_type()
-    print("Done")
+    reader = autosar.xml.Reader()
+    doc = reader.read_file(os.path.join(os.path.dirname(__file__), "data", "application_primitive_datatype.arxml"))
+    elem = doc.find("/DataTypes/ApplicationDataTypes/uint8_ADT")
+    assert isinstance(elem, ar_element.ApplicationPrimitiveDataType)

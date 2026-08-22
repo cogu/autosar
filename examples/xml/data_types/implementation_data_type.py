@@ -61,4 +61,10 @@ def create_array_impl_type_with_type_ref_element():
 if __name__ == "__main__":
     create_array_impl_type_with_value_element()
     create_array_impl_type_with_type_ref_element()
-    print("Done")
+    reader = autosar.xml.Reader()
+    data_dir = os.path.join(os.path.dirname(__file__), 'data')
+    doc1 = reader.read_file(os.path.join(data_dir, 'array_impl_type_with_value_element.arxml'))
+    assert isinstance(doc1.find('/DataTypes/ImplementationDataTypes/U8Array4_T'), ar_element.ImplementationDataType)
+    doc2 = reader.read_file(os.path.join(data_dir, 'array_impl_type_with_type_ref_element.arxml'))
+    assert isinstance(doc2.find('/DataTypes/ImplementationDataTypes/InactiveActiveArray2_T'),
+                      ar_element.ImplementationDataType)
