@@ -4278,6 +4278,58 @@ class TestInternalBehavior(unittest.TestCase):
         with self.assertRaises(ar_except.ElementTypeError):
             element.append_explicit_inter_runnable_variable("InvalidType")
 
+    def test_handle_termination_and_restart_can_be_restarted(self):
+        element = ar_element.SwcInternalBehavior(
+            "MyName",
+            handle_termination_and_restart=ar_enum.HandleTerminationAndRestart.CAN_BE_TERMINATED_AND_RESTARTED)
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <HANDLE-TERMINATION-AND-RESTART>CAN-BE-TERMINATED-AND-RESTARTED</HANDLE-TERMINATION-AND-RESTART>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(elem.handle_termination_and_restart,
+                         ar_enum.HandleTerminationAndRestart.CAN_BE_TERMINATED_AND_RESTARTED)
+
+    def test_handle_termination_and_restart_can_be_terminated(self):
+        element = ar_element.SwcInternalBehavior(
+            "MyName",
+            handle_termination_and_restart=ar_enum.HandleTerminationAndRestart.CAN_BE_TERMINATED)
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <HANDLE-TERMINATION-AND-RESTART>CAN-BE-TERMINATED</HANDLE-TERMINATION-AND-RESTART>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(elem.handle_termination_and_restart,
+                         ar_enum.HandleTerminationAndRestart.CAN_BE_TERMINATED)
+
+    def test_handle_termination_and_restart_no_support(self):
+        element = ar_element.SwcInternalBehavior(
+            "MyName",
+            handle_termination_and_restart=ar_enum.HandleTerminationAndRestart.NO_SUPPORT)
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <HANDLE-TERMINATION-AND-RESTART>NO-SUPPORT</HANDLE-TERMINATION-AND-RESTART>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(elem.handle_termination_and_restart,
+                         ar_enum.HandleTerminationAndRestart.NO_SUPPORT)
+
+    def test_handle_termination_and_restart_invalid_type(self):
+        with self.assertRaises(ar_except.AssignmentTypeError):
+            ar_element.SwcInternalBehavior("MyName", handle_termination_and_restart=123)
+
     def test_append_constant_value_mapping_invalid_type(self):
         element = ar_element.SwcInternalBehavior("MyName")
         with self.assertRaises(ar_except.ElementTypeError):

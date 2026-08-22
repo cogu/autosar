@@ -214,6 +214,16 @@ class HandleOutOfRangeStatus(Enum):
     SILENT = 1
 
 
+class HandleTerminationAndRestart(Enum):
+    """
+    HANDLE-TERMINATION-AND-RESTART-ENUM--SIMPLE
+    """
+
+    CAN_BE_TERMINATED = 0
+    CAN_BE_TERMINATED_AND_RESTARTED = 1
+    NO_SUPPORT = 2
+
+
 class HandleTimeout(Enum):
     """
     HANDLE-TIMEOUT-ENUM--SIMPLE
@@ -846,6 +856,11 @@ xml_to_enum_map: dict[str, dict] = {
         "INDICATE": HandleOutOfRangeStatus.INDICATE,
         "SILENT": HandleOutOfRangeStatus.SILENT,
     },
+    "HandleTerminationAndRestart": {
+        "CAN-BE-TERMINATED": HandleTerminationAndRestart.CAN_BE_TERMINATED,
+        "CAN-BE-TERMINATED-AND-RESTARTED": HandleTerminationAndRestart.CAN_BE_TERMINATED_AND_RESTARTED,
+        "NO-SUPPORT": HandleTerminationAndRestart.NO_SUPPORT,
+    },
     "HandleTimeout": {
         "NONE": HandleTimeout.NONE,
         "REPLACE": HandleTimeout.REPLACE,
@@ -1269,6 +1284,11 @@ enum_to_xml_map: dict[str, list] = {
     "HandleOutOfRangeStatus": [
         "INDICATE",            # 0
         "SILENT"               # 1
+    ],
+    "HandleTerminationAndRestart": [
+        "CAN-BE-TERMINATED",                # 0
+        "CAN-BE-TERMINATED-AND-RESTARTED",  # 1
+        "NO-SUPPORT",                       # 2
     ],
     "HandleTimeout": [
         "NONE",                                   # 0

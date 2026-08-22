@@ -6355,7 +6355,9 @@ class Reader:
             for xml_grand_child in xml_child.findall("./VARIABLE-DATA-PROTOTYPE"):
                 explicit_inter_runnable_variables.append(self._read_variable_data_prototype(xml_grand_child))
             data["explicit_inter_runnable_variables"] = explicit_inter_runnable_variables
-        child_elements.skip("HANDLE-TERMINATION-AND-RESTART")
+        xml_child = child_elements.get("HANDLE-TERMINATION-AND-RESTART")
+        if xml_child is not None:
+            data["handle_termination_and_restart"] = ar_enum.xml_to_enum("HandleTerminationAndRestart", xml_child.text)
         child_elements.skip("INCLUDED-DATA-TYPE-SETS")
         child_elements.skip("INCLUDED-MODE-DECLARATION-GROUP-SETS")
         child_elements.skip("INSTANTIATION-DATA-DEF-PROPSS")

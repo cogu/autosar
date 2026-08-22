@@ -5536,6 +5536,9 @@ class Writer(_XMLWriter):
             for item in elem.explicit_inter_runnable_variables:
                 self._write_variable_data_prototype(item, "VARIABLE-DATA-PROTOTYPE")
             self._leave_child()
+        if elem.handle_termination_and_restart is not None:
+            self._add_content("HANDLE-TERMINATION-AND-RESTART",
+                              ar_enum.enum_to_xml(elem.handle_termination_and_restart))
         if elem.port_api_options:
             self._add_child("PORT-API-OPTIONS")
             for element in elem.port_api_options.values():
