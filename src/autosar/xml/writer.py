@@ -5480,6 +5480,11 @@ class Writer(_XMLWriter):
             for order in elem.exclusive_area_nesting_orders:
                 self._write_exclusive_area_nesting_order(order)
             self._leave_child()
+        if elem.static_memory:
+            self._add_child("STATIC-MEMORYS")
+            for item in elem.static_memory:
+                self._write_variable_data_prototype(item, "VARIABLE-DATA-PROTOTYPE")
+            self._leave_child()
 
     def _write_swc_internal_behavior_group(self, elem: ar_element.SwcInternalBehavior) -> None:
         """
