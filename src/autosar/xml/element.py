@@ -8983,6 +8983,50 @@ class ExclusiveArea(Identifiable):
         return None if ref_str is None else ExclusiveAreaRef(ref_str)
 
 
+class ExclusiveAreaNestingOrder(Referrable):
+    """
+    Complex type AR:EXCLUSIVE-AREA-NESTING-ORDER
+    Tag variants: 'EXCLUSIVE-AREA-NESTING-ORDER'
+    """
+
+    def __init__(self,
+                 name: str,
+                 exclusive_areas: (ExclusiveAreaRef | list[ExclusiveAreaRef] |
+                                   str | list[str] | None) = None,
+                 **kwargs: dict) -> None:
+        super().__init__(name, **kwargs)
+        # .EXCLUSIVE-AREA-REFS
+        self.exclusive_areas: list[ExclusiveAreaRef] = []
+
+        if exclusive_areas is not None:
+            if isinstance(exclusive_areas, (ExclusiveAreaRef, str)):
+                self.append(exclusive_areas)
+            elif isinstance(exclusive_areas, Iterable):
+                for item in exclusive_areas:
+                    self.append(item)
+            else:
+                raise TypeError(f"exclusive_areas: Invalid type {str(type(exclusive_areas))}")
+
+    def append(self, exclusive_area: ExclusiveAreaRef | str) -> None:
+        """
+        Adds ExclusiveAreaRef to internal list
+        """
+        if isinstance(exclusive_area, str):
+            self.exclusive_areas.append(ExclusiveAreaRef(exclusive_area))
+        elif isinstance(exclusive_area, ExclusiveAreaRef):
+            self.exclusive_areas.append(exclusive_area)
+        else:
+            raise ar_except.ElementTypeError("exclusive_area", ("ExclusiveAreaRef", "str"), exclusive_area)
+
+    def ref(self) -> ExclusiveAreaNestingOrderRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        return None if ref_str is None else ExclusiveAreaNestingOrderRef(ref_str)
+
+
 class InternalBehavior(Identifiable):
     """
     Group AR:INTERNAL-BEHAVIOR
@@ -8996,6 +9040,8 @@ class InternalBehavior(Identifiable):
                                            list[ConstantSpecificationMappingSetRef] | None) = None,
                  data_type_mappings: str | DataTypeMappingSetRef | list[DataTypeMappingSetRef] | None = None,
                  exclusive_areas: ExclusiveArea | list[ExclusiveArea] | None = None,
+                 exclusive_area_nesting_orders: (ExclusiveAreaNestingOrder |
+                                                 list[ExclusiveAreaNestingOrder] | None) = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
         # .CONSTANT-MEMORYS
@@ -9006,7 +9052,8 @@ class InternalBehavior(Identifiable):
         self.data_type_mappings: list[DataTypeMappingSetRef] = []
         # .EXCLUSIVE-AREAS
         self.exclusive_areas: list[ExclusiveArea] = []
-        # .EXCLUSIVE-AREA-NESTING-ORDERS (not yet implemented)
+        # .EXCLUSIVE-AREA-NESTING-ORDERS
+        self.exclusive_area_nesting_orders: list[ExclusiveAreaNestingOrder] = []
         # .STATIC-MEMORYS (not yet implemented)
 
         if constant_memory is not None:
@@ -9037,6 +9084,12 @@ class InternalBehavior(Identifiable):
                     self.append_exclusive_area(exclusive_area)
             else:
                 self.append_exclusive_area(exclusive_areas)
+        if exclusive_area_nesting_orders is not None:
+            if isinstance(exclusive_area_nesting_orders, Iterable):
+                for order in exclusive_area_nesting_orders:
+                    self.append_exclusive_area_nesting_order(order)
+            else:
+                self.append_exclusive_area_nesting_order(exclusive_area_nesting_orders)
 
     @convenience_function
     def create_constant_memory(self,
@@ -9058,6 +9111,19 @@ class InternalBehavior(Identifiable):
         exclusive_area = ExclusiveArea(name, **kwargs)
         self.append_exclusive_area(exclusive_area)
         return exclusive_area
+
+    @convenience_function
+    def create_exclusive_area_nesting_order(self,
+                                            name: str,
+                                            exclusive_areas: (ExclusiveAreaRef | list[ExclusiveAreaRef] |
+                                                              str | list[str] | None) = None,
+                                            **kwargs) -> ExclusiveAreaNestingOrder:
+        """
+        Adds a new ExclusiveAreaNestingOrder to this object
+        """
+        order = ExclusiveAreaNestingOrder(name, exclusive_areas, **kwargs)
+        self.append_exclusive_area_nesting_order(order)
+        return order
 
     def append_constant_memory(self, item: ParameterDataPrototype) -> None:
         """
@@ -9096,6 +9162,16 @@ class InternalBehavior(Identifiable):
             exclusive_area.parent = self
         else:
             raise ar_except.ElementTypeError("exclusive_area", ExclusiveArea, exclusive_area)
+
+    def append_exclusive_area_nesting_order(self, item: ExclusiveAreaNestingOrder) -> None:
+        """
+        Appends ExclusiveAreaNestingOrder to exclusive_area_nesting_orders
+        """
+        if isinstance(item, ExclusiveAreaNestingOrder):
+            self.exclusive_area_nesting_orders.append(item)
+            item.parent = self
+        else:
+            raise ar_except.ElementTypeError("item", ExclusiveAreaNestingOrder, item)
 
 
 ModeSwitchEventArgsReturnType = tuple[RequirePortPrototype, ModeDeclarationGroupPrototype, ModeDeclaration]
