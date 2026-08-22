@@ -6358,6 +6358,12 @@ class Reader:
         xml_child = child_elements.get("HANDLE-TERMINATION-AND-RESTART")
         if xml_child is not None:
             data["handle_termination_and_restart"] = ar_enum.xml_to_enum("HandleTerminationAndRestart", xml_child.text)
+        xml_child = child_elements.get("IMPLICIT-INTER-RUNNABLE-VARIABLES")
+        if xml_child is not None:
+            implicit_inter_runnable_variables = []
+            for xml_grand_child in xml_child.findall("./VARIABLE-DATA-PROTOTYPE"):
+                implicit_inter_runnable_variables.append(self._read_variable_data_prototype(xml_grand_child))
+            data["implicit_inter_runnable_variables"] = implicit_inter_runnable_variables
         child_elements.skip("INCLUDED-DATA-TYPE-SETS")
         child_elements.skip("INCLUDED-MODE-DECLARATION-GROUP-SETS")
         child_elements.skip("INSTANTIATION-DATA-DEF-PROPSS")
