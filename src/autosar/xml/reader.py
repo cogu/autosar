@@ -192,6 +192,7 @@ class Reader:
             'APPLICATION-VALUE-SPECIFICATION': self._read_application_value_specification,
             'CONSTANT-REFERENCE': self._read_constant_reference,
             'REFERENCE-VALUE-SPECIFICATION': self._read_reference_value_specification,
+            'NUMERICAL-RULE-BASED-VALUE-SPECIFICATION': self._read_numerical_rule_based_value_specification,
         }
         self.switcher_provided_com_spec = {
             'QUEUED-SENDER-COM-SPEC': self._read_queued_sender_com_spec,
@@ -259,6 +260,9 @@ class Reader:
             'COMPU-SCALE': self._read_compu_scale,
             # Constant elements
             'VTF': self._read_numerical_or_text,
+            'RULE-ARGUMENTS': self._read_rule_arguments,
+            'RULE-BASED-VALUE-SPECIFICATION': self._read_rule_based_value_specification,
+            'RULE-BASED-VALUES': self._read_rule_based_value_specification,
             # Constraint elements
             'SCALE-CONSTR': self._read_scale_constraint,
             'INTERNAL-CONSTRS': self._read_internal_constraint,
@@ -3133,6 +3137,31 @@ class Reader:
         if xml_child is not None:
             data["reference_value"] = self._read_data_prototype_ref(xml_child)
 
+    def _read_numerical_rule_based_value_specification(self,
+                                                       xml_element: ElementTree.Element
+                                                       ) -> ar_element.NumericalRuleBasedValueSpecification:
+        """
+        Reads complex type AR:NUMERICAL-RULE-BASED-VALUE-SPECIFICATION
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_value_specification_group(child_elements, data)
+        self._read_numerical_rule_based_value_specification_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        element = ar_element.NumericalRuleBasedValueSpecification(**data)
+        return element
+
+    def _read_numerical_rule_based_value_specification_group(self,
+                                                             child_elements: ChildElementMap,
+                                                             data: dict) -> None:
+        """
+        Reads group AR:NUMERICAL-RULE-BASED-VALUE-SPECIFICATION
+        """
+        xml_child = child_elements.get("RULE-BASED-VALUES")
+        if xml_child is not None:
+            data["rule_based_values"] = self._read_rule_based_value_specification(xml_child)
+
     def _read_numerical_or_text(self,
                                 xml_element: ElementTree.Element
                                 ) -> ar_element.NumericalOrText:
@@ -3164,6 +3193,78 @@ class Reader:
         xml_child = child_elements.get("VT")
         if xml_child is not None:
             data["vt"] = xml_child.text
+
+    def _read_rule_arguments(self, xml_element: ElementTree.Element) -> ar_element.RuleArguments:
+        """
+        Reads complex type AR:RULE-ARGUMENTS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = list(xml_element.findall("./*"))
+        self._read_rule_arguments_group(child_elements, data)
+        element = ar_element.RuleArguments(**data)
+        return element
+
+    def _read_rule_arguments_group(self, child_elements: list[ElementTree.Element], data: dict) -> None:
+        """
+        Reads group AR:RULE-ARGUMENTS
+        """
+        if len(child_elements) > 0:
+            values = []
+            data["values"] = values
+            for xml_child in child_elements:
+                if xml_child.tag == "VTF":
+                    values.append(self._read_numerical_or_text(xml_child))
+                elif xml_child.tag == "VF":
+                    number = ar_element.NumericalValue(xml_child.text)
+                    if number.value_format in (ar_enum.ValueFormat.HEXADECIMAL,
+                                               ar_enum.ValueFormat.BINARY,
+                                               ar_enum.ValueFormat.SCIENTIFIC):
+                        values.append(number)
+                    else:
+                        values.append(number.value)
+                elif xml_child.tag == "VT":
+                    values.append(xml_child.text)
+                elif xml_child.tag == "V":
+                    number = ar_element.NumericalValue(xml_child.text)
+                    if number.value_format in (ar_enum.ValueFormat.HEXADECIMAL,
+                                               ar_enum.ValueFormat.BINARY,
+                                               ar_enum.ValueFormat.SCIENTIFIC):
+                        values.append(number)
+                    else:
+                        values.append(number.value)
+                elif xml_child.tag == "VARIATION-POINT":
+                    pass
+                else:
+                    self._report_unprocessed_element(xml_child)
+
+    def _read_rule_based_value_specification(self,
+                                             xml_element: ElementTree.Element
+                                             ) -> ar_element.RuleBasedValueSpecification:
+        """
+        Reads complex type AR:RULE-BASED-VALUE-SPECIFICATION
+        Multi-tagged: True
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_rule_based_value_specification_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        element = ar_element.RuleBasedValueSpecification(**data)
+        return element
+
+    def _read_rule_based_value_specification_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:RULE-BASED-VALUE-SPECIFICATION
+        """
+        xml_child = child_elements.get("RULE")
+        if xml_child is not None:
+            data["rule"] = xml_child.text
+        xml_child = child_elements.get("ARGUMENTSS")
+        if xml_child is not None:
+            data["arguments"] = [self._read_rule_arguments(x) for x in xml_child.findall("./RULE-ARGUMENTS")]
+        xml_child = child_elements.get("MAX-SIZE-TO-FILL")
+        if xml_child is not None:
+            data["max_size_to_fill"] = int(xml_child.text)
 
     # CalibrationData elements
 

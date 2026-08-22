@@ -12,7 +12,10 @@ Non-collectable elements are various sub-elements to collectable elements.
 #### XML - Constant elements
 
 * NumericalOrText | NUMERICAL-OR-TEXT
+* NumericalRuleBasedValueSpecification | NUMERICAL-RULE-BASED-VALUE-SPECIFICATION
 * ReferenceValueSpecification | REFERENCE-VALUE-SPECIFICATION
+* RuleArguments | RULE-ARGUMENTS
+* RuleBasedValueSpecification | RULE-BASED-VALUE-SPECIFICATION
 
 #### Developer Utilities (`dev_utils`)
 

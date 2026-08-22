@@ -687,5 +687,277 @@ class TestNumericalOrText(unittest.TestCase):
             ar_element.NumericalOrText(vt=123)
 
 
+class TestRuleArguments(unittest.TestCase):
+
+    def test_read_write_empty(self):
+        element = ar_element.RuleArguments()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<RULE-ARGUMENTS/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.RuleArguments = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RuleArguments)
+        self.assertEqual(len(elem.values), 0)
+
+    def test_read_write_single_int(self):
+        element = ar_element.RuleArguments(10)
+        writer = autosar.xml.Writer()
+        xml = '''<RULE-ARGUMENTS>
+  <V>10</V>
+</RULE-ARGUMENTS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RuleArguments = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RuleArguments)
+        self.assertEqual(elem.values, [10])
+
+    def test_read_write_single_float(self):
+        element = ar_element.RuleArguments(2.5)
+        writer = autosar.xml.Writer()
+        xml = '''<RULE-ARGUMENTS>
+  <V>2.5</V>
+</RULE-ARGUMENTS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RuleArguments = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RuleArguments)
+        self.assertEqual(elem.values, [2.5])
+
+    def test_read_write_single_text(self):
+        element = ar_element.RuleArguments("TextValue")
+        writer = autosar.xml.Writer()
+        xml = '''<RULE-ARGUMENTS>
+  <VT>TextValue</VT>
+</RULE-ARGUMENTS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RuleArguments = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RuleArguments)
+        self.assertEqual(elem.values, ["TextValue"])
+
+    def test_read_write_numerical_or_text(self):
+        element = ar_element.RuleArguments(ar_element.NumericalOrText(vf=5, vt="Five"))
+        writer = autosar.xml.Writer()
+        xml = '''<RULE-ARGUMENTS>
+  <VTF>
+    <VF>5</VF>
+    <VT>Five</VT>
+  </VTF>
+</RULE-ARGUMENTS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RuleArguments = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RuleArguments)
+        self.assertEqual(len(elem.values), 1)
+        self.assertIsInstance(elem.values[0], ar_element.NumericalOrText)
+        self.assertEqual(elem.values[0].vf, 5)
+        self.assertEqual(elem.values[0].vt, "Five")
+
+    def test_read_write_mixed_list(self):
+        element = ar_element.RuleArguments([10, "Hello", 2.5, ar_element.NumericalOrText(vf=1)])
+        writer = autosar.xml.Writer()
+        xml = '''<RULE-ARGUMENTS>
+  <V>10</V>
+  <VT>Hello</VT>
+  <V>2.5</V>
+  <VTF>
+    <VF>1</VF>
+  </VTF>
+</RULE-ARGUMENTS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RuleArguments = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RuleArguments)
+        self.assertEqual(len(elem.values), 4)
+        self.assertEqual(elem.values[0], 10)
+        self.assertEqual(elem.values[1], "Hello")
+        self.assertEqual(elem.values[2], 2.5)
+        self.assertIsInstance(elem.values[3], ar_element.NumericalOrText)
+        self.assertEqual(elem.values[3].vf, 1)
+
+    def test_read_vf_element(self):
+        xml = '''<RULE-ARGUMENTS>
+  <VF>42</VF>
+</RULE-ARGUMENTS>'''
+        reader = autosar.xml.Reader()
+        elem: ar_element.RuleArguments = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RuleArguments)
+        self.assertEqual(elem.values, [42])
+
+    def test_append_and_type_errors(self):
+        elem = ar_element.RuleArguments()
+        elem.append(100)
+        elem.append("str")
+        self.assertEqual(elem.values, [100, "str"])
+        with self.assertRaises(TypeError):
+            ar_element.RuleArguments(values=object())
+        with self.assertRaises(TypeError):
+            elem.append(object())
+
+
+class TestRuleBasedValueSpecification(unittest.TestCase):
+
+    def test_read_write_empty(self):
+        element = ar_element.RuleBasedValueSpecification()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<RULE-BASED-VALUE-SPECIFICATION/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.RuleBasedValueSpecification = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RuleBasedValueSpecification)
+        self.assertIsNone(elem.rule)
+        self.assertEqual(len(elem.arguments), 0)
+        self.assertIsNone(elem.max_size_to_fill)
+
+    def test_read_write_rule_only(self):
+        element = ar_element.RuleBasedValueSpecification(rule="FILL")
+        writer = autosar.xml.Writer()
+        xml = '''<RULE-BASED-VALUE-SPECIFICATION>
+  <RULE>FILL</RULE>
+</RULE-BASED-VALUE-SPECIFICATION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RuleBasedValueSpecification = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RuleBasedValueSpecification)
+        self.assertEqual(elem.rule, "FILL")
+        self.assertEqual(len(elem.arguments), 0)
+        self.assertIsNone(elem.max_size_to_fill)
+
+    def test_read_write_full(self):
+        args = ar_element.RuleArguments([0])
+        element = ar_element.RuleBasedValueSpecification(
+            rule="FILL",
+            arguments=args,
+            max_size_to_fill=100
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<RULE-BASED-VALUE-SPECIFICATION>
+  <RULE>FILL</RULE>
+  <ARGUMENTSS>
+    <RULE-ARGUMENTS>
+      <V>0</V>
+    </RULE-ARGUMENTS>
+  </ARGUMENTSS>
+  <MAX-SIZE-TO-FILL>100</MAX-SIZE-TO-FILL>
+</RULE-BASED-VALUE-SPECIFICATION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RuleBasedValueSpecification = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RuleBasedValueSpecification)
+        self.assertEqual(elem.rule, "FILL")
+        self.assertEqual(len(elem.arguments), 1)
+        self.assertEqual(elem.arguments[0].values, [0])
+        self.assertEqual(elem.max_size_to_fill, 100)
+
+    def test_read_rule_based_values_tag(self):
+        xml = '''<RULE-BASED-VALUES>
+  <RULE>RAMP</RULE>
+  <ARGUMENTSS>
+    <RULE-ARGUMENTS>
+      <V>0</V>
+      <V>1</V>
+    </RULE-ARGUMENTS>
+  </ARGUMENTSS>
+  <MAX-SIZE-TO-FILL>50</MAX-SIZE-TO-FILL>
+</RULE-BASED-VALUES>'''
+        reader = autosar.xml.Reader()
+        elem: ar_element.RuleBasedValueSpecification = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RuleBasedValueSpecification)
+        self.assertEqual(elem.rule, "RAMP")
+        self.assertEqual(len(elem.arguments), 1)
+        self.assertEqual(elem.arguments[0].values, [0, 1])
+        self.assertEqual(elem.max_size_to_fill, 50)
+
+    def test_append_and_type_errors(self):
+        elem = ar_element.RuleBasedValueSpecification()
+        args = ar_element.RuleArguments([10])
+        elem.append(args)
+        self.assertEqual(len(elem.arguments), 1)
+        with self.assertRaises(TypeError):
+            ar_element.RuleBasedValueSpecification(rule=123)
+        with self.assertRaises(TypeError):
+            ar_element.RuleBasedValueSpecification(arguments=object())
+        with self.assertRaises(TypeError):
+            ar_element.RuleBasedValueSpecification(max_size_to_fill="not_int")
+        with self.assertRaises(TypeError):
+            elem.append(object())
+
+
+class TestNumericalRuleBasedValueSpecification(unittest.TestCase):
+
+    def test_read_write_empty(self):
+        element = ar_element.NumericalRuleBasedValueSpecification()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<NUMERICAL-RULE-BASED-VALUE-SPECIFICATION/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.NumericalRuleBasedValueSpecification = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.NumericalRuleBasedValueSpecification)
+        self.assertIsNone(elem.label)
+        self.assertIsNone(elem.rule_based_values)
+
+    def test_read_write_with_label(self):
+        element = ar_element.NumericalRuleBasedValueSpecification(label="MyRuleValue")
+        writer = autosar.xml.Writer()
+        xml = '''<NUMERICAL-RULE-BASED-VALUE-SPECIFICATION>
+  <SHORT-LABEL>MyRuleValue</SHORT-LABEL>
+</NUMERICAL-RULE-BASED-VALUE-SPECIFICATION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.NumericalRuleBasedValueSpecification = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.NumericalRuleBasedValueSpecification)
+        self.assertEqual(elem.label, "MyRuleValue")
+        self.assertIsNone(elem.rule_based_values)
+
+    def test_read_write_full_fill_until_end(self):
+        rbv = ar_element.RuleBasedValueSpecification(
+            rule="FILL_UNTIL_END",
+            arguments=ar_element.RuleArguments([10, 20, 0]),
+            max_size_to_fill=100
+        )
+        element = ar_element.NumericalRuleBasedValueSpecification(
+            label="FilledArray",
+            rule_based_values=rbv
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<NUMERICAL-RULE-BASED-VALUE-SPECIFICATION>
+  <SHORT-LABEL>FilledArray</SHORT-LABEL>
+  <RULE-BASED-VALUES>
+    <RULE>FILL_UNTIL_END</RULE>
+    <ARGUMENTSS>
+      <RULE-ARGUMENTS>
+        <V>10</V>
+        <V>20</V>
+        <V>0</V>
+      </RULE-ARGUMENTS>
+    </ARGUMENTSS>
+    <MAX-SIZE-TO-FILL>100</MAX-SIZE-TO-FILL>
+  </RULE-BASED-VALUES>
+</NUMERICAL-RULE-BASED-VALUE-SPECIFICATION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.NumericalRuleBasedValueSpecification = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.NumericalRuleBasedValueSpecification)
+        self.assertEqual(elem.label, "FilledArray")
+        self.assertIsNotNone(elem.rule_based_values)
+        self.assertEqual(elem.rule_based_values.rule, "FILL_UNTIL_END")
+        self.assertEqual(elem.rule_based_values.max_size_to_fill, 100)
+        self.assertEqual(len(elem.rule_based_values.arguments), 1)
+        self.assertEqual(elem.rule_based_values.arguments[0].values, [10, 20, 0])
+
+    def test_make_value_with_check(self):
+        rbv = ar_element.RuleBasedValueSpecification(
+            rule="FILL",
+            arguments=ar_element.RuleArguments(0)
+        )
+        val = ar_element.ValueSpecification.make_value_with_check(rbv)
+        self.assertIsInstance(val, ar_element.NumericalRuleBasedValueSpecification)
+        self.assertIs(val.rule_based_values, rbv)
+
+    def test_type_errors(self):
+        with self.assertRaises(TypeError):
+            ar_element.NumericalRuleBasedValueSpecification(rule_based_values=object())
+
+
 if __name__ == '__main__':
     unittest.main()

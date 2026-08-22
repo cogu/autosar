@@ -176,6 +176,41 @@
             </RECORD-VALUE-SPECIFICATION>
           </VALUE-SPEC>
         </CONSTANT-SPECIFICATION>
+        <CONSTANT-SPECIFICATION>
+          <SHORT-NAME>ZeroFilledArrayConstant</SHORT-NAME>
+          <VALUE-SPEC>
+            <NUMERICAL-RULE-BASED-VALUE-SPECIFICATION>
+              <RULE-BASED-VALUES>
+                <RULE>FILL</RULE>
+                <ARGUMENTSS>
+                  <RULE-ARGUMENTS>
+                    <V>0</V>
+                  </RULE-ARGUMENTS>
+                </ARGUMENTSS>
+                <MAX-SIZE-TO-FILL>100</MAX-SIZE-TO-FILL>
+              </RULE-BASED-VALUES>
+            </NUMERICAL-RULE-BASED-VALUE-SPECIFICATION>
+          </VALUE-SPEC>
+        </CONSTANT-SPECIFICATION>
+        <CONSTANT-SPECIFICATION>
+          <SHORT-NAME>FillUntilEndArrayConstant</SHORT-NAME>
+          <VALUE-SPEC>
+            <NUMERICAL-RULE-BASED-VALUE-SPECIFICATION>
+              <RULE-BASED-VALUES>
+                <RULE>FILL_UNTIL_END</RULE>
+                <ARGUMENTSS>
+                  <RULE-ARGUMENTS>
+                    <V>10</V>
+                    <V>20</V>
+                    <V>30</V>
+                    <V>0</V>
+                  </RULE-ARGUMENTS>
+                </ARGUMENTSS>
+                <MAX-SIZE-TO-FILL>50</MAX-SIZE-TO-FILL>
+              </RULE-BASED-VALUES>
+            </NUMERICAL-RULE-BASED-VALUE-SPECIFICATION>
+          </VALUE-SPEC>
+        </CONSTANT-SPECIFICATION>
       </ELEMENTS>
     </AR-PACKAGE>
   </AR-PACKAGES>

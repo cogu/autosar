@@ -85,7 +85,8 @@ ValueSpecificationElement = Union["TextValueSpecification",
                                   "RecordValueSpecification",
                                   "ApplicationValueSpecification",
                                   "ConstantReference",
-                                  "ReferenceValueSpecification"]
+                                  "ReferenceValueSpecification",
+                                  "NumericalRuleBasedValueSpecification"]
 
 PortPrototypeElement = Union["ProvidePortPrototype",
                              "RequirePortPrototype",
@@ -3080,6 +3081,8 @@ class ValueSpecification(ARObject):
                 return ConstantReference(value)  # Wrap inside constant reference
             elif isinstance(value, DataPrototypeRef):
                 return ReferenceValueSpecification(value)
+            elif isinstance(value, RuleBasedValueSpecification):
+                return NumericalRuleBasedValueSpecification(rule_based_values=value)
             elif isinstance(value, (int, float, str, list, tuple)):
                 return cls.make_value(value)  # Attempt to create a new value based on raw python data
             else:
@@ -3388,6 +3391,87 @@ class NumericalOrText(ARObject):
         # .VARIATION-POINT not supported
         self._assign_optional_strict("vf", vf, (int, float, NumericalValue))
         self._assign_optional_strict("vt", vt, str)
+
+
+RuleArgumentElement = Union[int, float, str, NumericalValue, "NumericalOrText"]
+
+
+class RuleArguments(ARObject):
+    """
+    Complex type AR:RULE-ARGUMENTS
+    Tag variants: 'RULE-ARGUMENTS'
+    """
+
+    def __init__(self,
+                 values: list[RuleArgumentElement] | RuleArgumentElement | None = None) -> None:
+        self.values: list[RuleArgumentElement] = []
+        if values is not None:
+            if isinstance(values, list):
+                for value in values:
+                    self.append(value)
+            else:
+                self.append(values)
+
+    def append(self, value: RuleArgumentElement) -> None:
+        """
+        Appends value to list of values
+        """
+        if isinstance(value, (int, float, str, NumericalValue, NumericalOrText)):
+            self.values.append(value)
+        else:
+            raise TypeError(f"Invalid value type: {str(type(value))}")
+
+
+class RuleBasedValueSpecification(ARObject):
+    """
+    Complex type AR:RULE-BASED-VALUE-SPECIFICATION
+    Tag variants: 'RULE-BASED-VALUE-SPECIFICATION' | 'RULE-BASED-VALUES'
+    """
+
+    def __init__(self,
+                 rule: str | None = None,
+                 arguments: list[RuleArguments] | RuleArguments | None = None,
+                 max_size_to_fill: int | None = None) -> None:
+        # .RULE
+        self.rule: str | None = None
+        # .ARGUMENTS (XML: ARGUMENTSS/RULE-ARGUMENTS)
+        self.arguments: list[RuleArguments] = []
+        # .MAX-SIZE-TO-FILL
+        self.max_size_to_fill: int | None = None
+        self._assign_optional_strict("rule", rule, str)
+        if arguments is not None:
+            if isinstance(arguments, RuleArguments):
+                self.append(arguments)
+            elif isinstance(arguments, list):
+                for argument in arguments:
+                    self.append(argument)
+            else:
+                raise TypeError(f"Invalid type for 'arguments': {str(type(arguments))}")
+        self._assign_optional_strict("max_size_to_fill", max_size_to_fill, int)
+
+    def append(self, argument: RuleArguments) -> None:
+        """
+        Appends a RuleArguments object to the arguments list
+        """
+        if isinstance(argument, RuleArguments):
+            self.arguments.append(argument)
+        else:
+            raise TypeError(f"Invalid type for 'argument': {str(type(argument))}")
+
+
+class NumericalRuleBasedValueSpecification(ValueSpecification):
+    """
+    Complex type AR:NUMERICAL-RULE-BASED-VALUE-SPECIFICATION
+    Tag variants: 'NUMERICAL-RULE-BASED-VALUE-SPECIFICATION'
+    """
+
+    def __init__(self,
+                 rule_based_values: RuleBasedValueSpecification | None = None,
+                 label: str | None = None) -> None:
+        super().__init__(label)
+        # .RULE-BASED-VALUES
+        self.rule_based_values: RuleBasedValueSpecification | None = None
+        self._assign_optional_strict("rule_based_values", rule_based_values, RuleBasedValueSpecification)
 
 
 # --- Package elements (Partly implemented)
