@@ -9238,6 +9238,7 @@ class SwcInternalBehavior(InternalBehavior):
                                            list[SwcExclusiveAreaPolicy] | None) = None,
                  explicit_inter_runnable_variables: (VariableDataPrototype |
                                                      list[VariableDataPrototype] | None) = None,
+                 handle_termination_and_restart: ar_enum.HandleTerminationAndRestart | None = None,
                  runnables: RunnableEntity | list[RunnableEntity] | None = None,
                  port_api_options: PortApiOption | list[PortApiOption] | None = None,
                  **kwargs) -> None:
@@ -9250,7 +9251,8 @@ class SwcInternalBehavior(InternalBehavior):
         self.exclusive_area_policies: list[SwcExclusiveAreaPolicy] = []
         # .EXPLICIT-INTER-RUNNABLE-VARIABLES
         self.explicit_inter_runnable_variables: list[VariableDataPrototype] = []
-        # .HANDLE-TERMINATION-AND-RESTART (not yet implemented)
+        # .HANDLE-TERMINATION-AND-RESTART
+        self.handle_termination_and_restart: ar_enum.HandleTerminationAndRestart | None = None
         # .INCLUDED-DATA-TYPE-SETS (not yet implemented)
         # .INCLUDED-MODE-DECLARATION-GROUP-SETS (not yet implemented)
         # .INSTANTIATION-DATA-DEF-PROPSS (not yet implemented)
@@ -9265,6 +9267,10 @@ class SwcInternalBehavior(InternalBehavior):
         # .SUPPORTS-MULTIPLE-INSTANTIATION (not yet implemented)
         # .VARIATION-POINT-PROXYS (not supported)
         # .VARIATION-POINT (not supported)
+
+        self._assign_optional("handle_termination_and_restart",
+                              handle_termination_and_restart,
+                              ar_enum.HandleTerminationAndRestart)
 
         if ar_typed_per_instance_memory is not None:
             if isinstance(ar_typed_per_instance_memory, Iterable):
