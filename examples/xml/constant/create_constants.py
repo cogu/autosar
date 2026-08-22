@@ -97,6 +97,18 @@ def create_rule_based_constants(workspace: autosar.xml.Workspace):
     )
     workspace.add_element("Constants", ar_element.ConstantSpecification("FillUntilEndArrayConstant", fill_until_end))
 
+    # 3. Fill an array of records using CompositeRuleBasedValueSpecification
+    default_record = ar_element.RecordValueSpecification(fields=[
+        ar_element.NumericalValueSpecification(value=0),
+        ar_element.TextValueSpecification(value="Unused")
+    ])
+    composite_fill = ar_element.CompositeRuleBasedValueSpecification(
+        rule="FILL",
+        arguments=[default_record],
+        max_size_to_fill=32
+    )
+    workspace.add_element("Constants", ar_element.ConstantSpecification("DefaultRecordArrayConstant", composite_fill))
+
 
 def main():
     """Main function"""

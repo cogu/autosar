@@ -245,6 +245,8 @@ class Writer(_XMLWriter):
             'ConstantReference': self._write_constant_reference,
             'ReferenceValueSpecification': self._write_reference_value_specification,
             'NumericalRuleBasedValueSpecification': self._write_numerical_rule_based_value_specification,
+            'ApplicationRuleBasedValueSpecification': self._write_application_rule_based_value_specification,
+            'CompositeRuleBasedValueSpecification': self._write_composite_rule_based_value_specification,
         }
         # Com-spec elements
         self.switcher_provided_com_spec = {
@@ -341,6 +343,8 @@ class Writer(_XMLWriter):
             'SwValues': self._write_sw_values,
             'SwAxisCont': self._write_sw_axis_cont,
             'SwValueCont': self._write_sw_value_cont,
+            'RuleBasedAxisCont': self._write_rule_based_axis_cont,
+            'RuleBasedValueCont': self._write_rule_based_value_cont,
             'MultidimensionalTime': self._write_multidimensional_time,
             # Reference elements
             'PhysicalDimensionRef': self._write_physical_dimension_ref,
@@ -2810,6 +2814,77 @@ class Writer(_XMLWriter):
         if elem.rule_based_values is not None:
             self._write_rule_based_value_specification(elem.rule_based_values, "RULE-BASED-VALUES")
 
+    def _write_application_rule_based_value_specification(self,
+                                                          elem: ar_element.ApplicationRuleBasedValueSpecification,
+                                                          tag: str = "APPLICATION-RULE-BASED-VALUE-SPECIFICATION"
+                                                          ) -> None:
+        """
+        Writes complex type AR:APPLICATION-RULE-BASED-VALUE-SPECIFICATION
+        Multi-tagged: True
+        """
+        assert isinstance(elem, ar_element.ApplicationRuleBasedValueSpecification)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_value_specification_group(elem)
+            self._write_application_rule_based_value_specification_group(elem)
+            self._leave_child()
+
+    def _write_application_rule_based_value_specification_group(self,
+                                                                elem: ar_element.ApplicationRuleBasedValueSpecification
+                                                                ) -> None:
+        """
+        Writes group AR:APPLICATION-RULE-BASED-VALUE-SPECIFICATION
+        """
+        if elem.category is not None:
+            self._add_content("CATEGORY", str(elem.category))
+        if len(elem.sw_axis_conts) > 0:
+            self._add_child("SW-AXIS-CONTS")
+            for child in elem.sw_axis_conts:
+                self._write_rule_based_axis_cont(child)
+            self._leave_child()
+        if elem.sw_value_cont is not None:
+            self._write_rule_based_value_cont(elem.sw_value_cont, "SW-VALUE-CONT")
+
+    def _write_composite_rule_based_value_specification(self,
+                                                        elem: ar_element.CompositeRuleBasedValueSpecification,
+                                                        tag: str = "COMPOSITE-RULE-BASED-VALUE-SPECIFICATION"
+                                                        ) -> None:
+        """
+        Writes complex type AR:COMPOSITE-RULE-BASED-VALUE-SPECIFICATION
+        Multi-tagged: True
+        """
+        assert isinstance(elem, ar_element.CompositeRuleBasedValueSpecification)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_value_specification_group(elem)
+            self._write_composite_rule_based_value_specification_group(elem)
+            self._leave_child()
+
+    def _write_composite_rule_based_value_specification_group(self,
+                                                              elem: ar_element.CompositeRuleBasedValueSpecification
+                                                              ) -> None:
+        """
+        Writes group AR:COMPOSITE-RULE-BASED-VALUE-SPECIFICATION
+        """
+        if elem.rule is not None:
+            self._add_content("RULE", elem.rule)
+        if len(elem.arguments) > 0:
+            self._add_child("ARGUMENTS")
+            for arg in elem.arguments:
+                self._write_value_specification_element(arg)
+            self._leave_child()
+        if len(elem.compound_primitive_arguments) > 0:
+            self._add_child("COMPOUND-PRIMITIVE-ARGUMENTS")
+            for arg in elem.compound_primitive_arguments:
+                self._write_value_specification_element(arg)
+            self._leave_child()
+        if elem.max_size_to_fill is not None:
+            self._add_content("MAX-SIZE-TO-FILL", str(elem.max_size_to_fill))
+
     def _write_numerical_or_text(self, elem: ar_element.NumericalOrText) -> None:
         """
         Writes complex type AR:NUMERICAL-OR-TEXT
@@ -2994,6 +3069,62 @@ class Writer(_XMLWriter):
             self._write_value_list(elem.sw_array_size)
         if elem.sw_values_phys is not None:
             self._write_sw_values(elem.sw_values_phys)
+
+    def _write_rule_based_axis_cont(self,
+                                    elem: ar_element.RuleBasedAxisCont,
+                                    tag: str = "RULE-BASED-AXIS-CONT") -> None:
+        """
+        Writes complex type AR:RULE-BASED-AXIS-CONT
+        Multi-tagged: True
+        """
+        assert isinstance(elem, ar_element.RuleBasedAxisCont)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_rule_based_axis_cont_group(elem)
+            self._leave_child()
+
+    def _write_rule_based_axis_cont_group(self, elem: ar_element.RuleBasedAxisCont) -> None:
+        """
+        Writes group AR:RULE-BASED-AXIS-CONT
+        """
+        if elem.category is not None:
+            self._add_content("CATEGORY", ar_enum.enum_to_xml(elem.category))
+        if elem.unit_ref is not None:
+            self._write_unit_ref(elem.unit_ref)
+        if elem.sw_array_size is not None:
+            self._write_value_list(elem.sw_array_size)
+        if elem.sw_axis_index is not None:
+            self._add_content("SW-AXIS-INDEX", str(elem.sw_axis_index))
+        if elem.rule_based_values is not None:
+            self._write_rule_based_value_specification(elem.rule_based_values, "RULE-BASED-VALUES")
+
+    def _write_rule_based_value_cont(self,
+                                     elem: ar_element.RuleBasedValueCont,
+                                     tag: str = "RULE-BASED-VALUE-CONT") -> None:
+        """
+        Writes complex type AR:RULE-BASED-VALUE-CONT
+        Multi-tagged: True
+        """
+        assert isinstance(elem, ar_element.RuleBasedValueCont)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_rule_based_value_cont_group(elem)
+            self._leave_child()
+
+    def _write_rule_based_value_cont_group(self, elem: ar_element.RuleBasedValueCont) -> None:
+        """
+        Writes group AR:RULE-BASED-VALUE-CONT
+        """
+        if elem.unit_ref is not None:
+            self._write_unit_ref(elem.unit_ref)
+        if elem.sw_array_size is not None:
+            self._write_value_list(elem.sw_array_size)
+        if elem.rule_based_values is not None:
+            self._write_rule_based_value_specification(elem.rule_based_values, "RULE-BASED-VALUES")
 
     def _write_multidimensional_time(self, elem: ar_element.MultidimensionalTime, tag: str) -> None:
         """

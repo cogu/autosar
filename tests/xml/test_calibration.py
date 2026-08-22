@@ -259,7 +259,7 @@ class TestSwAxisCont(unittest.TestCase):
         element = ar_element.SwAxisCont(category=ar_enum.CalibrationAxisCategory.STD_AXIS)
         writer = autosar.xml.Writer()
         xml = '''<SW-AXIS-CONT>
-  <CATEGORY>STD-AXIS</CATEGORY>
+  <CATEGORY>STD_AXIS</CATEGORY>
 </SW-AXIS-CONT>'''
 
         self.assertEqual(writer.write_str_elem(element), xml)
@@ -267,6 +267,13 @@ class TestSwAxisCont(unittest.TestCase):
         elem: ar_element.SwAxisCont = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwAxisCont)
         self.assertEqual(elem.category, ar_enum.CalibrationAxisCategory.STD_AXIS)
+
+        # Verify backward compatibility with legacy hyphenated enum values
+        legacy_xml = '''<SW-AXIS-CONT>
+  <CATEGORY>STD-AXIS</CATEGORY>
+</SW-AXIS-CONT>'''
+        elem_legacy: ar_element.SwAxisCont = reader.read_str_elem(legacy_xml)
+        self.assertEqual(elem_legacy.category, ar_enum.CalibrationAxisCategory.STD_AXIS)
 
     def test_read_write_unit_ref(self):
         element = ar_element.SwAxisCont(unit_ref=ar_element.UnitRef("/Units/MyUnit"))
@@ -408,6 +415,136 @@ class TestSwValueCont(unittest.TestCase):
         elem: ar_element.SwValueCont = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwValueCont)
         self.assertEqual(elem.sw_values_phys.values, [1])
+
+
+class TestRuleBasedAxisCont(unittest.TestCase):
+
+    def test_read_write_empty(self):
+        element = ar_element.RuleBasedAxisCont()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<RULE-BASED-AXIS-CONT/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.RuleBasedAxisCont = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RuleBasedAxisCont)
+
+    def test_read_write_category(self):
+        element = ar_element.RuleBasedAxisCont(category=ar_enum.CalibrationAxisCategory.STD_AXIS)
+        writer = autosar.xml.Writer()
+        xml = '''<RULE-BASED-AXIS-CONT>
+  <CATEGORY>STD_AXIS</CATEGORY>
+</RULE-BASED-AXIS-CONT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RuleBasedAxisCont = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RuleBasedAxisCont)
+        self.assertEqual(elem.category, ar_enum.CalibrationAxisCategory.STD_AXIS)
+
+    def test_read_write_full(self):
+        rbv = ar_element.RuleBasedValueSpecification(
+            rule="RAMP",
+            arguments=ar_element.RuleArguments([0, 10]),
+            max_size_to_fill=11
+        )
+        element = ar_element.RuleBasedAxisCont(
+            category=ar_enum.CalibrationAxisCategory.STD_AXIS,
+            unit_ref=ar_element.UnitRef("/Units/Kph"),
+            sw_axis_index=1,
+            sw_array_size=ar_element.ValueList([11]),
+            rule_based_values=rbv
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<RULE-BASED-AXIS-CONT>
+  <CATEGORY>STD_AXIS</CATEGORY>
+  <UNIT-REF DEST="UNIT">/Units/Kph</UNIT-REF>
+  <SW-ARRAYSIZE>
+    <V>11</V>
+  </SW-ARRAYSIZE>
+  <SW-AXIS-INDEX>1</SW-AXIS-INDEX>
+  <RULE-BASED-VALUES>
+    <RULE>RAMP</RULE>
+    <ARGUMENTSS>
+      <RULE-ARGUMENTS>
+        <V>0</V>
+        <V>10</V>
+      </RULE-ARGUMENTS>
+    </ARGUMENTSS>
+    <MAX-SIZE-TO-FILL>11</MAX-SIZE-TO-FILL>
+  </RULE-BASED-VALUES>
+</RULE-BASED-AXIS-CONT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RuleBasedAxisCont = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RuleBasedAxisCont)
+        self.assertEqual(elem.category, ar_enum.CalibrationAxisCategory.STD_AXIS)
+        self.assertEqual(str(elem.unit_ref), "/Units/Kph")
+        self.assertEqual(elem.sw_axis_index, 1)
+        self.assertEqual(elem.sw_array_size.values, [11])
+        self.assertIsNotNone(elem.rule_based_values)
+        self.assertEqual(elem.rule_based_values.rule, "RAMP")
+
+    def test_type_errors(self):
+        with self.assertRaises(TypeError):
+            ar_element.RuleBasedAxisCont(unit_ref="not_a_unit_ref")
+        with self.assertRaises(TypeError):
+            ar_element.RuleBasedAxisCont(sw_axis_index=[1])
+        with self.assertRaises(TypeError):
+            ar_element.RuleBasedAxisCont(rule_based_values=object())
+
+
+class TestRuleBasedValueCont(unittest.TestCase):
+
+    def test_read_write_empty(self):
+        element = ar_element.RuleBasedValueCont()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<RULE-BASED-VALUE-CONT/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.RuleBasedValueCont = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RuleBasedValueCont)
+
+    def test_read_write_full(self):
+        rbv = ar_element.RuleBasedValueSpecification(
+            rule="FILL",
+            arguments=ar_element.RuleArguments(0),
+            max_size_to_fill=100
+        )
+        element = ar_element.RuleBasedValueCont(
+            unit_ref=ar_element.UnitRef("/Units/Nm"),
+            sw_array_size=ar_element.ValueList([10, 10]),
+            rule_based_values=rbv
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<RULE-BASED-VALUE-CONT>
+  <UNIT-REF DEST="UNIT">/Units/Nm</UNIT-REF>
+  <SW-ARRAYSIZE>
+    <V>10</V>
+    <V>10</V>
+  </SW-ARRAYSIZE>
+  <RULE-BASED-VALUES>
+    <RULE>FILL</RULE>
+    <ARGUMENTSS>
+      <RULE-ARGUMENTS>
+        <V>0</V>
+      </RULE-ARGUMENTS>
+    </ARGUMENTSS>
+    <MAX-SIZE-TO-FILL>100</MAX-SIZE-TO-FILL>
+  </RULE-BASED-VALUES>
+</RULE-BASED-VALUE-CONT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RuleBasedValueCont = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RuleBasedValueCont)
+        self.assertEqual(str(elem.unit_ref), "/Units/Nm")
+        self.assertEqual(elem.sw_array_size.values, [10, 10])
+        self.assertIsNotNone(elem.rule_based_values)
+        self.assertEqual(elem.rule_based_values.rule, "FILL")
+
+    def test_type_errors(self):
+        with self.assertRaises(TypeError):
+            ar_element.RuleBasedValueCont(unit_ref="not_a_unit_ref")
+        with self.assertRaises(TypeError):
+            ar_element.RuleBasedValueCont(rule_based_values=object())
 
 
 if __name__ == '__main__':
