@@ -73,9 +73,10 @@ display_format_str_re = re.compile(
 date_re = re.compile(r"([0-9]{4}-[0-9]{2}-[0-9]{2})(T[0-9]{2}:[0-9]{2}:[0-9]{2}(Z|([+\-][0-9]{2}:[0-9]{2})))?")
 
 revision_label_string_re = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+([\._;].*)?")
+
 # Type aliases
 
-BaseReference = BaseRef  # This line is simply here to suppress an unused import warning
+BaseReference = BaseRef  # This line is here to suppress an unused import warning
 
 ValueSpecificationElement = Union["TextValueSpecification",
                                   "NumericalValueSpecification",
@@ -102,6 +103,8 @@ InitValueArgType = Union["int",
                          "ConstantRef"]
 
 SingleLanguageText = tuple[ar_enum.Language, str]
+
+
 # Helper classes
 
 
@@ -2888,10 +2891,12 @@ class ValueList(ARObject):
     Tag variants: 'SW-ARRAYSIZE'
     """
 
-    def __init__(self, values: list[int | float | NumericalValue] | None = None) -> None:
+    def __init__(self,
+                 values: list[int | float | NumericalValue] | int | float | NumericalValue | None = None
+                 ) -> None:
         self.values = []
         if values is not None:
-            if isinstance(values, (int, float)):
+            if isinstance(values, (int, float, NumericalValue)):
                 self.append(values)
             else:
                 for value in values:
@@ -2935,7 +2940,7 @@ class SwAddrMethod(ARElement):
 # --- Calibration data elements
 
 
-SwValueElement = Union[int, float, str, NumericalValue, "ValueGroup"]  # Type alias
+SwValueElement = Union[int, float, str, NumericalValue, "ValueGroup", "NumericalOrText"]  # Type alias
 
 
 class SwValues(ARObject):
@@ -2945,10 +2950,10 @@ class SwValues(ARObject):
     """
 
     def __init__(self,
-                 values: list[SwValueElement] | None = None) -> None:
+                 values: list[SwValueElement] | SwValueElement | None = None) -> None:
         self.values = []
         if values is not None:
-            if isinstance(values, (int, float, str, NumericalValue, ValueGroup)):
+            if isinstance(values, (int, float, str, NumericalValue, ValueGroup, NumericalOrText)):
                 self.append(values)
             elif isinstance(values, list):
                 for value in values:
@@ -2957,12 +2962,8 @@ class SwValues(ARObject):
     def append(self, value: SwValueElement) -> None:
         """
         Appends value to list of values
-        XML elements not supported:
-
-        - VTF
-        - VF
         """
-        if isinstance(value, (int, float, str, NumericalValue, ValueGroup)):
+        if isinstance(value, (int, float, str, NumericalValue, ValueGroup, NumericalOrText)):
             self.values.append(value)
         else:
             raise TypeError(f"Invalid value type: {str(type(value))}")
@@ -3346,6 +3347,25 @@ class ConstantReference(ValueSpecification):
                 self.constant_ref = constant_ref
             else:
                 raise ar_except.AssignmentTypeError("constant_ref", ("ConstantRef", "str"), constant_ref)
+
+
+class NumericalOrText(ARObject):
+    """
+    Complex type AR:NUMERICAL-OR-TEXT
+    Tag variants: 'VTF'
+    """
+
+    def __init__(self,
+                 vf: int | float | NumericalValue | None = None,
+                 vt: str | None = None
+                 ) -> None:
+        # .VF
+        self.vf: int | float | NumericalValue | None = None
+        # .VT
+        self.vt: str | None = None
+        # .VARIATION-POINT not supported
+        self._assign_optional_strict("vf", vf, (int, float, NumericalValue))
+        self._assign_optional_strict("vt", vt, str)
 
 
 # --- Package elements (Partly implemented)

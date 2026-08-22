@@ -9,6 +9,10 @@ Non-collectable elements are various sub-elements to collectable elements.
 
 ### Added
 
+#### XML - Constant elements
+
+* NumericalOrText | NUMERICAL-OR-TEXT
+
 #### Developer Utilities (`dev_utils`)
 
 * Added a new collection of scripts for repo developers
@@ -16,6 +20,11 @@ Non-collectable elements are various sub-elements to collectable elements.
 ### Changed
 
 * Harmonized docstrings across `element.py`, `reader.py`, and `writer.py`
+
+#### Properly implemented XML Elements
+
+* SwValues
+  - Added support for `VF` and `VTF`
 
 ## [v0.5.6] - 2026-08-17
 

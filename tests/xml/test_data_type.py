@@ -2005,6 +2005,19 @@ class TestValueList(unittest.TestCase):
         self.assertEqual(number.value, 16)
         self.assertEqual(number.value_format, ar_enum.ValueFormat.HEXADECIMAL)
 
+    def test_init_single_value(self):
+        element = ar_element.ValueList(1)
+        self.assertEqual(element.values, [1])
+
+        element = ar_element.ValueList(1.5)
+        self.assertEqual(element.values, [1.5])
+
+        element = ar_element.ValueList(ar_element.NumericalValue("0x10"))
+        self.assertEqual(len(element.values), 1)
+        self.assertIsInstance(element.values[0], ar_element.NumericalValue)
+        self.assertEqual(element.values[0].value, 16)
+        self.assertEqual(element.values[0].value_format, ar_enum.ValueFormat.HEXADECIMAL)
+
 
 class TestVariableDataPrototype(unittest.TestCase):
 

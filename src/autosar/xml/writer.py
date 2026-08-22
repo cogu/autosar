@@ -310,6 +310,8 @@ class Writer(_XMLWriter):
             'Computation': self._write_computation,
             'CompuRational': self._write_compu_rational,
             'CompuScale': self._write_compu_scale,
+            # Constant elements
+            'NumericalOrText': self._write_numerical_or_text,
             # Constraint elements
             'ScaleConstraint': self._write_scale_constraint,
             'InternalConstraint': self._write_internal_constraint,
@@ -2757,6 +2759,29 @@ class Writer(_XMLWriter):
                 self._write_constant_ref(elem.constant_ref, "CONSTANT-REF")
             self._leave_child()
 
+    def _write_numerical_or_text(self, elem: ar_element.NumericalOrText) -> None:
+        """
+        Writes complex type AR:NUMERICAL-OR-TEXT
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.NumericalOrText)
+        tag = "VTF"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_numerical_or_text_group(elem)
+            self._leave_child()
+
+    def _write_numerical_or_text_group(self, elem: ar_element.NumericalOrText) -> None:
+        """
+        Writes group AR:NUMERICAL-OR-TEXT
+        """
+        if elem.vf is not None:
+            self._add_content("VF", self._format_number(elem.vf))
+        if elem.vt is not None:
+            self._add_content("VT", elem.vt)
+
 # --- CalibrationData elements
 
     def _write_sw_values(self, elem: ar_element.SwValues) -> None:
@@ -2778,7 +2803,9 @@ class Writer(_XMLWriter):
         Writes group AR:SW-VALUES
         """
         for value in elem.values:
-            if isinstance(value, str):
+            if isinstance(value, ar_element.NumericalOrText):
+                self._write_numerical_or_text(value)
+            elif isinstance(value, str):
                 self._add_content("VT", value)
             elif isinstance(value, (int, float, ar_element.NumericalValue)):
                 self._add_content("V", self._format_number(value))

@@ -161,8 +161,87 @@ class TestSwValues(unittest.TestCase): # noqa D101
         elem: ar_element.SwValues = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwValues)
         child: ar_element.ValueGroup = elem.values[0]
-        self.assertIsInstance(child, ar_element.ValueGroup)
         self.assertEqual(child.values, [1, 2, "Value"])
+
+    def test_read_write_vtf(self):
+        element = ar_element.SwValues(values=[
+            ar_element.NumericalOrText(vf=10),
+            ar_element.NumericalOrText(vt="TextVal"),
+            ar_element.NumericalOrText(vf=ar_element.NumericalValue("0x20")),
+        ])
+        writer = autosar.xml.Writer()
+        xml = '''<SW-VALUES-PHYS>
+  <VTF>
+    <VF>10</VF>
+  </VTF>
+  <VTF>
+    <VT>TextVal</VT>
+  </VTF>
+  <VTF>
+    <VF>0x20</VF>
+  </VTF>
+</SW-VALUES-PHYS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwValues = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwValues)
+        self.assertEqual(len(elem.values), 3)
+
+        self.assertIsInstance(elem.values[0], ar_element.NumericalOrText)
+        self.assertEqual(elem.values[0].vf, 10)
+        self.assertIsNone(elem.values[0].vt)
+
+        self.assertIsInstance(elem.values[1], ar_element.NumericalOrText)
+        self.assertIsNone(elem.values[1].vf)
+        self.assertEqual(elem.values[1].vt, "TextVal")
+
+        self.assertIsInstance(elem.values[2], ar_element.NumericalOrText)
+        self.assertIsInstance(elem.values[2].vf, ar_element.NumericalValue)
+        self.assertEqual(elem.values[2].vf.value, 32)
+        self.assertEqual(elem.values[2].vf.value_format, ar_enum.ValueFormat.HEXADECIMAL)
+
+    def test_read_write_value_group_with_vtf(self):
+        vg = ar_element.ValueGroup(values=[ar_element.NumericalOrText(vf=20)])
+        element = ar_element.SwValues(values=[vg])
+        writer = autosar.xml.Writer()
+        xml = '''<SW-VALUES-PHYS>
+  <VG>
+    <VTF>
+      <VF>20</VF>
+    </VTF>
+  </VG>
+</SW-VALUES-PHYS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwValues = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwValues)
+        child: ar_element.ValueGroup = elem.values[0]
+        self.assertIsInstance(child, ar_element.ValueGroup)
+        self.assertIsInstance(child.values[0], ar_element.NumericalOrText)
+        self.assertEqual(child.values[0].vf, 20)
+
+    def test_init_single_vtf(self):
+        vtf = ar_element.NumericalOrText(vf=5)
+        element = ar_element.SwValues(values=vtf)
+        self.assertEqual(len(element.values), 1)
+        self.assertIsInstance(element.values[0], ar_element.NumericalOrText)
+        self.assertEqual(element.values[0].vf, 5)
+
+    def test_read_vf(self):
+        xml = '''<SW-VALUES-PHYS>
+  <VF>10</VF>
+  <VF>3.14</VF>
+  <VF>0x10</VF>
+</SW-VALUES-PHYS>'''
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwValues = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwValues)
+        self.assertEqual(len(elem.values), 3)
+        self.assertEqual(elem.values[0], 10)
+        self.assertAlmostEqual(elem.values[1], 3.14)
+        self.assertIsInstance(elem.values[2], ar_element.NumericalValue)
+        self.assertEqual(elem.values[2].value, 16)
+        self.assertEqual(elem.values[2].value_format, ar_enum.ValueFormat.HEXADECIMAL)
 
 
 class TestSwAxisCont(unittest.TestCase):

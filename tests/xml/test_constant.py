@@ -6,6 +6,7 @@ import sys
 import unittest
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
 import autosar.xml.element as ar_element # noqa E402
+import autosar.xml.enumeration as ar_enum # noqa E402
 import autosar # noqa E402
 
 
@@ -536,6 +537,93 @@ class TestConstantReference(unittest.TestCase):
         elem: ar_element.ConstantReference = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.ConstantReference)
         self.assertEqual(elem.label, "MyLabel")
+
+
+class TestNumericalOrText(unittest.TestCase):
+
+    def test_read_write_empty(self):
+        element = ar_element.NumericalOrText()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<VTF/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.NumericalOrText = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.NumericalOrText)
+        self.assertIsNone(elem.vf)
+        self.assertIsNone(elem.vt)
+
+    def test_read_write_vf_int(self):
+        element = ar_element.NumericalOrText(vf=10)
+        writer = autosar.xml.Writer()
+        xml = '''<VTF>
+  <VF>10</VF>
+</VTF>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.NumericalOrText = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.NumericalOrText)
+        self.assertEqual(elem.vf, 10)
+        self.assertIsNone(elem.vt)
+
+    def test_read_write_vf_float(self):
+        element = ar_element.NumericalOrText(vf=3.14)
+        writer = autosar.xml.Writer()
+        xml = '''<VTF>
+  <VF>3.14</VF>
+</VTF>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.NumericalOrText = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.NumericalOrText)
+        self.assertEqual(elem.vf, 3.14)
+        self.assertIsNone(elem.vt)
+
+    def test_read_write_vf_hex(self):
+        element = ar_element.NumericalOrText(vf=ar_element.NumericalValue("0x10"))
+        writer = autosar.xml.Writer()
+        xml = '''<VTF>
+  <VF>0x10</VF>
+</VTF>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.NumericalOrText = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.NumericalOrText)
+        self.assertIsInstance(elem.vf, ar_element.NumericalValue)
+        self.assertEqual(elem.vf.value, 16)
+        self.assertEqual(elem.vf.value_format, ar_enum.ValueFormat.HEXADECIMAL)
+
+    def test_read_write_vt(self):
+        element = ar_element.NumericalOrText(vt="Hello")
+        writer = autosar.xml.Writer()
+        xml = '''<VTF>
+  <VT>Hello</VT>
+</VTF>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.NumericalOrText = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.NumericalOrText)
+        self.assertIsNone(elem.vf)
+        self.assertEqual(elem.vt, "Hello")
+
+    def test_read_write_both(self):
+        element = ar_element.NumericalOrText(vf=1, vt="One")
+        writer = autosar.xml.Writer()
+        xml = '''<VTF>
+  <VF>1</VF>
+  <VT>One</VT>
+</VTF>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.NumericalOrText = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.NumericalOrText)
+        self.assertEqual(elem.vf, 1)
+        self.assertEqual(elem.vt, "One")
+
+    def test_type_errors(self):
+        with self.assertRaises(TypeError):
+            ar_element.NumericalOrText(vf="not_a_number")
+        with self.assertRaises(TypeError):
+            ar_element.NumericalOrText(vt=123)
 
 
 if __name__ == '__main__':
