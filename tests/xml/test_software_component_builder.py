@@ -1066,9 +1066,7 @@ class TestRunnableEntityAPI(unittest.TestCase):
         self.assertEqual(str(child.sw_data_def_props.variants[0].sw_addr_method_ref), "/SWADDR/Protected")
 
     def test_server_call_point(self):
-        """
-        This also tests adding additional arguments using tuples
-        """
+        # This also tests adding additional arguments using tuples
         workspace = autosar.xml.Workspace()
         workspace.behavior_settings.set_value("server_call_point_prefix", "SC")
         swc = self.create_swc(workspace)

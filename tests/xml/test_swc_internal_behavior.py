@@ -911,9 +911,7 @@ class TestExecutableEntity(unittest.TestCase):
         self.assertEqual(activation_reason.name, 'MyReason2')
 
     def test_can_enters_from_element(self):
-        """
-        CAN-ENTERS is used for XML schema version >= 50
-        """
+        # CAN-ENTERS is used for XML schema version >= 50
         ref_str = "/MyPackage/MySwc/MyExclusiveArea"
         writer = autosar.xml.Writer()
         exclusive_area_cond = ar_element.ExclusiveAreaRefConditional(ref_str)
@@ -966,9 +964,7 @@ class TestExecutableEntity(unittest.TestCase):
         self.assertEqual(str(conditional.exclusive_area), ref_str2)
 
     def test_can_enter_exclusive_area_from_element(self):
-        """
-        CAN-ENTER-EXCLUSIVE-AREA-REFS is used for XML schema version < 50
-        """
+        # CAN-ENTER-EXCLUSIVE-AREA-REFS is used for XML schema version < 50
         ref_str = "/MyPackage/MySwc/MyExclusiveArea"
         writer = autosar.xml.Writer(schema_version=49)
         exclusive_area_cond = ar_element.ExclusiveAreaRefConditional(ref_str)
@@ -1136,9 +1132,7 @@ class TestExecutableEntity(unittest.TestCase):
         self.assertEqual(elem.reentrancy_level, ar_enum.ReentrancyLevel.SINGLE_CORE_REENTRANT)
 
     def test_runs_insides_from_element(self):
-        """
-        RUNS-INSIDES is used for XML schema version >= 50
-        """
+        # RUNS-INSIDES is used for XML schema version >= 50
         ref_str = "/MyPackage/MySwc/MyExclusiveArea"
         writer = autosar.xml.Writer()
         exclusive_area_cond = ar_element.ExclusiveAreaRefConditional(ref_str)
@@ -1191,9 +1185,7 @@ class TestExecutableEntity(unittest.TestCase):
         self.assertEqual(str(conditional.exclusive_area), ref_str2)
 
     def test_runs_inside_exclusive_area_from_element(self):
-        """
-        RUNS-INSIDE-EXCLUSIVE-AREA-REFS is used for XML schema version < 50
-        """
+        # RUNS-INSIDE-EXCLUSIVE-AREA-REFS is used for XML schema version < 50
         ref_str = "/MyPackage/MySwc/MyExclusiveArea"
         writer = autosar.xml.Writer(schema_version=49)
         exclusive_area_cond = ar_element.ExclusiveAreaRefConditional(ref_str)

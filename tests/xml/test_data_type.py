@@ -279,10 +279,8 @@ class TestSwTextProps(unittest.TestCase):
         self.assertEqual(str(elem.base_type_ref), '/Package/ElementName')
 
     def test_read_write_fill_char(self):
-        """
-        Not yet possible to choose integer base in Writer output
-        for selected elements. Use to decimal for now.
-        """
+        # Not yet possible to choose integer base in Writer output
+        # for selected elements. Use to decimal for now.
         element = ar_element.SwTextProps(fill_char=0x30)
         writer = autosar.xml.Writer()
         xml = '''<SW-TEXT-PROPS>
@@ -295,10 +293,8 @@ class TestSwTextProps(unittest.TestCase):
         self.assertEqual(elem.fill_char, 0x30)
 
     def test_read_hex_literal_fill_char(self):
-        """
-        Verify that we can process fill-char when
-        expressed as hex-literal
-        """
+        # Verify that we can process fill-char when
+        # expressed as hex-literal
         xml = '''<SW-TEXT-PROPS>
   <SW-FILL-CHARACTER>0x30</SW-FILL-CHARACTER>
 </SW-TEXT-PROPS>'''
