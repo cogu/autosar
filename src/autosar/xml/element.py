@@ -9027,10 +9027,26 @@ class ExclusiveAreaNestingOrder(Referrable):
         return None if ref_str is None else ExclusiveAreaNestingOrderRef(ref_str)
 
 
+class SwcExclusiveAreaPolicy(ARObject):
+    """
+    Complex type AR:SWC-EXCLUSIVE-AREA-POLICY
+    Tag variants: 'SWC-EXCLUSIVE-AREA-POLICY'
+    """
+
+    def __init__(self,
+                 exclusive_area: ExclusiveAreaRef | str | None = None,
+                 api_principle: ar_enum.ApiPrinciple | str | None = None) -> None:
+        # .EXCLUSIVE-AREA-REF
+        self.exclusive_area: ExclusiveAreaRef | None = None
+        # .API-PRINCIPLE
+        self.api_principle: ar_enum.ApiPrinciple | None = None
+        self._assign_optional("exclusive_area", exclusive_area, ExclusiveAreaRef)
+        self._assign_optional("api_principle", api_principle, ar_enum.ApiPrinciple)
+
+
 class InternalBehavior(Identifiable):
     """
     Group AR:INTERNAL-BEHAVIOR
-    Implementation is very limited for now
     """
 
     def __init__(self,
@@ -9211,21 +9227,25 @@ class SwcInternalBehavior(InternalBehavior):
     """
     Complex type AR:SWC-INTERNAL-BEHAVIOR
     Tag variants: 'SWC-INTERNAL-BEHAVIOR'
-
-    Implementation is very limited for now
     """
 
     def __init__(self,
                  name: str,
+                 ar_typed_per_instance_memory: (VariableDataPrototype |
+                                                list[VariableDataPrototype] | None) = None,
                  events: RteEvent | list[RteEvent] | None = None,
+                 exclusive_area_policies: (SwcExclusiveAreaPolicy |
+                                           list[SwcExclusiveAreaPolicy] | None) = None,
                  runnables: RunnableEntity | list[RunnableEntity] | None = None,
                  port_api_options: PortApiOption | list[PortApiOption] | None = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
-        # .AR-TYPED-PER-INSTANCE-MEMORYS (not yet implemented)
+        # .AR-TYPED-PER-INSTANCE-MEMORYS
+        self.ar_typed_per_instance_memory: list[VariableDataPrototype] = []
         # .EVENTS
         self.events: list[RteEvent] = []
-        # .EXCLUSIVE-AREA-POLICYS (not yet implemented)
+        # .EXCLUSIVE-AREA-POLICYS
+        self.exclusive_area_policies: list[SwcExclusiveAreaPolicy] = []
         # .EXPLICIT-INTER-RUNNABLE-VARIABLES (not yet implemented)
         # .HANDLE-TERMINATION-AND-RESTART (not yet implemented)
         # .INCLUDED-DATA-TYPE-SETS (not yet implemented)
@@ -9243,12 +9263,26 @@ class SwcInternalBehavior(InternalBehavior):
         # .VARIATION-POINT-PROXYS (not supported)
         # .VARIATION-POINT (not supported)
 
+        if ar_typed_per_instance_memory is not None:
+            if isinstance(ar_typed_per_instance_memory, Iterable):
+                for item in ar_typed_per_instance_memory:
+                    self.append_ar_typed_per_instance_memory(item)
+            else:
+                self.append_ar_typed_per_instance_memory(ar_typed_per_instance_memory)
+
         if events is not None:
             if isinstance(events, Iterable):
                 for event in events:
                     self.append_event(event)
             else:
                 self.append_event(events)
+
+        if exclusive_area_policies is not None:
+            if isinstance(exclusive_area_policies, Iterable):
+                for policy in exclusive_area_policies:
+                    self.append_exclusive_area_policy(policy)
+            else:
+                self.append_exclusive_area_policy(exclusive_area_policies)
 
         if runnables is not None:
             if isinstance(runnables, Iterable):
@@ -9279,8 +9313,10 @@ class SwcInternalBehavior(InternalBehavior):
         swc = self.get_valid_parent()
         workspace = swc.root_collection()
         if workspace is None:
-            raise ValueError("SWC doesn't seem to belong to a root collection")
-        return workspace.get_valid_behavior_settings()
+            raise RuntimeError("Workspace object not found")
+        if workspace.behavior_settings is None:
+            raise RuntimeError("behavior_settings object not found in workspace")
+        return workspace.behavior_settings
 
     def ref(self) -> SwcInternalBehaviorRef | None:
         """
@@ -9289,6 +9325,49 @@ class SwcInternalBehavior(InternalBehavior):
         """
         ref_str = self._calc_ref_string()
         return None if ref_str is None else SwcInternalBehaviorRef(ref_str)
+
+    @convenience_function
+    def create_ar_typed_per_instance_memory(self,
+                                            name: str,
+                                            init_value: ValueSpecificationElement | None = None,
+                                            **kwargs) -> VariableDataPrototype:
+        """
+        Adds a new VariableDataPrototype to ar_typed_per_instance_memory
+        """
+        item = VariableDataPrototype(name, init_value, **kwargs)
+        self.append_ar_typed_per_instance_memory(item)
+        return item
+
+    def append_ar_typed_per_instance_memory(self, item: VariableDataPrototype) -> None:
+        """
+        Appends VariableDataPrototype to ar_typed_per_instance_memory
+        """
+        if isinstance(item, VariableDataPrototype):
+            self.ar_typed_per_instance_memory.append(item)
+            item.parent = self
+        else:
+            raise ar_except.ElementTypeError("item", VariableDataPrototype, item)
+
+    @convenience_function
+    def create_exclusive_area_policy(self,
+                                     exclusive_area: ExclusiveAreaRef | str | None = None,
+                                     api_principle: ar_enum.ApiPrinciple | str | None = None
+                                     ) -> SwcExclusiveAreaPolicy:
+        """
+        Adds a new SwcExclusiveAreaPolicy to exclusive_area_policies
+        """
+        policy = SwcExclusiveAreaPolicy(exclusive_area, api_principle)
+        self.append_exclusive_area_policy(policy)
+        return policy
+
+    def append_exclusive_area_policy(self, item: SwcExclusiveAreaPolicy) -> None:
+        """
+        Appends SwcExclusiveAreaPolicy to exclusive_area_policies
+        """
+        if isinstance(item, SwcExclusiveAreaPolicy):
+            self.exclusive_area_policies.append(item)
+        else:
+            raise ar_except.ElementTypeError("item", SwcExclusiveAreaPolicy, item)
 
     def append_runnable(self, runnable: RunnableEntity) -> None:
         """

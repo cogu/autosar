@@ -333,6 +333,7 @@ class Reader:
             'EXCLUSIVE-AREA': self._read_exclusive_area,
             'EXCLUSIVE-AREA-NESTING-ORDER': self._read_exclusive_area_nesting_order,
             'EXCLUSIVE-AREA-REF-CONDITIONAL': self._read_exclusive_area_ref_conditional,
+            'SWC-EXCLUSIVE-AREA-POLICY': self._read_swc_exclusive_area_policy,
             'DISABLED-MODE-IREF': self._read_r_mode_in_atomic_swc_instance_ref,
             'SWC-INTERNAL-BEHAVIOR': self._read_swc_internal_behavior,
             'RUNNABLE-ENTITY-ARGUMENT': self._read_runnable_entity_argument,
@@ -6245,6 +6246,29 @@ class Reader:
                 exclusive_areas.append(self._read_exclusive_area_ref(xml_grand_child))
             data["exclusive_areas"] = exclusive_areas
 
+    def _read_swc_exclusive_area_policy(self,
+                                        xml_element: ElementTree.Element
+                                        ) -> ar_element.SwcExclusiveAreaPolicy:
+        """
+        Reads complex type AR:SWC-EXCLUSIVE-AREA-POLICY
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_swc_exclusive_area_policy_group(child_elements, data)
+        return ar_element.SwcExclusiveAreaPolicy(**data)
+
+    def _read_swc_exclusive_area_policy_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:SWC-EXCLUSIVE-AREA-POLICY
+        """
+        xml_child = child_elements.get("API-PRINCIPLE")
+        if xml_child is not None:
+            data["api_principle"] = ar_enum.xml_to_enum("ApiPrinciple", xml_child.text)
+        xml_child = child_elements.get("EXCLUSIVE-AREA-REF")
+        if xml_child is not None:
+            data["exclusive_area"] = self._read_exclusive_area_ref(xml_child)
+
     def _read_swc_internal_behavior(self, xml_element: ElementTree.Element) -> ar_element.SwcInternalBehavior:
         """
         Reads complex type AR:SWC-INTERNAL-BEHAVIOR
@@ -6307,14 +6331,24 @@ class Reader:
 
         Most of it will be implemented in a future version
         """
-        child_elements.skip("AR-TYPED-PER-INSTANCE-MEMORYS")
+        xml_child = child_elements.get("AR-TYPED-PER-INSTANCE-MEMORYS")
+        if xml_child is not None:
+            ar_typed_per_instance_memory = []
+            for xml_grand_child in xml_child.findall("./VARIABLE-DATA-PROTOTYPE"):
+                ar_typed_per_instance_memory.append(self._read_variable_data_prototype(xml_grand_child))
+            data["ar_typed_per_instance_memory"] = ar_typed_per_instance_memory
         xml_child = child_elements.get("EVENTS")
         if xml_child is not None:
             events = []
             for xml_grand_child in xml_child.findall("./*"):
                 events.append(self._read_rte_event_element(xml_grand_child))
             data["events"] = events
-        child_elements.skip("EXCLUSIVE-AREA-POLICYS")
+        xml_child = child_elements.get("EXCLUSIVE-AREA-POLICYS")
+        if xml_child is not None:
+            exclusive_area_policies = []
+            for xml_grand_child in xml_child.findall("./SWC-EXCLUSIVE-AREA-POLICY"):
+                exclusive_area_policies.append(self._read_swc_exclusive_area_policy(xml_grand_child))
+            data["exclusive_area_policies"] = exclusive_area_policies
         child_elements.skip("EXPLICIT-INTER-RUNNABLE-VARIABLES")
         child_elements.skip("HANDLE-TERMINATION-AND-RESTART")
         child_elements.skip("INCLUDED-DATA-TYPE-SETS")
