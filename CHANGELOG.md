@@ -30,6 +30,7 @@ Non-collectable elements are various sub-elements to collectable elements.
 * CryptoKeyManagementNeeds | CRYPTO-KEY-MANAGEMENT-NEEDS
 * CryptoServiceJobNeeds | CRYPTO-SERVICE-JOB-NEEDS
 * CryptoServiceNeeds | CRYPTO-SERVICE-NEEDS
+* DiagnosticCommunicationManagerNeeds | DIAGNOSTIC-COMMUNICATION-MANAGER-NEEDS
 
 #### XML - SWC internal behavior elements
 

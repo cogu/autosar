@@ -145,6 +145,27 @@ class DataTransformationStatusForwarding(Enum):
     TRANSFORMER_STATUS_FORWARDING = 1
 
 
+class DiagnosticAudience(Enum):
+    """
+    DIAGNOSTIC-AUDIENCE-ENUM--SIMPLE
+    """
+
+    AFTERMARKET = 0
+    AFTER_SALES = 1
+    DEVELOPMENT = 2
+    MANUFACTURING = 3
+    SUPPLIER = 4
+
+
+class DiagnosticServiceRequestCallbackType(Enum):
+    """
+    DIAGNOSTIC-SERVICE-REQUEST-CALLBACK-TYPE-ENUM--SIMPLE
+    """
+
+    REQUEST_CALLBACK_TYPE_MANUFACTURER = 0
+    REQUEST_CALLBACK_TYPE_SUPPLIER = 1
+
+
 class DisplayPresentation(Enum):
     """DISPLAY-PRESENTATION-ENUM"""
 
@@ -831,6 +852,17 @@ xml_to_enum_map: dict[str, dict] = {
         "NO-TRANSFORMER-STATUS-FORWARDING": DataTransformationStatusForwarding.NO_TRANSFORMER_STATUS_FORWARDING,
         "TRANSFORMER-STATUS-FORWARDING": DataTransformationStatusForwarding.TRANSFORMER_STATUS_FORWARDING
     },
+    "DiagnosticAudience": {
+        "AFTERMARKET": DiagnosticAudience.AFTERMARKET,
+        "AFTER-SALES": DiagnosticAudience.AFTER_SALES,
+        "DEVELOPMENT": DiagnosticAudience.DEVELOPMENT,
+        "MANUFACTURING": DiagnosticAudience.MANUFACTURING,
+        "SUPPLIER": DiagnosticAudience.SUPPLIER,
+    },
+    "DiagnosticServiceRequestCallbackType": {
+        "REQUEST-CALLBACK-TYPE-MANUFACTURER": DiagnosticServiceRequestCallbackType.REQUEST_CALLBACK_TYPE_MANUFACTURER,
+        "REQUEST-CALLBACK-TYPE-SUPPLIER": DiagnosticServiceRequestCallbackType.REQUEST_CALLBACK_TYPE_SUPPLIER,
+    },
     "DisplayPresentation": {
         "PRESENTATION-CONTINUOUS": DisplayPresentation.CONTINUOUS,
         "PRESENTATION-DISCRETE": DisplayPresentation.DISCRETE
@@ -1255,6 +1287,17 @@ enum_to_xml_map: dict[str, list] = {
     "DataTransformationStatusForwarding": [
         "NO-TRANSFORMER-STATUS-FORWARDING",
         "TRANSFORMER-STATUS-FORWARDING"
+    ],
+    "DiagnosticAudience": [
+        "AFTERMARKET",    # 0
+        "AFTER-SALES",    # 1
+        "DEVELOPMENT",    # 2
+        "MANUFACTURING",  # 3
+        "SUPPLIER",       # 4
+    ],
+    "DiagnosticServiceRequestCallbackType": [
+        "REQUEST-CALLBACK-TYPE-MANUFACTURER",  # 0
+        "REQUEST-CALLBACK-TYPE-SUPPLIER",      # 1
     ],
     "DataFilterType": [
         "ALWAYS",                         # 0

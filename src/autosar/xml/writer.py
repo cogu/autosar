@@ -386,6 +386,7 @@ class Writer(_XMLWriter):
             'CryptoKeyManagementNeeds': self._write_crypto_key_management_needs,
             'CryptoServiceJobNeeds': self._write_crypto_service_job_needs,
             'CryptoServiceNeeds': self._write_crypto_service_needs,
+            'DiagnosticCommunicationManagerNeeds': self._write_diagnostic_communication_manager_needs,
             # SWC internal behavior elements
             'ArVariableInImplementationDataInstanceRef': self._write_variable_in_impl_data_instance_ref,
             'VariableInAtomicSWCTypeInstanceRef': self._write_variable_in_atomic_swc_type_instance_ref,
@@ -4896,6 +4897,46 @@ class Writer(_XMLWriter):
             self._add_content("CRYPTO-KEY-DESCRIPTION", elem.crypto_key_description)
         if elem.maximum_key_length is not None:
             self._add_content("MAXIMUM-KEY-LENGTH", str(elem.maximum_key_length))
+
+    def _write_diagnostic_capability_element_group(self, elem: ar_element.DiagnosticCapabilityElement) -> None:
+        """
+        Writes group AR:DIAGNOSTIC-CAPABILITY-ELEMENT
+        """
+        if len(elem.audience) > 0:
+            self._add_child("AUDIENCES")
+            for audience in elem.audience:
+                self._add_content("AUDIENCE", ar_enum.enum_to_xml(audience))
+            self._leave_child()
+        if elem.diag_requirement is not None:
+            self._add_content("DIAG-REQUIREMENT", elem.diag_requirement)
+        if elem.security_access_level is not None:
+            self._add_content("SECURITY-ACCESS-LEVEL", str(elem.security_access_level))
+
+    def _write_diagnostic_communication_manager_needs(
+            self,
+            elem: ar_element.DiagnosticCommunicationManagerNeeds) -> None:
+        """
+        Writes complex type AR:DIAGNOSTIC-COMMUNICATION-MANAGER-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DiagnosticCommunicationManagerNeeds)
+        self._add_child("DIAGNOSTIC-COMMUNICATION-MANAGER-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_diagnostic_capability_element_group(elem)
+        self._write_diagnostic_communication_manager_needs_group(elem)
+        self._leave_child()
+
+    def _write_diagnostic_communication_manager_needs_group(
+            self,
+            elem: ar_element.DiagnosticCommunicationManagerNeeds) -> None:
+        """
+        Writes group AR:DIAGNOSTIC-COMMUNICATION-MANAGER-NEEDS
+        """
+        if elem.service_request_callback_type is not None:
+            self._add_content("SERVICE-REQUEST-CALLBACK-TYPE",
+                              ar_enum.enum_to_xml(elem.service_request_callback_type))
 
     def _write_abstract_access_point(self, elem: ar_element.AbstractAccessPoint) -> None:
         """

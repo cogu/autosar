@@ -6867,6 +6867,69 @@ class CryptoServiceNeeds(ServiceNeeds):
         self._assign_optional_positive_int("maximum_key_length", maximum_key_length)
 
 
+class DiagnosticCapabilityElement(ServiceNeeds):
+    """
+    Group AR:DIAGNOSTIC-CAPABILITY-ELEMENT
+    """
+
+    def __init__(self,
+                 name: str,
+                 audience: ar_enum.DiagnosticAudience | str | list[ar_enum.DiagnosticAudience | str] | None = None,
+                 diag_requirement: str | None = None,
+                 security_access_level: int | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .AUDIENCES
+        self.audience: list[ar_enum.DiagnosticAudience] = []
+        # .DIAG-REQUIREMENT
+        self.diag_requirement: str | None = None
+        # .SECURITY-ACCESS-LEVEL
+        self.security_access_level: int | None = None
+
+        if audience is not None:
+            if isinstance(audience, (ar_enum.DiagnosticAudience, str)):
+                self._append_audience(audience)
+            elif isinstance(audience, list):
+                for item in audience:
+                    self._append_audience(item)
+            else:
+                raise ar_except.ElementTypeError("audience", [ar_enum.DiagnosticAudience, str], audience)
+        self._assign_optional_strict("diag_requirement", diag_requirement, str)
+        self._assign_optional_positive_int("security_access_level", security_access_level)
+
+    def _append_audience(self, item: ar_enum.DiagnosticAudience | str) -> None:
+        if isinstance(item, str):
+            try:
+                item = ar_enum.xml_to_enum("DiagnosticAudience", item)
+            except KeyError as exc:
+                raise ar_except.ConversionError("audience", ar_enum.DiagnosticAudience, item) from exc
+        if isinstance(item, ar_enum.DiagnosticAudience):
+            self.audience.append(item)
+        else:
+            raise ar_except.ElementTypeError("audience", ar_enum.DiagnosticAudience, item)
+
+
+class DiagnosticCommunicationManagerNeeds(DiagnosticCapabilityElement):
+    """
+    Complex type AR:DIAGNOSTIC-COMMUNICATION-MANAGER-NEEDS
+    Tag variants: 'DIAGNOSTIC-COMMUNICATION-MANAGER-NEEDS'
+    """
+
+    def __init__(self,
+                 name: str,
+                 service_request_callback_type: (ar_enum.DiagnosticServiceRequestCallbackType
+                                                 | str
+                                                 | None) = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .SERVICE-REQUEST-CALLBACK-TYPE
+        self.service_request_callback_type: ar_enum.DiagnosticServiceRequestCallbackType | None = None
+
+        self._assign_optional("service_request_callback_type",
+                              service_request_callback_type,
+                              ar_enum.DiagnosticServiceRequestCallbackType)
+
+
 # --- Internal behavior elements
 
 
