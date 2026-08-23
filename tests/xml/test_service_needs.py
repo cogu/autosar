@@ -1064,5 +1064,151 @@ class TestDltUserNeeds(unittest.TestCase):
         self.assertEqual(elem.name, "DltUserNeeds")
 
 
+class TestDoIpActivationLineNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.DoIpActivationLineNeeds("DoIpActivationLineNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<DO-IP-ACTIVATION-LINE-NEEDS>
+  <SHORT-NAME>DoIpActivationLineNeeds</SHORT-NAME>
+</DO-IP-ACTIVATION-LINE-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DoIpActivationLineNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DoIpActivationLineNeeds)
+        self.assertIsInstance(elem, ar_element.DoIpServiceNeeds)
+        self.assertEqual(elem.name, "DoIpActivationLineNeeds")
+
+
+class TestDoIpGidNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.DoIpGidNeeds("DoIpGidNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<DO-IP-GID-NEEDS>
+  <SHORT-NAME>DoIpGidNeeds</SHORT-NAME>
+</DO-IP-GID-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DoIpGidNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DoIpGidNeeds)
+        self.assertIsInstance(elem, ar_element.DoIpServiceNeeds)
+        self.assertEqual(elem.name, "DoIpGidNeeds")
+
+
+class TestDoIpGidSynchronizationNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.DoIpGidSynchronizationNeeds("DoIpGidSynchronizationNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<DO-IP-GID-SYNCHRONIZATION-NEEDS>
+  <SHORT-NAME>DoIpGidSynchronizationNeeds</SHORT-NAME>
+</DO-IP-GID-SYNCHRONIZATION-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DoIpGidSynchronizationNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DoIpGidSynchronizationNeeds)
+        self.assertIsInstance(elem, ar_element.DoIpServiceNeeds)
+        self.assertEqual(elem.name, "DoIpGidSynchronizationNeeds")
+
+
+class TestDoIpPowerModeStatusNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.DoIpPowerModeStatusNeeds("DoIpPowerModeStatusNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<DO-IP-POWER-MODE-STATUS-NEEDS>
+  <SHORT-NAME>DoIpPowerModeStatusNeeds</SHORT-NAME>
+</DO-IP-POWER-MODE-STATUS-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DoIpPowerModeStatusNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DoIpPowerModeStatusNeeds)
+        self.assertIsInstance(elem, ar_element.DoIpServiceNeeds)
+        self.assertEqual(elem.name, "DoIpPowerModeStatusNeeds")
+
+
+class TestDoIpRoutingActivationAuthenticationNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.DoIpRoutingActivationAuthenticationNeeds("DoIpRoutingActivationAuthenticationNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<DO-IP-ROUTING-ACTIVATION-AUTHENTICATION-NEEDS>
+  <SHORT-NAME>DoIpRoutingActivationAuthenticationNeeds</SHORT-NAME>
+</DO-IP-ROUTING-ACTIVATION-AUTHENTICATION-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DoIpRoutingActivationAuthenticationNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DoIpRoutingActivationAuthenticationNeeds)
+        self.assertIsInstance(elem, ar_element.DoIpServiceNeeds)
+        self.assertEqual(elem.name, "DoIpRoutingActivationAuthenticationNeeds")
+        self.assertIsNone(elem.data_length_request)
+        self.assertIsNone(elem.data_length_response)
+        self.assertIsNone(elem.routing_activation_type)
+
+    def test_with_all_fields(self):
+        element = ar_element.DoIpRoutingActivationAuthenticationNeeds(
+            "DoIpRoutingActivationAuthenticationNeeds",
+            data_length_request=16,
+            data_length_response=32,
+            routing_activation_type="RA_0xE1"
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<DO-IP-ROUTING-ACTIVATION-AUTHENTICATION-NEEDS>
+  <SHORT-NAME>DoIpRoutingActivationAuthenticationNeeds</SHORT-NAME>
+  <DATA-LENGTH-REQUEST>16</DATA-LENGTH-REQUEST>
+  <DATA-LENGTH-RESPONSE>32</DATA-LENGTH-RESPONSE>
+  <ROUTING-ACTIVATION-TYPE>RA_0xE1</ROUTING-ACTIVATION-TYPE>
+</DO-IP-ROUTING-ACTIVATION-AUTHENTICATION-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DoIpRoutingActivationAuthenticationNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DoIpRoutingActivationAuthenticationNeeds)
+        self.assertEqual(elem.data_length_request, 16)
+        self.assertEqual(elem.data_length_response, 32)
+        self.assertEqual(elem.routing_activation_type, "RA_0xE1")
+
+
+class TestDoIpRoutingActivationConfirmationNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.DoIpRoutingActivationConfirmationNeeds("DoIpRoutingActivationConfirmationNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<DO-IP-ROUTING-ACTIVATION-CONFIRMATION-NEEDS>
+  <SHORT-NAME>DoIpRoutingActivationConfirmationNeeds</SHORT-NAME>
+</DO-IP-ROUTING-ACTIVATION-CONFIRMATION-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DoIpRoutingActivationConfirmationNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DoIpRoutingActivationConfirmationNeeds)
+        self.assertIsInstance(elem, ar_element.DoIpServiceNeeds)
+        self.assertEqual(elem.name, "DoIpRoutingActivationConfirmationNeeds")
+        self.assertIsNone(elem.data_length_request)
+        self.assertIsNone(elem.data_length_response)
+        self.assertIsNone(elem.routing_activation_type)
+
+    def test_with_all_fields(self):
+        element = ar_element.DoIpRoutingActivationConfirmationNeeds(
+            "DoIpRoutingActivationConfirmationNeeds",
+            data_length_request=8,
+            data_length_response=16,
+            routing_activation_type="0x01"
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<DO-IP-ROUTING-ACTIVATION-CONFIRMATION-NEEDS>
+  <SHORT-NAME>DoIpRoutingActivationConfirmationNeeds</SHORT-NAME>
+  <DATA-LENGTH-REQUEST>8</DATA-LENGTH-REQUEST>
+  <DATA-LENGTH-RESPONSE>16</DATA-LENGTH-RESPONSE>
+  <ROUTING-ACTIVATION-TYPE>0x01</ROUTING-ACTIVATION-TYPE>
+</DO-IP-ROUTING-ACTIVATION-CONFIRMATION-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DoIpRoutingActivationConfirmationNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DoIpRoutingActivationConfirmationNeeds)
+        self.assertEqual(elem.data_length_request, 8)
+        self.assertEqual(elem.data_length_response, 16)
+        self.assertEqual(elem.routing_activation_type, "0x01")
+
+
 if __name__ == '__main__':
     unittest.main()

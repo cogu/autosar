@@ -48,6 +48,12 @@ Non-collectable elements are various sub-elements to collectable elements.
 * DiagnosticValueNeeds | DIAGNOSTIC-VALUE-NEEDS
 * DiagnosticsCommunicationSecurityNeeds | DIAGNOSTICS-COMMUNICATION-SECURITY-NEEDS
 * DltUserNeeds | DLT-USER-NEEDS
+* DoIpActivationLineNeeds | DO-IP-ACTIVATION-LINE-NEEDS
+* DoIpGidNeeds | DO-IP-GID-NEEDS
+* DoIpGidSynchronizationNeeds | DO-IP-GID-SYNCHRONIZATION-NEEDS
+* DoIpPowerModeStatusNeeds | DO-IP-POWER-MODE-STATUS-NEEDS
+* DoIpRoutingActivationAuthenticationNeeds | DO-IP-ROUTING-ACTIVATION-AUTHENTICATION-NEEDS
+* DoIpRoutingActivationConfirmationNeeds | DO-IP-ROUTING-ACTIVATION-CONFIRMATION-NEEDS
 
 #### XML - SWC internal behavior elements
 
