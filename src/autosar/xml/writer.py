@@ -5621,6 +5621,14 @@ class Writer(_XMLWriter):
             for runnable in elem.runnable:
                 self._write_runnable_entity(runnable)
             self._leave_child()
+        if elem.shared_parameter:
+            self._add_child("SHARED-PARAMETERS")
+            for item in elem.shared_parameter:
+                self._write_parameter_data_prototype(item, "PARAMETER-DATA-PROTOTYPE")
+            self._leave_child()
+        if elem.supports_multiple_instantiation is not None:
+            self._add_content("SUPPORTS-MULTIPLE-INSTANTIATION",
+                              self._format_boolean(elem.supports_multiple_instantiation))
 
     def _write_rte_event_element(self, elem: ar_element.RteEvent) -> None:
         """
