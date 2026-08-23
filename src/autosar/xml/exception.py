@@ -23,6 +23,20 @@ class VersionError(ValueError):
     """
 
 
+class ConversionError(ValueError):
+    """
+    Failed to convert value to target type
+    """
+
+    def __init__(self,
+                 name: str,
+                 target_type: str | type,
+                 value: Any) -> None:
+        target = target_type.__name__ if isinstance(target_type, type) else str(target_type)
+        msg = f"{name}: Cannot convert '{value}' to {target}"
+        super().__init__(msg)
+
+
 class AssignmentTypeError(TypeError):
     """
     Assignment of invalid type

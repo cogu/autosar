@@ -71,6 +71,11 @@ class ARObject:
         Assign single value to attribute with type check.
         """
         if issubclass(type_name, Enum):
+            if isinstance(value, str):
+                try:
+                    value = ar_enum.xml_to_enum(type_name.__name__, value)
+                except KeyError as exc:
+                    raise ar_except.ConversionError(attr_name, type_name, value) from exc
             self._set_attr_with_strict_type(attr_name, value, type_name)
         elif issubclass(type_name, BaseRef):
             self._check_and_set_reference(attr_name, value, type_name)
