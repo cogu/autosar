@@ -157,6 +157,25 @@ class DiagnosticAudience(Enum):
     SUPPLIER = 4
 
 
+class DiagnosticProcessingStyle(Enum):
+    """
+    DIAGNOSTIC-PROCESSING-STYLE-ENUM--SIMPLE
+    """
+
+    PROCESSING_STYLE_ASYNCHRONOUS = 0
+    PROCESSING_STYLE_ASYNCHRONOUS_WITH_ERROR = 1
+    PROCESSING_STYLE_SYNCHRONOUS = 2
+
+
+class DiagnosticRoutineType(Enum):
+    """
+    DIAGNOSTIC-ROUTINE-TYPE-ENUM--SIMPLE
+    """
+
+    ASYNCHRONOUS = 0
+    SYNCHRONOUS = 1
+
+
 class DiagnosticServiceRequestCallbackType(Enum):
     """
     DIAGNOSTIC-SERVICE-REQUEST-CALLBACK-TYPE-ENUM--SIMPLE
@@ -164,6 +183,16 @@ class DiagnosticServiceRequestCallbackType(Enum):
 
     REQUEST_CALLBACK_TYPE_MANUFACTURER = 0
     REQUEST_CALLBACK_TYPE_SUPPLIER = 1
+
+
+class DiagnosticValueAccess(Enum):
+    """
+    DIAGNOSTIC-VALUE-ACCESS-ENUM--SIMPLE
+    """
+
+    READ_ONLY = 0
+    READ_WRITE = 1
+    WRITE_ONLY = 2
 
 
 class DisplayPresentation(Enum):
@@ -191,6 +220,15 @@ class EmphasisType(Enum):
     BOLDITALIC = 1
     ITALIC = 2
     PLAIN = 3
+
+
+class EventAcceptanceStatus(Enum):
+    """
+    EVENT-ACCEPTANCE-STATUS-ENUM--SIMPLE
+    """
+
+    EVENT_ACCEPTANCE_DISABLED = 0
+    EVENT_ACCEPTANCE_ENABLED = 1
 
 
 class Float(Enum):
@@ -301,52 +339,53 @@ class IdentifiableSubTypes(Enum):
     DATA_SEND_COMPLETED_EVENT = 35
     DATA_TYPE_MAPPING_SET = 36
     DATA_WRITE_COMPLETED_EVENT = 37
-    ECU_ABSTRACTION_SW_COMPONENT_TYPE = 38
-    E2E_PROFILE_COMPATIBILITY_PROPS = 39
-    EXCLUSIVE_AREA = 40
-    EXCLUSIVE_AREA_NESTING_ORDER = 41
-    EXTERNAL_TRIGGER_OCCURRED_EVENT = 42
-    IMPLEMENTATION_DATA_TYPE = 43
-    IMPLEMENTATION_DATA_TYPE_ELEMENT = 44
-    INIT_EVENT = 45
-    INTERNAL_TRIGGER_OCCURRED_EVENT = 46
-    INTERNAL_TRIGGERING_POINT = 47
-    MODE_DECLARATION = 48
-    MODE_DECLARATION_GROUP = 49
-    MODE_DECLARATION_GROUP_PROTOTYPE = 50
-    MODE_SWITCH_INTERFACE = 51
-    MODE_SWITCH_POINT = 52
-    MODE_SWITCHED_ACK_EVENT = 53
-    NV_BLOCK_SW_COMPONENT_TYPE = 54
-    NV_DATA_INTERFACE = 55
-    OPERATION_INVOKED_EVENT = 56
-    P_PORT_PROTOTYPE = 57
-    PARAMETER_DATA_PROTOTYPE = 58
-    PARAMETER_INTERFACE = 59
-    PER_INSTANCE_MEMORY = 60
-    PHYSICAL_DIMENSION = 61
-    PORT_PROTOTYPE = 62
-    PR_PORT_PROTOTYPE = 63
-    R_PORT_PROTOTYPE = 64
-    RUNNABLE_ENTITY = 65
-    SENDER_RECEIVER_INTERFACE = 66
-    SENSOR_ACTUATOR_SW_COMPONENT_TYPE = 67
-    SERVICE_PROXY_SW_COMPONENT_TYPE = 68
-    SERVICE_SW_COMPONENT_TYPE = 69
-    SW_ADDR_METHOD = 70
-    SW_BASE_TYPE = 71
-    SW_COMPONENT_PROTOTYPE = 72
-    SWC_IMPLEMENTATION = 73
-    SWC_INTERNAL_BEHAVIOR = 74
-    SWC_MODE_MANAGER_ERROR_EVENT = 75
-    SWC_MODE_SWITCH_EVENT = 76
-    TIMING_EVENT = 77
-    TRANSFORMER_HARD_ERROR_EVENT = 78
-    TRIGGER = 79
-    TRIGGER_INTERFACE = 80
-    UNIT = 81
-    VARIABLE_ACCESS = 82
-    VARIABLE_DATA_PROTOTYPE = 83
+    DIAGNOSTIC_VALUE_NEEDS = 38
+    ECU_ABSTRACTION_SW_COMPONENT_TYPE = 39
+    E2E_PROFILE_COMPATIBILITY_PROPS = 40
+    EXCLUSIVE_AREA = 41
+    EXCLUSIVE_AREA_NESTING_ORDER = 42
+    EXTERNAL_TRIGGER_OCCURRED_EVENT = 43
+    IMPLEMENTATION_DATA_TYPE = 44
+    IMPLEMENTATION_DATA_TYPE_ELEMENT = 45
+    INIT_EVENT = 46
+    INTERNAL_TRIGGER_OCCURRED_EVENT = 47
+    INTERNAL_TRIGGERING_POINT = 48
+    MODE_DECLARATION = 49
+    MODE_DECLARATION_GROUP = 50
+    MODE_DECLARATION_GROUP_PROTOTYPE = 51
+    MODE_SWITCH_INTERFACE = 52
+    MODE_SWITCH_POINT = 53
+    MODE_SWITCHED_ACK_EVENT = 54
+    NV_BLOCK_SW_COMPONENT_TYPE = 55
+    NV_DATA_INTERFACE = 56
+    OPERATION_INVOKED_EVENT = 57
+    P_PORT_PROTOTYPE = 58
+    PARAMETER_DATA_PROTOTYPE = 59
+    PARAMETER_INTERFACE = 60
+    PER_INSTANCE_MEMORY = 61
+    PHYSICAL_DIMENSION = 62
+    PORT_PROTOTYPE = 63
+    PR_PORT_PROTOTYPE = 64
+    R_PORT_PROTOTYPE = 65
+    RUNNABLE_ENTITY = 66
+    SENDER_RECEIVER_INTERFACE = 67
+    SENSOR_ACTUATOR_SW_COMPONENT_TYPE = 68
+    SERVICE_PROXY_SW_COMPONENT_TYPE = 69
+    SERVICE_SW_COMPONENT_TYPE = 70
+    SW_ADDR_METHOD = 71
+    SW_BASE_TYPE = 72
+    SW_COMPONENT_PROTOTYPE = 73
+    SWC_IMPLEMENTATION = 74
+    SWC_INTERNAL_BEHAVIOR = 75
+    SWC_MODE_MANAGER_ERROR_EVENT = 76
+    SWC_MODE_SWITCH_EVENT = 77
+    TIMING_EVENT = 78
+    TRANSFORMER_HARD_ERROR_EVENT = 79
+    TRIGGER = 80
+    TRIGGER_INTERFACE = 81
+    UNIT = 82
+    VARIABLE_ACCESS = 83
+    VARIABLE_DATA_PROTOTYPE = 84
 
 
 class IntervalType(Enum):
@@ -565,6 +604,19 @@ class Monotony(Enum):
     STRICT_MONOTONOUS = 6
 
 
+class OperationCycleType(Enum):
+    """
+    OPERATION-CYCLE-TYPE-ENUM--SIMPLE
+    """
+
+    IGNITION = 0
+    OBD_DCY = 1
+    OTHER = 2
+    POWER = 3
+    TIME = 4
+    WARMUP = 5
+
+
 class PackageRole(Enum):
     """
     Supported package roles
@@ -689,6 +741,15 @@ class ServiceKind(Enum):
     V2X_MANAGEMENT = 21
     VENDOR_SPECIFIC = 16
     WATCH_DOG_MANAGER = 17
+
+
+class StorageConditionStatus(Enum):
+    """
+    STORAGE-CONDITION-STATUS-ENUM--SIMPLE
+    """
+
+    EVENT_STORAGE_DISABLED = 0
+    EVENT_STORAGE_ENABLED = 1
 
 
 class SupportBufferLocking(Enum):
@@ -859,9 +920,23 @@ xml_to_enum_map: dict[str, dict] = {
         "MANUFACTURING": DiagnosticAudience.MANUFACTURING,
         "SUPPLIER": DiagnosticAudience.SUPPLIER,
     },
+    "DiagnosticProcessingStyle": {
+        "PROCESSING-STYLE-ASYNCHRONOUS": DiagnosticProcessingStyle.PROCESSING_STYLE_ASYNCHRONOUS,
+        "PROCESSING-STYLE-ASYNCHRONOUS-WITH-ERROR": DiagnosticProcessingStyle.PROCESSING_STYLE_ASYNCHRONOUS_WITH_ERROR,
+        "PROCESSING-STYLE-SYNCHRONOUS": DiagnosticProcessingStyle.PROCESSING_STYLE_SYNCHRONOUS,
+    },
+    "DiagnosticRoutineType": {
+        "ASYNCHRONOUS": DiagnosticRoutineType.ASYNCHRONOUS,
+        "SYNCHRONOUS": DiagnosticRoutineType.SYNCHRONOUS,
+    },
     "DiagnosticServiceRequestCallbackType": {
         "REQUEST-CALLBACK-TYPE-MANUFACTURER": DiagnosticServiceRequestCallbackType.REQUEST_CALLBACK_TYPE_MANUFACTURER,
         "REQUEST-CALLBACK-TYPE-SUPPLIER": DiagnosticServiceRequestCallbackType.REQUEST_CALLBACK_TYPE_SUPPLIER,
+    },
+    "DiagnosticValueAccess": {
+        "READ-ONLY": DiagnosticValueAccess.READ_ONLY,
+        "READ-WRITE": DiagnosticValueAccess.READ_WRITE,
+        "WRITE-ONLY": DiagnosticValueAccess.WRITE_ONLY,
     },
     "DisplayPresentation": {
         "PRESENTATION-CONTINUOUS": DisplayPresentation.CONTINUOUS,
@@ -876,6 +951,10 @@ xml_to_enum_map: dict[str, dict] = {
         "BOLDITALIC": EmphasisType.BOLDITALIC,
         "ITALIC": EmphasisType.ITALIC,
         "PLAIN": EmphasisType.PLAIN,
+    },
+    "EventAcceptanceStatus": {
+        "EVENT-ACCEPTANCE-DISABLED": EventAcceptanceStatus.EVENT_ACCEPTANCE_DISABLED,
+        "EVENT-ACCEPTANCE-ENABLED": EventAcceptanceStatus.EVENT_ACCEPTANCE_ENABLED,
     },
     "Float": {
         "FLOAT": Float.FLOAT,
@@ -948,6 +1027,7 @@ xml_to_enum_map: dict[str, dict] = {
         "DATA-SEND-COMPLETED-EVENT": IdentifiableSubTypes.DATA_SEND_COMPLETED_EVENT,
         "DATA-TYPE-MAPPING-SET": IdentifiableSubTypes.DATA_TYPE_MAPPING_SET,
         "DATA-WRITE-COMPLETED-EVENT": IdentifiableSubTypes.DATA_WRITE_COMPLETED_EVENT,
+        "DIAGNOSTIC-VALUE-NEEDS": IdentifiableSubTypes.DIAGNOSTIC_VALUE_NEEDS,
         "ECU-ABSTRACTION-SW-COMPONENT-TYPE": IdentifiableSubTypes.ECU_ABSTRACTION_SW_COMPONENT_TYPE,
         "E-2-E-PROFILE-COMPATIBILITY-PROPS": IdentifiableSubTypes.E2E_PROFILE_COMPATIBILITY_PROPS,
         "EXCLUSIVE-AREA": IdentifiableSubTypes.EXCLUSIVE_AREA,
@@ -1165,6 +1245,14 @@ xml_to_enum_map: dict[str, dict] = {
         "STRICTLY-INCREASING": Monotony.STRICTLY_INCREASING,
         "STRICT-MONOTONOUS": Monotony.STRICT_MONOTONOUS,
     },
+    "OperationCycleType": {
+        "IGNITION": OperationCycleType.IGNITION,
+        "OBD-DCY": OperationCycleType.OBD_DCY,
+        "OTHER": OperationCycleType.OTHER,
+        "POWER": OperationCycleType.POWER,
+        "TIME": OperationCycleType.TIME,
+        "WARMUP": OperationCycleType.WARMUP,
+    },
     "PageBreak": {
         "BREAK": PageBreak.BREAK,
         "NO-BREAK": PageBreak.NO_BREAK,
@@ -1191,6 +1279,10 @@ xml_to_enum_map: dict[str, dict] = {
     "ServerArgImplPolicy": {
         "USE-ARGUMENT-TYPE": ServerArgImplPolicy.USE_ARGUMENT_TYPE,
         "USE-VOID": ServerArgImplPolicy.USE_VOID
+    },
+    "StorageConditionStatus": {
+        "EVENT-STORAGE-DISABLED": StorageConditionStatus.EVENT_STORAGE_DISABLED,
+        "EVENT-STORAGE-ENABLED": StorageConditionStatus.EVENT_STORAGE_ENABLED,
     },
     "SupportBufferLocking": {
         "DOES-NOT-SUPPORT-BUFFER-LOCKING": SupportBufferLocking.DOES_NOT_SUPPORT_BUFFER_LOCKING,
@@ -1295,9 +1387,23 @@ enum_to_xml_map: dict[str, list] = {
         "MANUFACTURING",  # 3
         "SUPPLIER",       # 4
     ],
+    "DiagnosticProcessingStyle": [
+        "PROCESSING-STYLE-ASYNCHRONOUS",             # 0
+        "PROCESSING-STYLE-ASYNCHRONOUS-WITH-ERROR",  # 1
+        "PROCESSING-STYLE-SYNCHRONOUS",              # 2
+    ],
+    "DiagnosticRoutineType": [
+        "ASYNCHRONOUS",  # 0
+        "SYNCHRONOUS",   # 1
+    ],
     "DiagnosticServiceRequestCallbackType": [
         "REQUEST-CALLBACK-TYPE-MANUFACTURER",  # 0
         "REQUEST-CALLBACK-TYPE-SUPPLIER",      # 1
+    ],
+    "DiagnosticValueAccess": [
+        "READ-ONLY",   # 0
+        "READ-WRITE",  # 1
+        "WRITE-ONLY",  # 2
     ],
     "DataFilterType": [
         "ALWAYS",                         # 0
@@ -1322,6 +1428,10 @@ enum_to_xml_map: dict[str, list] = {
         "BOLDITALIC",  # 1
         "ITALIC",      # 2
         "PLAIN",       # 3
+    ],
+    "EventAcceptanceStatus": [
+        "EVENT-ACCEPTANCE-DISABLED",  # 0
+        "EVENT-ACCEPTANCE-ENABLED",   # 1
     ],
     "Float": [
         "FLOAT",     # 0
@@ -1394,52 +1504,53 @@ enum_to_xml_map: dict[str, list] = {
         "DATA-SEND-COMPLETED-EVENT",                     # 35
         "DATA-TYPE-MAPPING-SET",                         # 36
         "DATA-WRITE-COMPLETED-EVENT",                    # 37
-        "ECU-ABSTRACTION-SW-COMPONENT-TYPE",             # 38
-        "E-2-E-PROFILE-COMPATIBILITY-PROPS",             # 39
-        "EXCLUSIVE-AREA",                                # 40
-        "EXCLUSIVE-AREA-NESTING-ORDER",                  # 41
-        "EXTERNAL-TRIGGER-OCCURRED-EVENT",               # 42
-        "IMPLEMENTATION-DATA-TYPE",                      # 43
-        "IMPLEMENTATION-DATA-TYPE-ELEMENT",              # 44
-        "INIT-EVENT",                                    # 45
-        "INTERNAL-TRIGGER-OCCURRED-EVENT",               # 46
-        "INTERNAL-TRIGGERING-POINT",                     # 47
-        "MODE-DECLARATION",                              # 48
-        "MODE-DECLARATION-GROUP",                        # 49
-        "MODE-DECLARATION-GROUP-PROTOTYPE",              # 50
-        "MODE-SWITCH-INTERFACE",                         # 51
-        "MODE-SWITCH-POINT",                             # 52
-        "MODE-SWITCHED-ACK-EVENT",                       # 53
-        "NV-BLOCK-SW-COMPONENT-TYPE",                    # 54
-        "NV-DATA-INTERFACE",                             # 55
-        "OPERATION-INVOKED-EVENT",                       # 56
-        "P-PORT-PROTOTYPE",                              # 57
-        "PARAMETER-DATA-PROTOTYPE",                      # 58
-        "PARAMETER-INTERFACE",                           # 59
-        "PER-INSTANCE-MEMORY",                           # 60
-        "PHYSICAL-DIMENSION",                            # 61
-        "PORT-PROTOTYPE",                                # 62
-        "PR-PORT-PROTOTYPE",                             # 63
-        "R-PORT-PROTOTYPE",                              # 64
-        "RUNNABLE-ENTITY",                               # 65
-        "SENDER-RECEIVER-INTERFACE",                     # 66
-        "SENSOR-ACTUATOR-SW-COMPONENT-TYPE",             # 67
-        "SERVICE-PROXY-SW-COMPONENT-TYPE",               # 68
-        "SERVICE-SW-COMPONENT-TYPE",                     # 69
-        "SW-ADDR-METHOD",                                # 70
-        "SW-BASE-TYPE",                                  # 71
-        "SW-COMPONENT-PROTOTYPE",                        # 72
-        "SWC-IMPLEMENTATION",                            # 73
-        "SWC-INTERNAL-BEHAVIOR",                         # 74
-        "SWC-MODE-MANAGER-ERROR-EVENT",                  # 75
-        "SWC-MODE-SWITCH-EVENT",                         # 76
-        "TIMING-EVENT",                                  # 77
-        "TRANSFORMER-HARD-ERROR-EVENT",                  # 78
-        "TRIGGER",                                       # 79
-        "TRIGGER-INTERFACE",                             # 80
-        "UNIT",                                          # 81
-        "VARIABLE-ACCESS",                               # 82
-        "VARIABLE-DATA-PROTOTYPE",                       # 83
+        "DIAGNOSTIC-VALUE-NEEDS",                        # 38
+        "ECU-ABSTRACTION-SW-COMPONENT-TYPE",             # 39
+        "E-2-E-PROFILE-COMPATIBILITY-PROPS",             # 40
+        "EXCLUSIVE-AREA",                                # 41
+        "EXCLUSIVE-AREA-NESTING-ORDER",                  # 42
+        "EXTERNAL-TRIGGER-OCCURRED-EVENT",               # 43
+        "IMPLEMENTATION-DATA-TYPE",                      # 44
+        "IMPLEMENTATION-DATA-TYPE-ELEMENT",              # 45
+        "INIT-EVENT",                                    # 46
+        "INTERNAL-TRIGGER-OCCURRED-EVENT",               # 47
+        "INTERNAL-TRIGGERING-POINT",                     # 48
+        "MODE-DECLARATION",                              # 49
+        "MODE-DECLARATION-GROUP",                        # 50
+        "MODE-DECLARATION-GROUP-PROTOTYPE",              # 51
+        "MODE-SWITCH-INTERFACE",                         # 52
+        "MODE-SWITCH-POINT",                             # 53
+        "MODE-SWITCHED-ACK-EVENT",                       # 54
+        "NV-BLOCK-SW-COMPONENT-TYPE",                    # 55
+        "NV-DATA-INTERFACE",                             # 56
+        "OPERATION-INVOKED-EVENT",                       # 57
+        "P-PORT-PROTOTYPE",                              # 58
+        "PARAMETER-DATA-PROTOTYPE",                      # 59
+        "PARAMETER-INTERFACE",                           # 60
+        "PER-INSTANCE-MEMORY",                           # 61
+        "PHYSICAL-DIMENSION",                            # 62
+        "PORT-PROTOTYPE",                                # 63
+        "PR-PORT-PROTOTYPE",                             # 64
+        "R-PORT-PROTOTYPE",                              # 65
+        "RUNNABLE-ENTITY",                               # 66
+        "SENDER-RECEIVER-INTERFACE",                     # 67
+        "SENSOR-ACTUATOR-SW-COMPONENT-TYPE",             # 68
+        "SERVICE-PROXY-SW-COMPONENT-TYPE",               # 69
+        "SERVICE-SW-COMPONENT-TYPE",                     # 70
+        "SW-ADDR-METHOD",                                # 71
+        "SW-BASE-TYPE",                                  # 72
+        "SW-COMPONENT-PROTOTYPE",                        # 73
+        "SWC-IMPLEMENTATION",                            # 74
+        "SWC-INTERNAL-BEHAVIOR",                         # 75
+        "SWC-MODE-MANAGER-ERROR-EVENT",                  # 76
+        "SWC-MODE-SWITCH-EVENT",                         # 77
+        "TIMING-EVENT",                                  # 78
+        "TRANSFORMER-HARD-ERROR-EVENT",                  # 79
+        "TRIGGER",                                       # 80
+        "TRIGGER-INTERFACE",                             # 81
+        "UNIT",                                          # 82
+        "VARIABLE-ACCESS",                               # 83
+        "VARIABLE-DATA-PROTOTYPE",                       # 84
     ],
     "IntervalType": [
         "CLOSED",  # 0
@@ -1611,6 +1722,14 @@ enum_to_xml_map: dict[str, list] = {
         "STRICTLY-INCREASING",  # 5
         "STRICT-MONOTONOUS",    # 6
     ],
+    "OperationCycleType": [
+        "IGNITION",  # 0
+        "OBD-DCY",   # 1
+        "OTHER",     # 2
+        "POWER",     # 3
+        "TIME",      # 4
+        "WARMUP",    # 5
+    ],
     "PageBreak": [
         "BREAK",     # 0
         "NO-BREAK",  # 1
@@ -1638,6 +1757,10 @@ enum_to_xml_map: dict[str, list] = {
         "USE-ARGUMENT-TYPE",  # 0
         None,                 # 1 (removed)
         "USE-VOID",           # 2
+    ],
+    "StorageConditionStatus": [
+        "EVENT-STORAGE-DISABLED",  # 0
+        "EVENT-STORAGE-ENABLED",   # 1
     ],
     "SupportBufferLocking": [
         "DOES-NOT-SUPPORT-BUFFER-LOCKING",  # 0

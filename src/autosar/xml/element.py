@@ -63,6 +63,7 @@ from autosar.xml.reference import (SwBaseTypeRef,  # noqa F401
                                    ApplicationArrayElementRef,
                                    ApplicationRecordElementRef,
                                    PerInstanceMemoryRef,
+                                   DiagnosticValueNeedsRef,
                                    )
 
 
@@ -6928,6 +6929,207 @@ class DiagnosticCommunicationManagerNeeds(DiagnosticCapabilityElement):
         self._assign_optional("service_request_callback_type",
                               service_request_callback_type,
                               ar_enum.DiagnosticServiceRequestCallbackType)
+
+
+class DiagnosticComponentNeeds(DiagnosticCapabilityElement):
+    """
+    Complex type AR:DIAGNOSTIC-COMPONENT-NEEDS
+    Tag variants: 'DIAGNOSTIC-COMPONENT-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
+class DiagnosticControlNeeds(DiagnosticCapabilityElement):
+    """
+    Complex type AR:DIAGNOSTIC-CONTROL-NEEDS
+    Tag variants: 'DIAGNOSTIC-CONTROL-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
+class DiagnosticEnableConditionNeeds(DiagnosticCapabilityElement):
+    """
+    Complex type AR:DIAGNOSTIC-ENABLE-CONDITION-NEEDS
+    Tag variants: 'DIAGNOSTIC-ENABLE-CONDITION-NEEDS'
+    """
+
+    def __init__(self,
+                 name: str,
+                 initial_status: ar_enum.EventAcceptanceStatus | str | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .INITIAL-STATUS
+        self.initial_status: ar_enum.EventAcceptanceStatus | None = None
+
+        self._assign_optional("initial_status", initial_status, ar_enum.EventAcceptanceStatus)
+
+
+class DiagnosticEventInfoNeeds(DiagnosticCapabilityElement):
+    """
+    Complex type AR:DIAGNOSTIC-EVENT-INFO-NEEDS
+    Tag variants: 'DIAGNOSTIC-EVENT-INFO-NEEDS'
+    """
+
+    def __init__(self,
+                 name: str,
+                 obd_dtc_number: int | None = None,
+                 uds_dtc_number: int | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .OBD-DTC-NUMBER
+        self.obd_dtc_number: int | None = None
+        # .UDS-DTC-NUMBER
+        self.uds_dtc_number: int | None = None
+
+        self._assign_optional("obd_dtc_number", obd_dtc_number, int)
+        self._assign_optional("uds_dtc_number", uds_dtc_number, int)
+
+
+class DiagnosticEventManagerNeeds(DiagnosticCapabilityElement):
+    """
+    Complex type AR:DIAGNOSTIC-EVENT-MANAGER-NEEDS
+    Tag variants: 'DIAGNOSTIC-EVENT-MANAGER-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
+class DiagnosticIoControlNeeds(DiagnosticCapabilityElement):
+    """
+    Complex type AR:DIAGNOSTIC-IO-CONTROL-NEEDS
+    Tag variants: 'DIAGNOSTIC-IO-CONTROL-NEEDS'
+    """
+
+    def __init__(self,
+                 name: str,
+                 current_value_ref: DiagnosticValueNeedsRef | None = None,
+                 freeze_current_state_supported: bool | None = None,
+                 reset_to_default_supported: bool | None = None,
+                 short_term_adjustment_supported: bool | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .CURRENT-VALUE-REF
+        self.current_value_ref: DiagnosticValueNeedsRef | None = None
+        # .FREEZE-CURRENT-STATE-SUPPORTED
+        self.freeze_current_state_supported: bool | None = None
+        # .RESET-TO-DEFAULT-SUPPORTED
+        self.reset_to_default_supported: bool | None = None
+        # .SHORT-TERM-ADJUSTMENT-SUPPORTED
+        self.short_term_adjustment_supported: bool | None = None
+
+        self._assign_optional("current_value_ref", current_value_ref, DiagnosticValueNeedsRef)
+        self._assign_optional("freeze_current_state_supported", freeze_current_state_supported, bool)
+        self._assign_optional("reset_to_default_supported", reset_to_default_supported, bool)
+        self._assign_optional("short_term_adjustment_supported", short_term_adjustment_supported, bool)
+
+
+class DiagnosticOperationCycleNeeds(DiagnosticCapabilityElement):
+    """
+    Complex type AR:DIAGNOSTIC-OPERATION-CYCLE-NEEDS
+    Tag variants: 'DIAGNOSTIC-OPERATION-CYCLE-NEEDS'
+    """
+
+    def __init__(self,
+                 name: str,
+                 operation_cycle: ar_enum.OperationCycleType | str | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .OPERATION-CYCLE
+        self.operation_cycle: ar_enum.OperationCycleType | None = None
+
+        self._assign_optional("operation_cycle", operation_cycle, ar_enum.OperationCycleType)
+
+
+class DiagnosticRequestFileTransferNeeds(DiagnosticCapabilityElement):
+    """
+    Complex type AR:DIAGNOSTIC-REQUEST-FILE-TRANSFER-NEEDS
+    Tag variants: 'DIAGNOSTIC-REQUEST-FILE-TRANSFER-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
+class DiagnosticRoutineNeeds(DiagnosticCapabilityElement):
+    """
+    Complex type AR:DIAGNOSTIC-ROUTINE-NEEDS
+    Tag variants: 'DIAGNOSTIC-ROUTINE-NEEDS'
+    """
+
+    def __init__(self,
+                 name: str,
+                 diag_routine_type: ar_enum.DiagnosticRoutineType | str | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .DIAG-ROUTINE-TYPE
+        self.diag_routine_type: ar_enum.DiagnosticRoutineType | None = None
+
+        self._assign_optional("diag_routine_type", diag_routine_type, ar_enum.DiagnosticRoutineType)
+
+
+class DiagnosticStorageConditionNeeds(DiagnosticCapabilityElement):
+    """
+    Complex type AR:DIAGNOSTIC-STORAGE-CONDITION-NEEDS
+    Tag variants: 'DIAGNOSTIC-STORAGE-CONDITION-NEEDS'
+    """
+
+    def __init__(self,
+                 name: str,
+                 initial_status: ar_enum.StorageConditionStatus | str | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .INITIAL-STATUS
+        self.initial_status: ar_enum.StorageConditionStatus | None = None
+
+        self._assign_optional("initial_status", initial_status, ar_enum.StorageConditionStatus)
+
+
+class DiagnosticUploadDownloadNeeds(DiagnosticCapabilityElement):
+    """
+    Complex type AR:DIAGNOSTIC-UPLOAD-DOWNLOAD-NEEDS
+    Tag variants: 'DIAGNOSTIC-UPLOAD-DOWNLOAD-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
+class DiagnosticValueNeeds(DiagnosticCapabilityElement):
+    """
+    Complex type AR:DIAGNOSTIC-VALUE-NEEDS
+    Tag variants: 'DIAGNOSTIC-VALUE-NEEDS'
+    """
+
+    def __init__(self,
+                 name: str,
+                 data_length: int | None = None,
+                 diagnostic_value_access: ar_enum.DiagnosticValueAccess | str | None = None,
+                 fixed_length: bool | None = None,
+                 processing_style: ar_enum.DiagnosticProcessingStyle | str | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .DATA-LENGTH
+        self.data_length: int | None = None
+        # .DIAGNOSTIC-VALUE-ACCESS
+        self.diagnostic_value_access: ar_enum.DiagnosticValueAccess | None = None
+        # .FIXED-LENGTH
+        self.fixed_length: bool | None = None
+        # .PROCESSING-STYLE
+        self.processing_style: ar_enum.DiagnosticProcessingStyle | None = None
+
+        self._assign_optional("data_length", data_length, int)
+        self._assign_optional("diagnostic_value_access", diagnostic_value_access, ar_enum.DiagnosticValueAccess)
+        self._assign_optional("fixed_length", fixed_length, bool)
+        self._assign_optional("processing_style", processing_style, ar_enum.DiagnosticProcessingStyle)
+
+
+class DiagnosticsCommunicationSecurityNeeds(DiagnosticCapabilityElement):
+    """
+    Complex type AR:DIAGNOSTICS-COMMUNICATION-SECURITY-NEEDS
+    Tag variants: 'DIAGNOSTICS-COMMUNICATION-SECURITY-NEEDS'
+
+    Same constructor as parent class
+    """
 
 
 # --- Internal behavior elements

@@ -31,6 +31,19 @@ Non-collectable elements are various sub-elements to collectable elements.
 * CryptoServiceJobNeeds | CRYPTO-SERVICE-JOB-NEEDS
 * CryptoServiceNeeds | CRYPTO-SERVICE-NEEDS
 * DiagnosticCommunicationManagerNeeds | DIAGNOSTIC-COMMUNICATION-MANAGER-NEEDS
+* DiagnosticComponentNeeds | DIAGNOSTIC-COMPONENT-NEEDS
+* DiagnosticControlNeeds | DIAGNOSTIC-CONTROL-NEEDS
+* DiagnosticEnableConditionNeeds | DIAGNOSTIC-ENABLE-CONDITION-NEEDS
+* DiagnosticEventInfoNeeds | DIAGNOSTIC-EVENT-INFO-NEEDS
+* DiagnosticEventManagerNeeds | DIAGNOSTIC-EVENT-MANAGER-NEEDS
+* DiagnosticIoControlNeeds | DIAGNOSTIC-IO-CONTROL-NEEDS
+* DiagnosticOperationCycleNeeds | DIAGNOSTIC-OPERATION-CYCLE-NEEDS
+* DiagnosticRequestFileTransferNeeds | DIAGNOSTIC-REQUEST-FILE-TRANSFER-NEEDS
+* DiagnosticRoutineNeeds | DIAGNOSTIC-ROUTINE-NEEDS
+* DiagnosticStorageConditionNeeds | DIAGNOSTIC-STORAGE-CONDITION-NEEDS
+* DiagnosticUploadDownloadNeeds | DIAGNOSTIC-UPLOAD-DOWNLOAD-NEEDS
+* DiagnosticValueNeeds | DIAGNOSTIC-VALUE-NEEDS
+* DiagnosticsCommunicationSecurityNeeds | DIAGNOSTICS-COMMUNICATION-SECURITY-NEEDS
 
 #### XML - SWC internal behavior elements
 
