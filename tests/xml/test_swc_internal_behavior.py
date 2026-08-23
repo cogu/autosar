@@ -3883,6 +3883,84 @@ class TestPortApiOption(unittest.TestCase):
         self.assertEqual(elem.transformer_status_forwarding, status_forwarding)
 
 
+class TestIncludedDataTypeSet(unittest.TestCase):
+
+    def test_empty(self):
+        element = ar_element.IncludedDataTypeSet()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<INCLUDED-DATA-TYPE-SET/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.IncludedDataTypeSet = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.IncludedDataTypeSet)
+        self.assertEqual(elem.data_type, [])
+        self.assertIsNone(elem.literal_prefix)
+
+    def test_literal_prefix(self):
+        element = ar_element.IncludedDataTypeSet(literal_prefix="Prefix_")
+        writer = autosar.xml.Writer()
+        xml = '''<INCLUDED-DATA-TYPE-SET>
+  <LITERAL-PREFIX>Prefix_</LITERAL-PREFIX>
+</INCLUDED-DATA-TYPE-SET>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.IncludedDataTypeSet = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.IncludedDataTypeSet)
+        self.assertEqual(elem.literal_prefix, "Prefix_")
+
+    def test_data_type_from_str(self):
+        element = ar_element.IncludedDataTypeSet(data_type="/DataTypes/MyType", literal_prefix="Prefix_")
+        xml = '''<INCLUDED-DATA-TYPE-SET>
+  <DATA-TYPE-REFS>
+    <DATA-TYPE-REF DEST="AUTOSAR-DATA-TYPE">/DataTypes/MyType</DATA-TYPE-REF>
+  </DATA-TYPE-REFS>
+  <LITERAL-PREFIX>Prefix_</LITERAL-PREFIX>
+</INCLUDED-DATA-TYPE-SET>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.IncludedDataTypeSet = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.IncludedDataTypeSet)
+        self.assertEqual(len(elem.data_type), 1)
+        self.assertIsInstance(elem.data_type[0], ar_element.AutosarDataTypeRef)
+        self.assertEqual(str(elem.data_type[0]), "/DataTypes/MyType")
+        self.assertEqual(elem.literal_prefix, "Prefix_")
+
+    def test_data_type_from_list(self):
+        ref1 = ar_element.AutosarDataTypeRef("/DataTypes/Type1", ar_enum.IdentifiableSubTypes.AUTOSAR_DATA_TYPE)
+        ref2 = "/DataTypes/Type2"
+        element = ar_element.IncludedDataTypeSet(data_type=[ref1, ref2])
+        xml = '''<INCLUDED-DATA-TYPE-SET>
+  <DATA-TYPE-REFS>
+    <DATA-TYPE-REF DEST="AUTOSAR-DATA-TYPE">/DataTypes/Type1</DATA-TYPE-REF>
+    <DATA-TYPE-REF DEST="AUTOSAR-DATA-TYPE">/DataTypes/Type2</DATA-TYPE-REF>
+  </DATA-TYPE-REFS>
+</INCLUDED-DATA-TYPE-SET>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.IncludedDataTypeSet = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.IncludedDataTypeSet)
+        self.assertEqual(len(elem.data_type), 2)
+        self.assertEqual(str(elem.data_type[0]), "/DataTypes/Type1")
+        self.assertEqual(str(elem.data_type[1]), "/DataTypes/Type2")
+
+    def test_append(self):
+        element = ar_element.IncludedDataTypeSet()
+        element.append("/DataTypes/Type1")
+        element.append(ar_element.AutosarDataTypeRef("/DataTypes/Type2",
+                                                     ar_enum.IdentifiableSubTypes.AUTOSAR_DATA_TYPE))
+        self.assertEqual(len(element.data_type), 2)
+        with self.assertRaises(ar_except.ElementTypeError):
+            element.append(123)
+
+    def test_invalid_types(self):
+        with self.assertRaises(ar_except.AssignmentTypeError):
+            ar_element.IncludedDataTypeSet(literal_prefix=123)
+        with self.assertRaises(TypeError):
+            ar_element.IncludedDataTypeSet(data_type=123)
+
+
 class TestInternalBehavior(unittest.TestCase):
     """
     Use SwcInternalBehavior as test class since InternalBehavior is abstract.
@@ -4391,6 +4469,77 @@ class TestInternalBehavior(unittest.TestCase):
         element = ar_element.SwcInternalBehavior("MyName")
         with self.assertRaises(ar_except.ElementTypeError):
             element.append_implicit_inter_runnable_variable("InvalidType")
+
+    def test_included_data_type_sets_from_element(self):
+        data_type_set = ar_element.IncludedDataTypeSet(data_type="/DataTypes/MyType", literal_prefix="Prefix_")
+        element = ar_element.SwcInternalBehavior("MyName", included_data_type_set=data_type_set)
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <INCLUDED-DATA-TYPE-SETS>
+    <INCLUDED-DATA-TYPE-SET>
+      <DATA-TYPE-REFS>
+        <DATA-TYPE-REF DEST="AUTOSAR-DATA-TYPE">/DataTypes/MyType</DATA-TYPE-REF>
+      </DATA-TYPE-REFS>
+      <LITERAL-PREFIX>Prefix_</LITERAL-PREFIX>
+    </INCLUDED-DATA-TYPE-SET>
+  </INCLUDED-DATA-TYPE-SETS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.included_data_type_set), 1)
+        child = elem.included_data_type_set[0]
+        self.assertIsInstance(child, ar_element.IncludedDataTypeSet)
+        self.assertEqual(len(child.data_type), 1)
+        self.assertEqual(str(child.data_type[0]), "/DataTypes/MyType")
+        self.assertEqual(child.literal_prefix, "Prefix_")
+
+    def test_included_data_type_sets_from_list(self):
+        set1 = ar_element.IncludedDataTypeSet(data_type="/DataTypes/Type1", literal_prefix="P1_")
+        set2 = ar_element.IncludedDataTypeSet(data_type="/DataTypes/Type2", literal_prefix="P2_")
+        element = ar_element.SwcInternalBehavior("MyName", included_data_type_set=[set1, set2])
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <INCLUDED-DATA-TYPE-SETS>
+    <INCLUDED-DATA-TYPE-SET>
+      <DATA-TYPE-REFS>
+        <DATA-TYPE-REF DEST="AUTOSAR-DATA-TYPE">/DataTypes/Type1</DATA-TYPE-REF>
+      </DATA-TYPE-REFS>
+      <LITERAL-PREFIX>P1_</LITERAL-PREFIX>
+    </INCLUDED-DATA-TYPE-SET>
+    <INCLUDED-DATA-TYPE-SET>
+      <DATA-TYPE-REFS>
+        <DATA-TYPE-REF DEST="AUTOSAR-DATA-TYPE">/DataTypes/Type2</DATA-TYPE-REF>
+      </DATA-TYPE-REFS>
+      <LITERAL-PREFIX>P2_</LITERAL-PREFIX>
+    </INCLUDED-DATA-TYPE-SET>
+  </INCLUDED-DATA-TYPE-SETS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.included_data_type_set), 2)
+        self.assertEqual(elem.included_data_type_set[0].literal_prefix, "P1_")
+        self.assertEqual(elem.included_data_type_set[1].literal_prefix, "P2_")
+
+    def test_create_included_data_type_set(self):
+        element = ar_element.SwcInternalBehavior("MyName")
+        item = element.create_included_data_type_set(data_type="/DataTypes/MyType", literal_prefix="Prefix_")
+        self.assertIsInstance(item, ar_element.IncludedDataTypeSet)
+        self.assertEqual(item.literal_prefix, "Prefix_")
+        self.assertEqual(len(item.data_type), 1)
+        self.assertEqual(str(item.data_type[0]), "/DataTypes/MyType")
+        self.assertEqual(len(element.included_data_type_set), 1)
+        self.assertIs(element.included_data_type_set[0], item)
+
+    def test_append_included_data_type_set_invalid_type(self):
+        element = ar_element.SwcInternalBehavior("MyName")
+        with self.assertRaises(ar_except.ElementTypeError):
+            element.append_included_data_type_set("InvalidType")
 
     def test_append_constant_value_mapping_invalid_type(self):
         element = ar_element.SwcInternalBehavior("MyName")

@@ -9044,6 +9044,45 @@ class SwcExclusiveAreaPolicy(ARObject):
         self._assign_optional("api_principle", api_principle, ar_enum.ApiPrinciple)
 
 
+class IncludedDataTypeSet(ARObject):
+    """
+    Complex type AR:INCLUDED-DATA-TYPE-SET
+    Tag variants: 'INCLUDED-DATA-TYPE-SET'
+    """
+
+    def __init__(self,
+                 data_type: (AutosarDataTypeRef | list[AutosarDataTypeRef] |
+                             str | list[str] | None) = None,
+                 literal_prefix: str | None = None) -> None:
+        super().__init__()
+        # .DATA-TYPE-REFS
+        self.data_type: list[AutosarDataTypeRef] = []
+        # .LITERAL-PREFIX
+        self.literal_prefix: str | None = None
+
+        self._assign_optional_strict("literal_prefix", literal_prefix, str)
+
+        if data_type is not None:
+            if isinstance(data_type, (AutosarDataTypeRef, str)):
+                self.append(data_type)
+            elif isinstance(data_type, Iterable):
+                for item in data_type:
+                    self.append(item)
+            else:
+                raise TypeError(f"data_type: Invalid type {str(type(data_type))}")
+
+    def append(self, data_type: AutosarDataTypeRef | str) -> None:
+        """
+        Adds AutosarDataTypeRef to internal list
+        """
+        if isinstance(data_type, str):
+            self.data_type.append(AutosarDataTypeRef(data_type, ar_enum.IdentifiableSubTypes.AUTOSAR_DATA_TYPE))
+        elif isinstance(data_type, AutosarDataTypeRef):
+            self.data_type.append(data_type)
+        else:
+            raise ar_except.ElementTypeError("data_type", ("AutosarDataTypeRef", "str"), data_type)
+
+
 class InternalBehavior(Identifiable):
     """
     Group AR:INTERNAL-BEHAVIOR
@@ -9241,6 +9280,8 @@ class SwcInternalBehavior(InternalBehavior):
                  handle_termination_and_restart: ar_enum.HandleTerminationAndRestart | None = None,
                  implicit_inter_runnable_variable: (VariableDataPrototype |
                                                     list[VariableDataPrototype] | None) = None,
+                 included_data_type_set: (IncludedDataTypeSet |
+                                          list[IncludedDataTypeSet] | None) = None,
                  port_api_option: PortApiOption | list[PortApiOption] | None = None,
                  runnable: RunnableEntity | list[RunnableEntity] | None = None,
                  **kwargs) -> None:
@@ -9257,7 +9298,8 @@ class SwcInternalBehavior(InternalBehavior):
         self.handle_termination_and_restart: ar_enum.HandleTerminationAndRestart | None = None
         # .IMPLICIT-INTER-RUNNABLE-VARIABLES
         self.implicit_inter_runnable_variable: list[VariableDataPrototype] = []
-        # .INCLUDED-DATA-TYPE-SETS (not yet implemented)
+        # .INCLUDED-DATA-TYPE-SETS
+        self.included_data_type_set: list[IncludedDataTypeSet] = []
         # .INCLUDED-MODE-DECLARATION-GROUP-SETS (not yet implemented)
         # .INSTANTIATION-DATA-DEF-PROPSS (not yet implemented)
         # .PER-INSTANCE-MEMORYS (not yet implemented)
@@ -9310,6 +9352,13 @@ class SwcInternalBehavior(InternalBehavior):
                     self.append_implicit_inter_runnable_variable(item)
             else:
                 self.append_implicit_inter_runnable_variable(implicit_inter_runnable_variable)
+
+        if included_data_type_set is not None:
+            if isinstance(included_data_type_set, Iterable):
+                for item in included_data_type_set:
+                    self.append_included_data_type_set(item)
+            else:
+                self.append_included_data_type_set(included_data_type_set)
 
         if port_api_option is not None:
             if isinstance(port_api_option, Iterable):
@@ -9439,6 +9488,28 @@ class SwcInternalBehavior(InternalBehavior):
             self.exclusive_area_policy.append(item)
         else:
             raise ar_except.ElementTypeError("item", SwcExclusiveAreaPolicy, item)
+
+    @convenience_function
+    def create_included_data_type_set(self,
+                                      data_type: (AutosarDataTypeRef | list[AutosarDataTypeRef] |
+                                                  str | list[str] | None) = None,
+                                      literal_prefix: str | None = None
+                                      ) -> IncludedDataTypeSet:
+        """
+        Adds a new IncludedDataTypeSet to included_data_type_set
+        """
+        item = IncludedDataTypeSet(data_type=data_type, literal_prefix=literal_prefix)
+        self.append_included_data_type_set(item)
+        return item
+
+    def append_included_data_type_set(self, item: IncludedDataTypeSet) -> None:
+        """
+        Appends IncludedDataTypeSet to included_data_type_set
+        """
+        if isinstance(item, IncludedDataTypeSet):
+            self.included_data_type_set.append(item)
+        else:
+            raise ar_except.ElementTypeError("item", IncludedDataTypeSet, item)
 
     def append_runnable(self, runnable: RunnableEntity) -> None:
         """

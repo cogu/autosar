@@ -391,6 +391,7 @@ class Writer(_XMLWriter):
             'ExecutableEntityActivationReason': self._write_executable_entity_activation_reason,
             'ExclusiveAreaRefConditional': self._write_exclusive_area_ref_conditional,
             'SwcExclusiveAreaPolicy': self._write_swc_exclusive_area_policy,
+            'IncludedDataTypeSet': self._write_included_data_type_set,
             'RunnableEntityArgument': self._write_runnable_entity_argument,
             'RunnableEntity': self._write_runnable_entity,
             'AsynchronousServerCallReturnsEvent': self._write_async_server_call_returns_event,
@@ -4692,6 +4693,32 @@ class Writer(_XMLWriter):
         if elem.exclusive_area is not None:
             self._write_exclusive_area_ref(elem.exclusive_area, "EXCLUSIVE-AREA-REF")
 
+    def _write_included_data_type_set(self, elem: ar_element.IncludedDataTypeSet) -> None:
+        """
+        Writes complex type AR:INCLUDED-DATA-TYPE-SET
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.IncludedDataTypeSet)
+        tag = "INCLUDED-DATA-TYPE-SET"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_included_data_type_set_group(elem)
+            self._leave_child()
+
+    def _write_included_data_type_set_group(self, elem: ar_element.IncludedDataTypeSet) -> None:
+        """
+        Writes group AR:INCLUDED-DATA-TYPE-SET
+        """
+        if elem.data_type:
+            self._add_child("DATA-TYPE-REFS")
+            for item in elem.data_type:
+                self._write_autosar_data_type_ref(item, "DATA-TYPE-REF")
+            self._leave_child()
+        if elem.literal_prefix is not None:
+            self._add_content("LITERAL-PREFIX", elem.literal_prefix)
+
     def _write_abstract_access_point(self, elem: ar_element.AbstractAccessPoint) -> None:
         """
         Writes group AR:ABSTRACT-ACCESS-POINT
@@ -5543,6 +5570,11 @@ class Writer(_XMLWriter):
             self._add_child("IMPLICIT-INTER-RUNNABLE-VARIABLES")
             for item in elem.implicit_inter_runnable_variable:
                 self._write_variable_data_prototype(item, "VARIABLE-DATA-PROTOTYPE")
+            self._leave_child()
+        if elem.included_data_type_set:
+            self._add_child("INCLUDED-DATA-TYPE-SETS")
+            for item in elem.included_data_type_set:
+                self._write_included_data_type_set(item)
             self._leave_child()
         if elem.port_api_option:
             self._add_child("PORT-API-OPTIONS")
