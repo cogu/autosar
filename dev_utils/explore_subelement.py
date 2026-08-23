@@ -206,6 +206,10 @@ class SchemaInspector:
         self.ignored_categories: Dict[str, str] = {}
         self._index_ignored_schema_types()
 
+        # Index namespaces from XSD comments (e.g. <!-- complex type for class AUTOSAR <Namespace>::<ClassName> -->)
+        self.type_namespaces: Dict[str, str] = {}
+        self._index_schema_namespaces()
+
         mode_str = "Classic Platform (CP only)" if self.classic_only else "All Standards (CP + AP)"
         print(f"Schema indexed: {len(self.complex_types)} complexTypes, "
               f"{len(self.groups)} groups, {len(self.simple_types)} simpleTypes. [{mode_str}]")
@@ -242,6 +246,36 @@ class SchemaInspector:
                         self.ignored_groups.add(name)
                         self.ignored_categories[name] = 'Blueprint' if 'StandardizationTemplate' in pat else 'Variant'
                         break
+
+    def _index_schema_namespaces(self):
+        """Index UML package / namespace for types and groups from XSD comments."""
+        pattern = re.compile(r'class\s+(?:AUTOSAR\s+)?(.+)::(\w+)')
+        for ct in self.complex_types.values():
+            name = ct.attrib.get('name')
+            if not name:
+                continue
+            prev = ct.getprevious()
+            if prev is not None and callable(prev.tag):
+                text = (prev.text or '').strip()
+                m = pattern.search(text)
+                if m:
+                    self.type_namespaces[name] = m.group(1).strip()
+
+        for g in self.groups.values():
+            name = g.attrib.get('name')
+            if not name or name in self.type_namespaces:
+                continue
+            prev = g.getprevious()
+            if prev is not None and callable(prev.tag):
+                text = (prev.text or '').strip()
+                m = pattern.search(text)
+                if m:
+                    self.type_namespaces[name] = m.group(1).strip()
+
+    def get_namespace(self, type_name: str) -> Optional[str]:
+        """Return AUTOSAR UML package/namespace (from XSD comments) for a complexType or group."""
+        clean = type_name.replace('AR:', '')
+        return self.type_namespaces.get(clean)
 
     def get_type_status(self, type_name: str) -> Optional[str]:
         """Return atp.Status for an AUTOSAR type/group if explicitly tagged, else None (standard/valid)."""
@@ -742,6 +776,7 @@ class SchemaInspector:
         ct_impl = self.get_implementation_info(clean_name)
         canonical_cls = self.get_canonical_class_name(clean_name)
         target_status = self.get_type_status(clean_name)
+        namespace = self.get_namespace(clean_name)
 
         print("=" * 80)
         print(f"AUTOSAR Complex Type Explorer: {clean_name}")
@@ -763,6 +798,8 @@ class SchemaInspector:
                 print(f"Bases:       {', '.join(ct_impl['bases'])}")
         else:
             print(f"Python:      No class mapping found in docstrings [TODO: class {canonical_cls}]")
+        if namespace:
+            print(f"Namespace:   {namespace}")
 
         if grp is None and ct is None:
             print(f"\nError: Neither complexType nor group '{clean_name}' was found in schema.")
@@ -889,6 +926,7 @@ class SchemaInspector:
         ct_impl = self.get_implementation_info(clean_ct)
         canonical_cls = self.get_canonical_class_name(clean_ct)
         target_ct_status = self.get_type_status(clean_ct)
+        namespace = self.get_namespace(clean_ct)
 
         print("=" * 80)
         print("AUTOSAR XSD Dependency Explorer")
@@ -905,6 +943,8 @@ class SchemaInspector:
                 print(f"Class Bases:   {', '.join(ct_impl['bases'])}")
         else:
             print(f"Python Class:  None found in docstrings [TODO: class {canonical_cls}]")
+        if namespace:
+            print(f"Namespace:     {namespace}")
         print(f"Schema:        {self.xsd_path}")
         print("=" * 80)
 

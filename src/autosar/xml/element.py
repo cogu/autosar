@@ -6782,6 +6782,28 @@ class RTriggerInAtomicSwcInstanceRef(ARObject):
         self._assign_optional("target_trigger", target_trigger, TriggerRef)
 
 
+# --- Service needs elements
+
+
+class ServiceNeeds(Identifiable):
+    """
+    Group AR:SERVICE-NEEDS
+    """
+
+    def __init__(self, name: str, **kwargs) -> None:
+        super().__init__(name, **kwargs)
+
+
+class BswMgrNeeds(ServiceNeeds):
+    """
+    Complex type AR:BSW-MGR-NEEDS
+    Tag variants: 'BSW-MGR-NEEDS'
+    """
+
+    def __init__(self, name: str, **kwargs) -> None:
+        super().__init__(name, **kwargs)
+
+
 # --- Internal behavior elements
 
 

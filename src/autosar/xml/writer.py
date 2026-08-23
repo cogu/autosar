@@ -380,6 +380,8 @@ class Writer(_XMLWriter):
             'PassThroughSwConnector': self._write_passthrough_sw_connector,
             'RModeInAtomicSwcInstanceRef': self._write_r_mode_in_atomic_swc_instance_ref,
             'RModeGroupInAtomicSwcInstanceRef': self._write_r_mode_group_in_atomic_swc_instance_ref,
+            # Service needs elements
+            'BswMgrNeeds': self._write_bsw_mgr_needs,
             # SWC internal behavior elements
             'ArVariableInImplementationDataInstanceRef': self._write_variable_in_impl_data_instance_ref,
             'VariableInAtomicSWCTypeInstanceRef': self._write_variable_in_atomic_swc_type_instance_ref,
@@ -4803,6 +4805,21 @@ class Writer(_XMLWriter):
             self._add_content("TYPE", elem.type)
         if elem.type_definition is not None:
             self._add_content("TYPE-DEFINITION", elem.type_definition)
+
+    # Service needs elements
+
+    def _write_bsw_mgr_needs(self, elem: ar_element.BswMgrNeeds) -> None:
+        """
+        Writes complex type AR:BSW-MGR-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.BswMgrNeeds)
+        self._add_child("BSW-MGR-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        # Groups AR:SERVICE-NEEDS and AR:BSW-MGR-NEEDS contain no elements
+        self._leave_child()
 
     def _write_abstract_access_point(self, elem: ar_element.AbstractAccessPoint) -> None:
         """
