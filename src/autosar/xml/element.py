@@ -6868,6 +6868,97 @@ class CryptoServiceNeeds(ServiceNeeds):
         self._assign_optional_positive_int("maximum_key_length", maximum_key_length)
 
 
+class DiagEventDebounceAlgorithm(Identifiable):
+    """
+    Group AR:DIAG-EVENT-DEBOUNCE-ALGORITHM
+    """
+
+
+class DiagEventDebounceCounterBased(DiagEventDebounceAlgorithm):
+    """
+    Complex type AR:DIAG-EVENT-DEBOUNCE-COUNTER-BASED
+    Tag variants: 'DIAG-EVENT-DEBOUNCE-COUNTER-BASED'
+    """
+
+    def __init__(self,
+                 name: str,
+                 counter_based_fdc_threshold_storage_value: int | None = None,
+                 counter_decrement_step_size: int | None = None,
+                 counter_failed_threshold: int | None = None,
+                 counter_increment_step_size: int | None = None,
+                 counter_jump_down: bool | None = None,
+                 counter_jump_down_value: int | None = None,
+                 counter_jump_up: bool | None = None,
+                 counter_jump_up_value: int | None = None,
+                 counter_passed_threshold: int | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .COUNTER-BASED-FDC-THRESHOLD-STORAGE-VALUE
+        self.counter_based_fdc_threshold_storage_value: int | None = None
+        # .COUNTER-DECREMENT-STEP-SIZE
+        self.counter_decrement_step_size: int | None = None
+        # .COUNTER-FAILED-THRESHOLD
+        self.counter_failed_threshold: int | None = None
+        # .COUNTER-INCREMENT-STEP-SIZE
+        self.counter_increment_step_size: int | None = None
+        # .COUNTER-JUMP-DOWN
+        self.counter_jump_down: bool | None = None
+        # .COUNTER-JUMP-DOWN-VALUE
+        self.counter_jump_down_value: int | None = None
+        # .COUNTER-JUMP-UP
+        self.counter_jump_up: bool | None = None
+        # .COUNTER-JUMP-UP-VALUE
+        self.counter_jump_up_value: int | None = None
+        # .COUNTER-PASSED-THRESHOLD
+        self.counter_passed_threshold: int | None = None
+
+        self._assign_optional("counter_based_fdc_threshold_storage_value",
+                              counter_based_fdc_threshold_storage_value, int)
+        self._assign_optional("counter_decrement_step_size", counter_decrement_step_size, int)
+        self._assign_optional("counter_failed_threshold", counter_failed_threshold, int)
+        self._assign_optional("counter_increment_step_size", counter_increment_step_size, int)
+        self._assign_optional("counter_jump_down", counter_jump_down, bool)
+        self._assign_optional("counter_jump_down_value", counter_jump_down_value, int)
+        self._assign_optional("counter_jump_up", counter_jump_up, bool)
+        self._assign_optional("counter_jump_up_value", counter_jump_up_value, int)
+        self._assign_optional("counter_passed_threshold", counter_passed_threshold, int)
+
+
+class DiagEventDebounceMonitorInternal(DiagEventDebounceAlgorithm):
+    """
+    Complex type AR:DIAG-EVENT-DEBOUNCE-MONITOR-INTERNAL
+    Tag variants: 'DIAG-EVENT-DEBOUNCE-MONITOR-INTERNAL'
+
+    Same constructor as parent class
+    """
+
+
+class DiagEventDebounceTimeBased(DiagEventDebounceAlgorithm):
+    """
+    Complex type AR:DIAG-EVENT-DEBOUNCE-TIME-BASED
+    Tag variants: 'DIAG-EVENT-DEBOUNCE-TIME-BASED'
+    """
+
+    def __init__(self,
+                 name: str,
+                 time_based_fdc_threshold_storage_value: float | int | None = None,
+                 time_failed_threshold: float | int | None = None,
+                 time_passed_threshold: float | int | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .TIME-BASED-FDC-THRESHOLD-STORAGE-VALUE
+        self.time_based_fdc_threshold_storage_value: float | int | None = None
+        # .TIME-FAILED-THRESHOLD
+        self.time_failed_threshold: float | int | None = None
+        # .TIME-PASSED-THRESHOLD
+        self.time_passed_threshold: float | int | None = None
+
+        self._assign_optional("time_based_fdc_threshold_storage_value",
+                              time_based_fdc_threshold_storage_value, float)
+        self._assign_optional("time_failed_threshold", time_failed_threshold, float)
+        self._assign_optional("time_passed_threshold", time_passed_threshold, float)
+
+
 class DiagnosticCapabilityElement(ServiceNeeds):
     """
     Group AR:DIAGNOSTIC-CAPABILITY-ELEMENT
