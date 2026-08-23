@@ -4694,6 +4694,89 @@ class TestInternalBehavior(unittest.TestCase):
         with self.assertRaises(ar_except.ElementTypeError):
             element.append_included_mode_declaration_group_set("InvalidType")
 
+    def test_shared_parameter_from_element(self):
+        param = ar_element.ParameterDataPrototype("MySharedParam")
+        element = ar_element.SwcInternalBehavior("MyName", shared_parameter=param)
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <SHARED-PARAMETERS>
+    <PARAMETER-DATA-PROTOTYPE>
+      <SHORT-NAME>MySharedParam</SHORT-NAME>
+    </PARAMETER-DATA-PROTOTYPE>
+  </SHARED-PARAMETERS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.shared_parameter), 1)
+        self.assertIsInstance(elem.shared_parameter[0], ar_element.ParameterDataPrototype)
+        self.assertEqual(elem.shared_parameter[0].name, "MySharedParam")
+
+    def test_shared_parameter_from_list(self):
+        p1 = ar_element.ParameterDataPrototype("P1")
+        p2 = ar_element.ParameterDataPrototype("P2")
+        element = ar_element.SwcInternalBehavior("MyName", shared_parameter=[p1, p2])
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <SHARED-PARAMETERS>
+    <PARAMETER-DATA-PROTOTYPE>
+      <SHORT-NAME>P1</SHORT-NAME>
+    </PARAMETER-DATA-PROTOTYPE>
+    <PARAMETER-DATA-PROTOTYPE>
+      <SHORT-NAME>P2</SHORT-NAME>
+    </PARAMETER-DATA-PROTOTYPE>
+  </SHARED-PARAMETERS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.shared_parameter), 2)
+        self.assertEqual(elem.shared_parameter[0].name, "P1")
+        self.assertEqual(elem.shared_parameter[1].name, "P2")
+
+    def test_create_shared_parameter(self):
+        element = ar_element.SwcInternalBehavior("MyName")
+        param = element.create_shared_parameter("MySharedParam")
+        self.assertIsInstance(param, ar_element.ParameterDataPrototype)
+        self.assertEqual(param.name, "MySharedParam")
+        self.assertEqual(len(element.shared_parameter), 1)
+        self.assertIs(element.shared_parameter[0], param)
+
+    def test_append_shared_parameter_invalid_type(self):
+        element = ar_element.SwcInternalBehavior("MyName")
+        with self.assertRaises(ar_except.ElementTypeError):
+            element.append_shared_parameter("InvalidType")
+
+    def test_supports_multiple_instantiation_true(self):
+        element = ar_element.SwcInternalBehavior("MyName", supports_multiple_instantiation=True)
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <SUPPORTS-MULTIPLE-INSTANTIATION>true</SUPPORTS-MULTIPLE-INSTANTIATION>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertIs(elem.supports_multiple_instantiation, True)
+
+    def test_supports_multiple_instantiation_false(self):
+        element = ar_element.SwcInternalBehavior("MyName", supports_multiple_instantiation=False)
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <SUPPORTS-MULTIPLE-INSTANTIATION>false</SUPPORTS-MULTIPLE-INSTANTIATION>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertIs(elem.supports_multiple_instantiation, False)
+
     def test_append_constant_value_mapping_invalid_type(self):
         element = ar_element.SwcInternalBehavior("MyName")
         with self.assertRaises(ar_except.ElementTypeError):

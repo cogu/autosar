@@ -9327,6 +9327,9 @@ class SwcInternalBehavior(InternalBehavior):
                                                        list[IncludedModeDeclarationGroupSet] | None) = None,
                  port_api_option: PortApiOption | list[PortApiOption] | None = None,
                  runnable: RunnableEntity | list[RunnableEntity] | None = None,
+                 shared_parameter: (ParameterDataPrototype |
+                                    list[ParameterDataPrototype] | None) = None,
+                 supports_multiple_instantiation: bool | None = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
         # .AR-TYPED-PER-INSTANCE-MEMORYS
@@ -9353,14 +9356,19 @@ class SwcInternalBehavior(InternalBehavior):
         # .RUNNABLES
         self.runnable: list[RunnableEntity] = []
         # .SERVICE-DEPENDENCYS (not yet implemented)
-        # .SHARED-PARAMETERS (not yet implemented)
-        # .SUPPORTS-MULTIPLE-INSTANTIATION (not yet implemented)
-        # .VARIATION-POINT-PROXYS (not supported)
-        # .VARIATION-POINT (not supported)
+        # .SHARED-PARAMETERS
+        self.shared_parameter: list[ParameterDataPrototype] = []
+        # .SUPPORTS-MULTIPLE-INSTANTIATION
+        self.supports_multiple_instantiation: bool | None = None
+        # .VARIATION-POINT-PROXYS --- NOT SUPPORTED (VARIANT)
+        # .VARIATION-POINT --- NOT SUPPORTED (VARIANT)
 
         self._assign_optional("handle_termination_and_restart",
                               handle_termination_and_restart,
                               ar_enum.HandleTerminationAndRestart)
+        self._assign_optional("supports_multiple_instantiation",
+                              supports_multiple_instantiation,
+                              bool)
 
         if ar_typed_per_instance_memory is not None:
             if isinstance(ar_typed_per_instance_memory, Iterable):
@@ -9424,6 +9432,13 @@ class SwcInternalBehavior(InternalBehavior):
                     self.append_runnable(item)
             else:
                 self.append_runnable(runnable)
+
+        if shared_parameter is not None:
+            if isinstance(shared_parameter, Iterable):
+                for item in shared_parameter:
+                    self.append_shared_parameter(item)
+            else:
+                self.append_shared_parameter(shared_parameter)
 
     def get_valid_parent(self) -> SwComponentType:
         """
@@ -9584,6 +9599,28 @@ class SwcInternalBehavior(InternalBehavior):
             self.included_mode_declaration_group_set.append(item)
         else:
             raise ar_except.ElementTypeError("item", IncludedModeDeclarationGroupSet, item)
+
+    @convenience_function
+    def create_shared_parameter(self,
+                                name: str,
+                                init_value: ValueSpecificationElement | None = None,
+                                **kwargs) -> ParameterDataPrototype:
+        """
+        Adds a new ParameterDataPrototype to shared_parameter
+        """
+        item = ParameterDataPrototype(name, init_value, **kwargs)
+        self.append_shared_parameter(item)
+        return item
+
+    def append_shared_parameter(self, item: ParameterDataPrototype) -> None:
+        """
+        Appends ParameterDataPrototype to shared_parameter
+        """
+        if isinstance(item, ParameterDataPrototype):
+            self.shared_parameter.append(item)
+            item.parent = self
+        else:
+            raise ar_except.ElementTypeError("item", ParameterDataPrototype, item)
 
     def append_runnable(self, runnable: RunnableEntity) -> None:
         """

@@ -6449,8 +6449,15 @@ class Reader:
                 runnables.append(self._read_runnable_entity(xml_grand_child))
             data["runnable"] = runnables
         child_elements.skip("SERVICE-DEPENDENCYS")
-        child_elements.skip("SHARED-PARAMETERS")
-        child_elements.skip("SUPPORTS-MULTIPLE-INSTANTIATION")
+        xml_child = child_elements.get("SHARED-PARAMETERS")
+        if xml_child is not None:
+            shared_parameters = []
+            for xml_grand_child in xml_child.findall("./PARAMETER-DATA-PROTOTYPE"):
+                shared_parameters.append(self._read_parameter_data_prototype(xml_grand_child))
+            data["shared_parameter"] = shared_parameters
+        xml_child = child_elements.get("SUPPORTS-MULTIPLE-INSTANTIATION")
+        if xml_child is not None:
+            data["supports_multiple_instantiation"] = self._read_boolean(xml_child.text)
         child_elements.skip("VARIATION-POINT-PROXYS")
         child_elements.skip("VARIATION-POINT")
 
