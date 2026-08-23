@@ -334,6 +334,7 @@ class Reader:
             'EXCLUSIVE-AREA-NESTING-ORDER': self._read_exclusive_area_nesting_order,
             'EXCLUSIVE-AREA-REF-CONDITIONAL': self._read_exclusive_area_ref_conditional,
             'SWC-EXCLUSIVE-AREA-POLICY': self._read_swc_exclusive_area_policy,
+            'INCLUDED-DATA-TYPE-SET': self._read_included_data_type_set,
             'DISABLED-MODE-IREF': self._read_r_mode_in_atomic_swc_instance_ref,
             'SWC-INTERNAL-BEHAVIOR': self._read_swc_internal_behavior,
             'RUNNABLE-ENTITY-ARGUMENT': self._read_runnable_entity_argument,
@@ -6269,6 +6270,33 @@ class Reader:
         if xml_child is not None:
             data["exclusive_area"] = self._read_exclusive_area_ref(xml_child)
 
+    def _read_included_data_type_set(self,
+                                     xml_element: ElementTree.Element
+                                     ) -> ar_element.IncludedDataTypeSet:
+        """
+        Reads complex type AR:INCLUDED-DATA-TYPE-SET
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_included_data_type_set_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.IncludedDataTypeSet(**data)
+
+    def _read_included_data_type_set_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:INCLUDED-DATA-TYPE-SET
+        """
+        xml_child = child_elements.get("DATA-TYPE-REFS")
+        if xml_child is not None:
+            data_types = []
+            for xml_grand_child in xml_child.findall("./DATA-TYPE-REF"):
+                data_types.append(self._read_autosar_data_type_ref(xml_grand_child))
+            data["data_type"] = data_types
+        xml_child = child_elements.get("LITERAL-PREFIX")
+        if xml_child is not None:
+            data["literal_prefix"] = xml_child.text
+
     def _read_swc_internal_behavior(self, xml_element: ElementTree.Element) -> ar_element.SwcInternalBehavior:
         """
         Reads complex type AR:SWC-INTERNAL-BEHAVIOR
@@ -6364,7 +6392,12 @@ class Reader:
             for xml_grand_child in xml_child.findall("./VARIABLE-DATA-PROTOTYPE"):
                 implicit_inter_runnable_variables.append(self._read_variable_data_prototype(xml_grand_child))
             data["implicit_inter_runnable_variable"] = implicit_inter_runnable_variables
-        child_elements.skip("INCLUDED-DATA-TYPE-SETS")
+        xml_child = child_elements.get("INCLUDED-DATA-TYPE-SETS")
+        if xml_child is not None:
+            included_data_type_sets = []
+            for xml_grand_child in xml_child.findall("./INCLUDED-DATA-TYPE-SET"):
+                included_data_type_sets.append(self._read_included_data_type_set(xml_grand_child))
+            data["included_data_type_set"] = included_data_type_sets
         child_elements.skip("INCLUDED-MODE-DECLARATION-GROUP-SETS")
         child_elements.skip("INSTANTIATION-DATA-DEF-PROPSS")
         child_elements.skip("PER-INSTANCE-MEMORYS")
