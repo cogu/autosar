@@ -393,6 +393,7 @@ class Writer(_XMLWriter):
             'SwcExclusiveAreaPolicy': self._write_swc_exclusive_area_policy,
             'IncludedDataTypeSet': self._write_included_data_type_set,
             'IncludedModeDeclarationGroupSet': self._write_included_mode_declaration_group_set,
+            'PerInstanceMemory': self._write_per_instance_memory,
             'RunnableEntityArgument': self._write_runnable_entity_argument,
             'RunnableEntity': self._write_runnable_entity,
             'AsynchronousServerCallReturnsEvent': self._write_async_server_call_returns_event,
@@ -4749,6 +4750,32 @@ class Writer(_XMLWriter):
         if elem.prefix is not None:
             self._add_content("PREFIX", elem.prefix)
 
+    def _write_per_instance_memory(self, elem: ar_element.PerInstanceMemory) -> None:
+        """
+        Writes complex type AR:PER-INSTANCE-MEMORY
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.PerInstanceMemory)
+        self._add_child("PER-INSTANCE-MEMORY")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_per_instance_memory_group(elem)
+        self._leave_child()
+
+    def _write_per_instance_memory_group(self, elem: ar_element.PerInstanceMemory) -> None:
+        """
+        Writes group AR:PER-INSTANCE-MEMORY
+        """
+        if elem.init_value is not None:
+            self._add_content("INIT-VALUE", elem.init_value)
+        if elem.sw_data_def_props is not None:
+            self._write_sw_data_def_props(elem.sw_data_def_props, "SW-DATA-DEF-PROPS")
+        if elem.type is not None:
+            self._add_content("TYPE", elem.type)
+        if elem.type_definition is not None:
+            self._add_content("TYPE-DEFINITION", elem.type_definition)
+
     def _write_abstract_access_point(self, elem: ar_element.AbstractAccessPoint) -> None:
         """
         Writes group AR:ABSTRACT-ACCESS-POINT
@@ -5610,6 +5637,11 @@ class Writer(_XMLWriter):
             self._add_child("INCLUDED-MODE-DECLARATION-GROUP-SETS")
             for item in elem.included_mode_declaration_group_set:
                 self._write_included_mode_declaration_group_set(item)
+            self._leave_child()
+        if elem.per_instance_memory:
+            self._add_child("PER-INSTANCE-MEMORYS")
+            for item in elem.per_instance_memory:
+                self._write_per_instance_memory(item)
             self._leave_child()
         if elem.port_api_option:
             self._add_child("PORT-API-OPTIONS")

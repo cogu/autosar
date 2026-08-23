@@ -336,6 +336,7 @@ class Reader:
             'SWC-EXCLUSIVE-AREA-POLICY': self._read_swc_exclusive_area_policy,
             'INCLUDED-DATA-TYPE-SET': self._read_included_data_type_set,
             'INCLUDED-MODE-DECLARATION-GROUP-SET': self._read_included_mode_declaration_group_set,
+            'PER-INSTANCE-MEMORY': self._read_per_instance_memory,
             'DISABLED-MODE-IREF': self._read_r_mode_in_atomic_swc_instance_ref,
             'SWC-INTERNAL-BEHAVIOR': self._read_swc_internal_behavior,
             'RUNNABLE-ENTITY-ARGUMENT': self._read_runnable_entity_argument,
@@ -6325,6 +6326,38 @@ class Reader:
         if xml_child is not None:
             data["prefix"] = xml_child.text
 
+    def _read_per_instance_memory(self, xml_element: ElementTree.Element) -> ar_element.PerInstanceMemory:
+        """
+        Reads complex type AR:PER-INSTANCE-MEMORY
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_per_instance_memory_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.PerInstanceMemory(**data)
+
+    def _read_per_instance_memory_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:PER-INSTANCE-MEMORY
+        """
+        xml_child = child_elements.get("INIT-VALUE")
+        if xml_child is not None:
+            data["init_value"] = xml_child.text
+        xml_child = child_elements.get("SW-DATA-DEF-PROPS")
+        if xml_child is not None:
+            data["sw_data_def_props"] = self._read_sw_data_def_props(xml_child)
+        xml_child = child_elements.get("TYPE")
+        if xml_child is not None:
+            data["type"] = xml_child.text
+        xml_child = child_elements.get("TYPE-DEFINITION")
+        if xml_child is not None:
+            data["type_definition"] = xml_child.text
+        child_elements.skip("VARIATION-POINT")
+
     def _read_swc_internal_behavior(self, xml_element: ElementTree.Element) -> ar_element.SwcInternalBehavior:
         """
         Reads complex type AR:SWC-INTERNAL-BEHAVIOR
@@ -6434,7 +6467,12 @@ class Reader:
                     self._read_included_mode_declaration_group_set(xml_grand_child))
             data["included_mode_declaration_group_set"] = included_mode_declaration_group_sets
         child_elements.skip("INSTANTIATION-DATA-DEF-PROPSS")
-        child_elements.skip("PER-INSTANCE-MEMORYS")
+        xml_child = child_elements.get("PER-INSTANCE-MEMORYS")
+        if xml_child is not None:
+            per_instance_memories = []
+            for xml_grand_child in xml_child.findall("./PER-INSTANCE-MEMORY"):
+                per_instance_memories.append(self._read_per_instance_memory(xml_grand_child))
+            data["per_instance_memory"] = per_instance_memories
         child_elements.skip("PER-INSTANCE-PARAMETERS")
         xml_child = child_elements.get("PORT-API-OPTIONS")
         if xml_child is not None:

@@ -62,6 +62,7 @@ from autosar.xml.reference import (SwBaseTypeRef,  # noqa F401
                                    ArgumentDataPrototypeRef,
                                    ApplicationArrayElementRef,
                                    ApplicationRecordElementRef,
+                                   PerInstanceMemoryRef,
                                    )
 
 
@@ -9124,6 +9125,50 @@ class IncludedModeDeclarationGroupSet(ARObject):
                                              mode_declaration_group)
 
 
+class PerInstanceMemory(Identifiable):
+    """
+    Complex type AR:PER-INSTANCE-MEMORY
+    Tag variants: 'PER-INSTANCE-MEMORY'
+    """
+
+    def __init__(self,
+                 name: str,
+                 init_value: str | None = None,
+                 sw_data_def_props: SwDataDefProps | SwDataDefPropsConditional | None = None,
+                 type: str | None = None,
+                 type_definition: str | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .INIT-VALUE
+        self.init_value: str | None = None
+        # .SW-DATA-DEF-PROPS
+        self.sw_data_def_props: SwDataDefProps | None = None
+        # .TYPE
+        self.type: str | None = None
+        # .TYPE-DEFINITION
+        self.type_definition: str | None = None
+        # .VARIATION-POINT --- NOT SUPPORTED (VARIANT)
+
+        self._assign_optional_strict("init_value", init_value, str)
+        if sw_data_def_props is not None:
+            if isinstance(sw_data_def_props, SwDataDefProps):
+                self.sw_data_def_props = sw_data_def_props
+            elif isinstance(sw_data_def_props, SwDataDefPropsConditional):
+                self.sw_data_def_props = SwDataDefProps(sw_data_def_props)
+            else:
+                raise TypeError("'sw_data_def_props' must be one of (SwDataDefProps, SwDataDefPropsConditional)")
+        self._assign_optional_strict("type", type, str)
+        self._assign_optional_strict("type_definition", type_definition, str)
+
+    def ref(self) -> PerInstanceMemoryRef | None:
+        """
+        Returns a reference to this element or None if the element
+        is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        return None if ref_str is None else PerInstanceMemoryRef(ref_str)
+
+
 class InternalBehavior(Identifiable):
     """
     Group AR:INTERNAL-BEHAVIOR
@@ -9325,6 +9370,8 @@ class SwcInternalBehavior(InternalBehavior):
                                           list[IncludedDataTypeSet] | None) = None,
                  included_mode_declaration_group_set: (IncludedModeDeclarationGroupSet |
                                                        list[IncludedModeDeclarationGroupSet] | None) = None,
+                 per_instance_memory: (PerInstanceMemory |
+                                       list[PerInstanceMemory] | None) = None,
                  port_api_option: PortApiOption | list[PortApiOption] | None = None,
                  runnable: RunnableEntity | list[RunnableEntity] | None = None,
                  shared_parameter: (ParameterDataPrototype |
@@ -9349,7 +9396,8 @@ class SwcInternalBehavior(InternalBehavior):
         # .INCLUDED-MODE-DECLARATION-GROUP-SETS
         self.included_mode_declaration_group_set: list[IncludedModeDeclarationGroupSet] = []
         # .INSTANTIATION-DATA-DEF-PROPSS (not yet implemented)
-        # .PER-INSTANCE-MEMORYS (not yet implemented)
+        # .PER-INSTANCE-MEMORYS
+        self.per_instance_memory: list[PerInstanceMemory] = []
         # .PER-INSTANCE-PARAMETERS (not yet implemented)
         # .PORT-API-OPTIONS
         self.port_api_option: OrderedDict[PortApiOption] = OrderedDict()
@@ -9432,6 +9480,13 @@ class SwcInternalBehavior(InternalBehavior):
                     self.append_runnable(item)
             else:
                 self.append_runnable(runnable)
+
+        if per_instance_memory is not None:
+            if isinstance(per_instance_memory, Iterable):
+                for item in per_instance_memory:
+                    self.append_per_instance_memory(item)
+            else:
+                self.append_per_instance_memory(per_instance_memory)
 
         if shared_parameter is not None:
             if isinstance(shared_parameter, Iterable):
@@ -9599,6 +9654,36 @@ class SwcInternalBehavior(InternalBehavior):
             self.included_mode_declaration_group_set.append(item)
         else:
             raise ar_except.ElementTypeError("item", IncludedModeDeclarationGroupSet, item)
+
+    @convenience_function
+    def create_per_instance_memory(self,
+                                   name: str,
+                                   init_value: str | None = None,
+                                   sw_data_def_props: SwDataDefProps | SwDataDefPropsConditional | None = None,
+                                   type: str | None = None,
+                                   type_definition: str | None = None,
+                                   **kwargs) -> PerInstanceMemory:
+        """
+        Adds a new PerInstanceMemory to per_instance_memory
+        """
+        item = PerInstanceMemory(name,
+                                 init_value=init_value,
+                                 sw_data_def_props=sw_data_def_props,
+                                 type=type,
+                                 type_definition=type_definition,
+                                 **kwargs)
+        self.append_per_instance_memory(item)
+        return item
+
+    def append_per_instance_memory(self, item: PerInstanceMemory) -> None:
+        """
+        Appends PerInstanceMemory to per_instance_memory
+        """
+        if isinstance(item, PerInstanceMemory):
+            self.per_instance_memory.append(item)
+            item.parent = self
+        else:
+            raise ar_except.ElementTypeError("item", PerInstanceMemory, item)
 
     @convenience_function
     def create_shared_parameter(self,

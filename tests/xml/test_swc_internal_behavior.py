@@ -4039,6 +4039,67 @@ class TestIncludedModeDeclarationGroupSet(unittest.TestCase):
             ar_element.IncludedModeDeclarationGroupSet(mode_declaration_group=123)
 
 
+class TestPerInstanceMemory(unittest.TestCase):
+
+    def test_empty(self):
+        element = ar_element.PerInstanceMemory("Pim1")
+        xml = '''<PER-INSTANCE-MEMORY>
+  <SHORT-NAME>Pim1</SHORT-NAME>
+</PER-INSTANCE-MEMORY>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.PerInstanceMemory = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.PerInstanceMemory)
+        self.assertEqual(elem.name, "Pim1")
+        self.assertIsNone(elem.init_value)
+        self.assertIsNone(elem.sw_data_def_props)
+        self.assertIsNone(elem.type)
+        self.assertIsNone(elem.type_definition)
+
+    def test_full(self):
+        props = ar_element.SwDataDefPropsConditional(sw_addr_method_ref="/Mode/SwAddrMethod")
+        element = ar_element.PerInstanceMemory("Pim1",
+                                               init_value="0",
+                                               sw_data_def_props=props,
+                                               type="uint32",
+                                               type_definition="typedef uint32 my_uint32;")
+        xml = '''<PER-INSTANCE-MEMORY>
+  <SHORT-NAME>Pim1</SHORT-NAME>
+  <INIT-VALUE>0</INIT-VALUE>
+  <SW-DATA-DEF-PROPS>
+    <SW-DATA-DEF-PROPS-VARIANTS>
+      <SW-DATA-DEF-PROPS-CONDITIONAL>
+        <SW-ADDR-METHOD-REF DEST="SW-ADDR-METHOD">/Mode/SwAddrMethod</SW-ADDR-METHOD-REF>
+      </SW-DATA-DEF-PROPS-CONDITIONAL>
+    </SW-DATA-DEF-PROPS-VARIANTS>
+  </SW-DATA-DEF-PROPS>
+  <TYPE>uint32</TYPE>
+  <TYPE-DEFINITION>typedef uint32 my_uint32;</TYPE-DEFINITION>
+</PER-INSTANCE-MEMORY>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.PerInstanceMemory = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.PerInstanceMemory)
+        self.assertEqual(elem.name, "Pim1")
+        self.assertEqual(elem.init_value, "0")
+        self.assertIsInstance(elem.sw_data_def_props, ar_element.SwDataDefProps)
+        self.assertEqual(str(elem.sw_data_def_props[0].sw_addr_method_ref), "/Mode/SwAddrMethod")
+        self.assertEqual(elem.type, "uint32")
+        self.assertEqual(elem.type_definition, "typedef uint32 my_uint32;")
+
+    def test_invalid_types(self):
+        with self.assertRaises(TypeError):
+            ar_element.PerInstanceMemory("Pim1", sw_data_def_props=123)
+        with self.assertRaises(ar_except.AssignmentTypeError):
+            ar_element.PerInstanceMemory("Pim1", init_value=123)
+        with self.assertRaises(ar_except.AssignmentTypeError):
+            ar_element.PerInstanceMemory("Pim1", type=123)
+        with self.assertRaises(ar_except.AssignmentTypeError):
+            ar_element.PerInstanceMemory("Pim1", type_definition=123)
+
+
 class TestInternalBehavior(unittest.TestCase):
     """
     Use SwcInternalBehavior as test class since InternalBehavior is abstract.
@@ -4776,6 +4837,68 @@ class TestInternalBehavior(unittest.TestCase):
         elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
         self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
         self.assertIs(elem.supports_multiple_instantiation, False)
+
+    def test_per_instance_memory_from_element(self):
+        pim = ar_element.PerInstanceMemory("Pim1", type="uint32")
+        element = ar_element.SwcInternalBehavior("MyName", per_instance_memory=pim)
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <PER-INSTANCE-MEMORYS>
+    <PER-INSTANCE-MEMORY>
+      <SHORT-NAME>Pim1</SHORT-NAME>
+      <TYPE>uint32</TYPE>
+    </PER-INSTANCE-MEMORY>
+  </PER-INSTANCE-MEMORYS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.per_instance_memory), 1)
+        self.assertIsInstance(elem.per_instance_memory[0], ar_element.PerInstanceMemory)
+        self.assertEqual(elem.per_instance_memory[0].name, "Pim1")
+        self.assertEqual(elem.per_instance_memory[0].type, "uint32")
+
+    def test_per_instance_memory_from_list(self):
+        pim1 = ar_element.PerInstanceMemory("Pim1", type="uint32")
+        pim2 = ar_element.PerInstanceMemory("Pim2", type="uint8")
+        element = ar_element.SwcInternalBehavior("MyName", per_instance_memory=[pim1, pim2])
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <PER-INSTANCE-MEMORYS>
+    <PER-INSTANCE-MEMORY>
+      <SHORT-NAME>Pim1</SHORT-NAME>
+      <TYPE>uint32</TYPE>
+    </PER-INSTANCE-MEMORY>
+    <PER-INSTANCE-MEMORY>
+      <SHORT-NAME>Pim2</SHORT-NAME>
+      <TYPE>uint8</TYPE>
+    </PER-INSTANCE-MEMORY>
+  </PER-INSTANCE-MEMORYS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.per_instance_memory), 2)
+        self.assertEqual(elem.per_instance_memory[0].name, "Pim1")
+        self.assertEqual(elem.per_instance_memory[1].name, "Pim2")
+
+    def test_create_per_instance_memory(self):
+        element = ar_element.SwcInternalBehavior("MyName")
+        pim = element.create_per_instance_memory("Pim1", type="uint32")
+        self.assertIsInstance(pim, ar_element.PerInstanceMemory)
+        self.assertEqual(pim.name, "Pim1")
+        self.assertEqual(pim.type, "uint32")
+        self.assertEqual(len(element.per_instance_memory), 1)
+        self.assertIs(element.per_instance_memory[0], pim)
+
+    def test_append_per_instance_memory_invalid_type(self):
+        element = ar_element.SwcInternalBehavior("MyName")
+        with self.assertRaises(ar_except.ElementTypeError):
+            element.append_per_instance_memory("InvalidType")
 
     def test_append_constant_value_mapping_invalid_type(self):
         element = ar_element.SwcInternalBehavior("MyName")
