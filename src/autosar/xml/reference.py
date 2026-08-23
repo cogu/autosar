@@ -800,3 +800,19 @@ class ApplicationRecordElementRef(BaseRef):
     def accepted_sub_types(cls) -> set[ar_enum.IdentifiableSubTypes]:
         """Acceptable values for dest"""
         return {ar_enum.IdentifiableSubTypes.APPLICATION_RECORD_ELEMENT}
+
+
+class PerInstanceMemoryRef(BaseRef):
+    """
+    AR:PER-INSTANCE-MEMORY--SUBTYPES-ENUM
+    """
+
+    def __init__(self, value: str,
+                 dest: ar_enum.IdentifiableSubTypes = ar_enum.IdentifiableSubTypes.PER_INSTANCE_MEMORY
+                 ) -> None:
+        super().__init__(value, dest)
+
+    @classmethod
+    def accepted_sub_types(cls) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.PER_INSTANCE_MEMORY}

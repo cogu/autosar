@@ -302,29 +302,30 @@ class IdentifiableSubTypes(Enum):
     P_PORT_PROTOTYPE = 57
     PARAMETER_DATA_PROTOTYPE = 58
     PARAMETER_INTERFACE = 59
-    PHYSICAL_DIMENSION = 60
-    PORT_PROTOTYPE = 61
-    PR_PORT_PROTOTYPE = 62
-    R_PORT_PROTOTYPE = 63
-    RUNNABLE_ENTITY = 64
-    SENDER_RECEIVER_INTERFACE = 65
-    SENSOR_ACTUATOR_SW_COMPONENT_TYPE = 66
-    SERVICE_PROXY_SW_COMPONENT_TYPE = 67
-    SERVICE_SW_COMPONENT_TYPE = 68
-    SW_ADDR_METHOD = 69
-    SW_BASE_TYPE = 70
-    SW_COMPONENT_PROTOTYPE = 71
-    SWC_IMPLEMENTATION = 72
-    SWC_INTERNAL_BEHAVIOR = 73
-    SWC_MODE_MANAGER_ERROR_EVENT = 74
-    SWC_MODE_SWITCH_EVENT = 75
-    TIMING_EVENT = 76
-    TRANSFORMER_HARD_ERROR_EVENT = 77
-    TRIGGER = 78
-    TRIGGER_INTERFACE = 79
-    UNIT = 80
-    VARIABLE_ACCESS = 81
-    VARIABLE_DATA_PROTOTYPE = 82
+    PER_INSTANCE_MEMORY = 60
+    PHYSICAL_DIMENSION = 61
+    PORT_PROTOTYPE = 62
+    PR_PORT_PROTOTYPE = 63
+    R_PORT_PROTOTYPE = 64
+    RUNNABLE_ENTITY = 65
+    SENDER_RECEIVER_INTERFACE = 66
+    SENSOR_ACTUATOR_SW_COMPONENT_TYPE = 67
+    SERVICE_PROXY_SW_COMPONENT_TYPE = 68
+    SERVICE_SW_COMPONENT_TYPE = 69
+    SW_ADDR_METHOD = 70
+    SW_BASE_TYPE = 71
+    SW_COMPONENT_PROTOTYPE = 72
+    SWC_IMPLEMENTATION = 73
+    SWC_INTERNAL_BEHAVIOR = 74
+    SWC_MODE_MANAGER_ERROR_EVENT = 75
+    SWC_MODE_SWITCH_EVENT = 76
+    TIMING_EVENT = 77
+    TRANSFORMER_HARD_ERROR_EVENT = 78
+    TRIGGER = 79
+    TRIGGER_INTERFACE = 80
+    UNIT = 81
+    VARIABLE_ACCESS = 82
+    VARIABLE_DATA_PROTOTYPE = 83
 
 
 class IntervalType(Enum):
@@ -927,6 +928,7 @@ xml_to_enum_map: dict[str, dict] = {
         "P-PORT-PROTOTYPE": IdentifiableSubTypes.P_PORT_PROTOTYPE,
         "PARAMETER-DATA-PROTOTYPE": IdentifiableSubTypes.PARAMETER_DATA_PROTOTYPE,
         "PARAMETER-INTERFACE": IdentifiableSubTypes.PARAMETER_INTERFACE,
+        "PER-INSTANCE-MEMORY": IdentifiableSubTypes.PER_INSTANCE_MEMORY,
         "PHYSICAL-DIMENSION": IdentifiableSubTypes.PHYSICAL_DIMENSION,
         "PORT-PROTOTYPE": IdentifiableSubTypes.PORT_PROTOTYPE,
         "PR-PORT-PROTOTYPE": IdentifiableSubTypes.PR_PORT_PROTOTYPE,
@@ -1356,29 +1358,30 @@ enum_to_xml_map: dict[str, list] = {
         "P-PORT-PROTOTYPE",                              # 57
         "PARAMETER-DATA-PROTOTYPE",                      # 58
         "PARAMETER-INTERFACE",                           # 59
-        "PHYSICAL-DIMENSION",                            # 60
-        "PORT-PROTOTYPE",                                # 61
-        "PR-PORT-PROTOTYPE",                             # 62
-        "R-PORT-PROTOTYPE",                              # 63
-        "RUNNABLE-ENTITY",                               # 64
-        "SENDER-RECEIVER-INTERFACE",                     # 65
-        "SENSOR-ACTUATOR-SW-COMPONENT-TYPE",             # 66
-        "SERVICE-PROXY-SW-COMPONENT-TYPE",               # 67
-        "SERVICE-SW-COMPONENT-TYPE",                     # 68
-        "SW-ADDR-METHOD",                                # 69
-        "SW-BASE-TYPE",                                  # 70
-        "SW-COMPONENT-PROTOTYPE",                        # 71
-        "SWC-IMPLEMENTATION",                            # 72
-        "SWC-INTERNAL-BEHAVIOR",                         # 73
-        "SWC-MODE-MANAGER-ERROR-EVENT",                  # 74
-        "SWC-MODE-SWITCH-EVENT",                         # 75
-        "TIMING-EVENT",                                  # 76
-        "TRANSFORMER-HARD-ERROR-EVENT",                  # 77
-        "TRIGGER",                                       # 78
-        "TRIGGER-INTERFACE",                             # 79
-        "UNIT",                                          # 80
-        "VARIABLE-ACCESS",                               # 81
-        "VARIABLE-DATA-PROTOTYPE",                       # 82
+        "PER-INSTANCE-MEMORY",                           # 60
+        "PHYSICAL-DIMENSION",                            # 61
+        "PORT-PROTOTYPE",                                # 62
+        "PR-PORT-PROTOTYPE",                             # 63
+        "R-PORT-PROTOTYPE",                              # 64
+        "RUNNABLE-ENTITY",                               # 65
+        "SENDER-RECEIVER-INTERFACE",                     # 66
+        "SENSOR-ACTUATOR-SW-COMPONENT-TYPE",             # 67
+        "SERVICE-PROXY-SW-COMPONENT-TYPE",               # 68
+        "SERVICE-SW-COMPONENT-TYPE",                     # 69
+        "SW-ADDR-METHOD",                                # 70
+        "SW-BASE-TYPE",                                  # 71
+        "SW-COMPONENT-PROTOTYPE",                        # 72
+        "SWC-IMPLEMENTATION",                            # 73
+        "SWC-INTERNAL-BEHAVIOR",                         # 74
+        "SWC-MODE-MANAGER-ERROR-EVENT",                  # 75
+        "SWC-MODE-SWITCH-EVENT",                         # 76
+        "TIMING-EVENT",                                  # 77
+        "TRANSFORMER-HARD-ERROR-EVENT",                  # 78
+        "TRIGGER",                                       # 79
+        "TRIGGER-INTERFACE",                             # 80
+        "UNIT",                                          # 81
+        "VARIABLE-ACCESS",                               # 82
+        "VARIABLE-DATA-PROTOTYPE",                       # 83
     ],
     "IntervalType": [
         "CLOSED",  # 0
