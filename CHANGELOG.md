@@ -47,6 +47,7 @@ Non-collectable elements are various sub-elements to collectable elements.
 * DiagnosticUploadDownloadNeeds | DIAGNOSTIC-UPLOAD-DOWNLOAD-NEEDS
 * DiagnosticValueNeeds | DIAGNOSTIC-VALUE-NEEDS
 * DiagnosticsCommunicationSecurityNeeds | DIAGNOSTICS-COMMUNICATION-SECURITY-NEEDS
+* DltUserNeeds | DLT-USER-NEEDS
 
 #### XML - SWC internal behavior elements
 

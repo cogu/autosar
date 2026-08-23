@@ -1048,5 +1048,21 @@ class TestDiagEventDebounceTimeBased(unittest.TestCase):
         self.assertEqual(elem.time_passed_threshold, 0.8)
 
 
+class TestDltUserNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.DltUserNeeds("DltUserNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<DLT-USER-NEEDS>
+  <SHORT-NAME>DltUserNeeds</SHORT-NAME>
+</DLT-USER-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DltUserNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DltUserNeeds)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "DltUserNeeds")
+
+
 if __name__ == '__main__':
     unittest.main()
