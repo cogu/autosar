@@ -4039,6 +4039,127 @@ class TestIncludedModeDeclarationGroupSet(unittest.TestCase):
             ar_element.IncludedModeDeclarationGroupSet(mode_declaration_group=123)
 
 
+class TestInstantiationDataDefProps(unittest.TestCase):
+
+    def test_empty(self):
+        element = ar_element.InstantiationDataDefProps()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<INSTANTIATION-DATA-DEF-PROPS/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.InstantiationDataDefProps = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.InstantiationDataDefProps)
+        self.assertIsNone(elem.parameter_instance)
+        self.assertIsNone(elem.sw_data_def_props)
+        self.assertIsNone(elem.variable_instance)
+
+    def test_parameter_instance(self):
+        param_iref = ar_element.ParameterInAtomicSwcTypeInstanceRef(
+            port_prototype=ar_element.PortPrototypeRef("/Port1", ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE))
+        param_ref = ar_element.AutosarParameterRef(autosar_parameter=param_iref)
+        element = ar_element.InstantiationDataDefProps(parameter_instance=param_ref)
+        xml = '''<INSTANTIATION-DATA-DEF-PROPS>
+  <PARAMETER-INSTANCE>
+    <AUTOSAR-PARAMETER-IREF>
+      <PORT-PROTOTYPE-REF DEST="R-PORT-PROTOTYPE">/Port1</PORT-PROTOTYPE-REF>
+    </AUTOSAR-PARAMETER-IREF>
+  </PARAMETER-INSTANCE>
+</INSTANTIATION-DATA-DEF-PROPS>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.InstantiationDataDefProps = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.InstantiationDataDefProps)
+        self.assertIsNotNone(elem.parameter_instance)
+        self.assertIsNotNone(elem.parameter_instance.autosar_parameter)
+        self.assertEqual(str(elem.parameter_instance.autosar_parameter.port_prototype), "/Port1")
+
+    def test_sw_data_def_props(self):
+        sw_props = ar_element.SwDataDefProps(
+            ar_element.SwDataDefPropsConditional(calibration_access=ar_enum.SwCalibrationAccess.READ_ONLY))
+        element = ar_element.InstantiationDataDefProps(sw_data_def_props=sw_props)
+        xml = '''<INSTANTIATION-DATA-DEF-PROPS>
+  <SW-DATA-DEF-PROPS>
+    <SW-DATA-DEF-PROPS-VARIANTS>
+      <SW-DATA-DEF-PROPS-CONDITIONAL>
+        <SW-CALIBRATION-ACCESS>READ-ONLY</SW-CALIBRATION-ACCESS>
+      </SW-DATA-DEF-PROPS-CONDITIONAL>
+    </SW-DATA-DEF-PROPS-VARIANTS>
+  </SW-DATA-DEF-PROPS>
+</INSTANTIATION-DATA-DEF-PROPS>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.InstantiationDataDefProps = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.InstantiationDataDefProps)
+        self.assertIsNotNone(elem.sw_data_def_props)
+        self.assertEqual(elem.sw_data_def_props.variants[0].calibration_access, ar_enum.SwCalibrationAccess.READ_ONLY)
+
+    def test_variable_instance(self):
+        var_iref = ar_element.VariableInAtomicSWCTypeInstanceRef(
+            port_prototype_ref=ar_element.PortPrototypeRef("/Port1", ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE))
+        var_ref = ar_element.AutosarVariableRef(ar_variable_iref=var_iref)
+        element = ar_element.InstantiationDataDefProps(variable_instance=var_ref)
+        xml = '''<INSTANTIATION-DATA-DEF-PROPS>
+  <VARIABLE-INSTANCE>
+    <AUTOSAR-VARIABLE-IREF>
+      <PORT-PROTOTYPE-REF DEST="R-PORT-PROTOTYPE">/Port1</PORT-PROTOTYPE-REF>
+    </AUTOSAR-VARIABLE-IREF>
+  </VARIABLE-INSTANCE>
+</INSTANTIATION-DATA-DEF-PROPS>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.InstantiationDataDefProps = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.InstantiationDataDefProps)
+        self.assertIsNotNone(elem.variable_instance)
+        self.assertIsNotNone(elem.variable_instance.ar_variable_iref)
+        self.assertEqual(str(elem.variable_instance.ar_variable_iref.port_prototype_ref), "/Port1")
+
+    def test_all_properties(self):
+        param_ref = ar_element.AutosarParameterRef(
+            local_parameter=ar_element.DataPrototypeRef(
+                "/Data1", ar_enum.IdentifiableSubTypes.PARAMETER_DATA_PROTOTYPE))
+        sw_props = ar_element.SwDataDefPropsConditional(calibration_access=ar_enum.SwCalibrationAccess.READ_ONLY)
+        var_ref = ar_element.AutosarVariableRef(
+            local_variable_ref=ar_element.VariableDataPrototypeRef("/Var1"))
+        element = ar_element.InstantiationDataDefProps(
+            parameter_instance=param_ref,
+            sw_data_def_props=sw_props,
+            variable_instance=var_ref)
+        xml = '''<INSTANTIATION-DATA-DEF-PROPS>
+  <PARAMETER-INSTANCE>
+    <LOCAL-PARAMETER-REF DEST="PARAMETER-DATA-PROTOTYPE">/Data1</LOCAL-PARAMETER-REF>
+  </PARAMETER-INSTANCE>
+  <SW-DATA-DEF-PROPS>
+    <SW-DATA-DEF-PROPS-VARIANTS>
+      <SW-DATA-DEF-PROPS-CONDITIONAL>
+        <SW-CALIBRATION-ACCESS>READ-ONLY</SW-CALIBRATION-ACCESS>
+      </SW-DATA-DEF-PROPS-CONDITIONAL>
+    </SW-DATA-DEF-PROPS-VARIANTS>
+  </SW-DATA-DEF-PROPS>
+  <VARIABLE-INSTANCE>
+    <LOCAL-VARIABLE-REF DEST="VARIABLE-DATA-PROTOTYPE">/Var1</LOCAL-VARIABLE-REF>
+  </VARIABLE-INSTANCE>
+</INSTANTIATION-DATA-DEF-PROPS>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.InstantiationDataDefProps = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.InstantiationDataDefProps)
+        self.assertEqual(str(elem.parameter_instance.local_parameter), "/Data1")
+        self.assertEqual(elem.sw_data_def_props.variants[0].calibration_access, ar_enum.SwCalibrationAccess.READ_ONLY)
+        self.assertEqual(str(elem.variable_instance.local_variable_ref), "/Var1")
+
+    def test_invalid_types(self):
+        with self.assertRaises(ar_except.AssignmentTypeError):
+            ar_element.InstantiationDataDefProps(parameter_instance="invalid")
+        with self.assertRaises(TypeError):
+            ar_element.InstantiationDataDefProps(sw_data_def_props="invalid")
+        with self.assertRaises(ar_except.AssignmentTypeError):
+            ar_element.InstantiationDataDefProps(variable_instance="invalid")
+
+
 class TestPerInstanceMemory(unittest.TestCase):
 
     def test_empty(self):
@@ -5320,6 +5441,80 @@ class TestSwcInternalBehavior(unittest.TestCase):
         runnable = elem.runnable[2]
         self.assertIsInstance(runnable, ar_element.RunnableEntity)
         self.assertEqual(runnable.name, "MyRunnable3")
+
+    # INSTANTIATION-DATA-DEF-PROPSS
+
+    def test_instantiation_data_def_props_from_element(self):
+        var_ref = ar_element.AutosarVariableRef(
+            local_variable_ref=ar_element.VariableDataPrototypeRef("/Var1"))
+        item = ar_element.InstantiationDataDefProps(variable_instance=var_ref)
+        element = ar_element.SwcInternalBehavior('MyBehavior', instantiation_data_def_props=item)
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyBehavior</SHORT-NAME>
+  <INSTANTIATION-DATA-DEF-PROPSS>
+    <INSTANTIATION-DATA-DEF-PROPS>
+      <VARIABLE-INSTANCE>
+        <LOCAL-VARIABLE-REF DEST="VARIABLE-DATA-PROTOTYPE">/Var1</LOCAL-VARIABLE-REF>
+      </VARIABLE-INSTANCE>
+    </INSTANTIATION-DATA-DEF-PROPS>
+  </INSTANTIATION-DATA-DEF-PROPSS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.instantiation_data_def_props), 1)
+        child = elem.instantiation_data_def_props[0]
+        self.assertIsInstance(child, ar_element.InstantiationDataDefProps)
+        self.assertEqual(str(child.variable_instance.local_variable_ref), "/Var1")
+
+    def test_instantiation_data_def_props_from_list(self):
+        item1 = ar_element.InstantiationDataDefProps(
+            variable_instance=ar_element.AutosarVariableRef(
+                local_variable_ref=ar_element.VariableDataPrototypeRef("/Var1")))
+        item2 = ar_element.InstantiationDataDefProps(
+            parameter_instance=ar_element.AutosarParameterRef(
+                local_parameter=ar_element.DataPrototypeRef(
+                    "/Param1", ar_enum.IdentifiableSubTypes.PARAMETER_DATA_PROTOTYPE)))
+        element = ar_element.SwcInternalBehavior('MyBehavior', instantiation_data_def_props=[item1, item2])
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyBehavior</SHORT-NAME>
+  <INSTANTIATION-DATA-DEF-PROPSS>
+    <INSTANTIATION-DATA-DEF-PROPS>
+      <VARIABLE-INSTANCE>
+        <LOCAL-VARIABLE-REF DEST="VARIABLE-DATA-PROTOTYPE">/Var1</LOCAL-VARIABLE-REF>
+      </VARIABLE-INSTANCE>
+    </INSTANTIATION-DATA-DEF-PROPS>
+    <INSTANTIATION-DATA-DEF-PROPS>
+      <PARAMETER-INSTANCE>
+        <LOCAL-PARAMETER-REF DEST="PARAMETER-DATA-PROTOTYPE">/Param1</LOCAL-PARAMETER-REF>
+      </PARAMETER-INSTANCE>
+    </INSTANTIATION-DATA-DEF-PROPS>
+  </INSTANTIATION-DATA-DEF-PROPSS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.instantiation_data_def_props), 2)
+        self.assertEqual(str(elem.instantiation_data_def_props[0].variable_instance.local_variable_ref), "/Var1")
+        self.assertEqual(str(elem.instantiation_data_def_props[1].parameter_instance.local_parameter), "/Param1")
+
+    def test_create_instantiation_data_def_props(self):
+        element = ar_element.SwcInternalBehavior('MyBehavior')
+        item = element.create_instantiation_data_def_props(
+            variable_instance=ar_element.AutosarVariableRef(
+                local_variable_ref=ar_element.VariableDataPrototypeRef("/Var1")))
+        self.assertIsInstance(item, ar_element.InstantiationDataDefProps)
+        self.assertEqual(len(element.instantiation_data_def_props), 1)
+        self.assertIs(element.instantiation_data_def_props[0], item)
+
+    def test_append_instantiation_data_def_props_invalid(self):
+        element = ar_element.SwcInternalBehavior('MyBehavior')
+        with self.assertRaises(ar_except.ElementTypeError):
+            element.append_instantiation_data_def_props("invalid")
 
     # IMPLEMENT LATER: SERVICE-DEPENDENCYS"
     # IMPLEMENT LATER: SHARED-PARAMETERS
