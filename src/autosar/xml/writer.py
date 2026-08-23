@@ -386,6 +386,9 @@ class Writer(_XMLWriter):
             'CryptoKeyManagementNeeds': self._write_crypto_key_management_needs,
             'CryptoServiceJobNeeds': self._write_crypto_service_job_needs,
             'CryptoServiceNeeds': self._write_crypto_service_needs,
+            'DiagEventDebounceCounterBased': self._write_diag_event_debounce_counter_based,
+            'DiagEventDebounceMonitorInternal': self._write_diag_event_debounce_monitor_internal,
+            'DiagEventDebounceTimeBased': self._write_diag_event_debounce_time_based,
             'DiagnosticCommunicationManagerNeeds': self._write_diagnostic_communication_manager_needs,
             'DiagnosticComponentNeeds': self._write_diagnostic_component_needs,
             'DiagnosticControlNeeds': self._write_diagnostic_control_needs,
@@ -4917,6 +4920,94 @@ class Writer(_XMLWriter):
             self._add_content("CRYPTO-KEY-DESCRIPTION", elem.crypto_key_description)
         if elem.maximum_key_length is not None:
             self._add_content("MAXIMUM-KEY-LENGTH", str(elem.maximum_key_length))
+
+    def _write_diag_event_debounce_counter_based(
+            self,
+            elem: ar_element.DiagEventDebounceCounterBased) -> None:
+        """
+        Writes complex type AR:DIAG-EVENT-DEBOUNCE-COUNTER-BASED
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DiagEventDebounceCounterBased)
+        self._add_child("DIAG-EVENT-DEBOUNCE-COUNTER-BASED")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        # Group AR:DIAG-EVENT-DEBOUNCE-ALGORITHM contains no elements
+        self._write_diag_event_debounce_counter_based_group(elem)
+        self._leave_child()
+
+    def _write_diag_event_debounce_counter_based_group(
+            self,
+            elem: ar_element.DiagEventDebounceCounterBased) -> None:
+        """
+        Writes group AR:DIAG-EVENT-DEBOUNCE-COUNTER-BASED
+        """
+        if elem.counter_based_fdc_threshold_storage_value is not None:
+            self._add_content("COUNTER-BASED-FDC-THRESHOLD-STORAGE-VALUE",
+                              str(elem.counter_based_fdc_threshold_storage_value))
+        if elem.counter_decrement_step_size is not None:
+            self._add_content("COUNTER-DECREMENT-STEP-SIZE", str(elem.counter_decrement_step_size))
+        if elem.counter_failed_threshold is not None:
+            self._add_content("COUNTER-FAILED-THRESHOLD", str(elem.counter_failed_threshold))
+        if elem.counter_increment_step_size is not None:
+            self._add_content("COUNTER-INCREMENT-STEP-SIZE", str(elem.counter_increment_step_size))
+        if elem.counter_jump_down is not None:
+            self._add_content("COUNTER-JUMP-DOWN", self._format_boolean(elem.counter_jump_down))
+        if elem.counter_jump_down_value is not None:
+            self._add_content("COUNTER-JUMP-DOWN-VALUE", str(elem.counter_jump_down_value))
+        if elem.counter_jump_up is not None:
+            self._add_content("COUNTER-JUMP-UP", self._format_boolean(elem.counter_jump_up))
+        if elem.counter_jump_up_value is not None:
+            self._add_content("COUNTER-JUMP-UP-VALUE", str(elem.counter_jump_up_value))
+        if elem.counter_passed_threshold is not None:
+            self._add_content("COUNTER-PASSED-THRESHOLD", str(elem.counter_passed_threshold))
+
+    def _write_diag_event_debounce_monitor_internal(
+            self,
+            elem: ar_element.DiagEventDebounceMonitorInternal) -> None:
+        """
+        Writes complex type AR:DIAG-EVENT-DEBOUNCE-MONITOR-INTERNAL
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DiagEventDebounceMonitorInternal)
+        self._add_child("DIAG-EVENT-DEBOUNCE-MONITOR-INTERNAL")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        # Group AR:DIAG-EVENT-DEBOUNCE-ALGORITHM contains no elements
+        # Group AR:DIAG-EVENT-DEBOUNCE-MONITOR-INTERNAL contains no elements
+        self._leave_child()
+
+    def _write_diag_event_debounce_time_based(
+            self,
+            elem: ar_element.DiagEventDebounceTimeBased) -> None:
+        """
+        Writes complex type AR:DIAG-EVENT-DEBOUNCE-TIME-BASED
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DiagEventDebounceTimeBased)
+        self._add_child("DIAG-EVENT-DEBOUNCE-TIME-BASED")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        # Group AR:DIAG-EVENT-DEBOUNCE-ALGORITHM contains no elements
+        self._write_diag_event_debounce_time_based_group(elem)
+        self._leave_child()
+
+    def _write_diag_event_debounce_time_based_group(
+            self,
+            elem: ar_element.DiagEventDebounceTimeBased) -> None:
+        """
+        Writes group AR:DIAG-EVENT-DEBOUNCE-TIME-BASED
+        """
+        if elem.time_based_fdc_threshold_storage_value is not None:
+            self._add_content("TIME-BASED-FDC-THRESHOLD-STORAGE-VALUE",
+                              str(elem.time_based_fdc_threshold_storage_value))
+        if elem.time_failed_threshold is not None:
+            self._add_content("TIME-FAILED-THRESHOLD", str(elem.time_failed_threshold))
+        if elem.time_passed_threshold is not None:
+            self._add_content("TIME-PASSED-THRESHOLD", str(elem.time_passed_threshold))
 
     def _write_diagnostic_capability_element_group(self, elem: ar_element.DiagnosticCapabilityElement) -> None:
         """

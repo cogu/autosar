@@ -330,6 +330,9 @@ class Reader:
             'CRYPTO-KEY-MANAGEMENT-NEEDS': self._read_crypto_key_management_needs,
             'CRYPTO-SERVICE-JOB-NEEDS': self._read_crypto_service_job_needs,
             'CRYPTO-SERVICE-NEEDS': self._read_crypto_service_needs,
+            'DIAG-EVENT-DEBOUNCE-COUNTER-BASED': self._read_diag_event_debounce_counter_based,
+            'DIAG-EVENT-DEBOUNCE-MONITOR-INTERNAL': self._read_diag_event_debounce_monitor_internal,
+            'DIAG-EVENT-DEBOUNCE-TIME-BASED': self._read_diag_event_debounce_time_based,
             'DIAGNOSTIC-COMMUNICATION-MANAGER-NEEDS': self._read_diagnostic_communication_manager_needs,
             'DIAGNOSTIC-COMPONENT-NEEDS': self._read_diagnostic_component_needs,
             'DIAGNOSTIC-CONTROL-NEEDS': self._read_diagnostic_control_needs,
@@ -6514,6 +6517,109 @@ class Reader:
         xml_child = child_elements.get("MAXIMUM-KEY-LENGTH")
         if xml_child is not None:
             data["maximum_key_length"] = ar_element.PositiveIntegerValue(xml_child.text).value
+
+    def _read_diag_event_debounce_counter_based(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.DiagEventDebounceCounterBased:
+        """
+        Reads complex type AR:DIAG-EVENT-DEBOUNCE-COUNTER-BASED
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Group AR:DIAG-EVENT-DEBOUNCE-ALGORITHM contains no elements
+        self._read_diag_event_debounce_counter_based_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.DiagEventDebounceCounterBased(**data)
+
+    def _read_diag_event_debounce_counter_based_group(
+            self,
+            child_elements: ChildElementMap,
+            data: dict) -> None:
+        """
+        Reads group AR:DIAG-EVENT-DEBOUNCE-COUNTER-BASED
+        """
+        xml_child = child_elements.get("COUNTER-BASED-FDC-THRESHOLD-STORAGE-VALUE")
+        if xml_child is not None:
+            data["counter_based_fdc_threshold_storage_value"] = self._read_integer(xml_child.text)
+        xml_child = child_elements.get("COUNTER-DECREMENT-STEP-SIZE")
+        if xml_child is not None:
+            data["counter_decrement_step_size"] = self._read_integer(xml_child.text)
+        xml_child = child_elements.get("COUNTER-FAILED-THRESHOLD")
+        if xml_child is not None:
+            data["counter_failed_threshold"] = self._read_integer(xml_child.text)
+        xml_child = child_elements.get("COUNTER-INCREMENT-STEP-SIZE")
+        if xml_child is not None:
+            data["counter_increment_step_size"] = self._read_integer(xml_child.text)
+        xml_child = child_elements.get("COUNTER-JUMP-DOWN")
+        if xml_child is not None:
+            data["counter_jump_down"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("COUNTER-JUMP-DOWN-VALUE")
+        if xml_child is not None:
+            data["counter_jump_down_value"] = self._read_integer(xml_child.text)
+        xml_child = child_elements.get("COUNTER-JUMP-UP")
+        if xml_child is not None:
+            data["counter_jump_up"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("COUNTER-JUMP-UP-VALUE")
+        if xml_child is not None:
+            data["counter_jump_up_value"] = self._read_integer(xml_child.text)
+        xml_child = child_elements.get("COUNTER-PASSED-THRESHOLD")
+        if xml_child is not None:
+            data["counter_passed_threshold"] = self._read_integer(xml_child.text)
+
+    def _read_diag_event_debounce_monitor_internal(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.DiagEventDebounceMonitorInternal:
+        """
+        Reads complex type AR:DIAG-EVENT-DEBOUNCE-MONITOR-INTERNAL
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Group AR:DIAG-EVENT-DEBOUNCE-ALGORITHM contains no elements
+        # Group AR:DIAG-EVENT-DEBOUNCE-MONITOR-INTERNAL contains no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.DiagEventDebounceMonitorInternal(**data)
+
+    def _read_diag_event_debounce_time_based(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.DiagEventDebounceTimeBased:
+        """
+        Reads complex type AR:DIAG-EVENT-DEBOUNCE-TIME-BASED
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Group AR:DIAG-EVENT-DEBOUNCE-ALGORITHM contains no elements
+        self._read_diag_event_debounce_time_based_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.DiagEventDebounceTimeBased(**data)
+
+    def _read_diag_event_debounce_time_based_group(
+            self,
+            child_elements: ChildElementMap,
+            data: dict) -> None:
+        """
+        Reads group AR:DIAG-EVENT-DEBOUNCE-TIME-BASED
+        """
+        xml_child = child_elements.get("TIME-BASED-FDC-THRESHOLD-STORAGE-VALUE")
+        if xml_child is not None:
+            data["time_based_fdc_threshold_storage_value"] = self._read_number(xml_child.text)
+        xml_child = child_elements.get("TIME-FAILED-THRESHOLD")
+        if xml_child is not None:
+            data["time_failed_threshold"] = self._read_number(xml_child.text)
+        xml_child = child_elements.get("TIME-PASSED-THRESHOLD")
+        if xml_child is not None:
+            data["time_passed_threshold"] = self._read_number(xml_child.text)
 
     def _read_diagnostic_capability_element_group(self, child_elements: ChildElementMap, data: dict) -> None:
         """

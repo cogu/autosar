@@ -30,6 +30,9 @@ Non-collectable elements are various sub-elements to collectable elements.
 * CryptoKeyManagementNeeds | CRYPTO-KEY-MANAGEMENT-NEEDS
 * CryptoServiceJobNeeds | CRYPTO-SERVICE-JOB-NEEDS
 * CryptoServiceNeeds | CRYPTO-SERVICE-NEEDS
+* DiagEventDebounceCounterBased | DIAG-EVENT-DEBOUNCE-COUNTER-BASED
+* DiagEventDebounceMonitorInternal | DIAG-EVENT-DEBOUNCE-MONITOR-INTERNAL
+* DiagEventDebounceTimeBased | DIAG-EVENT-DEBOUNCE-TIME-BASED
 * DiagnosticCommunicationManagerNeeds | DIAGNOSTIC-COMMUNICATION-MANAGER-NEEDS
 * DiagnosticComponentNeeds | DIAGNOSTIC-COMPONENT-NEEDS
 * DiagnosticControlNeeds | DIAGNOSTIC-CONTROL-NEEDS

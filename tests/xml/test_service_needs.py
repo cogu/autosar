@@ -926,5 +926,127 @@ class TestDiagnosticsCommunicationSecurityNeeds(unittest.TestCase):
         self.assertEqual(elem.name, "DiagnosticsCommunicationSecurityNeeds")
 
 
+class TestDiagEventDebounceCounterBased(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.DiagEventDebounceCounterBased("DiagEventDebounceCounterBased")
+        writer = autosar.xml.Writer()
+        xml = '''<DIAG-EVENT-DEBOUNCE-COUNTER-BASED>
+  <SHORT-NAME>DiagEventDebounceCounterBased</SHORT-NAME>
+</DIAG-EVENT-DEBOUNCE-COUNTER-BASED>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DiagEventDebounceCounterBased = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DiagEventDebounceCounterBased)
+        self.assertIsInstance(elem, ar_element.DiagEventDebounceAlgorithm)
+        self.assertEqual(elem.name, "DiagEventDebounceCounterBased")
+        self.assertIsNone(elem.counter_based_fdc_threshold_storage_value)
+        self.assertIsNone(elem.counter_decrement_step_size)
+        self.assertIsNone(elem.counter_failed_threshold)
+        self.assertIsNone(elem.counter_increment_step_size)
+        self.assertIsNone(elem.counter_jump_down)
+        self.assertIsNone(elem.counter_jump_down_value)
+        self.assertIsNone(elem.counter_jump_up)
+        self.assertIsNone(elem.counter_jump_up_value)
+        self.assertIsNone(elem.counter_passed_threshold)
+
+    def test_with_all_fields(self):
+        element = ar_element.DiagEventDebounceCounterBased(
+            "DiagEventDebounceCounterBased",
+            counter_based_fdc_threshold_storage_value=10,
+            counter_decrement_step_size=1,
+            counter_failed_threshold=20,
+            counter_increment_step_size=2,
+            counter_jump_down=True,
+            counter_jump_down_value=5,
+            counter_jump_up=False,
+            counter_jump_up_value=15,
+            counter_passed_threshold=-20
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<DIAG-EVENT-DEBOUNCE-COUNTER-BASED>
+  <SHORT-NAME>DiagEventDebounceCounterBased</SHORT-NAME>
+  <COUNTER-BASED-FDC-THRESHOLD-STORAGE-VALUE>10</COUNTER-BASED-FDC-THRESHOLD-STORAGE-VALUE>
+  <COUNTER-DECREMENT-STEP-SIZE>1</COUNTER-DECREMENT-STEP-SIZE>
+  <COUNTER-FAILED-THRESHOLD>20</COUNTER-FAILED-THRESHOLD>
+  <COUNTER-INCREMENT-STEP-SIZE>2</COUNTER-INCREMENT-STEP-SIZE>
+  <COUNTER-JUMP-DOWN>true</COUNTER-JUMP-DOWN>
+  <COUNTER-JUMP-DOWN-VALUE>5</COUNTER-JUMP-DOWN-VALUE>
+  <COUNTER-JUMP-UP>false</COUNTER-JUMP-UP>
+  <COUNTER-JUMP-UP-VALUE>15</COUNTER-JUMP-UP-VALUE>
+  <COUNTER-PASSED-THRESHOLD>-20</COUNTER-PASSED-THRESHOLD>
+</DIAG-EVENT-DEBOUNCE-COUNTER-BASED>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DiagEventDebounceCounterBased = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DiagEventDebounceCounterBased)
+        self.assertEqual(elem.counter_based_fdc_threshold_storage_value, 10)
+        self.assertEqual(elem.counter_decrement_step_size, 1)
+        self.assertEqual(elem.counter_failed_threshold, 20)
+        self.assertEqual(elem.counter_increment_step_size, 2)
+        self.assertTrue(elem.counter_jump_down)
+        self.assertEqual(elem.counter_jump_down_value, 5)
+        self.assertFalse(elem.counter_jump_up)
+        self.assertEqual(elem.counter_jump_up_value, 15)
+        self.assertEqual(elem.counter_passed_threshold, -20)
+
+
+class TestDiagEventDebounceMonitorInternal(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.DiagEventDebounceMonitorInternal("DiagEventDebounceMonitorInternal")
+        writer = autosar.xml.Writer()
+        xml = '''<DIAG-EVENT-DEBOUNCE-MONITOR-INTERNAL>
+  <SHORT-NAME>DiagEventDebounceMonitorInternal</SHORT-NAME>
+</DIAG-EVENT-DEBOUNCE-MONITOR-INTERNAL>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DiagEventDebounceMonitorInternal = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DiagEventDebounceMonitorInternal)
+        self.assertIsInstance(elem, ar_element.DiagEventDebounceAlgorithm)
+        self.assertEqual(elem.name, "DiagEventDebounceMonitorInternal")
+
+
+class TestDiagEventDebounceTimeBased(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.DiagEventDebounceTimeBased("DiagEventDebounceTimeBased")
+        writer = autosar.xml.Writer()
+        xml = '''<DIAG-EVENT-DEBOUNCE-TIME-BASED>
+  <SHORT-NAME>DiagEventDebounceTimeBased</SHORT-NAME>
+</DIAG-EVENT-DEBOUNCE-TIME-BASED>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DiagEventDebounceTimeBased = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DiagEventDebounceTimeBased)
+        self.assertIsInstance(elem, ar_element.DiagEventDebounceAlgorithm)
+        self.assertEqual(elem.name, "DiagEventDebounceTimeBased")
+        self.assertIsNone(elem.time_based_fdc_threshold_storage_value)
+        self.assertIsNone(elem.time_failed_threshold)
+        self.assertIsNone(elem.time_passed_threshold)
+
+    def test_with_all_fields(self):
+        element = ar_element.DiagEventDebounceTimeBased(
+            "DiagEventDebounceTimeBased",
+            time_based_fdc_threshold_storage_value=0.5,
+            time_failed_threshold=1.2,
+            time_passed_threshold=0.8
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<DIAG-EVENT-DEBOUNCE-TIME-BASED>
+  <SHORT-NAME>DiagEventDebounceTimeBased</SHORT-NAME>
+  <TIME-BASED-FDC-THRESHOLD-STORAGE-VALUE>0.5</TIME-BASED-FDC-THRESHOLD-STORAGE-VALUE>
+  <TIME-FAILED-THRESHOLD>1.2</TIME-FAILED-THRESHOLD>
+  <TIME-PASSED-THRESHOLD>0.8</TIME-PASSED-THRESHOLD>
+</DIAG-EVENT-DEBOUNCE-TIME-BASED>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DiagEventDebounceTimeBased = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DiagEventDebounceTimeBased)
+        self.assertEqual(elem.time_based_fdc_threshold_storage_value, 0.5)
+        self.assertEqual(elem.time_failed_threshold, 1.2)
+        self.assertEqual(elem.time_passed_threshold, 0.8)
+
+
 if __name__ == '__main__':
     unittest.main()
