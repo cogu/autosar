@@ -347,6 +347,7 @@ class Reader:
             'DIAGNOSTIC-UPLOAD-DOWNLOAD-NEEDS': self._read_diagnostic_upload_download_needs,
             'DIAGNOSTIC-VALUE-NEEDS': self._read_diagnostic_value_needs,
             'DIAGNOSTICS-COMMUNICATION-SECURITY-NEEDS': self._read_diagnostics_communication_security_needs,
+            'DLT-USER-NEEDS': self._read_dlt_user_needs,
             # SWC internal behavior elements
             'AUTOSAR-VARIABLE-IN-IMPL-DATATYPE': self._read_variable_in_impl_data_instance_ref,
             'AUTOSAR-VARIABLE-IREF': self._read_variable_in_atomic_swc_type_instance_ref,
@@ -6968,6 +6969,22 @@ class Reader:
         # Group AR:DIAGNOSTICS-COMMUNICATION-SECURITY-NEEDS contains no elements
         self._report_unprocessed_elements(child_elements)
         return ar_element.DiagnosticsCommunicationSecurityNeeds(**data)
+
+    def _read_dlt_user_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.DltUserNeeds:
+        """
+        Reads complex type AR:DLT-USER-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Groups AR:SERVICE-NEEDS and AR:DLT-USER-NEEDS contain no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.DltUserNeeds(**data)
 
     def _read_swc_internal_behavior(self, xml_element: ElementTree.Element) -> ar_element.SwcInternalBehavior:
         """

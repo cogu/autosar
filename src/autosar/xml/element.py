@@ -7223,6 +7223,15 @@ class DiagnosticsCommunicationSecurityNeeds(DiagnosticCapabilityElement):
     """
 
 
+class DltUserNeeds(ServiceNeeds):
+    """
+    Complex type AR:DLT-USER-NEEDS
+    Tag variants: 'DLT-USER-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
 # --- Internal behavior elements
 
 
