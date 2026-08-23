@@ -9083,6 +9083,47 @@ class IncludedDataTypeSet(ARObject):
             raise ar_except.ElementTypeError("data_type", ("AutosarDataTypeRef", "str"), data_type)
 
 
+class IncludedModeDeclarationGroupSet(ARObject):
+    """
+    Complex type AR:INCLUDED-MODE-DECLARATION-GROUP-SET
+    Tag variants: 'INCLUDED-MODE-DECLARATION-GROUP-SET'
+    """
+
+    def __init__(self,
+                 mode_declaration_group: (ModeDeclarationGroupRef | list[ModeDeclarationGroupRef] |
+                                          str | list[str] | None) = None,
+                 prefix: str | None = None) -> None:
+        super().__init__()
+        # .MODE-DECLARATION-GROUP-REFS
+        self.mode_declaration_group: list[ModeDeclarationGroupRef] = []
+        # .PREFIX
+        self.prefix: str | None = None
+
+        self._assign_optional_strict("prefix", prefix, str)
+
+        if mode_declaration_group is not None:
+            if isinstance(mode_declaration_group, (ModeDeclarationGroupRef, str)):
+                self.append(mode_declaration_group)
+            elif isinstance(mode_declaration_group, Iterable):
+                for item in mode_declaration_group:
+                    self.append(item)
+            else:
+                raise TypeError(f"mode_declaration_group: Invalid type {str(type(mode_declaration_group))}")
+
+    def append(self, mode_declaration_group: ModeDeclarationGroupRef | str) -> None:
+        """
+        Adds ModeDeclarationGroupRef to internal list
+        """
+        if isinstance(mode_declaration_group, str):
+            self.mode_declaration_group.append(ModeDeclarationGroupRef(mode_declaration_group))
+        elif isinstance(mode_declaration_group, ModeDeclarationGroupRef):
+            self.mode_declaration_group.append(mode_declaration_group)
+        else:
+            raise ar_except.ElementTypeError("mode_declaration_group",
+                                             ("ModeDeclarationGroupRef", "str"),
+                                             mode_declaration_group)
+
+
 class InternalBehavior(Identifiable):
     """
     Group AR:INTERNAL-BEHAVIOR
@@ -9282,6 +9323,8 @@ class SwcInternalBehavior(InternalBehavior):
                                                     list[VariableDataPrototype] | None) = None,
                  included_data_type_set: (IncludedDataTypeSet |
                                           list[IncludedDataTypeSet] | None) = None,
+                 included_mode_declaration_group_set: (IncludedModeDeclarationGroupSet |
+                                                       list[IncludedModeDeclarationGroupSet] | None) = None,
                  port_api_option: PortApiOption | list[PortApiOption] | None = None,
                  runnable: RunnableEntity | list[RunnableEntity] | None = None,
                  **kwargs) -> None:
@@ -9300,7 +9343,8 @@ class SwcInternalBehavior(InternalBehavior):
         self.implicit_inter_runnable_variable: list[VariableDataPrototype] = []
         # .INCLUDED-DATA-TYPE-SETS
         self.included_data_type_set: list[IncludedDataTypeSet] = []
-        # .INCLUDED-MODE-DECLARATION-GROUP-SETS (not yet implemented)
+        # .INCLUDED-MODE-DECLARATION-GROUP-SETS
+        self.included_mode_declaration_group_set: list[IncludedModeDeclarationGroupSet] = []
         # .INSTANTIATION-DATA-DEF-PROPSS (not yet implemented)
         # .PER-INSTANCE-MEMORYS (not yet implemented)
         # .PER-INSTANCE-PARAMETERS (not yet implemented)
@@ -9359,6 +9403,13 @@ class SwcInternalBehavior(InternalBehavior):
                     self.append_included_data_type_set(item)
             else:
                 self.append_included_data_type_set(included_data_type_set)
+
+        if included_mode_declaration_group_set is not None:
+            if isinstance(included_mode_declaration_group_set, Iterable):
+                for item in included_mode_declaration_group_set:
+                    self.append_included_mode_declaration_group_set(item)
+            else:
+                self.append_included_mode_declaration_group_set(included_mode_declaration_group_set)
 
         if port_api_option is not None:
             if isinstance(port_api_option, Iterable):
@@ -9510,6 +9561,29 @@ class SwcInternalBehavior(InternalBehavior):
             self.included_data_type_set.append(item)
         else:
             raise ar_except.ElementTypeError("item", IncludedDataTypeSet, item)
+
+    @convenience_function
+    def create_included_mode_declaration_group_set(self,
+                                                   mode_declaration_group: (ModeDeclarationGroupRef |
+                                                                            list[ModeDeclarationGroupRef] |
+                                                                            str | list[str] | None) = None,
+                                                   prefix: str | None = None
+                                                   ) -> IncludedModeDeclarationGroupSet:
+        """
+        Adds a new IncludedModeDeclarationGroupSet to included_mode_declaration_group_set
+        """
+        item = IncludedModeDeclarationGroupSet(mode_declaration_group=mode_declaration_group, prefix=prefix)
+        self.append_included_mode_declaration_group_set(item)
+        return item
+
+    def append_included_mode_declaration_group_set(self, item: IncludedModeDeclarationGroupSet) -> None:
+        """
+        Appends IncludedModeDeclarationGroupSet to included_mode_declaration_group_set
+        """
+        if isinstance(item, IncludedModeDeclarationGroupSet):
+            self.included_mode_declaration_group_set.append(item)
+        else:
+            raise ar_except.ElementTypeError("item", IncludedModeDeclarationGroupSet, item)
 
     def append_runnable(self, runnable: RunnableEntity) -> None:
         """
