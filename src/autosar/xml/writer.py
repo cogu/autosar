@@ -387,6 +387,19 @@ class Writer(_XMLWriter):
             'CryptoServiceJobNeeds': self._write_crypto_service_job_needs,
             'CryptoServiceNeeds': self._write_crypto_service_needs,
             'DiagnosticCommunicationManagerNeeds': self._write_diagnostic_communication_manager_needs,
+            'DiagnosticComponentNeeds': self._write_diagnostic_component_needs,
+            'DiagnosticControlNeeds': self._write_diagnostic_control_needs,
+            'DiagnosticEnableConditionNeeds': self._write_diagnostic_enable_condition_needs,
+            'DiagnosticEventInfoNeeds': self._write_diagnostic_event_info_needs,
+            'DiagnosticEventManagerNeeds': self._write_diagnostic_event_manager_needs,
+            'DiagnosticIoControlNeeds': self._write_diagnostic_io_control_needs,
+            'DiagnosticOperationCycleNeeds': self._write_diagnostic_operation_cycle_needs,
+            'DiagnosticRequestFileTransferNeeds': self._write_diagnostic_request_file_transfer_needs,
+            'DiagnosticRoutineNeeds': self._write_diagnostic_routine_needs,
+            'DiagnosticStorageConditionNeeds': self._write_diagnostic_storage_condition_needs,
+            'DiagnosticUploadDownloadNeeds': self._write_diagnostic_upload_download_needs,
+            'DiagnosticValueNeeds': self._write_diagnostic_value_needs,
+            'DiagnosticsCommunicationSecurityNeeds': self._write_diagnostics_communication_security_needs,
             # SWC internal behavior elements
             'ArVariableInImplementationDataInstanceRef': self._write_variable_in_impl_data_instance_ref,
             'VariableInAtomicSWCTypeInstanceRef': self._write_variable_in_atomic_swc_type_instance_ref,
@@ -2643,6 +2656,13 @@ class Writer(_XMLWriter):
         Writes references to AR:APPLICATION-RECORD-ELEMENT--SUBTYPES-ENUM
         """
         assert isinstance(elem, ar_element.ApplicationRecordElementRef)
+        self._write_ref_content(elem, tag)
+
+    def _write_diagnostic_value_needs_ref(self, elem: ar_element.DiagnosticValueNeedsRef, tag: str) -> None:
+        """
+        Writes references to AR:DIAGNOSTIC-VALUE-NEEDS--SUBTYPES-ENUM
+        """
+        assert isinstance(elem, ar_element.DiagnosticValueNeedsRef)
         self._write_ref_content(elem, tag)
 
 # -- Constant and value specifications
@@ -4937,6 +4957,294 @@ class Writer(_XMLWriter):
         if elem.service_request_callback_type is not None:
             self._add_content("SERVICE-REQUEST-CALLBACK-TYPE",
                               ar_enum.enum_to_xml(elem.service_request_callback_type))
+
+    def _write_diagnostic_component_needs(
+            self,
+            elem: ar_element.DiagnosticComponentNeeds) -> None:
+        """
+        Writes complex type AR:DIAGNOSTIC-COMPONENT-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DiagnosticComponentNeeds)
+        self._add_child("DIAGNOSTIC-COMPONENT-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_diagnostic_capability_element_group(elem)
+        # Group AR:DIAGNOSTIC-COMPONENT-NEEDS contains no elements
+        self._leave_child()
+
+    def _write_diagnostic_control_needs(
+            self,
+            elem: ar_element.DiagnosticControlNeeds) -> None:
+        """
+        Writes complex type AR:DIAGNOSTIC-CONTROL-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DiagnosticControlNeeds)
+        self._add_child("DIAGNOSTIC-CONTROL-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_diagnostic_capability_element_group(elem)
+        # Group AR:DIAGNOSTIC-CONTROL-NEEDS contains no elements
+        self._leave_child()
+
+    def _write_diagnostic_enable_condition_needs(
+            self,
+            elem: ar_element.DiagnosticEnableConditionNeeds) -> None:
+        """
+        Writes complex type AR:DIAGNOSTIC-ENABLE-CONDITION-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DiagnosticEnableConditionNeeds)
+        self._add_child("DIAGNOSTIC-ENABLE-CONDITION-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_diagnostic_capability_element_group(elem)
+        self._write_diagnostic_enable_condition_needs_group(elem)
+        self._leave_child()
+
+    def _write_diagnostic_enable_condition_needs_group(
+            self,
+            elem: ar_element.DiagnosticEnableConditionNeeds) -> None:
+        """
+        Writes group AR:DIAGNOSTIC-ENABLE-CONDITION-NEEDS
+        """
+        if elem.initial_status is not None:
+            self._add_content("INITIAL-STATUS", ar_enum.enum_to_xml(elem.initial_status))
+
+    def _write_diagnostic_event_info_needs(
+            self,
+            elem: ar_element.DiagnosticEventInfoNeeds) -> None:
+        """
+        Writes complex type AR:DIAGNOSTIC-EVENT-INFO-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DiagnosticEventInfoNeeds)
+        self._add_child("DIAGNOSTIC-EVENT-INFO-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_diagnostic_capability_element_group(elem)
+        self._write_diagnostic_event_info_needs_group(elem)
+        self._leave_child()
+
+    def _write_diagnostic_event_info_needs_group(
+            self,
+            elem: ar_element.DiagnosticEventInfoNeeds) -> None:
+        """
+        Writes group AR:DIAGNOSTIC-EVENT-INFO-NEEDS
+        """
+        if elem.obd_dtc_number is not None:
+            self._add_content("OBD-DTC-NUMBER", str(elem.obd_dtc_number))
+        if elem.uds_dtc_number is not None:
+            self._add_content("UDS-DTC-NUMBER", str(elem.uds_dtc_number))
+
+    def _write_diagnostic_event_manager_needs(
+            self,
+            elem: ar_element.DiagnosticEventManagerNeeds) -> None:
+        """
+        Writes complex type AR:DIAGNOSTIC-EVENT-MANAGER-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DiagnosticEventManagerNeeds)
+        self._add_child("DIAGNOSTIC-EVENT-MANAGER-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_diagnostic_capability_element_group(elem)
+        # Group AR:DIAGNOSTIC-EVENT-MANAGER-NEEDS contains no elements
+        self._leave_child()
+
+    def _write_diagnostic_io_control_needs(
+            self,
+            elem: ar_element.DiagnosticIoControlNeeds) -> None:
+        """
+        Writes complex type AR:DIAGNOSTIC-IO-CONTROL-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DiagnosticIoControlNeeds)
+        self._add_child("DIAGNOSTIC-IO-CONTROL-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_diagnostic_capability_element_group(elem)
+        self._write_diagnostic_io_control_needs_group(elem)
+        self._leave_child()
+
+    def _write_diagnostic_io_control_needs_group(
+            self,
+            elem: ar_element.DiagnosticIoControlNeeds) -> None:
+        """
+        Writes group AR:DIAGNOSTIC-IO-CONTROL-NEEDS
+        """
+        if elem.current_value_ref is not None:
+            self._write_diagnostic_value_needs_ref(elem.current_value_ref, "CURRENT-VALUE-REF")
+        if elem.freeze_current_state_supported is not None:
+            self._add_content("FREEZE-CURRENT-STATE-SUPPORTED",
+                              self._format_boolean(elem.freeze_current_state_supported))
+        if elem.reset_to_default_supported is not None:
+            self._add_content("RESET-TO-DEFAULT-SUPPORTED",
+                              self._format_boolean(elem.reset_to_default_supported))
+        if elem.short_term_adjustment_supported is not None:
+            self._add_content("SHORT-TERM-ADJUSTMENT-SUPPORTED",
+                              self._format_boolean(elem.short_term_adjustment_supported))
+
+    def _write_diagnostic_operation_cycle_needs(
+            self,
+            elem: ar_element.DiagnosticOperationCycleNeeds) -> None:
+        """
+        Writes complex type AR:DIAGNOSTIC-OPERATION-CYCLE-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DiagnosticOperationCycleNeeds)
+        self._add_child("DIAGNOSTIC-OPERATION-CYCLE-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_diagnostic_capability_element_group(elem)
+        self._write_diagnostic_operation_cycle_needs_group(elem)
+        self._leave_child()
+
+    def _write_diagnostic_operation_cycle_needs_group(
+            self,
+            elem: ar_element.DiagnosticOperationCycleNeeds) -> None:
+        """
+        Writes group AR:DIAGNOSTIC-OPERATION-CYCLE-NEEDS
+        """
+        if elem.operation_cycle is not None:
+            self._add_content("OPERATION-CYCLE", ar_enum.enum_to_xml(elem.operation_cycle))
+
+    def _write_diagnostic_request_file_transfer_needs(
+            self,
+            elem: ar_element.DiagnosticRequestFileTransferNeeds) -> None:
+        """
+        Writes complex type AR:DIAGNOSTIC-REQUEST-FILE-TRANSFER-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DiagnosticRequestFileTransferNeeds)
+        self._add_child("DIAGNOSTIC-REQUEST-FILE-TRANSFER-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_diagnostic_capability_element_group(elem)
+        # Group AR:DIAGNOSTIC-REQUEST-FILE-TRANSFER-NEEDS contains no elements
+        self._leave_child()
+
+    def _write_diagnostic_routine_needs(
+            self,
+            elem: ar_element.DiagnosticRoutineNeeds) -> None:
+        """
+        Writes complex type AR:DIAGNOSTIC-ROUTINE-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DiagnosticRoutineNeeds)
+        self._add_child("DIAGNOSTIC-ROUTINE-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_diagnostic_capability_element_group(elem)
+        self._write_diagnostic_routine_needs_group(elem)
+        self._leave_child()
+
+    def _write_diagnostic_routine_needs_group(
+            self,
+            elem: ar_element.DiagnosticRoutineNeeds) -> None:
+        """
+        Writes group AR:DIAGNOSTIC-ROUTINE-NEEDS
+        """
+        if elem.diag_routine_type is not None:
+            self._add_content("DIAG-ROUTINE-TYPE", ar_enum.enum_to_xml(elem.diag_routine_type))
+
+    def _write_diagnostic_storage_condition_needs(
+            self,
+            elem: ar_element.DiagnosticStorageConditionNeeds) -> None:
+        """
+        Writes complex type AR:DIAGNOSTIC-STORAGE-CONDITION-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DiagnosticStorageConditionNeeds)
+        self._add_child("DIAGNOSTIC-STORAGE-CONDITION-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_diagnostic_capability_element_group(elem)
+        self._write_diagnostic_storage_condition_needs_group(elem)
+        self._leave_child()
+
+    def _write_diagnostic_storage_condition_needs_group(
+            self,
+            elem: ar_element.DiagnosticStorageConditionNeeds) -> None:
+        """
+        Writes group AR:DIAGNOSTIC-STORAGE-CONDITION-NEEDS
+        """
+        if elem.initial_status is not None:
+            self._add_content("INITIAL-STATUS", ar_enum.enum_to_xml(elem.initial_status))
+
+    def _write_diagnostic_upload_download_needs(
+            self,
+            elem: ar_element.DiagnosticUploadDownloadNeeds) -> None:
+        """
+        Writes complex type AR:DIAGNOSTIC-UPLOAD-DOWNLOAD-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DiagnosticUploadDownloadNeeds)
+        self._add_child("DIAGNOSTIC-UPLOAD-DOWNLOAD-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_diagnostic_capability_element_group(elem)
+        # Group AR:DIAGNOSTIC-UPLOAD-DOWNLOAD-NEEDS contains no elements
+        self._leave_child()
+
+    def _write_diagnostic_value_needs(
+            self,
+            elem: ar_element.DiagnosticValueNeeds) -> None:
+        """
+        Writes complex type AR:DIAGNOSTIC-VALUE-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DiagnosticValueNeeds)
+        self._add_child("DIAGNOSTIC-VALUE-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_diagnostic_capability_element_group(elem)
+        self._write_diagnostic_value_needs_group(elem)
+        self._leave_child()
+
+    def _write_diagnostic_value_needs_group(
+            self,
+            elem: ar_element.DiagnosticValueNeeds) -> None:
+        """
+        Writes group AR:DIAGNOSTIC-VALUE-NEEDS
+        """
+        if elem.data_length is not None:
+            self._add_content("DATA-LENGTH", str(elem.data_length))
+        if elem.diagnostic_value_access is not None:
+            self._add_content("DIAGNOSTIC-VALUE-ACCESS", ar_enum.enum_to_xml(elem.diagnostic_value_access))
+        if elem.fixed_length is not None:
+            self._add_content("FIXED-LENGTH", self._format_boolean(elem.fixed_length))
+        if elem.processing_style is not None:
+            self._add_content("PROCESSING-STYLE", ar_enum.enum_to_xml(elem.processing_style))
+
+    def _write_diagnostics_communication_security_needs(
+            self,
+            elem: ar_element.DiagnosticsCommunicationSecurityNeeds) -> None:
+        """
+        Writes complex type AR:DIAGNOSTICS-COMMUNICATION-SECURITY-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DiagnosticsCommunicationSecurityNeeds)
+        self._add_child("DIAGNOSTICS-COMMUNICATION-SECURITY-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_diagnostic_capability_element_group(elem)
+        # Group AR:DIAGNOSTICS-COMMUNICATION-SECURITY-NEEDS contains no elements
+        self._leave_child()
 
     def _write_abstract_access_point(self, elem: ar_element.AbstractAccessPoint) -> None:
         """
