@@ -26,6 +26,7 @@ Non-collectable elements are various sub-elements to collectable elements.
 #### XML - Service needs elements
 
 * BswMgrNeeds | BSW-MGR-NEEDS
+* ComMgrUserNeeds | COM-MGR-USER-NEEDS
 
 #### XML - SWC internal behavior elements
 

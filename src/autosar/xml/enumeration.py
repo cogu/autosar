@@ -492,6 +492,16 @@ class Language(Enum):
     ZU = 136  # Zulu
 
 
+class MaxCommMode(Enum):
+    """
+    MAX-COMM-MODE-ENUM--SIMPLE
+    """
+
+    FULL = 0
+    NONE = 1
+    SILENT = 2
+
+
 class ModeAccess(Enum):
     """
     Used internally for selecting mode access
@@ -1100,6 +1110,11 @@ xml_to_enum_map: dict[str, dict] = {
         "ZH": Language.ZH,
         "ZU": Language.ZU,
     },
+    "MaxCommMode": {
+        "FULL": MaxCommMode.FULL,
+        "NONE": MaxCommMode.NONE,
+        "SILENT": MaxCommMode.SILENT,
+    },
     "ModeActivationKind": {
         "ON-ENTRY": ModeActivationKind.ON_ENTRY,
         "ON-EXIT": ModeActivationKind.ON_EXIT,
@@ -1529,6 +1544,11 @@ enum_to_xml_map: dict[str, list] = {
         "YO",  # 134
         "ZH",  # 135
         "ZU",  # 136
+    ],
+    "MaxCommMode": [
+        "FULL",    # 0
+        "NONE",    # 1
+        "SILENT",  # 2
     ],
     "ModeActivationKind": [
         "ON-ENTRY",           # 0
