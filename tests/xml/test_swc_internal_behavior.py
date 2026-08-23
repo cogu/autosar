@@ -3961,6 +3961,84 @@ class TestIncludedDataTypeSet(unittest.TestCase):
             ar_element.IncludedDataTypeSet(data_type=123)
 
 
+class TestIncludedModeDeclarationGroupSet(unittest.TestCase):
+
+    def test_empty(self):
+        element = ar_element.IncludedModeDeclarationGroupSet()
+        writer = autosar.xml.Writer()
+        xml = writer.write_str_elem(element)
+        self.assertEqual(xml, '<INCLUDED-MODE-DECLARATION-GROUP-SET/>')
+        reader = autosar.xml.Reader()
+        elem: ar_element.IncludedModeDeclarationGroupSet = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.IncludedModeDeclarationGroupSet)
+        self.assertEqual(elem.mode_declaration_group, [])
+        self.assertIsNone(elem.prefix)
+
+    def test_prefix(self):
+        element = ar_element.IncludedModeDeclarationGroupSet(prefix="Prefix_")
+        writer = autosar.xml.Writer()
+        xml = '''<INCLUDED-MODE-DECLARATION-GROUP-SET>
+  <PREFIX>Prefix_</PREFIX>
+</INCLUDED-MODE-DECLARATION-GROUP-SET>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.IncludedModeDeclarationGroupSet = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.IncludedModeDeclarationGroupSet)
+        self.assertEqual(elem.prefix, "Prefix_")
+
+    def test_mode_declaration_group_from_str(self):
+        element = ar_element.IncludedModeDeclarationGroupSet(
+            mode_declaration_group="/ModeDeclarations/MyModes", prefix="Prefix_")
+        xml = '''<INCLUDED-MODE-DECLARATION-GROUP-SET>
+  <MODE-DECLARATION-GROUP-REFS>
+    <MODE-DECLARATION-GROUP-REF DEST="MODE-DECLARATION-GROUP">/ModeDeclarations/MyModes</MODE-DECLARATION-GROUP-REF>
+  </MODE-DECLARATION-GROUP-REFS>
+  <PREFIX>Prefix_</PREFIX>
+</INCLUDED-MODE-DECLARATION-GROUP-SET>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.IncludedModeDeclarationGroupSet = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.IncludedModeDeclarationGroupSet)
+        self.assertEqual(len(elem.mode_declaration_group), 1)
+        self.assertIsInstance(elem.mode_declaration_group[0], ar_element.ModeDeclarationGroupRef)
+        self.assertEqual(str(elem.mode_declaration_group[0]), "/ModeDeclarations/MyModes")
+        self.assertEqual(elem.prefix, "Prefix_")
+
+    def test_mode_declaration_group_from_list(self):
+        ref1 = ar_element.ModeDeclarationGroupRef("/ModeDeclarations/Mode1")
+        ref2 = "/ModeDeclarations/Mode2"
+        element = ar_element.IncludedModeDeclarationGroupSet(mode_declaration_group=[ref1, ref2])
+        xml = '''<INCLUDED-MODE-DECLARATION-GROUP-SET>
+  <MODE-DECLARATION-GROUP-REFS>
+    <MODE-DECLARATION-GROUP-REF DEST="MODE-DECLARATION-GROUP">/ModeDeclarations/Mode1</MODE-DECLARATION-GROUP-REF>
+    <MODE-DECLARATION-GROUP-REF DEST="MODE-DECLARATION-GROUP">/ModeDeclarations/Mode2</MODE-DECLARATION-GROUP-REF>
+  </MODE-DECLARATION-GROUP-REFS>
+</INCLUDED-MODE-DECLARATION-GROUP-SET>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.IncludedModeDeclarationGroupSet = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.IncludedModeDeclarationGroupSet)
+        self.assertEqual(len(elem.mode_declaration_group), 2)
+        self.assertEqual(str(elem.mode_declaration_group[0]), "/ModeDeclarations/Mode1")
+        self.assertEqual(str(elem.mode_declaration_group[1]), "/ModeDeclarations/Mode2")
+
+    def test_append(self):
+        element = ar_element.IncludedModeDeclarationGroupSet()
+        element.append("/ModeDeclarations/Mode1")
+        element.append(ar_element.ModeDeclarationGroupRef("/ModeDeclarations/Mode2"))
+        self.assertEqual(len(element.mode_declaration_group), 2)
+        with self.assertRaises(ar_except.ElementTypeError):
+            element.append(123)
+
+    def test_invalid_types(self):
+        with self.assertRaises(ar_except.AssignmentTypeError):
+            ar_element.IncludedModeDeclarationGroupSet(prefix=123)
+        with self.assertRaises(TypeError):
+            ar_element.IncludedModeDeclarationGroupSet(mode_declaration_group=123)
+
+
 class TestInternalBehavior(unittest.TestCase):
     """
     Use SwcInternalBehavior as test class since InternalBehavior is abstract.
@@ -4540,6 +4618,81 @@ class TestInternalBehavior(unittest.TestCase):
         element = ar_element.SwcInternalBehavior("MyName")
         with self.assertRaises(ar_except.ElementTypeError):
             element.append_included_data_type_set("InvalidType")
+
+    def test_included_mode_declaration_group_sets_from_element(self):
+        mdg_set = ar_element.IncludedModeDeclarationGroupSet(
+            mode_declaration_group="/ModeDeclarations/MyModes", prefix="Prefix_")
+        element = ar_element.SwcInternalBehavior("MyName", included_mode_declaration_group_set=mdg_set)
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <INCLUDED-MODE-DECLARATION-GROUP-SETS>
+    <INCLUDED-MODE-DECLARATION-GROUP-SET>
+      <MODE-DECLARATION-GROUP-REFS>
+        <MODE-DECLARATION-GROUP-REF DEST="MODE-DECLARATION-GROUP">/ModeDeclarations/MyModes</MODE-DECLARATION-GROUP-REF>
+      </MODE-DECLARATION-GROUP-REFS>
+      <PREFIX>Prefix_</PREFIX>
+    </INCLUDED-MODE-DECLARATION-GROUP-SET>
+  </INCLUDED-MODE-DECLARATION-GROUP-SETS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.included_mode_declaration_group_set), 1)
+        child = elem.included_mode_declaration_group_set[0]
+        self.assertIsInstance(child, ar_element.IncludedModeDeclarationGroupSet)
+        self.assertEqual(len(child.mode_declaration_group), 1)
+        self.assertEqual(str(child.mode_declaration_group[0]), "/ModeDeclarations/MyModes")
+        self.assertEqual(child.prefix, "Prefix_")
+
+    def test_included_mode_declaration_group_sets_from_list(self):
+        set1 = ar_element.IncludedModeDeclarationGroupSet(
+            mode_declaration_group="/ModeDeclarations/Mode1", prefix="P1_")
+        set2 = ar_element.IncludedModeDeclarationGroupSet(
+            mode_declaration_group="/ModeDeclarations/Mode2", prefix="P2_")
+        element = ar_element.SwcInternalBehavior("MyName", included_mode_declaration_group_set=[set1, set2])
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <INCLUDED-MODE-DECLARATION-GROUP-SETS>
+    <INCLUDED-MODE-DECLARATION-GROUP-SET>
+      <MODE-DECLARATION-GROUP-REFS>
+        <MODE-DECLARATION-GROUP-REF DEST="MODE-DECLARATION-GROUP">/ModeDeclarations/Mode1</MODE-DECLARATION-GROUP-REF>
+      </MODE-DECLARATION-GROUP-REFS>
+      <PREFIX>P1_</PREFIX>
+    </INCLUDED-MODE-DECLARATION-GROUP-SET>
+    <INCLUDED-MODE-DECLARATION-GROUP-SET>
+      <MODE-DECLARATION-GROUP-REFS>
+        <MODE-DECLARATION-GROUP-REF DEST="MODE-DECLARATION-GROUP">/ModeDeclarations/Mode2</MODE-DECLARATION-GROUP-REF>
+      </MODE-DECLARATION-GROUP-REFS>
+      <PREFIX>P2_</PREFIX>
+    </INCLUDED-MODE-DECLARATION-GROUP-SET>
+  </INCLUDED-MODE-DECLARATION-GROUP-SETS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.included_mode_declaration_group_set), 2)
+        self.assertEqual(elem.included_mode_declaration_group_set[0].prefix, "P1_")
+        self.assertEqual(elem.included_mode_declaration_group_set[1].prefix, "P2_")
+
+    def test_create_included_mode_declaration_group_set(self):
+        element = ar_element.SwcInternalBehavior("MyName")
+        item = element.create_included_mode_declaration_group_set(
+            mode_declaration_group="/ModeDeclarations/MyModes", prefix="Prefix_")
+        self.assertIsInstance(item, ar_element.IncludedModeDeclarationGroupSet)
+        self.assertEqual(item.prefix, "Prefix_")
+        self.assertEqual(len(item.mode_declaration_group), 1)
+        self.assertEqual(str(item.mode_declaration_group[0]), "/ModeDeclarations/MyModes")
+        self.assertEqual(len(element.included_mode_declaration_group_set), 1)
+        self.assertIs(element.included_mode_declaration_group_set[0], item)
+
+    def test_append_included_mode_declaration_group_set_invalid_type(self):
+        element = ar_element.SwcInternalBehavior("MyName")
+        with self.assertRaises(ar_except.ElementTypeError):
+            element.append_included_mode_declaration_group_set("InvalidType")
 
     def test_append_constant_value_mapping_invalid_type(self):
         element = ar_element.SwcInternalBehavior("MyName")

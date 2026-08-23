@@ -27,6 +27,7 @@ Non-collectable elements are various sub-elements to collectable elements.
 
 * ExclusiveAreaNestingOrder | EXCLUSIVE-AREA-NESTING-ORDER
 * IncludedDataTypeSet | INCLUDED-DATA-TYPE-SET
+* IncludedModeDeclarationGroupSet | INCLUDED-MODE-DECLARATION-GROUP-SET
 * SwcExclusiveAreaPolicy | SWC-EXCLUSIVE-AREA-POLICY
 
 #### Developer Utilities (`dev_utils`)

@@ -335,6 +335,7 @@ class Reader:
             'EXCLUSIVE-AREA-REF-CONDITIONAL': self._read_exclusive_area_ref_conditional,
             'SWC-EXCLUSIVE-AREA-POLICY': self._read_swc_exclusive_area_policy,
             'INCLUDED-DATA-TYPE-SET': self._read_included_data_type_set,
+            'INCLUDED-MODE-DECLARATION-GROUP-SET': self._read_included_mode_declaration_group_set,
             'DISABLED-MODE-IREF': self._read_r_mode_in_atomic_swc_instance_ref,
             'SWC-INTERNAL-BEHAVIOR': self._read_swc_internal_behavior,
             'RUNNABLE-ENTITY-ARGUMENT': self._read_runnable_entity_argument,
@@ -6297,6 +6298,33 @@ class Reader:
         if xml_child is not None:
             data["literal_prefix"] = xml_child.text
 
+    def _read_included_mode_declaration_group_set(self,
+                                                  xml_element: ElementTree.Element
+                                                  ) -> ar_element.IncludedModeDeclarationGroupSet:
+        """
+        Reads complex type AR:INCLUDED-MODE-DECLARATION-GROUP-SET
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_included_mode_declaration_group_set_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.IncludedModeDeclarationGroupSet(**data)
+
+    def _read_included_mode_declaration_group_set_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:INCLUDED-MODE-DECLARATION-GROUP-SET
+        """
+        xml_child = child_elements.get("MODE-DECLARATION-GROUP-REFS")
+        if xml_child is not None:
+            mode_declaration_groups = []
+            for xml_grand_child in xml_child.findall("./MODE-DECLARATION-GROUP-REF"):
+                mode_declaration_groups.append(self._read_mode_declaration_group_ref(xml_grand_child))
+            data["mode_declaration_group"] = mode_declaration_groups
+        xml_child = child_elements.get("PREFIX")
+        if xml_child is not None:
+            data["prefix"] = xml_child.text
+
     def _read_swc_internal_behavior(self, xml_element: ElementTree.Element) -> ar_element.SwcInternalBehavior:
         """
         Reads complex type AR:SWC-INTERNAL-BEHAVIOR
@@ -6398,7 +6426,13 @@ class Reader:
             for xml_grand_child in xml_child.findall("./INCLUDED-DATA-TYPE-SET"):
                 included_data_type_sets.append(self._read_included_data_type_set(xml_grand_child))
             data["included_data_type_set"] = included_data_type_sets
-        child_elements.skip("INCLUDED-MODE-DECLARATION-GROUP-SETS")
+        xml_child = child_elements.get("INCLUDED-MODE-DECLARATION-GROUP-SETS")
+        if xml_child is not None:
+            included_mode_declaration_group_sets = []
+            for xml_grand_child in xml_child.findall("./INCLUDED-MODE-DECLARATION-GROUP-SET"):
+                included_mode_declaration_group_sets.append(
+                    self._read_included_mode_declaration_group_set(xml_grand_child))
+            data["included_mode_declaration_group_set"] = included_mode_declaration_group_sets
         child_elements.skip("INSTANTIATION-DATA-DEF-PROPSS")
         child_elements.skip("PER-INSTANCE-MEMORYS")
         child_elements.skip("PER-INSTANCE-PARAMETERS")

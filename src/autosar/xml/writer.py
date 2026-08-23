@@ -392,6 +392,7 @@ class Writer(_XMLWriter):
             'ExclusiveAreaRefConditional': self._write_exclusive_area_ref_conditional,
             'SwcExclusiveAreaPolicy': self._write_swc_exclusive_area_policy,
             'IncludedDataTypeSet': self._write_included_data_type_set,
+            'IncludedModeDeclarationGroupSet': self._write_included_mode_declaration_group_set,
             'RunnableEntityArgument': self._write_runnable_entity_argument,
             'RunnableEntity': self._write_runnable_entity,
             'AsynchronousServerCallReturnsEvent': self._write_async_server_call_returns_event,
@@ -4719,6 +4720,35 @@ class Writer(_XMLWriter):
         if elem.literal_prefix is not None:
             self._add_content("LITERAL-PREFIX", elem.literal_prefix)
 
+    def _write_included_mode_declaration_group_set(self,
+                                                   elem: ar_element.IncludedModeDeclarationGroupSet
+                                                   ) -> None:
+        """
+        Writes complex type AR:INCLUDED-MODE-DECLARATION-GROUP-SET
+        """
+        assert isinstance(elem, ar_element.IncludedModeDeclarationGroupSet)
+        tag = "INCLUDED-MODE-DECLARATION-GROUP-SET"
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_included_mode_declaration_group_set_group(elem)
+            self._leave_child()
+
+    def _write_included_mode_declaration_group_set_group(self,
+                                                         elem: ar_element.IncludedModeDeclarationGroupSet
+                                                         ) -> None:
+        """
+        Writes group AR:INCLUDED-MODE-DECLARATION-GROUP-SET
+        """
+        if elem.mode_declaration_group:
+            self._add_child("MODE-DECLARATION-GROUP-REFS")
+            for item in elem.mode_declaration_group:
+                self._write_mode_declaration_group_ref(item, "MODE-DECLARATION-GROUP-REF")
+            self._leave_child()
+        if elem.prefix is not None:
+            self._add_content("PREFIX", elem.prefix)
+
     def _write_abstract_access_point(self, elem: ar_element.AbstractAccessPoint) -> None:
         """
         Writes group AR:ABSTRACT-ACCESS-POINT
@@ -5575,6 +5605,11 @@ class Writer(_XMLWriter):
             self._add_child("INCLUDED-DATA-TYPE-SETS")
             for item in elem.included_data_type_set:
                 self._write_included_data_type_set(item)
+            self._leave_child()
+        if elem.included_mode_declaration_group_set:
+            self._add_child("INCLUDED-MODE-DECLARATION-GROUP-SETS")
+            for item in elem.included_mode_declaration_group_set:
+                self._write_included_mode_declaration_group_set(item)
             self._leave_child()
         if elem.port_api_option:
             self._add_child("PORT-API-OPTIONS")
