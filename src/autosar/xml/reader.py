@@ -6508,7 +6508,12 @@ class Reader:
             for xml_grand_child in xml_child.findall("./PER-INSTANCE-MEMORY"):
                 per_instance_memories.append(self._read_per_instance_memory(xml_grand_child))
             data["per_instance_memory"] = per_instance_memories
-        child_elements.skip("PER-INSTANCE-PARAMETERS")
+        xml_child = child_elements.get("PER-INSTANCE-PARAMETERS")
+        if xml_child is not None:
+            per_instance_parameters = []
+            for xml_grand_child in xml_child.findall("./PARAMETER-DATA-PROTOTYPE"):
+                per_instance_parameters.append(self._read_parameter_data_prototype(xml_grand_child))
+            data["per_instance_parameter"] = per_instance_parameters
         xml_child = child_elements.get("PORT-API-OPTIONS")
         if xml_child is not None:
             port_api_options = []

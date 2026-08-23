@@ -5516,6 +5516,65 @@ class TestSwcInternalBehavior(unittest.TestCase):
         with self.assertRaises(ar_except.ElementTypeError):
             element.append_instantiation_data_def_props("invalid")
 
+    # PER-INSTANCE-PARAMETERS
+
+    def test_per_instance_parameter_from_element(self):
+        param = ar_element.ParameterDataPrototype("MyPerInstanceParam")
+        element = ar_element.SwcInternalBehavior("MyName", per_instance_parameter=param)
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <PER-INSTANCE-PARAMETERS>
+    <PARAMETER-DATA-PROTOTYPE>
+      <SHORT-NAME>MyPerInstanceParam</SHORT-NAME>
+    </PARAMETER-DATA-PROTOTYPE>
+  </PER-INSTANCE-PARAMETERS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.per_instance_parameter), 1)
+        self.assertIsInstance(elem.per_instance_parameter[0], ar_element.ParameterDataPrototype)
+        self.assertEqual(elem.per_instance_parameter[0].name, "MyPerInstanceParam")
+
+    def test_per_instance_parameter_from_list(self):
+        p1 = ar_element.ParameterDataPrototype("P1")
+        p2 = ar_element.ParameterDataPrototype("P2")
+        element = ar_element.SwcInternalBehavior("MyName", per_instance_parameter=[p1, p2])
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <PER-INSTANCE-PARAMETERS>
+    <PARAMETER-DATA-PROTOTYPE>
+      <SHORT-NAME>P1</SHORT-NAME>
+    </PARAMETER-DATA-PROTOTYPE>
+    <PARAMETER-DATA-PROTOTYPE>
+      <SHORT-NAME>P2</SHORT-NAME>
+    </PARAMETER-DATA-PROTOTYPE>
+  </PER-INSTANCE-PARAMETERS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.per_instance_parameter), 2)
+        self.assertEqual(elem.per_instance_parameter[0].name, "P1")
+        self.assertEqual(elem.per_instance_parameter[1].name, "P2")
+
+    def test_create_per_instance_parameter(self):
+        element = ar_element.SwcInternalBehavior("MyName")
+        param = element.create_per_instance_parameter("MyPerInstanceParam")
+        self.assertIsInstance(param, ar_element.ParameterDataPrototype)
+        self.assertEqual(param.name, "MyPerInstanceParam")
+        self.assertEqual(len(element.per_instance_parameter), 1)
+        self.assertIs(element.per_instance_parameter[0], param)
+
+    def test_append_per_instance_parameter_invalid_type(self):
+        element = ar_element.SwcInternalBehavior("MyName")
+        with self.assertRaises(ar_except.ElementTypeError):
+            element.append_per_instance_parameter("InvalidType")
+
     # IMPLEMENT LATER: SERVICE-DEPENDENCYS"
     # IMPLEMENT LATER: SHARED-PARAMETERS
     # IMPLEMENT LATER: SUPPORTS-MULTIPLE-INSTANTIATION

@@ -9408,6 +9408,8 @@ class SwcInternalBehavior(InternalBehavior):
                                                 list[InstantiationDataDefProps] | None) = None,
                  per_instance_memory: (PerInstanceMemory |
                                        list[PerInstanceMemory] | None) = None,
+                 per_instance_parameter: (ParameterDataPrototype |
+                                          list[ParameterDataPrototype] | None) = None,
                  port_api_option: PortApiOption | list[PortApiOption] | None = None,
                  runnable: RunnableEntity | list[RunnableEntity] | None = None,
                  shared_parameter: (ParameterDataPrototype |
@@ -9435,7 +9437,8 @@ class SwcInternalBehavior(InternalBehavior):
         self.instantiation_data_def_props: list[InstantiationDataDefProps] = []
         # .PER-INSTANCE-MEMORYS
         self.per_instance_memory: list[PerInstanceMemory] = []
-        # .PER-INSTANCE-PARAMETERS (not yet implemented)
+        # .PER-INSTANCE-PARAMETERS
+        self.per_instance_parameter: list[ParameterDataPrototype] = []
         # .PORT-API-OPTIONS
         self.port_api_option: OrderedDict[PortApiOption] = OrderedDict()
         # .RUNNABLES
@@ -9531,6 +9534,13 @@ class SwcInternalBehavior(InternalBehavior):
                     self.append_per_instance_memory(item)
             else:
                 self.append_per_instance_memory(per_instance_memory)
+
+        if per_instance_parameter is not None:
+            if isinstance(per_instance_parameter, Iterable):
+                for item in per_instance_parameter:
+                    self.append_per_instance_parameter(item)
+            else:
+                self.append_per_instance_parameter(per_instance_parameter)
 
         if shared_parameter is not None:
             if isinstance(shared_parameter, Iterable):
@@ -9752,6 +9762,28 @@ class SwcInternalBehavior(InternalBehavior):
             item.parent = self
         else:
             raise ar_except.ElementTypeError("item", PerInstanceMemory, item)
+
+    @convenience_function
+    def create_per_instance_parameter(self,
+                                      name: str,
+                                      init_value: ValueSpecificationElement | None = None,
+                                      **kwargs) -> ParameterDataPrototype:
+        """
+        Adds a new ParameterDataPrototype to per_instance_parameter
+        """
+        item = ParameterDataPrototype(name, init_value, **kwargs)
+        self.append_per_instance_parameter(item)
+        return item
+
+    def append_per_instance_parameter(self, item: ParameterDataPrototype) -> None:
+        """
+        Appends ParameterDataPrototype to per_instance_parameter
+        """
+        if isinstance(item, ParameterDataPrototype):
+            self.per_instance_parameter.append(item)
+            item.parent = self
+        else:
+            raise ar_except.ElementTypeError("item", ParameterDataPrototype, item)
 
     @convenience_function
     def create_shared_parameter(self,
