@@ -6798,10 +6798,26 @@ class BswMgrNeeds(ServiceNeeds):
     """
     Complex type AR:BSW-MGR-NEEDS
     Tag variants: 'BSW-MGR-NEEDS'
+
+    Same constructor as parent class
     """
 
-    def __init__(self, name: str, **kwargs) -> None:
+
+class ComMgrUserNeeds(ServiceNeeds):
+    """
+    Complex type AR:COM-MGR-USER-NEEDS
+    Tag variants: 'COM-MGR-USER-NEEDS'
+    """
+
+    def __init__(self,
+                 name: str,
+                 max_comm_mode: ar_enum.MaxCommMode | None = None,
+                 **kwargs) -> None:
         super().__init__(name, **kwargs)
+        # .MAX-COMM-MODE
+        self.max_comm_mode: ar_enum.MaxCommMode | None = None
+
+        self._assign_optional("max_comm_mode", max_comm_mode, ar_enum.MaxCommMode)
 
 
 # --- Internal behavior elements
@@ -9191,7 +9207,7 @@ class PerInstanceMemory(Identifiable):
                  name: str,
                  init_value: str | None = None,
                  sw_data_def_props: SwDataDefProps | SwDataDefPropsConditional | None = None,
-                 type: str | None = None,
+                 type: str | None = None,  # pylint: disable=redefined-builtin
                  type_definition: str | None = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
@@ -9760,7 +9776,7 @@ class SwcInternalBehavior(InternalBehavior):
                                    name: str,
                                    init_value: str | None = None,
                                    sw_data_def_props: SwDataDefProps | SwDataDefPropsConditional | None = None,
-                                   type: str | None = None,
+                                   type: str | None = None,  # pylint: disable=redefined-builtin
                                    type_definition: str | None = None,
                                    **kwargs) -> PerInstanceMemory:
         """

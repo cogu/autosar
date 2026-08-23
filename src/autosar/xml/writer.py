@@ -382,6 +382,7 @@ class Writer(_XMLWriter):
             'RModeGroupInAtomicSwcInstanceRef': self._write_r_mode_group_in_atomic_swc_instance_ref,
             # Service needs elements
             'BswMgrNeeds': self._write_bsw_mgr_needs,
+            'ComMgrUserNeeds': self._write_com_mgr_user_needs,
             # SWC internal behavior elements
             'ArVariableInImplementationDataInstanceRef': self._write_variable_in_impl_data_instance_ref,
             'VariableInAtomicSWCTypeInstanceRef': self._write_variable_in_atomic_swc_type_instance_ref,
@@ -4820,6 +4821,26 @@ class Writer(_XMLWriter):
         self._write_identifiable(elem)
         # Groups AR:SERVICE-NEEDS and AR:BSW-MGR-NEEDS contain no elements
         self._leave_child()
+
+    def _write_com_mgr_user_needs(self, elem: ar_element.ComMgrUserNeeds) -> None:
+        """
+        Writes complex type AR:COM-MGR-USER-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.ComMgrUserNeeds)
+        self._add_child("COM-MGR-USER-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_com_mgr_user_needs_group(elem)
+        self._leave_child()
+
+    def _write_com_mgr_user_needs_group(self, elem: ar_element.ComMgrUserNeeds) -> None:
+        """
+        Writes group AR:COM-MGR-USER-NEEDS
+        """
+        if elem.max_comm_mode is not None:
+            self._add_content("MAX-COMM-MODE", ar_enum.enum_to_xml(elem.max_comm_mode))
 
     def _write_abstract_access_point(self, elem: ar_element.AbstractAccessPoint) -> None:
         """

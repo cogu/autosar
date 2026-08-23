@@ -326,6 +326,7 @@ class Reader:
             'R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF': self._read_r_mode_group_in_atomic_swc_instance_ref,
             # Service needs elements
             'BSW-MGR-NEEDS': self._read_bsw_mgr_needs,
+            'COM-MGR-USER-NEEDS': self._read_com_mgr_user_needs,
             # SWC internal behavior elements
             'AUTOSAR-VARIABLE-IN-IMPL-DATATYPE': self._read_variable_in_impl_data_instance_ref,
             'AUTOSAR-VARIABLE-IREF': self._read_variable_in_atomic_swc_type_instance_ref,
@@ -6404,6 +6405,28 @@ class Reader:
         # Groups AR:SERVICE-NEEDS and AR:BSW-MGR-NEEDS contain no elements
         self._report_unprocessed_elements(child_elements)
         return ar_element.BswMgrNeeds(**data)
+
+    def _read_com_mgr_user_needs(self, xml_element: ElementTree.Element) -> ar_element.ComMgrUserNeeds:
+        """
+        Reads complex type AR:COM-MGR-USER-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_com_mgr_user_needs_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ComMgrUserNeeds(**data)
+
+    def _read_com_mgr_user_needs_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:COM-MGR-USER-NEEDS
+        """
+        xml_child = child_elements.get("MAX-COMM-MODE")
+        if xml_child is not None:
+            data["max_comm_mode"] = ar_enum.xml_to_enum("MaxCommMode", xml_child.text)
 
     def _read_swc_internal_behavior(self, xml_element: ElementTree.Element) -> ar_element.SwcInternalBehavior:
         """

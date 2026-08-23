@@ -69,5 +69,45 @@ class TestBswMgrNeeds(unittest.TestCase):
         self.assertEqual(elem.category, "SERVICE_NEEDS")
 
 
+class TestComMgrUserNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.ComMgrUserNeeds("ComMgrUserNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<COM-MGR-USER-NEEDS>
+  <SHORT-NAME>ComMgrUserNeeds</SHORT-NAME>
+</COM-MGR-USER-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ComMgrUserNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ComMgrUserNeeds)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "ComMgrUserNeeds")
+        self.assertIsNone(elem.max_comm_mode)
+
+    def test_with_max_comm_mode(self):
+        element = ar_element.ComMgrUserNeeds(
+            "ComMgrUserNeeds",
+            max_comm_mode=autosar.xml.enumeration.MaxCommMode.FULL
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<COM-MGR-USER-NEEDS>
+  <SHORT-NAME>ComMgrUserNeeds</SHORT-NAME>
+  <MAX-COMM-MODE>FULL</MAX-COMM-MODE>
+</COM-MGR-USER-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ComMgrUserNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ComMgrUserNeeds)
+        self.assertEqual(elem.max_comm_mode, autosar.xml.enumeration.MaxCommMode.FULL)
+
+    def test_with_invalid_max_comm_mode(self):
+        with self.assertRaises(autosar.xml.exception.AssignmentTypeError):
+            ar_element.ComMgrUserNeeds(
+                "ComMgrUserNeeds",
+                max_comm_mode="SILENT"
+            )
+
+
 if __name__ == '__main__':
     unittest.main()
