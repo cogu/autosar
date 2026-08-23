@@ -5676,6 +5676,11 @@ class Writer(_XMLWriter):
             for item in elem.per_instance_memory:
                 self._write_per_instance_memory(item)
             self._leave_child()
+        if elem.per_instance_parameter:
+            self._add_child("PER-INSTANCE-PARAMETERS")
+            for item in elem.per_instance_parameter:
+                self._write_parameter_data_prototype(item, "PARAMETER-DATA-PROTOTYPE")
+            self._leave_child()
         if elem.port_api_option:
             self._add_child("PORT-API-OPTIONS")
             for element in elem.port_api_option.values():
