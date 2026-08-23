@@ -404,6 +404,12 @@ class Writer(_XMLWriter):
             'DiagnosticValueNeeds': self._write_diagnostic_value_needs,
             'DiagnosticsCommunicationSecurityNeeds': self._write_diagnostics_communication_security_needs,
             'DltUserNeeds': self._write_dlt_user_needs,
+            'DoIpActivationLineNeeds': self._write_do_ip_activation_line_needs,
+            'DoIpGidNeeds': self._write_do_ip_gid_needs,
+            'DoIpGidSynchronizationNeeds': self._write_do_ip_gid_synchronization_needs,
+            'DoIpPowerModeStatusNeeds': self._write_do_ip_power_mode_status_needs,
+            'DoIpRoutingActivationAuthenticationNeeds': self._write_do_ip_routing_activation_authentication_needs,
+            'DoIpRoutingActivationConfirmationNeeds': self._write_do_ip_routing_activation_confirmation_needs,
             # SWC internal behavior elements
             'ArVariableInImplementationDataInstanceRef': self._write_variable_in_impl_data_instance_ref,
             'VariableInAtomicSWCTypeInstanceRef': self._write_variable_in_atomic_swc_type_instance_ref,
@@ -5352,6 +5358,124 @@ class Writer(_XMLWriter):
         self._write_identifiable(elem)
         # Groups AR:SERVICE-NEEDS and AR:DLT-USER-NEEDS contain no elements
         self._leave_child()
+
+    def _write_do_ip_activation_line_needs(
+            self,
+            elem: ar_element.DoIpActivationLineNeeds) -> None:
+        """
+        Writes complex type AR:DO-IP-ACTIVATION-LINE-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DoIpActivationLineNeeds)
+        self._add_child("DO-IP-ACTIVATION-LINE-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        # Groups AR:SERVICE-NEEDS, AR:DO-IP-SERVICE-NEEDS, and AR:DO-IP-ACTIVATION-LINE-NEEDS contain no elements
+        self._leave_child()
+
+    def _write_do_ip_gid_needs(
+            self,
+            elem: ar_element.DoIpGidNeeds) -> None:
+        """
+        Writes complex type AR:DO-IP-GID-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DoIpGidNeeds)
+        self._add_child("DO-IP-GID-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        # Groups AR:SERVICE-NEEDS, AR:DO-IP-SERVICE-NEEDS, and AR:DO-IP-GID-NEEDS contain no elements
+        self._leave_child()
+
+    def _write_do_ip_gid_synchronization_needs(
+            self,
+            elem: ar_element.DoIpGidSynchronizationNeeds) -> None:
+        """
+        Writes complex type AR:DO-IP-GID-SYNCHRONIZATION-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DoIpGidSynchronizationNeeds)
+        self._add_child("DO-IP-GID-SYNCHRONIZATION-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        # Groups AR:SERVICE-NEEDS, AR:DO-IP-SERVICE-NEEDS, and AR:DO-IP-GID-SYNCHRONIZATION-NEEDS contain no elements
+        self._leave_child()
+
+    def _write_do_ip_power_mode_status_needs(
+            self,
+            elem: ar_element.DoIpPowerModeStatusNeeds) -> None:
+        """
+        Writes complex type AR:DO-IP-POWER-MODE-STATUS-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DoIpPowerModeStatusNeeds)
+        self._add_child("DO-IP-POWER-MODE-STATUS-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        # Groups AR:SERVICE-NEEDS, AR:DO-IP-SERVICE-NEEDS, and AR:DO-IP-POWER-MODE-STATUS-NEEDS contain no elements
+        self._leave_child()
+
+    def _write_do_ip_routing_activation_authentication_needs(
+            self,
+            elem: ar_element.DoIpRoutingActivationAuthenticationNeeds) -> None:
+        """
+        Writes complex type AR:DO-IP-ROUTING-ACTIVATION-AUTHENTICATION-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DoIpRoutingActivationAuthenticationNeeds)
+        self._add_child("DO-IP-ROUTING-ACTIVATION-AUTHENTICATION-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        # Groups AR:SERVICE-NEEDS and AR:DO-IP-SERVICE-NEEDS contain no elements
+        self._write_do_ip_routing_activation_authentication_needs_group(elem)
+        self._leave_child()
+
+    def _write_do_ip_routing_activation_authentication_needs_group(
+            self,
+            elem: ar_element.DoIpRoutingActivationAuthenticationNeeds) -> None:
+        """
+        Writes group AR:DO-IP-ROUTING-ACTIVATION-AUTHENTICATION-NEEDS
+        """
+        if elem.data_length_request is not None:
+            self._add_content("DATA-LENGTH-REQUEST", str(elem.data_length_request))
+        if elem.data_length_response is not None:
+            self._add_content("DATA-LENGTH-RESPONSE", str(elem.data_length_response))
+        if elem.routing_activation_type is not None:
+            self._add_content("ROUTING-ACTIVATION-TYPE", elem.routing_activation_type)
+
+    def _write_do_ip_routing_activation_confirmation_needs(
+            self,
+            elem: ar_element.DoIpRoutingActivationConfirmationNeeds) -> None:
+        """
+        Writes complex type AR:DO-IP-ROUTING-ACTIVATION-CONFIRMATION-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DoIpRoutingActivationConfirmationNeeds)
+        self._add_child("DO-IP-ROUTING-ACTIVATION-CONFIRMATION-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        # Groups AR:SERVICE-NEEDS and AR:DO-IP-SERVICE-NEEDS contain no elements
+        self._write_do_ip_routing_activation_confirmation_needs_group(elem)
+        self._leave_child()
+
+    def _write_do_ip_routing_activation_confirmation_needs_group(
+            self,
+            elem: ar_element.DoIpRoutingActivationConfirmationNeeds) -> None:
+        """
+        Writes group AR:DO-IP-ROUTING-ACTIVATION-CONFIRMATION-NEEDS
+        """
+        if elem.data_length_request is not None:
+            self._add_content("DATA-LENGTH-REQUEST", str(elem.data_length_request))
+        if elem.data_length_response is not None:
+            self._add_content("DATA-LENGTH-RESPONSE", str(elem.data_length_response))
+        if elem.routing_activation_type is not None:
+            self._add_content("ROUTING-ACTIVATION-TYPE", elem.routing_activation_type)
 
     def _write_abstract_access_point(self, elem: ar_element.AbstractAccessPoint) -> None:
         """

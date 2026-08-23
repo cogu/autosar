@@ -348,6 +348,12 @@ class Reader:
             'DIAGNOSTIC-VALUE-NEEDS': self._read_diagnostic_value_needs,
             'DIAGNOSTICS-COMMUNICATION-SECURITY-NEEDS': self._read_diagnostics_communication_security_needs,
             'DLT-USER-NEEDS': self._read_dlt_user_needs,
+            'DO-IP-ACTIVATION-LINE-NEEDS': self._read_do_ip_activation_line_needs,
+            'DO-IP-GID-NEEDS': self._read_do_ip_gid_needs,
+            'DO-IP-GID-SYNCHRONIZATION-NEEDS': self._read_do_ip_gid_synchronization_needs,
+            'DO-IP-POWER-MODE-STATUS-NEEDS': self._read_do_ip_power_mode_status_needs,
+            'DO-IP-ROUTING-ACTIVATION-AUTHENTICATION-NEEDS': self._read_do_ip_routing_activation_authentication_needs,
+            'DO-IP-ROUTING-ACTIVATION-CONFIRMATION-NEEDS': self._read_do_ip_routing_activation_confirmation_needs,
             # SWC internal behavior elements
             'AUTOSAR-VARIABLE-IN-IMPL-DATATYPE': self._read_variable_in_impl_data_instance_ref,
             'AUTOSAR-VARIABLE-IREF': self._read_variable_in_atomic_swc_type_instance_ref,
@@ -6985,6 +6991,138 @@ class Reader:
         # Groups AR:SERVICE-NEEDS and AR:DLT-USER-NEEDS contain no elements
         self._report_unprocessed_elements(child_elements)
         return ar_element.DltUserNeeds(**data)
+
+    def _read_do_ip_activation_line_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.DoIpActivationLineNeeds:
+        """
+        Reads complex type AR:DO-IP-ACTIVATION-LINE-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Groups AR:SERVICE-NEEDS, AR:DO-IP-SERVICE-NEEDS, and AR:DO-IP-ACTIVATION-LINE-NEEDS contain no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.DoIpActivationLineNeeds(**data)
+
+    def _read_do_ip_gid_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.DoIpGidNeeds:
+        """
+        Reads complex type AR:DO-IP-GID-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Groups AR:SERVICE-NEEDS, AR:DO-IP-SERVICE-NEEDS, and AR:DO-IP-GID-NEEDS contain no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.DoIpGidNeeds(**data)
+
+    def _read_do_ip_gid_synchronization_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.DoIpGidSynchronizationNeeds:
+        """
+        Reads complex type AR:DO-IP-GID-SYNCHRONIZATION-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Groups AR:SERVICE-NEEDS, AR:DO-IP-SERVICE-NEEDS, and AR:DO-IP-GID-SYNCHRONIZATION-NEEDS contain no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.DoIpGidSynchronizationNeeds(**data)
+
+    def _read_do_ip_power_mode_status_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.DoIpPowerModeStatusNeeds:
+        """
+        Reads complex type AR:DO-IP-POWER-MODE-STATUS-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Groups AR:SERVICE-NEEDS, AR:DO-IP-SERVICE-NEEDS, and AR:DO-IP-POWER-MODE-STATUS-NEEDS contain no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.DoIpPowerModeStatusNeeds(**data)
+
+    def _read_do_ip_routing_activation_authentication_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.DoIpRoutingActivationAuthenticationNeeds:
+        """
+        Reads complex type AR:DO-IP-ROUTING-ACTIVATION-AUTHENTICATION-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Groups AR:SERVICE-NEEDS and AR:DO-IP-SERVICE-NEEDS contain no elements
+        self._read_do_ip_routing_activation_authentication_needs_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.DoIpRoutingActivationAuthenticationNeeds(**data)
+
+    def _read_do_ip_routing_activation_authentication_needs_group(
+            self,
+            child_elements: ChildElementMap,
+            data: dict) -> None:
+        """
+        Reads group AR:DO-IP-ROUTING-ACTIVATION-AUTHENTICATION-NEEDS
+        """
+        xml_child = child_elements.get("DATA-LENGTH-REQUEST")
+        if xml_child is not None:
+            data["data_length_request"] = ar_element.PositiveIntegerValue(xml_child.text).value
+        xml_child = child_elements.get("DATA-LENGTH-RESPONSE")
+        if xml_child is not None:
+            data["data_length_response"] = ar_element.PositiveIntegerValue(xml_child.text).value
+        xml_child = child_elements.get("ROUTING-ACTIVATION-TYPE")
+        if xml_child is not None:
+            data["routing_activation_type"] = xml_child.text
+
+    def _read_do_ip_routing_activation_confirmation_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.DoIpRoutingActivationConfirmationNeeds:
+        """
+        Reads complex type AR:DO-IP-ROUTING-ACTIVATION-CONFIRMATION-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Groups AR:SERVICE-NEEDS and AR:DO-IP-SERVICE-NEEDS contain no elements
+        self._read_do_ip_routing_activation_confirmation_needs_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.DoIpRoutingActivationConfirmationNeeds(**data)
+
+    def _read_do_ip_routing_activation_confirmation_needs_group(
+            self,
+            child_elements: ChildElementMap,
+            data: dict) -> None:
+        """
+        Reads group AR:DO-IP-ROUTING-ACTIVATION-CONFIRMATION-NEEDS
+        """
+        xml_child = child_elements.get("DATA-LENGTH-REQUEST")
+        if xml_child is not None:
+            data["data_length_request"] = ar_element.PositiveIntegerValue(xml_child.text).value
+        xml_child = child_elements.get("DATA-LENGTH-RESPONSE")
+        if xml_child is not None:
+            data["data_length_response"] = ar_element.PositiveIntegerValue(xml_child.text).value
+        xml_child = child_elements.get("ROUTING-ACTIVATION-TYPE")
+        if xml_child is not None:
+            data["routing_activation_type"] = xml_child.text
 
     def _read_swc_internal_behavior(self, xml_element: ElementTree.Element) -> ar_element.SwcInternalBehavior:
         """

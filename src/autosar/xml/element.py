@@ -7232,6 +7232,98 @@ class DltUserNeeds(ServiceNeeds):
     """
 
 
+class DoIpServiceNeeds(ServiceNeeds):
+    """
+    Group AR:DO-IP-SERVICE-NEEDS
+    """
+
+
+class DoIpActivationLineNeeds(DoIpServiceNeeds):
+    """
+    Complex type AR:DO-IP-ACTIVATION-LINE-NEEDS
+    Tag variants: 'DO-IP-ACTIVATION-LINE-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
+class DoIpGidNeeds(DoIpServiceNeeds):
+    """
+    Complex type AR:DO-IP-GID-NEEDS
+    Tag variants: 'DO-IP-GID-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
+class DoIpGidSynchronizationNeeds(DoIpServiceNeeds):
+    """
+    Complex type AR:DO-IP-GID-SYNCHRONIZATION-NEEDS
+    Tag variants: 'DO-IP-GID-SYNCHRONIZATION-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
+class DoIpPowerModeStatusNeeds(DoIpServiceNeeds):
+    """
+    Complex type AR:DO-IP-POWER-MODE-STATUS-NEEDS
+    Tag variants: 'DO-IP-POWER-MODE-STATUS-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
+class DoIpRoutingActivationAuthenticationNeeds(DoIpServiceNeeds):
+    """
+    Complex type AR:DO-IP-ROUTING-ACTIVATION-AUTHENTICATION-NEEDS
+    Tag variants: 'DO-IP-ROUTING-ACTIVATION-AUTHENTICATION-NEEDS'
+    """
+
+    def __init__(self,
+                 name: str,
+                 data_length_request: int | None = None,
+                 data_length_response: int | None = None,
+                 routing_activation_type: str | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .DATA-LENGTH-REQUEST
+        self.data_length_request: int | None = None
+        # .DATA-LENGTH-RESPONSE
+        self.data_length_response: int | None = None
+        # .ROUTING-ACTIVATION-TYPE
+        self.routing_activation_type: str | None = None
+
+        self._assign_optional_positive_int("data_length_request", data_length_request)
+        self._assign_optional_positive_int("data_length_response", data_length_response)
+        self._assign_optional_strict("routing_activation_type", routing_activation_type, str)
+
+
+class DoIpRoutingActivationConfirmationNeeds(DoIpServiceNeeds):
+    """
+    Complex type AR:DO-IP-ROUTING-ACTIVATION-CONFIRMATION-NEEDS
+    Tag variants: 'DO-IP-ROUTING-ACTIVATION-CONFIRMATION-NEEDS'
+    """
+
+    def __init__(self,
+                 name: str,
+                 data_length_request: int | None = None,
+                 data_length_response: int | None = None,
+                 routing_activation_type: str | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .DATA-LENGTH-REQUEST
+        self.data_length_request: int | None = None
+        # .DATA-LENGTH-RESPONSE
+        self.data_length_response: int | None = None
+        # .ROUTING-ACTIVATION-TYPE
+        self.routing_activation_type: str | None = None
+
+        self._assign_optional_positive_int("data_length_request", data_length_request)
+        self._assign_optional_positive_int("data_length_response", data_length_response)
+        self._assign_optional_strict("routing_activation_type", routing_activation_type, str)
+
+
 # --- Internal behavior elements
 
 
