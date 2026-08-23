@@ -330,6 +330,7 @@ class Reader:
             'CRYPTO-KEY-MANAGEMENT-NEEDS': self._read_crypto_key_management_needs,
             'CRYPTO-SERVICE-JOB-NEEDS': self._read_crypto_service_job_needs,
             'CRYPTO-SERVICE-NEEDS': self._read_crypto_service_needs,
+            'DIAGNOSTIC-COMMUNICATION-MANAGER-NEEDS': self._read_diagnostic_communication_manager_needs,
             # SWC internal behavior elements
             'AUTOSAR-VARIABLE-IN-IMPL-DATATYPE': self._read_variable_in_impl_data_instance_ref,
             'AUTOSAR-VARIABLE-IREF': self._read_variable_in_atomic_swc_type_instance_ref,
@@ -6491,6 +6492,49 @@ class Reader:
         xml_child = child_elements.get("MAXIMUM-KEY-LENGTH")
         if xml_child is not None:
             data["maximum_key_length"] = ar_element.PositiveIntegerValue(xml_child.text).value
+
+    def _read_diagnostic_capability_element_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:DIAGNOSTIC-CAPABILITY-ELEMENT
+        """
+        xml_child = child_elements.get("AUDIENCES")
+        if xml_child is not None:
+            audience = []
+            for xml_audience in xml_child.findall("./AUDIENCE"):
+                audience.append(ar_enum.xml_to_enum("DiagnosticAudience", xml_audience.text))
+            data["audience"] = audience
+        xml_child = child_elements.get("DIAG-REQUIREMENT")
+        if xml_child is not None:
+            data["diag_requirement"] = xml_child.text
+        xml_child = child_elements.get("SECURITY-ACCESS-LEVEL")
+        if xml_child is not None:
+            data["security_access_level"] = ar_element.PositiveIntegerValue(xml_child.text).value
+
+    def _read_diagnostic_communication_manager_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.DiagnosticCommunicationManagerNeeds:
+        """
+        Reads complex type AR:DIAGNOSTIC-COMMUNICATION-MANAGER-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_diagnostic_capability_element_group(child_elements, data)
+        self._read_diagnostic_communication_manager_needs_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.DiagnosticCommunicationManagerNeeds(**data)
+
+    def _read_diagnostic_communication_manager_needs_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:DIAGNOSTIC-COMMUNICATION-MANAGER-NEEDS
+        """
+        xml_child = child_elements.get("SERVICE-REQUEST-CALLBACK-TYPE")
+        if xml_child is not None:
+            data["service_request_callback_type"] = ar_enum.xml_to_enum("DiagnosticServiceRequestCallbackType",
+                                                                        xml_child.text)
 
     def _read_swc_internal_behavior(self, xml_element: ElementTree.Element) -> ar_element.SwcInternalBehavior:
         """

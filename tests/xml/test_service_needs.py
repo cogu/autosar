@@ -216,5 +216,101 @@ class TestCryptoServiceNeeds(unittest.TestCase):
             )
 
 
+class TestDiagnosticCommunicationManagerNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.DiagnosticCommunicationManagerNeeds("DiagnosticCommunicationManagerNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<DIAGNOSTIC-COMMUNICATION-MANAGER-NEEDS>
+  <SHORT-NAME>DiagnosticCommunicationManagerNeeds</SHORT-NAME>
+</DIAGNOSTIC-COMMUNICATION-MANAGER-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DiagnosticCommunicationManagerNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DiagnosticCommunicationManagerNeeds)
+        self.assertIsInstance(elem, ar_element.DiagnosticCapabilityElement)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "DiagnosticCommunicationManagerNeeds")
+        self.assertEqual(elem.audience, [])
+        self.assertIsNone(elem.diag_requirement)
+        self.assertIsNone(elem.security_access_level)
+        self.assertIsNone(elem.service_request_callback_type)
+
+    def test_with_all_fields(self):
+        element = ar_element.DiagnosticCommunicationManagerNeeds(
+            "DiagnosticCommunicationManagerNeeds",
+            audience=[autosar.xml.enumeration.DiagnosticAudience.DEVELOPMENT,
+                      autosar.xml.enumeration.DiagnosticAudience.MANUFACTURING],
+            diag_requirement="REQ-1234",
+            security_access_level=1,
+            service_request_callback_type=(
+                autosar.xml.enumeration.DiagnosticServiceRequestCallbackType.REQUEST_CALLBACK_TYPE_MANUFACTURER
+            )
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<DIAGNOSTIC-COMMUNICATION-MANAGER-NEEDS>
+  <SHORT-NAME>DiagnosticCommunicationManagerNeeds</SHORT-NAME>
+  <AUDIENCES>
+    <AUDIENCE>DEVELOPMENT</AUDIENCE>
+    <AUDIENCE>MANUFACTURING</AUDIENCE>
+  </AUDIENCES>
+  <DIAG-REQUIREMENT>REQ-1234</DIAG-REQUIREMENT>
+  <SECURITY-ACCESS-LEVEL>1</SECURITY-ACCESS-LEVEL>
+  <SERVICE-REQUEST-CALLBACK-TYPE>REQUEST-CALLBACK-TYPE-MANUFACTURER</SERVICE-REQUEST-CALLBACK-TYPE>
+</DIAGNOSTIC-COMMUNICATION-MANAGER-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DiagnosticCommunicationManagerNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DiagnosticCommunicationManagerNeeds)
+        self.assertEqual(elem.audience, [
+            autosar.xml.enumeration.DiagnosticAudience.DEVELOPMENT,
+            autosar.xml.enumeration.DiagnosticAudience.MANUFACTURING
+        ])
+        self.assertEqual(elem.diag_requirement, "REQ-1234")
+        self.assertEqual(elem.security_access_level, 1)
+        self.assertEqual(
+            elem.service_request_callback_type,
+            autosar.xml.enumeration.DiagnosticServiceRequestCallbackType.REQUEST_CALLBACK_TYPE_MANUFACTURER
+        )
+
+    def test_with_string_enums(self):
+        element = ar_element.DiagnosticCommunicationManagerNeeds(
+            "DiagnosticCommunicationManagerNeeds",
+            audience="AFTERMARKET",
+            service_request_callback_type="REQUEST-CALLBACK-TYPE-SUPPLIER"
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<DIAGNOSTIC-COMMUNICATION-MANAGER-NEEDS>
+  <SHORT-NAME>DiagnosticCommunicationManagerNeeds</SHORT-NAME>
+  <AUDIENCES>
+    <AUDIENCE>AFTERMARKET</AUDIENCE>
+  </AUDIENCES>
+  <SERVICE-REQUEST-CALLBACK-TYPE>REQUEST-CALLBACK-TYPE-SUPPLIER</SERVICE-REQUEST-CALLBACK-TYPE>
+</DIAGNOSTIC-COMMUNICATION-MANAGER-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DiagnosticCommunicationManagerNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DiagnosticCommunicationManagerNeeds)
+        self.assertEqual(elem.audience, [autosar.xml.enumeration.DiagnosticAudience.AFTERMARKET])
+        self.assertEqual(
+            elem.service_request_callback_type,
+            autosar.xml.enumeration.DiagnosticServiceRequestCallbackType.REQUEST_CALLBACK_TYPE_SUPPLIER
+        )
+
+    def test_invalid_audience(self):
+        with self.assertRaises(autosar.xml.exception.ConversionError):
+            ar_element.DiagnosticCommunicationManagerNeeds(
+                "DiagnosticCommunicationManagerNeeds",
+                audience="INVALID_AUDIENCE"
+            )
+
+    def test_invalid_service_request_callback_type(self):
+        with self.assertRaises(autosar.xml.exception.ConversionError):
+            ar_element.DiagnosticCommunicationManagerNeeds(
+                "DiagnosticCommunicationManagerNeeds",
+                service_request_callback_type="INVALID_TYPE"
+            )
+
+
 if __name__ == '__main__':
     unittest.main()

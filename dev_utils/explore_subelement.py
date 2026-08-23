@@ -1002,6 +1002,9 @@ class SchemaInspector:
             print(status_alert)
         is_list_str = ' (unbounded list)' if target_element['is_list'] else ''
         print(f"  Cardinality:    {target_element['cardinality']}{is_list_str}")
+        qname = target_element.get('qualified_name')
+        if qname:
+            print(f"  Qualified Name: {qname}")
 
         owner_impl = grp_impl or ct_impl
         if owner_impl:
