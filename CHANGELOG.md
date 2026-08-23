@@ -27,6 +27,9 @@ Non-collectable elements are various sub-elements to collectable elements.
 
 * BswMgrNeeds | BSW-MGR-NEEDS
 * ComMgrUserNeeds | COM-MGR-USER-NEEDS
+* CryptoKeyManagementNeeds | CRYPTO-KEY-MANAGEMENT-NEEDS
+* CryptoServiceJobNeeds | CRYPTO-SERVICE-JOB-NEEDS
+* CryptoServiceNeeds | CRYPTO-SERVICE-NEEDS
 
 #### XML - SWC internal behavior elements
 

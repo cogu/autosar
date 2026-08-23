@@ -327,6 +327,9 @@ class Reader:
             # Service needs elements
             'BSW-MGR-NEEDS': self._read_bsw_mgr_needs,
             'COM-MGR-USER-NEEDS': self._read_com_mgr_user_needs,
+            'CRYPTO-KEY-MANAGEMENT-NEEDS': self._read_crypto_key_management_needs,
+            'CRYPTO-SERVICE-JOB-NEEDS': self._read_crypto_service_job_needs,
+            'CRYPTO-SERVICE-NEEDS': self._read_crypto_service_needs,
             # SWC internal behavior elements
             'AUTOSAR-VARIABLE-IN-IMPL-DATATYPE': self._read_variable_in_impl_data_instance_ref,
             'AUTOSAR-VARIABLE-IREF': self._read_variable_in_atomic_swc_type_instance_ref,
@@ -6427,6 +6430,67 @@ class Reader:
         xml_child = child_elements.get("MAX-COMM-MODE")
         if xml_child is not None:
             data["max_comm_mode"] = ar_enum.xml_to_enum("MaxCommMode", xml_child.text)
+
+    def _read_crypto_key_management_needs(self,
+                                          xml_element: ElementTree.Element) -> ar_element.CryptoKeyManagementNeeds:
+        """
+        Reads complex type AR:CRYPTO-KEY-MANAGEMENT-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Group AR:CRYPTO-KEY-MANAGEMENT-NEEDS contains no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.CryptoKeyManagementNeeds(**data)
+
+    def _read_crypto_service_job_needs(self,
+                                       xml_element: ElementTree.Element) -> ar_element.CryptoServiceJobNeeds:
+        """
+        Reads complex type AR:CRYPTO-SERVICE-JOB-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Group AR:CRYPTO-SERVICE-JOB-NEEDS contains no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.CryptoServiceJobNeeds(**data)
+
+    def _read_crypto_service_needs(self, xml_element: ElementTree.Element) -> ar_element.CryptoServiceNeeds:
+        """
+        Reads complex type AR:CRYPTO-SERVICE-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_crypto_service_needs_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.CryptoServiceNeeds(**data)
+
+    def _read_crypto_service_needs_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:CRYPTO-SERVICE-NEEDS
+        """
+        xml_child = child_elements.get("ALGORITHM-FAMILY")
+        if xml_child is not None:
+            data["algorithm_family"] = xml_child.text
+        xml_child = child_elements.get("ALGORITHM-MODE")
+        if xml_child is not None:
+            data["algorithm_mode"] = xml_child.text
+        xml_child = child_elements.get("CRYPTO-KEY-DESCRIPTION")
+        if xml_child is not None:
+            data["crypto_key_description"] = xml_child.text
+        xml_child = child_elements.get("MAXIMUM-KEY-LENGTH")
+        if xml_child is not None:
+            data["maximum_key_length"] = ar_element.PositiveIntegerValue(xml_child.text).value
 
     def _read_swc_internal_behavior(self, xml_element: ElementTree.Element) -> ar_element.SwcInternalBehavior:
         """

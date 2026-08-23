@@ -383,6 +383,9 @@ class Writer(_XMLWriter):
             # Service needs elements
             'BswMgrNeeds': self._write_bsw_mgr_needs,
             'ComMgrUserNeeds': self._write_com_mgr_user_needs,
+            'CryptoKeyManagementNeeds': self._write_crypto_key_management_needs,
+            'CryptoServiceJobNeeds': self._write_crypto_service_job_needs,
+            'CryptoServiceNeeds': self._write_crypto_service_needs,
             # SWC internal behavior elements
             'ArVariableInImplementationDataInstanceRef': self._write_variable_in_impl_data_instance_ref,
             'VariableInAtomicSWCTypeInstanceRef': self._write_variable_in_atomic_swc_type_instance_ref,
@@ -4841,6 +4844,58 @@ class Writer(_XMLWriter):
         """
         if elem.max_comm_mode is not None:
             self._add_content("MAX-COMM-MODE", ar_enum.enum_to_xml(elem.max_comm_mode))
+
+    def _write_crypto_key_management_needs(self, elem: ar_element.CryptoKeyManagementNeeds) -> None:
+        """
+        Writes complex type AR:CRYPTO-KEY-MANAGEMENT-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.CryptoKeyManagementNeeds)
+        self._add_child("CRYPTO-KEY-MANAGEMENT-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        # Group AR:CRYPTO-KEY-MANAGEMENT-NEEDS contains no elements
+        self._leave_child()
+
+    def _write_crypto_service_job_needs(self, elem: ar_element.CryptoServiceJobNeeds) -> None:
+        """
+        Writes complex type AR:CRYPTO-SERVICE-JOB-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.CryptoServiceJobNeeds)
+        self._add_child("CRYPTO-SERVICE-JOB-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        # Group AR:CRYPTO-SERVICE-JOB-NEEDS contains no elements
+        self._leave_child()
+
+    def _write_crypto_service_needs(self, elem: ar_element.CryptoServiceNeeds) -> None:
+        """
+        Writes complex type AR:CRYPTO-SERVICE-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.CryptoServiceNeeds)
+        self._add_child("CRYPTO-SERVICE-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_crypto_service_needs_group(elem)
+        self._leave_child()
+
+    def _write_crypto_service_needs_group(self, elem: ar_element.CryptoServiceNeeds) -> None:
+        """
+        Writes group AR:CRYPTO-SERVICE-NEEDS
+        """
+        if elem.algorithm_family is not None:
+            self._add_content("ALGORITHM-FAMILY", elem.algorithm_family)
+        if elem.algorithm_mode is not None:
+            self._add_content("ALGORITHM-MODE", elem.algorithm_mode)
+        if elem.crypto_key_description is not None:
+            self._add_content("CRYPTO-KEY-DESCRIPTION", elem.crypto_key_description)
+        if elem.maximum_key_length is not None:
+            self._add_content("MAXIMUM-KEY-LENGTH", str(elem.maximum_key_length))
 
     def _write_abstract_access_point(self, elem: ar_element.AbstractAccessPoint) -> None:
         """
