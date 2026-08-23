@@ -6820,6 +6820,53 @@ class ComMgrUserNeeds(ServiceNeeds):
         self._assign_optional("max_comm_mode", max_comm_mode, ar_enum.MaxCommMode)
 
 
+class CryptoKeyManagementNeeds(ServiceNeeds):
+    """
+    Complex type AR:CRYPTO-KEY-MANAGEMENT-NEEDS
+    Tag variants: 'CRYPTO-KEY-MANAGEMENT-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
+class CryptoServiceJobNeeds(ServiceNeeds):
+    """
+    Complex type AR:CRYPTO-SERVICE-JOB-NEEDS
+    Tag variants: 'CRYPTO-SERVICE-JOB-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
+class CryptoServiceNeeds(ServiceNeeds):
+    """
+    Complex type AR:CRYPTO-SERVICE-NEEDS
+    Tag variants: 'CRYPTO-SERVICE-NEEDS'
+    """
+
+    def __init__(self,
+                 name: str,
+                 algorithm_family: str | None = None,
+                 algorithm_mode: str | None = None,
+                 crypto_key_description: str | None = None,
+                 maximum_key_length: int | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .ALGORITHM-FAMILY
+        self.algorithm_family: str | None = None
+        # .ALGORITHM-MODE
+        self.algorithm_mode: str | None = None
+        # .CRYPTO-KEY-DESCRIPTION
+        self.crypto_key_description: str | None = None
+        # .MAXIMUM-KEY-LENGTH
+        self.maximum_key_length: int | None = None
+
+        self._assign_optional_strict("algorithm_family", algorithm_family, str)
+        self._assign_optional_strict("algorithm_mode", algorithm_mode, str)
+        self._assign_optional_strict("crypto_key_description", crypto_key_description, str)
+        self._assign_optional_positive_int("maximum_key_length", maximum_key_length)
+
+
 # --- Internal behavior elements
 
 

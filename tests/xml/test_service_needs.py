@@ -132,5 +132,89 @@ class TestComMgrUserNeeds(unittest.TestCase):
             )
 
 
+class TestCryptoKeyManagementNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.CryptoKeyManagementNeeds("CryptoKeyManagementNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<CRYPTO-KEY-MANAGEMENT-NEEDS>
+  <SHORT-NAME>CryptoKeyManagementNeeds</SHORT-NAME>
+</CRYPTO-KEY-MANAGEMENT-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.CryptoKeyManagementNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.CryptoKeyManagementNeeds)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "CryptoKeyManagementNeeds")
+
+
+class TestCryptoServiceJobNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.CryptoServiceJobNeeds("CryptoServiceJobNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<CRYPTO-SERVICE-JOB-NEEDS>
+  <SHORT-NAME>CryptoServiceJobNeeds</SHORT-NAME>
+</CRYPTO-SERVICE-JOB-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.CryptoServiceJobNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.CryptoServiceJobNeeds)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "CryptoServiceJobNeeds")
+
+
+class TestCryptoServiceNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.CryptoServiceNeeds("CryptoServiceNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<CRYPTO-SERVICE-NEEDS>
+  <SHORT-NAME>CryptoServiceNeeds</SHORT-NAME>
+</CRYPTO-SERVICE-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.CryptoServiceNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.CryptoServiceNeeds)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "CryptoServiceNeeds")
+        self.assertIsNone(elem.algorithm_family)
+        self.assertIsNone(elem.algorithm_mode)
+        self.assertIsNone(elem.crypto_key_description)
+        self.assertIsNone(elem.maximum_key_length)
+
+    def test_with_all_fields(self):
+        element = ar_element.CryptoServiceNeeds(
+            "CryptoServiceNeeds",
+            algorithm_family="AES",
+            algorithm_mode="CBC",
+            crypto_key_description="Key for AES-128",
+            maximum_key_length=128
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<CRYPTO-SERVICE-NEEDS>
+  <SHORT-NAME>CryptoServiceNeeds</SHORT-NAME>
+  <ALGORITHM-FAMILY>AES</ALGORITHM-FAMILY>
+  <ALGORITHM-MODE>CBC</ALGORITHM-MODE>
+  <CRYPTO-KEY-DESCRIPTION>Key for AES-128</CRYPTO-KEY-DESCRIPTION>
+  <MAXIMUM-KEY-LENGTH>128</MAXIMUM-KEY-LENGTH>
+</CRYPTO-SERVICE-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.CryptoServiceNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.CryptoServiceNeeds)
+        self.assertEqual(elem.algorithm_family, "AES")
+        self.assertEqual(elem.algorithm_mode, "CBC")
+        self.assertEqual(elem.crypto_key_description, "Key for AES-128")
+        self.assertEqual(elem.maximum_key_length, 128)
+
+    def test_invalid_positive_int(self):
+        with self.assertRaises(ValueError):
+            ar_element.CryptoServiceNeeds(
+                "CryptoServiceNeeds",
+                maximum_key_length=-1
+            )
+
+
 if __name__ == '__main__':
     unittest.main()
