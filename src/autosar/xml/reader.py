@@ -324,6 +324,8 @@ class Reader:
             'DELEGATION-SW-CONNECTOR': self._read_delegation_sw_connector,
             'PASS-THROUGH-SW-CONNECTOR': self._read_pass_through_sw_connector,
             'R-MODE-GROUP-IN-ATOMIC-SWC-INSTANCE-REF': self._read_r_mode_group_in_atomic_swc_instance_ref,
+            # Service needs elements
+            'BSW-MGR-NEEDS': self._read_bsw_mgr_needs,
             # SWC internal behavior elements
             'AUTOSAR-VARIABLE-IN-IMPL-DATATYPE': self._read_variable_in_impl_data_instance_ref,
             'AUTOSAR-VARIABLE-IREF': self._read_variable_in_atomic_swc_type_instance_ref,
@@ -6386,6 +6388,22 @@ class Reader:
         if xml_child is not None:
             data["type_definition"] = xml_child.text
         child_elements.skip("VARIATION-POINT")
+
+    # Service needs elements
+
+    def _read_bsw_mgr_needs(self, xml_element: ElementTree.Element) -> ar_element.BswMgrNeeds:
+        """
+        Reads complex type AR:BSW-MGR-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Groups AR:SERVICE-NEEDS and AR:BSW-MGR-NEEDS contain no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.BswMgrNeeds(**data)
 
     def _read_swc_internal_behavior(self, xml_element: ElementTree.Element) -> ar_element.SwcInternalBehavior:
         """
