@@ -1,6 +1,6 @@
 """Unit tests for internal behavior elements"""
 
-# pylint: disable=missing-class-docstring, missing-function-docstring
+# pylint: disable=missing-class-docstring, missing-function-docstring, too-many-public-methods
 import os
 import sys
 import unittest

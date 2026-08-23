@@ -101,11 +101,34 @@ class TestComMgrUserNeeds(unittest.TestCase):
         self.assertIsInstance(elem, ar_element.ComMgrUserNeeds)
         self.assertEqual(elem.max_comm_mode, autosar.xml.enumeration.MaxCommMode.FULL)
 
+    def test_with_max_comm_mode_str(self):
+        element = ar_element.ComMgrUserNeeds(
+            "ComMgrUserNeeds",
+            max_comm_mode="SILENT"
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<COM-MGR-USER-NEEDS>
+  <SHORT-NAME>ComMgrUserNeeds</SHORT-NAME>
+  <MAX-COMM-MODE>SILENT</MAX-COMM-MODE>
+</COM-MGR-USER-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ComMgrUserNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ComMgrUserNeeds)
+        self.assertEqual(elem.max_comm_mode, autosar.xml.enumeration.MaxCommMode.SILENT)
+
     def test_with_invalid_max_comm_mode(self):
+        with self.assertRaises(autosar.xml.exception.ConversionError):
+            ar_element.ComMgrUserNeeds(
+                "ComMgrUserNeeds",
+                max_comm_mode="VERBOSE"
+            )
+
+    def test_with_invalid_max_comm_mode_type(self):
         with self.assertRaises(autosar.xml.exception.AssignmentTypeError):
             ar_element.ComMgrUserNeeds(
                 "ComMgrUserNeeds",
-                max_comm_mode="SILENT"
+                max_comm_mode=123
             )
 
 
