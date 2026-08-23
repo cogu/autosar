@@ -336,6 +336,7 @@ class Reader:
             'SWC-EXCLUSIVE-AREA-POLICY': self._read_swc_exclusive_area_policy,
             'INCLUDED-DATA-TYPE-SET': self._read_included_data_type_set,
             'INCLUDED-MODE-DECLARATION-GROUP-SET': self._read_included_mode_declaration_group_set,
+            'INSTANTIATION-DATA-DEF-PROPS': self._read_instantiation_data_def_props,
             'PER-INSTANCE-MEMORY': self._read_per_instance_memory,
             'DISABLED-MODE-IREF': self._read_r_mode_in_atomic_swc_instance_ref,
             'SWC-INTERNAL-BEHAVIOR': self._read_swc_internal_behavior,
@@ -6326,6 +6327,34 @@ class Reader:
         if xml_child is not None:
             data["prefix"] = xml_child.text
 
+    def _read_instantiation_data_def_props(self,
+                                           xml_element: ElementTree.Element
+                                           ) -> ar_element.InstantiationDataDefProps:
+        """
+        Reads complex type AR:INSTANTIATION-DATA-DEF-PROPS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_instantiation_data_def_props_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.InstantiationDataDefProps(**data)
+
+    def _read_instantiation_data_def_props_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:INSTANTIATION-DATA-DEF-PROPS
+        """
+        xml_child = child_elements.get("PARAMETER-INSTANCE")
+        if xml_child is not None:
+            data["parameter_instance"] = self._read_autosar_parameter_ref(xml_child)
+        xml_child = child_elements.get("SW-DATA-DEF-PROPS")
+        if xml_child is not None:
+            data["sw_data_def_props"] = self._read_sw_data_def_props(xml_child)
+        xml_child = child_elements.get("VARIABLE-INSTANCE")
+        if xml_child is not None:
+            data["variable_instance"] = self._read_autosar_variable_ref(xml_child)
+        child_elements.skip("VARIATION-POINT")
+
     def _read_per_instance_memory(self, xml_element: ElementTree.Element) -> ar_element.PerInstanceMemory:
         """
         Reads complex type AR:PER-INSTANCE-MEMORY
@@ -6466,7 +6495,13 @@ class Reader:
                 included_mode_declaration_group_sets.append(
                     self._read_included_mode_declaration_group_set(xml_grand_child))
             data["included_mode_declaration_group_set"] = included_mode_declaration_group_sets
-        child_elements.skip("INSTANTIATION-DATA-DEF-PROPSS")
+        xml_child = child_elements.get("INSTANTIATION-DATA-DEF-PROPSS")
+        if xml_child is not None:
+            instantiation_data_def_props = []
+            for xml_grand_child in xml_child.findall("./INSTANTIATION-DATA-DEF-PROPS"):
+                instantiation_data_def_props.append(
+                    self._read_instantiation_data_def_props(xml_grand_child))
+            data["instantiation_data_def_props"] = instantiation_data_def_props
         xml_child = child_elements.get("PER-INSTANCE-MEMORYS")
         if xml_child is not None:
             per_instance_memories = []

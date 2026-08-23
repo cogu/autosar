@@ -28,6 +28,7 @@ Non-collectable elements are various sub-elements to collectable elements.
 * ExclusiveAreaNestingOrder | EXCLUSIVE-AREA-NESTING-ORDER
 * IncludedDataTypeSet | INCLUDED-DATA-TYPE-SET
 * IncludedModeDeclarationGroupSet | INCLUDED-MODE-DECLARATION-GROUP-SET
+* InstantiationDataDefProps | INSTANTIATION-DATA-DEF-PROPS
 * PerInstanceMemory | PER-INSTANCE-MEMORY
 * SwcExclusiveAreaPolicy | SWC-EXCLUSIVE-AREA-POLICY
 

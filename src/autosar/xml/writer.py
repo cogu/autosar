@@ -393,6 +393,7 @@ class Writer(_XMLWriter):
             'SwcExclusiveAreaPolicy': self._write_swc_exclusive_area_policy,
             'IncludedDataTypeSet': self._write_included_data_type_set,
             'IncludedModeDeclarationGroupSet': self._write_included_mode_declaration_group_set,
+            'InstantiationDataDefProps': self._write_instantiation_data_def_props,
             'PerInstanceMemory': self._write_per_instance_memory,
             'RunnableEntityArgument': self._write_runnable_entity_argument,
             'RunnableEntity': self._write_runnable_entity,
@@ -4750,6 +4751,33 @@ class Writer(_XMLWriter):
         if elem.prefix is not None:
             self._add_content("PREFIX", elem.prefix)
 
+    def _write_instantiation_data_def_props(self,
+                                            elem: ar_element.InstantiationDataDefProps,
+                                            tag: str = "INSTANTIATION-DATA-DEF-PROPS"
+                                            ) -> None:
+        """
+        Writes complex type AR:INSTANTIATION-DATA-DEF-PROPS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.InstantiationDataDefProps)
+        if elem.is_empty:
+            self._add_content(tag)
+        else:
+            self._add_child(tag)
+            self._write_instantiation_data_def_props_group(elem)
+            self._leave_child()
+
+    def _write_instantiation_data_def_props_group(self, elem: ar_element.InstantiationDataDefProps) -> None:
+        """
+        Writes group AR:INSTANTIATION-DATA-DEF-PROPS
+        """
+        if elem.parameter_instance is not None:
+            self._write_autosar_parameter_ref(elem.parameter_instance, "PARAMETER-INSTANCE")
+        if elem.sw_data_def_props is not None:
+            self._write_sw_data_def_props(elem.sw_data_def_props, "SW-DATA-DEF-PROPS")
+        if elem.variable_instance is not None:
+            self._write_autosar_variable_ref(elem.variable_instance, "VARIABLE-INSTANCE")
+
     def _write_per_instance_memory(self, elem: ar_element.PerInstanceMemory) -> None:
         """
         Writes complex type AR:PER-INSTANCE-MEMORY
@@ -5637,6 +5665,11 @@ class Writer(_XMLWriter):
             self._add_child("INCLUDED-MODE-DECLARATION-GROUP-SETS")
             for item in elem.included_mode_declaration_group_set:
                 self._write_included_mode_declaration_group_set(item)
+            self._leave_child()
+        if elem.instantiation_data_def_props:
+            self._add_child("INSTANTIATION-DATA-DEF-PROPSS")
+            for item in elem.instantiation_data_def_props:
+                self._write_instantiation_data_def_props(item)
             self._leave_child()
         if elem.per_instance_memory:
             self._add_child("PER-INSTANCE-MEMORYS")

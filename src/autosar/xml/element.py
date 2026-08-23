@@ -9125,6 +9125,40 @@ class IncludedModeDeclarationGroupSet(ARObject):
                                              mode_declaration_group)
 
 
+class InstantiationDataDefProps(ARObject):
+    """
+    Complex type AR:INSTANTIATION-DATA-DEF-PROPS
+    Tag variants: 'INSTANTIATION-DATA-DEF-PROPS'
+    """
+
+    def __init__(self,
+                 parameter_instance: AutosarParameterRef | None = None,
+                 sw_data_def_props: SwDataDefProps | SwDataDefPropsConditional | None = None,
+                 variable_instance: AutosarVariableRef | None = None) -> None:
+        super().__init__()
+        # .PARAMETER-INSTANCE
+        self.parameter_instance: AutosarParameterRef | None = None
+        # .SW-DATA-DEF-PROPS
+        self.sw_data_def_props: SwDataDefProps | None = None
+        # .VARIABLE-INSTANCE
+        self.variable_instance: AutosarVariableRef | None = None
+        # .VARIATION-POINT --- NOT SUPPORTED (VARIANT)
+
+        self._assign_optional_strict("parameter_instance",
+                                     parameter_instance,
+                                     AutosarParameterRef)
+        if sw_data_def_props is not None:
+            if isinstance(sw_data_def_props, SwDataDefProps):
+                self.sw_data_def_props = sw_data_def_props
+            elif isinstance(sw_data_def_props, SwDataDefPropsConditional):
+                self.sw_data_def_props = SwDataDefProps(sw_data_def_props)
+            else:
+                raise TypeError("'sw_data_def_props' must be one of (SwDataDefProps, SwDataDefPropsConditional)")
+        self._assign_optional_strict("variable_instance",
+                                     variable_instance,
+                                     AutosarVariableRef)
+
+
 class PerInstanceMemory(Identifiable):
     """
     Complex type AR:PER-INSTANCE-MEMORY
@@ -9370,6 +9404,8 @@ class SwcInternalBehavior(InternalBehavior):
                                           list[IncludedDataTypeSet] | None) = None,
                  included_mode_declaration_group_set: (IncludedModeDeclarationGroupSet |
                                                        list[IncludedModeDeclarationGroupSet] | None) = None,
+                 instantiation_data_def_props: (InstantiationDataDefProps |
+                                                list[InstantiationDataDefProps] | None) = None,
                  per_instance_memory: (PerInstanceMemory |
                                        list[PerInstanceMemory] | None) = None,
                  port_api_option: PortApiOption | list[PortApiOption] | None = None,
@@ -9395,7 +9431,8 @@ class SwcInternalBehavior(InternalBehavior):
         self.included_data_type_set: list[IncludedDataTypeSet] = []
         # .INCLUDED-MODE-DECLARATION-GROUP-SETS
         self.included_mode_declaration_group_set: list[IncludedModeDeclarationGroupSet] = []
-        # .INSTANTIATION-DATA-DEF-PROPSS (not yet implemented)
+        # .INSTANTIATION-DATA-DEF-PROPSS
+        self.instantiation_data_def_props: list[InstantiationDataDefProps] = []
         # .PER-INSTANCE-MEMORYS
         self.per_instance_memory: list[PerInstanceMemory] = []
         # .PER-INSTANCE-PARAMETERS (not yet implemented)
@@ -9466,6 +9503,13 @@ class SwcInternalBehavior(InternalBehavior):
                     self.append_included_mode_declaration_group_set(item)
             else:
                 self.append_included_mode_declaration_group_set(included_mode_declaration_group_set)
+
+        if instantiation_data_def_props is not None:
+            if isinstance(instantiation_data_def_props, Iterable):
+                for item in instantiation_data_def_props:
+                    self.append_instantiation_data_def_props(item)
+            else:
+                self.append_instantiation_data_def_props(instantiation_data_def_props)
 
         if port_api_option is not None:
             if isinstance(port_api_option, Iterable):
@@ -9654,6 +9698,30 @@ class SwcInternalBehavior(InternalBehavior):
             self.included_mode_declaration_group_set.append(item)
         else:
             raise ar_except.ElementTypeError("item", IncludedModeDeclarationGroupSet, item)
+
+    @convenience_function
+    def create_instantiation_data_def_props(self,
+                                            parameter_instance: AutosarParameterRef | None = None,
+                                            sw_data_def_props: SwDataDefProps | SwDataDefPropsConditional | None = None,
+                                            variable_instance: AutosarVariableRef | None = None
+                                            ) -> InstantiationDataDefProps:
+        """
+        Adds a new InstantiationDataDefProps to instantiation_data_def_props
+        """
+        item = InstantiationDataDefProps(parameter_instance=parameter_instance,
+                                         sw_data_def_props=sw_data_def_props,
+                                         variable_instance=variable_instance)
+        self.append_instantiation_data_def_props(item)
+        return item
+
+    def append_instantiation_data_def_props(self, item: InstantiationDataDefProps) -> None:
+        """
+        Appends InstantiationDataDefProps to instantiation_data_def_props
+        """
+        if isinstance(item, InstantiationDataDefProps):
+            self.instantiation_data_def_props.append(item)
+        else:
+            raise ar_except.ElementTypeError("item", InstantiationDataDefProps, item)
 
     @convenience_function
     def create_per_instance_memory(self,
