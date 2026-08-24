@@ -13,6 +13,16 @@ It also has some support for parsing AUTOSAR XML files.
 2. For Python AUTOSAR v0.4, see the [v0.4 maintenance branch](https://github.com/cogu/autosar/tree/maintenance/0.4).
 3. There's no offical documentation yet for v0.5. The [documentation](https://autosar.readthedocs.io/en/latest/) found at Read the Docs is for v0.4.
 
+## Compatibility & Versioning with `py-apx`
+
+`autosar` versions align directly with the [py-apx](https://github.com/cogu/py-apx) package:
+
+| `autosar` Version | `py-apx` Version | Status | Notes |
+| :--- | :--- | :--- | :--- |
+| **v0.4.x** | **v0.4.x** | Maintenance | Legacy API compatibility maintained on the respective `maintenance/0.4` branches. |
+| **v0.5.x** | **v0.5.x** | In Development | Modernized API redesign & architecture refactoring. |
+| **v0.6.x** | **v0.6.x** | Planned | Stable modernized release with full `py-apx` v0.6.x compatibility, published to PyPI. |
+
 ## Major design changes
 
 AUTOSAR v0.5 has been rewritten and modernized.
@@ -79,7 +89,7 @@ workspace.write_documents()
 
 ## Installation
 
-Manual install required as this version is not available on PyPI (until v0.6).
+Manual install required as this version is not yet available on PyPI.
 
 ### Preparation
 
@@ -87,7 +97,7 @@ Download a compressed source package from GitHub or clone this repo to a local d
 
 ### Installation steps for virtual environment
 
-Start bash (Linux) or Powershell (Windows).
+Start bash (Linux) or PowerShell (Windows).
 
 #### Create virtual environment
 
@@ -99,7 +109,7 @@ python -m venv .venv
 
 On Windows run:
 
-```bash
+```powershell
 .\.venv\Scripts\activate
 ```
 
@@ -114,22 +124,29 @@ source .venv/bin/activate
 Once virtual environment is active run:
 
 ```bash
-python -m pip install --upgrade pip
-python -m pip install --upgrade setuptools
+python -m pip install --upgrade pip setuptools
+python -m pip install -r requirements.txt
+```
+
+#### Developer dependencies (optional)
+
+If you are a package developer, you also need to install additional tools for linting, packaging, and building documentation:
+
+```bash
+python -m pip install --upgrade flake8 build twine sphinx
 ```
 
 #### Installing the Python module
 
-Your current directory must be either where you unzipped the source package
-or your where you cloned the git repo (See preparation step above).
+Your current directory must be either where you unzipped the source package or where you cloned the git repo.
 
-For standard install, run:
+For standard install (users):
 
 ```bash
-pip install  .
+pip install .
 ```
 
-For editable install, run:
+For editable install (developers):
 
 ```bash
 pip install --editable .
