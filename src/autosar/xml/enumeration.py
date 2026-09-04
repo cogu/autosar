@@ -650,6 +650,26 @@ class Monotony(Enum):
     STRICT_MONOTONOUS = 6
 
 
+class NvBlockNeedsReliability(Enum):
+    """
+    AR:NV-BLOCK-NEEDS-RELIABILITY-ENUM--SIMPLE
+    """
+
+    ERROR_CORRECTION = 0
+    ERROR_DETECTION = 1
+    NO_PROTECTION = 2
+
+
+class NvBlockNeedsWritingPriority(Enum):
+    """
+    AR:NV-BLOCK-NEEDS-WRITING-PRIORITY-ENUM--SIMPLE
+    """
+
+    HIGH = 0
+    LOW = 1
+    MEDIUM = 2
+
+
 class OperationCycleType(Enum):
     """
     OPERATION-CYCLE-TYPE-ENUM--SIMPLE
@@ -724,6 +744,15 @@ class ReadResult(Enum):
 
     BY_ARGUMENT = 0
     BY_VALUE = 1
+
+
+class RamBlockStatusControl(Enum):
+    """
+    AR:RAM-BLOCK-STATUS-CONTROL-ENUM--SIMPLE
+    """
+
+    API = 0
+    NV_RAM_MANAGER = 1
 
 
 class ReentrancyLevel(Enum):
@@ -1346,6 +1375,16 @@ xml_to_enum_map: dict[str, dict] = {
         "STRICTLY-INCREASING": Monotony.STRICTLY_INCREASING,
         "STRICT-MONOTONOUS": Monotony.STRICT_MONOTONOUS,
     },
+    "NvBlockNeedsReliability": {
+        "ERROR-CORRECTION": NvBlockNeedsReliability.ERROR_CORRECTION,
+        "ERROR-DETECTION": NvBlockNeedsReliability.ERROR_DETECTION,
+        "NO-PROTECTION": NvBlockNeedsReliability.NO_PROTECTION,
+    },
+    "NvBlockNeedsWritingPriority": {
+        "HIGH": NvBlockNeedsWritingPriority.HIGH,
+        "LOW": NvBlockNeedsWritingPriority.LOW,
+        "MEDIUM": NvBlockNeedsWritingPriority.MEDIUM,
+    },
     "ObdRatioConnectionKind": {
         "API-USE": ObdRatioConnectionKind.API_USE,
         "OBSERVER": ObdRatioConnectionKind.OBSERVER,
@@ -1365,6 +1404,10 @@ xml_to_enum_map: dict[str, dict] = {
     "PageWide": {
         "NO-PGWIDE": PageWide.NO_PGWIDE,
         "PGWIDE": PageWide.PGWIDE,
+    },
+    "RamBlockStatusControl": {
+        "API": RamBlockStatusControl.API,
+        "NV-RAM-MANAGER": RamBlockStatusControl.NV_RAM_MANAGER,
     },
     "ReentrancyLevel": {
         "MULTICORE-REENTRANT": ReentrancyLevel.MULTICORE_REENTRANT,
@@ -1861,6 +1904,16 @@ enum_to_xml_map: dict[str, list] = {
         "STRICTLY-INCREASING",  # 5
         "STRICT-MONOTONOUS",    # 6
     ],
+    "NvBlockNeedsReliability": [
+        "ERROR-CORRECTION",  # 0
+        "ERROR-DETECTION",   # 1
+        "NO-PROTECTION",     # 2
+    ],
+    "NvBlockNeedsWritingPriority": [
+        "HIGH",    # 0
+        "LOW",     # 1
+        "MEDIUM",  # 2
+    ],
     "ObdRatioConnectionKind": [
         "API-USE",   # 0
         "OBSERVER",  # 1
@@ -1880,6 +1933,10 @@ enum_to_xml_map: dict[str, list] = {
     "PageWide": [
         "NO-PGWIDE",  # 0
         "PGWIDE",     # 1
+    ],
+    "RamBlockStatusControl": [
+        "API",             # 0
+        "NV-RAM-MANAGER",  # 1
     ],
     "ReentrancyLevel": [
         "MULTICORE-REENTRANT",   # 0

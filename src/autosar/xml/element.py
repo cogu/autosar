@@ -6825,6 +6825,15 @@ class ComMgrUserNeeds(ServiceNeeds):
         self._assign_optional("max_comm_mode", max_comm_mode, ar_enum.MaxCommMode)
 
 
+class CryptoCertificateKeySlotNeeds(ServiceNeeds):
+    """
+    Complex type AR:CRYPTO-CERTIFICATE-KEY-SLOT-NEEDS
+    Tag variants: 'CRYPTO-CERTIFICATE-KEY-SLOT-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
 class CryptoKeyManagementNeeds(ServiceNeeds):
     """
     Complex type AR:CRYPTO-KEY-MANAGEMENT-NEEDS
@@ -7729,6 +7738,107 @@ class J1939RmOutgoingRequestServiceNeeds(ServiceNeeds):
 
     Same constructor as parent class
     """
+
+
+class NvBlockNeeds(ServiceNeeds):
+    """
+    Complex type AR:NV-BLOCK-NEEDS
+    Tag variants: 'NV-BLOCK-NEEDS'
+    """
+
+    def __init__(self,
+                 name: str,
+                 calc_ram_block_crc: bool | None = None,
+                 check_static_block_id: bool | None = None,
+                 cyclic_writing_period: float | int | None = None,
+                 n_data_sets: int | None = None,
+                 n_rom_blocks: int | None = None,
+                 ram_block_status_control: ar_enum.RamBlockStatusControl | str | None = None,
+                 readonly: bool | None = None,
+                 reliability: ar_enum.NvBlockNeedsReliability | str | None = None,
+                 resistant_to_changed_sw: bool | None = None,
+                 restore_at_start: bool | None = None,
+                 select_block_for_first_init_all: bool | None = None,
+                 store_at_shutdown: bool | None = None,
+                 store_cyclic: bool | None = None,
+                 store_emergency: bool | None = None,
+                 store_immediate: bool | None = None,
+                 store_on_change: bool | None = None,
+                 use_auto_validation_at_shut_down: bool | None = None,
+                 use_crc_comp_mechanism: bool | None = None,
+                 write_only_once: bool | None = None,
+                 write_verification: bool | None = None,
+                 writing_frequency: int | None = None,
+                 writing_priority: ar_enum.NvBlockNeedsWritingPriority | str | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .CALC-RAM-BLOCK-CRC
+        self.calc_ram_block_crc: bool | None = None
+        # .CHECK-STATIC-BLOCK-ID
+        self.check_static_block_id: bool | None = None
+        # .CYCLIC-WRITING-PERIOD
+        self.cyclic_writing_period: float | int | None = None
+        # .N-DATA-SETS
+        self.n_data_sets: int | None = None
+        # .N-ROM-BLOCKS
+        self.n_rom_blocks: int | None = None
+        # .RAM-BLOCK-STATUS-CONTROL
+        self.ram_block_status_control: ar_enum.RamBlockStatusControl | None = None
+        # .READONLY
+        self.readonly: bool | None = None
+        # .RELIABILITY
+        self.reliability: ar_enum.NvBlockNeedsReliability | None = None
+        # .RESISTANT-TO-CHANGED-SW
+        self.resistant_to_changed_sw: bool | None = None
+        # .RESTORE-AT-START
+        self.restore_at_start: bool | None = None
+        # .SELECT-BLOCK-FOR-FIRST-INIT-ALL
+        self.select_block_for_first_init_all: bool | None = None
+        # .STORE-AT-SHUTDOWN
+        self.store_at_shutdown: bool | None = None
+        # .STORE-CYCLIC
+        self.store_cyclic: bool | None = None
+        # .STORE-EMERGENCY
+        self.store_emergency: bool | None = None
+        # .STORE-IMMEDIATE
+        self.store_immediate: bool | None = None
+        # .STORE-ON-CHANGE
+        self.store_on_change: bool | None = None
+        # .USE-AUTO-VALIDATION-AT-SHUT-DOWN
+        self.use_auto_validation_at_shut_down: bool | None = None
+        # .USE-CRC-COMP-MECHANISM
+        self.use_crc_comp_mechanism: bool | None = None
+        # .WRITE-ONLY-ONCE
+        self.write_only_once: bool | None = None
+        # .WRITE-VERIFICATION
+        self.write_verification: bool | None = None
+        # .WRITING-FREQUENCY
+        self.writing_frequency: int | None = None
+        # .WRITING-PRIORITY
+        self.writing_priority: ar_enum.NvBlockNeedsWritingPriority | None = None
+
+        self._assign_optional("calc_ram_block_crc", calc_ram_block_crc, bool)
+        self._assign_optional("check_static_block_id", check_static_block_id, bool)
+        self._assign_optional("cyclic_writing_period", cyclic_writing_period, float)
+        self._assign_optional_positive_int("n_data_sets", n_data_sets)
+        self._assign_optional_positive_int("n_rom_blocks", n_rom_blocks)
+        self._assign_optional("ram_block_status_control", ram_block_status_control, ar_enum.RamBlockStatusControl)
+        self._assign_optional("readonly", readonly, bool)
+        self._assign_optional("reliability", reliability, ar_enum.NvBlockNeedsReliability)
+        self._assign_optional("resistant_to_changed_sw", resistant_to_changed_sw, bool)
+        self._assign_optional("restore_at_start", restore_at_start, bool)
+        self._assign_optional("select_block_for_first_init_all", select_block_for_first_init_all, bool)
+        self._assign_optional("store_at_shutdown", store_at_shutdown, bool)
+        self._assign_optional("store_cyclic", store_cyclic, bool)
+        self._assign_optional("store_emergency", store_emergency, bool)
+        self._assign_optional("store_immediate", store_immediate, bool)
+        self._assign_optional("store_on_change", store_on_change, bool)
+        self._assign_optional("use_auto_validation_at_shut_down", use_auto_validation_at_shut_down, bool)
+        self._assign_optional("use_crc_comp_mechanism", use_crc_comp_mechanism, bool)
+        self._assign_optional("write_only_once", write_only_once, bool)
+        self._assign_optional("write_verification", write_verification, bool)
+        self._assign_optional_positive_int("writing_frequency", writing_frequency)
+        self._assign_optional("writing_priority", writing_priority, ar_enum.NvBlockNeedsWritingPriority)
 
 
 class ObdControlServiceNeeds(DiagnosticCapabilityElement):

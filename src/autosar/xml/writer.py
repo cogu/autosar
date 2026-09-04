@@ -383,6 +383,7 @@ class Writer(_XMLWriter):
             # Service needs elements
             'BswMgrNeeds': self._write_bsw_mgr_needs,
             'ComMgrUserNeeds': self._write_com_mgr_user_needs,
+            'CryptoCertificateKeySlotNeeds': self._write_crypto_certificate_key_slot_needs,
             'CryptoKeyManagementNeeds': self._write_crypto_key_management_needs,
             'CryptoServiceJobNeeds': self._write_crypto_service_job_needs,
             'CryptoServiceNeeds': self._write_crypto_service_needs,
@@ -430,6 +431,7 @@ class Writer(_XMLWriter):
             'J1939DcmDm19Support': self._write_j1939_dcm_dm_19_support,
             'J1939RmIncomingRequestServiceNeeds': self._write_j1939_rm_incoming_request_service_needs,
             'J1939RmOutgoingRequestServiceNeeds': self._write_j1939_rm_outgoing_request_service_needs,
+            'NvBlockNeeds': self._write_nv_block_needs,
             'ObdControlServiceNeeds': self._write_obd_control_service_needs,
             'ObdInfoServiceNeeds': self._write_obd_info_service_needs,
             'ObdMonitorServiceNeeds': self._write_obd_monitor_service_needs,
@@ -4940,6 +4942,21 @@ class Writer(_XMLWriter):
         if elem.max_comm_mode is not None:
             self._add_content("MAX-COMM-MODE", ar_enum.enum_to_xml(elem.max_comm_mode))
 
+    def _write_crypto_certificate_key_slot_needs(
+            self,
+            elem: ar_element.CryptoCertificateKeySlotNeeds) -> None:
+        """
+        Writes complex type AR:CRYPTO-CERTIFICATE-KEY-SLOT-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.CryptoCertificateKeySlotNeeds)
+        self._add_child("CRYPTO-CERTIFICATE-KEY-SLOT-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        # Group AR:CRYPTO-CERTIFICATE-KEY-SLOT-NEEDS contains no elements
+        self._leave_child()
+
     def _write_crypto_key_management_needs(self, elem: ar_element.CryptoKeyManagementNeeds) -> None:
         """
         Writes complex type AR:CRYPTO-KEY-MANAGEMENT-NEEDS
@@ -5937,6 +5954,74 @@ class Writer(_XMLWriter):
         self._write_identifiable(elem)
         # Groups AR:SERVICE-NEEDS and AR:J-1939-RM-OUTGOING-REQUEST-SERVICE-NEEDS contain no elements
         self._leave_child()
+
+    def _write_nv_block_needs(
+            self,
+            elem: ar_element.NvBlockNeeds) -> None:
+        """
+        Writes complex type AR:NV-BLOCK-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.NvBlockNeeds)
+        self._add_child("NV-BLOCK-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_nv_block_needs_group(elem)
+        self._leave_child()
+
+    def _write_nv_block_needs_group(
+            self,
+            elem: ar_element.NvBlockNeeds) -> None:
+        """
+        Writes group AR:NV-BLOCK-NEEDS
+        """
+        if elem.calc_ram_block_crc is not None:
+            self._add_content("CALC-RAM-BLOCK-CRC", self._format_boolean(elem.calc_ram_block_crc))
+        if elem.check_static_block_id is not None:
+            self._add_content("CHECK-STATIC-BLOCK-ID", self._format_boolean(elem.check_static_block_id))
+        if elem.cyclic_writing_period is not None:
+            self._add_content("CYCLIC-WRITING-PERIOD", str(elem.cyclic_writing_period))
+        if elem.n_data_sets is not None:
+            self._add_content("N-DATA-SETS", str(elem.n_data_sets))
+        if elem.n_rom_blocks is not None:
+            self._add_content("N-ROM-BLOCKS", str(elem.n_rom_blocks))
+        if elem.ram_block_status_control is not None:
+            self._add_content("RAM-BLOCK-STATUS-CONTROL", ar_enum.enum_to_xml(elem.ram_block_status_control))
+        if elem.readonly is not None:
+            self._add_content("READONLY", self._format_boolean(elem.readonly))
+        if elem.reliability is not None:
+            self._add_content("RELIABILITY", ar_enum.enum_to_xml(elem.reliability))
+        if elem.resistant_to_changed_sw is not None:
+            self._add_content("RESISTANT-TO-CHANGED-SW", self._format_boolean(elem.resistant_to_changed_sw))
+        if elem.restore_at_start is not None:
+            self._add_content("RESTORE-AT-START", self._format_boolean(elem.restore_at_start))
+        if elem.select_block_for_first_init_all is not None:
+            self._add_content("SELECT-BLOCK-FOR-FIRST-INIT-ALL",
+                              self._format_boolean(elem.select_block_for_first_init_all))
+        if elem.store_at_shutdown is not None:
+            self._add_content("STORE-AT-SHUTDOWN", self._format_boolean(elem.store_at_shutdown))
+        if elem.store_cyclic is not None:
+            self._add_content("STORE-CYCLIC", self._format_boolean(elem.store_cyclic))
+        if elem.store_emergency is not None:
+            self._add_content("STORE-EMERGENCY", self._format_boolean(elem.store_emergency))
+        if elem.store_immediate is not None:
+            self._add_content("STORE-IMMEDIATE", self._format_boolean(elem.store_immediate))
+        if elem.store_on_change is not None:
+            self._add_content("STORE-ON-CHANGE", self._format_boolean(elem.store_on_change))
+        if elem.use_auto_validation_at_shut_down is not None:
+            self._add_content("USE-AUTO-VALIDATION-AT-SHUT-DOWN",
+                              self._format_boolean(elem.use_auto_validation_at_shut_down))
+        if elem.use_crc_comp_mechanism is not None:
+            self._add_content("USE-CRC-COMP-MECHANISM", self._format_boolean(elem.use_crc_comp_mechanism))
+        if elem.write_only_once is not None:
+            self._add_content("WRITE-ONLY-ONCE", self._format_boolean(elem.write_only_once))
+        if elem.write_verification is not None:
+            self._add_content("WRITE-VERIFICATION", self._format_boolean(elem.write_verification))
+        if elem.writing_frequency is not None:
+            self._add_content("WRITING-FREQUENCY", str(elem.writing_frequency))
+        if elem.writing_priority is not None:
+            self._add_content("WRITING-PRIORITY", ar_enum.enum_to_xml(elem.writing_priority))
 
     def _write_obd_control_service_needs(
             self,

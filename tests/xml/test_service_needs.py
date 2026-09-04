@@ -133,6 +133,68 @@ class TestComMgrUserNeeds(unittest.TestCase):
             )
 
 
+class TestCryptoCertificateKeySlotNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.CryptoCertificateKeySlotNeeds("CryptoCertificateKeySlotNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<CRYPTO-CERTIFICATE-KEY-SLOT-NEEDS>
+  <SHORT-NAME>CryptoCertificateKeySlotNeeds</SHORT-NAME>
+</CRYPTO-CERTIFICATE-KEY-SLOT-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.CryptoCertificateKeySlotNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.CryptoCertificateKeySlotNeeds)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "CryptoCertificateKeySlotNeeds")
+
+    def test_with_admin_data(self):
+        admin_data = ar_element.AdminData(
+            doc_revisions=ar_element.DocRevision(revision_label="1.0.0")
+        )
+        element = ar_element.CryptoCertificateKeySlotNeeds(
+            "CryptoCertificateKeySlotNeeds",
+            admin_data=admin_data
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<CRYPTO-CERTIFICATE-KEY-SLOT-NEEDS>
+  <SHORT-NAME>CryptoCertificateKeySlotNeeds</SHORT-NAME>
+  <ADMIN-DATA>
+    <DOC-REVISIONS>
+      <DOC-REVISION>
+        <REVISION-LABEL>1.0.0</REVISION-LABEL>
+      </DOC-REVISION>
+    </DOC-REVISIONS>
+  </ADMIN-DATA>
+</CRYPTO-CERTIFICATE-KEY-SLOT-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.CryptoCertificateKeySlotNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.CryptoCertificateKeySlotNeeds)
+        self.assertEqual(str(elem.admin_data.doc_revisions[0].revision_label), "1.0.0")
+
+    def test_with_desc_and_category(self):
+        element = ar_element.CryptoCertificateKeySlotNeeds(
+            "CryptoCertificateKeySlotNeeds",
+            desc="Crypto certificate key slot needs",
+            category="SERVICE_NEEDS"
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<CRYPTO-CERTIFICATE-KEY-SLOT-NEEDS>
+  <SHORT-NAME>CryptoCertificateKeySlotNeeds</SHORT-NAME>
+  <DESC>
+    <L-2 L="FOR-ALL">Crypto certificate key slot needs</L-2>
+  </DESC>
+  <CATEGORY>SERVICE_NEEDS</CATEGORY>
+</CRYPTO-CERTIFICATE-KEY-SLOT-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.CryptoCertificateKeySlotNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.CryptoCertificateKeySlotNeeds)
+        self.assertEqual(elem.desc.elements[0].parts[0], "Crypto certificate key slot needs")
+        self.assertEqual(elem.category, "SERVICE_NEEDS")
+
+
 class TestCryptoKeyManagementNeeds(unittest.TestCase):
 
     def test_name_only(self):
@@ -2849,6 +2911,194 @@ class TestJ1939RmOutgoingRequestServiceNeeds(unittest.TestCase):
         self.assertIsInstance(elem, ar_element.J1939RmOutgoingRequestServiceNeeds)
         self.assertEqual(elem.desc.elements[0].parts[0], "Outgoing request needs")
         self.assertEqual(elem.category, "SERVICE_NEEDS")
+
+
+class TestNvBlockNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.NvBlockNeeds("NvBlockNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<NV-BLOCK-NEEDS>
+  <SHORT-NAME>NvBlockNeeds</SHORT-NAME>
+</NV-BLOCK-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.NvBlockNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.NvBlockNeeds)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "NvBlockNeeds")
+        self.assertIsNone(elem.calc_ram_block_crc)
+        self.assertIsNone(elem.check_static_block_id)
+        self.assertIsNone(elem.cyclic_writing_period)
+        self.assertIsNone(elem.n_data_sets)
+        self.assertIsNone(elem.n_rom_blocks)
+        self.assertIsNone(elem.ram_block_status_control)
+        self.assertIsNone(elem.readonly)
+        self.assertIsNone(elem.reliability)
+        self.assertIsNone(elem.resistant_to_changed_sw)
+        self.assertIsNone(elem.restore_at_start)
+        self.assertIsNone(elem.select_block_for_first_init_all)
+        self.assertIsNone(elem.store_at_shutdown)
+        self.assertIsNone(elem.store_cyclic)
+        self.assertIsNone(elem.store_emergency)
+        self.assertIsNone(elem.store_immediate)
+        self.assertIsNone(elem.store_on_change)
+        self.assertIsNone(elem.use_auto_validation_at_shut_down)
+        self.assertIsNone(elem.use_crc_comp_mechanism)
+        self.assertIsNone(elem.write_only_once)
+        self.assertIsNone(elem.write_verification)
+        self.assertIsNone(elem.writing_frequency)
+        self.assertIsNone(elem.writing_priority)
+
+    def test_all_fields(self):
+        element = ar_element.NvBlockNeeds(
+            "NvBlockNeeds",
+            calc_ram_block_crc=True,
+            check_static_block_id=False,
+            cyclic_writing_period=0.05,
+            n_data_sets=2,
+            n_rom_blocks=1,
+            ram_block_status_control=ar_enum.RamBlockStatusControl.API,
+            readonly=False,
+            reliability=ar_enum.NvBlockNeedsReliability.ERROR_CORRECTION,
+            resistant_to_changed_sw=True,
+            restore_at_start=True,
+            select_block_for_first_init_all=False,
+            store_at_shutdown=True,
+            store_cyclic=False,
+            store_emergency=True,
+            store_immediate=False,
+            store_on_change=True,
+            use_auto_validation_at_shut_down=False,
+            use_crc_comp_mechanism=True,
+            write_only_once=False,
+            write_verification=True,
+            writing_frequency=10,
+            writing_priority=ar_enum.NvBlockNeedsWritingPriority.HIGH
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<NV-BLOCK-NEEDS>
+  <SHORT-NAME>NvBlockNeeds</SHORT-NAME>
+  <CALC-RAM-BLOCK-CRC>true</CALC-RAM-BLOCK-CRC>
+  <CHECK-STATIC-BLOCK-ID>false</CHECK-STATIC-BLOCK-ID>
+  <CYCLIC-WRITING-PERIOD>0.05</CYCLIC-WRITING-PERIOD>
+  <N-DATA-SETS>2</N-DATA-SETS>
+  <N-ROM-BLOCKS>1</N-ROM-BLOCKS>
+  <RAM-BLOCK-STATUS-CONTROL>API</RAM-BLOCK-STATUS-CONTROL>
+  <READONLY>false</READONLY>
+  <RELIABILITY>ERROR-CORRECTION</RELIABILITY>
+  <RESISTANT-TO-CHANGED-SW>true</RESISTANT-TO-CHANGED-SW>
+  <RESTORE-AT-START>true</RESTORE-AT-START>
+  <SELECT-BLOCK-FOR-FIRST-INIT-ALL>false</SELECT-BLOCK-FOR-FIRST-INIT-ALL>
+  <STORE-AT-SHUTDOWN>true</STORE-AT-SHUTDOWN>
+  <STORE-CYCLIC>false</STORE-CYCLIC>
+  <STORE-EMERGENCY>true</STORE-EMERGENCY>
+  <STORE-IMMEDIATE>false</STORE-IMMEDIATE>
+  <STORE-ON-CHANGE>true</STORE-ON-CHANGE>
+  <USE-AUTO-VALIDATION-AT-SHUT-DOWN>false</USE-AUTO-VALIDATION-AT-SHUT-DOWN>
+  <USE-CRC-COMP-MECHANISM>true</USE-CRC-COMP-MECHANISM>
+  <WRITE-ONLY-ONCE>false</WRITE-ONLY-ONCE>
+  <WRITE-VERIFICATION>true</WRITE-VERIFICATION>
+  <WRITING-FREQUENCY>10</WRITING-FREQUENCY>
+  <WRITING-PRIORITY>HIGH</WRITING-PRIORITY>
+</NV-BLOCK-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.NvBlockNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.NvBlockNeeds)
+        self.assertTrue(elem.calc_ram_block_crc)
+        self.assertFalse(elem.check_static_block_id)
+        self.assertAlmostEqual(elem.cyclic_writing_period, 0.05)
+        self.assertEqual(elem.n_data_sets, 2)
+        self.assertEqual(elem.n_rom_blocks, 1)
+        self.assertEqual(elem.ram_block_status_control, ar_enum.RamBlockStatusControl.API)
+        self.assertFalse(elem.readonly)
+        self.assertEqual(elem.reliability, ar_enum.NvBlockNeedsReliability.ERROR_CORRECTION)
+        self.assertTrue(elem.resistant_to_changed_sw)
+        self.assertTrue(elem.restore_at_start)
+        self.assertFalse(elem.select_block_for_first_init_all)
+        self.assertTrue(elem.store_at_shutdown)
+        self.assertFalse(elem.store_cyclic)
+        self.assertTrue(elem.store_emergency)
+        self.assertFalse(elem.store_immediate)
+        self.assertTrue(elem.store_on_change)
+        self.assertFalse(elem.use_auto_validation_at_shut_down)
+        self.assertTrue(elem.use_crc_comp_mechanism)
+        self.assertFalse(elem.write_only_once)
+        self.assertTrue(elem.write_verification)
+        self.assertEqual(elem.writing_frequency, 10)
+        self.assertEqual(elem.writing_priority, ar_enum.NvBlockNeedsWritingPriority.HIGH)
+
+    def test_string_enums(self):
+        element = ar_element.NvBlockNeeds(
+            "NvBlockNeeds",
+            ram_block_status_control="NV-RAM-MANAGER",
+            reliability="NO-PROTECTION",
+            writing_priority="LOW"
+        )
+        self.assertEqual(element.ram_block_status_control, ar_enum.RamBlockStatusControl.NV_RAM_MANAGER)
+        self.assertEqual(element.reliability, ar_enum.NvBlockNeedsReliability.NO_PROTECTION)
+        self.assertEqual(element.writing_priority, ar_enum.NvBlockNeedsWritingPriority.LOW)
+
+    def test_positive_int_validations(self):
+        with self.assertRaises(ValueError):
+            ar_element.NvBlockNeeds("NvBlockNeeds", n_data_sets=-1)
+        with self.assertRaises(ValueError):
+            ar_element.NvBlockNeeds("NvBlockNeeds", n_rom_blocks=-1)
+        with self.assertRaises(ValueError):
+            ar_element.NvBlockNeeds("NvBlockNeeds", writing_frequency=-1)
+        with self.assertRaises(TypeError):
+            ar_element.NvBlockNeeds("NvBlockNeeds", n_data_sets="invalid")
+
+    def test_invalid_enums(self):
+        with self.assertRaises(autosar.xml.exception.ConversionError):
+            ar_element.NvBlockNeeds("NvBlockNeeds", ram_block_status_control="INVALID")
+        with self.assertRaises(autosar.xml.exception.ConversionError):
+            ar_element.NvBlockNeeds("NvBlockNeeds", reliability="INVALID")
+        with self.assertRaises(autosar.xml.exception.ConversionError):
+            ar_element.NvBlockNeeds("NvBlockNeeds", writing_priority="INVALID")
+        with self.assertRaises(autosar.xml.exception.AssignmentTypeError):
+            ar_element.NvBlockNeeds("NvBlockNeeds", ram_block_status_control=123)
+        with self.assertRaises(autosar.xml.exception.AssignmentTypeError):
+            ar_element.NvBlockNeeds("NvBlockNeeds", reliability=123)
+        with self.assertRaises(autosar.xml.exception.AssignmentTypeError):
+            ar_element.NvBlockNeeds("NvBlockNeeds", writing_priority=123)
+
+    def test_with_admin_data_desc_category(self):
+        admin_data = ar_element.AdminData(
+            doc_revisions=ar_element.DocRevision(revision_label="1.0.0")
+        )
+        element = ar_element.NvBlockNeeds(
+            "NvBlockNeeds",
+            admin_data=admin_data,
+            desc="NV block needs description",
+            category="SERVICE_NEEDS",
+            calc_ram_block_crc=True
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<NV-BLOCK-NEEDS>
+  <SHORT-NAME>NvBlockNeeds</SHORT-NAME>
+  <DESC>
+    <L-2 L="FOR-ALL">NV block needs description</L-2>
+  </DESC>
+  <CATEGORY>SERVICE_NEEDS</CATEGORY>
+  <ADMIN-DATA>
+    <DOC-REVISIONS>
+      <DOC-REVISION>
+        <REVISION-LABEL>1.0.0</REVISION-LABEL>
+      </DOC-REVISION>
+    </DOC-REVISIONS>
+  </ADMIN-DATA>
+  <CALC-RAM-BLOCK-CRC>true</CALC-RAM-BLOCK-CRC>
+</NV-BLOCK-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.NvBlockNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.NvBlockNeeds)
+        self.assertEqual(str(elem.admin_data.doc_revisions[0].revision_label), "1.0.0")
+        self.assertEqual(elem.desc.elements[0].parts[0], "NV block needs description")
+        self.assertEqual(elem.category, "SERVICE_NEEDS")
+        self.assertTrue(elem.calc_ram_block_crc)
 
 
 class TestSecureOnBoardCommunicationNeeds(unittest.TestCase):
