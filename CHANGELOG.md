@@ -27,6 +27,7 @@ Non-collectable elements are various sub-elements to collectable elements.
 
 * BswMgrNeeds | BSW-MGR-NEEDS
 * ComMgrUserNeeds | COM-MGR-USER-NEEDS
+* CryptoCertificateKeySlotNeeds | CRYPTO-CERTIFICATE-KEY-SLOT-NEEDS
 * CryptoKeyManagementNeeds | CRYPTO-KEY-MANAGEMENT-NEEDS
 * CryptoServiceJobNeeds | CRYPTO-SERVICE-JOB-NEEDS
 * CryptoServiceNeeds | CRYPTO-SERVICE-NEEDS
@@ -74,6 +75,7 @@ Non-collectable elements are various sub-elements to collectable elements.
 * J1939DcmDm19Support | J-1939-DCM-DM-19-SUPPORT
 * J1939RmIncomingRequestServiceNeeds | J-1939-RM-INCOMING-REQUEST-SERVICE-NEEDS
 * J1939RmOutgoingRequestServiceNeeds | J-1939-RM-OUTGOING-REQUEST-SERVICE-NEEDS
+* NvBlockNeeds | NV-BLOCK-NEEDS
 * ObdControlServiceNeeds | OBD-CONTROL-SERVICE-NEEDS
 * ObdInfoServiceNeeds | OBD-INFO-SERVICE-NEEDS
 * ObdMonitorServiceNeeds | OBD-MONITOR-SERVICE-NEEDS

@@ -327,6 +327,7 @@ class Reader:
             # Service needs elements
             'BSW-MGR-NEEDS': self._read_bsw_mgr_needs,
             'COM-MGR-USER-NEEDS': self._read_com_mgr_user_needs,
+            'CRYPTO-CERTIFICATE-KEY-SLOT-NEEDS': self._read_crypto_certificate_key_slot_needs,
             'CRYPTO-KEY-MANAGEMENT-NEEDS': self._read_crypto_key_management_needs,
             'CRYPTO-SERVICE-JOB-NEEDS': self._read_crypto_service_job_needs,
             'CRYPTO-SERVICE-NEEDS': self._read_crypto_service_needs,
@@ -374,6 +375,7 @@ class Reader:
             'J-1939-DCM-DM-19-SUPPORT': self._read_j1939_dcm_dm_19_support,
             'J-1939-RM-INCOMING-REQUEST-SERVICE-NEEDS': self._read_j1939_rm_incoming_request_service_needs,
             'J-1939-RM-OUTGOING-REQUEST-SERVICE-NEEDS': self._read_j1939_rm_outgoing_request_service_needs,
+            'NV-BLOCK-NEEDS': self._read_nv_block_needs,
             'OBD-CONTROL-SERVICE-NEEDS': self._read_obd_control_service_needs,
             'OBD-INFO-SERVICE-NEEDS': self._read_obd_info_service_needs,
             'OBD-MONITOR-SERVICE-NEEDS': self._read_obd_monitor_service_needs,
@@ -6531,6 +6533,22 @@ class Reader:
         if xml_child is not None:
             data["max_comm_mode"] = ar_enum.xml_to_enum("MaxCommMode", xml_child.text)
 
+    def _read_crypto_certificate_key_slot_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.CryptoCertificateKeySlotNeeds:
+        """
+        Reads complex type AR:CRYPTO-CERTIFICATE-KEY-SLOT-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Group AR:CRYPTO-CERTIFICATE-KEY-SLOT-NEEDS contains no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.CryptoCertificateKeySlotNeeds(**data)
+
     def _read_crypto_key_management_needs(self,
                                           xml_element: ElementTree.Element) -> ar_element.CryptoKeyManagementNeeds:
         """
@@ -7621,6 +7639,93 @@ class Reader:
         # Groups AR:SERVICE-NEEDS and AR:J-1939-RM-OUTGOING-REQUEST-SERVICE-NEEDS contain no elements
         self._report_unprocessed_elements(child_elements)
         return ar_element.J1939RmOutgoingRequestServiceNeeds(**data)
+
+    def _read_nv_block_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.NvBlockNeeds:
+        """
+        Reads complex type AR:NV-BLOCK-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_nv_block_needs_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.NvBlockNeeds(**data)
+
+    def _read_nv_block_needs_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:NV-BLOCK-NEEDS
+        """
+        xml_child = child_elements.get("CALC-RAM-BLOCK-CRC")
+        if xml_child is not None:
+            data["calc_ram_block_crc"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("CHECK-STATIC-BLOCK-ID")
+        if xml_child is not None:
+            data["check_static_block_id"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("CYCLIC-WRITING-PERIOD")
+        if xml_child is not None:
+            data["cyclic_writing_period"] = self._read_number(xml_child.text)
+        xml_child = child_elements.get("N-DATA-SETS")
+        if xml_child is not None:
+            data["n_data_sets"] = self._read_positive_integer(xml_child.text)
+        xml_child = child_elements.get("N-ROM-BLOCKS")
+        if xml_child is not None:
+            data["n_rom_blocks"] = self._read_positive_integer(xml_child.text)
+        xml_child = child_elements.get("RAM-BLOCK-STATUS-CONTROL")
+        if xml_child is not None:
+            data["ram_block_status_control"] = ar_enum.xml_to_enum("RamBlockStatusControl", xml_child.text)
+        xml_child = child_elements.get("READONLY")
+        if xml_child is not None:
+            data["readonly"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("RELIABILITY")
+        if xml_child is not None:
+            data["reliability"] = ar_enum.xml_to_enum("NvBlockNeedsReliability", xml_child.text)
+        xml_child = child_elements.get("RESISTANT-TO-CHANGED-SW")
+        if xml_child is not None:
+            data["resistant_to_changed_sw"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("RESTORE-AT-START")
+        if xml_child is not None:
+            data["restore_at_start"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("SELECT-BLOCK-FOR-FIRST-INIT-ALL")
+        if xml_child is not None:
+            data["select_block_for_first_init_all"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("STORE-AT-SHUTDOWN")
+        if xml_child is not None:
+            data["store_at_shutdown"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("STORE-CYCLIC")
+        if xml_child is not None:
+            data["store_cyclic"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("STORE-EMERGENCY")
+        if xml_child is not None:
+            data["store_emergency"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("STORE-IMMEDIATE")
+        if xml_child is not None:
+            data["store_immediate"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("STORE-ON-CHANGE")
+        if xml_child is not None:
+            data["store_on_change"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("USE-AUTO-VALIDATION-AT-SHUT-DOWN")
+        if xml_child is not None:
+            data["use_auto_validation_at_shut_down"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("USE-CRC-COMP-MECHANISM")
+        if xml_child is not None:
+            data["use_crc_comp_mechanism"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("WRITE-ONLY-ONCE")
+        if xml_child is not None:
+            data["write_only_once"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("WRITE-VERIFICATION")
+        if xml_child is not None:
+            data["write_verification"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("WRITING-FREQUENCY")
+        if xml_child is not None:
+            data["writing_frequency"] = self._read_positive_integer(xml_child.text)
+        xml_child = child_elements.get("WRITING-PRIORITY")
+        if xml_child is not None:
+            data["writing_priority"] = ar_enum.xml_to_enum("NvBlockNeedsWritingPriority", xml_child.text)
 
     def _read_obd_control_service_needs(
             self,
