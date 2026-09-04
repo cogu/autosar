@@ -2,6 +2,7 @@
 Classes related to AUTOSAR XML Elements
 """
 
+import builtins
 import datetime
 import re
 from collections import OrderedDict
@@ -66,6 +67,7 @@ from autosar.xml.reference import (SwBaseTypeRef,  # noqa F401
                                    DiagnosticEventNeedsRef,
                                    DiagnosticValueNeedsRef,
                                    FunctionInhibitionNeedsRef,
+                                   SupervisedEntityCheckpointNeedsRef,
                                    )
 
 
@@ -7345,6 +7347,140 @@ class DtcStatusChangeNotificationNeeds(DiagnosticCapabilityElement):
                               ar_enum.DiagnosticClearDtcNotification)
 
 
+class EcuStateMgrUserNeeds(ServiceNeeds):
+    """
+    Complex type AR:ECU-STATE-MGR-USER-NEEDS
+    Tag variants: 'ECU-STATE-MGR-USER-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
+class TracedFailure(Identifiable):
+    """
+    Group AR:TRACED-FAILURE
+    """
+
+    def __init__(self,
+                 name: str,
+                 id: int | None = None,  # pylint: disable=redefined-builtin
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .ID
+        self.id: int | None = None
+
+        self._assign_optional_positive_int("id", id)
+
+
+class DevelopmentError(TracedFailure):
+    """
+    Complex type AR:DEVELOPMENT-ERROR
+    Tag variants: 'DEVELOPMENT-ERROR'
+
+    Same constructor as parent class
+    """
+
+
+class RuntimeError(TracedFailure):  # pylint: disable=redefined-builtin
+    """
+    Complex type AR:RUNTIME-ERROR
+    Tag variants: 'RUNTIME-ERROR'
+
+    Same constructor as parent class
+    """
+
+
+class PossibleErrorReaction(Identifiable):
+    """
+    Complex type AR:POSSIBLE-ERROR-REACTION
+    Tag variants: 'POSSIBLE-ERROR-REACTION'
+    """
+
+    def __init__(self,
+                 name: str,
+                 reaction_code: int | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .REACTION-CODE
+        self.reaction_code: int | None = None
+
+        self._assign_optional_positive_int("reaction_code", reaction_code)
+
+
+class TransientFault(TracedFailure):
+    """
+    Complex type AR:TRANSIENT-FAULT
+    Tag variants: 'TRANSIENT-FAULT'
+    """
+
+    def __init__(self,
+                 name: str,
+                 id: int | None = None,  # pylint: disable=redefined-builtin
+                 possible_error_reactions: PossibleErrorReaction | list[PossibleErrorReaction] | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, id=id, **kwargs)
+        # .POSSIBLE-ERROR-REACTIONS
+        self.possible_error_reactions: list[PossibleErrorReaction] = []
+
+        if possible_error_reactions is not None:
+            if isinstance(possible_error_reactions, PossibleErrorReaction):
+                self.append_possible_error_reaction(possible_error_reactions)
+            elif isinstance(possible_error_reactions, list):
+                for reaction in possible_error_reactions:
+                    self.append_possible_error_reaction(reaction)
+            else:
+                raise TypeError("possible_error_reactions: Expected PossibleErrorReaction or list")
+
+    def append_possible_error_reaction(self, reaction: PossibleErrorReaction) -> None:
+        """
+        Appends reaction to internal list of possible error reactions
+        """
+        if isinstance(reaction, PossibleErrorReaction):
+            self.possible_error_reactions.append(reaction)
+        else:
+            raise TypeError("reaction: Expected type PossibleErrorReaction")
+
+    append = append_possible_error_reaction
+
+
+TracedFailureType = DevelopmentError | RuntimeError | TransientFault
+
+
+class ErrorTracerNeeds(ServiceNeeds):
+    """
+    Complex type AR:ERROR-TRACER-NEEDS
+    Tag variants: 'ERROR-TRACER-NEEDS'
+    """
+
+    def __init__(self,
+                 name: str,
+                 traced_failures: TracedFailureType | list[TracedFailureType] | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .TRACED-FAILURES
+        self.traced_failures: list[TracedFailure] = []
+
+        if traced_failures is not None:
+            if isinstance(traced_failures, TracedFailure):
+                self.append_traced_failure(traced_failures)
+            elif isinstance(traced_failures, list):
+                for failure in traced_failures:
+                    self.append_traced_failure(failure)
+            else:
+                raise TypeError("traced_failures: Expected TracedFailure or list")
+
+    def append_traced_failure(self, failure: TracedFailure) -> None:
+        """
+        Appends failure to internal list of traced failures
+        """
+        if isinstance(failure, TracedFailure):
+            self.traced_failures.append(failure)
+        else:
+            raise TypeError("failure: Expected type TracedFailure")
+
+    append = append_traced_failure
+
+
 class FunctionInhibitionAvailabilityNeeds(ServiceNeeds):
     """
     Complex type AR:FUNCTION-INHIBITION-AVAILABILITY-NEEDS
@@ -7377,6 +7513,24 @@ class FurtherActionByteNeeds(DoIpServiceNeeds):
     """
     Complex type AR:FURTHER-ACTION-BYTE-NEEDS
     Tag variants: 'FURTHER-ACTION-BYTE-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
+class GlobalSupervisionNeeds(ServiceNeeds):
+    """
+    Complex type AR:GLOBAL-SUPERVISION-NEEDS
+    Tag variants: 'GLOBAL-SUPERVISION-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
+class HardwareTestNeeds(ServiceNeeds):
+    """
+    Complex type AR:HARDWARE-TEST-NEEDS
+    Tag variants: 'HARDWARE-TEST-NEEDS'
 
     Same constructor as parent class
     """
@@ -7505,6 +7659,106 @@ class ObdRatioServiceNeeds(DiagnosticCapabilityElement):
         self._assign_optional("used_fid_ref",
                               used_fid_ref,
                               FunctionInhibitionNeedsRef)
+
+
+class SupervisedEntityCheckpointNeedsRefConditional(ARObject):
+    """
+    Complex type AR:SUPERVISED-ENTITY-CHECKPOINT-NEEDS-REF-CONDITIONAL
+    Tag variants: 'SUPERVISED-ENTITY-CHECKPOINT-NEEDS-REF-CONDITIONAL'
+    """
+
+    def __init__(self,
+                 checkpoint_ref: SupervisedEntityCheckpointNeedsRef | str | None = None) -> None:
+        super().__init__()
+        # .SUPERVISED-ENTITY-CHECKPOINT-NEEDS-REF
+        self.checkpoint_ref: SupervisedEntityCheckpointNeedsRef | None = None
+
+        self._assign_optional("checkpoint_ref", checkpoint_ref, SupervisedEntityCheckpointNeedsRef)
+
+
+SupervisedEntityCheckpointArgumentType = (SupervisedEntityCheckpointNeedsRefConditional |
+                                          SupervisedEntityCheckpointNeedsRef |
+                                          str)
+
+
+class SupervisedEntityCheckpointNeeds(ServiceNeeds):
+    """
+    Complex type AR:SUPERVISED-ENTITY-CHECKPOINT-NEEDS
+    Tag variants: 'SUPERVISED-ENTITY-CHECKPOINT-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
+class SupervisedEntityNeeds(ServiceNeeds):
+    """
+    Complex type AR:SUPERVISED-ENTITY-NEEDS
+    Tag variants: 'SUPERVISED-ENTITY-NEEDS'
+    """
+
+    def __init__(self,
+                 name: str,
+                 activate_at_start: bool | None = None,
+                 checkpoints: (SupervisedEntityCheckpointArgumentType |
+                               list[SupervisedEntityCheckpointArgumentType] |
+                               None) = None,
+                 enable_deactivation: bool | None = None,
+                 expected_alive_cycle: float | int | None = None,
+                 max_alive_cycle: float | int | None = None,
+                 min_alive_cycle: float | int | None = None,
+                 tolerated_failed_cycles: int | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .ACTIVATE-AT-START
+        self.activate_at_start: bool | None = None
+        # .CHECKPOINTSS
+        self.checkpoints: list[SupervisedEntityCheckpointNeedsRefConditional] = []
+        # .ENABLE-DEACTIVATION
+        self.enable_deactivation: bool | None = None
+        # .EXPECTED-ALIVE-CYCLE
+        self.expected_alive_cycle: float | None = None
+        # .MAX-ALIVE-CYCLE
+        self.max_alive_cycle: float | None = None
+        # .MIN-ALIVE-CYCLE
+        self.min_alive_cycle: float | None = None
+        # .TOLERATED-FAILED-CYCLES
+        self.tolerated_failed_cycles: int | None = None
+
+        self._assign_optional("activate_at_start", activate_at_start, bool)
+        if checkpoints is not None:
+            if isinstance(checkpoints, list):
+                for checkpoint in checkpoints:
+                    self.append_checkpoint(checkpoint)
+            else:
+                self.append_checkpoint(checkpoints)
+        self._assign_optional("enable_deactivation", enable_deactivation, bool)
+        self._assign_optional("expected_alive_cycle", expected_alive_cycle, float)
+        self._assign_optional("max_alive_cycle", max_alive_cycle, float)
+        self._assign_optional("min_alive_cycle", min_alive_cycle, float)
+        self._assign_optional_positive_int("tolerated_failed_cycles", tolerated_failed_cycles)
+
+    def append_checkpoint(self, checkpoint: SupervisedEntityCheckpointArgumentType) -> None:
+        """
+        Appends checkpoint reference conditional to internal list of checkpoints
+        """
+        if isinstance(checkpoint, SupervisedEntityCheckpointNeedsRefConditional):
+            self.checkpoints.append(checkpoint)
+        elif isinstance(checkpoint, (SupervisedEntityCheckpointNeedsRef, str)):
+            self.checkpoints.append(SupervisedEntityCheckpointNeedsRefConditional(checkpoint))
+        else:
+            raise TypeError("checkpoint: Expected SupervisedEntityCheckpointNeedsRefConditional, "
+                            "SupervisedEntityCheckpointNeedsRef or str")
+
+    append = append_checkpoint
+
+
+class VendorSpecificServiceNeeds(ServiceNeeds):
+    """
+    Complex type AR:VENDOR-SPECIFIC-SERVICE-NEEDS
+    Tag variants: 'VENDOR-SPECIFIC-SERVICE-NEEDS'
+
+    Same constructor as parent class
+    """
 
 
 class WarningIndicatorRequestedBitNeeds(DiagnosticCapabilityElement):
@@ -8599,8 +8853,8 @@ class RunnableEntity(ExecutableEntity):
                 if element.name == element_name:
                     data_element = element
         if data_element is None:
-            raise RuntimeError(f"Unable to find a matching data element '{element_name}' "
-                               f"in port interface '{port_interface.name}'")
+            raise builtins.RuntimeError(f"Unable to find a matching data element '{element_name}' "
+                                        f"in port interface '{port_interface.name}'")
         name: str | None = None
         if access_point_args is not None and "name" in access_point_args:
             name = access_point_args["name"]
@@ -8658,8 +8912,8 @@ class RunnableEntity(ExecutableEntity):
         else:
             mode_group = port_interface.mode_group
         if mode_group is None:
-            raise RuntimeError(f"Unable to find a ModeDeclarationGroupPrototype named '{mode_group_name}' "
-                               f"in port interface '{port_interface.name}'")
+            raise builtins.RuntimeError(f"Unable to find a ModeDeclarationGroupPrototype named '{mode_group_name}' "
+                                        f"in port interface '{port_interface.name}'")
         name: str | None = None
         access_point = None
         if access_point_args is not None and "name" in access_point_args:
@@ -8712,8 +8966,8 @@ class RunnableEntity(ExecutableEntity):
                 if element.name == parameter_name:
                     target_data = element
         if target_data is None:
-            raise RuntimeError(f"Unable to find a matching parameter element '{parameter_name}' "
-                               f"in port interface '{port_interface.name}'")
+            raise builtins.RuntimeError(f"Unable to find a matching parameter element '{parameter_name}' "
+                                        f"in port interface '{port_interface.name}'")
         parameter_iref = ParameterInAtomicSwcTypeInstanceRef(port_prototype=port.ref(),
                                                              target_data_prototype=target_data.ref())
         name: str | None = None
@@ -8751,8 +9005,8 @@ class RunnableEntity(ExecutableEntity):
                 if element.name == operation_name:
                     operation = element
         if operation is None:
-            raise RuntimeError(f"Unable to find a matching operation '{operation_name}' "
-                               f"in port interface '{port_interface.name}'")
+            raise builtins.RuntimeError(f"Unable to find a matching operation '{operation_name}' "
+                                        f"in port interface '{port_interface.name}'")
         name: str | None = None
         if access_point_args is not None and "name" in access_point_args:
             name = access_point_args["name"]
@@ -8795,8 +9049,8 @@ class RunnableEntity(ExecutableEntity):
                 if element.name == trigger_name:
                     trigger = element
         if trigger is None:
-            raise RuntimeError(f"Unable to find a matching trigger '{trigger_name}' "
-                               f"in port interface '{port_interface.name}'")
+            raise builtins.RuntimeError(f"Unable to find a matching trigger '{trigger_name}' "
+                                        f"in port interface '{port_interface.name}'")
         if isinstance(port, (ProvidePortPrototype, PRPortPrototype)):
             triggering_point = None
             if trigger_point_type == ar_enum.TriggerPoint.EXTERNAL:
@@ -9029,7 +9283,7 @@ class RunnableEntity(ExecutableEntity):
         Verifies that this object has valid SwcInternalBehavior as parent before returning it
         """
         if self.parent is None or not isinstance(self.parent, SwcInternalBehavior):
-            raise RuntimeError("Runnable object doesn't have a valid parent")
+            raise builtins.RuntimeError("Runnable object doesn't have a valid parent")
         return self.parent
 
 
@@ -10288,7 +10542,7 @@ class SwcInternalBehavior(InternalBehavior):
         Verifies that this object has valid SoftwareComponent as parent before returning it
         """
         if self.parent is None or not isinstance(self.parent, SwComponentType):
-            raise RuntimeError("Behavior object doesn't have a valid parent")
+            raise builtins.RuntimeError("Behavior object doesn't have a valid parent")
         return self.parent
 
     def get_valid_behavior_settings(self) -> BehaviorSettings:
@@ -10298,9 +10552,9 @@ class SwcInternalBehavior(InternalBehavior):
         swc = self.get_valid_parent()
         workspace = swc.root_collection()
         if workspace is None:
-            raise RuntimeError("Workspace object not found")
+            raise builtins.RuntimeError("Workspace object not found")
         if workspace.behavior_settings is None:
-            raise RuntimeError("behavior_settings object not found in workspace")
+            raise builtins.RuntimeError("behavior_settings object not found in workspace")
         return workspace.behavior_settings
 
     def ref(self) -> SwcInternalBehaviorRef | None:
@@ -10670,7 +10924,7 @@ class SwcInternalBehavior(InternalBehavior):
             else:
                 msg = "event_name: Unable to dynamically create event name,"\
                       " background_event_prefix is not set in behavior settings"
-                raise RuntimeError(msg)
+                raise builtins.RuntimeError(msg)
         assert isinstance(event_name, str)
         unique_event_name = self._make_unique_event_name(event_name)
         event = BackgroundEvent(unique_event_name, runnable.ref(), **kwargs)
@@ -10716,7 +10970,7 @@ class SwcInternalBehavior(InternalBehavior):
             else:
                 msg = "event_name: Unable to dynamically create event name,"\
                       " data_receive_error_event_prefix is not set in behavior settings"
-                raise RuntimeError(msg)
+                raise builtins.RuntimeError(msg)
         assert isinstance(event_name, str)
         unique_event_name = self._make_unique_event_name(event_name)
         event = DataReceiveErrorEvent.make(unique_event_name,
@@ -10766,7 +11020,7 @@ class SwcInternalBehavior(InternalBehavior):
             else:
                 msg = "event_name: Unable to dynamically create event name,"\
                       " data_receive_event_prefix is not set in behavior settings"
-                raise RuntimeError(msg)
+                raise builtins.RuntimeError(msg)
         assert isinstance(event_name, str)
         unique_event_name = self._make_unique_event_name(event_name)
         event = DataReceivedEvent.make(unique_event_name,
@@ -10830,7 +11084,7 @@ class SwcInternalBehavior(InternalBehavior):
             else:
                 msg = "event_name: Unable to dynamically create event name,"\
                       " init_event_prefix is not set in behavior settings"
-                raise RuntimeError(msg)
+                raise builtins.RuntimeError(msg)
         assert isinstance(event_name, str)
         unique_event_name = self._make_unique_event_name(event_name)
         event = InitEvent(unique_event_name, runnable.ref(), **kwargs)
@@ -10873,7 +11127,7 @@ class SwcInternalBehavior(InternalBehavior):
             else:
                 msg = "event_name: Unable to dynamically create event name,"\
                       " operation_invoked_event_prefix is not set in behavior settings"
-                raise RuntimeError(msg)
+                raise builtins.RuntimeError(msg)
         assert isinstance(event_name, str)
         unique_event_name = self._make_unique_event_name(event_name)
         event = OperationInvokedEvent.make(unique_event_name,
@@ -10915,7 +11169,7 @@ class SwcInternalBehavior(InternalBehavior):
             else:
                 msg = "event_name: Unable to dynamically create event name,"\
                       " swc_mode_manager_error_event_prefix is not set in behavior settings"
-                raise RuntimeError(msg)
+                raise builtins.RuntimeError(msg)
         assert isinstance(event_name, str)
         unique_event_name = self._make_unique_event_name(event_name)
         event = SwcModeManagerErrorEvent.make(unique_event_name,
@@ -10953,7 +11207,7 @@ class SwcInternalBehavior(InternalBehavior):
             else:
                 msg = "event_name: Unable to dynamically create event name,"\
                       " swc_mode_switch_event_prefix is not set in behavior settings"
-                raise RuntimeError(msg)
+                raise builtins.RuntimeError(msg)
         assert isinstance(event_name, str)
         unique_event_name = self._make_unique_event_name(event_name)
         expected_formats = "Expected formats: '<PortName>', '<PortName>/<ModeDeclarationName>', tuple[str, str]"
@@ -11014,7 +11268,7 @@ class SwcInternalBehavior(InternalBehavior):
             else:
                 msg = "event_name: Unable to dynamically create event name,"\
                       " timing_event_prefix is not set in behavior settings"
-                raise RuntimeError(msg)
+                raise builtins.RuntimeError(msg)
         assert isinstance(event_name, str)
         unique_event_name = self._make_unique_event_name(event_name)
         event = TimingEvent(unique_event_name, runnable.ref(), period, offset, **kwargs)
@@ -11053,7 +11307,7 @@ class SwcInternalBehavior(InternalBehavior):
             else:
                 msg = "event_name: Unable to dynamically create event name,"\
                       " external_trigger_event_prefix is not set in behavior settings"
-                raise RuntimeError(msg)
+                raise builtins.RuntimeError(msg)
         assert isinstance(event_name, str)
         unique_event_name = self._make_unique_event_name(event_name)
         instance_ref = RTriggerInAtomicSwcInstanceRef(context_port.ref(), target_trigger.ref())
@@ -11081,7 +11335,7 @@ class SwcInternalBehavior(InternalBehavior):
             else:
                 msg = "event_name: Unable to dynamically create event name,"\
                       " internal_trigger_event_prefix is not set in behavior settings"
-                raise RuntimeError(msg)
+                raise builtins.RuntimeError(msg)
         assert isinstance(event_name, str)
         unique_event_name = self._make_unique_event_name(event_name)
         event_source_ref = self._find_internal_trigger_point(source_name)

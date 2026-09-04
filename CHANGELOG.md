@@ -30,6 +30,7 @@ Non-collectable elements are various sub-elements to collectable elements.
 * CryptoKeyManagementNeeds | CRYPTO-KEY-MANAGEMENT-NEEDS
 * CryptoServiceJobNeeds | CRYPTO-SERVICE-JOB-NEEDS
 * CryptoServiceNeeds | CRYPTO-SERVICE-NEEDS
+* DevelopmentError | DEVELOPMENT-ERROR
 * DiagEventDebounceCounterBased | DIAG-EVENT-DEBOUNCE-COUNTER-BASED
 * DiagEventDebounceMonitorInternal | DIAG-EVENT-DEBOUNCE-MONITOR-INTERNAL
 * DiagEventDebounceTimeBased | DIAG-EVENT-DEBOUNCE-TIME-BASED
@@ -55,9 +56,13 @@ Non-collectable elements are various sub-elements to collectable elements.
 * DoIpRoutingActivationAuthenticationNeeds | DO-IP-ROUTING-ACTIVATION-AUTHENTICATION-NEEDS
 * DoIpRoutingActivationConfirmationNeeds | DO-IP-ROUTING-ACTIVATION-CONFIRMATION-NEEDS
 * DtcStatusChangeNotificationNeeds | DTC-STATUS-CHANGE-NOTIFICATION-NEEDS
+* EcuStateMgrUserNeeds | ECU-STATE-MGR-USER-NEEDS
+* ErrorTracerNeeds | ERROR-TRACER-NEEDS
 * FunctionInhibitionAvailabilityNeeds | FUNCTION-INHIBITION-AVAILABILITY-NEEDS
 * FunctionInhibitionNeeds | FUNCTION-INHIBITION-NEEDS
 * FurtherActionByteNeeds | FURTHER-ACTION-BYTE-NEEDS
+* GlobalSupervisionNeeds | GLOBAL-SUPERVISION-NEEDS
+* HardwareTestNeeds | HARDWARE-TEST-NEEDS
 * IndicatorStatusNeeds | INDICATOR-STATUS-NEEDS
 * ObdControlServiceNeeds | OBD-CONTROL-SERVICE-NEEDS
 * ObdInfoServiceNeeds | OBD-INFO-SERVICE-NEEDS
@@ -65,6 +70,13 @@ Non-collectable elements are various sub-elements to collectable elements.
 * ObdPidServiceNeeds | OBD-PID-SERVICE-NEEDS
 * ObdRatioDenominatorNeeds | OBD-RATIO-DENOMINATOR-NEEDS
 * ObdRatioServiceNeeds | OBD-RATIO-SERVICE-NEEDS
+* PossibleErrorReaction | POSSIBLE-ERROR-REACTION
+* RuntimeError | RUNTIME-ERROR
+* SupervisedEntityCheckpointNeeds | SUPERVISED-ENTITY-CHECKPOINT-NEEDS
+* SupervisedEntityCheckpointNeedsRefConditional | SUPERVISED-ENTITY-CHECKPOINT-NEEDS-REF-CONDITIONAL
+* SupervisedEntityNeeds | SUPERVISED-ENTITY-NEEDS
+* TransientFault | TRANSIENT-FAULT
+* VendorSpecificServiceNeeds | VENDOR-SPECIFIC-SERVICE-NEEDS
 * WarningIndicatorRequestedBitNeeds | WARNING-INDICATOR-REQUESTED-BIT-NEEDS
 
 #### XML - SWC internal behavior elements
