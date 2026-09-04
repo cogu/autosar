@@ -103,7 +103,12 @@ Non-collectable elements are various sub-elements to collectable elements.
 * IncludedModeDeclarationGroupSet | INCLUDED-MODE-DECLARATION-GROUP-SET
 * InstantiationDataDefProps | INSTANTIATION-DATA-DEF-PROPS
 * PerInstanceMemory | PER-INSTANCE-MEMORY
+* RoleBasedDataAssignment | ROLE-BASED-DATA-ASSIGNMENT
+* RoleBasedDataTypeAssignment | ROLE-BASED-DATA-TYPE-ASSIGNMENT
+* RoleBasedPortAssignment | ROLE-BASED-PORT-ASSIGNMENT
 * SwcExclusiveAreaPolicy | SWC-EXCLUSIVE-AREA-POLICY
+* SwcServiceDependency | SWC-SERVICE-DEPENDENCY
+* SymbolicNameProps | SYMBOLIC-NAME-PROPS
 
 #### Developer Utilities (`dev_utils`)
 

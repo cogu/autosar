@@ -497,6 +497,11 @@ class Writer(_XMLWriter):
             'ParameterInAtomicSwcTypeInstanceRef': self._write_parameter_in_atomic_swc_type_instance_ref,
             'AutosarParameterRef': self._write_autosar_parameter_ref,
             'ParameterAccess': self._write_parameter_access,
+            'RoleBasedDataAssignment': self._write_role_based_data_assignment,
+            'RoleBasedDataTypeAssignment': self._write_role_based_data_type_assignment,
+            'RoleBasedPortAssignment': self._write_role_based_port_assignment,
+            'SymbolicNameProps': self._write_symbolic_name_props,
+            'SwcServiceDependency': self._write_swc_service_dependency,
             'WaitPoint': self._write_wait_point,
         }
         #
@@ -2739,6 +2744,20 @@ class Writer(_XMLWriter):
         Writes references to AR:SUPERVISED-ENTITY-CHECKPOINT-NEEDS--SUBTYPES-ENUM
         """
         assert isinstance(elem, ar_element.SupervisedEntityCheckpointNeedsRef)
+        self._write_ref_content(elem, tag)
+
+    def _write_port_group_ref(self, elem: ar_element.PortGroupRef, tag: str) -> None:
+        """
+        Writes references to AR:PORT-GROUP--SUBTYPES-ENUM
+        """
+        assert isinstance(elem, ar_element.PortGroupRef)
+        self._write_ref_content(elem, tag)
+
+    def _write_per_instance_memory_ref(self, elem: ar_element.PerInstanceMemoryRef, tag: str) -> None:
+        """
+        Writes references to AR:PER-INSTANCE-MEMORY--SUBTYPES-ENUM
+        """
+        assert isinstance(elem, ar_element.PerInstanceMemoryRef)
         self._write_ref_content(elem, tag)
 
 # -- Constant and value specifications
@@ -7279,6 +7298,11 @@ class Writer(_XMLWriter):
             for runnable in elem.runnable:
                 self._write_runnable_entity(runnable)
             self._leave_child()
+        if elem.service_dependency:
+            self._add_child("SERVICE-DEPENDENCYS")
+            for item in elem.service_dependency:
+                self._write_swc_service_dependency(item)
+            self._leave_child()
         if elem.shared_parameter:
             self._add_child("SHARED-PARAMETERS")
             for item in elem.shared_parameter:
@@ -7298,3 +7322,109 @@ class Writer(_XMLWriter):
             write_method(elem)
         else:
             raise NotImplementedError(f"Found no writer for class {class_name}")
+
+    def _write_role_based_data_assignment(self, elem: ar_element.RoleBasedDataAssignment,
+                                          tag: str = "ROLE-BASED-DATA-ASSIGNMENT") -> None:
+        """
+        Writes complex type AR:ROLE-BASED-DATA-ASSIGNMENT
+        """
+        self._add_child(tag)
+        if elem.role is not None:
+            self._add_content("ROLE", elem.role)
+        if elem.used_data_element is not None:
+            self._write_autosar_variable_ref(elem.used_data_element, "USED-DATA-ELEMENT")
+        if elem.used_parameter_element is not None:
+            self._write_autosar_parameter_ref(elem.used_parameter_element, "USED-PARAMETER-ELEMENT")
+        if elem.used_pim_ref is not None:
+            self._write_per_instance_memory_ref(elem.used_pim_ref, "USED-PIM-REF")
+        self._leave_child()
+
+    def _write_role_based_data_type_assignment(self, elem: ar_element.RoleBasedDataTypeAssignment,
+                                               tag: str = "ROLE-BASED-DATA-TYPE-ASSIGNMENT") -> None:
+        """
+        Writes complex type AR:ROLE-BASED-DATA-TYPE-ASSIGNMENT
+        """
+        self._add_child(tag)
+        if elem.role is not None:
+            self._add_content("ROLE", elem.role)
+        if elem.used_implementation_data_type_ref is not None:
+            self._write_impl_data_type_ref(elem.used_implementation_data_type_ref,
+                                           "USED-IMPLEMENTATION-DATA-TYPE-REF")
+        self._leave_child()
+
+    def _write_role_based_port_assignment(self, elem: ar_element.RoleBasedPortAssignment,
+                                          tag: str = "ROLE-BASED-PORT-ASSIGNMENT") -> None:
+        """
+        Writes complex type AR:ROLE-BASED-PORT-ASSIGNMENT
+        """
+        self._add_child(tag)
+        if elem.port_prototype_ref is not None:
+            self._write_port_prototype_ref(elem.port_prototype_ref, "PORT-PROTOTYPE-REF")
+        if elem.role is not None:
+            self._add_content("ROLE", elem.role)
+        self._leave_child()
+
+    def _write_symbolic_name_props(self, elem: ar_element.SymbolicNameProps,
+                                   tag: str = "SYMBOLIC-NAME-PROPS") -> None:
+        """
+        Writes complex type AR:SYMBOLIC-NAME-PROPS
+        """
+        self._add_child(tag)
+        self._write_referrable(elem)
+        if elem.symbol is not None:
+            self._add_content("SYMBOL", elem.symbol)
+        self._leave_child()
+
+    def _write_service_dependency_group(self, elem: ar_element.ServiceDependency) -> None:
+        """
+        Writes group AR:SERVICE-DEPENDENCY
+        """
+        if elem.assigned_data_types:
+            self._add_child("ASSIGNED-DATA-TYPES")
+            for item in elem.assigned_data_types:
+                self._write_role_based_data_type_assignment(item)
+            self._leave_child()
+        if elem.diagnostic_relevance is not None:
+            self._add_content("DIAGNOSTIC-RELEVANCE",
+                              ar_enum.enum_to_xml(elem.diagnostic_relevance))
+        if elem.symbolic_name_props is not None:
+            self._write_symbolic_name_props(elem.symbolic_name_props)
+
+    def _write_swc_service_dependency_group(self, elem: ar_element.SwcServiceDependency) -> None:
+        """
+        Writes group AR:SWC-SERVICE-DEPENDENCY
+        """
+        if elem.assigned_datas:
+            self._add_child("ASSIGNED-DATAS")
+            for item in elem.assigned_datas:
+                self._write_role_based_data_assignment(item)
+            self._leave_child()
+        if elem.assigned_ports:
+            self._add_child("ASSIGNED-PORTS")
+            for item in elem.assigned_ports:
+                self._write_role_based_port_assignment(item)
+            self._leave_child()
+        if elem.represented_port_group_ref is not None:
+            self._write_port_group_ref(elem.represented_port_group_ref, "REPRESENTED-PORT-GROUP-REF")
+        if elem.service_needs is not None:
+            self._add_child("SERVICE-NEEDS")
+            class_name = elem.service_needs.__class__.__name__
+            write_method = self.switcher_non_collectable.get(class_name, None)
+            if write_method is not None:
+                write_method(elem.service_needs)
+            else:
+                raise NotImplementedError(f"Found no writer for service_needs class {class_name}")
+            self._leave_child()
+
+    def _write_swc_service_dependency(self, elem: ar_element.SwcServiceDependency) -> None:
+        """
+        Writes complex type AR:SWC-SERVICE-DEPENDENCY
+        Multi-tagged: False
+        """
+        self._add_child("SWC-SERVICE-DEPENDENCY")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_service_dependency_group(elem)
+        self._write_swc_service_dependency_group(elem)
+        self._leave_child()
