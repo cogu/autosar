@@ -157,6 +157,27 @@ class DiagnosticAudience(Enum):
     SUPPLIER = 4
 
 
+class DiagnosticClearDtcNotification(Enum):
+    """
+    DIAGNOSTIC-CLEAR-DTC-NOTIFICATION-ENUM--SIMPLE
+    """
+
+    START = 0
+    FINISH = 1
+
+
+class DiagnosticIndicatorType(Enum):
+    """
+    DIAGNOSTIC-INDICATOR-TYPE-ENUM--SIMPLE
+    """
+
+    AMBER_WARNING = 0
+    MALFUNCTION = 1
+    PROTECT_LAMP = 2
+    RED_STOP_LAMP = 3
+    WARNING = 4
+
+
 class DiagnosticProcessingStyle(Enum):
     """
     DIAGNOSTIC-PROCESSING-STYLE-ENUM--SIMPLE
@@ -345,47 +366,48 @@ class IdentifiableSubTypes(Enum):
     EXCLUSIVE_AREA = 41
     EXCLUSIVE_AREA_NESTING_ORDER = 42
     EXTERNAL_TRIGGER_OCCURRED_EVENT = 43
-    IMPLEMENTATION_DATA_TYPE = 44
-    IMPLEMENTATION_DATA_TYPE_ELEMENT = 45
-    INIT_EVENT = 46
-    INTERNAL_TRIGGER_OCCURRED_EVENT = 47
-    INTERNAL_TRIGGERING_POINT = 48
-    MODE_DECLARATION = 49
-    MODE_DECLARATION_GROUP = 50
-    MODE_DECLARATION_GROUP_PROTOTYPE = 51
-    MODE_SWITCH_INTERFACE = 52
-    MODE_SWITCH_POINT = 53
-    MODE_SWITCHED_ACK_EVENT = 54
-    NV_BLOCK_SW_COMPONENT_TYPE = 55
-    NV_DATA_INTERFACE = 56
-    OPERATION_INVOKED_EVENT = 57
-    P_PORT_PROTOTYPE = 58
-    PARAMETER_DATA_PROTOTYPE = 59
-    PARAMETER_INTERFACE = 60
-    PER_INSTANCE_MEMORY = 61
-    PHYSICAL_DIMENSION = 62
-    PORT_PROTOTYPE = 63
-    PR_PORT_PROTOTYPE = 64
-    R_PORT_PROTOTYPE = 65
-    RUNNABLE_ENTITY = 66
-    SENDER_RECEIVER_INTERFACE = 67
-    SENSOR_ACTUATOR_SW_COMPONENT_TYPE = 68
-    SERVICE_PROXY_SW_COMPONENT_TYPE = 69
-    SERVICE_SW_COMPONENT_TYPE = 70
-    SW_ADDR_METHOD = 71
-    SW_BASE_TYPE = 72
-    SW_COMPONENT_PROTOTYPE = 73
-    SWC_IMPLEMENTATION = 74
-    SWC_INTERNAL_BEHAVIOR = 75
-    SWC_MODE_MANAGER_ERROR_EVENT = 76
-    SWC_MODE_SWITCH_EVENT = 77
-    TIMING_EVENT = 78
-    TRANSFORMER_HARD_ERROR_EVENT = 79
-    TRIGGER = 80
-    TRIGGER_INTERFACE = 81
-    UNIT = 82
-    VARIABLE_ACCESS = 83
-    VARIABLE_DATA_PROTOTYPE = 84
+    FUNCTION_INHIBITION_NEEDS = 44
+    IMPLEMENTATION_DATA_TYPE = 45
+    IMPLEMENTATION_DATA_TYPE_ELEMENT = 46
+    INIT_EVENT = 47
+    INTERNAL_TRIGGER_OCCURRED_EVENT = 48
+    INTERNAL_TRIGGERING_POINT = 49
+    MODE_DECLARATION = 50
+    MODE_DECLARATION_GROUP = 51
+    MODE_DECLARATION_GROUP_PROTOTYPE = 52
+    MODE_SWITCH_INTERFACE = 53
+    MODE_SWITCH_POINT = 54
+    MODE_SWITCHED_ACK_EVENT = 55
+    NV_BLOCK_SW_COMPONENT_TYPE = 56
+    NV_DATA_INTERFACE = 57
+    OPERATION_INVOKED_EVENT = 58
+    P_PORT_PROTOTYPE = 59
+    PARAMETER_DATA_PROTOTYPE = 60
+    PARAMETER_INTERFACE = 61
+    PER_INSTANCE_MEMORY = 62
+    PHYSICAL_DIMENSION = 63
+    PORT_PROTOTYPE = 64
+    PR_PORT_PROTOTYPE = 65
+    R_PORT_PROTOTYPE = 66
+    RUNNABLE_ENTITY = 67
+    SENDER_RECEIVER_INTERFACE = 68
+    SENSOR_ACTUATOR_SW_COMPONENT_TYPE = 69
+    SERVICE_PROXY_SW_COMPONENT_TYPE = 70
+    SERVICE_SW_COMPONENT_TYPE = 71
+    SW_ADDR_METHOD = 72
+    SW_BASE_TYPE = 73
+    SW_COMPONENT_PROTOTYPE = 74
+    SWC_IMPLEMENTATION = 75
+    SWC_INTERNAL_BEHAVIOR = 76
+    SWC_MODE_MANAGER_ERROR_EVENT = 77
+    SWC_MODE_SWITCH_EVENT = 78
+    TIMING_EVENT = 79
+    TRANSFORMER_HARD_ERROR_EVENT = 80
+    TRIGGER = 81
+    TRIGGER_INTERFACE = 82
+    UNIT = 83
+    VARIABLE_ACCESS = 84
+    VARIABLE_DATA_PROTOTYPE = 85
 
 
 class IntervalType(Enum):
@@ -920,6 +942,17 @@ xml_to_enum_map: dict[str, dict] = {
         "MANUFACTURING": DiagnosticAudience.MANUFACTURING,
         "SUPPLIER": DiagnosticAudience.SUPPLIER,
     },
+    "DiagnosticClearDtcNotification": {
+        "START": DiagnosticClearDtcNotification.START,
+        "FINISH": DiagnosticClearDtcNotification.FINISH,
+    },
+    "DiagnosticIndicatorType": {
+        "AMBER-WARNING": DiagnosticIndicatorType.AMBER_WARNING,
+        "MALFUNCTION": DiagnosticIndicatorType.MALFUNCTION,
+        "PROTECT-LAMP": DiagnosticIndicatorType.PROTECT_LAMP,
+        "RED-STOP-LAMP": DiagnosticIndicatorType.RED_STOP_LAMP,
+        "WARNING": DiagnosticIndicatorType.WARNING,
+    },
     "DiagnosticProcessingStyle": {
         "PROCESSING-STYLE-ASYNCHRONOUS": DiagnosticProcessingStyle.PROCESSING_STYLE_ASYNCHRONOUS,
         "PROCESSING-STYLE-ASYNCHRONOUS-WITH-ERROR": DiagnosticProcessingStyle.PROCESSING_STYLE_ASYNCHRONOUS_WITH_ERROR,
@@ -1033,6 +1066,7 @@ xml_to_enum_map: dict[str, dict] = {
         "EXCLUSIVE-AREA": IdentifiableSubTypes.EXCLUSIVE_AREA,
         "EXCLUSIVE-AREA-NESTING-ORDER": IdentifiableSubTypes.EXCLUSIVE_AREA_NESTING_ORDER,
         "EXTERNAL-TRIGGER-OCCURRED-EVENT": IdentifiableSubTypes.EXTERNAL_TRIGGER_OCCURRED_EVENT,
+        "FUNCTION-INHIBITION-NEEDS": IdentifiableSubTypes.FUNCTION_INHIBITION_NEEDS,
         "IMPLEMENTATION-DATA-TYPE": IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE,
         "IMPLEMENTATION-DATA-TYPE-ELEMENT": IdentifiableSubTypes.IMPLEMENTATION_DATA_TYPE_ELEMENT,
         "INIT-EVENT": IdentifiableSubTypes.INIT_EVENT,
@@ -1387,6 +1421,17 @@ enum_to_xml_map: dict[str, list] = {
         "MANUFACTURING",  # 3
         "SUPPLIER",       # 4
     ],
+    "DiagnosticClearDtcNotification": [
+        "START",   # 0
+        "FINISH",  # 1
+    ],
+    "DiagnosticIndicatorType": [
+        "AMBER-WARNING",  # 0
+        "MALFUNCTION",    # 1
+        "PROTECT-LAMP",   # 2
+        "RED-STOP-LAMP",  # 3
+        "WARNING",        # 4
+    ],
     "DiagnosticProcessingStyle": [
         "PROCESSING-STYLE-ASYNCHRONOUS",             # 0
         "PROCESSING-STYLE-ASYNCHRONOUS-WITH-ERROR",  # 1
@@ -1510,47 +1555,48 @@ enum_to_xml_map: dict[str, list] = {
         "EXCLUSIVE-AREA",                                # 41
         "EXCLUSIVE-AREA-NESTING-ORDER",                  # 42
         "EXTERNAL-TRIGGER-OCCURRED-EVENT",               # 43
-        "IMPLEMENTATION-DATA-TYPE",                      # 44
-        "IMPLEMENTATION-DATA-TYPE-ELEMENT",              # 45
-        "INIT-EVENT",                                    # 46
-        "INTERNAL-TRIGGER-OCCURRED-EVENT",               # 47
-        "INTERNAL-TRIGGERING-POINT",                     # 48
-        "MODE-DECLARATION",                              # 49
-        "MODE-DECLARATION-GROUP",                        # 50
-        "MODE-DECLARATION-GROUP-PROTOTYPE",              # 51
-        "MODE-SWITCH-INTERFACE",                         # 52
-        "MODE-SWITCH-POINT",                             # 53
-        "MODE-SWITCHED-ACK-EVENT",                       # 54
-        "NV-BLOCK-SW-COMPONENT-TYPE",                    # 55
-        "NV-DATA-INTERFACE",                             # 56
-        "OPERATION-INVOKED-EVENT",                       # 57
-        "P-PORT-PROTOTYPE",                              # 58
-        "PARAMETER-DATA-PROTOTYPE",                      # 59
-        "PARAMETER-INTERFACE",                           # 60
-        "PER-INSTANCE-MEMORY",                           # 61
-        "PHYSICAL-DIMENSION",                            # 62
-        "PORT-PROTOTYPE",                                # 63
-        "PR-PORT-PROTOTYPE",                             # 64
-        "R-PORT-PROTOTYPE",                              # 65
-        "RUNNABLE-ENTITY",                               # 66
-        "SENDER-RECEIVER-INTERFACE",                     # 67
-        "SENSOR-ACTUATOR-SW-COMPONENT-TYPE",             # 68
-        "SERVICE-PROXY-SW-COMPONENT-TYPE",               # 69
-        "SERVICE-SW-COMPONENT-TYPE",                     # 70
-        "SW-ADDR-METHOD",                                # 71
-        "SW-BASE-TYPE",                                  # 72
-        "SW-COMPONENT-PROTOTYPE",                        # 73
-        "SWC-IMPLEMENTATION",                            # 74
-        "SWC-INTERNAL-BEHAVIOR",                         # 75
-        "SWC-MODE-MANAGER-ERROR-EVENT",                  # 76
-        "SWC-MODE-SWITCH-EVENT",                         # 77
-        "TIMING-EVENT",                                  # 78
-        "TRANSFORMER-HARD-ERROR-EVENT",                  # 79
-        "TRIGGER",                                       # 80
-        "TRIGGER-INTERFACE",                             # 81
-        "UNIT",                                          # 82
-        "VARIABLE-ACCESS",                               # 83
-        "VARIABLE-DATA-PROTOTYPE",                       # 84
+        "FUNCTION-INHIBITION-NEEDS",                     # 44
+        "IMPLEMENTATION-DATA-TYPE",                      # 45
+        "IMPLEMENTATION-DATA-TYPE-ELEMENT",              # 46
+        "INIT-EVENT",                                    # 47
+        "INTERNAL-TRIGGER-OCCURRED-EVENT",               # 48
+        "INTERNAL-TRIGGERING-POINT",                     # 49
+        "MODE-DECLARATION",                              # 50
+        "MODE-DECLARATION-GROUP",                        # 51
+        "MODE-DECLARATION-GROUP-PROTOTYPE",              # 52
+        "MODE-SWITCH-INTERFACE",                         # 53
+        "MODE-SWITCH-POINT",                             # 54
+        "MODE-SWITCHED-ACK-EVENT",                       # 55
+        "NV-BLOCK-SW-COMPONENT-TYPE",                    # 56
+        "NV-DATA-INTERFACE",                             # 57
+        "OPERATION-INVOKED-EVENT",                       # 58
+        "P-PORT-PROTOTYPE",                              # 59
+        "PARAMETER-DATA-PROTOTYPE",                      # 60
+        "PARAMETER-INTERFACE",                           # 61
+        "PER-INSTANCE-MEMORY",                           # 62
+        "PHYSICAL-DIMENSION",                            # 63
+        "PORT-PROTOTYPE",                                # 64
+        "PR-PORT-PROTOTYPE",                             # 65
+        "R-PORT-PROTOTYPE",                              # 66
+        "RUNNABLE-ENTITY",                               # 67
+        "SENDER-RECEIVER-INTERFACE",                     # 68
+        "SENSOR-ACTUATOR-SW-COMPONENT-TYPE",             # 69
+        "SERVICE-PROXY-SW-COMPONENT-TYPE",               # 70
+        "SERVICE-SW-COMPONENT-TYPE",                     # 71
+        "SW-ADDR-METHOD",                                # 72
+        "SW-BASE-TYPE",                                  # 73
+        "SW-COMPONENT-PROTOTYPE",                        # 74
+        "SWC-IMPLEMENTATION",                            # 75
+        "SWC-INTERNAL-BEHAVIOR",                         # 76
+        "SWC-MODE-MANAGER-ERROR-EVENT",                  # 77
+        "SWC-MODE-SWITCH-EVENT",                         # 78
+        "TIMING-EVENT",                                  # 79
+        "TRANSFORMER-HARD-ERROR-EVENT",                  # 80
+        "TRIGGER",                                       # 81
+        "TRIGGER-INTERFACE",                             # 82
+        "UNIT",                                          # 83
+        "VARIABLE-ACCESS",                               # 84
+        "VARIABLE-DATA-PROTOTYPE",                       # 85
     ],
     "IntervalType": [
         "CLOSED",  # 0

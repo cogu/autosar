@@ -354,6 +354,12 @@ class Reader:
             'DO-IP-POWER-MODE-STATUS-NEEDS': self._read_do_ip_power_mode_status_needs,
             'DO-IP-ROUTING-ACTIVATION-AUTHENTICATION-NEEDS': self._read_do_ip_routing_activation_authentication_needs,
             'DO-IP-ROUTING-ACTIVATION-CONFIRMATION-NEEDS': self._read_do_ip_routing_activation_confirmation_needs,
+            'DTC-STATUS-CHANGE-NOTIFICATION-NEEDS': self._read_dtc_status_change_notification_needs,
+            'FUNCTION-INHIBITION-AVAILABILITY-NEEDS': self._read_function_inhibition_availability_needs,
+            'FUNCTION-INHIBITION-NEEDS': self._read_function_inhibition_needs,
+            'FURTHER-ACTION-BYTE-NEEDS': self._read_further_action_byte_needs,
+            'INDICATOR-STATUS-NEEDS': self._read_indicator_status_needs,
+            'WARNING-INDICATOR-REQUESTED-BIT-NEEDS': self._read_warning_indicator_requested_bit_needs,
             # SWC internal behavior elements
             'AUTOSAR-VARIABLE-IN-IMPL-DATATYPE': self._read_variable_in_impl_data_instance_ref,
             'AUTOSAR-VARIABLE-IREF': self._read_variable_in_atomic_swc_type_instance_ref,
@@ -3005,6 +3011,15 @@ class Reader:
         """
         dest_enum = self._read_ref_dest(xml_elem)
         return ar_element.DiagnosticValueNeedsRef(xml_elem.text, dest_enum)
+
+    def _read_function_inhibition_needs_ref(self,
+                                            xml_elem: ElementTree.Element
+                                            ) -> ar_element.FunctionInhibitionNeedsRef:
+        """
+        Reads references to AR:FUNCTION-INHIBITION-NEEDS--SUBTYPES-ENUM
+        """
+        dest_enum = self._read_ref_dest(xml_elem)
+        return ar_element.FunctionInhibitionNeedsRef(xml_elem.text, dest_enum)
 
     # --- Constant and value specifications
 
@@ -7123,6 +7138,137 @@ class Reader:
         xml_child = child_elements.get("ROUTING-ACTIVATION-TYPE")
         if xml_child is not None:
             data["routing_activation_type"] = xml_child.text
+
+    def _read_dtc_status_change_notification_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.DtcStatusChangeNotificationNeeds:
+        """
+        Reads complex type AR:DTC-STATUS-CHANGE-NOTIFICATION-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_diagnostic_capability_element_group(child_elements, data)
+        self._read_dtc_status_change_notification_needs_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.DtcStatusChangeNotificationNeeds(**data)
+
+    def _read_dtc_status_change_notification_needs_group(
+            self,
+            child_elements: ChildElementMap,
+            data: dict) -> None:
+        """
+        Reads group AR:DTC-STATUS-CHANGE-NOTIFICATION-NEEDS
+        """
+        xml_child = child_elements.get("NOTIFICATION-TIME")
+        if xml_child is not None:
+            data["notification_time"] = ar_enum.xml_to_enum("DiagnosticClearDtcNotification", xml_child.text)
+
+    def _read_function_inhibition_availability_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.FunctionInhibitionAvailabilityNeeds:
+        """
+        Reads complex type AR:FUNCTION-INHIBITION-AVAILABILITY-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_function_inhibition_availability_needs_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.FunctionInhibitionAvailabilityNeeds(**data)
+
+    def _read_function_inhibition_availability_needs_group(
+            self,
+            child_elements: ChildElementMap,
+            data: dict) -> None:
+        """
+        Reads group AR:FUNCTION-INHIBITION-AVAILABILITY-NEEDS
+        """
+        xml_child = child_elements.get("CONTROLLED-FID-REF")
+        if xml_child is not None:
+            data["controlled_fid_ref"] = self._read_function_inhibition_needs_ref(xml_child)
+
+    def _read_function_inhibition_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.FunctionInhibitionNeeds:
+        """
+        Reads complex type AR:FUNCTION-INHIBITION-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Group AR:FUNCTION-INHIBITION-NEEDS contains no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.FunctionInhibitionNeeds(**data)
+
+    def _read_further_action_byte_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.FurtherActionByteNeeds:
+        """
+        Reads complex type AR:FURTHER-ACTION-BYTE-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Groups AR:DO-IP-SERVICE-NEEDS and AR:FURTHER-ACTION-BYTE-NEEDS contain no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.FurtherActionByteNeeds(**data)
+
+    def _read_indicator_status_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.IndicatorStatusNeeds:
+        """
+        Reads complex type AR:INDICATOR-STATUS-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_indicator_status_needs_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.IndicatorStatusNeeds(**data)
+
+    def _read_indicator_status_needs_group(
+            self,
+            child_elements: ChildElementMap,
+            data: dict) -> None:
+        """
+        Reads group AR:INDICATOR-STATUS-NEEDS
+        """
+        xml_child = child_elements.get("TYPE")
+        if xml_child is not None:
+            data["type"] = ar_enum.xml_to_enum("DiagnosticIndicatorType", xml_child.text)
+
+    def _read_warning_indicator_requested_bit_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.WarningIndicatorRequestedBitNeeds:
+        """
+        Reads complex type AR:WARNING-INDICATOR-REQUESTED-BIT-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_diagnostic_capability_element_group(child_elements, data)
+        # Group AR:WARNING-INDICATOR-REQUESTED-BIT-NEEDS contains no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.WarningIndicatorRequestedBitNeeds(**data)
 
     def _read_swc_internal_behavior(self, xml_element: ElementTree.Element) -> ar_element.SwcInternalBehavior:
         """

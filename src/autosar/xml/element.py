@@ -64,6 +64,7 @@ from autosar.xml.reference import (SwBaseTypeRef,  # noqa F401
                                    ApplicationRecordElementRef,
                                    PerInstanceMemoryRef,
                                    DiagnosticValueNeedsRef,
+                                   FunctionInhibitionNeedsRef,
                                    )
 
 
@@ -7322,6 +7323,90 @@ class DoIpRoutingActivationConfirmationNeeds(DoIpServiceNeeds):
         self._assign_optional_positive_int("data_length_request", data_length_request)
         self._assign_optional_positive_int("data_length_response", data_length_response)
         self._assign_optional_strict("routing_activation_type", routing_activation_type, str)
+
+
+class DtcStatusChangeNotificationNeeds(DiagnosticCapabilityElement):
+    """
+    Complex type AR:DTC-STATUS-CHANGE-NOTIFICATION-NEEDS
+    Tag variants: 'DTC-STATUS-CHANGE-NOTIFICATION-NEEDS'
+    """
+
+    def __init__(self,
+                 name: str,
+                 notification_time: ar_enum.DiagnosticClearDtcNotification | str | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .NOTIFICATION-TIME
+        self.notification_time: ar_enum.DiagnosticClearDtcNotification | None = None
+
+        self._assign_optional("notification_time",
+                              notification_time,
+                              ar_enum.DiagnosticClearDtcNotification)
+
+
+class FunctionInhibitionAvailabilityNeeds(ServiceNeeds):
+    """
+    Complex type AR:FUNCTION-INHIBITION-AVAILABILITY-NEEDS
+    Tag variants: 'FUNCTION-INHIBITION-AVAILABILITY-NEEDS'
+    """
+
+    def __init__(self,
+                 name: str,
+                 controlled_fid_ref: FunctionInhibitionNeedsRef | str | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .CONTROLLED-FID-REF
+        self.controlled_fid_ref: FunctionInhibitionNeedsRef | None = None
+
+        self._assign_optional("controlled_fid_ref",
+                              controlled_fid_ref,
+                              FunctionInhibitionNeedsRef)
+
+
+class FunctionInhibitionNeeds(ServiceNeeds):
+    """
+    Complex type AR:FUNCTION-INHIBITION-NEEDS
+    Tag variants: 'FUNCTION-INHIBITION-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
+class FurtherActionByteNeeds(DoIpServiceNeeds):
+    """
+    Complex type AR:FURTHER-ACTION-BYTE-NEEDS
+    Tag variants: 'FURTHER-ACTION-BYTE-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
+class IndicatorStatusNeeds(ServiceNeeds):
+    """
+    Complex type AR:INDICATOR-STATUS-NEEDS
+    Tag variants: 'INDICATOR-STATUS-NEEDS'
+    """
+
+    def __init__(self,
+                 name: str,
+                 type: ar_enum.DiagnosticIndicatorType | str | None = None,  # pylint: disable=redefined-builtin
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .TYPE
+        self.type: ar_enum.DiagnosticIndicatorType | None = None
+
+        self._assign_optional("type",
+                              type,
+                              ar_enum.DiagnosticIndicatorType)
+
+
+class WarningIndicatorRequestedBitNeeds(DiagnosticCapabilityElement):
+    """
+    Complex type AR:WARNING-INDICATOR-REQUESTED-BIT-NEEDS
+    Tag variants: 'WARNING-INDICATOR-REQUESTED-BIT-NEEDS'
+
+    Same constructor as parent class
+    """
 
 
 # --- Internal behavior elements
