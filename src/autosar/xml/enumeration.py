@@ -229,6 +229,15 @@ class DiagnosticValueAccess(Enum):
     WRITE_ONLY = 2
 
 
+class DtcKind(Enum):
+    """
+    AR:DTC-KIND-ENUM--SIMPLE
+    """
+
+    EMISSION_RELATED_DTC = 0
+    NON_EMMISSION_RELATED_DTC = 1
+
+
 class DisplayPresentation(Enum):
     """DISPLAY-PRESENTATION-ENUM"""
 
@@ -727,6 +736,15 @@ class ReentrancyLevel(Enum):
     SINGLE_CORE_REENTRANT = 2
 
 
+class ReportBehavior(Enum):
+    """
+    AR:REPORT-BEHAVIOR-ENUM--SIMPLE
+    """
+
+    REPORT_AFTER_INIT = 0
+    REPORT_BEFORE_INIT = 1
+
+
 class RteApiReturnValueProvision(Enum):
     """
     AR:RTE-API-RETURN-VALUE-PROVISION-ENUM--SIMPLE
@@ -1013,6 +1031,10 @@ xml_to_enum_map: dict[str, dict] = {
         "READ-ONLY": DiagnosticValueAccess.READ_ONLY,
         "READ-WRITE": DiagnosticValueAccess.READ_WRITE,
         "WRITE-ONLY": DiagnosticValueAccess.WRITE_ONLY,
+    },
+    "DtcKind": {
+        "EMISSION-RELATED-DTC": DtcKind.EMISSION_RELATED_DTC,
+        "NON-EMMISSION-RELATED-DTC": DtcKind.NON_EMMISSION_RELATED_DTC,
     },
     "DisplayPresentation": {
         "PRESENTATION-CONTINUOUS": DisplayPresentation.CONTINUOUS,
@@ -1349,6 +1371,10 @@ xml_to_enum_map: dict[str, dict] = {
         "NON-REENTRANT": ReentrancyLevel.NON_REENTRANT,
         "SINGLE-CORE-REENTRANT": ReentrancyLevel.SINGLE_CORE_REENTRANT
     },
+    "ReportBehavior": {
+        "REPORT-AFTER-INIT": ReportBehavior.REPORT_AFTER_INIT,
+        "REPORT-BEFORE-INIT": ReportBehavior.REPORT_BEFORE_INIT,
+    },
     "RteApiReturnValueProvision": {
         "RETURN-VALUE-PROVIDED": RteApiReturnValueProvision.RETURN_VALUE_PROVIDED,
         "NO-RETURN-VALUE-PROVIDED": RteApiReturnValueProvision.NO_RETURN_VALUE_PROVIDED
@@ -1510,6 +1536,10 @@ enum_to_xml_map: dict[str, list] = {
         "READ-ONLY",   # 0
         "READ-WRITE",  # 1
         "WRITE-ONLY",  # 2
+    ],
+    "DtcKind": [
+        "EMISSION-RELATED-DTC",      # 0
+        "NON-EMMISSION-RELATED-DTC",  # 1
     ],
     "DataFilterType": [
         "ALWAYS",                         # 0
@@ -1855,6 +1885,10 @@ enum_to_xml_map: dict[str, list] = {
         "MULTICORE-REENTRANT",   # 0
         "NON-REENTRANT",         # 1
         "SINGLE-CORE-REENTRANT"  # 2
+    ],
+    "ReportBehavior": [
+        "REPORT-AFTER-INIT",   # 0
+        "REPORT-BEFORE-INIT",  # 1
     ],
     "RteApiReturnValueProvision": [
         "RETURN-VALUE-PROVIDED",    # 0

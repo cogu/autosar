@@ -390,15 +390,20 @@ class Writer(_XMLWriter):
             'DiagEventDebounceCounterBased': self._write_diag_event_debounce_counter_based,
             'DiagEventDebounceMonitorInternal': self._write_diag_event_debounce_monitor_internal,
             'DiagEventDebounceTimeBased': self._write_diag_event_debounce_time_based,
+            'DiagnosticClearConditionNeeds': self._write_diagnostic_clear_condition_needs,
             'DiagnosticCommunicationManagerNeeds': self._write_diagnostic_communication_manager_needs,
             'DiagnosticComponentNeeds': self._write_diagnostic_component_needs,
             'DiagnosticControlNeeds': self._write_diagnostic_control_needs,
             'DiagnosticEnableConditionNeeds': self._write_diagnostic_enable_condition_needs,
             'DiagnosticEventInfoNeeds': self._write_diagnostic_event_info_needs,
             'DiagnosticEventManagerNeeds': self._write_diagnostic_event_manager_needs,
+            'DiagnosticEventNeeds': self._write_diagnostic_event_needs,
+            'DiagnosticGenericUdsNeeds': self._write_diagnostic_generic_uds_needs,
+            'DiagnosticIndicatorNeeds': self._write_diagnostic_indicator_needs,
             'DiagnosticIoControlNeeds': self._write_diagnostic_io_control_needs,
             'DiagnosticOperationCycleNeeds': self._write_diagnostic_operation_cycle_needs,
             'DiagnosticRequestFileTransferNeeds': self._write_diagnostic_request_file_transfer_needs,
+            'DiagnosticResponseOnEventNeeds': self._write_diagnostic_response_on_event_needs,
             'DiagnosticRoutineNeeds': self._write_diagnostic_routine_needs,
             'DiagnosticStorageConditionNeeds': self._write_diagnostic_storage_condition_needs,
             'DiagnosticUploadDownloadNeeds': self._write_diagnostic_upload_download_needs,
@@ -5007,6 +5012,18 @@ class Writer(_XMLWriter):
         self._write_traced_failure_group(elem)
         self._leave_child()
 
+    def _write_diag_event_debounce_algorithm(
+            self,
+            elem: ar_element.DiagEventDebounceAlgorithmType) -> None:
+        """
+        Writes choice AR:DIAG-EVENT-DEBOUNCE-ALGORITHM
+        """
+        write_method = self.switcher_non_collectable.get(elem.__class__.__name__, None)
+        if write_method is not None:
+            write_method(elem)
+        else:
+            raise NotImplementedError(f"Found no writer for class '{elem.__class__.__name__}'")
+
     def _write_diag_event_debounce_counter_based(
             self,
             elem: ar_element.DiagEventDebounceCounterBased) -> None:
@@ -5109,6 +5126,22 @@ class Writer(_XMLWriter):
         if elem.security_access_level is not None:
             self._add_content("SECURITY-ACCESS-LEVEL", str(elem.security_access_level))
 
+    def _write_diagnostic_clear_condition_needs(
+            self,
+            elem: ar_element.DiagnosticClearConditionNeeds) -> None:
+        """
+        Writes complex type AR:DIAGNOSTIC-CLEAR-CONDITION-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DiagnosticClearConditionNeeds)
+        self._add_child("DIAGNOSTIC-CLEAR-CONDITION-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_diagnostic_capability_element_group(elem)
+        # Group AR:DIAGNOSTIC-CLEAR-CONDITION-NEEDS contains no elements
+        self._leave_child()
+
     def _write_diagnostic_communication_manager_needs(
             self,
             elem: ar_element.DiagnosticCommunicationManagerNeeds) -> None:
@@ -5192,6 +5225,57 @@ class Writer(_XMLWriter):
         if elem.initial_status is not None:
             self._add_content("INITIAL-STATUS", ar_enum.enum_to_xml(elem.initial_status))
 
+    def _write_diagnostic_event_needs(
+            self,
+            elem: ar_element.DiagnosticEventNeeds) -> None:
+        """
+        Writes complex type AR:DIAGNOSTIC-EVENT-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DiagnosticEventNeeds)
+        self._add_child("DIAGNOSTIC-EVENT-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_diagnostic_capability_element_group(elem)
+        self._write_diagnostic_event_needs_group(elem)
+        self._leave_child()
+
+    def _write_diagnostic_event_needs_group(
+            self,
+            elem: ar_element.DiagnosticEventNeeds) -> None:
+        """
+        Writes group AR:DIAGNOSTIC-EVENT-NEEDS
+        """
+        if elem.consider_pto_status is not None:
+            self._add_content("CONSIDER-PTO-STATUS", self._format_boolean(elem.consider_pto_status))
+        if elem.diag_event_debounce_algorithm is not None:
+            self._add_child("DIAG-EVENT-DEBOUNCE-ALGORITHM")
+            self._write_diag_event_debounce_algorithm(elem.diag_event_debounce_algorithm)
+            self._leave_child()
+        if elem.dtc_kind is not None:
+            self._add_content("DTC-KIND", ar_enum.enum_to_xml(elem.dtc_kind))
+        if elem.dtc_number is not None:
+            self._add_content("DTC-NUMBER", str(elem.dtc_number))
+        if elem.inhibiting_fid_ref is not None:
+            self._write_function_inhibition_needs_ref(elem.inhibiting_fid_ref, "INHIBITING-FID-REF")
+        if len(elem.inhibiting_secondary_fid_refs) > 0:
+            self._add_child("INHIBITING-SECONDARY-FID-REFS")
+            for ref in elem.inhibiting_secondary_fid_refs:
+                self._write_function_inhibition_needs_ref(ref, "INHIBITING-SECONDARY-FID-REF")
+            self._leave_child()
+        if elem.obd_dtc_number is not None:
+            self._add_content("OBD-DTC-NUMBER", str(elem.obd_dtc_number))
+        if elem.prestored_freezeframe_stored_in_nvm is not None:
+            self._add_content("PRESTORED-FREEZEFRAME-STORED-IN-NVM",
+                              self._format_boolean(elem.prestored_freezeframe_stored_in_nvm))
+        if elem.report_behavior is not None:
+            self._add_content("REPORT-BEHAVIOR", ar_enum.enum_to_xml(elem.report_behavior))
+        if elem.uds_dtc_number is not None:
+            self._add_content("UDS-DTC-NUMBER", str(elem.uds_dtc_number))
+        if elem.uses_monitor_data is not None:
+            self._add_content("USES-MONITOR-DATA", self._format_boolean(elem.uses_monitor_data))
+
     def _write_diagnostic_event_info_needs(
             self,
             elem: ar_element.DiagnosticEventInfoNeeds) -> None:
@@ -5233,6 +5317,38 @@ class Writer(_XMLWriter):
         self._write_identifiable(elem)
         self._write_diagnostic_capability_element_group(elem)
         # Group AR:DIAGNOSTIC-EVENT-MANAGER-NEEDS contains no elements
+        self._leave_child()
+
+    def _write_diagnostic_generic_uds_needs(
+            self,
+            elem: ar_element.DiagnosticGenericUdsNeeds) -> None:
+        """
+        Writes complex type AR:DIAGNOSTIC-GENERIC-UDS-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DiagnosticGenericUdsNeeds)
+        self._add_child("DIAGNOSTIC-GENERIC-UDS-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_diagnostic_capability_element_group(elem)
+        # Group AR:DIAGNOSTIC-GENERIC-UDS-NEEDS contains no elements
+        self._leave_child()
+
+    def _write_diagnostic_indicator_needs(
+            self,
+            elem: ar_element.DiagnosticIndicatorNeeds) -> None:
+        """
+        Writes complex type AR:DIAGNOSTIC-INDICATOR-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DiagnosticIndicatorNeeds)
+        self._add_child("DIAGNOSTIC-INDICATOR-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_diagnostic_capability_element_group(elem)
+        # Group AR:DIAGNOSTIC-INDICATOR-NEEDS contains no elements
         self._leave_child()
 
     def _write_diagnostic_io_control_needs(
@@ -5308,6 +5424,22 @@ class Writer(_XMLWriter):
         self._write_identifiable(elem)
         self._write_diagnostic_capability_element_group(elem)
         # Group AR:DIAGNOSTIC-REQUEST-FILE-TRANSFER-NEEDS contains no elements
+        self._leave_child()
+
+    def _write_diagnostic_response_on_event_needs(
+            self,
+            elem: ar_element.DiagnosticResponseOnEventNeeds) -> None:
+        """
+        Writes complex type AR:DIAGNOSTIC-RESPONSE-ON-EVENT-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DiagnosticResponseOnEventNeeds)
+        self._add_child("DIAGNOSTIC-RESPONSE-ON-EVENT-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_diagnostic_capability_element_group(elem)
+        # Group AR:DIAGNOSTIC-RESPONSE-ON-EVENT-NEEDS contains no elements
         self._leave_child()
 
     def _write_diagnostic_routine_needs(
