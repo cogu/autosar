@@ -386,6 +386,7 @@ class Writer(_XMLWriter):
             'CryptoKeyManagementNeeds': self._write_crypto_key_management_needs,
             'CryptoServiceJobNeeds': self._write_crypto_service_job_needs,
             'CryptoServiceNeeds': self._write_crypto_service_needs,
+            'DevelopmentError': self._write_development_error,
             'DiagEventDebounceCounterBased': self._write_diag_event_debounce_counter_based,
             'DiagEventDebounceMonitorInternal': self._write_diag_event_debounce_monitor_internal,
             'DiagEventDebounceTimeBased': self._write_diag_event_debounce_time_based,
@@ -411,9 +412,13 @@ class Writer(_XMLWriter):
             'DoIpRoutingActivationAuthenticationNeeds': self._write_do_ip_routing_activation_authentication_needs,
             'DoIpRoutingActivationConfirmationNeeds': self._write_do_ip_routing_activation_confirmation_needs,
             'DtcStatusChangeNotificationNeeds': self._write_dtc_status_change_notification_needs,
+            'EcuStateMgrUserNeeds': self._write_ecu_state_mgr_user_needs,
+            'ErrorTracerNeeds': self._write_error_tracer_needs,
             'FunctionInhibitionAvailabilityNeeds': self._write_function_inhibition_availability_needs,
             'FunctionInhibitionNeeds': self._write_function_inhibition_needs,
             'FurtherActionByteNeeds': self._write_further_action_byte_needs,
+            'GlobalSupervisionNeeds': self._write_global_supervision_needs,
+            'HardwareTestNeeds': self._write_hardware_test_needs,
             'IndicatorStatusNeeds': self._write_indicator_status_needs,
             'ObdControlServiceNeeds': self._write_obd_control_service_needs,
             'ObdInfoServiceNeeds': self._write_obd_info_service_needs,
@@ -421,6 +426,14 @@ class Writer(_XMLWriter):
             'ObdPidServiceNeeds': self._write_obd_pid_service_needs,
             'ObdRatioDenominatorNeeds': self._write_obd_ratio_denominator_needs,
             'ObdRatioServiceNeeds': self._write_obd_ratio_service_needs,
+            'PossibleErrorReaction': self._write_possible_error_reaction,
+            'RuntimeError': self._write_runtime_error,
+            'SupervisedEntityCheckpointNeeds': self._write_supervised_entity_checkpoint_needs,
+            'SupervisedEntityCheckpointNeedsRefConditional':
+            self._write_supervised_entity_checkpoint_needs_ref_conditional,
+            'SupervisedEntityNeeds': self._write_supervised_entity_needs,
+            'TransientFault': self._write_transient_fault,
+            'VendorSpecificServiceNeeds': self._write_vendor_specific_service_needs,
             'WarningIndicatorRequestedBitNeeds': self._write_warning_indicator_requested_bit_needs,
             # SWC internal behavior elements
             'ArVariableInImplementationDataInstanceRef': self._write_variable_in_impl_data_instance_ref,
@@ -2701,6 +2714,16 @@ class Writer(_XMLWriter):
         assert isinstance(elem, ar_element.FunctionInhibitionNeedsRef)
         self._write_ref_content(elem, tag)
 
+    def _write_supervised_entity_checkpoint_needs_ref(
+            self,
+            elem: ar_element.SupervisedEntityCheckpointNeedsRef,
+            tag: str) -> None:
+        """
+        Writes references to AR:SUPERVISED-ENTITY-CHECKPOINT-NEEDS--SUBTYPES-ENUM
+        """
+        assert isinstance(elem, ar_element.SupervisedEntityCheckpointNeedsRef)
+        self._write_ref_content(elem, tag)
+
 # -- Constant and value specifications
 
     def _write_text_value_specification(self, elem: ar_element.TextValueSpecification) -> None:
@@ -4954,6 +4977,26 @@ class Writer(_XMLWriter):
         if elem.maximum_key_length is not None:
             self._add_content("MAXIMUM-KEY-LENGTH", str(elem.maximum_key_length))
 
+    def _write_traced_failure_group(self, elem: ar_element.TracedFailure) -> None:
+        """
+        Writes group AR:TRACED-FAILURE
+        """
+        if elem.id is not None:
+            self._add_content("ID", str(elem.id))
+
+    def _write_development_error(self, elem: ar_element.DevelopmentError) -> None:
+        """
+        Writes complex type AR:DEVELOPMENT-ERROR
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DevelopmentError)
+        self._add_child("DEVELOPMENT-ERROR")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_traced_failure_group(elem)
+        self._leave_child()
+
     def _write_diag_event_debounce_counter_based(
             self,
             elem: ar_element.DiagEventDebounceCounterBased) -> None:
@@ -5528,6 +5571,49 @@ class Writer(_XMLWriter):
         if elem.notification_time is not None:
             self._add_content("NOTIFICATION-TIME", ar_enum.enum_to_xml(elem.notification_time))
 
+    def _write_ecu_state_mgr_user_needs(self, elem: ar_element.EcuStateMgrUserNeeds) -> None:
+        """
+        Writes complex type AR:ECU-STATE-MGR-USER-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.EcuStateMgrUserNeeds)
+        self._add_child("ECU-STATE-MGR-USER-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        # Groups AR:SERVICE-NEEDS and AR:ECU-STATE-MGR-USER-NEEDS contain no elements
+        self._leave_child()
+
+    def _write_error_tracer_needs(self, elem: ar_element.ErrorTracerNeeds) -> None:
+        """
+        Writes complex type AR:ERROR-TRACER-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.ErrorTracerNeeds)
+        self._add_child("ERROR-TRACER-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_error_tracer_needs_group(elem)
+        self._leave_child()
+
+    def _write_error_tracer_needs_group(self, elem: ar_element.ErrorTracerNeeds) -> None:
+        """
+        Writes group AR:ERROR-TRACER-NEEDS
+        """
+        if len(elem.traced_failures) > 0:
+            self._add_child("TRACED-FAILURES")
+            for failure in elem.traced_failures:
+                if isinstance(failure, ar_element.DevelopmentError):
+                    self._write_development_error(failure)
+                elif isinstance(failure, ar_element.RuntimeError):
+                    self._write_runtime_error(failure)
+                elif isinstance(failure, ar_element.TransientFault):
+                    self._write_transient_fault(failure)
+                else:
+                    raise NotImplementedError(f"Unsupported failure type: {type(failure)}")
+            self._leave_child()
+
     def _write_function_inhibition_availability_needs(
             self,
             elem: ar_element.FunctionInhibitionAvailabilityNeeds) -> None:
@@ -5580,6 +5666,32 @@ class Writer(_XMLWriter):
         self._write_multilanguage_referrable(elem)
         self._write_identifiable(elem)
         # Groups AR:DO-IP-SERVICE-NEEDS and AR:FURTHER-ACTION-BYTE-NEEDS contain no elements
+        self._leave_child()
+
+    def _write_global_supervision_needs(self, elem: ar_element.GlobalSupervisionNeeds) -> None:
+        """
+        Writes complex type AR:GLOBAL-SUPERVISION-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.GlobalSupervisionNeeds)
+        self._add_child("GLOBAL-SUPERVISION-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        # Groups AR:SERVICE-NEEDS and AR:GLOBAL-SUPERVISION-NEEDS contain no elements
+        self._leave_child()
+
+    def _write_hardware_test_needs(self, elem: ar_element.HardwareTestNeeds) -> None:
+        """
+        Writes complex type AR:HARDWARE-TEST-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.HardwareTestNeeds)
+        self._add_child("HARDWARE-TEST-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        # Groups AR:SERVICE-NEEDS and AR:HARDWARE-TEST-NEEDS contain no elements
         self._leave_child()
 
     def _write_indicator_status_needs(
@@ -5737,6 +5849,148 @@ class Writer(_XMLWriter):
                                                    "RATE-BASED-MONITORED-EVENT-REF")
         if elem.used_fid_ref is not None:
             self._write_function_inhibition_needs_ref(elem.used_fid_ref, "USED-FID-REF")
+
+    def _write_possible_error_reaction(self, elem: ar_element.PossibleErrorReaction) -> None:
+        """
+        Writes complex type AR:POSSIBLE-ERROR-REACTION
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.PossibleErrorReaction)
+        self._add_child("POSSIBLE-ERROR-REACTION")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_possible_error_reaction_group(elem)
+        self._leave_child()
+
+    def _write_possible_error_reaction_group(self, elem: ar_element.PossibleErrorReaction) -> None:
+        """
+        Writes group AR:POSSIBLE-ERROR-REACTION
+        """
+        if elem.reaction_code is not None:
+            self._add_content("REACTION-CODE", str(elem.reaction_code))
+
+    def _write_runtime_error(self, elem: ar_element.RuntimeError) -> None:
+        """
+        Writes complex type AR:RUNTIME-ERROR
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.RuntimeError)
+        self._add_child("RUNTIME-ERROR")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_traced_failure_group(elem)
+        self._leave_child()
+
+    def _write_supervised_entity_checkpoint_needs(
+            self,
+            elem: ar_element.SupervisedEntityCheckpointNeeds) -> None:
+        """
+        Writes complex type AR:SUPERVISED-ENTITY-CHECKPOINT-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.SupervisedEntityCheckpointNeeds)
+        self._add_child("SUPERVISED-ENTITY-CHECKPOINT-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        # Groups AR:SERVICE-NEEDS and AR:SUPERVISED-ENTITY-CHECKPOINT-NEEDS contain no elements
+        self._leave_child()
+
+    def _write_supervised_entity_checkpoint_needs_ref_conditional(
+            self,
+            elem: ar_element.SupervisedEntityCheckpointNeedsRefConditional) -> None:
+        """
+        Writes complex type AR:SUPERVISED-ENTITY-CHECKPOINT-NEEDS-REF-CONDITIONAL
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.SupervisedEntityCheckpointNeedsRefConditional)
+        self._add_child("SUPERVISED-ENTITY-CHECKPOINT-NEEDS-REF-CONDITIONAL")
+        self._write_supervised_entity_checkpoint_needs_ref_conditional_group(elem)
+        self._leave_child()
+
+    def _write_supervised_entity_checkpoint_needs_ref_conditional_group(
+            self,
+            elem: ar_element.SupervisedEntityCheckpointNeedsRefConditional) -> None:
+        """
+        Writes group AR:SUPERVISED-ENTITY-CHECKPOINT-NEEDS-REF-CONDITIONAL
+        """
+        if elem.checkpoint_ref is not None:
+            self._write_supervised_entity_checkpoint_needs_ref(elem.checkpoint_ref,
+                                                               "SUPERVISED-ENTITY-CHECKPOINT-NEEDS-REF")
+
+    def _write_supervised_entity_needs(self, elem: ar_element.SupervisedEntityNeeds) -> None:
+        """
+        Writes complex type AR:SUPERVISED-ENTITY-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.SupervisedEntityNeeds)
+        self._add_child("SUPERVISED-ENTITY-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_supervised_entity_needs_group(elem)
+        self._leave_child()
+
+    def _write_supervised_entity_needs_group(self, elem: ar_element.SupervisedEntityNeeds) -> None:
+        """
+        Writes group AR:SUPERVISED-ENTITY-NEEDS
+        """
+        if elem.activate_at_start is not None:
+            self._add_content("ACTIVATE-AT-START", self._format_boolean(elem.activate_at_start))
+        if len(elem.checkpoints) > 0:
+            self._add_child("CHECKPOINTSS")
+            for item in elem.checkpoints:
+                self._write_supervised_entity_checkpoint_needs_ref_conditional(item)
+            self._leave_child()
+        if elem.enable_deactivation is not None:
+            self._add_content("ENABLE-DEACTIVATION", self._format_boolean(elem.enable_deactivation))
+        if elem.expected_alive_cycle is not None:
+            self._add_content("EXPECTED-ALIVE-CYCLE", self._format_number(elem.expected_alive_cycle))
+        if elem.max_alive_cycle is not None:
+            self._add_content("MAX-ALIVE-CYCLE", self._format_number(elem.max_alive_cycle))
+        if elem.min_alive_cycle is not None:
+            self._add_content("MIN-ALIVE-CYCLE", self._format_number(elem.min_alive_cycle))
+        if elem.tolerated_failed_cycles is not None:
+            self._add_content("TOLERATED-FAILED-CYCLES", str(elem.tolerated_failed_cycles))
+
+    def _write_transient_fault(self, elem: ar_element.TransientFault) -> None:
+        """
+        Writes complex type AR:TRANSIENT-FAULT
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.TransientFault)
+        self._add_child("TRANSIENT-FAULT")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_traced_failure_group(elem)
+        self._write_transient_fault_group(elem)
+        self._leave_child()
+
+    def _write_transient_fault_group(self, elem: ar_element.TransientFault) -> None:
+        """
+        Writes group AR:TRANSIENT-FAULT
+        """
+        if len(elem.possible_error_reactions) > 0:
+            self._add_child("POSSIBLE-ERROR-REACTIONS")
+            for item in elem.possible_error_reactions:
+                self._write_possible_error_reaction(item)
+            self._leave_child()
+
+    def _write_vendor_specific_service_needs(self, elem: ar_element.VendorSpecificServiceNeeds) -> None:
+        """
+        Writes complex type AR:VENDOR-SPECIFIC-SERVICE-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.VendorSpecificServiceNeeds)
+        self._add_child("VENDOR-SPECIFIC-SERVICE-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        # Groups AR:SERVICE-NEEDS and AR:VENDOR-SPECIFIC-SERVICE-NEEDS contain no elements
+        self._leave_child()
 
     def _write_warning_indicator_requested_bit_needs(
             self,

@@ -864,3 +864,19 @@ class FunctionInhibitionNeedsRef(BaseRef):
     def accepted_sub_types(cls) -> set[ar_enum.IdentifiableSubTypes]:
         """Acceptable values for dest"""
         return {ar_enum.IdentifiableSubTypes.FUNCTION_INHIBITION_NEEDS}
+
+
+class SupervisedEntityCheckpointNeedsRef(BaseRef):
+    """
+    AR:SUPERVISED-ENTITY-CHECKPOINT-NEEDS--SUBTYPES-ENUM
+    """
+
+    def __init__(self, value: str,
+                 dest: ar_enum.IdentifiableSubTypes = ar_enum.IdentifiableSubTypes.SUPERVISED_ENTITY_CHECKPOINT_NEEDS
+                 ) -> None:
+        super().__init__(value, dest)
+
+    @classmethod
+    def accepted_sub_types(cls) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.SUPERVISED_ENTITY_CHECKPOINT_NEEDS}

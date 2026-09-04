@@ -330,6 +330,7 @@ class Reader:
             'CRYPTO-KEY-MANAGEMENT-NEEDS': self._read_crypto_key_management_needs,
             'CRYPTO-SERVICE-JOB-NEEDS': self._read_crypto_service_job_needs,
             'CRYPTO-SERVICE-NEEDS': self._read_crypto_service_needs,
+            'DEVELOPMENT-ERROR': self._read_development_error,
             'DIAG-EVENT-DEBOUNCE-COUNTER-BASED': self._read_diag_event_debounce_counter_based,
             'DIAG-EVENT-DEBOUNCE-MONITOR-INTERNAL': self._read_diag_event_debounce_monitor_internal,
             'DIAG-EVENT-DEBOUNCE-TIME-BASED': self._read_diag_event_debounce_time_based,
@@ -355,9 +356,13 @@ class Reader:
             'DO-IP-ROUTING-ACTIVATION-AUTHENTICATION-NEEDS': self._read_do_ip_routing_activation_authentication_needs,
             'DO-IP-ROUTING-ACTIVATION-CONFIRMATION-NEEDS': self._read_do_ip_routing_activation_confirmation_needs,
             'DTC-STATUS-CHANGE-NOTIFICATION-NEEDS': self._read_dtc_status_change_notification_needs,
+            'ECU-STATE-MGR-USER-NEEDS': self._read_ecu_state_mgr_user_needs,
+            'ERROR-TRACER-NEEDS': self._read_error_tracer_needs,
             'FUNCTION-INHIBITION-AVAILABILITY-NEEDS': self._read_function_inhibition_availability_needs,
             'FUNCTION-INHIBITION-NEEDS': self._read_function_inhibition_needs,
             'FURTHER-ACTION-BYTE-NEEDS': self._read_further_action_byte_needs,
+            'GLOBAL-SUPERVISION-NEEDS': self._read_global_supervision_needs,
+            'HARDWARE-TEST-NEEDS': self._read_hardware_test_needs,
             'INDICATOR-STATUS-NEEDS': self._read_indicator_status_needs,
             'OBD-CONTROL-SERVICE-NEEDS': self._read_obd_control_service_needs,
             'OBD-INFO-SERVICE-NEEDS': self._read_obd_info_service_needs,
@@ -365,6 +370,14 @@ class Reader:
             'OBD-PID-SERVICE-NEEDS': self._read_obd_pid_service_needs,
             'OBD-RATIO-DENOMINATOR-NEEDS': self._read_obd_ratio_denominator_needs,
             'OBD-RATIO-SERVICE-NEEDS': self._read_obd_ratio_service_needs,
+            'POSSIBLE-ERROR-REACTION': self._read_possible_error_reaction,
+            'RUNTIME-ERROR': self._read_runtime_error,
+            'SUPERVISED-ENTITY-CHECKPOINT-NEEDS': self._read_supervised_entity_checkpoint_needs,
+            'SUPERVISED-ENTITY-CHECKPOINT-NEEDS-REF-CONDITIONAL':
+            self._read_supervised_entity_checkpoint_needs_ref_conditional,
+            'SUPERVISED-ENTITY-NEEDS': self._read_supervised_entity_needs,
+            'TRANSIENT-FAULT': self._read_transient_fault,
+            'VENDOR-SPECIFIC-SERVICE-NEEDS': self._read_vendor_specific_service_needs,
             'WARNING-INDICATOR-REQUESTED-BIT-NEEDS': self._read_warning_indicator_requested_bit_needs,
             # SWC internal behavior elements
             'AUTOSAR-VARIABLE-IN-IMPL-DATATYPE': self._read_variable_in_impl_data_instance_ref,
@@ -3035,6 +3048,15 @@ class Reader:
         """
         dest_enum = self._read_ref_dest(xml_elem)
         return ar_element.FunctionInhibitionNeedsRef(xml_elem.text, dest_enum)
+
+    def _read_supervised_entity_checkpoint_needs_ref(self,
+                                                     xml_elem: ElementTree.Element
+                                                     ) -> ar_element.SupervisedEntityCheckpointNeedsRef:
+        """
+        Reads references to AR:SUPERVISED-ENTITY-CHECKPOINT-NEEDS--SUBTYPES-ENUM
+        """
+        dest_enum = self._read_ref_dest(xml_elem)
+        return ar_element.SupervisedEntityCheckpointNeedsRef(xml_elem.text, dest_enum)
 
     # --- Constant and value specifications
 
@@ -6555,6 +6577,28 @@ class Reader:
         if xml_child is not None:
             data["maximum_key_length"] = ar_element.PositiveIntegerValue(xml_child.text).value
 
+    def _read_traced_failure_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:TRACED-FAILURE
+        """
+        xml_child = child_elements.get("ID")
+        if xml_child is not None:
+            data["id"] = self._read_positive_integer(xml_child.text)
+
+    def _read_development_error(self, xml_element: ElementTree.Element) -> ar_element.DevelopmentError:
+        """
+        Reads complex type AR:DEVELOPMENT-ERROR
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_traced_failure_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.DevelopmentError(**data)
+
     def _read_diag_event_debounce_counter_based(
             self,
             xml_element: ElementTree.Element) -> ar_element.DiagEventDebounceCounterBased:
@@ -7182,6 +7226,50 @@ class Reader:
         if xml_child is not None:
             data["notification_time"] = ar_enum.xml_to_enum("DiagnosticClearDtcNotification", xml_child.text)
 
+    def _read_ecu_state_mgr_user_needs(self, xml_element: ElementTree.Element) -> ar_element.EcuStateMgrUserNeeds:
+        """
+        Reads complex type AR:ECU-STATE-MGR-USER-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Groups AR:SERVICE-NEEDS and AR:ECU-STATE-MGR-USER-NEEDS contain no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.EcuStateMgrUserNeeds(**data)
+
+    def _read_error_tracer_needs(self, xml_element: ElementTree.Element) -> ar_element.ErrorTracerNeeds:
+        """
+        Reads complex type AR:ERROR-TRACER-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_error_tracer_needs_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ErrorTracerNeeds(**data)
+
+    def _read_error_tracer_needs_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:ERROR-TRACER-NEEDS
+        """
+        xml_child = child_elements.get("TRACED-FAILURES")
+        if xml_child is not None:
+            failures = []
+            for xml_grand_child in xml_child.findall("./*"):
+                if xml_grand_child.tag == "DEVELOPMENT-ERROR":
+                    failures.append(self._read_development_error(xml_grand_child))
+                elif xml_grand_child.tag == "RUNTIME-ERROR":
+                    failures.append(self._read_runtime_error(xml_grand_child))
+                elif xml_grand_child.tag == "TRANSIENT-FAULT":
+                    failures.append(self._read_transient_fault(xml_grand_child))
+            data["traced_failures"] = failures
+
     def _read_function_inhibition_availability_needs(
             self,
             xml_element: ElementTree.Element) -> ar_element.FunctionInhibitionAvailabilityNeeds:
@@ -7240,6 +7328,34 @@ class Reader:
         # Groups AR:DO-IP-SERVICE-NEEDS and AR:FURTHER-ACTION-BYTE-NEEDS contain no elements
         self._report_unprocessed_elements(child_elements)
         return ar_element.FurtherActionByteNeeds(**data)
+
+    def _read_global_supervision_needs(self, xml_element: ElementTree.Element) -> ar_element.GlobalSupervisionNeeds:
+        """
+        Reads complex type AR:GLOBAL-SUPERVISION-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Groups AR:SERVICE-NEEDS and AR:GLOBAL-SUPERVISION-NEEDS contain no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.GlobalSupervisionNeeds(**data)
+
+    def _read_hardware_test_needs(self, xml_element: ElementTree.Element) -> ar_element.HardwareTestNeeds:
+        """
+        Reads complex type AR:HARDWARE-TEST-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Groups AR:SERVICE-NEEDS and AR:HARDWARE-TEST-NEEDS contain no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.HardwareTestNeeds(**data)
 
     def _read_indicator_status_needs(
             self,
@@ -7414,6 +7530,168 @@ class Reader:
         xml_child = child_elements.get("USED-FID-REF")
         if xml_child is not None:
             data["used_fid_ref"] = self._read_function_inhibition_needs_ref(xml_child)
+
+    def _read_possible_error_reaction(self, xml_element: ElementTree.Element) -> ar_element.PossibleErrorReaction:
+        """
+        Reads complex type AR:POSSIBLE-ERROR-REACTION
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_possible_error_reaction_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.PossibleErrorReaction(**data)
+
+    def _read_possible_error_reaction_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:POSSIBLE-ERROR-REACTION
+        """
+        xml_child = child_elements.get("REACTION-CODE")
+        if xml_child is not None:
+            data["reaction_code"] = self._read_positive_integer(xml_child.text)
+
+    def _read_runtime_error(self, xml_element: ElementTree.Element) -> ar_element.RuntimeError:
+        """
+        Reads complex type AR:RUNTIME-ERROR
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_traced_failure_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.RuntimeError(**data)
+
+    def _read_supervised_entity_checkpoint_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.SupervisedEntityCheckpointNeeds:
+        """
+        Reads complex type AR:SUPERVISED-ENTITY-CHECKPOINT-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Groups AR:SERVICE-NEEDS and AR:SUPERVISED-ENTITY-CHECKPOINT-NEEDS contain no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.SupervisedEntityCheckpointNeeds(**data)
+
+    def _read_supervised_entity_checkpoint_needs_ref_conditional(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.SupervisedEntityCheckpointNeedsRefConditional:
+        """
+        Reads complex type AR:SUPERVISED-ENTITY-CHECKPOINT-NEEDS-REF-CONDITIONAL
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_supervised_entity_checkpoint_needs_ref_conditional_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.SupervisedEntityCheckpointNeedsRefConditional(**data)
+
+    def _read_supervised_entity_checkpoint_needs_ref_conditional_group(
+            self,
+            child_elements: ChildElementMap,
+            data: dict) -> None:
+        """
+        Reads group AR:SUPERVISED-ENTITY-CHECKPOINT-NEEDS-REF-CONDITIONAL
+        """
+        xml_child = child_elements.get("SUPERVISED-ENTITY-CHECKPOINT-NEEDS-REF")
+        if xml_child is not None:
+            data["checkpoint_ref"] = self._read_supervised_entity_checkpoint_needs_ref(xml_child)
+        child_elements.skip("VARIATION-POINT")
+
+    def _read_supervised_entity_needs(self, xml_element: ElementTree.Element) -> ar_element.SupervisedEntityNeeds:
+        """
+        Reads complex type AR:SUPERVISED-ENTITY-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_supervised_entity_needs_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.SupervisedEntityNeeds(**data)
+
+    def _read_supervised_entity_needs_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:SUPERVISED-ENTITY-NEEDS
+        """
+        xml_child = child_elements.get("ACTIVATE-AT-START")
+        if xml_child is not None:
+            data["activate_at_start"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("CHECKPOINTSS")
+        if xml_child is not None:
+            checkpoints = []
+            for xml_grand_child in xml_child.findall("./SUPERVISED-ENTITY-CHECKPOINT-NEEDS-REF-CONDITIONAL"):
+                checkpoints.append(self._read_supervised_entity_checkpoint_needs_ref_conditional(xml_grand_child))
+            data["checkpoints"] = checkpoints
+        xml_child = child_elements.get("ENABLE-DEACTIVATION")
+        if xml_child is not None:
+            data["enable_deactivation"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("EXPECTED-ALIVE-CYCLE")
+        if xml_child is not None:
+            data["expected_alive_cycle"] = self._read_number(xml_child.text)
+        xml_child = child_elements.get("MAX-ALIVE-CYCLE")
+        if xml_child is not None:
+            data["max_alive_cycle"] = self._read_number(xml_child.text)
+        xml_child = child_elements.get("MIN-ALIVE-CYCLE")
+        if xml_child is not None:
+            data["min_alive_cycle"] = self._read_number(xml_child.text)
+        xml_child = child_elements.get("TOLERATED-FAILED-CYCLES")
+        if xml_child is not None:
+            data["tolerated_failed_cycles"] = self._read_positive_integer(xml_child.text)
+
+    def _read_transient_fault(self, xml_element: ElementTree.Element) -> ar_element.TransientFault:
+        """
+        Reads complex type AR:TRANSIENT-FAULT
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_traced_failure_group(child_elements, data)
+        self._read_transient_fault_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.TransientFault(**data)
+
+    def _read_transient_fault_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:TRANSIENT-FAULT
+        """
+        xml_child = child_elements.get("POSSIBLE-ERROR-REACTIONS")
+        if xml_child is not None:
+            reactions = []
+            for xml_grand_child in xml_child.findall("./POSSIBLE-ERROR-REACTION"):
+                reactions.append(self._read_possible_error_reaction(xml_grand_child))
+            data["possible_error_reactions"] = reactions
+
+    def _read_vendor_specific_service_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.VendorSpecificServiceNeeds:
+        """
+        Reads complex type AR:VENDOR-SPECIFIC-SERVICE-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Groups AR:SERVICE-NEEDS and AR:VENDOR-SPECIFIC-SERVICE-NEEDS contain no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.VendorSpecificServiceNeeds(**data)
 
     def _read_warning_indicator_requested_bit_needs(
             self,

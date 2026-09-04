@@ -408,20 +408,21 @@ class IdentifiableSubTypes(Enum):
     SENSOR_ACTUATOR_SW_COMPONENT_TYPE = 70
     SERVICE_PROXY_SW_COMPONENT_TYPE = 71
     SERVICE_SW_COMPONENT_TYPE = 72
-    SW_ADDR_METHOD = 73
-    SW_BASE_TYPE = 74
-    SW_COMPONENT_PROTOTYPE = 75
-    SWC_IMPLEMENTATION = 76
-    SWC_INTERNAL_BEHAVIOR = 77
-    SWC_MODE_MANAGER_ERROR_EVENT = 78
-    SWC_MODE_SWITCH_EVENT = 79
-    TIMING_EVENT = 80
-    TRANSFORMER_HARD_ERROR_EVENT = 81
-    TRIGGER = 82
-    TRIGGER_INTERFACE = 83
-    UNIT = 84
-    VARIABLE_ACCESS = 85
-    VARIABLE_DATA_PROTOTYPE = 86
+    SUPERVISED_ENTITY_CHECKPOINT_NEEDS = 73
+    SW_ADDR_METHOD = 74
+    SW_BASE_TYPE = 75
+    SW_COMPONENT_PROTOTYPE = 76
+    SWC_IMPLEMENTATION = 77
+    SWC_INTERNAL_BEHAVIOR = 78
+    SWC_MODE_MANAGER_ERROR_EVENT = 79
+    SWC_MODE_SWITCH_EVENT = 80
+    TIMING_EVENT = 81
+    TRANSFORMER_HARD_ERROR_EVENT = 82
+    TRIGGER = 83
+    TRIGGER_INTERFACE = 84
+    UNIT = 85
+    VARIABLE_ACCESS = 86
+    VARIABLE_DATA_PROTOTYPE = 87
 
 
 class IntervalType(Enum):
@@ -1127,6 +1128,7 @@ xml_to_enum_map: dict[str, dict] = {
         "SENSOR-ACTUATOR-SW-COMPONENT-TYPE": IdentifiableSubTypes.SENSOR_ACTUATOR_SW_COMPONENT_TYPE,
         "SERVICE-PROXY-SW-COMPONENT-TYPE": IdentifiableSubTypes.SERVICE_PROXY_SW_COMPONENT_TYPE,
         "SERVICE-SW-COMPONENT-TYPE": IdentifiableSubTypes.SERVICE_SW_COMPONENT_TYPE,
+        "SUPERVISED-ENTITY-CHECKPOINT-NEEDS": IdentifiableSubTypes.SUPERVISED_ENTITY_CHECKPOINT_NEEDS,
         "SW-ADDR-METHOD": IdentifiableSubTypes.SW_ADDR_METHOD,
         "SW-BASE-TYPE": IdentifiableSubTypes.SW_BASE_TYPE,
         "SW-COMPONENT-PROTOTYPE": IdentifiableSubTypes.SW_COMPONENT_PROTOTYPE,
@@ -1629,20 +1631,21 @@ enum_to_xml_map: dict[str, list] = {
         "SENSOR-ACTUATOR-SW-COMPONENT-TYPE",             # 70
         "SERVICE-PROXY-SW-COMPONENT-TYPE",               # 71
         "SERVICE-SW-COMPONENT-TYPE",                     # 72
-        "SW-ADDR-METHOD",                                # 73
-        "SW-BASE-TYPE",                                  # 74
-        "SW-COMPONENT-PROTOTYPE",                        # 75
-        "SWC-IMPLEMENTATION",                            # 76
-        "SWC-INTERNAL-BEHAVIOR",                         # 77
-        "SWC-MODE-MANAGER-ERROR-EVENT",                  # 78
-        "SWC-MODE-SWITCH-EVENT",                         # 79
-        "TIMING-EVENT",                                  # 80
-        "TRANSFORMER-HARD-ERROR-EVENT",                  # 81
-        "TRIGGER",                                       # 82
-        "TRIGGER-INTERFACE",                             # 83
-        "UNIT",                                          # 84
-        "VARIABLE-ACCESS",                               # 85
-        "VARIABLE-DATA-PROTOTYPE",                       # 86
+        "SUPERVISED-ENTITY-CHECKPOINT-NEEDS",            # 73
+        "SW-ADDR-METHOD",                                # 74
+        "SW-BASE-TYPE",                                  # 75
+        "SW-COMPONENT-PROTOTYPE",                        # 76
+        "SWC-IMPLEMENTATION",                            # 77
+        "SWC-INTERNAL-BEHAVIOR",                         # 78
+        "SWC-MODE-MANAGER-ERROR-EVENT",                  # 79
+        "SWC-MODE-SWITCH-EVENT",                         # 80
+        "TIMING-EVENT",                                  # 81
+        "TRANSFORMER-HARD-ERROR-EVENT",                  # 82
+        "TRIGGER",                                       # 83
+        "TRIGGER-INTERFACE",                             # 84
+        "UNIT",                                          # 85
+        "VARIABLE-ACCESS",                               # 86
+        "VARIABLE-DATA-PROTOTYPE",                       # 87
     ],
     "IntervalType": [
         "CLOSED",  # 0

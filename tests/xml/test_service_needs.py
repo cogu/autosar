@@ -1718,5 +1718,314 @@ class TestWarningIndicatorRequestedBitNeeds(unittest.TestCase):
         self.assertEqual(elem.security_access_level, 3)
 
 
+class TestEcuStateMgrUserNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.EcuStateMgrUserNeeds("EcuStateMgrUserNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<ECU-STATE-MGR-USER-NEEDS>
+  <SHORT-NAME>EcuStateMgrUserNeeds</SHORT-NAME>
+</ECU-STATE-MGR-USER-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.EcuStateMgrUserNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.EcuStateMgrUserNeeds)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "EcuStateMgrUserNeeds")
+
+
+class TestErrorTracerNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.ErrorTracerNeeds("ErrorTracerNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<ERROR-TRACER-NEEDS>
+  <SHORT-NAME>ErrorTracerNeeds</SHORT-NAME>
+</ERROR-TRACER-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ErrorTracerNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ErrorTracerNeeds)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "ErrorTracerNeeds")
+        self.assertEqual(len(elem.traced_failures), 0)
+
+    def test_development_error(self):
+        element = ar_element.DevelopmentError("DevError1", id=42)
+        writer = autosar.xml.Writer()
+        xml = '''<DEVELOPMENT-ERROR>
+  <SHORT-NAME>DevError1</SHORT-NAME>
+  <ID>42</ID>
+</DEVELOPMENT-ERROR>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DevelopmentError = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DevelopmentError)
+        self.assertEqual(elem.name, "DevError1")
+        self.assertEqual(elem.id, 42)
+
+    def test_runtime_error(self):
+        element = ar_element.RuntimeError("RuntimeError1", id=101)
+        writer = autosar.xml.Writer()
+        xml = '''<RUNTIME-ERROR>
+  <SHORT-NAME>RuntimeError1</SHORT-NAME>
+  <ID>101</ID>
+</RUNTIME-ERROR>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.RuntimeError = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.RuntimeError)
+        self.assertEqual(elem.name, "RuntimeError1")
+        self.assertEqual(elem.id, 101)
+
+    def test_possible_error_reaction(self):
+        element = ar_element.PossibleErrorReaction("Reaction1", reaction_code=7)
+        writer = autosar.xml.Writer()
+        xml = '''<POSSIBLE-ERROR-REACTION>
+  <SHORT-NAME>Reaction1</SHORT-NAME>
+  <REACTION-CODE>7</REACTION-CODE>
+</POSSIBLE-ERROR-REACTION>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.PossibleErrorReaction = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.PossibleErrorReaction)
+        self.assertEqual(elem.name, "Reaction1")
+        self.assertEqual(elem.reaction_code, 7)
+
+    def test_transient_fault(self):
+        element = ar_element.TransientFault("Fault1", id=200)
+        element.append(ar_element.PossibleErrorReaction("Reaction1", reaction_code=1))
+        element.append(ar_element.PossibleErrorReaction("Reaction2", reaction_code=2))
+        writer = autosar.xml.Writer()
+        xml = '''<TRANSIENT-FAULT>
+  <SHORT-NAME>Fault1</SHORT-NAME>
+  <ID>200</ID>
+  <POSSIBLE-ERROR-REACTIONS>
+    <POSSIBLE-ERROR-REACTION>
+      <SHORT-NAME>Reaction1</SHORT-NAME>
+      <REACTION-CODE>1</REACTION-CODE>
+    </POSSIBLE-ERROR-REACTION>
+    <POSSIBLE-ERROR-REACTION>
+      <SHORT-NAME>Reaction2</SHORT-NAME>
+      <REACTION-CODE>2</REACTION-CODE>
+    </POSSIBLE-ERROR-REACTION>
+  </POSSIBLE-ERROR-REACTIONS>
+</TRANSIENT-FAULT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.TransientFault = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.TransientFault)
+        self.assertEqual(elem.name, "Fault1")
+        self.assertEqual(elem.id, 200)
+        self.assertEqual(len(elem.possible_error_reactions), 2)
+        self.assertEqual(elem.possible_error_reactions[0].name, "Reaction1")
+        self.assertEqual(elem.possible_error_reactions[0].reaction_code, 1)
+        self.assertEqual(elem.possible_error_reactions[1].name, "Reaction2")
+        self.assertEqual(elem.possible_error_reactions[1].reaction_code, 2)
+
+    def test_with_all_failures(self):
+        element = ar_element.ErrorTracerNeeds("ErrorTracerNeeds")
+        element.append(ar_element.DevelopmentError("DevError", id=1))
+        element.append(ar_element.RuntimeError("RunError", id=2))
+        fault = ar_element.TransientFault("TransFault", id=3)
+        fault.append(ar_element.PossibleErrorReaction("Reaction1", reaction_code=10))
+        element.append(fault)
+
+        writer = autosar.xml.Writer()
+        xml = '''<ERROR-TRACER-NEEDS>
+  <SHORT-NAME>ErrorTracerNeeds</SHORT-NAME>
+  <TRACED-FAILURES>
+    <DEVELOPMENT-ERROR>
+      <SHORT-NAME>DevError</SHORT-NAME>
+      <ID>1</ID>
+    </DEVELOPMENT-ERROR>
+    <RUNTIME-ERROR>
+      <SHORT-NAME>RunError</SHORT-NAME>
+      <ID>2</ID>
+    </RUNTIME-ERROR>
+    <TRANSIENT-FAULT>
+      <SHORT-NAME>TransFault</SHORT-NAME>
+      <ID>3</ID>
+      <POSSIBLE-ERROR-REACTIONS>
+        <POSSIBLE-ERROR-REACTION>
+          <SHORT-NAME>Reaction1</SHORT-NAME>
+          <REACTION-CODE>10</REACTION-CODE>
+        </POSSIBLE-ERROR-REACTION>
+      </POSSIBLE-ERROR-REACTIONS>
+    </TRANSIENT-FAULT>
+  </TRACED-FAILURES>
+</ERROR-TRACER-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ErrorTracerNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ErrorTracerNeeds)
+        self.assertEqual(len(elem.traced_failures), 3)
+        self.assertIsInstance(elem.traced_failures[0], ar_element.DevelopmentError)
+        self.assertEqual(elem.traced_failures[0].name, "DevError")
+        self.assertEqual(elem.traced_failures[0].id, 1)
+        self.assertIsInstance(elem.traced_failures[1], ar_element.RuntimeError)
+        self.assertEqual(elem.traced_failures[1].name, "RunError")
+        self.assertEqual(elem.traced_failures[1].id, 2)
+        self.assertIsInstance(elem.traced_failures[2], ar_element.TransientFault)
+        self.assertEqual(elem.traced_failures[2].name, "TransFault")
+        self.assertEqual(elem.traced_failures[2].id, 3)
+        self.assertEqual(len(elem.traced_failures[2].possible_error_reactions), 1)
+
+
+class TestGlobalSupervisionNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.GlobalSupervisionNeeds("GlobalSupervisionNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<GLOBAL-SUPERVISION-NEEDS>
+  <SHORT-NAME>GlobalSupervisionNeeds</SHORT-NAME>
+</GLOBAL-SUPERVISION-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.GlobalSupervisionNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.GlobalSupervisionNeeds)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "GlobalSupervisionNeeds")
+
+
+class TestHardwareTestNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.HardwareTestNeeds("HardwareTestNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<HARDWARE-TEST-NEEDS>
+  <SHORT-NAME>HardwareTestNeeds</SHORT-NAME>
+</HARDWARE-TEST-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.HardwareTestNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.HardwareTestNeeds)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "HardwareTestNeeds")
+
+
+class TestSupervisedEntityCheckpointNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.SupervisedEntityCheckpointNeeds("SupervisedEntityCheckpointNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<SUPERVISED-ENTITY-CHECKPOINT-NEEDS>
+  <SHORT-NAME>SupervisedEntityCheckpointNeeds</SHORT-NAME>
+</SUPERVISED-ENTITY-CHECKPOINT-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SupervisedEntityCheckpointNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SupervisedEntityCheckpointNeeds)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "SupervisedEntityCheckpointNeeds")
+
+
+class TestSupervisedEntityNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.SupervisedEntityNeeds("SupervisedEntityNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<SUPERVISED-ENTITY-NEEDS>
+  <SHORT-NAME>SupervisedEntityNeeds</SHORT-NAME>
+</SUPERVISED-ENTITY-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SupervisedEntityNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SupervisedEntityNeeds)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "SupervisedEntityNeeds")
+        self.assertIsNone(elem.activate_at_start)
+        self.assertEqual(len(elem.checkpoints), 0)
+        self.assertIsNone(elem.enable_deactivation)
+        self.assertIsNone(elem.expected_alive_cycle)
+        self.assertIsNone(elem.max_alive_cycle)
+        self.assertIsNone(elem.min_alive_cycle)
+        self.assertIsNone(elem.tolerated_failed_cycles)
+
+    def test_with_all_fields(self):
+        element = ar_element.SupervisedEntityNeeds(
+            "SupervisedEntityNeeds",
+            activate_at_start=True,
+            enable_deactivation=False,
+            expected_alive_cycle=0.01,
+            max_alive_cycle=0.02,
+            min_alive_cycle=0.005,
+            tolerated_failed_cycles=3,
+            checkpoints=[
+                ar_element.SupervisedEntityCheckpointNeedsRefConditional("/Service/CP1"),
+                "/Service/CP2"
+            ]
+        )
+        writer = autosar.xml.Writer()
+        xml = (
+            '<SUPERVISED-ENTITY-NEEDS>\n'
+            '  <SHORT-NAME>SupervisedEntityNeeds</SHORT-NAME>\n'
+            '  <ACTIVATE-AT-START>true</ACTIVATE-AT-START>\n'
+            '  <CHECKPOINTSS>\n'
+            '    <SUPERVISED-ENTITY-CHECKPOINT-NEEDS-REF-CONDITIONAL>\n'
+            '      <SUPERVISED-ENTITY-CHECKPOINT-NEEDS-REF '
+            'DEST="SUPERVISED-ENTITY-CHECKPOINT-NEEDS">/Service/CP1</SUPERVISED-ENTITY-CHECKPOINT-NEEDS-REF>\n'
+            '    </SUPERVISED-ENTITY-CHECKPOINT-NEEDS-REF-CONDITIONAL>\n'
+            '    <SUPERVISED-ENTITY-CHECKPOINT-NEEDS-REF-CONDITIONAL>\n'
+            '      <SUPERVISED-ENTITY-CHECKPOINT-NEEDS-REF '
+            'DEST="SUPERVISED-ENTITY-CHECKPOINT-NEEDS">/Service/CP2</SUPERVISED-ENTITY-CHECKPOINT-NEEDS-REF>\n'
+            '    </SUPERVISED-ENTITY-CHECKPOINT-NEEDS-REF-CONDITIONAL>\n'
+            '  </CHECKPOINTSS>\n'
+            '  <ENABLE-DEACTIVATION>false</ENABLE-DEACTIVATION>\n'
+            '  <EXPECTED-ALIVE-CYCLE>0.01</EXPECTED-ALIVE-CYCLE>\n'
+            '  <MAX-ALIVE-CYCLE>0.02</MAX-ALIVE-CYCLE>\n'
+            '  <MIN-ALIVE-CYCLE>0.005</MIN-ALIVE-CYCLE>\n'
+            '  <TOLERATED-FAILED-CYCLES>3</TOLERATED-FAILED-CYCLES>\n'
+            '</SUPERVISED-ENTITY-NEEDS>'
+        )
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SupervisedEntityNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SupervisedEntityNeeds)
+        self.assertTrue(elem.activate_at_start)
+        self.assertFalse(elem.enable_deactivation)
+        self.assertAlmostEqual(elem.expected_alive_cycle, 0.01)
+        self.assertAlmostEqual(elem.max_alive_cycle, 0.02)
+        self.assertAlmostEqual(elem.min_alive_cycle, 0.005)
+        self.assertEqual(elem.tolerated_failed_cycles, 3)
+        self.assertEqual(len(elem.checkpoints), 2)
+        self.assertEqual(str(elem.checkpoints[0].checkpoint_ref), "/Service/CP1")
+        self.assertEqual(str(elem.checkpoints[1].checkpoint_ref), "/Service/CP2")
+
+    def test_checkpoint_variations(self):
+        element = ar_element.SupervisedEntityNeeds("SupervisedEntityNeeds")
+        # 1. append RefConditional
+        element.append(ar_element.SupervisedEntityCheckpointNeedsRefConditional("/Service/CP1"))
+        # 2. append Ref
+        ref = ar_element.SupervisedEntityCheckpointNeedsRef("/Service/CP2")
+        element.append(ref)
+        # 3. append str
+        element.append("/Service/CP3")
+
+        self.assertEqual(len(element.checkpoints), 3)
+        self.assertEqual(str(element.checkpoints[0].checkpoint_ref), "/Service/CP1")
+        self.assertEqual(str(element.checkpoints[1].checkpoint_ref), "/Service/CP2")
+        self.assertEqual(str(element.checkpoints[2].checkpoint_ref), "/Service/CP3")
+
+        with self.assertRaises(TypeError):
+            element.append(123)
+
+
+class TestVendorSpecificServiceNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.VendorSpecificServiceNeeds("VendorSpecificServiceNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<VENDOR-SPECIFIC-SERVICE-NEEDS>
+  <SHORT-NAME>VendorSpecificServiceNeeds</SHORT-NAME>
+</VENDOR-SPECIFIC-SERVICE-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.VendorSpecificServiceNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.VendorSpecificServiceNeeds)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "VendorSpecificServiceNeeds")
+
+
 if __name__ == '__main__':
     unittest.main()
