@@ -59,6 +59,12 @@ Non-collectable elements are various sub-elements to collectable elements.
 * FunctionInhibitionNeeds | FUNCTION-INHIBITION-NEEDS
 * FurtherActionByteNeeds | FURTHER-ACTION-BYTE-NEEDS
 * IndicatorStatusNeeds | INDICATOR-STATUS-NEEDS
+* ObdControlServiceNeeds | OBD-CONTROL-SERVICE-NEEDS
+* ObdInfoServiceNeeds | OBD-INFO-SERVICE-NEEDS
+* ObdMonitorServiceNeeds | OBD-MONITOR-SERVICE-NEEDS
+* ObdPidServiceNeeds | OBD-PID-SERVICE-NEEDS
+* ObdRatioDenominatorNeeds | OBD-RATIO-DENOMINATOR-NEEDS
+* ObdRatioServiceNeeds | OBD-RATIO-SERVICE-NEEDS
 * WarningIndicatorRequestedBitNeeds | WARNING-INDICATOR-REQUESTED-BIT-NEEDS
 
 #### XML - SWC internal behavior elements

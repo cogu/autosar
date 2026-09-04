@@ -1413,6 +1413,271 @@ class TestIndicatorStatusNeeds(unittest.TestCase):
         self.assertEqual(element.type, autosar.xml.enumeration.DiagnosticIndicatorType.AMBER_WARNING)
 
 
+class TestObdControlServiceNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.ObdControlServiceNeeds("ObdControlServiceNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<OBD-CONTROL-SERVICE-NEEDS>
+  <SHORT-NAME>ObdControlServiceNeeds</SHORT-NAME>
+</OBD-CONTROL-SERVICE-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ObdControlServiceNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ObdControlServiceNeeds)
+        self.assertIsInstance(elem, ar_element.DiagnosticCapabilityElement)
+        self.assertEqual(elem.name, "ObdControlServiceNeeds")
+
+    def test_with_fields(self):
+        element = ar_element.ObdControlServiceNeeds(
+            "ObdControlServiceNeeds",
+            audience=autosar.xml.enumeration.DiagnosticAudience.AFTER_SALES,
+            diag_requirement="REQ-OBD-01",
+            security_access_level=1
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<OBD-CONTROL-SERVICE-NEEDS>
+  <SHORT-NAME>ObdControlServiceNeeds</SHORT-NAME>
+  <AUDIENCES>
+    <AUDIENCE>AFTER-SALES</AUDIENCE>
+  </AUDIENCES>
+  <DIAG-REQUIREMENT>REQ-OBD-01</DIAG-REQUIREMENT>
+  <SECURITY-ACCESS-LEVEL>1</SECURITY-ACCESS-LEVEL>
+</OBD-CONTROL-SERVICE-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ObdControlServiceNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ObdControlServiceNeeds)
+        self.assertEqual(elem.audience, [autosar.xml.enumeration.DiagnosticAudience.AFTER_SALES])
+        self.assertEqual(elem.diag_requirement, "REQ-OBD-01")
+        self.assertEqual(elem.security_access_level, 1)
+
+
+class TestObdInfoServiceNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.ObdInfoServiceNeeds("ObdInfoServiceNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<OBD-INFO-SERVICE-NEEDS>
+  <SHORT-NAME>ObdInfoServiceNeeds</SHORT-NAME>
+</OBD-INFO-SERVICE-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ObdInfoServiceNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ObdInfoServiceNeeds)
+        self.assertIsInstance(elem, ar_element.DiagnosticCapabilityElement)
+        self.assertEqual(elem.name, "ObdInfoServiceNeeds")
+
+    def test_with_fields(self):
+        element = ar_element.ObdInfoServiceNeeds(
+            "ObdInfoServiceNeeds",
+            audience=autosar.xml.enumeration.DiagnosticAudience.DEVELOPMENT,
+            diag_requirement="REQ-INFO-01",
+            security_access_level=2
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<OBD-INFO-SERVICE-NEEDS>
+  <SHORT-NAME>ObdInfoServiceNeeds</SHORT-NAME>
+  <AUDIENCES>
+    <AUDIENCE>DEVELOPMENT</AUDIENCE>
+  </AUDIENCES>
+  <DIAG-REQUIREMENT>REQ-INFO-01</DIAG-REQUIREMENT>
+  <SECURITY-ACCESS-LEVEL>2</SECURITY-ACCESS-LEVEL>
+</OBD-INFO-SERVICE-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ObdInfoServiceNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ObdInfoServiceNeeds)
+        self.assertEqual(elem.audience, [autosar.xml.enumeration.DiagnosticAudience.DEVELOPMENT])
+        self.assertEqual(elem.diag_requirement, "REQ-INFO-01")
+        self.assertEqual(elem.security_access_level, 2)
+
+
+class TestObdMonitorServiceNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.ObdMonitorServiceNeeds("ObdMonitorServiceNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<OBD-MONITOR-SERVICE-NEEDS>
+  <SHORT-NAME>ObdMonitorServiceNeeds</SHORT-NAME>
+</OBD-MONITOR-SERVICE-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ObdMonitorServiceNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ObdMonitorServiceNeeds)
+        self.assertIsInstance(elem, ar_element.DiagnosticCapabilityElement)
+        self.assertEqual(elem.name, "ObdMonitorServiceNeeds")
+        self.assertIsNone(elem.appl_data_type_ref)
+        self.assertIsNone(elem.event_needs_ref)
+        self.assertIsNone(elem.unit_and_scaling_id)
+
+    def test_with_fields(self):
+        element = ar_element.ObdMonitorServiceNeeds(
+            "ObdMonitorServiceNeeds",
+            appl_data_type_ref=ar_element.ApplicationDataTypeRef(
+                "/DataTypes/AppType",
+                autosar.xml.enumeration.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE),
+            event_needs_ref=ar_element.DiagnosticEventNeedsRef("/Diagnostics/EventNeeds"),
+            unit_and_scaling_id=42
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<OBD-MONITOR-SERVICE-NEEDS>
+  <SHORT-NAME>ObdMonitorServiceNeeds</SHORT-NAME>
+  <APPLICATION-DATA-TYPE-REF DEST="APPLICATION-PRIMITIVE-DATA-TYPE">/DataTypes/AppType</APPLICATION-DATA-TYPE-REF>
+  <EVENT-NEEDS-REF DEST="DIAGNOSTIC-EVENT-NEEDS">/Diagnostics/EventNeeds</EVENT-NEEDS-REF>
+  <UNIT-AND-SCALING-ID>42</UNIT-AND-SCALING-ID>
+</OBD-MONITOR-SERVICE-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ObdMonitorServiceNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ObdMonitorServiceNeeds)
+        self.assertEqual(elem.appl_data_type_ref.value, "/DataTypes/AppType")
+        self.assertEqual(elem.appl_data_type_ref.dest,
+                         autosar.xml.enumeration.IdentifiableSubTypes.APPLICATION_PRIMITIVE_DATA_TYPE)
+        self.assertEqual(elem.event_needs_ref.value, "/Diagnostics/EventNeeds")
+        self.assertEqual(elem.unit_and_scaling_id, 42)
+
+    def test_with_string_event_ref(self):
+        element = ar_element.ObdMonitorServiceNeeds(
+            "ObdMonitorServiceNeeds",
+            event_needs_ref="/Diagnostics/EventNeeds",
+            unit_and_scaling_id=10
+        )
+        self.assertIsInstance(element.event_needs_ref, ar_element.DiagnosticEventNeedsRef)
+        self.assertEqual(element.event_needs_ref.value, "/Diagnostics/EventNeeds")
+        self.assertEqual(element.unit_and_scaling_id, 10)
+
+
+class TestObdPidServiceNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.ObdPidServiceNeeds("ObdPidServiceNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<OBD-PID-SERVICE-NEEDS>
+  <SHORT-NAME>ObdPidServiceNeeds</SHORT-NAME>
+</OBD-PID-SERVICE-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ObdPidServiceNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ObdPidServiceNeeds)
+        self.assertIsInstance(elem, ar_element.DiagnosticCapabilityElement)
+        self.assertEqual(elem.name, "ObdPidServiceNeeds")
+
+    def test_with_fields(self):
+        element = ar_element.ObdPidServiceNeeds(
+            "ObdPidServiceNeeds",
+            audience=autosar.xml.enumeration.DiagnosticAudience.MANUFACTURING,
+            diag_requirement="REQ-PID-01",
+            security_access_level=0
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<OBD-PID-SERVICE-NEEDS>
+  <SHORT-NAME>ObdPidServiceNeeds</SHORT-NAME>
+  <AUDIENCES>
+    <AUDIENCE>MANUFACTURING</AUDIENCE>
+  </AUDIENCES>
+  <DIAG-REQUIREMENT>REQ-PID-01</DIAG-REQUIREMENT>
+  <SECURITY-ACCESS-LEVEL>0</SECURITY-ACCESS-LEVEL>
+</OBD-PID-SERVICE-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ObdPidServiceNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ObdPidServiceNeeds)
+        self.assertEqual(elem.audience, [autosar.xml.enumeration.DiagnosticAudience.MANUFACTURING])
+        self.assertEqual(elem.diag_requirement, "REQ-PID-01")
+        self.assertEqual(elem.security_access_level, 0)
+
+
+class TestObdRatioDenominatorNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.ObdRatioDenominatorNeeds("ObdRatioDenominatorNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<OBD-RATIO-DENOMINATOR-NEEDS>
+  <SHORT-NAME>ObdRatioDenominatorNeeds</SHORT-NAME>
+</OBD-RATIO-DENOMINATOR-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ObdRatioDenominatorNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ObdRatioDenominatorNeeds)
+        self.assertIsInstance(elem, ar_element.DiagnosticCapabilityElement)
+        self.assertEqual(elem.name, "ObdRatioDenominatorNeeds")
+        self.assertIsNone(elem.denominator_condition)
+
+    def test_with_denominator_condition(self):
+        element = ar_element.ObdRatioDenominatorNeeds(
+            "ObdRatioDenominatorNeeds",
+            denominator_condition=autosar.xml.enumeration.DiagnosticDenominatorCondition.COLDSTART
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<OBD-RATIO-DENOMINATOR-NEEDS>
+  <SHORT-NAME>ObdRatioDenominatorNeeds</SHORT-NAME>
+  <DENOMINATOR-CONDITION>COLDSTART</DENOMINATOR-CONDITION>
+</OBD-RATIO-DENOMINATOR-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ObdRatioDenominatorNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ObdRatioDenominatorNeeds)
+        self.assertEqual(elem.denominator_condition,
+                         autosar.xml.enumeration.DiagnosticDenominatorCondition.COLDSTART)
+
+    def test_denominator_condition_from_str(self):
+        element = ar_element.ObdRatioDenominatorNeeds(
+            "ObdRatioDenominatorNeeds",
+            denominator_condition="-500-MILES"
+        )
+        self.assertEqual(element.denominator_condition,
+                         autosar.xml.enumeration.DiagnosticDenominatorCondition.CONDITION_500_MILES)
+
+
+class TestObdRatioServiceNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.ObdRatioServiceNeeds("ObdRatioServiceNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<OBD-RATIO-SERVICE-NEEDS>
+  <SHORT-NAME>ObdRatioServiceNeeds</SHORT-NAME>
+</OBD-RATIO-SERVICE-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ObdRatioServiceNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ObdRatioServiceNeeds)
+        self.assertIsInstance(elem, ar_element.DiagnosticCapabilityElement)
+        self.assertEqual(elem.name, "ObdRatioServiceNeeds")
+        self.assertIsNone(elem.connection_type)
+        self.assertIsNone(elem.rate_based_monitored_event_ref)
+        self.assertIsNone(elem.used_fid_ref)
+
+    def test_with_fields(self):
+        element = ar_element.ObdRatioServiceNeeds(
+            "ObdRatioServiceNeeds",
+            connection_type=autosar.xml.enumeration.ObdRatioConnectionKind.API_USE,
+            rate_based_monitored_event_ref=ar_element.DiagnosticEventNeedsRef("/Diag/MonitoredEvent"),
+            used_fid_ref=ar_element.FunctionInhibitionNeedsRef("/Diag/FID")
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<OBD-RATIO-SERVICE-NEEDS>
+  <SHORT-NAME>ObdRatioServiceNeeds</SHORT-NAME>
+  <CONNECTION-TYPE>API-USE</CONNECTION-TYPE>
+  <RATE-BASED-MONITORED-EVENT-REF DEST="DIAGNOSTIC-EVENT-NEEDS">/Diag/MonitoredEvent</RATE-BASED-MONITORED-EVENT-REF>
+  <USED-FID-REF DEST="FUNCTION-INHIBITION-NEEDS">/Diag/FID</USED-FID-REF>
+</OBD-RATIO-SERVICE-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.ObdRatioServiceNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.ObdRatioServiceNeeds)
+        self.assertEqual(elem.connection_type, autosar.xml.enumeration.ObdRatioConnectionKind.API_USE)
+        self.assertEqual(elem.rate_based_monitored_event_ref.value, "/Diag/MonitoredEvent")
+        self.assertEqual(elem.used_fid_ref.value, "/Diag/FID")
+
+    def test_connection_type_from_str(self):
+        element = ar_element.ObdRatioServiceNeeds(
+            "ObdRatioServiceNeeds",
+            connection_type="OBSERVER"
+        )
+        self.assertEqual(element.connection_type, autosar.xml.enumeration.ObdRatioConnectionKind.OBSERVER)
+
+
 class TestWarningIndicatorRequestedBitNeeds(unittest.TestCase):
 
     def test_name_only(self):

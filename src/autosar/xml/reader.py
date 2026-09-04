@@ -359,6 +359,12 @@ class Reader:
             'FUNCTION-INHIBITION-NEEDS': self._read_function_inhibition_needs,
             'FURTHER-ACTION-BYTE-NEEDS': self._read_further_action_byte_needs,
             'INDICATOR-STATUS-NEEDS': self._read_indicator_status_needs,
+            'OBD-CONTROL-SERVICE-NEEDS': self._read_obd_control_service_needs,
+            'OBD-INFO-SERVICE-NEEDS': self._read_obd_info_service_needs,
+            'OBD-MONITOR-SERVICE-NEEDS': self._read_obd_monitor_service_needs,
+            'OBD-PID-SERVICE-NEEDS': self._read_obd_pid_service_needs,
+            'OBD-RATIO-DENOMINATOR-NEEDS': self._read_obd_ratio_denominator_needs,
+            'OBD-RATIO-SERVICE-NEEDS': self._read_obd_ratio_service_needs,
             'WARNING-INDICATOR-REQUESTED-BIT-NEEDS': self._read_warning_indicator_requested_bit_needs,
             # SWC internal behavior elements
             'AUTOSAR-VARIABLE-IN-IMPL-DATATYPE': self._read_variable_in_impl_data_instance_ref,
@@ -3002,6 +3008,15 @@ class Reader:
         """
         dest_enum = self._read_ref_dest(xml_elem)
         return ar_element.ApplicationRecordElementRef(xml_elem.text, dest_enum)
+
+    def _read_diagnostic_event_needs_ref(self,
+                                         xml_elem: ElementTree.Element
+                                         ) -> ar_element.DiagnosticEventNeedsRef:
+        """
+        Reads references to AR:DIAGNOSTIC-EVENT-NEEDS--SUBTYPES-ENUM
+        """
+        dest_enum = self._read_ref_dest(xml_elem)
+        return ar_element.DiagnosticEventNeedsRef(xml_elem.text, dest_enum)
 
     def _read_diagnostic_value_needs_ref(self,
                                          xml_elem: ElementTree.Element
@@ -7252,6 +7267,153 @@ class Reader:
         xml_child = child_elements.get("TYPE")
         if xml_child is not None:
             data["type"] = ar_enum.xml_to_enum("DiagnosticIndicatorType", xml_child.text)
+
+    def _read_obd_control_service_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.ObdControlServiceNeeds:
+        """
+        Reads complex type AR:OBD-CONTROL-SERVICE-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_diagnostic_capability_element_group(child_elements, data)
+        # Group AR:OBD-CONTROL-SERVICE-NEEDS contains no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ObdControlServiceNeeds(**data)
+
+    def _read_obd_info_service_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.ObdInfoServiceNeeds:
+        """
+        Reads complex type AR:OBD-INFO-SERVICE-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_diagnostic_capability_element_group(child_elements, data)
+        # Group AR:OBD-INFO-SERVICE-NEEDS contains no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ObdInfoServiceNeeds(**data)
+
+    def _read_obd_monitor_service_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.ObdMonitorServiceNeeds:
+        """
+        Reads complex type AR:OBD-MONITOR-SERVICE-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_diagnostic_capability_element_group(child_elements, data)
+        self._read_obd_monitor_service_needs_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ObdMonitorServiceNeeds(**data)
+
+    def _read_obd_monitor_service_needs_group(
+            self,
+            child_elements: ChildElementMap,
+            data: dict) -> None:
+        """
+        Reads group AR:OBD-MONITOR-SERVICE-NEEDS
+        """
+        xml_child = child_elements.get("APPLICATION-DATA-TYPE-REF")
+        if xml_child is not None:
+            data["appl_data_type_ref"] = self._read_application_data_type_ref(xml_child)
+        xml_child = child_elements.get("EVENT-NEEDS-REF")
+        if xml_child is not None:
+            data["event_needs_ref"] = self._read_diagnostic_event_needs_ref(xml_child)
+        xml_child = child_elements.get("UNIT-AND-SCALING-ID")
+        if xml_child is not None:
+            data["unit_and_scaling_id"] = self._read_positive_integer(xml_child.text)
+
+    def _read_obd_pid_service_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.ObdPidServiceNeeds:
+        """
+        Reads complex type AR:OBD-PID-SERVICE-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_diagnostic_capability_element_group(child_elements, data)
+        # Group AR:OBD-PID-SERVICE-NEEDS contains no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ObdPidServiceNeeds(**data)
+
+    def _read_obd_ratio_denominator_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.ObdRatioDenominatorNeeds:
+        """
+        Reads complex type AR:OBD-RATIO-DENOMINATOR-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_diagnostic_capability_element_group(child_elements, data)
+        self._read_obd_ratio_denominator_needs_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ObdRatioDenominatorNeeds(**data)
+
+    def _read_obd_ratio_denominator_needs_group(
+            self,
+            child_elements: ChildElementMap,
+            data: dict) -> None:
+        """
+        Reads group AR:OBD-RATIO-DENOMINATOR-NEEDS
+        """
+        xml_child = child_elements.get("DENOMINATOR-CONDITION")
+        if xml_child is not None:
+            data["denominator_condition"] = ar_enum.xml_to_enum("DiagnosticDenominatorCondition", xml_child.text)
+
+    def _read_obd_ratio_service_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.ObdRatioServiceNeeds:
+        """
+        Reads complex type AR:OBD-RATIO-SERVICE-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_diagnostic_capability_element_group(child_elements, data)
+        self._read_obd_ratio_service_needs_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.ObdRatioServiceNeeds(**data)
+
+    def _read_obd_ratio_service_needs_group(
+            self,
+            child_elements: ChildElementMap,
+            data: dict) -> None:
+        """
+        Reads group AR:OBD-RATIO-SERVICE-NEEDS
+        """
+        xml_child = child_elements.get("CONNECTION-TYPE")
+        if xml_child is not None:
+            data["connection_type"] = ar_enum.xml_to_enum("ObdRatioConnectionKind", xml_child.text)
+        xml_child = child_elements.get("RATE-BASED-MONITORED-EVENT-REF")
+        if xml_child is not None:
+            data["rate_based_monitored_event_ref"] = self._read_diagnostic_event_needs_ref(xml_child)
+        xml_child = child_elements.get("USED-FID-REF")
+        if xml_child is not None:
+            data["used_fid_ref"] = self._read_function_inhibition_needs_ref(xml_child)
 
     def _read_warning_indicator_requested_bit_needs(
             self,

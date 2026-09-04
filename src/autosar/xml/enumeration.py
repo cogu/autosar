@@ -166,6 +166,19 @@ class DiagnosticClearDtcNotification(Enum):
     FINISH = 1
 
 
+class DiagnosticDenominatorCondition(Enum):
+    """
+    DIAGNOSTIC-DENOMINATOR-CONDITION-ENUM--SIMPLE
+    """
+
+    COLDSTART = 0
+    EVAP = 1
+    CONDITION_500_MILES = 2
+    INDIVIDUAL = 3
+    OBD = 4
+    CSERS = 5
+
+
 class DiagnosticIndicatorType(Enum):
     """
     DIAGNOSTIC-INDICATOR-TYPE-ENUM--SIMPLE
@@ -360,54 +373,55 @@ class IdentifiableSubTypes(Enum):
     DATA_SEND_COMPLETED_EVENT = 35
     DATA_TYPE_MAPPING_SET = 36
     DATA_WRITE_COMPLETED_EVENT = 37
-    DIAGNOSTIC_VALUE_NEEDS = 38
-    ECU_ABSTRACTION_SW_COMPONENT_TYPE = 39
-    E2E_PROFILE_COMPATIBILITY_PROPS = 40
-    EXCLUSIVE_AREA = 41
-    EXCLUSIVE_AREA_NESTING_ORDER = 42
-    EXTERNAL_TRIGGER_OCCURRED_EVENT = 43
-    FUNCTION_INHIBITION_NEEDS = 44
-    IMPLEMENTATION_DATA_TYPE = 45
-    IMPLEMENTATION_DATA_TYPE_ELEMENT = 46
-    INIT_EVENT = 47
-    INTERNAL_TRIGGER_OCCURRED_EVENT = 48
-    INTERNAL_TRIGGERING_POINT = 49
-    MODE_DECLARATION = 50
-    MODE_DECLARATION_GROUP = 51
-    MODE_DECLARATION_GROUP_PROTOTYPE = 52
-    MODE_SWITCH_INTERFACE = 53
-    MODE_SWITCH_POINT = 54
-    MODE_SWITCHED_ACK_EVENT = 55
-    NV_BLOCK_SW_COMPONENT_TYPE = 56
-    NV_DATA_INTERFACE = 57
-    OPERATION_INVOKED_EVENT = 58
-    P_PORT_PROTOTYPE = 59
-    PARAMETER_DATA_PROTOTYPE = 60
-    PARAMETER_INTERFACE = 61
-    PER_INSTANCE_MEMORY = 62
-    PHYSICAL_DIMENSION = 63
-    PORT_PROTOTYPE = 64
-    PR_PORT_PROTOTYPE = 65
-    R_PORT_PROTOTYPE = 66
-    RUNNABLE_ENTITY = 67
-    SENDER_RECEIVER_INTERFACE = 68
-    SENSOR_ACTUATOR_SW_COMPONENT_TYPE = 69
-    SERVICE_PROXY_SW_COMPONENT_TYPE = 70
-    SERVICE_SW_COMPONENT_TYPE = 71
-    SW_ADDR_METHOD = 72
-    SW_BASE_TYPE = 73
-    SW_COMPONENT_PROTOTYPE = 74
-    SWC_IMPLEMENTATION = 75
-    SWC_INTERNAL_BEHAVIOR = 76
-    SWC_MODE_MANAGER_ERROR_EVENT = 77
-    SWC_MODE_SWITCH_EVENT = 78
-    TIMING_EVENT = 79
-    TRANSFORMER_HARD_ERROR_EVENT = 80
-    TRIGGER = 81
-    TRIGGER_INTERFACE = 82
-    UNIT = 83
-    VARIABLE_ACCESS = 84
-    VARIABLE_DATA_PROTOTYPE = 85
+    DIAGNOSTIC_EVENT_NEEDS = 38
+    DIAGNOSTIC_VALUE_NEEDS = 39
+    ECU_ABSTRACTION_SW_COMPONENT_TYPE = 40
+    E2E_PROFILE_COMPATIBILITY_PROPS = 41
+    EXCLUSIVE_AREA = 42
+    EXCLUSIVE_AREA_NESTING_ORDER = 43
+    EXTERNAL_TRIGGER_OCCURRED_EVENT = 44
+    FUNCTION_INHIBITION_NEEDS = 45
+    IMPLEMENTATION_DATA_TYPE = 46
+    IMPLEMENTATION_DATA_TYPE_ELEMENT = 47
+    INIT_EVENT = 48
+    INTERNAL_TRIGGER_OCCURRED_EVENT = 49
+    INTERNAL_TRIGGERING_POINT = 50
+    MODE_DECLARATION = 51
+    MODE_DECLARATION_GROUP = 52
+    MODE_DECLARATION_GROUP_PROTOTYPE = 53
+    MODE_SWITCH_INTERFACE = 54
+    MODE_SWITCH_POINT = 55
+    MODE_SWITCHED_ACK_EVENT = 56
+    NV_BLOCK_SW_COMPONENT_TYPE = 57
+    NV_DATA_INTERFACE = 58
+    OPERATION_INVOKED_EVENT = 59
+    P_PORT_PROTOTYPE = 60
+    PARAMETER_DATA_PROTOTYPE = 61
+    PARAMETER_INTERFACE = 62
+    PER_INSTANCE_MEMORY = 63
+    PHYSICAL_DIMENSION = 64
+    PORT_PROTOTYPE = 65
+    PR_PORT_PROTOTYPE = 66
+    R_PORT_PROTOTYPE = 67
+    RUNNABLE_ENTITY = 68
+    SENDER_RECEIVER_INTERFACE = 69
+    SENSOR_ACTUATOR_SW_COMPONENT_TYPE = 70
+    SERVICE_PROXY_SW_COMPONENT_TYPE = 71
+    SERVICE_SW_COMPONENT_TYPE = 72
+    SW_ADDR_METHOD = 73
+    SW_BASE_TYPE = 74
+    SW_COMPONENT_PROTOTYPE = 75
+    SWC_IMPLEMENTATION = 76
+    SWC_INTERNAL_BEHAVIOR = 77
+    SWC_MODE_MANAGER_ERROR_EVENT = 78
+    SWC_MODE_SWITCH_EVENT = 79
+    TIMING_EVENT = 80
+    TRANSFORMER_HARD_ERROR_EVENT = 81
+    TRIGGER = 82
+    TRIGGER_INTERFACE = 83
+    UNIT = 84
+    VARIABLE_ACCESS = 85
+    VARIABLE_DATA_PROTOTYPE = 86
 
 
 class IntervalType(Enum):
@@ -637,6 +651,15 @@ class OperationCycleType(Enum):
     POWER = 3
     TIME = 4
     WARMUP = 5
+
+
+class ObdRatioConnectionKind(Enum):
+    """
+    OBD-RATIO-CONNECTION-KIND-ENUM--SIMPLE
+    """
+
+    API_USE = 0
+    OBSERVER = 1
 
 
 class PackageRole(Enum):
@@ -946,6 +969,15 @@ xml_to_enum_map: dict[str, dict] = {
         "START": DiagnosticClearDtcNotification.START,
         "FINISH": DiagnosticClearDtcNotification.FINISH,
     },
+    "DiagnosticDenominatorCondition": {
+        "COLDSTART": DiagnosticDenominatorCondition.COLDSTART,
+        "EVAP": DiagnosticDenominatorCondition.EVAP,
+        "-500-MILES": DiagnosticDenominatorCondition.CONDITION_500_MILES,
+        "500-MILES": DiagnosticDenominatorCondition.CONDITION_500_MILES,
+        "INDIVIDUAL": DiagnosticDenominatorCondition.INDIVIDUAL,
+        "OBD": DiagnosticDenominatorCondition.OBD,
+        "CSERS": DiagnosticDenominatorCondition.CSERS,
+    },
     "DiagnosticIndicatorType": {
         "AMBER-WARNING": DiagnosticIndicatorType.AMBER_WARNING,
         "MALFUNCTION": DiagnosticIndicatorType.MALFUNCTION,
@@ -1060,6 +1092,7 @@ xml_to_enum_map: dict[str, dict] = {
         "DATA-SEND-COMPLETED-EVENT": IdentifiableSubTypes.DATA_SEND_COMPLETED_EVENT,
         "DATA-TYPE-MAPPING-SET": IdentifiableSubTypes.DATA_TYPE_MAPPING_SET,
         "DATA-WRITE-COMPLETED-EVENT": IdentifiableSubTypes.DATA_WRITE_COMPLETED_EVENT,
+        "DIAGNOSTIC-EVENT-NEEDS": IdentifiableSubTypes.DIAGNOSTIC_EVENT_NEEDS,
         "DIAGNOSTIC-VALUE-NEEDS": IdentifiableSubTypes.DIAGNOSTIC_VALUE_NEEDS,
         "ECU-ABSTRACTION-SW-COMPONENT-TYPE": IdentifiableSubTypes.ECU_ABSTRACTION_SW_COMPONENT_TYPE,
         "E-2-E-PROFILE-COMPATIBILITY-PROPS": IdentifiableSubTypes.E2E_PROFILE_COMPATIBILITY_PROPS,
@@ -1279,6 +1312,10 @@ xml_to_enum_map: dict[str, dict] = {
         "STRICTLY-INCREASING": Monotony.STRICTLY_INCREASING,
         "STRICT-MONOTONOUS": Monotony.STRICT_MONOTONOUS,
     },
+    "ObdRatioConnectionKind": {
+        "API-USE": ObdRatioConnectionKind.API_USE,
+        "OBSERVER": ObdRatioConnectionKind.OBSERVER,
+    },
     "OperationCycleType": {
         "IGNITION": OperationCycleType.IGNITION,
         "OBD-DCY": OperationCycleType.OBD_DCY,
@@ -1425,6 +1462,14 @@ enum_to_xml_map: dict[str, list] = {
         "START",   # 0
         "FINISH",  # 1
     ],
+    "DiagnosticDenominatorCondition": [
+        "COLDSTART",   # 0
+        "EVAP",        # 1
+        "-500-MILES",  # 2
+        "INDIVIDUAL",  # 3
+        "OBD",         # 4
+        "CSERS",       # 5
+    ],
     "DiagnosticIndicatorType": [
         "AMBER-WARNING",  # 0
         "MALFUNCTION",    # 1
@@ -1549,54 +1594,55 @@ enum_to_xml_map: dict[str, list] = {
         "DATA-SEND-COMPLETED-EVENT",                     # 35
         "DATA-TYPE-MAPPING-SET",                         # 36
         "DATA-WRITE-COMPLETED-EVENT",                    # 37
-        "DIAGNOSTIC-VALUE-NEEDS",                        # 38
-        "ECU-ABSTRACTION-SW-COMPONENT-TYPE",             # 39
-        "E-2-E-PROFILE-COMPATIBILITY-PROPS",             # 40
-        "EXCLUSIVE-AREA",                                # 41
-        "EXCLUSIVE-AREA-NESTING-ORDER",                  # 42
-        "EXTERNAL-TRIGGER-OCCURRED-EVENT",               # 43
-        "FUNCTION-INHIBITION-NEEDS",                     # 44
-        "IMPLEMENTATION-DATA-TYPE",                      # 45
-        "IMPLEMENTATION-DATA-TYPE-ELEMENT",              # 46
-        "INIT-EVENT",                                    # 47
-        "INTERNAL-TRIGGER-OCCURRED-EVENT",               # 48
-        "INTERNAL-TRIGGERING-POINT",                     # 49
-        "MODE-DECLARATION",                              # 50
-        "MODE-DECLARATION-GROUP",                        # 51
-        "MODE-DECLARATION-GROUP-PROTOTYPE",              # 52
-        "MODE-SWITCH-INTERFACE",                         # 53
-        "MODE-SWITCH-POINT",                             # 54
-        "MODE-SWITCHED-ACK-EVENT",                       # 55
-        "NV-BLOCK-SW-COMPONENT-TYPE",                    # 56
-        "NV-DATA-INTERFACE",                             # 57
-        "OPERATION-INVOKED-EVENT",                       # 58
-        "P-PORT-PROTOTYPE",                              # 59
-        "PARAMETER-DATA-PROTOTYPE",                      # 60
-        "PARAMETER-INTERFACE",                           # 61
-        "PER-INSTANCE-MEMORY",                           # 62
-        "PHYSICAL-DIMENSION",                            # 63
-        "PORT-PROTOTYPE",                                # 64
-        "PR-PORT-PROTOTYPE",                             # 65
-        "R-PORT-PROTOTYPE",                              # 66
-        "RUNNABLE-ENTITY",                               # 67
-        "SENDER-RECEIVER-INTERFACE",                     # 68
-        "SENSOR-ACTUATOR-SW-COMPONENT-TYPE",             # 69
-        "SERVICE-PROXY-SW-COMPONENT-TYPE",               # 70
-        "SERVICE-SW-COMPONENT-TYPE",                     # 71
-        "SW-ADDR-METHOD",                                # 72
-        "SW-BASE-TYPE",                                  # 73
-        "SW-COMPONENT-PROTOTYPE",                        # 74
-        "SWC-IMPLEMENTATION",                            # 75
-        "SWC-INTERNAL-BEHAVIOR",                         # 76
-        "SWC-MODE-MANAGER-ERROR-EVENT",                  # 77
-        "SWC-MODE-SWITCH-EVENT",                         # 78
-        "TIMING-EVENT",                                  # 79
-        "TRANSFORMER-HARD-ERROR-EVENT",                  # 80
-        "TRIGGER",                                       # 81
-        "TRIGGER-INTERFACE",                             # 82
-        "UNIT",                                          # 83
-        "VARIABLE-ACCESS",                               # 84
-        "VARIABLE-DATA-PROTOTYPE",                       # 85
+        "DIAGNOSTIC-EVENT-NEEDS",                        # 38
+        "DIAGNOSTIC-VALUE-NEEDS",                        # 39
+        "ECU-ABSTRACTION-SW-COMPONENT-TYPE",             # 40
+        "E-2-E-PROFILE-COMPATIBILITY-PROPS",             # 41
+        "EXCLUSIVE-AREA",                                # 42
+        "EXCLUSIVE-AREA-NESTING-ORDER",                  # 43
+        "EXTERNAL-TRIGGER-OCCURRED-EVENT",               # 44
+        "FUNCTION-INHIBITION-NEEDS",                     # 45
+        "IMPLEMENTATION-DATA-TYPE",                      # 46
+        "IMPLEMENTATION-DATA-TYPE-ELEMENT",              # 47
+        "INIT-EVENT",                                    # 48
+        "INTERNAL-TRIGGER-OCCURRED-EVENT",               # 49
+        "INTERNAL-TRIGGERING-POINT",                     # 50
+        "MODE-DECLARATION",                              # 51
+        "MODE-DECLARATION-GROUP",                        # 52
+        "MODE-DECLARATION-GROUP-PROTOTYPE",              # 53
+        "MODE-SWITCH-INTERFACE",                         # 54
+        "MODE-SWITCH-POINT",                             # 55
+        "MODE-SWITCHED-ACK-EVENT",                       # 56
+        "NV-BLOCK-SW-COMPONENT-TYPE",                    # 57
+        "NV-DATA-INTERFACE",                             # 58
+        "OPERATION-INVOKED-EVENT",                       # 59
+        "P-PORT-PROTOTYPE",                              # 60
+        "PARAMETER-DATA-PROTOTYPE",                      # 61
+        "PARAMETER-INTERFACE",                           # 62
+        "PER-INSTANCE-MEMORY",                           # 63
+        "PHYSICAL-DIMENSION",                            # 64
+        "PORT-PROTOTYPE",                                # 65
+        "PR-PORT-PROTOTYPE",                             # 66
+        "R-PORT-PROTOTYPE",                              # 67
+        "RUNNABLE-ENTITY",                               # 68
+        "SENDER-RECEIVER-INTERFACE",                     # 69
+        "SENSOR-ACTUATOR-SW-COMPONENT-TYPE",             # 70
+        "SERVICE-PROXY-SW-COMPONENT-TYPE",               # 71
+        "SERVICE-SW-COMPONENT-TYPE",                     # 72
+        "SW-ADDR-METHOD",                                # 73
+        "SW-BASE-TYPE",                                  # 74
+        "SW-COMPONENT-PROTOTYPE",                        # 75
+        "SWC-IMPLEMENTATION",                            # 76
+        "SWC-INTERNAL-BEHAVIOR",                         # 77
+        "SWC-MODE-MANAGER-ERROR-EVENT",                  # 78
+        "SWC-MODE-SWITCH-EVENT",                         # 79
+        "TIMING-EVENT",                                  # 80
+        "TRANSFORMER-HARD-ERROR-EVENT",                  # 81
+        "TRIGGER",                                       # 82
+        "TRIGGER-INTERFACE",                             # 83
+        "UNIT",                                          # 84
+        "VARIABLE-ACCESS",                               # 85
+        "VARIABLE-DATA-PROTOTYPE",                       # 86
     ],
     "IntervalType": [
         "CLOSED",  # 0
@@ -1767,6 +1813,10 @@ enum_to_xml_map: dict[str, list] = {
         "STRICTLY-DECREASING",  # 4
         "STRICTLY-INCREASING",  # 5
         "STRICT-MONOTONOUS",    # 6
+    ],
+    "ObdRatioConnectionKind": [
+        "API-USE",   # 0
+        "OBSERVER",  # 1
     ],
     "OperationCycleType": [
         "IGNITION",  # 0
