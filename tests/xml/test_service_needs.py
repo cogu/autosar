@@ -1210,5 +1210,248 @@ class TestDoIpRoutingActivationConfirmationNeeds(unittest.TestCase):
         self.assertEqual(elem.routing_activation_type, "0x01")
 
 
+class TestDtcStatusChangeNotificationNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.DtcStatusChangeNotificationNeeds("DtcStatusChangeNotificationNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<DTC-STATUS-CHANGE-NOTIFICATION-NEEDS>
+  <SHORT-NAME>DtcStatusChangeNotificationNeeds</SHORT-NAME>
+</DTC-STATUS-CHANGE-NOTIFICATION-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DtcStatusChangeNotificationNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DtcStatusChangeNotificationNeeds)
+        self.assertIsInstance(elem, ar_element.DiagnosticCapabilityElement)
+        self.assertEqual(elem.name, "DtcStatusChangeNotificationNeeds")
+        self.assertIsNone(elem.notification_time)
+
+    def test_with_all_fields(self):
+        element = ar_element.DtcStatusChangeNotificationNeeds(
+            "DtcStatusChangeNotificationNeeds",
+            notification_time=autosar.xml.enumeration.DiagnosticClearDtcNotification.FINISH,
+            audience=autosar.xml.enumeration.DiagnosticAudience.DEVELOPMENT,
+            diag_requirement="REQ-DTC-01",
+            security_access_level=1
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<DTC-STATUS-CHANGE-NOTIFICATION-NEEDS>
+  <SHORT-NAME>DtcStatusChangeNotificationNeeds</SHORT-NAME>
+  <AUDIENCES>
+    <AUDIENCE>DEVELOPMENT</AUDIENCE>
+  </AUDIENCES>
+  <DIAG-REQUIREMENT>REQ-DTC-01</DIAG-REQUIREMENT>
+  <SECURITY-ACCESS-LEVEL>1</SECURITY-ACCESS-LEVEL>
+  <NOTIFICATION-TIME>FINISH</NOTIFICATION-TIME>
+</DTC-STATUS-CHANGE-NOTIFICATION-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DtcStatusChangeNotificationNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DtcStatusChangeNotificationNeeds)
+        self.assertEqual(elem.notification_time, autosar.xml.enumeration.DiagnosticClearDtcNotification.FINISH)
+        self.assertEqual(elem.audience, [autosar.xml.enumeration.DiagnosticAudience.DEVELOPMENT])
+        self.assertEqual(elem.diag_requirement, "REQ-DTC-01")
+        self.assertEqual(elem.security_access_level, 1)
+
+    def test_notification_time_str(self):
+        element = ar_element.DtcStatusChangeNotificationNeeds(
+            "DtcStatusChangeNotificationNeeds",
+            notification_time="START"
+        )
+        self.assertEqual(element.notification_time, autosar.xml.enumeration.DiagnosticClearDtcNotification.START)
+
+
+class TestFunctionInhibitionAvailabilityNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.FunctionInhibitionAvailabilityNeeds("FunctionInhibitionAvailabilityNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<FUNCTION-INHIBITION-AVAILABILITY-NEEDS>
+  <SHORT-NAME>FunctionInhibitionAvailabilityNeeds</SHORT-NAME>
+</FUNCTION-INHIBITION-AVAILABILITY-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.FunctionInhibitionAvailabilityNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.FunctionInhibitionAvailabilityNeeds)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "FunctionInhibitionAvailabilityNeeds")
+        self.assertIsNone(elem.controlled_fid_ref)
+
+    def test_with_all_fields(self):
+        element = ar_element.FunctionInhibitionAvailabilityNeeds(
+            "FunctionInhibitionAvailabilityNeeds",
+            controlled_fid_ref="/ServiceNeeds/Fid1"
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<FUNCTION-INHIBITION-AVAILABILITY-NEEDS>
+  <SHORT-NAME>FunctionInhibitionAvailabilityNeeds</SHORT-NAME>
+  <CONTROLLED-FID-REF DEST="FUNCTION-INHIBITION-NEEDS">/ServiceNeeds/Fid1</CONTROLLED-FID-REF>
+</FUNCTION-INHIBITION-AVAILABILITY-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.FunctionInhibitionAvailabilityNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.FunctionInhibitionAvailabilityNeeds)
+        self.assertIsInstance(elem.controlled_fid_ref, ar_element.FunctionInhibitionNeedsRef)
+        self.assertEqual(str(elem.controlled_fid_ref), "/ServiceNeeds/Fid1")
+        self.assertEqual(elem.controlled_fid_ref.dest,
+                         autosar.xml.enumeration.IdentifiableSubTypes.FUNCTION_INHIBITION_NEEDS)
+
+
+class TestFunctionInhibitionNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.FunctionInhibitionNeeds("FunctionInhibitionNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<FUNCTION-INHIBITION-NEEDS>
+  <SHORT-NAME>FunctionInhibitionNeeds</SHORT-NAME>
+</FUNCTION-INHIBITION-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.FunctionInhibitionNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.FunctionInhibitionNeeds)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "FunctionInhibitionNeeds")
+
+    def test_with_admin_data(self):
+        admin_data = ar_element.AdminData(
+            doc_revisions=ar_element.DocRevision(revision_label="1.0.0")
+        )
+        element = ar_element.FunctionInhibitionNeeds("FunctionInhibitionNeeds", admin_data=admin_data)
+        writer = autosar.xml.Writer()
+        xml = '''<FUNCTION-INHIBITION-NEEDS>
+  <SHORT-NAME>FunctionInhibitionNeeds</SHORT-NAME>
+  <ADMIN-DATA>
+    <DOC-REVISIONS>
+      <DOC-REVISION>
+        <REVISION-LABEL>1.0.0</REVISION-LABEL>
+      </DOC-REVISION>
+    </DOC-REVISIONS>
+  </ADMIN-DATA>
+</FUNCTION-INHIBITION-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.FunctionInhibitionNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.FunctionInhibitionNeeds)
+        self.assertEqual(str(elem.admin_data.doc_revisions[0].revision_label), "1.0.0")
+
+
+class TestFurtherActionByteNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.FurtherActionByteNeeds("FurtherActionByteNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<FURTHER-ACTION-BYTE-NEEDS>
+  <SHORT-NAME>FurtherActionByteNeeds</SHORT-NAME>
+</FURTHER-ACTION-BYTE-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.FurtherActionByteNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.FurtherActionByteNeeds)
+        self.assertIsInstance(elem, ar_element.DoIpServiceNeeds)
+        self.assertEqual(elem.name, "FurtherActionByteNeeds")
+
+    def test_with_admin_data(self):
+        admin_data = ar_element.AdminData(
+            doc_revisions=ar_element.DocRevision(revision_label="1.0.0")
+        )
+        element = ar_element.FurtherActionByteNeeds("FurtherActionByteNeeds", admin_data=admin_data)
+        writer = autosar.xml.Writer()
+        xml = '''<FURTHER-ACTION-BYTE-NEEDS>
+  <SHORT-NAME>FurtherActionByteNeeds</SHORT-NAME>
+  <ADMIN-DATA>
+    <DOC-REVISIONS>
+      <DOC-REVISION>
+        <REVISION-LABEL>1.0.0</REVISION-LABEL>
+      </DOC-REVISION>
+    </DOC-REVISIONS>
+  </ADMIN-DATA>
+</FURTHER-ACTION-BYTE-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.FurtherActionByteNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.FurtherActionByteNeeds)
+        self.assertEqual(str(elem.admin_data.doc_revisions[0].revision_label), "1.0.0")
+
+
+class TestIndicatorStatusNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.IndicatorStatusNeeds("IndicatorStatusNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<INDICATOR-STATUS-NEEDS>
+  <SHORT-NAME>IndicatorStatusNeeds</SHORT-NAME>
+</INDICATOR-STATUS-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.IndicatorStatusNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.IndicatorStatusNeeds)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "IndicatorStatusNeeds")
+        self.assertIsNone(elem.type)
+
+    def test_with_all_fields(self):
+        element = ar_element.IndicatorStatusNeeds(
+            "IndicatorStatusNeeds",
+            type=autosar.xml.enumeration.DiagnosticIndicatorType.WARNING
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<INDICATOR-STATUS-NEEDS>
+  <SHORT-NAME>IndicatorStatusNeeds</SHORT-NAME>
+  <TYPE>WARNING</TYPE>
+</INDICATOR-STATUS-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.IndicatorStatusNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.IndicatorStatusNeeds)
+        self.assertEqual(elem.type, autosar.xml.enumeration.DiagnosticIndicatorType.WARNING)
+
+    def test_type_from_str(self):
+        element = ar_element.IndicatorStatusNeeds(
+            "IndicatorStatusNeeds",
+            type="AMBER-WARNING"
+        )
+        self.assertEqual(element.type, autosar.xml.enumeration.DiagnosticIndicatorType.AMBER_WARNING)
+
+
+class TestWarningIndicatorRequestedBitNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.WarningIndicatorRequestedBitNeeds("WarningIndicatorRequestedBitNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<WARNING-INDICATOR-REQUESTED-BIT-NEEDS>
+  <SHORT-NAME>WarningIndicatorRequestedBitNeeds</SHORT-NAME>
+</WARNING-INDICATOR-REQUESTED-BIT-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.WarningIndicatorRequestedBitNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.WarningIndicatorRequestedBitNeeds)
+        self.assertIsInstance(elem, ar_element.DiagnosticCapabilityElement)
+        self.assertEqual(elem.name, "WarningIndicatorRequestedBitNeeds")
+
+    def test_with_fields(self):
+        element = ar_element.WarningIndicatorRequestedBitNeeds(
+            "WarningIndicatorRequestedBitNeeds",
+            audience=autosar.xml.enumeration.DiagnosticAudience.AFTER_SALES,
+            diag_requirement="REQ-WARN-01",
+            security_access_level=3
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<WARNING-INDICATOR-REQUESTED-BIT-NEEDS>
+  <SHORT-NAME>WarningIndicatorRequestedBitNeeds</SHORT-NAME>
+  <AUDIENCES>
+    <AUDIENCE>AFTER-SALES</AUDIENCE>
+  </AUDIENCES>
+  <DIAG-REQUIREMENT>REQ-WARN-01</DIAG-REQUIREMENT>
+  <SECURITY-ACCESS-LEVEL>3</SECURITY-ACCESS-LEVEL>
+</WARNING-INDICATOR-REQUESTED-BIT-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.WarningIndicatorRequestedBitNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.WarningIndicatorRequestedBitNeeds)
+        self.assertEqual(elem.audience, [autosar.xml.enumeration.DiagnosticAudience.AFTER_SALES])
+        self.assertEqual(elem.diag_requirement, "REQ-WARN-01")
+        self.assertEqual(elem.security_access_level, 3)
+
+
 if __name__ == '__main__':
     unittest.main()

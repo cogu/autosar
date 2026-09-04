@@ -54,6 +54,12 @@ Non-collectable elements are various sub-elements to collectable elements.
 * DoIpPowerModeStatusNeeds | DO-IP-POWER-MODE-STATUS-NEEDS
 * DoIpRoutingActivationAuthenticationNeeds | DO-IP-ROUTING-ACTIVATION-AUTHENTICATION-NEEDS
 * DoIpRoutingActivationConfirmationNeeds | DO-IP-ROUTING-ACTIVATION-CONFIRMATION-NEEDS
+* DtcStatusChangeNotificationNeeds | DTC-STATUS-CHANGE-NOTIFICATION-NEEDS
+* FunctionInhibitionAvailabilityNeeds | FUNCTION-INHIBITION-AVAILABILITY-NEEDS
+* FunctionInhibitionNeeds | FUNCTION-INHIBITION-NEEDS
+* FurtherActionByteNeeds | FURTHER-ACTION-BYTE-NEEDS
+* IndicatorStatusNeeds | INDICATOR-STATUS-NEEDS
+* WarningIndicatorRequestedBitNeeds | WARNING-INDICATOR-REQUESTED-BIT-NEEDS
 
 #### XML - SWC internal behavior elements
 

@@ -410,6 +410,12 @@ class Writer(_XMLWriter):
             'DoIpPowerModeStatusNeeds': self._write_do_ip_power_mode_status_needs,
             'DoIpRoutingActivationAuthenticationNeeds': self._write_do_ip_routing_activation_authentication_needs,
             'DoIpRoutingActivationConfirmationNeeds': self._write_do_ip_routing_activation_confirmation_needs,
+            'DtcStatusChangeNotificationNeeds': self._write_dtc_status_change_notification_needs,
+            'FunctionInhibitionAvailabilityNeeds': self._write_function_inhibition_availability_needs,
+            'FunctionInhibitionNeeds': self._write_function_inhibition_needs,
+            'FurtherActionByteNeeds': self._write_further_action_byte_needs,
+            'IndicatorStatusNeeds': self._write_indicator_status_needs,
+            'WarningIndicatorRequestedBitNeeds': self._write_warning_indicator_requested_bit_needs,
             # SWC internal behavior elements
             'ArVariableInImplementationDataInstanceRef': self._write_variable_in_impl_data_instance_ref,
             'VariableInAtomicSWCTypeInstanceRef': self._write_variable_in_atomic_swc_type_instance_ref,
@@ -2673,6 +2679,13 @@ class Writer(_XMLWriter):
         Writes references to AR:DIAGNOSTIC-VALUE-NEEDS--SUBTYPES-ENUM
         """
         assert isinstance(elem, ar_element.DiagnosticValueNeedsRef)
+        self._write_ref_content(elem, tag)
+
+    def _write_function_inhibition_needs_ref(self, elem: ar_element.FunctionInhibitionNeedsRef, tag: str) -> None:
+        """
+        Writes references to AR:FUNCTION-INHIBITION-NEEDS--SUBTYPES-ENUM
+        """
+        assert isinstance(elem, ar_element.FunctionInhibitionNeedsRef)
         self._write_ref_content(elem, tag)
 
 # -- Constant and value specifications
@@ -5476,6 +5489,125 @@ class Writer(_XMLWriter):
             self._add_content("DATA-LENGTH-RESPONSE", str(elem.data_length_response))
         if elem.routing_activation_type is not None:
             self._add_content("ROUTING-ACTIVATION-TYPE", elem.routing_activation_type)
+
+    def _write_dtc_status_change_notification_needs(
+            self,
+            elem: ar_element.DtcStatusChangeNotificationNeeds) -> None:
+        """
+        Writes complex type AR:DTC-STATUS-CHANGE-NOTIFICATION-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.DtcStatusChangeNotificationNeeds)
+        self._add_child("DTC-STATUS-CHANGE-NOTIFICATION-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_diagnostic_capability_element_group(elem)
+        self._write_dtc_status_change_notification_needs_group(elem)
+        self._leave_child()
+
+    def _write_dtc_status_change_notification_needs_group(
+            self,
+            elem: ar_element.DtcStatusChangeNotificationNeeds) -> None:
+        """
+        Writes group AR:DTC-STATUS-CHANGE-NOTIFICATION-NEEDS
+        """
+        if elem.notification_time is not None:
+            self._add_content("NOTIFICATION-TIME", ar_enum.enum_to_xml(elem.notification_time))
+
+    def _write_function_inhibition_availability_needs(
+            self,
+            elem: ar_element.FunctionInhibitionAvailabilityNeeds) -> None:
+        """
+        Writes complex type AR:FUNCTION-INHIBITION-AVAILABILITY-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.FunctionInhibitionAvailabilityNeeds)
+        self._add_child("FUNCTION-INHIBITION-AVAILABILITY-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_function_inhibition_availability_needs_group(elem)
+        self._leave_child()
+
+    def _write_function_inhibition_availability_needs_group(
+            self,
+            elem: ar_element.FunctionInhibitionAvailabilityNeeds) -> None:
+        """
+        Writes group AR:FUNCTION-INHIBITION-AVAILABILITY-NEEDS
+        """
+        if elem.controlled_fid_ref is not None:
+            self._write_function_inhibition_needs_ref(elem.controlled_fid_ref, "CONTROLLED-FID-REF")
+
+    def _write_function_inhibition_needs(
+            self,
+            elem: ar_element.FunctionInhibitionNeeds) -> None:
+        """
+        Writes complex type AR:FUNCTION-INHIBITION-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.FunctionInhibitionNeeds)
+        self._add_child("FUNCTION-INHIBITION-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        # Group AR:FUNCTION-INHIBITION-NEEDS contains no elements
+        self._leave_child()
+
+    def _write_further_action_byte_needs(
+            self,
+            elem: ar_element.FurtherActionByteNeeds) -> None:
+        """
+        Writes complex type AR:FURTHER-ACTION-BYTE-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.FurtherActionByteNeeds)
+        self._add_child("FURTHER-ACTION-BYTE-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        # Groups AR:DO-IP-SERVICE-NEEDS and AR:FURTHER-ACTION-BYTE-NEEDS contain no elements
+        self._leave_child()
+
+    def _write_indicator_status_needs(
+            self,
+            elem: ar_element.IndicatorStatusNeeds) -> None:
+        """
+        Writes complex type AR:INDICATOR-STATUS-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.IndicatorStatusNeeds)
+        self._add_child("INDICATOR-STATUS-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_indicator_status_needs_group(elem)
+        self._leave_child()
+
+    def _write_indicator_status_needs_group(
+            self,
+            elem: ar_element.IndicatorStatusNeeds) -> None:
+        """
+        Writes group AR:INDICATOR-STATUS-NEEDS
+        """
+        if elem.type is not None:
+            self._add_content("TYPE", ar_enum.enum_to_xml(elem.type))
+
+    def _write_warning_indicator_requested_bit_needs(
+            self,
+            elem: ar_element.WarningIndicatorRequestedBitNeeds) -> None:
+        """
+        Writes complex type AR:WARNING-INDICATOR-REQUESTED-BIT-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.WarningIndicatorRequestedBitNeeds)
+        self._add_child("WARNING-INDICATOR-REQUESTED-BIT-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_diagnostic_capability_element_group(elem)
+        # Group AR:WARNING-INDICATOR-REQUESTED-BIT-NEEDS contains no elements
+        self._leave_child()
 
     def _write_abstract_access_point(self, elem: ar_element.AbstractAccessPoint) -> None:
         """
