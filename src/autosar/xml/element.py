@@ -7536,6 +7536,32 @@ class HardwareTestNeeds(ServiceNeeds):
     """
 
 
+class IdsMgrCustomTimestampNeeds(ServiceNeeds):
+    """
+    Complex type AR:IDS-MGR-CUSTOM-TIMESTAMP-NEEDS
+    Tag variants: 'IDS-MGR-CUSTOM-TIMESTAMP-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
+class IdsMgrNeeds(ServiceNeeds):
+    """
+    Complex type AR:IDS-MGR-NEEDS
+    Tag variants: 'IDS-MGR-NEEDS'
+    """
+
+    def __init__(self,
+                 name: str,
+                 use_smart_sensor_api: bool | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .USE-SMART-SENSOR-API
+        self.use_smart_sensor_api: bool | None = None
+
+        self._assign_optional("use_smart_sensor_api", use_smart_sensor_api, bool)
+
+
 class IndicatorStatusNeeds(ServiceNeeds):
     """
     Complex type AR:INDICATOR-STATUS-NEEDS
@@ -7553,6 +7579,33 @@ class IndicatorStatusNeeds(ServiceNeeds):
         self._assign_optional("type",
                               type,
                               ar_enum.DiagnosticIndicatorType)
+
+
+class J1939DcmDm19Support(ServiceNeeds):
+    """
+    Complex type AR:J-1939-DCM-DM-19-SUPPORT
+    Tag variants: 'J-1939-DCM-DM-19-SUPPORT'
+
+    Same constructor as parent class
+    """
+
+
+class J1939RmIncomingRequestServiceNeeds(ServiceNeeds):
+    """
+    Complex type AR:J-1939-RM-INCOMING-REQUEST-SERVICE-NEEDS
+    Tag variants: 'J-1939-RM-INCOMING-REQUEST-SERVICE-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
+class J1939RmOutgoingRequestServiceNeeds(ServiceNeeds):
+    """
+    Complex type AR:J-1939-RM-OUTGOING-REQUEST-SERVICE-NEEDS
+    Tag variants: 'J-1939-RM-OUTGOING-REQUEST-SERVICE-NEEDS'
+
+    Same constructor as parent class
+    """
 
 
 class ObdControlServiceNeeds(DiagnosticCapabilityElement):
@@ -7661,6 +7714,25 @@ class ObdRatioServiceNeeds(DiagnosticCapabilityElement):
                               FunctionInhibitionNeedsRef)
 
 
+class SecureOnBoardCommunicationNeeds(ServiceNeeds):
+    """
+    Complex type AR:SECURE-ON-BOARD-COMMUNICATION-NEEDS
+    Tag variants: 'SECURE-ON-BOARD-COMMUNICATION-NEEDS'
+    """
+
+    def __init__(self,
+                 name: str,
+                 verification_status_indication_mode: ar_enum.VerificationStatusIndicationMode | str | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .VERIFICATION-STATUS-INDICATION-MODE
+        self.verification_status_indication_mode: ar_enum.VerificationStatusIndicationMode | None = None
+
+        self._assign_optional("verification_status_indication_mode",
+                              verification_status_indication_mode,
+                              ar_enum.VerificationStatusIndicationMode)
+
+
 class SupervisedEntityCheckpointNeedsRefConditional(ARObject):
     """
     Complex type AR:SUPERVISED-ENTITY-CHECKPOINT-NEEDS-REF-CONDITIONAL
@@ -7752,10 +7824,46 @@ class SupervisedEntityNeeds(ServiceNeeds):
     append = append_checkpoint
 
 
+class SyncTimeBaseMgrUserNeeds(ServiceNeeds):
+    """
+    Complex type AR:SYNC-TIME-BASE-MGR-USER-NEEDS
+    Tag variants: 'SYNC-TIME-BASE-MGR-USER-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
 class VendorSpecificServiceNeeds(ServiceNeeds):
     """
     Complex type AR:VENDOR-SPECIFIC-SERVICE-NEEDS
     Tag variants: 'VENDOR-SPECIFIC-SERVICE-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
+class V2xDataManagerNeeds(ServiceNeeds):
+    """
+    Complex type AR:V-2-X-DATA-MANAGER-NEEDS
+    Tag variants: 'V-2-X-DATA-MANAGER-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
+class V2xFacUserNeeds(ServiceNeeds):
+    """
+    Complex type AR:V-2-X-FAC-USER-NEEDS
+    Tag variants: 'V-2-X-FAC-USER-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
+class V2xMUserNeeds(ServiceNeeds):
+    """
+    Complex type AR:V-2-X-M-USER-NEEDS
+    Tag variants: 'V-2-X-M-USER-NEEDS'
 
     Same constructor as parent class
     """

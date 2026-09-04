@@ -419,7 +419,12 @@ class Writer(_XMLWriter):
             'FurtherActionByteNeeds': self._write_further_action_byte_needs,
             'GlobalSupervisionNeeds': self._write_global_supervision_needs,
             'HardwareTestNeeds': self._write_hardware_test_needs,
+            'IdsMgrCustomTimestampNeeds': self._write_ids_mgr_custom_timestamp_needs,
+            'IdsMgrNeeds': self._write_ids_mgr_needs,
             'IndicatorStatusNeeds': self._write_indicator_status_needs,
+            'J1939DcmDm19Support': self._write_j1939_dcm_dm_19_support,
+            'J1939RmIncomingRequestServiceNeeds': self._write_j1939_rm_incoming_request_service_needs,
+            'J1939RmOutgoingRequestServiceNeeds': self._write_j1939_rm_outgoing_request_service_needs,
             'ObdControlServiceNeeds': self._write_obd_control_service_needs,
             'ObdInfoServiceNeeds': self._write_obd_info_service_needs,
             'ObdMonitorServiceNeeds': self._write_obd_monitor_service_needs,
@@ -428,12 +433,17 @@ class Writer(_XMLWriter):
             'ObdRatioServiceNeeds': self._write_obd_ratio_service_needs,
             'PossibleErrorReaction': self._write_possible_error_reaction,
             'RuntimeError': self._write_runtime_error,
+            'SecureOnBoardCommunicationNeeds': self._write_secure_on_board_communication_needs,
             'SupervisedEntityCheckpointNeeds': self._write_supervised_entity_checkpoint_needs,
             'SupervisedEntityCheckpointNeedsRefConditional':
             self._write_supervised_entity_checkpoint_needs_ref_conditional,
             'SupervisedEntityNeeds': self._write_supervised_entity_needs,
+            'SyncTimeBaseMgrUserNeeds': self._write_sync_time_base_mgr_user_needs,
             'TransientFault': self._write_transient_fault,
             'VendorSpecificServiceNeeds': self._write_vendor_specific_service_needs,
+            'V2xDataManagerNeeds': self._write_v2x_data_manager_needs,
+            'V2xFacUserNeeds': self._write_v2x_fac_user_needs,
+            'V2xMUserNeeds': self._write_v2x_m_user_needs,
             'WarningIndicatorRequestedBitNeeds': self._write_warning_indicator_requested_bit_needs,
             # SWC internal behavior elements
             'ArVariableInImplementationDataInstanceRef': self._write_variable_in_impl_data_instance_ref,
@@ -5694,6 +5704,41 @@ class Writer(_XMLWriter):
         # Groups AR:SERVICE-NEEDS and AR:HARDWARE-TEST-NEEDS contain no elements
         self._leave_child()
 
+    def _write_ids_mgr_custom_timestamp_needs(
+            self,
+            elem: ar_element.IdsMgrCustomTimestampNeeds) -> None:
+        """
+        Writes complex type AR:IDS-MGR-CUSTOM-TIMESTAMP-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.IdsMgrCustomTimestampNeeds)
+        self._add_child("IDS-MGR-CUSTOM-TIMESTAMP-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        # Groups AR:SERVICE-NEEDS and AR:IDS-MGR-CUSTOM-TIMESTAMP-NEEDS contain no elements
+        self._leave_child()
+
+    def _write_ids_mgr_needs(self, elem: ar_element.IdsMgrNeeds) -> None:
+        """
+        Writes complex type AR:IDS-MGR-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.IdsMgrNeeds)
+        self._add_child("IDS-MGR-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_ids_mgr_needs_group(elem)
+        self._leave_child()
+
+    def _write_ids_mgr_needs_group(self, elem: ar_element.IdsMgrNeeds) -> None:
+        """
+        Writes group AR:IDS-MGR-NEEDS
+        """
+        if elem.use_smart_sensor_api is not None:
+            self._add_content("USE-SMART-SENSOR-API", self._format_boolean(elem.use_smart_sensor_api))
+
     def _write_indicator_status_needs(
             self,
             elem: ar_element.IndicatorStatusNeeds) -> None:
@@ -5717,6 +5762,49 @@ class Writer(_XMLWriter):
         """
         if elem.type is not None:
             self._add_content("TYPE", ar_enum.enum_to_xml(elem.type))
+
+    def _write_j1939_dcm_dm_19_support(self, elem: ar_element.J1939DcmDm19Support) -> None:
+        """
+        Writes complex type AR:J-1939-DCM-DM-19-SUPPORT
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.J1939DcmDm19Support)
+        self._add_child("J-1939-DCM-DM-19-SUPPORT")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        # Groups AR:SERVICE-NEEDS and AR:J-1939-DCM-DM-19-SUPPORT contain no elements
+        self._leave_child()
+
+    def _write_j1939_rm_incoming_request_service_needs(
+            self,
+            elem: ar_element.J1939RmIncomingRequestServiceNeeds) -> None:
+        """
+        Writes complex type AR:J-1939-RM-INCOMING-REQUEST-SERVICE-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.J1939RmIncomingRequestServiceNeeds)
+        self._add_child("J-1939-RM-INCOMING-REQUEST-SERVICE-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        # Groups AR:SERVICE-NEEDS and AR:J-1939-RM-INCOMING-REQUEST-SERVICE-NEEDS contain no elements
+        self._leave_child()
+
+    def _write_j1939_rm_outgoing_request_service_needs(
+            self,
+            elem: ar_element.J1939RmOutgoingRequestServiceNeeds) -> None:
+        """
+        Writes complex type AR:J-1939-RM-OUTGOING-REQUEST-SERVICE-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.J1939RmOutgoingRequestServiceNeeds)
+        self._add_child("J-1939-RM-OUTGOING-REQUEST-SERVICE-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        # Groups AR:SERVICE-NEEDS and AR:J-1939-RM-OUTGOING-REQUEST-SERVICE-NEEDS contain no elements
+        self._leave_child()
 
     def _write_obd_control_service_needs(
             self,
@@ -5883,6 +5971,31 @@ class Writer(_XMLWriter):
         self._write_traced_failure_group(elem)
         self._leave_child()
 
+    def _write_secure_on_board_communication_needs(
+            self,
+            elem: ar_element.SecureOnBoardCommunicationNeeds) -> None:
+        """
+        Writes complex type AR:SECURE-ON-BOARD-COMMUNICATION-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.SecureOnBoardCommunicationNeeds)
+        self._add_child("SECURE-ON-BOARD-COMMUNICATION-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_secure_on_board_communication_needs_group(elem)
+        self._leave_child()
+
+    def _write_secure_on_board_communication_needs_group(
+            self,
+            elem: ar_element.SecureOnBoardCommunicationNeeds) -> None:
+        """
+        Writes group AR:SECURE-ON-BOARD-COMMUNICATION-NEEDS
+        """
+        if elem.verification_status_indication_mode is not None:
+            self._add_content("VERIFICATION-STATUS-INDICATION-MODE",
+                              ar_enum.enum_to_xml(elem.verification_status_indication_mode))
+
     def _write_supervised_entity_checkpoint_needs(
             self,
             elem: ar_element.SupervisedEntityCheckpointNeeds) -> None:
@@ -5955,6 +6068,21 @@ class Writer(_XMLWriter):
         if elem.tolerated_failed_cycles is not None:
             self._add_content("TOLERATED-FAILED-CYCLES", str(elem.tolerated_failed_cycles))
 
+    def _write_sync_time_base_mgr_user_needs(
+            self,
+            elem: ar_element.SyncTimeBaseMgrUserNeeds) -> None:
+        """
+        Writes complex type AR:SYNC-TIME-BASE-MGR-USER-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.SyncTimeBaseMgrUserNeeds)
+        self._add_child("SYNC-TIME-BASE-MGR-USER-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        # Groups AR:SERVICE-NEEDS and AR:SYNC-TIME-BASE-MGR-USER-NEEDS contain no elements
+        self._leave_child()
+
     def _write_transient_fault(self, elem: ar_element.TransientFault) -> None:
         """
         Writes complex type AR:TRANSIENT-FAULT
@@ -5990,6 +6118,45 @@ class Writer(_XMLWriter):
         self._write_multilanguage_referrable(elem)
         self._write_identifiable(elem)
         # Groups AR:SERVICE-NEEDS and AR:VENDOR-SPECIFIC-SERVICE-NEEDS contain no elements
+        self._leave_child()
+
+    def _write_v2x_data_manager_needs(self, elem: ar_element.V2xDataManagerNeeds) -> None:
+        """
+        Writes complex type AR:V-2-X-DATA-MANAGER-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.V2xDataManagerNeeds)
+        self._add_child("V-2-X-DATA-MANAGER-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        # Groups AR:SERVICE-NEEDS and AR:V-2-X-DATA-MANAGER-NEEDS contain no elements
+        self._leave_child()
+
+    def _write_v2x_fac_user_needs(self, elem: ar_element.V2xFacUserNeeds) -> None:
+        """
+        Writes complex type AR:V-2-X-FAC-USER-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.V2xFacUserNeeds)
+        self._add_child("V-2-X-FAC-USER-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        # Groups AR:SERVICE-NEEDS and AR:V-2-X-FAC-USER-NEEDS contain no elements
+        self._leave_child()
+
+    def _write_v2x_m_user_needs(self, elem: ar_element.V2xMUserNeeds) -> None:
+        """
+        Writes complex type AR:V-2-X-M-USER-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.V2xMUserNeeds)
+        self._add_child("V-2-X-M-USER-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        # Groups AR:SERVICE-NEEDS and AR:V-2-X-M-USER-NEEDS contain no elements
         self._leave_child()
 
     def _write_warning_indicator_requested_bit_needs(
