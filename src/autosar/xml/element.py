@@ -63,6 +63,7 @@ from autosar.xml.reference import (SwBaseTypeRef,  # noqa F401
                                    ApplicationArrayElementRef,
                                    ApplicationRecordElementRef,
                                    PerInstanceMemoryRef,
+                                   DiagnosticEventNeedsRef,
                                    DiagnosticValueNeedsRef,
                                    FunctionInhibitionNeedsRef,
                                    )
@@ -7398,6 +7399,112 @@ class IndicatorStatusNeeds(ServiceNeeds):
         self._assign_optional("type",
                               type,
                               ar_enum.DiagnosticIndicatorType)
+
+
+class ObdControlServiceNeeds(DiagnosticCapabilityElement):
+    """
+    Complex type AR:OBD-CONTROL-SERVICE-NEEDS
+    Tag variants: 'OBD-CONTROL-SERVICE-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
+class ObdInfoServiceNeeds(DiagnosticCapabilityElement):
+    """
+    Complex type AR:OBD-INFO-SERVICE-NEEDS
+    Tag variants: 'OBD-INFO-SERVICE-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
+class ObdMonitorServiceNeeds(DiagnosticCapabilityElement):
+    """
+    Complex type AR:OBD-MONITOR-SERVICE-NEEDS
+    Tag variants: 'OBD-MONITOR-SERVICE-NEEDS'
+    """
+
+    def __init__(self,
+                 name: str,
+                 appl_data_type_ref: ApplicationDataTypeRef | str | None = None,
+                 event_needs_ref: DiagnosticEventNeedsRef | str | None = None,
+                 unit_and_scaling_id: int | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .APPLICATION-DATA-TYPE-REF
+        self.appl_data_type_ref: ApplicationDataTypeRef | None = None
+        # .EVENT-NEEDS-REF
+        self.event_needs_ref: DiagnosticEventNeedsRef | None = None
+        # .UNIT-AND-SCALING-ID
+        self.unit_and_scaling_id: int | None = None
+
+        self._assign_optional_strict("appl_data_type_ref",
+                                     appl_data_type_ref,
+                                     ApplicationDataTypeRef)
+        self._assign_optional("event_needs_ref",
+                              event_needs_ref,
+                              DiagnosticEventNeedsRef)
+        self._assign_optional_positive_int("unit_and_scaling_id", unit_and_scaling_id)
+
+
+class ObdPidServiceNeeds(DiagnosticCapabilityElement):
+    """
+    Complex type AR:OBD-PID-SERVICE-NEEDS
+    Tag variants: 'OBD-PID-SERVICE-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
+class ObdRatioDenominatorNeeds(DiagnosticCapabilityElement):
+    """
+    Complex type AR:OBD-RATIO-DENOMINATOR-NEEDS
+    Tag variants: 'OBD-RATIO-DENOMINATOR-NEEDS'
+    """
+
+    def __init__(self,
+                 name: str,
+                 denominator_condition: ar_enum.DiagnosticDenominatorCondition | str | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .DENOMINATOR-CONDITION
+        self.denominator_condition: ar_enum.DiagnosticDenominatorCondition | None = None
+
+        self._assign_optional("denominator_condition",
+                              denominator_condition,
+                              ar_enum.DiagnosticDenominatorCondition)
+
+
+class ObdRatioServiceNeeds(DiagnosticCapabilityElement):
+    """
+    Complex type AR:OBD-RATIO-SERVICE-NEEDS
+    Tag variants: 'OBD-RATIO-SERVICE-NEEDS'
+    """
+
+    def __init__(self,
+                 name: str,
+                 connection_type: ar_enum.ObdRatioConnectionKind | str | None = None,
+                 rate_based_monitored_event_ref: DiagnosticEventNeedsRef | str | None = None,
+                 used_fid_ref: FunctionInhibitionNeedsRef | str | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .CONNECTION-TYPE
+        self.connection_type: ar_enum.ObdRatioConnectionKind | None = None
+        # .RATE-BASED-MONITORED-EVENT-REF
+        self.rate_based_monitored_event_ref: DiagnosticEventNeedsRef | None = None
+        # .USED-FID-REF
+        self.used_fid_ref: FunctionInhibitionNeedsRef | None = None
+
+        self._assign_optional("connection_type",
+                              connection_type,
+                              ar_enum.ObdRatioConnectionKind)
+        self._assign_optional("rate_based_monitored_event_ref",
+                              rate_based_monitored_event_ref,
+                              DiagnosticEventNeedsRef)
+        self._assign_optional("used_fid_ref",
+                              used_fid_ref,
+                              FunctionInhibitionNeedsRef)
 
 
 class WarningIndicatorRequestedBitNeeds(DiagnosticCapabilityElement):

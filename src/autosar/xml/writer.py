@@ -415,6 +415,12 @@ class Writer(_XMLWriter):
             'FunctionInhibitionNeeds': self._write_function_inhibition_needs,
             'FurtherActionByteNeeds': self._write_further_action_byte_needs,
             'IndicatorStatusNeeds': self._write_indicator_status_needs,
+            'ObdControlServiceNeeds': self._write_obd_control_service_needs,
+            'ObdInfoServiceNeeds': self._write_obd_info_service_needs,
+            'ObdMonitorServiceNeeds': self._write_obd_monitor_service_needs,
+            'ObdPidServiceNeeds': self._write_obd_pid_service_needs,
+            'ObdRatioDenominatorNeeds': self._write_obd_ratio_denominator_needs,
+            'ObdRatioServiceNeeds': self._write_obd_ratio_service_needs,
             'WarningIndicatorRequestedBitNeeds': self._write_warning_indicator_requested_bit_needs,
             # SWC internal behavior elements
             'ArVariableInImplementationDataInstanceRef': self._write_variable_in_impl_data_instance_ref,
@@ -2672,6 +2678,13 @@ class Writer(_XMLWriter):
         Writes references to AR:APPLICATION-RECORD-ELEMENT--SUBTYPES-ENUM
         """
         assert isinstance(elem, ar_element.ApplicationRecordElementRef)
+        self._write_ref_content(elem, tag)
+
+    def _write_diagnostic_event_needs_ref(self, elem: ar_element.DiagnosticEventNeedsRef, tag: str) -> None:
+        """
+        Writes references to AR:DIAGNOSTIC-EVENT-NEEDS--SUBTYPES-ENUM
+        """
+        assert isinstance(elem, ar_element.DiagnosticEventNeedsRef)
         self._write_ref_content(elem, tag)
 
     def _write_diagnostic_value_needs_ref(self, elem: ar_element.DiagnosticValueNeedsRef, tag: str) -> None:
@@ -5592,6 +5605,138 @@ class Writer(_XMLWriter):
         """
         if elem.type is not None:
             self._add_content("TYPE", ar_enum.enum_to_xml(elem.type))
+
+    def _write_obd_control_service_needs(
+            self,
+            elem: ar_element.ObdControlServiceNeeds) -> None:
+        """
+        Writes complex type AR:OBD-CONTROL-SERVICE-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.ObdControlServiceNeeds)
+        self._add_child("OBD-CONTROL-SERVICE-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_diagnostic_capability_element_group(elem)
+        # Group AR:OBD-CONTROL-SERVICE-NEEDS contains no elements
+        self._leave_child()
+
+    def _write_obd_info_service_needs(
+            self,
+            elem: ar_element.ObdInfoServiceNeeds) -> None:
+        """
+        Writes complex type AR:OBD-INFO-SERVICE-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.ObdInfoServiceNeeds)
+        self._add_child("OBD-INFO-SERVICE-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_diagnostic_capability_element_group(elem)
+        # Group AR:OBD-INFO-SERVICE-NEEDS contains no elements
+        self._leave_child()
+
+    def _write_obd_monitor_service_needs(
+            self,
+            elem: ar_element.ObdMonitorServiceNeeds) -> None:
+        """
+        Writes complex type AR:OBD-MONITOR-SERVICE-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.ObdMonitorServiceNeeds)
+        self._add_child("OBD-MONITOR-SERVICE-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_diagnostic_capability_element_group(elem)
+        self._write_obd_monitor_service_needs_group(elem)
+        self._leave_child()
+
+    def _write_obd_monitor_service_needs_group(
+            self,
+            elem: ar_element.ObdMonitorServiceNeeds) -> None:
+        """
+        Writes group AR:OBD-MONITOR-SERVICE-NEEDS
+        """
+        if elem.appl_data_type_ref is not None:
+            self._write_application_data_type_ref(elem.appl_data_type_ref, "APPLICATION-DATA-TYPE-REF")
+        if elem.event_needs_ref is not None:
+            self._write_diagnostic_event_needs_ref(elem.event_needs_ref, "EVENT-NEEDS-REF")
+        if elem.unit_and_scaling_id is not None:
+            self._add_content("UNIT-AND-SCALING-ID", str(elem.unit_and_scaling_id))
+
+    def _write_obd_pid_service_needs(
+            self,
+            elem: ar_element.ObdPidServiceNeeds) -> None:
+        """
+        Writes complex type AR:OBD-PID-SERVICE-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.ObdPidServiceNeeds)
+        self._add_child("OBD-PID-SERVICE-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_diagnostic_capability_element_group(elem)
+        # Group AR:OBD-PID-SERVICE-NEEDS contains no elements
+        self._leave_child()
+
+    def _write_obd_ratio_denominator_needs(
+            self,
+            elem: ar_element.ObdRatioDenominatorNeeds) -> None:
+        """
+        Writes complex type AR:OBD-RATIO-DENOMINATOR-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.ObdRatioDenominatorNeeds)
+        self._add_child("OBD-RATIO-DENOMINATOR-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_diagnostic_capability_element_group(elem)
+        self._write_obd_ratio_denominator_needs_group(elem)
+        self._leave_child()
+
+    def _write_obd_ratio_denominator_needs_group(
+            self,
+            elem: ar_element.ObdRatioDenominatorNeeds) -> None:
+        """
+        Writes group AR:OBD-RATIO-DENOMINATOR-NEEDS
+        """
+        if elem.denominator_condition is not None:
+            self._add_content("DENOMINATOR-CONDITION", ar_enum.enum_to_xml(elem.denominator_condition))
+
+    def _write_obd_ratio_service_needs(
+            self,
+            elem: ar_element.ObdRatioServiceNeeds) -> None:
+        """
+        Writes complex type AR:OBD-RATIO-SERVICE-NEEDS
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.ObdRatioServiceNeeds)
+        self._add_child("OBD-RATIO-SERVICE-NEEDS")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_diagnostic_capability_element_group(elem)
+        self._write_obd_ratio_service_needs_group(elem)
+        self._leave_child()
+
+    def _write_obd_ratio_service_needs_group(
+            self,
+            elem: ar_element.ObdRatioServiceNeeds) -> None:
+        """
+        Writes group AR:OBD-RATIO-SERVICE-NEEDS
+        """
+        if elem.connection_type is not None:
+            self._add_content("CONNECTION-TYPE", ar_enum.enum_to_xml(elem.connection_type))
+        if elem.rate_based_monitored_event_ref is not None:
+            self._write_diagnostic_event_needs_ref(elem.rate_based_monitored_event_ref,
+                                                   "RATE-BASED-MONITORED-EVENT-REF")
+        if elem.used_fid_ref is not None:
+            self._write_function_inhibition_needs_ref(elem.used_fid_ref, "USED-FID-REF")
 
     def _write_warning_indicator_requested_bit_needs(
             self,

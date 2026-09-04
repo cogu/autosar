@@ -818,6 +818,22 @@ class PerInstanceMemoryRef(BaseRef):
         return {ar_enum.IdentifiableSubTypes.PER_INSTANCE_MEMORY}
 
 
+class DiagnosticEventNeedsRef(BaseRef):
+    """
+    AR:DIAGNOSTIC-EVENT-NEEDS--SUBTYPES-ENUM
+    """
+
+    def __init__(self, value: str,
+                 dest: ar_enum.IdentifiableSubTypes = ar_enum.IdentifiableSubTypes.DIAGNOSTIC_EVENT_NEEDS
+                 ) -> None:
+        super().__init__(value, dest)
+
+    @classmethod
+    def accepted_sub_types(cls) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.DIAGNOSTIC_EVENT_NEEDS}
+
+
 class DiagnosticValueNeedsRef(BaseRef):
     """
     AR:DIAGNOSTIC-VALUE-NEEDS--SUBTYPES-ENUM
