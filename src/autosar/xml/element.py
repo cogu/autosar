@@ -39,6 +39,7 @@ from autosar.xml.reference import (SwBaseTypeRef,  # noqa F401
                                    E2EProfileCompatibilityPropsRef,
                                    ClientServerOperationRef,
                                    PortPrototypeRef,
+                                   PortGroupRef,
                                    AbstractImplementationDataTypeElementRef,
                                    DataPrototypeRef,
                                    PortInterfaceRef,
@@ -10532,6 +10533,210 @@ class PerInstanceMemory(Identifiable):
         return None if ref_str is None else PerInstanceMemoryRef(ref_str)
 
 
+# --- Service dependency elements
+
+
+class RoleBasedDataAssignment(ARObject):
+    """
+    Complex type AR:ROLE-BASED-DATA-ASSIGNMENT
+    Tag variants: 'ROLE-BASED-DATA-ASSIGNMENT'
+    """
+
+    def __init__(self,
+                 role: str | None = None,
+                 used_data_element: AutosarVariableRef | None = None,
+                 used_parameter_element: AutosarParameterRef | None = None,
+                 used_pim_ref: PerInstanceMemoryRef | str | None = None) -> None:
+        super().__init__()
+        # .ROLE
+        self.role: str | None = None
+        # .USED-DATA-ELEMENT
+        self.used_data_element: AutosarVariableRef | None = None
+        # .USED-PARAMETER-ELEMENT
+        self.used_parameter_element: AutosarParameterRef | None = None
+        # .USED-PIM-REF
+        self.used_pim_ref: PerInstanceMemoryRef | None = None
+
+        self._assign_optional_strict("role", role, str)
+        self._assign_optional_strict("used_data_element", used_data_element, AutosarVariableRef)
+        self._assign_optional_strict("used_parameter_element", used_parameter_element, AutosarParameterRef)
+        self._assign_optional("used_pim_ref", used_pim_ref, PerInstanceMemoryRef)
+
+
+class RoleBasedDataTypeAssignment(ARObject):
+    """
+    Complex type AR:ROLE-BASED-DATA-TYPE-ASSIGNMENT
+    Tag variants: 'ROLE-BASED-DATA-TYPE-ASSIGNMENT'
+    """
+
+    def __init__(self,
+                 role: str | None = None,
+                 used_implementation_data_type_ref: ImplementationDataTypeRef | str | None = None) -> None:
+        super().__init__()
+        # .ROLE
+        self.role: str | None = None
+        # .USED-IMPLEMENTATION-DATA-TYPE-REF
+        self.used_implementation_data_type_ref: ImplementationDataTypeRef | None = None
+
+        self._assign_optional_strict("role", role, str)
+        self._assign_optional("used_implementation_data_type_ref",
+                              used_implementation_data_type_ref,
+                              ImplementationDataTypeRef)
+
+
+class RoleBasedPortAssignment(ARObject):
+    """
+    Complex type AR:ROLE-BASED-PORT-ASSIGNMENT
+    Tag variants: 'ROLE-BASED-PORT-ASSIGNMENT'
+    """
+
+    def __init__(self,
+                 port_prototype_ref: PortPrototypeRef | str | None = None,
+                 role: str | None = None) -> None:
+        super().__init__()
+        # .PORT-PROTOTYPE-REF
+        self.port_prototype_ref: PortPrototypeRef | None = None
+        # .ROLE
+        self.role: str | None = None
+
+        self._assign_optional("port_prototype_ref", port_prototype_ref, PortPrototypeRef)
+        self._assign_optional_strict("role", role, str)
+
+
+class SymbolicNameProps(Referrable):
+    """
+    Complex type AR:SYMBOLIC-NAME-PROPS
+    Tag variants: 'SYMBOLIC-NAME-PROPS'
+    """
+
+    def __init__(self,
+                 name: str,
+                 symbol: str | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .SYMBOL
+        self.symbol: str | None = None
+        self._assign_optional_strict("symbol", symbol, str)
+
+
+class ServiceDependency(Identifiable):
+    """
+    Group AR:SERVICE-DEPENDENCY
+    """
+
+    def __init__(self,
+                 name: str,
+                 assigned_data_types: (RoleBasedDataTypeAssignment |
+                                       list[RoleBasedDataTypeAssignment] |
+                                       None) = None,
+                 diagnostic_relevance: ar_enum.ServiceDiagnosticRelevance | str | None = None,
+                 symbolic_name_props: SymbolicNameProps | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .ASSIGNED-DATA-TYPES
+        self.assigned_data_types: list[RoleBasedDataTypeAssignment] = []
+        # .DIAGNOSTIC-RELEVANCE
+        self.diagnostic_relevance: ar_enum.ServiceDiagnosticRelevance | None = None
+        # .SYMBOLIC-NAME-PROPS
+        self.symbolic_name_props: SymbolicNameProps | None = None
+
+        if assigned_data_types is not None:
+            if isinstance(assigned_data_types, RoleBasedDataTypeAssignment):
+                self.assigned_data_types.append(assigned_data_types)
+            elif isinstance(assigned_data_types, Iterable):
+                for item in assigned_data_types:
+                    self.append_assigned_data_type(item)
+            else:
+                raise TypeError(f"assigned_data_types: Invalid type {str(type(assigned_data_types))}")
+
+        self._assign_optional("diagnostic_relevance",
+                              diagnostic_relevance,
+                              ar_enum.ServiceDiagnosticRelevance)
+        self._assign_optional_strict("symbolic_name_props",
+                                     symbolic_name_props,
+                                     SymbolicNameProps)
+
+    def append_assigned_data_type(self, item: RoleBasedDataTypeAssignment) -> None:
+        """
+        Appends RoleBasedDataTypeAssignment to assigned_data_types
+        """
+        if isinstance(item, RoleBasedDataTypeAssignment):
+            self.assigned_data_types.append(item)
+        else:
+            raise ar_except.ElementTypeError("item", RoleBasedDataTypeAssignment, item)
+
+
+class SwcServiceDependency(ServiceDependency):
+    """
+    Complex type AR:SWC-SERVICE-DEPENDENCY
+    Tag variants: 'SWC-SERVICE-DEPENDENCY'
+    """
+
+    def __init__(self,
+                 name: str,
+                 assigned_datas: (RoleBasedDataAssignment |
+                                  list[RoleBasedDataAssignment] |
+                                  None) = None,
+                 assigned_ports: (RoleBasedPortAssignment |
+                                  list[RoleBasedPortAssignment] |
+                                  None) = None,
+                 represented_port_group_ref: PortGroupRef | str | None = None,
+                 service_needs: ServiceNeeds | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .ASSIGNED-DATAS
+        self.assigned_datas: list[RoleBasedDataAssignment] = []
+        # .ASSIGNED-PORTS
+        self.assigned_ports: list[RoleBasedPortAssignment] = []
+        # .REPRESENTED-PORT-GROUP-REF
+        self.represented_port_group_ref: PortGroupRef | None = None
+        # .SERVICE-NEEDS
+        self.service_needs: ServiceNeeds | None = None
+
+        if assigned_datas is not None:
+            if isinstance(assigned_datas, RoleBasedDataAssignment):
+                self.assigned_datas.append(assigned_datas)
+            elif isinstance(assigned_datas, Iterable):
+                for item in assigned_datas:
+                    self.append_assigned_data(item)
+            else:
+                raise TypeError(f"assigned_datas: Invalid type {str(type(assigned_datas))}")
+
+        if assigned_ports is not None:
+            if isinstance(assigned_ports, RoleBasedPortAssignment):
+                self.assigned_ports.append(assigned_ports)
+            elif isinstance(assigned_ports, Iterable):
+                for item in assigned_ports:
+                    self.append_assigned_port(item)
+            else:
+                raise TypeError(f"assigned_ports: Invalid type {str(type(assigned_ports))}")
+
+        self._assign_optional("represented_port_group_ref",
+                              represented_port_group_ref,
+                              PortGroupRef)
+        self._assign_optional_strict("service_needs",
+                                     service_needs,
+                                     ServiceNeeds)
+
+    def append_assigned_data(self, item: RoleBasedDataAssignment) -> None:
+        """
+        Appends RoleBasedDataAssignment to assigned_datas
+        """
+        if isinstance(item, RoleBasedDataAssignment):
+            self.assigned_datas.append(item)
+        else:
+            raise ar_except.ElementTypeError("item", RoleBasedDataAssignment, item)
+
+    def append_assigned_port(self, item: RoleBasedPortAssignment) -> None:
+        """
+        Appends RoleBasedPortAssignment to assigned_ports
+        """
+        if isinstance(item, RoleBasedPortAssignment):
+            self.assigned_ports.append(item)
+        else:
+            raise ar_except.ElementTypeError("item", RoleBasedPortAssignment, item)
+
+
 class InternalBehavior(Identifiable):
     """
     Group AR:INTERNAL-BEHAVIOR
@@ -10711,6 +10916,7 @@ class InternalBehavior(Identifiable):
 ModeSwitchEventArgsReturnType = tuple[RequirePortPrototype, ModeDeclarationGroupPrototype, ModeDeclaration]
 
 
+# pylint: disable=too-many-public-methods
 class SwcInternalBehavior(InternalBehavior):
     """
     Complex type AR:SWC-INTERNAL-BEHAVIOR
@@ -10741,6 +10947,8 @@ class SwcInternalBehavior(InternalBehavior):
                                           list[ParameterDataPrototype] | None) = None,
                  port_api_option: PortApiOption | list[PortApiOption] | None = None,
                  runnable: RunnableEntity | list[RunnableEntity] | None = None,
+                 service_dependency: (SwcServiceDependency |
+                                      list[SwcServiceDependency] | None) = None,
                  shared_parameter: (ParameterDataPrototype |
                                     list[ParameterDataPrototype] | None) = None,
                  supports_multiple_instantiation: bool | None = None,
@@ -10772,7 +10980,8 @@ class SwcInternalBehavior(InternalBehavior):
         self.port_api_option: OrderedDict[PortApiOption] = OrderedDict()
         # .RUNNABLES
         self.runnable: list[RunnableEntity] = []
-        # .SERVICE-DEPENDENCYS (not yet implemented)
+        # .SERVICE-DEPENDENCYS
+        self.service_dependency: list[SwcServiceDependency] = []
         # .SHARED-PARAMETERS
         self.shared_parameter: list[ParameterDataPrototype] = []
         # .SUPPORTS-MULTIPLE-INSTANTIATION
@@ -10856,6 +11065,13 @@ class SwcInternalBehavior(InternalBehavior):
                     self.append_runnable(item)
             else:
                 self.append_runnable(runnable)
+
+        if service_dependency is not None:
+            if isinstance(service_dependency, Iterable):
+                for item in service_dependency:
+                    self.append_service_dependency(item)
+            else:
+                self.append_service_dependency(service_dependency)
 
         if per_instance_memory is not None:
             if isinstance(per_instance_memory, Iterable):
@@ -11145,6 +11361,40 @@ class SwcInternalBehavior(InternalBehavior):
             self.runnable.append(runnable)
         else:
             raise TypeError(f"runnable must be of type RunnableEntity. Got {str(type(runnable))}")
+
+    @convenience_function
+    def create_service_dependency(self,
+                                  name: str,
+                                  assigned_datas: (RoleBasedDataAssignment |
+                                                   list[RoleBasedDataAssignment] |
+                                                   None) = None,
+                                  assigned_ports: (RoleBasedPortAssignment |
+                                                   list[RoleBasedPortAssignment] |
+                                                   None) = None,
+                                  represented_port_group_ref: PortGroupRef | str | None = None,
+                                  service_needs: ServiceNeeds | None = None,
+                                  **kwargs) -> SwcServiceDependency:
+        """
+        Adds a new SwcServiceDependency to service_dependency
+        """
+        item = SwcServiceDependency(name,
+                                    assigned_datas=assigned_datas,
+                                    assigned_ports=assigned_ports,
+                                    represented_port_group_ref=represented_port_group_ref,
+                                    service_needs=service_needs,
+                                    **kwargs)
+        self.append_service_dependency(item)
+        return item
+
+    def append_service_dependency(self, item: SwcServiceDependency) -> None:
+        """
+        Appends SwcServiceDependency to service_dependency
+        """
+        if isinstance(item, SwcServiceDependency):
+            self.service_dependency.append(item)
+            item.parent = self
+        else:
+            raise ar_except.ElementTypeError("item", SwcServiceDependency, item)
 
     def append_event(self, event: RteEvent) -> None:
         """

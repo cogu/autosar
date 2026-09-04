@@ -409,29 +409,30 @@ class IdentifiableSubTypes(Enum):
     PARAMETER_INTERFACE = 62
     PER_INSTANCE_MEMORY = 63
     PHYSICAL_DIMENSION = 64
-    PORT_PROTOTYPE = 65
-    PR_PORT_PROTOTYPE = 66
-    R_PORT_PROTOTYPE = 67
-    RUNNABLE_ENTITY = 68
-    SENDER_RECEIVER_INTERFACE = 69
-    SENSOR_ACTUATOR_SW_COMPONENT_TYPE = 70
-    SERVICE_PROXY_SW_COMPONENT_TYPE = 71
-    SERVICE_SW_COMPONENT_TYPE = 72
-    SUPERVISED_ENTITY_CHECKPOINT_NEEDS = 73
-    SW_ADDR_METHOD = 74
-    SW_BASE_TYPE = 75
-    SW_COMPONENT_PROTOTYPE = 76
-    SWC_IMPLEMENTATION = 77
-    SWC_INTERNAL_BEHAVIOR = 78
-    SWC_MODE_MANAGER_ERROR_EVENT = 79
-    SWC_MODE_SWITCH_EVENT = 80
-    TIMING_EVENT = 81
-    TRANSFORMER_HARD_ERROR_EVENT = 82
-    TRIGGER = 83
-    TRIGGER_INTERFACE = 84
-    UNIT = 85
-    VARIABLE_ACCESS = 86
-    VARIABLE_DATA_PROTOTYPE = 87
+    PORT_GROUP = 65
+    PORT_PROTOTYPE = 66
+    PR_PORT_PROTOTYPE = 67
+    R_PORT_PROTOTYPE = 68
+    RUNNABLE_ENTITY = 69
+    SENDER_RECEIVER_INTERFACE = 70
+    SENSOR_ACTUATOR_SW_COMPONENT_TYPE = 71
+    SERVICE_PROXY_SW_COMPONENT_TYPE = 72
+    SERVICE_SW_COMPONENT_TYPE = 73
+    SUPERVISED_ENTITY_CHECKPOINT_NEEDS = 74
+    SW_ADDR_METHOD = 75
+    SW_BASE_TYPE = 76
+    SW_COMPONENT_PROTOTYPE = 77
+    SWC_IMPLEMENTATION = 78
+    SWC_INTERNAL_BEHAVIOR = 79
+    SWC_MODE_MANAGER_ERROR_EVENT = 80
+    SWC_MODE_SWITCH_EVENT = 81
+    TIMING_EVENT = 82
+    TRANSFORMER_HARD_ERROR_EVENT = 83
+    TRIGGER = 84
+    TRIGGER_INTERFACE = 85
+    UNIT = 86
+    VARIABLE_ACCESS = 87
+    VARIABLE_DATA_PROTOTYPE = 88
 
 
 class IntervalType(Enum):
@@ -802,6 +803,15 @@ class ServerArgImplPolicy(Enum):
     USE_ARGUMENT_TYPE = 0
     # USE_ARRAY_BASED_TYPE --- REMOVED
     USE_VOID = 2
+
+
+class ServiceDiagnosticRelevance(Enum):
+    """
+    AR:SERVICE-DIAGNOSTIC-RELEVANCE-ENUM--SIMPLE
+    """
+
+    IS_NOT_RELEVANT = 0
+    IS_RELEVANT = 1
 
 
 class ServiceKind(Enum):
@@ -1181,6 +1191,7 @@ xml_to_enum_map: dict[str, dict] = {
         "PARAMETER-INTERFACE": IdentifiableSubTypes.PARAMETER_INTERFACE,
         "PER-INSTANCE-MEMORY": IdentifiableSubTypes.PER_INSTANCE_MEMORY,
         "PHYSICAL-DIMENSION": IdentifiableSubTypes.PHYSICAL_DIMENSION,
+        "PORT-GROUP": IdentifiableSubTypes.PORT_GROUP,
         "PORT-PROTOTYPE": IdentifiableSubTypes.PORT_PROTOTYPE,
         "PR-PORT-PROTOTYPE": IdentifiableSubTypes.PR_PORT_PROTOTYPE,
         "R-PORT-PROTOTYPE": IdentifiableSubTypes.R_PORT_PROTOTYPE,
@@ -1431,6 +1442,10 @@ xml_to_enum_map: dict[str, dict] = {
     "ServerArgImplPolicy": {
         "USE-ARGUMENT-TYPE": ServerArgImplPolicy.USE_ARGUMENT_TYPE,
         "USE-VOID": ServerArgImplPolicy.USE_VOID
+    },
+    "ServiceDiagnosticRelevance": {
+        "IS-NOT-RELEVANT": ServiceDiagnosticRelevance.IS_NOT_RELEVANT,
+        "IS-RELEVANT": ServiceDiagnosticRelevance.IS_RELEVANT,
     },
     "StorageConditionStatus": {
         "EVENT-STORAGE-DISABLED": StorageConditionStatus.EVENT_STORAGE_DISABLED,
@@ -1710,29 +1725,30 @@ enum_to_xml_map: dict[str, list] = {
         "PARAMETER-INTERFACE",                           # 62
         "PER-INSTANCE-MEMORY",                           # 63
         "PHYSICAL-DIMENSION",                            # 64
-        "PORT-PROTOTYPE",                                # 65
-        "PR-PORT-PROTOTYPE",                             # 66
-        "R-PORT-PROTOTYPE",                              # 67
-        "RUNNABLE-ENTITY",                               # 68
-        "SENDER-RECEIVER-INTERFACE",                     # 69
-        "SENSOR-ACTUATOR-SW-COMPONENT-TYPE",             # 70
-        "SERVICE-PROXY-SW-COMPONENT-TYPE",               # 71
-        "SERVICE-SW-COMPONENT-TYPE",                     # 72
-        "SUPERVISED-ENTITY-CHECKPOINT-NEEDS",            # 73
-        "SW-ADDR-METHOD",                                # 74
-        "SW-BASE-TYPE",                                  # 75
-        "SW-COMPONENT-PROTOTYPE",                        # 76
-        "SWC-IMPLEMENTATION",                            # 77
-        "SWC-INTERNAL-BEHAVIOR",                         # 78
-        "SWC-MODE-MANAGER-ERROR-EVENT",                  # 79
-        "SWC-MODE-SWITCH-EVENT",                         # 80
-        "TIMING-EVENT",                                  # 81
-        "TRANSFORMER-HARD-ERROR-EVENT",                  # 82
-        "TRIGGER",                                       # 83
-        "TRIGGER-INTERFACE",                             # 84
-        "UNIT",                                          # 85
-        "VARIABLE-ACCESS",                               # 86
-        "VARIABLE-DATA-PROTOTYPE",                       # 87
+        "PORT-GROUP",                                    # 65
+        "PORT-PROTOTYPE",                                # 66
+        "PR-PORT-PROTOTYPE",                             # 67
+        "R-PORT-PROTOTYPE",                              # 68
+        "RUNNABLE-ENTITY",                               # 69
+        "SENDER-RECEIVER-INTERFACE",                     # 70
+        "SENSOR-ACTUATOR-SW-COMPONENT-TYPE",             # 71
+        "SERVICE-PROXY-SW-COMPONENT-TYPE",               # 72
+        "SERVICE-SW-COMPONENT-TYPE",                     # 73
+        "SUPERVISED-ENTITY-CHECKPOINT-NEEDS",            # 74
+        "SW-ADDR-METHOD",                                # 75
+        "SW-BASE-TYPE",                                  # 76
+        "SW-COMPONENT-PROTOTYPE",                        # 77
+        "SWC-IMPLEMENTATION",                            # 78
+        "SWC-INTERNAL-BEHAVIOR",                         # 79
+        "SWC-MODE-MANAGER-ERROR-EVENT",                  # 80
+        "SWC-MODE-SWITCH-EVENT",                         # 81
+        "TIMING-EVENT",                                  # 82
+        "TRANSFORMER-HARD-ERROR-EVENT",                  # 83
+        "TRIGGER",                                       # 84
+        "TRIGGER-INTERFACE",                             # 85
+        "UNIT",                                          # 86
+        "VARIABLE-ACCESS",                               # 87
+        "VARIABLE-DATA-PROTOTYPE",                       # 88
     ],
     "IntervalType": [
         "CLOSED",  # 0
@@ -1961,6 +1977,10 @@ enum_to_xml_map: dict[str, list] = {
         "USE-ARGUMENT-TYPE",  # 0
         None,                 # 1 (removed)
         "USE-VOID",           # 2
+    ],
+    "ServiceDiagnosticRelevance": [
+        "IS-NOT-RELEVANT",  # 0
+        "IS-RELEVANT",      # 1
     ],
     "StorageConditionStatus": [
         "EVENT-STORAGE-DISABLED",  # 0

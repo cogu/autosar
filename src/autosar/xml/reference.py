@@ -377,6 +377,22 @@ class ClientServerOperationRef(BaseRef):
         return {ar_enum.IdentifiableSubTypes.CLIENT_SERVER_OPERATION}
 
 
+class PortGroupRef(BaseRef):
+    """
+    Reference to PortGroup
+    """
+
+    def __init__(self, value: str,
+                 dest: ar_enum.IdentifiableSubTypes = ar_enum.IdentifiableSubTypes.PORT_GROUP
+                 ) -> None:
+        super().__init__(value, dest)
+
+    @classmethod
+    def accepted_sub_types(cls) -> set[ar_enum.IdentifiableSubTypes]:
+        """Acceptable values for dest"""
+        return {ar_enum.IdentifiableSubTypes.PORT_GROUP}
+
+
 class PortPrototypeRef(BaseRef):
     """
     Reference to port prototype elements

@@ -442,6 +442,11 @@ class Reader:
             'AUTOSAR-PARAMETER-IREF': self._read_parameter_in_atomic_swc_type_instance_ref,
             'ACCESSED-PARAMETER': self._read_autosar_parameter_ref,
             'PARAMETER-ACCESS': self._read_parameter_access,
+            'ROLE-BASED-DATA-ASSIGNMENT': self._read_role_based_data_assignment,
+            'ROLE-BASED-DATA-TYPE-ASSIGNMENT': self._read_role_based_data_type_assignment,
+            'ROLE-BASED-PORT-ASSIGNMENT': self._read_role_based_port_assignment,
+            'SYMBOLIC-NAME-PROPS': self._read_symbolic_name_props,
+            'SWC-SERVICE-DEPENDENCY': self._read_swc_service_dependency,
             'WAIT-POINT': self._read_wait_point,
         }
         self.switcher_all = {}
@@ -3074,6 +3079,24 @@ class Reader:
         """
         dest_enum = self._read_ref_dest(xml_elem)
         return ar_element.SupervisedEntityCheckpointNeedsRef(xml_elem.text, dest_enum)
+
+    def _read_port_group_ref(self,
+                             xml_elem: ElementTree.Element
+                             ) -> ar_element.PortGroupRef:
+        """
+        Reads references to AR:PORT-GROUP--SUBTYPES-ENUM
+        """
+        dest_enum = self._read_ref_dest(xml_elem)
+        return ar_element.PortGroupRef(xml_elem.text, dest_enum)
+
+    def _read_per_instance_memory_ref(self,
+                                      xml_elem: ElementTree.Element
+                                      ) -> ar_element.PerInstanceMemoryRef:
+        """
+        Reads references to AR:PER-INSTANCE-MEMORY--SUBTYPES-ENUM
+        """
+        dest_enum = self._read_ref_dest(xml_elem)
+        return ar_element.PerInstanceMemoryRef(xml_elem.text, dest_enum)
 
     # --- Constant and value specifications
 
@@ -8278,7 +8301,12 @@ class Reader:
             for xml_grand_child in xml_child.findall("./RUNNABLE-ENTITY"):
                 runnables.append(self._read_runnable_entity(xml_grand_child))
             data["runnable"] = runnables
-        child_elements.skip("SERVICE-DEPENDENCYS")
+        xml_child = child_elements.get("SERVICE-DEPENDENCYS")
+        if xml_child is not None:
+            service_dependency = []
+            for xml_grand_child in xml_child.findall("./SWC-SERVICE-DEPENDENCY"):
+                service_dependency.append(self._read_swc_service_dependency(xml_grand_child))
+            data["service_dependency"] = service_dependency
         xml_child = child_elements.get("SHARED-PARAMETERS")
         if xml_child is not None:
             shared_parameters = []
@@ -8300,3 +8328,159 @@ class Reader:
             return read_method(xml_element)
         else:
             raise KeyError(f"Found no reader for '{xml_element.tag}'")
+
+    def _read_role_based_data_assignment(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.RoleBasedDataAssignment:
+        """
+        Reads complex type AR:ROLE-BASED-DATA-ASSIGNMENT
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_role_based_data_assignment_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.RoleBasedDataAssignment(**data)
+
+    def _read_role_based_data_assignment_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:ROLE-BASED-DATA-ASSIGNMENT
+        """
+        xml_child = child_elements.get("ROLE")
+        if xml_child is not None:
+            data["role"] = xml_child.text
+        xml_child = child_elements.get("USED-DATA-ELEMENT")
+        if xml_child is not None:
+            data["used_data_element"] = self._read_autosar_variable_ref(xml_child)
+        xml_child = child_elements.get("USED-PARAMETER-ELEMENT")
+        if xml_child is not None:
+            data["used_parameter_element"] = self._read_autosar_parameter_ref(xml_child)
+        xml_child = child_elements.get("USED-PIM-REF")
+        if xml_child is not None:
+            data["used_pim_ref"] = self._read_per_instance_memory_ref(xml_child)
+        child_elements.skip("VARIATION-POINT")
+
+    def _read_role_based_data_type_assignment(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.RoleBasedDataTypeAssignment:
+        """
+        Reads complex type AR:ROLE-BASED-DATA-TYPE-ASSIGNMENT
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_role_based_data_type_assignment_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.RoleBasedDataTypeAssignment(**data)
+
+    def _read_role_based_data_type_assignment_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:ROLE-BASED-DATA-TYPE-ASSIGNMENT
+        """
+        xml_child = child_elements.get("ROLE")
+        if xml_child is not None:
+            data["role"] = xml_child.text
+        xml_child = child_elements.get("USED-IMPLEMENTATION-DATA-TYPE-REF")
+        if xml_child is not None:
+            data["used_implementation_data_type_ref"] = self._read_impl_data_type_ref(xml_child)
+        child_elements.skip("VARIATION-POINT")
+
+    def _read_role_based_port_assignment(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.RoleBasedPortAssignment:
+        """
+        Reads complex type AR:ROLE-BASED-PORT-ASSIGNMENT
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_role_based_port_assignment_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.RoleBasedPortAssignment(**data)
+
+    def _read_role_based_port_assignment_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:ROLE-BASED-PORT-ASSIGNMENT
+        """
+        xml_child = child_elements.get("PORT-PROTOTYPE-REF")
+        if xml_child is not None:
+            data["port_prototype_ref"] = self._read_port_prototype_ref(xml_child)
+        xml_child = child_elements.get("ROLE")
+        if xml_child is not None:
+            data["role"] = xml_child.text
+        child_elements.skip("VARIATION-POINT")
+
+    def _read_symbolic_name_props(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.SymbolicNameProps:
+        """
+        Reads complex type AR:SYMBOLIC-NAME-PROPS
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        xml_child = child_elements.get("SYMBOL")
+        if xml_child is not None:
+            data["symbol"] = xml_child.text
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.SymbolicNameProps(**data)
+
+    def _read_service_dependency_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:SERVICE-DEPENDENCY
+        """
+        xml_child = child_elements.get("ASSIGNED-DATA-TYPES")
+        if xml_child is not None:
+            assigned_data_types = []
+            for xml_grand_child in xml_child.findall("./ROLE-BASED-DATA-TYPE-ASSIGNMENT"):
+                assigned_data_types.append(self._read_role_based_data_type_assignment(xml_grand_child))
+            data["assigned_data_types"] = assigned_data_types
+        xml_child = child_elements.get("DIAGNOSTIC-RELEVANCE")
+        if xml_child is not None:
+            data["diagnostic_relevance"] = ar_enum.xml_to_enum(
+                "ServiceDiagnosticRelevance", xml_child.text, self.schema_version)
+        xml_child = child_elements.get("SYMBOLIC-NAME-PROPS")
+        if xml_child is not None:
+            data["symbolic_name_props"] = self._read_symbolic_name_props(xml_child)
+
+    def _read_swc_service_dependency_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:SWC-SERVICE-DEPENDENCY
+        """
+        xml_child = child_elements.get("ASSIGNED-DATAS")
+        if xml_child is not None:
+            assigned_datas = []
+            for xml_grand_child in xml_child.findall("./ROLE-BASED-DATA-ASSIGNMENT"):
+                assigned_datas.append(self._read_role_based_data_assignment(xml_grand_child))
+            data["assigned_datas"] = assigned_datas
+        xml_child = child_elements.get("ASSIGNED-PORTS")
+        if xml_child is not None:
+            assigned_ports = []
+            for xml_grand_child in xml_child.findall("./ROLE-BASED-PORT-ASSIGNMENT"):
+                assigned_ports.append(self._read_role_based_port_assignment(xml_grand_child))
+            data["assigned_ports"] = assigned_ports
+        xml_child = child_elements.get("REPRESENTED-PORT-GROUP-REF")
+        if xml_child is not None:
+            data["represented_port_group_ref"] = self._read_port_group_ref(xml_child)
+        xml_child = child_elements.get("SERVICE-NEEDS")
+        if xml_child is not None:
+            for xml_grand_child in xml_child:
+                read_method = self.switcher_non_collectable.get(xml_grand_child.tag, None)
+                if read_method is None:
+                    raise KeyError(f"Found no reader for service needs '{xml_grand_child.tag}'")
+                data["service_needs"] = read_method(xml_grand_child)
+                break
+        child_elements.skip("VARIATION-POINT")
+
+    def _read_swc_service_dependency(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.SwcServiceDependency:
+        """
+        Reads complex type AR:SWC-SERVICE-DEPENDENCY
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_service_dependency_group(child_elements, data)
+        self._read_swc_service_dependency_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.SwcServiceDependency(**data)
