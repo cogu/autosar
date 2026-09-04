@@ -7,6 +7,7 @@ import unittest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
 import autosar.xml.element as ar_element  # noqa: E402
+import autosar.xml.enumeration as ar_enum  # noqa: E402
 import autosar  # noqa: E402
 
 
@@ -2025,6 +2026,651 @@ class TestVendorSpecificServiceNeeds(unittest.TestCase):
         self.assertIsInstance(elem, ar_element.VendorSpecificServiceNeeds)
         self.assertIsInstance(elem, ar_element.ServiceNeeds)
         self.assertEqual(elem.name, "VendorSpecificServiceNeeds")
+
+
+class TestIdsMgrCustomTimestampNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.IdsMgrCustomTimestampNeeds("IdsMgrCustomTimestampNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<IDS-MGR-CUSTOM-TIMESTAMP-NEEDS>
+  <SHORT-NAME>IdsMgrCustomTimestampNeeds</SHORT-NAME>
+</IDS-MGR-CUSTOM-TIMESTAMP-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.IdsMgrCustomTimestampNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.IdsMgrCustomTimestampNeeds)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "IdsMgrCustomTimestampNeeds")
+
+    def test_with_admin_data(self):
+        admin_data = ar_element.AdminData(
+            doc_revisions=ar_element.DocRevision(revision_label="1.0.0")
+        )
+        element = ar_element.IdsMgrCustomTimestampNeeds("IdsMgrCustomTimestampNeeds", admin_data=admin_data)
+        writer = autosar.xml.Writer()
+        xml = '''<IDS-MGR-CUSTOM-TIMESTAMP-NEEDS>
+  <SHORT-NAME>IdsMgrCustomTimestampNeeds</SHORT-NAME>
+  <ADMIN-DATA>
+    <DOC-REVISIONS>
+      <DOC-REVISION>
+        <REVISION-LABEL>1.0.0</REVISION-LABEL>
+      </DOC-REVISION>
+    </DOC-REVISIONS>
+  </ADMIN-DATA>
+</IDS-MGR-CUSTOM-TIMESTAMP-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.IdsMgrCustomTimestampNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.IdsMgrCustomTimestampNeeds)
+        self.assertEqual(str(elem.admin_data.doc_revisions[0].revision_label), "1.0.0")
+
+    def test_with_desc_and_category(self):
+        element = ar_element.IdsMgrCustomTimestampNeeds(
+            "IdsMgrCustomTimestampNeeds",
+            desc="Needs for custom timestamp",
+            category="SERVICE_NEEDS"
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<IDS-MGR-CUSTOM-TIMESTAMP-NEEDS>
+  <SHORT-NAME>IdsMgrCustomTimestampNeeds</SHORT-NAME>
+  <DESC>
+    <L-2 L="FOR-ALL">Needs for custom timestamp</L-2>
+  </DESC>
+  <CATEGORY>SERVICE_NEEDS</CATEGORY>
+</IDS-MGR-CUSTOM-TIMESTAMP-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.IdsMgrCustomTimestampNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.IdsMgrCustomTimestampNeeds)
+        self.assertEqual(elem.desc.elements[0].parts[0], "Needs for custom timestamp")
+        self.assertEqual(elem.category, "SERVICE_NEEDS")
+
+
+class TestIdsMgrNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.IdsMgrNeeds("IdsMgrNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<IDS-MGR-NEEDS>
+  <SHORT-NAME>IdsMgrNeeds</SHORT-NAME>
+</IDS-MGR-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.IdsMgrNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.IdsMgrNeeds)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "IdsMgrNeeds")
+        self.assertIsNone(elem.use_smart_sensor_api)
+
+    def test_with_use_smart_sensor_api_true(self):
+        element = ar_element.IdsMgrNeeds("IdsMgrNeeds", use_smart_sensor_api=True)
+        writer = autosar.xml.Writer()
+        xml = '''<IDS-MGR-NEEDS>
+  <SHORT-NAME>IdsMgrNeeds</SHORT-NAME>
+  <USE-SMART-SENSOR-API>true</USE-SMART-SENSOR-API>
+</IDS-MGR-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.IdsMgrNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.IdsMgrNeeds)
+        self.assertTrue(elem.use_smart_sensor_api)
+
+    def test_with_use_smart_sensor_api_false(self):
+        element = ar_element.IdsMgrNeeds("IdsMgrNeeds", use_smart_sensor_api=False)
+        writer = autosar.xml.Writer()
+        xml = '''<IDS-MGR-NEEDS>
+  <SHORT-NAME>IdsMgrNeeds</SHORT-NAME>
+  <USE-SMART-SENSOR-API>false</USE-SMART-SENSOR-API>
+</IDS-MGR-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.IdsMgrNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.IdsMgrNeeds)
+        self.assertFalse(elem.use_smart_sensor_api)
+
+    def test_with_admin_data_and_all_fields(self):
+        admin_data = ar_element.AdminData(
+            doc_revisions=ar_element.DocRevision(revision_label="1.0.0")
+        )
+        element = ar_element.IdsMgrNeeds(
+            "IdsMgrNeeds",
+            use_smart_sensor_api=True,
+            admin_data=admin_data,
+            desc="IdsMgr needs description",
+            category="SERVICE_NEEDS"
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<IDS-MGR-NEEDS>
+  <SHORT-NAME>IdsMgrNeeds</SHORT-NAME>
+  <DESC>
+    <L-2 L="FOR-ALL">IdsMgr needs description</L-2>
+  </DESC>
+  <CATEGORY>SERVICE_NEEDS</CATEGORY>
+  <ADMIN-DATA>
+    <DOC-REVISIONS>
+      <DOC-REVISION>
+        <REVISION-LABEL>1.0.0</REVISION-LABEL>
+      </DOC-REVISION>
+    </DOC-REVISIONS>
+  </ADMIN-DATA>
+  <USE-SMART-SENSOR-API>true</USE-SMART-SENSOR-API>
+</IDS-MGR-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.IdsMgrNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.IdsMgrNeeds)
+        self.assertTrue(elem.use_smart_sensor_api)
+        self.assertEqual(str(elem.admin_data.doc_revisions[0].revision_label), "1.0.0")
+        self.assertEqual(elem.desc.elements[0].parts[0], "IdsMgr needs description")
+        self.assertEqual(elem.category, "SERVICE_NEEDS")
+
+
+class TestJ1939DcmDm19Support(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.J1939DcmDm19Support("J1939DcmDm19Support")
+        writer = autosar.xml.Writer()
+        xml = '''<J-1939-DCM-DM-19-SUPPORT>
+  <SHORT-NAME>J1939DcmDm19Support</SHORT-NAME>
+</J-1939-DCM-DM-19-SUPPORT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.J1939DcmDm19Support = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.J1939DcmDm19Support)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "J1939DcmDm19Support")
+
+    def test_with_admin_data(self):
+        admin_data = ar_element.AdminData(
+            doc_revisions=ar_element.DocRevision(revision_label="1.0.0")
+        )
+        element = ar_element.J1939DcmDm19Support("J1939DcmDm19Support", admin_data=admin_data)
+        writer = autosar.xml.Writer()
+        xml = '''<J-1939-DCM-DM-19-SUPPORT>
+  <SHORT-NAME>J1939DcmDm19Support</SHORT-NAME>
+  <ADMIN-DATA>
+    <DOC-REVISIONS>
+      <DOC-REVISION>
+        <REVISION-LABEL>1.0.0</REVISION-LABEL>
+      </DOC-REVISION>
+    </DOC-REVISIONS>
+  </ADMIN-DATA>
+</J-1939-DCM-DM-19-SUPPORT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.J1939DcmDm19Support = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.J1939DcmDm19Support)
+        self.assertEqual(str(elem.admin_data.doc_revisions[0].revision_label), "1.0.0")
+
+    def test_with_desc_and_category(self):
+        element = ar_element.J1939DcmDm19Support(
+            "J1939DcmDm19Support",
+            desc="Needs for J1939 DM19",
+            category="SERVICE_NEEDS"
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<J-1939-DCM-DM-19-SUPPORT>
+  <SHORT-NAME>J1939DcmDm19Support</SHORT-NAME>
+  <DESC>
+    <L-2 L="FOR-ALL">Needs for J1939 DM19</L-2>
+  </DESC>
+  <CATEGORY>SERVICE_NEEDS</CATEGORY>
+</J-1939-DCM-DM-19-SUPPORT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.J1939DcmDm19Support = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.J1939DcmDm19Support)
+        self.assertEqual(elem.desc.elements[0].parts[0], "Needs for J1939 DM19")
+        self.assertEqual(elem.category, "SERVICE_NEEDS")
+
+
+class TestJ1939RmIncomingRequestServiceNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.J1939RmIncomingRequestServiceNeeds("J1939RmIncomingRequestServiceNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<J-1939-RM-INCOMING-REQUEST-SERVICE-NEEDS>
+  <SHORT-NAME>J1939RmIncomingRequestServiceNeeds</SHORT-NAME>
+</J-1939-RM-INCOMING-REQUEST-SERVICE-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.J1939RmIncomingRequestServiceNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.J1939RmIncomingRequestServiceNeeds)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "J1939RmIncomingRequestServiceNeeds")
+
+    def test_with_admin_data(self):
+        admin_data = ar_element.AdminData(
+            doc_revisions=ar_element.DocRevision(revision_label="1.0.0")
+        )
+        element = ar_element.J1939RmIncomingRequestServiceNeeds(
+            "J1939RmIncomingRequestServiceNeeds",
+            admin_data=admin_data
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<J-1939-RM-INCOMING-REQUEST-SERVICE-NEEDS>
+  <SHORT-NAME>J1939RmIncomingRequestServiceNeeds</SHORT-NAME>
+  <ADMIN-DATA>
+    <DOC-REVISIONS>
+      <DOC-REVISION>
+        <REVISION-LABEL>1.0.0</REVISION-LABEL>
+      </DOC-REVISION>
+    </DOC-REVISIONS>
+  </ADMIN-DATA>
+</J-1939-RM-INCOMING-REQUEST-SERVICE-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.J1939RmIncomingRequestServiceNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.J1939RmIncomingRequestServiceNeeds)
+        self.assertEqual(str(elem.admin_data.doc_revisions[0].revision_label), "1.0.0")
+
+    def test_with_desc_and_category(self):
+        element = ar_element.J1939RmIncomingRequestServiceNeeds(
+            "J1939RmIncomingRequestServiceNeeds",
+            desc="Incoming request needs",
+            category="SERVICE_NEEDS"
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<J-1939-RM-INCOMING-REQUEST-SERVICE-NEEDS>
+  <SHORT-NAME>J1939RmIncomingRequestServiceNeeds</SHORT-NAME>
+  <DESC>
+    <L-2 L="FOR-ALL">Incoming request needs</L-2>
+  </DESC>
+  <CATEGORY>SERVICE_NEEDS</CATEGORY>
+</J-1939-RM-INCOMING-REQUEST-SERVICE-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.J1939RmIncomingRequestServiceNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.J1939RmIncomingRequestServiceNeeds)
+        self.assertEqual(elem.desc.elements[0].parts[0], "Incoming request needs")
+        self.assertEqual(elem.category, "SERVICE_NEEDS")
+
+
+class TestJ1939RmOutgoingRequestServiceNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.J1939RmOutgoingRequestServiceNeeds("J1939RmOutgoingRequestServiceNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<J-1939-RM-OUTGOING-REQUEST-SERVICE-NEEDS>
+  <SHORT-NAME>J1939RmOutgoingRequestServiceNeeds</SHORT-NAME>
+</J-1939-RM-OUTGOING-REQUEST-SERVICE-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.J1939RmOutgoingRequestServiceNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.J1939RmOutgoingRequestServiceNeeds)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "J1939RmOutgoingRequestServiceNeeds")
+
+    def test_with_admin_data(self):
+        admin_data = ar_element.AdminData(
+            doc_revisions=ar_element.DocRevision(revision_label="1.0.0")
+        )
+        element = ar_element.J1939RmOutgoingRequestServiceNeeds(
+            "J1939RmOutgoingRequestServiceNeeds",
+            admin_data=admin_data
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<J-1939-RM-OUTGOING-REQUEST-SERVICE-NEEDS>
+  <SHORT-NAME>J1939RmOutgoingRequestServiceNeeds</SHORT-NAME>
+  <ADMIN-DATA>
+    <DOC-REVISIONS>
+      <DOC-REVISION>
+        <REVISION-LABEL>1.0.0</REVISION-LABEL>
+      </DOC-REVISION>
+    </DOC-REVISIONS>
+  </ADMIN-DATA>
+</J-1939-RM-OUTGOING-REQUEST-SERVICE-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.J1939RmOutgoingRequestServiceNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.J1939RmOutgoingRequestServiceNeeds)
+        self.assertEqual(str(elem.admin_data.doc_revisions[0].revision_label), "1.0.0")
+
+    def test_with_desc_and_category(self):
+        element = ar_element.J1939RmOutgoingRequestServiceNeeds(
+            "J1939RmOutgoingRequestServiceNeeds",
+            desc="Outgoing request needs",
+            category="SERVICE_NEEDS"
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<J-1939-RM-OUTGOING-REQUEST-SERVICE-NEEDS>
+  <SHORT-NAME>J1939RmOutgoingRequestServiceNeeds</SHORT-NAME>
+  <DESC>
+    <L-2 L="FOR-ALL">Outgoing request needs</L-2>
+  </DESC>
+  <CATEGORY>SERVICE_NEEDS</CATEGORY>
+</J-1939-RM-OUTGOING-REQUEST-SERVICE-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.J1939RmOutgoingRequestServiceNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.J1939RmOutgoingRequestServiceNeeds)
+        self.assertEqual(elem.desc.elements[0].parts[0], "Outgoing request needs")
+        self.assertEqual(elem.category, "SERVICE_NEEDS")
+
+
+class TestSecureOnBoardCommunicationNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.SecureOnBoardCommunicationNeeds("SecureOnBoardCommunicationNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<SECURE-ON-BOARD-COMMUNICATION-NEEDS>
+  <SHORT-NAME>SecureOnBoardCommunicationNeeds</SHORT-NAME>
+</SECURE-ON-BOARD-COMMUNICATION-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SecureOnBoardCommunicationNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SecureOnBoardCommunicationNeeds)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "SecureOnBoardCommunicationNeeds")
+        self.assertIsNone(elem.verification_status_indication_mode)
+
+    def test_with_verification_status_indication_mode_enum(self):
+        element = ar_element.SecureOnBoardCommunicationNeeds(
+            "SecureOnBoardCommunicationNeeds",
+            verification_status_indication_mode=ar_enum.VerificationStatusIndicationMode.FAILURE_AND_SUCCESS
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<SECURE-ON-BOARD-COMMUNICATION-NEEDS>
+  <SHORT-NAME>SecureOnBoardCommunicationNeeds</SHORT-NAME>
+  <VERIFICATION-STATUS-INDICATION-MODE>FAILURE-AND-SUCCESS</VERIFICATION-STATUS-INDICATION-MODE>
+</SECURE-ON-BOARD-COMMUNICATION-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SecureOnBoardCommunicationNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SecureOnBoardCommunicationNeeds)
+        self.assertEqual(elem.verification_status_indication_mode,
+                         ar_enum.VerificationStatusIndicationMode.FAILURE_AND_SUCCESS)
+
+    def test_with_verification_status_indication_mode_str(self):
+        element = ar_element.SecureOnBoardCommunicationNeeds(
+            "SecureOnBoardCommunicationNeeds",
+            verification_status_indication_mode="FAILURE-ONLY"
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<SECURE-ON-BOARD-COMMUNICATION-NEEDS>
+  <SHORT-NAME>SecureOnBoardCommunicationNeeds</SHORT-NAME>
+  <VERIFICATION-STATUS-INDICATION-MODE>FAILURE-ONLY</VERIFICATION-STATUS-INDICATION-MODE>
+</SECURE-ON-BOARD-COMMUNICATION-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SecureOnBoardCommunicationNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SecureOnBoardCommunicationNeeds)
+        self.assertEqual(elem.verification_status_indication_mode,
+                         ar_enum.VerificationStatusIndicationMode.FAILURE_ONLY)
+
+    def test_with_admin_data_and_all_fields(self):
+        admin_data = ar_element.AdminData(
+            doc_revisions=ar_element.DocRevision(revision_label="1.0.0")
+        )
+        element = ar_element.SecureOnBoardCommunicationNeeds(
+            "SecureOnBoardCommunicationNeeds",
+            verification_status_indication_mode=ar_enum.VerificationStatusIndicationMode.FAILURE_ONLY,
+            admin_data=admin_data,
+            desc="SecOC needs description",
+            category="SERVICE_NEEDS"
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<SECURE-ON-BOARD-COMMUNICATION-NEEDS>
+  <SHORT-NAME>SecureOnBoardCommunicationNeeds</SHORT-NAME>
+  <DESC>
+    <L-2 L="FOR-ALL">SecOC needs description</L-2>
+  </DESC>
+  <CATEGORY>SERVICE_NEEDS</CATEGORY>
+  <ADMIN-DATA>
+    <DOC-REVISIONS>
+      <DOC-REVISION>
+        <REVISION-LABEL>1.0.0</REVISION-LABEL>
+      </DOC-REVISION>
+    </DOC-REVISIONS>
+  </ADMIN-DATA>
+  <VERIFICATION-STATUS-INDICATION-MODE>FAILURE-ONLY</VERIFICATION-STATUS-INDICATION-MODE>
+</SECURE-ON-BOARD-COMMUNICATION-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SecureOnBoardCommunicationNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SecureOnBoardCommunicationNeeds)
+        self.assertEqual(elem.verification_status_indication_mode,
+                         ar_enum.VerificationStatusIndicationMode.FAILURE_ONLY)
+        self.assertEqual(str(elem.admin_data.doc_revisions[0].revision_label), "1.0.0")
+        self.assertEqual(elem.desc.elements[0].parts[0], "SecOC needs description")
+        self.assertEqual(elem.category, "SERVICE_NEEDS")
+
+
+class TestSyncTimeBaseMgrUserNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.SyncTimeBaseMgrUserNeeds("SyncTimeBaseMgrUserNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<SYNC-TIME-BASE-MGR-USER-NEEDS>
+  <SHORT-NAME>SyncTimeBaseMgrUserNeeds</SHORT-NAME>
+</SYNC-TIME-BASE-MGR-USER-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SyncTimeBaseMgrUserNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SyncTimeBaseMgrUserNeeds)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "SyncTimeBaseMgrUserNeeds")
+
+    def test_with_admin_data(self):
+        admin_data = ar_element.AdminData(
+            doc_revisions=ar_element.DocRevision(revision_label="1.0.0")
+        )
+        element = ar_element.SyncTimeBaseMgrUserNeeds("SyncTimeBaseMgrUserNeeds", admin_data=admin_data)
+        writer = autosar.xml.Writer()
+        xml = '''<SYNC-TIME-BASE-MGR-USER-NEEDS>
+  <SHORT-NAME>SyncTimeBaseMgrUserNeeds</SHORT-NAME>
+  <ADMIN-DATA>
+    <DOC-REVISIONS>
+      <DOC-REVISION>
+        <REVISION-LABEL>1.0.0</REVISION-LABEL>
+      </DOC-REVISION>
+    </DOC-REVISIONS>
+  </ADMIN-DATA>
+</SYNC-TIME-BASE-MGR-USER-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SyncTimeBaseMgrUserNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SyncTimeBaseMgrUserNeeds)
+        self.assertEqual(str(elem.admin_data.doc_revisions[0].revision_label), "1.0.0")
+
+    def test_with_desc_and_category(self):
+        element = ar_element.SyncTimeBaseMgrUserNeeds(
+            "SyncTimeBaseMgrUserNeeds",
+            desc="Needs for synchronized time base manager",
+            category="SERVICE_NEEDS"
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<SYNC-TIME-BASE-MGR-USER-NEEDS>
+  <SHORT-NAME>SyncTimeBaseMgrUserNeeds</SHORT-NAME>
+  <DESC>
+    <L-2 L="FOR-ALL">Needs for synchronized time base manager</L-2>
+  </DESC>
+  <CATEGORY>SERVICE_NEEDS</CATEGORY>
+</SYNC-TIME-BASE-MGR-USER-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SyncTimeBaseMgrUserNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SyncTimeBaseMgrUserNeeds)
+        self.assertEqual(elem.desc.elements[0].parts[0], "Needs for synchronized time base manager")
+        self.assertEqual(elem.category, "SERVICE_NEEDS")
+
+
+class TestV2xDataManagerNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.V2xDataManagerNeeds("V2xDataManagerNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<V-2-X-DATA-MANAGER-NEEDS>
+  <SHORT-NAME>V2xDataManagerNeeds</SHORT-NAME>
+</V-2-X-DATA-MANAGER-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.V2xDataManagerNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.V2xDataManagerNeeds)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "V2xDataManagerNeeds")
+
+    def test_with_admin_data(self):
+        admin_data = ar_element.AdminData(
+            doc_revisions=ar_element.DocRevision(revision_label="1.0.0")
+        )
+        element = ar_element.V2xDataManagerNeeds("V2xDataManagerNeeds", admin_data=admin_data)
+        writer = autosar.xml.Writer()
+        xml = '''<V-2-X-DATA-MANAGER-NEEDS>
+  <SHORT-NAME>V2xDataManagerNeeds</SHORT-NAME>
+  <ADMIN-DATA>
+    <DOC-REVISIONS>
+      <DOC-REVISION>
+        <REVISION-LABEL>1.0.0</REVISION-LABEL>
+      </DOC-REVISION>
+    </DOC-REVISIONS>
+  </ADMIN-DATA>
+</V-2-X-DATA-MANAGER-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.V2xDataManagerNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.V2xDataManagerNeeds)
+        self.assertEqual(str(elem.admin_data.doc_revisions[0].revision_label), "1.0.0")
+
+    def test_with_desc_and_category(self):
+        element = ar_element.V2xDataManagerNeeds(
+            "V2xDataManagerNeeds",
+            desc="V2X Data Manager needs",
+            category="SERVICE_NEEDS"
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<V-2-X-DATA-MANAGER-NEEDS>
+  <SHORT-NAME>V2xDataManagerNeeds</SHORT-NAME>
+  <DESC>
+    <L-2 L="FOR-ALL">V2X Data Manager needs</L-2>
+  </DESC>
+  <CATEGORY>SERVICE_NEEDS</CATEGORY>
+</V-2-X-DATA-MANAGER-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.V2xDataManagerNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.V2xDataManagerNeeds)
+        self.assertEqual(elem.desc.elements[0].parts[0], "V2X Data Manager needs")
+        self.assertEqual(elem.category, "SERVICE_NEEDS")
+
+
+class TestV2xFacUserNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.V2xFacUserNeeds("V2xFacUserNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<V-2-X-FAC-USER-NEEDS>
+  <SHORT-NAME>V2xFacUserNeeds</SHORT-NAME>
+</V-2-X-FAC-USER-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.V2xFacUserNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.V2xFacUserNeeds)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "V2xFacUserNeeds")
+
+    def test_with_admin_data(self):
+        admin_data = ar_element.AdminData(
+            doc_revisions=ar_element.DocRevision(revision_label="1.0.0")
+        )
+        element = ar_element.V2xFacUserNeeds("V2xFacUserNeeds", admin_data=admin_data)
+        writer = autosar.xml.Writer()
+        xml = '''<V-2-X-FAC-USER-NEEDS>
+  <SHORT-NAME>V2xFacUserNeeds</SHORT-NAME>
+  <ADMIN-DATA>
+    <DOC-REVISIONS>
+      <DOC-REVISION>
+        <REVISION-LABEL>1.0.0</REVISION-LABEL>
+      </DOC-REVISION>
+    </DOC-REVISIONS>
+  </ADMIN-DATA>
+</V-2-X-FAC-USER-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.V2xFacUserNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.V2xFacUserNeeds)
+        self.assertEqual(str(elem.admin_data.doc_revisions[0].revision_label), "1.0.0")
+
+    def test_with_desc_and_category(self):
+        element = ar_element.V2xFacUserNeeds(
+            "V2xFacUserNeeds",
+            desc="V2X Facilities needs",
+            category="SERVICE_NEEDS"
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<V-2-X-FAC-USER-NEEDS>
+  <SHORT-NAME>V2xFacUserNeeds</SHORT-NAME>
+  <DESC>
+    <L-2 L="FOR-ALL">V2X Facilities needs</L-2>
+  </DESC>
+  <CATEGORY>SERVICE_NEEDS</CATEGORY>
+</V-2-X-FAC-USER-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.V2xFacUserNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.V2xFacUserNeeds)
+        self.assertEqual(elem.desc.elements[0].parts[0], "V2X Facilities needs")
+        self.assertEqual(elem.category, "SERVICE_NEEDS")
+
+
+class TestV2xMUserNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.V2xMUserNeeds("V2xMUserNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<V-2-X-M-USER-NEEDS>
+  <SHORT-NAME>V2xMUserNeeds</SHORT-NAME>
+</V-2-X-M-USER-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.V2xMUserNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.V2xMUserNeeds)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "V2xMUserNeeds")
+
+    def test_with_admin_data(self):
+        admin_data = ar_element.AdminData(
+            doc_revisions=ar_element.DocRevision(revision_label="1.0.0")
+        )
+        element = ar_element.V2xMUserNeeds("V2xMUserNeeds", admin_data=admin_data)
+        writer = autosar.xml.Writer()
+        xml = '''<V-2-X-M-USER-NEEDS>
+  <SHORT-NAME>V2xMUserNeeds</SHORT-NAME>
+  <ADMIN-DATA>
+    <DOC-REVISIONS>
+      <DOC-REVISION>
+        <REVISION-LABEL>1.0.0</REVISION-LABEL>
+      </DOC-REVISION>
+    </DOC-REVISIONS>
+  </ADMIN-DATA>
+</V-2-X-M-USER-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.V2xMUserNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.V2xMUserNeeds)
+        self.assertEqual(str(elem.admin_data.doc_revisions[0].revision_label), "1.0.0")
+
+    def test_with_desc_and_category(self):
+        element = ar_element.V2xMUserNeeds(
+            "V2xMUserNeeds",
+            desc="V2X Management needs",
+            category="SERVICE_NEEDS"
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<V-2-X-M-USER-NEEDS>
+  <SHORT-NAME>V2xMUserNeeds</SHORT-NAME>
+  <DESC>
+    <L-2 L="FOR-ALL">V2X Management needs</L-2>
+  </DESC>
+  <CATEGORY>SERVICE_NEEDS</CATEGORY>
+</V-2-X-M-USER-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.V2xMUserNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.V2xMUserNeeds)
+        self.assertEqual(elem.desc.elements[0].parts[0], "V2X Management needs")
+        self.assertEqual(elem.category, "SERVICE_NEEDS")
 
 
 if __name__ == '__main__':

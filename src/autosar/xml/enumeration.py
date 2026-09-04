@@ -871,6 +871,16 @@ class VariableAccessScope(Enum):
     COMMUNICATION_INTRA_PARTITION = 1
     INTER_PARTITION_INTRA_ECU = 2
 
+
+class VerificationStatusIndicationMode(Enum):
+    """
+    AR:VERIFICATION-STATUS-INDICATION-MODE-ENUM--SIMPLE
+    """
+
+    FAILURE_AND_SUCCESS = 0
+    FAILURE_ONLY = 1
+
+
 ########################################
 
 
@@ -1382,6 +1392,10 @@ xml_to_enum_map: dict[str, dict] = {
         "COMMUNICATION-INTER-ECU": VariableAccessScope.COMMUNICATION_INTER_ECU,
         "COMMUNICATION-INTRA-PARTITION": VariableAccessScope.COMMUNICATION_INTRA_PARTITION,
         "INTER-PARTITION-INTRA-ECU": VariableAccessScope.INTER_PARTITION_INTRA_ECU,
+    },
+    "VerificationStatusIndicationMode": {
+        "FAILURE-AND-SUCCESS": VerificationStatusIndicationMode.FAILURE_AND_SUCCESS,
+        "FAILURE-ONLY": VerificationStatusIndicationMode.FAILURE_ONLY,
     }
 }
 
@@ -1886,6 +1900,10 @@ enum_to_xml_map: dict[str, list] = {
         "COMMUNICATION-INTER-ECU",        # 0
         "COMMUNICATION-INTRA-PARTITION",  # 1
         "INTER-PARTITION-INTRA-ECU",      # 2
+    ],
+    "VerificationStatusIndicationMode": [
+        "FAILURE-AND-SUCCESS",  # 0
+        "FAILURE-ONLY",         # 1
     ]
 }
 

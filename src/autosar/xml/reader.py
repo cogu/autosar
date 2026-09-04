@@ -363,7 +363,12 @@ class Reader:
             'FURTHER-ACTION-BYTE-NEEDS': self._read_further_action_byte_needs,
             'GLOBAL-SUPERVISION-NEEDS': self._read_global_supervision_needs,
             'HARDWARE-TEST-NEEDS': self._read_hardware_test_needs,
+            'IDS-MGR-CUSTOM-TIMESTAMP-NEEDS': self._read_ids_mgr_custom_timestamp_needs,
+            'IDS-MGR-NEEDS': self._read_ids_mgr_needs,
             'INDICATOR-STATUS-NEEDS': self._read_indicator_status_needs,
+            'J-1939-DCM-DM-19-SUPPORT': self._read_j1939_dcm_dm_19_support,
+            'J-1939-RM-INCOMING-REQUEST-SERVICE-NEEDS': self._read_j1939_rm_incoming_request_service_needs,
+            'J-1939-RM-OUTGOING-REQUEST-SERVICE-NEEDS': self._read_j1939_rm_outgoing_request_service_needs,
             'OBD-CONTROL-SERVICE-NEEDS': self._read_obd_control_service_needs,
             'OBD-INFO-SERVICE-NEEDS': self._read_obd_info_service_needs,
             'OBD-MONITOR-SERVICE-NEEDS': self._read_obd_monitor_service_needs,
@@ -372,12 +377,17 @@ class Reader:
             'OBD-RATIO-SERVICE-NEEDS': self._read_obd_ratio_service_needs,
             'POSSIBLE-ERROR-REACTION': self._read_possible_error_reaction,
             'RUNTIME-ERROR': self._read_runtime_error,
+            'SECURE-ON-BOARD-COMMUNICATION-NEEDS': self._read_secure_on_board_communication_needs,
             'SUPERVISED-ENTITY-CHECKPOINT-NEEDS': self._read_supervised_entity_checkpoint_needs,
             'SUPERVISED-ENTITY-CHECKPOINT-NEEDS-REF-CONDITIONAL':
             self._read_supervised_entity_checkpoint_needs_ref_conditional,
             'SUPERVISED-ENTITY-NEEDS': self._read_supervised_entity_needs,
+            'SYNC-TIME-BASE-MGR-USER-NEEDS': self._read_sync_time_base_mgr_user_needs,
             'TRANSIENT-FAULT': self._read_transient_fault,
             'VENDOR-SPECIFIC-SERVICE-NEEDS': self._read_vendor_specific_service_needs,
+            'V-2-X-DATA-MANAGER-NEEDS': self._read_v2x_data_manager_needs,
+            'V-2-X-FAC-USER-NEEDS': self._read_v2x_fac_user_needs,
+            'V-2-X-M-USER-NEEDS': self._read_v2x_m_user_needs,
             'WARNING-INDICATOR-REQUESTED-BIT-NEEDS': self._read_warning_indicator_requested_bit_needs,
             # SWC internal behavior elements
             'AUTOSAR-VARIABLE-IN-IMPL-DATATYPE': self._read_variable_in_impl_data_instance_ref,
@@ -7357,6 +7367,44 @@ class Reader:
         self._report_unprocessed_elements(child_elements)
         return ar_element.HardwareTestNeeds(**data)
 
+    def _read_ids_mgr_custom_timestamp_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.IdsMgrCustomTimestampNeeds:
+        """
+        Reads complex type AR:IDS-MGR-CUSTOM-TIMESTAMP-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Groups AR:SERVICE-NEEDS and AR:IDS-MGR-CUSTOM-TIMESTAMP-NEEDS contain no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.IdsMgrCustomTimestampNeeds(**data)
+
+    def _read_ids_mgr_needs(self, xml_element: ElementTree.Element) -> ar_element.IdsMgrNeeds:
+        """
+        Reads complex type AR:IDS-MGR-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_ids_mgr_needs_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.IdsMgrNeeds(**data)
+
+    def _read_ids_mgr_needs_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:IDS-MGR-NEEDS
+        """
+        xml_child = child_elements.get("USE-SMART-SENSOR-API")
+        if xml_child is not None:
+            data["use_smart_sensor_api"] = self._read_boolean(xml_child.text)
+
     def _read_indicator_status_needs(
             self,
             xml_element: ElementTree.Element) -> ar_element.IndicatorStatusNeeds:
@@ -7383,6 +7431,52 @@ class Reader:
         xml_child = child_elements.get("TYPE")
         if xml_child is not None:
             data["type"] = ar_enum.xml_to_enum("DiagnosticIndicatorType", xml_child.text)
+
+    def _read_j1939_dcm_dm_19_support(self, xml_element: ElementTree.Element) -> ar_element.J1939DcmDm19Support:
+        """
+        Reads complex type AR:J-1939-DCM-DM-19-SUPPORT
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Groups AR:SERVICE-NEEDS and AR:J-1939-DCM-DM-19-SUPPORT contain no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.J1939DcmDm19Support(**data)
+
+    def _read_j1939_rm_incoming_request_service_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.J1939RmIncomingRequestServiceNeeds:
+        """
+        Reads complex type AR:J-1939-RM-INCOMING-REQUEST-SERVICE-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Groups AR:SERVICE-NEEDS and AR:J-1939-RM-INCOMING-REQUEST-SERVICE-NEEDS contain no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.J1939RmIncomingRequestServiceNeeds(**data)
+
+    def _read_j1939_rm_outgoing_request_service_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.J1939RmOutgoingRequestServiceNeeds:
+        """
+        Reads complex type AR:J-1939-RM-OUTGOING-REQUEST-SERVICE-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Groups AR:SERVICE-NEEDS and AR:J-1939-RM-OUTGOING-REQUEST-SERVICE-NEEDS contain no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.J1939RmOutgoingRequestServiceNeeds(**data)
 
     def _read_obd_control_service_needs(
             self,
@@ -7567,6 +7661,34 @@ class Reader:
         self._report_unprocessed_elements(child_elements)
         return ar_element.RuntimeError(**data)
 
+    def _read_secure_on_board_communication_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.SecureOnBoardCommunicationNeeds:
+        """
+        Reads complex type AR:SECURE-ON-BOARD-COMMUNICATION-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_secure_on_board_communication_needs_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.SecureOnBoardCommunicationNeeds(**data)
+
+    def _read_secure_on_board_communication_needs_group(
+            self,
+            child_elements: ChildElementMap,
+            data: dict) -> None:
+        """
+        Reads group AR:SECURE-ON-BOARD-COMMUNICATION-NEEDS
+        """
+        xml_child = child_elements.get("VERIFICATION-STATUS-INDICATION-MODE")
+        if xml_child is not None:
+            data["verification_status_indication_mode"] = ar_enum.xml_to_enum("VerificationStatusIndicationMode",
+                                                                              xml_child.text)
+
     def _read_supervised_entity_checkpoint_needs(
             self,
             xml_element: ElementTree.Element) -> ar_element.SupervisedEntityCheckpointNeeds:
@@ -7651,6 +7773,22 @@ class Reader:
         if xml_child is not None:
             data["tolerated_failed_cycles"] = self._read_positive_integer(xml_child.text)
 
+    def _read_sync_time_base_mgr_user_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.SyncTimeBaseMgrUserNeeds:
+        """
+        Reads complex type AR:SYNC-TIME-BASE-MGR-USER-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Groups AR:SERVICE-NEEDS and AR:SYNC-TIME-BASE-MGR-USER-NEEDS contain no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.SyncTimeBaseMgrUserNeeds(**data)
+
     def _read_transient_fault(self, xml_element: ElementTree.Element) -> ar_element.TransientFault:
         """
         Reads complex type AR:TRANSIENT-FAULT
@@ -7692,6 +7830,48 @@ class Reader:
         # Groups AR:SERVICE-NEEDS and AR:VENDOR-SPECIFIC-SERVICE-NEEDS contain no elements
         self._report_unprocessed_elements(child_elements)
         return ar_element.VendorSpecificServiceNeeds(**data)
+
+    def _read_v2x_data_manager_needs(self, xml_element: ElementTree.Element) -> ar_element.V2xDataManagerNeeds:
+        """
+        Reads complex type AR:V-2-X-DATA-MANAGER-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Groups AR:SERVICE-NEEDS and AR:V-2-X-DATA-MANAGER-NEEDS contain no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.V2xDataManagerNeeds(**data)
+
+    def _read_v2x_fac_user_needs(self, xml_element: ElementTree.Element) -> ar_element.V2xFacUserNeeds:
+        """
+        Reads complex type AR:V-2-X-FAC-USER-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Groups AR:SERVICE-NEEDS and AR:V-2-X-FAC-USER-NEEDS contain no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.V2xFacUserNeeds(**data)
+
+    def _read_v2x_m_user_needs(self, xml_element: ElementTree.Element) -> ar_element.V2xMUserNeeds:
+        """
+        Reads complex type AR:V-2-X-M-USER-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        # Groups AR:SERVICE-NEEDS and AR:V-2-X-M-USER-NEEDS contain no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.V2xMUserNeeds(**data)
 
     def _read_warning_indicator_requested_bit_needs(
             self,

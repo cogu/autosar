@@ -63,7 +63,12 @@ Non-collectable elements are various sub-elements to collectable elements.
 * FurtherActionByteNeeds | FURTHER-ACTION-BYTE-NEEDS
 * GlobalSupervisionNeeds | GLOBAL-SUPERVISION-NEEDS
 * HardwareTestNeeds | HARDWARE-TEST-NEEDS
+* IdsMgrCustomTimestampNeeds | IDS-MGR-CUSTOM-TIMESTAMP-NEEDS
+* IdsMgrNeeds | IDS-MGR-NEEDS
 * IndicatorStatusNeeds | INDICATOR-STATUS-NEEDS
+* J1939DcmDm19Support | J-1939-DCM-DM-19-SUPPORT
+* J1939RmIncomingRequestServiceNeeds | J-1939-RM-INCOMING-REQUEST-SERVICE-NEEDS
+* J1939RmOutgoingRequestServiceNeeds | J-1939-RM-OUTGOING-REQUEST-SERVICE-NEEDS
 * ObdControlServiceNeeds | OBD-CONTROL-SERVICE-NEEDS
 * ObdInfoServiceNeeds | OBD-INFO-SERVICE-NEEDS
 * ObdMonitorServiceNeeds | OBD-MONITOR-SERVICE-NEEDS
@@ -72,11 +77,16 @@ Non-collectable elements are various sub-elements to collectable elements.
 * ObdRatioServiceNeeds | OBD-RATIO-SERVICE-NEEDS
 * PossibleErrorReaction | POSSIBLE-ERROR-REACTION
 * RuntimeError | RUNTIME-ERROR
+* SecureOnBoardCommunicationNeeds | SECURE-ON-BOARD-COMMUNICATION-NEEDS
 * SupervisedEntityCheckpointNeeds | SUPERVISED-ENTITY-CHECKPOINT-NEEDS
 * SupervisedEntityCheckpointNeedsRefConditional | SUPERVISED-ENTITY-CHECKPOINT-NEEDS-REF-CONDITIONAL
 * SupervisedEntityNeeds | SUPERVISED-ENTITY-NEEDS
+* SyncTimeBaseMgrUserNeeds | SYNC-TIME-BASE-MGR-USER-NEEDS
 * TransientFault | TRANSIENT-FAULT
 * VendorSpecificServiceNeeds | VENDOR-SPECIFIC-SERVICE-NEEDS
+* V2xDataManagerNeeds | V-2-X-DATA-MANAGER-NEEDS
+* V2xFacUserNeeds | V-2-X-FAC-USER-NEEDS
+* V2xMUserNeeds | V-2-X-M-USER-NEEDS
 * WarningIndicatorRequestedBitNeeds | WARNING-INDICATOR-REQUESTED-BIT-NEEDS
 
 #### XML - SWC internal behavior elements
