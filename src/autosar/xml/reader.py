@@ -334,15 +334,20 @@ class Reader:
             'DIAG-EVENT-DEBOUNCE-COUNTER-BASED': self._read_diag_event_debounce_counter_based,
             'DIAG-EVENT-DEBOUNCE-MONITOR-INTERNAL': self._read_diag_event_debounce_monitor_internal,
             'DIAG-EVENT-DEBOUNCE-TIME-BASED': self._read_diag_event_debounce_time_based,
+            'DIAGNOSTIC-CLEAR-CONDITION-NEEDS': self._read_diagnostic_clear_condition_needs,
             'DIAGNOSTIC-COMMUNICATION-MANAGER-NEEDS': self._read_diagnostic_communication_manager_needs,
             'DIAGNOSTIC-COMPONENT-NEEDS': self._read_diagnostic_component_needs,
             'DIAGNOSTIC-CONTROL-NEEDS': self._read_diagnostic_control_needs,
             'DIAGNOSTIC-ENABLE-CONDITION-NEEDS': self._read_diagnostic_enable_condition_needs,
             'DIAGNOSTIC-EVENT-INFO-NEEDS': self._read_diagnostic_event_info_needs,
             'DIAGNOSTIC-EVENT-MANAGER-NEEDS': self._read_diagnostic_event_manager_needs,
+            'DIAGNOSTIC-EVENT-NEEDS': self._read_diagnostic_event_needs,
+            'DIAGNOSTIC-GENERIC-UDS-NEEDS': self._read_diagnostic_generic_uds_needs,
+            'DIAGNOSTIC-INDICATOR-NEEDS': self._read_diagnostic_indicator_needs,
             'DIAGNOSTIC-IO-CONTROL-NEEDS': self._read_diagnostic_io_control_needs,
             'DIAGNOSTIC-OPERATION-CYCLE-NEEDS': self._read_diagnostic_operation_cycle_needs,
             'DIAGNOSTIC-REQUEST-FILE-TRANSFER-NEEDS': self._read_diagnostic_request_file_transfer_needs,
+            'DIAGNOSTIC-RESPONSE-ON-EVENT-NEEDS': self._read_diagnostic_response_on_event_needs,
             'DIAGNOSTIC-ROUTINE-NEEDS': self._read_diagnostic_routine_needs,
             'DIAGNOSTIC-STORAGE-CONDITION-NEEDS': self._read_diagnostic_storage_condition_needs,
             'DIAGNOSTIC-UPLOAD-DOWNLOAD-NEEDS': self._read_diagnostic_upload_download_needs,
@@ -6609,6 +6614,19 @@ class Reader:
         self._report_unprocessed_elements(child_elements)
         return ar_element.DevelopmentError(**data)
 
+    def _read_diag_event_debounce_algorithm(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.DiagEventDebounceAlgorithmType:
+        """
+        Reads choice AR:DIAG-EVENT-DEBOUNCE-ALGORITHM
+        """
+        for xml_child in xml_element:
+            read_method = self.switcher_non_collectable.get(xml_child.tag, None)
+            if read_method is not None:
+                return read_method(xml_child)
+            self._raise_parse_error(xml_child, f"Unexpected element <{xml_child.tag}>")
+        raise ar_exception.ParseError("Empty DIAG-EVENT-DEBOUNCE-ALGORITHM")
+
     def _read_diag_event_debounce_counter_based(
             self,
             xml_element: ElementTree.Element) -> ar_element.DiagEventDebounceCounterBased:
@@ -6728,6 +6746,23 @@ class Reader:
         xml_child = child_elements.get("SECURITY-ACCESS-LEVEL")
         if xml_child is not None:
             data["security_access_level"] = ar_element.PositiveIntegerValue(xml_child.text).value
+
+    def _read_diagnostic_clear_condition_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.DiagnosticClearConditionNeeds:
+        """
+        Reads complex type AR:DIAGNOSTIC-CLEAR-CONDITION-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_diagnostic_capability_element_group(child_elements, data)
+        # Group AR:DIAGNOSTIC-CLEAR-CONDITION-NEEDS contains no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.DiagnosticClearConditionNeeds(**data)
 
     def _read_diagnostic_communication_manager_needs(
             self,
@@ -6861,6 +6896,98 @@ class Reader:
         self._report_unprocessed_elements(child_elements)
         return ar_element.DiagnosticEventManagerNeeds(**data)
 
+    def _read_diagnostic_event_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.DiagnosticEventNeeds:
+        """
+        Reads complex type AR:DIAGNOSTIC-EVENT-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_diagnostic_capability_element_group(child_elements, data)
+        self._read_diagnostic_event_needs_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.DiagnosticEventNeeds(**data)
+
+    def _read_diagnostic_event_needs_group(self, child_elements: ChildElementMap, data: dict) -> None:
+        """
+        Reads group AR:DIAGNOSTIC-EVENT-NEEDS
+        """
+        xml_child = child_elements.get("CONSIDER-PTO-STATUS")
+        if xml_child is not None:
+            data["consider_pto_status"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("DIAG-EVENT-DEBOUNCE-ALGORITHM")
+        if xml_child is not None:
+            data["diag_event_debounce_algorithm"] = self._read_diag_event_debounce_algorithm(xml_child)
+        xml_child = child_elements.get("DTC-KIND")
+        if xml_child is not None:
+            data["dtc_kind"] = ar_enum.xml_to_enum("DtcKind", xml_child.text)
+        xml_child = child_elements.get("DTC-NUMBER")
+        if xml_child is not None:
+            data["dtc_number"] = self._read_positive_integer(xml_child.text)
+        xml_child = child_elements.get("INHIBITING-FID-REF")
+        if xml_child is not None:
+            data["inhibiting_fid_ref"] = self._read_function_inhibition_needs_ref(xml_child)
+        xml_child = child_elements.get("INHIBITING-SECONDARY-FID-REFS")
+        if xml_child is not None:
+            inhibiting_secondary_fid_refs = []
+            for xml_elem in xml_child.findall("./INHIBITING-SECONDARY-FID-REF"):
+                inhibiting_secondary_fid_refs.append(self._read_function_inhibition_needs_ref(xml_elem))
+            data["inhibiting_secondary_fid_refs"] = inhibiting_secondary_fid_refs
+        xml_child = child_elements.get("OBD-DTC-NUMBER")
+        if xml_child is not None:
+            data["obd_dtc_number"] = self._read_positive_integer(xml_child.text)
+        xml_child = child_elements.get("PRESTORED-FREEZEFRAME-STORED-IN-NVM")
+        if xml_child is not None:
+            data["prestored_freezeframe_stored_in_nvm"] = self._read_boolean(xml_child.text)
+        xml_child = child_elements.get("REPORT-BEHAVIOR")
+        if xml_child is not None:
+            data["report_behavior"] = ar_enum.xml_to_enum("ReportBehavior", xml_child.text)
+        xml_child = child_elements.get("UDS-DTC-NUMBER")
+        if xml_child is not None:
+            data["uds_dtc_number"] = self._read_positive_integer(xml_child.text)
+        xml_child = child_elements.get("USES-MONITOR-DATA")
+        if xml_child is not None:
+            data["uses_monitor_data"] = self._read_boolean(xml_child.text)
+
+    def _read_diagnostic_generic_uds_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.DiagnosticGenericUdsNeeds:
+        """
+        Reads complex type AR:DIAGNOSTIC-GENERIC-UDS-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_diagnostic_capability_element_group(child_elements, data)
+        # Group AR:DIAGNOSTIC-GENERIC-UDS-NEEDS contains no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.DiagnosticGenericUdsNeeds(**data)
+
+    def _read_diagnostic_indicator_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.DiagnosticIndicatorNeeds:
+        """
+        Reads complex type AR:DIAGNOSTIC-INDICATOR-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_diagnostic_capability_element_group(child_elements, data)
+        # Group AR:DIAGNOSTIC-INDICATOR-NEEDS contains no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.DiagnosticIndicatorNeeds(**data)
+
     def _read_diagnostic_io_control_needs(
             self,
             xml_element: ElementTree.Element) -> ar_element.DiagnosticIoControlNeeds:
@@ -6939,6 +7066,23 @@ class Reader:
         # Group AR:DIAGNOSTIC-REQUEST-FILE-TRANSFER-NEEDS contains no elements
         self._report_unprocessed_elements(child_elements)
         return ar_element.DiagnosticRequestFileTransferNeeds(**data)
+
+    def _read_diagnostic_response_on_event_needs(
+            self,
+            xml_element: ElementTree.Element) -> ar_element.DiagnosticResponseOnEventNeeds:
+        """
+        Reads complex type AR:DIAGNOSTIC-RESPONSE-ON-EVENT-NEEDS
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_diagnostic_capability_element_group(child_elements, data)
+        # Group AR:DIAGNOSTIC-RESPONSE-ON-EVENT-NEEDS contains no elements
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.DiagnosticResponseOnEventNeeds(**data)
 
     def _read_diagnostic_routine_needs(
             self,

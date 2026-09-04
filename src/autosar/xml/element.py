@@ -7005,6 +7005,15 @@ class DiagnosticCapabilityElement(ServiceNeeds):
             raise ar_except.ElementTypeError("audience", ar_enum.DiagnosticAudience, item)
 
 
+class DiagnosticClearConditionNeeds(DiagnosticCapabilityElement):
+    """
+    Complex type AR:DIAGNOSTIC-CLEAR-CONDITION-NEEDS
+    Tag variants: 'DIAGNOSTIC-CLEAR-CONDITION-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
 class DiagnosticCommunicationManagerNeeds(DiagnosticCapabilityElement):
     """
     Complex type AR:DIAGNOSTIC-COMMUNICATION-MANAGER-NEEDS
@@ -7061,6 +7070,93 @@ class DiagnosticEnableConditionNeeds(DiagnosticCapabilityElement):
         self._assign_optional("initial_status", initial_status, ar_enum.EventAcceptanceStatus)
 
 
+DiagEventDebounceAlgorithmType = (DiagEventDebounceCounterBased |
+                                  DiagEventDebounceMonitorInternal |
+                                  DiagEventDebounceTimeBased)
+InhibitingSecondaryFidRefType = FunctionInhibitionNeedsRef | str
+
+
+class DiagnosticEventNeeds(DiagnosticCapabilityElement):
+    """
+    Complex type AR:DIAGNOSTIC-EVENT-NEEDS
+    Tag variants: 'DIAGNOSTIC-EVENT-NEEDS'
+    """
+
+    def __init__(self,
+                 name: str,
+                 consider_pto_status: bool | None = None,
+                 diag_event_debounce_algorithm: DiagEventDebounceAlgorithmType | None = None,
+                 dtc_kind: ar_enum.DtcKind | str | None = None,
+                 dtc_number: int | None = None,
+                 inhibiting_fid_ref: FunctionInhibitionNeedsRef | str | None = None,
+                 inhibiting_secondary_fid_refs: (InhibitingSecondaryFidRefType |
+                                                 list[InhibitingSecondaryFidRefType] |
+                                                 None) = None,
+                 obd_dtc_number: int | None = None,
+                 prestored_freezeframe_stored_in_nvm: bool | None = None,
+                 report_behavior: ar_enum.ReportBehavior | str | None = None,
+                 uds_dtc_number: int | None = None,
+                 uses_monitor_data: bool | None = None,
+                 **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        # .CONSIDER-PTO-STATUS
+        self.consider_pto_status: bool | None = None
+        # .DIAG-EVENT-DEBOUNCE-ALGORITHM
+        self.diag_event_debounce_algorithm: DiagEventDebounceAlgorithmType | None = None
+        # .DTC-KIND
+        self.dtc_kind: ar_enum.DtcKind | None = None
+        # .DTC-NUMBER
+        self.dtc_number: int | None = None
+        # .INHIBITING-FID-REF
+        self.inhibiting_fid_ref: FunctionInhibitionNeedsRef | None = None
+        # .INHIBITING-SECONDARY-FID-REFS
+        self.inhibiting_secondary_fid_refs: list[FunctionInhibitionNeedsRef] = []
+        # .OBD-DTC-NUMBER
+        self.obd_dtc_number: int | None = None
+        # .PRESTORED-FREEZEFRAME-STORED-IN-NVM
+        self.prestored_freezeframe_stored_in_nvm: bool | None = None
+        # .REPORT-BEHAVIOR
+        self.report_behavior: ar_enum.ReportBehavior | None = None
+        # .UDS-DTC-NUMBER
+        self.uds_dtc_number: int | None = None
+        # .USES-MONITOR-DATA
+        self.uses_monitor_data: bool | None = None
+
+        self._assign_optional("consider_pto_status", consider_pto_status, bool)
+        self._assign_optional_strict("diag_event_debounce_algorithm",
+                                     diag_event_debounce_algorithm,
+                                     (DiagEventDebounceCounterBased,
+                                      DiagEventDebounceMonitorInternal,
+                                      DiagEventDebounceTimeBased))
+        self._assign_optional("dtc_kind", dtc_kind, ar_enum.DtcKind)
+        self._assign_optional_positive_int("dtc_number", dtc_number)
+        self._assign_optional("inhibiting_fid_ref", inhibiting_fid_ref, FunctionInhibitionNeedsRef)
+        if inhibiting_secondary_fid_refs is not None:
+            if isinstance(inhibiting_secondary_fid_refs, list):
+                for ref in inhibiting_secondary_fid_refs:
+                    self.append_inhibiting_secondary_fid_ref(ref)
+            else:
+                self.append_inhibiting_secondary_fid_ref(inhibiting_secondary_fid_refs)
+        self._assign_optional_positive_int("obd_dtc_number", obd_dtc_number)
+        self._assign_optional("prestored_freezeframe_stored_in_nvm", prestored_freezeframe_stored_in_nvm, bool)
+        self._assign_optional("report_behavior", report_behavior, ar_enum.ReportBehavior)
+        self._assign_optional_positive_int("uds_dtc_number", uds_dtc_number)
+        self._assign_optional("uses_monitor_data", uses_monitor_data, bool)
+
+    def append_inhibiting_secondary_fid_ref(self, ref: InhibitingSecondaryFidRefType) -> None:
+        """
+        Appends inhibiting secondary FID reference to internal list
+        """
+        if isinstance(ref, FunctionInhibitionNeedsRef):
+            self.inhibiting_secondary_fid_refs.append(ref)
+        elif isinstance(ref, str):
+            self.inhibiting_secondary_fid_refs.append(FunctionInhibitionNeedsRef(ref))
+        else:
+            raise TypeError("ref: Expected type FunctionInhibitionNeedsRef or str")
+
+    append = append_inhibiting_secondary_fid_ref
+
+
 class DiagnosticEventInfoNeeds(DiagnosticCapabilityElement):
     """
     Complex type AR:DIAGNOSTIC-EVENT-INFO-NEEDS
@@ -7086,6 +7182,24 @@ class DiagnosticEventManagerNeeds(DiagnosticCapabilityElement):
     """
     Complex type AR:DIAGNOSTIC-EVENT-MANAGER-NEEDS
     Tag variants: 'DIAGNOSTIC-EVENT-MANAGER-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
+class DiagnosticGenericUdsNeeds(DiagnosticCapabilityElement):
+    """
+    Complex type AR:DIAGNOSTIC-GENERIC-UDS-NEEDS
+    Tag variants: 'DIAGNOSTIC-GENERIC-UDS-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
+class DiagnosticIndicatorNeeds(DiagnosticCapabilityElement):
+    """
+    Complex type AR:DIAGNOSTIC-INDICATOR-NEEDS
+    Tag variants: 'DIAGNOSTIC-INDICATOR-NEEDS'
 
     Same constructor as parent class
     """
@@ -7141,6 +7255,15 @@ class DiagnosticRequestFileTransferNeeds(DiagnosticCapabilityElement):
     """
     Complex type AR:DIAGNOSTIC-REQUEST-FILE-TRANSFER-NEEDS
     Tag variants: 'DIAGNOSTIC-REQUEST-FILE-TRANSFER-NEEDS'
+
+    Same constructor as parent class
+    """
+
+
+class DiagnosticResponseOnEventNeeds(DiagnosticCapabilityElement):
+    """
+    Complex type AR:DIAGNOSTIC-RESPONSE-ON-EVENT-NEEDS
+    Tag variants: 'DIAGNOSTIC-RESPONSE-ON-EVENT-NEEDS'
 
     Same constructor as parent class
     """

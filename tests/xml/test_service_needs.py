@@ -217,6 +217,83 @@ class TestCryptoServiceNeeds(unittest.TestCase):
             )
 
 
+class TestDiagnosticClearConditionNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.DiagnosticClearConditionNeeds("DiagnosticClearConditionNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<DIAGNOSTIC-CLEAR-CONDITION-NEEDS>
+  <SHORT-NAME>DiagnosticClearConditionNeeds</SHORT-NAME>
+</DIAGNOSTIC-CLEAR-CONDITION-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DiagnosticClearConditionNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DiagnosticClearConditionNeeds)
+        self.assertIsInstance(elem, ar_element.DiagnosticCapabilityElement)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "DiagnosticClearConditionNeeds")
+        self.assertEqual(elem.audience, [])
+        self.assertIsNone(elem.diag_requirement)
+        self.assertIsNone(elem.security_access_level)
+
+    def test_with_fields(self):
+        element = ar_element.DiagnosticClearConditionNeeds(
+            "DiagnosticClearConditionNeeds",
+            audience=autosar.xml.enumeration.DiagnosticAudience.AFTERMARKET,
+            diag_requirement="REQ-CLEAR-01",
+            security_access_level=1
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<DIAGNOSTIC-CLEAR-CONDITION-NEEDS>
+  <SHORT-NAME>DiagnosticClearConditionNeeds</SHORT-NAME>
+  <AUDIENCES>
+    <AUDIENCE>AFTERMARKET</AUDIENCE>
+  </AUDIENCES>
+  <DIAG-REQUIREMENT>REQ-CLEAR-01</DIAG-REQUIREMENT>
+  <SECURITY-ACCESS-LEVEL>1</SECURITY-ACCESS-LEVEL>
+</DIAGNOSTIC-CLEAR-CONDITION-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DiagnosticClearConditionNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DiagnosticClearConditionNeeds)
+        self.assertEqual(elem.audience, [autosar.xml.enumeration.DiagnosticAudience.AFTERMARKET])
+        self.assertEqual(elem.diag_requirement, "REQ-CLEAR-01")
+        self.assertEqual(elem.security_access_level, 1)
+
+    def test_with_admin_data_and_desc(self):
+        admin_data = ar_element.AdminData(
+            doc_revisions=ar_element.DocRevision(revision_label="1.0.0")
+        )
+        element = ar_element.DiagnosticClearConditionNeeds(
+            "DiagnosticClearConditionNeeds",
+            admin_data=admin_data,
+            desc="Clear condition description",
+            category="SERVICE_NEEDS"
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<DIAGNOSTIC-CLEAR-CONDITION-NEEDS>
+  <SHORT-NAME>DiagnosticClearConditionNeeds</SHORT-NAME>
+  <DESC>
+    <L-2 L="FOR-ALL">Clear condition description</L-2>
+  </DESC>
+  <CATEGORY>SERVICE_NEEDS</CATEGORY>
+  <ADMIN-DATA>
+    <DOC-REVISIONS>
+      <DOC-REVISION>
+        <REVISION-LABEL>1.0.0</REVISION-LABEL>
+      </DOC-REVISION>
+    </DOC-REVISIONS>
+  </ADMIN-DATA>
+</DIAGNOSTIC-CLEAR-CONDITION-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DiagnosticClearConditionNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DiagnosticClearConditionNeeds)
+        self.assertEqual(elem.desc.elements[0].parts[0], "Clear condition description")
+        self.assertEqual(elem.category, "SERVICE_NEEDS")
+        self.assertEqual(str(elem.admin_data.doc_revisions[0].revision_label), "1.0.0")
+
+
 class TestDiagnosticCommunicationManagerNeeds(unittest.TestCase):
 
     def test_name_only(self):
@@ -559,6 +636,365 @@ class TestDiagnosticEventManagerNeeds(unittest.TestCase):
         self.assertEqual(elem.security_access_level, 2)
 
 
+class TestDiagnosticEventNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.DiagnosticEventNeeds("DiagnosticEventNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<DIAGNOSTIC-EVENT-NEEDS>
+  <SHORT-NAME>DiagnosticEventNeeds</SHORT-NAME>
+</DIAGNOSTIC-EVENT-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DiagnosticEventNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DiagnosticEventNeeds)
+        self.assertIsInstance(elem, ar_element.DiagnosticCapabilityElement)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "DiagnosticEventNeeds")
+        self.assertIsNone(elem.consider_pto_status)
+        self.assertIsNone(elem.diag_event_debounce_algorithm)
+        self.assertIsNone(elem.dtc_kind)
+        self.assertIsNone(elem.dtc_number)
+        self.assertIsNone(elem.inhibiting_fid_ref)
+        self.assertEqual(elem.inhibiting_secondary_fid_refs, [])
+        self.assertIsNone(elem.obd_dtc_number)
+        self.assertIsNone(elem.prestored_freezeframe_stored_in_nvm)
+        self.assertIsNone(elem.report_behavior)
+        self.assertIsNone(elem.uds_dtc_number)
+        self.assertIsNone(elem.uses_monitor_data)
+
+    def test_with_all_fields_enum_objects(self):
+        element = ar_element.DiagnosticEventNeeds(
+            "DiagnosticEventNeeds",
+            audience=autosar.xml.enumeration.DiagnosticAudience.DEVELOPMENT,
+            diag_requirement="REQ-EVT-01",
+            security_access_level=1,
+            consider_pto_status=True,
+            dtc_kind=autosar.xml.enumeration.DtcKind.EMISSION_RELATED_DTC,
+            dtc_number=12345,
+            inhibiting_fid_ref="/Needs/Fid1",
+            inhibiting_secondary_fid_refs=["/Needs/Fid2", "/Needs/Fid3"],
+            obd_dtc_number=6789,
+            prestored_freezeframe_stored_in_nvm=False,
+            report_behavior=autosar.xml.enumeration.ReportBehavior.REPORT_AFTER_INIT,
+            uds_dtc_number=9999,
+            uses_monitor_data=True
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<DIAGNOSTIC-EVENT-NEEDS>
+  <SHORT-NAME>DiagnosticEventNeeds</SHORT-NAME>
+  <AUDIENCES>
+    <AUDIENCE>DEVELOPMENT</AUDIENCE>
+  </AUDIENCES>
+  <DIAG-REQUIREMENT>REQ-EVT-01</DIAG-REQUIREMENT>
+  <SECURITY-ACCESS-LEVEL>1</SECURITY-ACCESS-LEVEL>
+  <CONSIDER-PTO-STATUS>true</CONSIDER-PTO-STATUS>
+  <DTC-KIND>EMISSION-RELATED-DTC</DTC-KIND>
+  <DTC-NUMBER>12345</DTC-NUMBER>
+  <INHIBITING-FID-REF DEST="FUNCTION-INHIBITION-NEEDS">/Needs/Fid1</INHIBITING-FID-REF>
+  <INHIBITING-SECONDARY-FID-REFS>
+    <INHIBITING-SECONDARY-FID-REF DEST="FUNCTION-INHIBITION-NEEDS">/Needs/Fid2</INHIBITING-SECONDARY-FID-REF>
+    <INHIBITING-SECONDARY-FID-REF DEST="FUNCTION-INHIBITION-NEEDS">/Needs/Fid3</INHIBITING-SECONDARY-FID-REF>
+  </INHIBITING-SECONDARY-FID-REFS>
+  <OBD-DTC-NUMBER>6789</OBD-DTC-NUMBER>
+  <PRESTORED-FREEZEFRAME-STORED-IN-NVM>false</PRESTORED-FREEZEFRAME-STORED-IN-NVM>
+  <REPORT-BEHAVIOR>REPORT-AFTER-INIT</REPORT-BEHAVIOR>
+  <UDS-DTC-NUMBER>9999</UDS-DTC-NUMBER>
+  <USES-MONITOR-DATA>true</USES-MONITOR-DATA>
+</DIAGNOSTIC-EVENT-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DiagnosticEventNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DiagnosticEventNeeds)
+        self.assertEqual(elem.audience, [autosar.xml.enumeration.DiagnosticAudience.DEVELOPMENT])
+        self.assertEqual(elem.diag_requirement, "REQ-EVT-01")
+        self.assertEqual(elem.security_access_level, 1)
+        self.assertTrue(elem.consider_pto_status)
+        self.assertEqual(elem.dtc_kind, autosar.xml.enumeration.DtcKind.EMISSION_RELATED_DTC)
+        self.assertEqual(elem.dtc_number, 12345)
+        self.assertIsInstance(elem.inhibiting_fid_ref, ar_element.FunctionInhibitionNeedsRef)
+        self.assertEqual(elem.inhibiting_fid_ref.value, "/Needs/Fid1")
+        self.assertEqual(len(elem.inhibiting_secondary_fid_refs), 2)
+        self.assertEqual(elem.inhibiting_secondary_fid_refs[0].value, "/Needs/Fid2")
+        self.assertEqual(elem.inhibiting_secondary_fid_refs[1].value, "/Needs/Fid3")
+        self.assertEqual(elem.obd_dtc_number, 6789)
+        self.assertFalse(elem.prestored_freezeframe_stored_in_nvm)
+        self.assertEqual(elem.report_behavior, autosar.xml.enumeration.ReportBehavior.REPORT_AFTER_INIT)
+        self.assertEqual(elem.uds_dtc_number, 9999)
+        self.assertTrue(elem.uses_monitor_data)
+
+    def test_with_string_enums(self):
+        element = ar_element.DiagnosticEventNeeds(
+            "DiagnosticEventNeeds",
+            dtc_kind="NON-EMMISSION-RELATED-DTC",
+            report_behavior="REPORT-BEFORE-INIT"
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<DIAGNOSTIC-EVENT-NEEDS>
+  <SHORT-NAME>DiagnosticEventNeeds</SHORT-NAME>
+  <DTC-KIND>NON-EMMISSION-RELATED-DTC</DTC-KIND>
+  <REPORT-BEHAVIOR>REPORT-BEFORE-INIT</REPORT-BEHAVIOR>
+</DIAGNOSTIC-EVENT-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DiagnosticEventNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DiagnosticEventNeeds)
+        self.assertEqual(elem.dtc_kind, autosar.xml.enumeration.DtcKind.NON_EMMISSION_RELATED_DTC)
+        self.assertEqual(elem.report_behavior, autosar.xml.enumeration.ReportBehavior.REPORT_BEFORE_INIT)
+
+    def test_invalid_enums(self):
+        with self.assertRaises(autosar.xml.exception.ConversionError):
+            ar_element.DiagnosticEventNeeds(
+                "DiagnosticEventNeeds",
+                dtc_kind="INVALID_KIND"
+            )
+        with self.assertRaises(autosar.xml.exception.ConversionError):
+            ar_element.DiagnosticEventNeeds(
+                "DiagnosticEventNeeds",
+                report_behavior="INVALID_BEHAVIOR"
+            )
+
+    def test_invalid_positive_int(self):
+        with self.assertRaises(ValueError):
+            ar_element.DiagnosticEventNeeds("DiagnosticEventNeeds", dtc_number=-1)
+        with self.assertRaises(ValueError):
+            ar_element.DiagnosticEventNeeds("DiagnosticEventNeeds", obd_dtc_number=-1)
+        with self.assertRaises(ValueError):
+            ar_element.DiagnosticEventNeeds("DiagnosticEventNeeds", uds_dtc_number=-1)
+        with self.assertRaises(ValueError):
+            ar_element.DiagnosticEventNeeds("DiagnosticEventNeeds", security_access_level=-1)
+
+    def test_with_debounce_counter_based(self):
+        debounce = ar_element.DiagEventDebounceCounterBased(
+            "DebounceCounter",
+            counter_increment_step_size=2,
+            counter_decrement_step_size=1,
+            counter_failed_threshold=10,
+            counter_passed_threshold=-10
+        )
+        element = ar_element.DiagnosticEventNeeds(
+            "DiagnosticEventNeeds",
+            diag_event_debounce_algorithm=debounce
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<DIAGNOSTIC-EVENT-NEEDS>
+  <SHORT-NAME>DiagnosticEventNeeds</SHORT-NAME>
+  <DIAG-EVENT-DEBOUNCE-ALGORITHM>
+    <DIAG-EVENT-DEBOUNCE-COUNTER-BASED>
+      <SHORT-NAME>DebounceCounter</SHORT-NAME>
+      <COUNTER-DECREMENT-STEP-SIZE>1</COUNTER-DECREMENT-STEP-SIZE>
+      <COUNTER-FAILED-THRESHOLD>10</COUNTER-FAILED-THRESHOLD>
+      <COUNTER-INCREMENT-STEP-SIZE>2</COUNTER-INCREMENT-STEP-SIZE>
+      <COUNTER-PASSED-THRESHOLD>-10</COUNTER-PASSED-THRESHOLD>
+    </DIAG-EVENT-DEBOUNCE-COUNTER-BASED>
+  </DIAG-EVENT-DEBOUNCE-ALGORITHM>
+</DIAGNOSTIC-EVENT-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DiagnosticEventNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DiagnosticEventNeeds)
+        self.assertIsInstance(elem.diag_event_debounce_algorithm, ar_element.DiagEventDebounceCounterBased)
+        self.assertEqual(elem.diag_event_debounce_algorithm.name, "DebounceCounter")
+        self.assertEqual(elem.diag_event_debounce_algorithm.counter_increment_step_size, 2)
+        self.assertEqual(elem.diag_event_debounce_algorithm.counter_decrement_step_size, 1)
+        self.assertEqual(elem.diag_event_debounce_algorithm.counter_failed_threshold, 10)
+        self.assertEqual(elem.diag_event_debounce_algorithm.counter_passed_threshold, -10)
+
+    def test_with_debounce_monitor_internal(self):
+        debounce = ar_element.DiagEventDebounceMonitorInternal("DebounceMonitorInternal")
+        element = ar_element.DiagnosticEventNeeds(
+            "DiagnosticEventNeeds",
+            diag_event_debounce_algorithm=debounce
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<DIAGNOSTIC-EVENT-NEEDS>
+  <SHORT-NAME>DiagnosticEventNeeds</SHORT-NAME>
+  <DIAG-EVENT-DEBOUNCE-ALGORITHM>
+    <DIAG-EVENT-DEBOUNCE-MONITOR-INTERNAL>
+      <SHORT-NAME>DebounceMonitorInternal</SHORT-NAME>
+    </DIAG-EVENT-DEBOUNCE-MONITOR-INTERNAL>
+  </DIAG-EVENT-DEBOUNCE-ALGORITHM>
+</DIAGNOSTIC-EVENT-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DiagnosticEventNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DiagnosticEventNeeds)
+        self.assertIsInstance(elem.diag_event_debounce_algorithm, ar_element.DiagEventDebounceMonitorInternal)
+        self.assertEqual(elem.diag_event_debounce_algorithm.name, "DebounceMonitorInternal")
+
+    def test_with_debounce_time_based(self):
+        debounce = ar_element.DiagEventDebounceTimeBased(
+            "DebounceTime",
+            time_failed_threshold=0.5,
+            time_passed_threshold=0.2
+        )
+        element = ar_element.DiagnosticEventNeeds(
+            "DiagnosticEventNeeds",
+            diag_event_debounce_algorithm=debounce
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<DIAGNOSTIC-EVENT-NEEDS>
+  <SHORT-NAME>DiagnosticEventNeeds</SHORT-NAME>
+  <DIAG-EVENT-DEBOUNCE-ALGORITHM>
+    <DIAG-EVENT-DEBOUNCE-TIME-BASED>
+      <SHORT-NAME>DebounceTime</SHORT-NAME>
+      <TIME-FAILED-THRESHOLD>0.5</TIME-FAILED-THRESHOLD>
+      <TIME-PASSED-THRESHOLD>0.2</TIME-PASSED-THRESHOLD>
+    </DIAG-EVENT-DEBOUNCE-TIME-BASED>
+  </DIAG-EVENT-DEBOUNCE-ALGORITHM>
+</DIAGNOSTIC-EVENT-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DiagnosticEventNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DiagnosticEventNeeds)
+        self.assertIsInstance(elem.diag_event_debounce_algorithm, ar_element.DiagEventDebounceTimeBased)
+        self.assertEqual(elem.diag_event_debounce_algorithm.name, "DebounceTime")
+        self.assertEqual(elem.diag_event_debounce_algorithm.time_failed_threshold, 0.5)
+        self.assertEqual(elem.diag_event_debounce_algorithm.time_passed_threshold, 0.2)
+
+    def test_append_methods(self):
+        element = ar_element.DiagnosticEventNeeds("DiagnosticEventNeeds")
+        element.append_inhibiting_secondary_fid_ref("/Needs/Fid1")
+        element.append(ar_element.FunctionInhibitionNeedsRef("/Needs/Fid2"))
+        self.assertEqual(len(element.inhibiting_secondary_fid_refs), 2)
+        self.assertEqual(element.inhibiting_secondary_fid_refs[0].value, "/Needs/Fid1")
+        self.assertEqual(element.inhibiting_secondary_fid_refs[1].value, "/Needs/Fid2")
+        with self.assertRaises(TypeError):
+            element.append(123)
+
+
+class TestDiagnosticGenericUdsNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.DiagnosticGenericUdsNeeds("DiagnosticGenericUdsNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<DIAGNOSTIC-GENERIC-UDS-NEEDS>
+  <SHORT-NAME>DiagnosticGenericUdsNeeds</SHORT-NAME>
+</DIAGNOSTIC-GENERIC-UDS-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DiagnosticGenericUdsNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DiagnosticGenericUdsNeeds)
+        self.assertIsInstance(elem, ar_element.DiagnosticCapabilityElement)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "DiagnosticGenericUdsNeeds")
+        self.assertEqual(elem.audience, [])
+        self.assertIsNone(elem.diag_requirement)
+        self.assertIsNone(elem.security_access_level)
+
+    def test_with_fields(self):
+        element = ar_element.DiagnosticGenericUdsNeeds(
+            "DiagnosticGenericUdsNeeds",
+            audience=autosar.xml.enumeration.DiagnosticAudience.DEVELOPMENT,
+            diag_requirement="REQ-GENERIC-01",
+            security_access_level=3
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<DIAGNOSTIC-GENERIC-UDS-NEEDS>
+  <SHORT-NAME>DiagnosticGenericUdsNeeds</SHORT-NAME>
+  <AUDIENCES>
+    <AUDIENCE>DEVELOPMENT</AUDIENCE>
+  </AUDIENCES>
+  <DIAG-REQUIREMENT>REQ-GENERIC-01</DIAG-REQUIREMENT>
+  <SECURITY-ACCESS-LEVEL>3</SECURITY-ACCESS-LEVEL>
+</DIAGNOSTIC-GENERIC-UDS-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DiagnosticGenericUdsNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DiagnosticGenericUdsNeeds)
+        self.assertEqual(elem.audience, [autosar.xml.enumeration.DiagnosticAudience.DEVELOPMENT])
+        self.assertEqual(elem.diag_requirement, "REQ-GENERIC-01")
+        self.assertEqual(elem.security_access_level, 3)
+
+    def test_with_admin_data(self):
+        admin_data = ar_element.AdminData(
+            doc_revisions=ar_element.DocRevision(revision_label="1.0.0")
+        )
+        element = ar_element.DiagnosticGenericUdsNeeds("DiagnosticGenericUdsNeeds", admin_data=admin_data)
+        writer = autosar.xml.Writer()
+        xml = '''<DIAGNOSTIC-GENERIC-UDS-NEEDS>
+  <SHORT-NAME>DiagnosticGenericUdsNeeds</SHORT-NAME>
+  <ADMIN-DATA>
+    <DOC-REVISIONS>
+      <DOC-REVISION>
+        <REVISION-LABEL>1.0.0</REVISION-LABEL>
+      </DOC-REVISION>
+    </DOC-REVISIONS>
+  </ADMIN-DATA>
+</DIAGNOSTIC-GENERIC-UDS-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DiagnosticGenericUdsNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DiagnosticGenericUdsNeeds)
+        self.assertEqual(str(elem.admin_data.doc_revisions[0].revision_label), "1.0.0")
+
+
+class TestDiagnosticIndicatorNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.DiagnosticIndicatorNeeds("DiagnosticIndicatorNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<DIAGNOSTIC-INDICATOR-NEEDS>
+  <SHORT-NAME>DiagnosticIndicatorNeeds</SHORT-NAME>
+</DIAGNOSTIC-INDICATOR-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DiagnosticIndicatorNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DiagnosticIndicatorNeeds)
+        self.assertIsInstance(elem, ar_element.DiagnosticCapabilityElement)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "DiagnosticIndicatorNeeds")
+        self.assertEqual(elem.audience, [])
+        self.assertIsNone(elem.diag_requirement)
+        self.assertIsNone(elem.security_access_level)
+
+    def test_with_fields(self):
+        element = ar_element.DiagnosticIndicatorNeeds(
+            "DiagnosticIndicatorNeeds",
+            audience=autosar.xml.enumeration.DiagnosticAudience.MANUFACTURING,
+            diag_requirement="REQ-IND-01",
+            security_access_level=2
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<DIAGNOSTIC-INDICATOR-NEEDS>
+  <SHORT-NAME>DiagnosticIndicatorNeeds</SHORT-NAME>
+  <AUDIENCES>
+    <AUDIENCE>MANUFACTURING</AUDIENCE>
+  </AUDIENCES>
+  <DIAG-REQUIREMENT>REQ-IND-01</DIAG-REQUIREMENT>
+  <SECURITY-ACCESS-LEVEL>2</SECURITY-ACCESS-LEVEL>
+</DIAGNOSTIC-INDICATOR-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DiagnosticIndicatorNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DiagnosticIndicatorNeeds)
+        self.assertEqual(elem.audience, [autosar.xml.enumeration.DiagnosticAudience.MANUFACTURING])
+        self.assertEqual(elem.diag_requirement, "REQ-IND-01")
+        self.assertEqual(elem.security_access_level, 2)
+
+    def test_with_admin_data(self):
+        admin_data = ar_element.AdminData(
+            doc_revisions=ar_element.DocRevision(revision_label="1.0.0")
+        )
+        element = ar_element.DiagnosticIndicatorNeeds("DiagnosticIndicatorNeeds", admin_data=admin_data)
+        writer = autosar.xml.Writer()
+        xml = '''<DIAGNOSTIC-INDICATOR-NEEDS>
+  <SHORT-NAME>DiagnosticIndicatorNeeds</SHORT-NAME>
+  <ADMIN-DATA>
+    <DOC-REVISIONS>
+      <DOC-REVISION>
+        <REVISION-LABEL>1.0.0</REVISION-LABEL>
+      </DOC-REVISION>
+    </DOC-REVISIONS>
+  </ADMIN-DATA>
+</DIAGNOSTIC-INDICATOR-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DiagnosticIndicatorNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DiagnosticIndicatorNeeds)
+        self.assertEqual(str(elem.admin_data.doc_revisions[0].revision_label), "1.0.0")
+
+
 class TestDiagnosticIoControlNeeds(unittest.TestCase):
 
     def test_name_only(self):
@@ -681,6 +1117,72 @@ class TestDiagnosticRequestFileTransferNeeds(unittest.TestCase):
         self.assertIsInstance(elem, ar_element.DiagnosticRequestFileTransferNeeds)
         self.assertIsInstance(elem, ar_element.DiagnosticCapabilityElement)
         self.assertEqual(elem.name, "DiagnosticRequestFileTransferNeeds")
+
+
+class TestDiagnosticResponseOnEventNeeds(unittest.TestCase):
+
+    def test_name_only(self):
+        element = ar_element.DiagnosticResponseOnEventNeeds("DiagnosticResponseOnEventNeeds")
+        writer = autosar.xml.Writer()
+        xml = '''<DIAGNOSTIC-RESPONSE-ON-EVENT-NEEDS>
+  <SHORT-NAME>DiagnosticResponseOnEventNeeds</SHORT-NAME>
+</DIAGNOSTIC-RESPONSE-ON-EVENT-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DiagnosticResponseOnEventNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DiagnosticResponseOnEventNeeds)
+        self.assertIsInstance(elem, ar_element.DiagnosticCapabilityElement)
+        self.assertIsInstance(elem, ar_element.ServiceNeeds)
+        self.assertEqual(elem.name, "DiagnosticResponseOnEventNeeds")
+        self.assertEqual(elem.audience, [])
+        self.assertIsNone(elem.diag_requirement)
+        self.assertIsNone(elem.security_access_level)
+
+    def test_with_fields(self):
+        element = ar_element.DiagnosticResponseOnEventNeeds(
+            "DiagnosticResponseOnEventNeeds",
+            audience=autosar.xml.enumeration.DiagnosticAudience.SUPPLIER,
+            diag_requirement="REQ-ROE-01",
+            security_access_level=1
+        )
+        writer = autosar.xml.Writer()
+        xml = '''<DIAGNOSTIC-RESPONSE-ON-EVENT-NEEDS>
+  <SHORT-NAME>DiagnosticResponseOnEventNeeds</SHORT-NAME>
+  <AUDIENCES>
+    <AUDIENCE>SUPPLIER</AUDIENCE>
+  </AUDIENCES>
+  <DIAG-REQUIREMENT>REQ-ROE-01</DIAG-REQUIREMENT>
+  <SECURITY-ACCESS-LEVEL>1</SECURITY-ACCESS-LEVEL>
+</DIAGNOSTIC-RESPONSE-ON-EVENT-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DiagnosticResponseOnEventNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DiagnosticResponseOnEventNeeds)
+        self.assertEqual(elem.audience, [autosar.xml.enumeration.DiagnosticAudience.SUPPLIER])
+        self.assertEqual(elem.diag_requirement, "REQ-ROE-01")
+        self.assertEqual(elem.security_access_level, 1)
+
+    def test_with_admin_data(self):
+        admin_data = ar_element.AdminData(
+            doc_revisions=ar_element.DocRevision(revision_label="1.0.0")
+        )
+        element = ar_element.DiagnosticResponseOnEventNeeds("DiagnosticResponseOnEventNeeds", admin_data=admin_data)
+        writer = autosar.xml.Writer()
+        xml = '''<DIAGNOSTIC-RESPONSE-ON-EVENT-NEEDS>
+  <SHORT-NAME>DiagnosticResponseOnEventNeeds</SHORT-NAME>
+  <ADMIN-DATA>
+    <DOC-REVISIONS>
+      <DOC-REVISION>
+        <REVISION-LABEL>1.0.0</REVISION-LABEL>
+      </DOC-REVISION>
+    </DOC-REVISIONS>
+  </ADMIN-DATA>
+</DIAGNOSTIC-RESPONSE-ON-EVENT-NEEDS>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.DiagnosticResponseOnEventNeeds = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.DiagnosticResponseOnEventNeeds)
+        self.assertEqual(str(elem.admin_data.doc_revisions[0].revision_label), "1.0.0")
 
 
 class TestDiagnosticRoutineNeeds(unittest.TestCase):
