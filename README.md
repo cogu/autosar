@@ -9,7 +9,7 @@ It has some support for parsing ARXML files.
 
 ## Documentation
 
-[Documentation for v0.4](https://autosar.readthedocs.io/en/latest/).
+[Documentation for v0.4](https://autosar.readthedocs.io/en/v0.4.0/).
 
 ## Supported AUTOSAR versions
 
@@ -28,5 +28,3 @@ Classic AUTOSAR only.
 ```bash
 pip install "autosar<0.5"
 ```
-
-For now it works to install without the version part, it's there for future proofing the instruction after newer versions are released to PyPI.
