@@ -23,6 +23,13 @@ To refresh the cache and regenerate the page in one step:
 python dev_utils/wiki/generate_wiki_page.py --refresh
 ```
 
+To preview an upcoming release before its Git tag exists, assign that version to
+classes not found in any existing release tag:
+
+```bash
+python dev_utils/wiki/generate_wiki_page.py --refresh --unreleased-version v0.5.7
+```
+
 ---
 
 ## Diagnostics
