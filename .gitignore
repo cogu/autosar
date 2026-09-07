@@ -9,3 +9,4 @@ usage_tests/
 **/generated/validate_all.sh
 google_credentials.json
 .implementation_cache.json
+.vscode/
