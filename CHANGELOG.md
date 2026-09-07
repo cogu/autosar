@@ -102,6 +102,7 @@ Non-collectable elements are various sub-elements to collectable elements.
 * IncludedDataTypeSet | INCLUDED-DATA-TYPE-SET
 * IncludedModeDeclarationGroupSet | INCLUDED-MODE-DECLARATION-GROUP-SET
 * InstantiationDataDefProps | INSTANTIATION-DATA-DEF-PROPS
+* OsTaskExecutionEvent | OS-TASK-EXECUTION-EVENT
 * PerInstanceMemory | PER-INSTANCE-MEMORY
 * RoleBasedDataAssignment | ROLE-BASED-DATA-ASSIGNMENT
 * RoleBasedDataTypeAssignment | ROLE-BASED-DATA-TYPE-ASSIGNMENT

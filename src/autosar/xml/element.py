@@ -3832,6 +3832,7 @@ class BehaviorSettings:
         self.data_receive_event_prefix: str | None = None  # DataReceivedEvent name prefix
         self.init_event_prefix: str | None = None  # InitEvent name prefix
         self.operation_invoked_event_prefix: str | None = None  # OperationInvokedEvent name prefix
+        self.os_task_execution_event_prefix: str | None = None  # OsTaskExecutionEvent name prefix
         self.swc_mode_manager_error_event_prefix: str | None = None  # SwcModeManagerErrorEvent name prefix
         self.swc_mode_switch_event_prefix: str | None = None  # SwcModeSwitchEvent name prefix
         self.timing_event_prefix: str | None = None  # TimingEvent name prefix
@@ -10005,6 +10006,25 @@ class OperationInvokedEvent(RteEvent):
         return RteEventRef(ref_str, ar_enum.IdentifiableSubTypes.OPERATION_INVOKED_EVENT)
 
 
+class OsTaskExecutionEvent(RteEvent):
+    """
+    Complex type AR:OS-TASK-EXECUTION-EVENT
+    Tag variants: 'OS-TASK-EXECUTION-EVENT'
+
+    Inherits constructor from base class
+    """
+
+    def ref(self) -> RteEventRef | None:
+        """
+        Returns a reference to this element or
+        None if the element is not yet part of a package
+        """
+        ref_str = self._calc_ref_string()
+        if ref_str is None:
+            return None
+        return RteEventRef(ref_str, ar_enum.IdentifiableSubTypes.OS_TASK_EXECUTION_EVENT)
+
+
 SwcModeSwitchEventModeType = Union[RModeInAtomicSwcInstanceRef,
                                    tuple[RModeInAtomicSwcInstanceRef, RModeInAtomicSwcInstanceRef],
                                    None]
@@ -11726,6 +11746,32 @@ class SwcInternalBehavior(InternalBehavior):
                                            context_port.ref(),
                                            target_provided_operation.ref(),
                                            **kwargs)
+        self.append_event(event)
+        return event
+
+    @convenience_function
+    def create_os_task_execution_event(self,
+                                       runnable_name: str,
+                                       event_name: str | None = None,
+                                       **kwargs
+                                       ) -> OsTaskExecutionEvent:
+        """
+        Adds a new OsTaskExecutionEvent to this SwcInternalBehavior object
+        """
+        runnable = self.find_runnable(runnable_name)
+        if runnable is None:
+            raise KeyError(f"Found no runnable with name '{runnable_name}'")
+        if event_name is None:
+            behavior_settings = self.get_valid_behavior_settings()
+            if behavior_settings.os_task_execution_event_prefix:
+                event_name = behavior_settings.os_task_execution_event_prefix + "_" + runnable_name
+            else:
+                msg = "event_name: Unable to dynamically create event name,"\
+                      " os_task_execution_event_prefix is not set in behavior settings"
+                raise builtins.RuntimeError(msg)
+        assert isinstance(event_name, str)
+        unique_event_name = self._make_unique_event_name(event_name)
+        event = OsTaskExecutionEvent(unique_event_name, runnable.ref(), **kwargs)
         self.append_event(event)
         return event
 

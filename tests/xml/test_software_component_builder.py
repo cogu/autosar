@@ -540,6 +540,27 @@ class TestEventCreationAPI(unittest.TestCase):
         self.assertEqual(event.name, "IT_MyApplication_Init")
         self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/MyApplication_Init")
 
+    def test_create_os_task_execution_event(self):
+        workspace = autosar.xml.Workspace()
+        workspace.behavior_settings.set_value("os_task_execution_event_prefix", "OTET")
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        behavior.create_runnable("MyApplication_Task")
+        event = behavior.create_os_task_execution_event("MyApplication_Task")
+        self.assertIsInstance(event, ar_element.OsTaskExecutionEvent)
+        self.assertEqual(event.name, "OTET_MyApplication_Task")
+        self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/MyApplication_Task")
+
+    def test_create_os_task_execution_event_with_explicit_name(self):
+        workspace = autosar.xml.Workspace()
+        swc = self.create_swc(workspace)
+        behavior = swc.internal_behavior
+        behavior.create_runnable("MyApplication_Task")
+        event = behavior.create_os_task_execution_event("MyApplication_Task", "MyTaskEvent")
+        self.assertIsInstance(event, ar_element.OsTaskExecutionEvent)
+        self.assertEqual(event.name, "MyTaskEvent")
+        self.assertEqual(str(event.start_on_event), self.expected_behavior_ref + "/MyApplication_Task")
+
     def test_create_operation_invoked_event_port_name_only(self):
         workspace = autosar.xml.Workspace()
         workspace.behavior_settings.set_value("operation_invoked_event_prefix", "OIT")

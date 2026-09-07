@@ -404,35 +404,36 @@ class IdentifiableSubTypes(Enum):
     NV_BLOCK_SW_COMPONENT_TYPE = 57
     NV_DATA_INTERFACE = 58
     OPERATION_INVOKED_EVENT = 59
-    P_PORT_PROTOTYPE = 60
-    PARAMETER_DATA_PROTOTYPE = 61
-    PARAMETER_INTERFACE = 62
-    PER_INSTANCE_MEMORY = 63
-    PHYSICAL_DIMENSION = 64
-    PORT_GROUP = 65
-    PORT_PROTOTYPE = 66
-    PR_PORT_PROTOTYPE = 67
-    R_PORT_PROTOTYPE = 68
-    RUNNABLE_ENTITY = 69
-    SENDER_RECEIVER_INTERFACE = 70
-    SENSOR_ACTUATOR_SW_COMPONENT_TYPE = 71
-    SERVICE_PROXY_SW_COMPONENT_TYPE = 72
-    SERVICE_SW_COMPONENT_TYPE = 73
-    SUPERVISED_ENTITY_CHECKPOINT_NEEDS = 74
-    SW_ADDR_METHOD = 75
-    SW_BASE_TYPE = 76
-    SW_COMPONENT_PROTOTYPE = 77
-    SWC_IMPLEMENTATION = 78
-    SWC_INTERNAL_BEHAVIOR = 79
-    SWC_MODE_MANAGER_ERROR_EVENT = 80
-    SWC_MODE_SWITCH_EVENT = 81
-    TIMING_EVENT = 82
-    TRANSFORMER_HARD_ERROR_EVENT = 83
-    TRIGGER = 84
-    TRIGGER_INTERFACE = 85
-    UNIT = 86
-    VARIABLE_ACCESS = 87
-    VARIABLE_DATA_PROTOTYPE = 88
+    OS_TASK_EXECUTION_EVENT = 60
+    P_PORT_PROTOTYPE = 61
+    PARAMETER_DATA_PROTOTYPE = 62
+    PARAMETER_INTERFACE = 63
+    PER_INSTANCE_MEMORY = 64
+    PHYSICAL_DIMENSION = 65
+    PORT_GROUP = 66
+    PORT_PROTOTYPE = 67
+    PR_PORT_PROTOTYPE = 68
+    R_PORT_PROTOTYPE = 69
+    RUNNABLE_ENTITY = 70
+    SENDER_RECEIVER_INTERFACE = 71
+    SENSOR_ACTUATOR_SW_COMPONENT_TYPE = 72
+    SERVICE_PROXY_SW_COMPONENT_TYPE = 73
+    SERVICE_SW_COMPONENT_TYPE = 74
+    SUPERVISED_ENTITY_CHECKPOINT_NEEDS = 75
+    SW_ADDR_METHOD = 76
+    SW_BASE_TYPE = 77
+    SW_COMPONENT_PROTOTYPE = 78
+    SWC_IMPLEMENTATION = 79
+    SWC_INTERNAL_BEHAVIOR = 80
+    SWC_MODE_MANAGER_ERROR_EVENT = 81
+    SWC_MODE_SWITCH_EVENT = 82
+    TIMING_EVENT = 83
+    TRANSFORMER_HARD_ERROR_EVENT = 84
+    TRIGGER = 85
+    TRIGGER_INTERFACE = 86
+    UNIT = 87
+    VARIABLE_ACCESS = 88
+    VARIABLE_DATA_PROTOTYPE = 89
 
 
 class IntervalType(Enum):
@@ -1186,6 +1187,7 @@ xml_to_enum_map: dict[str, dict] = {
         "NV-BLOCK-SW-COMPONENT-TYPE": IdentifiableSubTypes.NV_BLOCK_SW_COMPONENT_TYPE,
         "NV-DATA-INTERFACE": IdentifiableSubTypes.NV_DATA_INTERFACE,
         "OPERATION-INVOKED-EVENT": IdentifiableSubTypes.OPERATION_INVOKED_EVENT,
+        "OS-TASK-EXECUTION-EVENT": IdentifiableSubTypes.OS_TASK_EXECUTION_EVENT,
         "P-PORT-PROTOTYPE": IdentifiableSubTypes.P_PORT_PROTOTYPE,
         "PARAMETER-DATA-PROTOTYPE": IdentifiableSubTypes.PARAMETER_DATA_PROTOTYPE,
         "PARAMETER-INTERFACE": IdentifiableSubTypes.PARAMETER_INTERFACE,
@@ -1720,35 +1722,36 @@ enum_to_xml_map: dict[str, list] = {
         "NV-BLOCK-SW-COMPONENT-TYPE",                    # 57
         "NV-DATA-INTERFACE",                             # 58
         "OPERATION-INVOKED-EVENT",                       # 59
-        "P-PORT-PROTOTYPE",                              # 60
-        "PARAMETER-DATA-PROTOTYPE",                      # 61
-        "PARAMETER-INTERFACE",                           # 62
-        "PER-INSTANCE-MEMORY",                           # 63
-        "PHYSICAL-DIMENSION",                            # 64
-        "PORT-GROUP",                                    # 65
-        "PORT-PROTOTYPE",                                # 66
-        "PR-PORT-PROTOTYPE",                             # 67
-        "R-PORT-PROTOTYPE",                              # 68
-        "RUNNABLE-ENTITY",                               # 69
-        "SENDER-RECEIVER-INTERFACE",                     # 70
-        "SENSOR-ACTUATOR-SW-COMPONENT-TYPE",             # 71
-        "SERVICE-PROXY-SW-COMPONENT-TYPE",               # 72
-        "SERVICE-SW-COMPONENT-TYPE",                     # 73
-        "SUPERVISED-ENTITY-CHECKPOINT-NEEDS",            # 74
-        "SW-ADDR-METHOD",                                # 75
-        "SW-BASE-TYPE",                                  # 76
-        "SW-COMPONENT-PROTOTYPE",                        # 77
-        "SWC-IMPLEMENTATION",                            # 78
-        "SWC-INTERNAL-BEHAVIOR",                         # 79
-        "SWC-MODE-MANAGER-ERROR-EVENT",                  # 80
-        "SWC-MODE-SWITCH-EVENT",                         # 81
-        "TIMING-EVENT",                                  # 82
-        "TRANSFORMER-HARD-ERROR-EVENT",                  # 83
-        "TRIGGER",                                       # 84
-        "TRIGGER-INTERFACE",                             # 85
-        "UNIT",                                          # 86
-        "VARIABLE-ACCESS",                               # 87
-        "VARIABLE-DATA-PROTOTYPE",                       # 88
+        "OS-TASK-EXECUTION-EVENT",                       # 60
+        "P-PORT-PROTOTYPE",                              # 61
+        "PARAMETER-DATA-PROTOTYPE",                      # 62
+        "PARAMETER-INTERFACE",                           # 63
+        "PER-INSTANCE-MEMORY",                           # 64
+        "PHYSICAL-DIMENSION",                            # 65
+        "PORT-GROUP",                                    # 66
+        "PORT-PROTOTYPE",                                # 67
+        "PR-PORT-PROTOTYPE",                             # 68
+        "R-PORT-PROTOTYPE",                              # 69
+        "RUNNABLE-ENTITY",                               # 70
+        "SENDER-RECEIVER-INTERFACE",                     # 71
+        "SENSOR-ACTUATOR-SW-COMPONENT-TYPE",             # 72
+        "SERVICE-PROXY-SW-COMPONENT-TYPE",               # 73
+        "SERVICE-SW-COMPONENT-TYPE",                     # 74
+        "SUPERVISED-ENTITY-CHECKPOINT-NEEDS",            # 75
+        "SW-ADDR-METHOD",                                # 76
+        "SW-BASE-TYPE",                                  # 77
+        "SW-COMPONENT-PROTOTYPE",                        # 78
+        "SWC-IMPLEMENTATION",                            # 79
+        "SWC-INTERNAL-BEHAVIOR",                         # 80
+        "SWC-MODE-MANAGER-ERROR-EVENT",                  # 81
+        "SWC-MODE-SWITCH-EVENT",                         # 82
+        "TIMING-EVENT",                                  # 83
+        "TRANSFORMER-HARD-ERROR-EVENT",                  # 84
+        "TRIGGER",                                       # 85
+        "TRIGGER-INTERFACE",                             # 86
+        "UNIT",                                          # 87
+        "VARIABLE-ACCESS",                               # 88
+        "VARIABLE-DATA-PROTOTYPE",                       # 89
     ],
     "IntervalType": [
         "CLOSED",  # 0

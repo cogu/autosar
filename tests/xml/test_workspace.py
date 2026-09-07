@@ -173,6 +173,11 @@ class BehaviorSettingsTests(unittest.TestCase):
         workspace.behavior_settings.set_value("operation_invoked_event_prefix", "OIT")
         self.assertEqual(workspace.behavior_settings.operation_invoked_event_prefix, "OIT")
 
+    def test_os_task_execution_event_prefix(self):
+        workspace = ar_workspace.Workspace()
+        workspace.behavior_settings.set_value("os_task_execution_event_prefix", "OTET")
+        self.assertEqual(workspace.behavior_settings.os_task_execution_event_prefix, "OTET")
+
     def test_swc_mode_manager_error_event_prefix(self):
         workspace = ar_workspace.Workspace()
         workspace.behavior_settings.set_value("swc_mode_manager_error_event_prefix", "MMET")
