@@ -311,26 +311,27 @@ Below is a rough roadmap of planned releases.
 
 **0.5.7** SwcInternalBehavior - improved
 
-* Support even more child elements of the SwcInternalBehavior class.
+* Fully support the SwcInternalBehavior class.
 
-**v0.5.8** Fixes and refactoring
+**v0.5.8:** Fixes and refactoring
 
 * Fix some early design mistakes.
-* Harmonize some member names to better match "qualified name" from XSD (BREAKING CHANGE)
-  * For the most part this means that some class members will have its "_ref" suffix stripped from its name.
+* Standardize member naming rules across the classes.
 * Attempt to break apart large Python files into smaller ones.
+* Start documentation work.
+
+**v0.5.9:** ?
 
 **v0.6.0:** Stable version, publish to PyPI.
 
-**v0.7.0:** RTE-generator and system description
+**v0.7.0:** RTE-generator
 
 * Contract-phase RTE generator
-* System description support
 
 **v0.8.0:** Stable version, publish to PyPI.
 
-**v0.9.0:** Documentation
+**v0.9.0:** System description
 
-* Update documentation project on readthedocs site.
+* System description support
 
 **v1.0.0:** Stable version, publish to PyPI.
