@@ -17,9 +17,11 @@ from tabulate import tabulate
 WIKI_COLUMNS = ["XML Tag Name", "Implemented", "Element Category", "Python Class Name"]
 
 
-def load_cache(cache_path: Path, refresh: bool = False) -> Dict[str, Any]:
+def load_cache(cache_path: Path,
+               refresh: bool = False,
+               unreleased_version: str | None = None) -> Dict[str, Any]:
     """Load JSON implementation cache, optionally forcing a refresh."""
-    if refresh or not cache_path.exists():
+    if refresh or unreleased_version is not None or not cache_path.exists():
         # Import dynamically from parent directory
         import sys
         dev_utils_dir = str(cache_path.parent)
@@ -27,7 +29,10 @@ def load_cache(cache_path: Path, refresh: bool = False) -> Dict[str, Any]:
             sys.path.insert(0, dev_utils_dir)
         import refresh_implementation  # type: ignore # pylint: disable=import-error
         print(f"Refreshing cache: {cache_path}...")
-        return refresh_implementation.refresh_cache(output_path=str(cache_path))
+        kwargs = {"output_path": str(cache_path)}
+        if unreleased_version is not None:
+            kwargs["unreleased_version"] = unreleased_version
+        return refresh_implementation.refresh_cache(**kwargs)
 
     with open(cache_path, "r", encoding="utf-8") as f:
         return json.load(f)
@@ -45,7 +50,7 @@ def extract_table_rows(cache_data: Dict[str, Any]) -> tuple[List[List[str]], Lis
             continue
 
         category = class_info.get("category", "CommonStructure")
-        version = class_info.get("since_version", "v0.5.6")
+        version = class_info.get("since_version", "unreleased")
         is_pkg = class_info.get("package_element", False)
 
         for tag in variants:
@@ -100,11 +105,15 @@ def main() -> None:
     parser.add_argument("--template", type=Path, default=default_template, help="Path to Jinja2 template")
     parser.add_argument("--output", type=Path, default=default_output, help="Path to output markdown file")
     parser.add_argument("--refresh", action="store_true", help="Force refresh cache before generating markdown")
+    parser.add_argument("--unreleased-version",
+                        help="Version assigned to classes not present in an existing Git release tag")
 
     args = parser.parse_args()
 
     print(f"Loading implementation cache from: {args.cache}...")
-    cache_data = load_cache(args.cache, refresh=args.refresh)
+    cache_data = load_cache(args.cache,
+                            refresh=args.refresh,
+                            unreleased_version=args.unreleased_version)
 
     pkg_rows, child_rows = extract_table_rows(cache_data)
     total_rows = len(pkg_rows) + len(child_rows)

@@ -25,8 +25,6 @@ if hasattr(sys.stdout, 'reconfigure'):
     except (ValueError, OSError, AttributeError):
         pass
 
-DEFAULT_RELEASE_VERSION = "v0.5.6"
-
 
 def get_default_cache_path() -> str:
     """Return the absolute path to .implementation_cache.json in dev_utils."""
@@ -75,21 +73,19 @@ def _extract_tag_variants(doc: str) -> List[str]:
     return [p for p in parts if p]
 
 
-def _get_git_class_versions(repo_root: str) -> Dict[str, str]:
+def _get_git_class_versions(repo_root: str) -> Tuple[Dict[str, Set[str]], List[str]]:
     """Resolve earliest git release tag containing each class in element.py."""
-    git_tags = ['v0.5.0', 'v0.5.1', 'v0.5.2', 'v0.5.3', 'v0.5.4', 'v0.5.5', 'v0.5.6']
+    git_tags: List[str] = []
     tag_classes: Dict[str, Set[str]] = {}
 
     try:
         raw_tags = subprocess.check_output(
-            ['git', 'tag', '-l', 'v0.5.*'],
+            ['git', 'tag', '-l', 'v0.5.*', '--sort=version:refname'],
             cwd=repo_root,
             encoding='utf-8',
             errors='ignore'
         ).splitlines()
-        if raw_tags:
-            # Sort version tags if needed
-            git_tags = [t.strip() for t in raw_tags if t.strip()]
+        git_tags = [t.strip() for t in raw_tags if t.strip()]
     except Exception:
         pass
 
@@ -181,7 +177,9 @@ def _extract_subelements(class_lines: List[str]) -> Tuple[List[str], List[str], 
     return implemented, unsupported, unimplemented
 
 
-def parse_element_file(filepath: str, repo_root: Optional[str] = None) -> Dict[str, Any]:
+def parse_element_file(filepath: str,
+                       repo_root: Optional[str] = None,
+                       unreleased_version: Optional[str] = None) -> Dict[str, Any]:
     """Parse src/autosar/xml/element.py and extract class definitions and docstring mappings."""
     if repo_root is None:
         repo_root = os.path.abspath(os.path.join(os.path.dirname(filepath), "..", "..", ".."))
@@ -266,7 +264,7 @@ def parse_element_file(filepath: str, repo_root: Optional[str] = None) -> Dict[s
                 since_ver = t
                 break
         if since_ver is None:
-            since_ver = git_tags[-1] if git_tags else DEFAULT_RELEASE_VERSION
+            since_ver = unreleased_version or (git_tags[-1] if git_tags else "unreleased")
 
         class_info = {
             "name": node.name,
@@ -394,7 +392,9 @@ def parse_reference_file(filepath: str) -> Dict[str, Any]:
     }
 
 
-def refresh_cache(repo_root: Optional[str] = None, output_path: Optional[str] = None) -> dict:
+def refresh_cache(repo_root: Optional[str] = None,
+                  output_path: Optional[str] = None,
+                  unreleased_version: Optional[str] = None) -> dict:
     """Scan the autosar Python source code and refresh the JSON cache."""
     if repo_root is None:
         script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -408,7 +408,9 @@ def refresh_cache(repo_root: Optional[str] = None, output_path: Optional[str] = 
         raise FileNotFoundError(f"Cannot find element.py at {element_py}")
 
     print(f"Scanning element.py ({element_py})...")
-    elem_data = parse_element_file(element_py, repo_root=repo_root)
+    elem_data = parse_element_file(element_py,
+                                   repo_root=repo_root,
+                                   unreleased_version=unreleased_version)
 
     enum_data: Dict[str, Any] = {"enums": {}, "type_to_enum": {}}
     if os.path.exists(enum_py):
