@@ -40,6 +40,7 @@ RteEventElement = Union[ar_element.AsynchronousServerCallReturnsEvent,
                         ar_element.InternalTriggerOccurredEvent,
                         ar_element.ModeSwitchedAckEvent,
                         ar_element.OperationInvokedEvent,
+                        ar_element.OsTaskExecutionEvent,
                         ar_element.SwcModeManagerErrorEvent,
                         ar_element.SwcModeSwitchEvent,
                         ar_element.TimingEvent,
@@ -225,6 +226,7 @@ class Reader:
             'INTERNAL-TRIGGER-OCCURRED-EVENT': self._read_internal_trigger_occured_event,
             'MODE-SWITCHED-ACK-EVENT': self._read_mode_switched_ack_event,
             'OPERATION-INVOKED-EVENT': self._read_operation_invoked_event,
+            'OS-TASK-EXECUTION-EVENT': self._read_os_task_execution_event,
             'SWC-MODE-MANAGER-ERROR-EVENT': self._read_swc_mode_manager_error_event,
             'SWC-MODE-SWITCH-EVENT': self._read_swc_mode_switch_event,
             'TIMING-EVENT': self._read_timing_event,
@@ -425,6 +427,7 @@ class Reader:
             'INTERNAL-TRIGGER-OCCURRED-EVENT': self._read_internal_trigger_occured_event,
             'MODE-SWITCHED-ACK-EVENT': self._read_mode_switched_ack_event,
             'OPERATION-INVOKED-EVENT': self._read_operation_invoked_event,
+            'OS-TASK-EXECUTION-EVENT': self._read_os_task_execution_event,
             'SWC-MODE-MANAGER-ERROR-EVENT': self._read_swc_mode_manager_error_event,
             'SWC-MODE-SWITCH-EVENT': self._read_swc_mode_switch_event,
             'TIMING-EVENT': self._read_timing_event,
@@ -6091,6 +6094,22 @@ class Reader:
         self._read_rte_event_group(child_elements, data)
         self._report_unprocessed_elements(child_elements)
         return ar_element.InitEvent(**data)
+
+    def _read_os_task_execution_event(self,
+                                      xml_element: ElementTree.Element
+                                      ) -> ar_element.OsTaskExecutionEvent:
+        """
+        Reads complex type AR:OS-TASK-EXECUTION-EVENT
+        Multi-tagged: False
+        """
+        data = {}
+        child_elements = ChildElementMap(xml_element)
+        self._read_referrable(child_elements, data)
+        self._read_multi_language_referrable(child_elements, data)
+        self._read_identifiable(child_elements, xml_element.attrib, data)
+        self._read_rte_event_group(child_elements, data)
+        self._report_unprocessed_elements(child_elements)
+        return ar_element.OsTaskExecutionEvent(**data)
 
     def _read_internal_trigger_occured_event(self,
                                              xml_element: ElementTree.Element

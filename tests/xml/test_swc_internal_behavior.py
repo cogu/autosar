@@ -3395,6 +3395,25 @@ class TestBackgroundEvent(unittest.TestCase):
         self.assertEqual(elem.short_name, 'MyName')
 
 
+class TestOsTaskExecutionEvent(unittest.TestCase):
+    """
+    This event doesn't have any additional elements outside its base class.
+    """
+
+    def test_name_only(self):
+        writer = autosar.xml.Writer()
+        element = ar_element.OsTaskExecutionEvent('MyName')
+        xml = '''<OS-TASK-EXECUTION-EVENT>
+  <SHORT-NAME>MyName</SHORT-NAME>
+</OS-TASK-EXECUTION-EVENT>'''
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.OsTaskExecutionEvent = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.OsTaskExecutionEvent)
+        self.assertEqual(elem.name, 'MyName')
+        self.assertEqual(elem.short_name, 'MyName')
+
+
 class TestExternalTriggerOccurredEvent(unittest.TestCase):
 
     def test_name_only(self):
@@ -5251,6 +5270,27 @@ class TestSwcInternalBehavior(unittest.TestCase):
         self.assertEqual(len(elem.event), 1)
         event = elem.event[0]
         self.assertIsInstance(event, ar_element.InitEvent)
+        self.assertEqual(event.name, "MyEvent")
+
+    def test_os_task_execution_event_from_element(self):
+        event = ar_element.OsTaskExecutionEvent("MyEvent")
+        element = ar_element.SwcInternalBehavior('MyName', event=event)
+        xml = '''<SWC-INTERNAL-BEHAVIOR>
+  <SHORT-NAME>MyName</SHORT-NAME>
+  <EVENTS>
+    <OS-TASK-EXECUTION-EVENT>
+      <SHORT-NAME>MyEvent</SHORT-NAME>
+    </OS-TASK-EXECUTION-EVENT>
+  </EVENTS>
+</SWC-INTERNAL-BEHAVIOR>'''
+        writer = autosar.xml.Writer()
+        self.assertEqual(writer.write_str_elem(element), xml)
+        reader = autosar.xml.Reader()
+        elem: ar_element.SwcInternalBehavior = reader.read_str_elem(xml)
+        self.assertIsInstance(elem, ar_element.SwcInternalBehavior)
+        self.assertEqual(len(elem.event), 1)
+        event = elem.event[0]
+        self.assertIsInstance(event, ar_element.OsTaskExecutionEvent)
         self.assertEqual(event.name, "MyEvent")
 
     def test_timing_event_from_element(self):

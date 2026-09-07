@@ -278,6 +278,7 @@ class Writer(_XMLWriter):
             'InternalTriggerOccurredEvent': self._write_internal_trigger_occured_event,
             'ModeSwitchedAckEvent': self._write_mode_switched_ack_event,
             'OperationInvokedEvent': self._write_operation_invoked_event,
+            'OsTaskExecutionEvent': self._write_os_task_execution_event,
             'SwcModeManagerErrorEvent': self._write_swc_mode_manager_error_event,
             'SwcModeSwitchEvent': self._write_swc_mode_switch_event,
             'TimingEvent': self._write_timing_event,
@@ -480,6 +481,7 @@ class Writer(_XMLWriter):
             'InternalTriggerOccurredEvent': self._write_internal_trigger_occured_event,
             'ModeSwitchedAckEvent': self._write_mode_switched_ack_event,
             'OperationInvokedEvent': self._write_operation_invoked_event,
+            'OsTaskExecutionEvent': self._write_os_task_execution_event,
             'SwcModeManagerErrorEvent': self._write_swc_mode_manager_error_event,
             'SwcModeSwitchEvent': self._write_swc_mode_switch_event,
             'TimingEvent': self._write_timing_event,
@@ -6942,6 +6944,19 @@ class Writer(_XMLWriter):
         """
         assert isinstance(elem, ar_element.InitEvent)
         self._add_child("INIT-EVENT")
+        self._write_referrable(elem)
+        self._write_multilanguage_referrable(elem)
+        self._write_identifiable(elem)
+        self._write_rte_event_group(elem)
+        self._leave_child()
+
+    def _write_os_task_execution_event(self, elem: ar_element.OsTaskExecutionEvent) -> None:
+        """
+        Writes complex type AR:OS-TASK-EXECUTION-EVENT
+        Multi-tagged: False
+        """
+        assert isinstance(elem, ar_element.OsTaskExecutionEvent)
+        self._add_child("OS-TASK-EXECUTION-EVENT")
         self._write_referrable(elem)
         self._write_multilanguage_referrable(elem)
         self._write_identifiable(elem)
