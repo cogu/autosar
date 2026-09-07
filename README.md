@@ -21,7 +21,7 @@ Classic AUTOSAR only.
 ## Requirements
 
 * Python 3.6+
-* cfile v0.2.0
+* cfile v0.2.x
 
 ## Installation
 
