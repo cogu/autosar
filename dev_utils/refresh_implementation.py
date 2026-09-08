@@ -74,7 +74,7 @@ def _extract_tag_variants(doc: str) -> List[str]:
 
 
 def _get_git_class_versions(repo_root: str) -> Tuple[Dict[str, Set[str]], List[str]]:
-    """Resolve earliest git release tag containing each class in element.py."""
+    """Resolve earliest git release tag containing each class in element modules."""
     git_tags: List[str] = []
     tag_classes: Dict[str, Set[str]] = {}
 
@@ -90,6 +90,7 @@ def _get_git_class_versions(repo_root: str) -> Tuple[Dict[str, Set[str]], List[s
         pass
 
     for t in git_tags:
+        classes: Set[str] = set()
         try:
             content = subprocess.check_output(
                 ['git', 'show', f'{t}:src/autosar/xml/element.py'],
@@ -97,10 +98,31 @@ def _get_git_class_versions(repo_root: str) -> Tuple[Dict[str, Set[str]], List[s
                 encoding='utf-8',
                 errors='ignore'
             )
-            classes = set(re.findall(r'^class\s+([A-Za-z0-9_]+)', content, flags=re.MULTILINE))
-            tag_classes[t] = classes
+            classes.update(re.findall(r'^class\s+([A-Za-z0-9_]+)', content, flags=re.MULTILINE))
         except Exception:
-            continue
+            pass
+
+        try:
+            tree_output = subprocess.check_output(
+                ['git', 'ls-tree', '-r', '--name-only', t, 'src/autosar/xml/elements'],
+                cwd=repo_root,
+                encoding='utf-8',
+                errors='ignore'
+            ).splitlines()
+            for py_file in tree_output:
+                py_path = py_file.strip()
+                if py_path.endswith('.py') and not py_path.endswith('__init__.py'):
+                    mod_content = subprocess.check_output(
+                        ['git', 'show', f'{t}:{py_path}'],
+                        cwd=repo_root,
+                        encoding='utf-8',
+                        errors='ignore'
+                    )
+                    classes.update(re.findall(r'^class\s+([A-Za-z0-9_]+)', mod_content, flags=re.MULTILINE))
+        except Exception:
+            pass
+
+        tag_classes[t] = classes
 
     return tag_classes, git_tags
 
@@ -177,119 +199,173 @@ def _extract_subelements(class_lines: List[str]) -> Tuple[List[str], List[str], 
     return implemented, unsupported, unimplemented
 
 
+MODULE_CATEGORY_MAP = {
+    "_base": "CommonStructure",
+    "documentation": "Documentation",
+    "common": "CommonStructure",
+    "computation_method": "ComputationMethod",
+    "constraint": "Constraint",
+    "unit": "Unit",
+    "data_type": "DataType",
+    "calibration_data": "CalibrationData",
+    "constant": "Constant",
+    "package": "Package",
+    "mode_declaration": "ModeDeclaration",
+    "port_interface": "PortInterface",
+    "system_template": "SystemTemplate",
+    "software_component": "SoftwareComponent",
+    "service_needs": "ServiceNeeds",
+    "internal_behavior": "InternalBehavior",
+    "service_dependency": "ServiceDependency",
+    "auxiliary": "AuxillaryObject",
+}
+
+ADMIN_DATA_CLASSES = {
+    "SpecialDataElement",
+    "SpecialDataValue",
+    "SpecialDataGroup",
+    "Modification",
+    "DocRevision",
+    "AdminData",
+}
+
+
 def parse_element_file(filepath: str,
                        repo_root: Optional[str] = None,
                        unreleased_version: Optional[str] = None) -> Dict[str, Any]:
-    """Parse src/autosar/xml/element.py and extract class definitions and docstring mappings."""
+    """Parse src/autosar/xml/element.py and elements/ package, extracting class definitions and docstring mappings."""
     if repo_root is None:
         repo_root = os.path.abspath(os.path.join(os.path.dirname(filepath), "..", "..", ".."))
 
-    with open(filepath, "r", encoding="utf-8") as f:
-        code = f.read()
-
-    tree = ast.parse(code)
-    lines = code.splitlines()
-
-    # Map line number to active section category
-    sec_by_line: Dict[int, str] = {}
-    curr_category = "CommonStructure"
-    for i, line in enumerate(lines, 1):
-        stripped = line.strip()
-        if stripped.startswith('# ---'):
-            curr_category = _extract_category(stripped)
-        sec_by_line[i] = curr_category
+    elements_dir = os.path.join(os.path.dirname(filepath), "elements")
+    files_to_parse: List[str] = []
+    if os.path.isdir(elements_dir):
+        for entry in sorted(os.listdir(elements_dir)):
+            if entry.endswith(".py") and not entry.startswith("__"):
+                files_to_parse.append(os.path.join(elements_dir, entry))
+    files_to_parse.append(filepath)
 
     tag_classes, git_tags = _get_git_class_versions(repo_root)
 
-    # Collect class inheritance map
+    parsed_files: List[Tuple[str, ast.AST, List[str]]] = []
     classes_bases: Dict[str, List[str]] = {}
-    for node in tree.body:
-        if isinstance(node, ast.ClassDef):
-            classes_bases[node.name] = [b.id for b in node.bases if isinstance(b, ast.Name)]
+
+    for fpath in files_to_parse:
+        with open(fpath, "r", encoding="utf-8") as f:
+            code = f.read()
+        tree = ast.parse(code)
+        lines = code.splitlines()
+        parsed_files.append((fpath, tree, lines))
+        for node in tree.body:
+            if isinstance(node, ast.ClassDef):
+                classes_bases[node.name] = [b.id for b in node.bases if isinstance(b, ast.Name)]
 
     classes: Dict[str, Any] = {}
     complex_types: Dict[str, str] = {}  # XSD complexType name -> Python class name
     groups: Dict[str, str] = {}         # XSD group name -> Python class name
     tag_variants: Dict[str, str] = {}   # XML tag variant -> Python class name
 
-    for node in tree.body:
-        if not isinstance(node, ast.ClassDef):
-            continue
+    for fpath, tree, lines in parsed_files:
+        is_facade = (os.path.abspath(fpath) == os.path.abspath(filepath))
+        sec_by_line: Dict[int, str] = {}
+        if is_facade:
+            curr_category = "CommonStructure"
+            for i, line in enumerate(lines, 1):
+                stripped = line.strip()
+                if stripped.startswith('# ---'):
+                    curr_category = _extract_category(stripped)
+                sec_by_line[i] = curr_category
 
-        doc = ast.get_docstring(node) or ""
-        bases = classes_bases.get(node.name, [])
+        module_name = os.path.splitext(os.path.basename(fpath))[0]
 
-        # 1. Complex Type patterns in docstrings
-        ct_matches = re.findall(
-            r'(?:Complex\s+[Tt]ypes?|complex\s+[Tt]ypes?)(?:\:)?\s+AR:([A-Z0-9\-]+)',
-            doc
-        )
+        for node in tree.body:
+            if not isinstance(node, ast.ClassDef):
+                continue
 
-        # Matches: "Merge of Complex types AR:A, AR:B and AR:C"
-        merge_matches = re.findall(r'Merge of [Cc]omplex types\s+([^.\n]+)', doc)
-        if merge_matches:
-            for m in merge_matches:
-                found_cts = re.findall(r'(?:AR:)?([A-Z0-9\-]+)', m)
-                for fct in found_cts:
-                    if fct not in ('AND', 'OR', 'OF') and fct not in ct_matches:
-                        ct_matches.append(fct)
+            doc = ast.get_docstring(node) or ""
+            bases = classes_bases.get(node.name, [])
 
-        # Matches: standalone "AR:XYZ" on first line of docstring
-        standalone_ar = re.match(r'^\s*AR:([A-Z0-9\-]+)', doc)
-        if standalone_ar:
-            tag = standalone_ar.group(1)
-            if tag not in ct_matches:
-                ct_matches.append(tag)
+            # 1. Complex Type patterns in docstrings
+            ct_matches = re.findall(
+                r'(?:Complex\s+[Tt]ypes?|complex\s+[Tt]ypes?)(?:\:)?\s+AR:([A-Z0-9\-]+)',
+                doc
+            )
 
-        # 2. Group patterns in docstrings
-        grp_matches = re.findall(r'Group\s+(?:AR:)?([A-Z0-9\-]+)', doc, re.IGNORECASE)
+            # Matches: "Merge of Complex types AR:A, AR:B and AR:C"
+            merge_matches = re.findall(r'Merge of [Cc]omplex types\s+([^.\n]+)', doc)
+            if merge_matches:
+                for m in merge_matches:
+                    found_cts = re.findall(r'(?:AR:)?([A-Z0-9\-]+)', m)
+                    for fct in found_cts:
+                        if fct not in ('AND', 'OR', 'OF') and fct not in ct_matches:
+                            ct_matches.append(fct)
 
-        # 3. Tag variants
-        variants = _extract_tag_variants(doc)
+            # Matches: standalone "AR:XYZ" on first line of docstring
+            standalone_ar = re.match(r'^\s*AR:([A-Z0-9\-]+)', doc)
+            if standalone_ar:
+                tag = standalone_ar.group(1)
+                if tag not in ct_matches:
+                    ct_matches.append(tag)
 
-        # 4. Constructor sub-element comments inspection
-        start_line = node.lineno
-        end_line = node.end_lineno if hasattr(node, 'end_lineno') and node.end_lineno else start_line + 50
-        class_lines = lines[start_line - 1:end_line]
+            # 2. Group patterns in docstrings
+            grp_matches = re.findall(r'Group\s+(?:AR:)?([A-Z0-9\-]+)', doc, re.IGNORECASE)
 
-        implemented_subelements, unsupported_subelements, unimplemented_subelements = _extract_subelements(class_lines)
+            # 3. Tag variants
+            variants = _extract_tag_variants(doc)
 
-        # 5. Category & Package Element status & Version
-        category = sec_by_line.get(node.lineno, "CommonStructure")
-        package_elem = _is_package_element(node.name, classes_bases)
+            # 4. Constructor sub-element comments inspection
+            start_line = node.lineno
+            end_line = node.end_lineno if hasattr(node, 'end_lineno') and node.end_lineno else start_line + 50
+            class_lines = lines[start_line - 1:end_line]
+            implemented_subelements, unsupported_subelements, unimplemented_subelements = (
+                _extract_subelements(class_lines)
+            )
 
-        since_ver = None
-        for t in git_tags:
-            if node.name in tag_classes.get(t, set()):
-                since_ver = t
-                break
-        if since_ver is None:
-            since_ver = unreleased_version or (git_tags[-1] if git_tags else "unreleased")
+            # 5. Category & Package Element status & Version
+            if is_facade:
+                category = sec_by_line.get(node.lineno, "CommonStructure")
+            else:
+                if module_name == "_base":
+                    category = "AdminData" if node.name in ADMIN_DATA_CLASSES else "CommonStructure"
+                elif node.name == "SwAddrMethod":
+                    category = "AuxillaryObject"
+                else:
+                    category = MODULE_CATEGORY_MAP.get(module_name, _extract_category(module_name))
 
-        class_info = {
-            "name": node.name,
-            "line": node.lineno,
-            "bases": bases,
-            "complex_types": ct_matches,
-            "groups": grp_matches,
-            "tag_variants": variants,
-            "category": category,
-            "package_element": package_elem,
-            "since_version": since_ver,
-            "implemented_subelements": implemented_subelements,
-            "unsupported_subelements": unsupported_subelements,
-            "unimplemented_subelements": unimplemented_subelements,
-            "docstring": doc[:200]
-        }
+            package_elem = _is_package_element(node.name, classes_bases)
 
-        classes[node.name] = class_info
+            since_ver = None
+            for t in git_tags:
+                if node.name in tag_classes.get(t, set()):
+                    since_ver = t
+                    break
+            if since_ver is None:
+                since_ver = unreleased_version or (git_tags[-1] if git_tags else "unreleased")
 
-        for ct in ct_matches:
-            complex_types[ct] = node.name
-        for grp in grp_matches:
-            groups[grp] = node.name
-        for var in variants:
-            tag_variants[var] = node.name
+            class_info = {
+                "name": node.name,
+                "line": node.lineno,
+                "bases": bases,
+                "complex_types": ct_matches,
+                "groups": grp_matches,
+                "tag_variants": variants,
+                "category": category,
+                "package_element": package_elem,
+                "since_version": since_ver,
+                "implemented_subelements": implemented_subelements,
+                "unsupported_subelements": unsupported_subelements,
+                "unimplemented_subelements": unimplemented_subelements,
+                "docstring": doc[:200]
+            }
+
+            classes[node.name] = class_info
+
+            for ct in ct_matches:
+                complex_types[ct] = node.name
+            for grp in grp_matches:
+                groups[grp] = node.name
+            for var in variants:
+                tag_variants[var] = node.name
 
     return {
         "classes": classes,
@@ -407,7 +483,7 @@ def refresh_cache(repo_root: Optional[str] = None,
     if not os.path.exists(element_py):
         raise FileNotFoundError(f"Cannot find element.py at {element_py}")
 
-    print(f"Scanning element.py ({element_py})...")
+    print(f"Scanning element definitions ({element_py})...")
     elem_data = parse_element_file(element_py,
                                    repo_root=repo_root,
                                    unreleased_version=unreleased_version)
@@ -442,7 +518,7 @@ def refresh_cache(repo_root: Optional[str] = None,
 
     print(f"Cache saved to: {output_path}")
     print("\nSummary of Indexed Implementations:")
-    print(f"  Classes in element.py:      {len(elem_data['classes'])}")
+    print(f"  Classes in element modules: {len(elem_data['classes'])}")
     print(f"  Mapped XML Complex Types:   {len(elem_data['complex_types'])}")
     print(f"  Mapped XML Groups:          {len(elem_data['groups'])}")
     print(f"  Mapped Tag Variants:        {len(elem_data['tag_variants'])}")
