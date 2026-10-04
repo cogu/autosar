@@ -7,6 +7,7 @@ from autosar.xml.elements._base import (  # noqa: F401
     AdminData,
     ARElement,
     CollectableElement,
+    Describable,
     DocRevision,
     Identifiable,
     make_unique_name_in_list,
@@ -16,7 +17,6 @@ from autosar.xml.elements._base import (  # noqa: F401
     NumericalValue,
     PositiveIntegerValue,
     Referrable,
-    SingleLanguageText,
     SpecialDataElement,
     SpecialDataGroup,
     SpecialDataGroupContent,
@@ -41,6 +41,13 @@ from autosar.xml.elements.computation_method import (  # noqa: F401
     Computation,
 )
 from autosar.xml.elements.auxiliary import SwAddrMethod  # noqa: F401
+from autosar.xml.elements.data_element import (  # noqa: F401
+    ArVariableInImplementationDataInstanceRef,
+    AutosarParameterRef,
+    AutosarVariableRef,
+    ParameterInAtomicSwcTypeInstanceRef,
+    VariableInAtomicSWCTypeInstanceRef,
+)
 from autosar.xml.elements.service_dependency import (  # noqa: F401
     RoleBasedDataAssignment,
     RoleBasedDataTypeAssignment,
@@ -52,13 +59,10 @@ from autosar.xml.elements.service_dependency import (  # noqa: F401
 from autosar.xml.elements.internal_behavior import (  # noqa: F401
     AbstractAccessPoint,
     ActivationReasonArgumentType,
-    ArVariableInImplementationDataInstanceRef,
     AsyncServerCallResultPointArgumentType,
     AsynchronousServerCallPoint,
     AsynchronousServerCallResultPoint,
     AsynchronousServerCallReturnsEvent,
-    AutosarParameterRef,
-    AutosarVariableRef,
     BackgroundEvent,
     CanEnterLeaveArgumentType,
     CommunicationBufferLocking,
@@ -91,7 +95,6 @@ from autosar.xml.elements.internal_behavior import (  # noqa: F401
     OperationInvokedEvent,
     OsTaskExecutionEvent,
     ParameterAccess,
-    ParameterInAtomicSwcTypeInstanceRef,
     PerInstanceMemory,
     PortAccessOptions,
     PortApiOption,
@@ -115,7 +118,6 @@ from autosar.xml.elements.internal_behavior import (  # noqa: F401
     TimingEvent,
     TransformerHardErrorEvent,
     VariableAccess,
-    VariableInAtomicSWCTypeInstanceRef,
     WaitPoint,
 )
 from autosar.xml.elements.software_component import (  # noqa: F401
@@ -216,7 +218,6 @@ from autosar.xml.elements.constant import (  # noqa: F401
     ConstantSpecificationMappingSet,
     InitValueArgType,
     NotAvailableValueSpecification,
-    NumericalOrText,
     NumericalRuleBasedValueSpecification,
     NumericalValueSpecification,
     RecordValueSpecification,
@@ -231,11 +232,13 @@ from autosar.xml.elements.constant import (  # noqa: F401
     ValueSpecificationElement,
 )
 from autosar.xml.elements.calibration_data import (  # noqa: F401
+    NumericalOrText,
     SwAxisCont,
     SwValueCont,
     SwValueElement,
     SwValues,
     ValueGroup,
+    ValueList,
 )
 from autosar.xml.elements.data_type import (  # noqa: F401
     ApplicationArrayDataType,
@@ -264,7 +267,6 @@ from autosar.xml.elements.data_type import (  # noqa: F401
     SwPointerTargetProps,
     SwTextProps,
     SymbolProps,
-    ValueList,
     VariableDataPrototype,
     alignment_type_re,
     display_format_str_re,
@@ -282,7 +284,6 @@ from autosar.xml.elements.documentation import (  # noqa: F401
     Annotation,
     Break,
     Date,
-    Describable,
     DocumentViewSelectable,
     DocumentationBlock,
     EmphasisText,
@@ -307,6 +308,7 @@ from autosar.xml.elements.documentation import (  # noqa: F401
     MultilanguageLongName,
     Paginateable,
     RevisionLabelString,
+    SingleLanguageText,
     SingleLanguageUnitNames,
     Subscript,
     Superscript,

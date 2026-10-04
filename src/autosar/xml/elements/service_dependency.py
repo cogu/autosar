@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import TYPE_CHECKING
 
 from autosar.xml.base import ARObject
 from autosar.xml.elements._base import Identifiable, Referrable
+from autosar.xml.elements.data_element import AutosarParameterRef, AutosarVariableRef
 from autosar.xml.elements.service_needs import ServiceNeeds
 import autosar.xml.enumeration as ar_enum
 import autosar.xml.exception as ar_except
@@ -16,22 +16,6 @@ from autosar.xml.reference import (
     PortGroupRef,
     PortPrototypeRef,
 )
-
-if TYPE_CHECKING:
-    from autosar.xml.elements.internal_behavior import (
-        AutosarParameterRef,
-        AutosarVariableRef,
-    )
-
-
-def _get_autosar_variable_ref_class():
-    from autosar.xml.elements.internal_behavior import AutosarVariableRef
-    return AutosarVariableRef
-
-
-def _get_autosar_parameter_ref_class():
-    from autosar.xml.elements.internal_behavior import AutosarParameterRef
-    return AutosarParameterRef
 
 
 class RoleBasedDataAssignment(ARObject):
@@ -56,14 +40,8 @@ class RoleBasedDataAssignment(ARObject):
         self.used_pim_ref: PerInstanceMemoryRef | None = None
 
         self._assign_optional_strict("role", role, str)
-        if used_data_element is not None:
-            self._assign_optional_strict("used_data_element",
-                                         used_data_element,
-                                         _get_autosar_variable_ref_class())
-        if used_parameter_element is not None:
-            self._assign_optional_strict("used_parameter_element",
-                                         used_parameter_element,
-                                         _get_autosar_parameter_ref_class())
+        self._assign_optional_strict("used_data_element", used_data_element, AutosarVariableRef)
+        self._assign_optional_strict("used_parameter_element", used_parameter_element, AutosarParameterRef)
         self._assign_optional("used_pim_ref", used_pim_ref, PerInstanceMemoryRef)
 
 

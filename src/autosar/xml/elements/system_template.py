@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from autosar.xml.elements._base import ARElement
-from autosar.xml.elements.documentation import Describable
+from autosar.xml.elements._base import ARElement, Describable
 from autosar.xml.reference import E2EProfileCompatibilityPropsRef
 
 

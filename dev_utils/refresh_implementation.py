@@ -215,6 +215,7 @@ MODULE_CATEGORY_MAP = {
     "system_template": "SystemTemplate",
     "software_component": "SoftwareComponent",
     "service_needs": "ServiceNeeds",
+    "data_element": "DataElement",
     "internal_behavior": "InternalBehavior",
     "service_dependency": "ServiceDependency",
     "auxiliary": "AuxillaryObject",

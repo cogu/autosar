@@ -48,17 +48,8 @@ from autosar.xml.reference import (
 )
 
 if TYPE_CHECKING:
+    # internal_behavior.py depends on this module, see local imports below
     from autosar.xml.elements.internal_behavior import SwcInternalBehavior, VariableAccess
-
-
-def _get_variable_access_class():
-    from autosar.xml.elements.internal_behavior import VariableAccess
-    return VariableAccess
-
-
-def _get_swc_internal_behavior_class():
-    from autosar.xml.elements.internal_behavior import SwcInternalBehavior
-    return SwcInternalBehavior
 
 
 PortPrototypeElement = Union[
@@ -555,7 +546,7 @@ class ReceiverComSpec(RequirePortComSpec):
                  max_no_new_repeated_data: int | None = None,
                  network_representation: SwDataDefProps | None = None,
                  reception_props: ReceptionComSpecProps | None = None,
-                 replace_with: Union["VariableAccess", None] = None,
+                 replace_with: VariableAccess | None = None,
                  sync_counter_init: int | None = None,
                  transformation_com_spec_props: EndToEndTransformationComSpecPropsArgTypes | None = None,
                  uses_end_to_end_protection: bool | None = None
@@ -594,7 +585,8 @@ class ReceiverComSpec(RequirePortComSpec):
         self._assign_optional_strict("network_representation", network_representation, SwDataDefProps)
         self._assign_optional_strict("reception_props", reception_props, ReceptionComSpecProps)
         if replace_with is not None:
-            self._assign_optional_strict("replace_with", replace_with, _get_variable_access_class())
+            from autosar.xml.elements.internal_behavior import VariableAccess  # pylint: disable=import-outside-toplevel
+            self._assign_optional_strict("replace_with", replace_with, VariableAccess)
         self._assign_optional_positive_int("sync_counter_init", sync_counter_init)
         self._assign_optional("uses_end_to_end_protection", uses_end_to_end_protection, bool)
         if transformation_com_spec_props is not None:
@@ -1260,25 +1252,26 @@ class AtomicSoftwareComponentType(SwComponentType):
 
     def __init__(self,
                  name: str,
-                 internal_behavior: Union["SwcInternalBehavior", None] = None,
+                 internal_behavior: SwcInternalBehavior | None = None,
                  symbol_props: SymbolProps | None = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
         self._internal_behavior: SwcInternalBehavior | None = None
         self.symbol_props: SymbolProps | None = None  # AR:SYMBOL-PROPS
         if internal_behavior is not None:
-            self._assign_optional_strict("_internal_behavior", internal_behavior, _get_swc_internal_behavior_class())
+            from autosar.xml.elements.internal_behavior import SwcInternalBehavior  # pylint: disable=C0415
+            self._assign_optional_strict("_internal_behavior", internal_behavior, SwcInternalBehavior)
         self._assign_optional_strict("symbol_props", symbol_props, SymbolProps)
 
     @property
-    def internal_behavior(self) -> Union["SwcInternalBehavior", None]:
+    def internal_behavior(self) -> SwcInternalBehavior | None:
         """
         Internal behavior getter
         """
         return self._internal_behavior
 
     @internal_behavior.setter
-    def internal_behavior(self, value: Union["SwcInternalBehavior", None]):
+    def internal_behavior(self, value: SwcInternalBehavior | None):
         """
         Internal behavior setter
         """
@@ -1287,15 +1280,15 @@ class AtomicSoftwareComponentType(SwComponentType):
             value.parent = self
 
     @convenience_function
-    def create_internal_behavior(self, name: str = None, **kwargs) -> "SwcInternalBehavior":
+    def create_internal_behavior(self, name: str = None, **kwargs) -> SwcInternalBehavior:
         """
         Creates an empty internal behavior object and adds it to the component.
         If the name argument is left as None, a default name will be created based on the name of
         the software component
         """
+        from autosar.xml.elements.internal_behavior import SwcInternalBehavior  # pylint: disable=C0415
         if name is None:
             name = self.name + "_InternalBehavior"
-        SwcInternalBehavior = _get_swc_internal_behavior_class()
         self.internal_behavior = SwcInternalBehavior(name, **kwargs)
         self.internal_behavior.parent = self
         return self.internal_behavior

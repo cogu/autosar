@@ -4,15 +4,13 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 import re
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from autosar.xml.base import BaseRef
 from autosar.xml.elements._base import ARElement, CollectableElement
+from autosar.xml.elements.port_interface import PortInterface
 import autosar.xml.exception as ar_except
 from autosar.xml.reference import PackageRef
-
-if TYPE_CHECKING:
-    from autosar.xml.elements.port_interface import PortInterface
 
 
 class Package(CollectableElement):
@@ -282,7 +280,7 @@ class PackageCollection:
             raise ValueError("Object doesn't seem to be a proper workspace")
         return self.behavior_settings
 
-    def get_port_interface(self, ref: str | BaseRef) -> "PortInterface":
+    def get_port_interface(self, ref: str | BaseRef) -> PortInterface:
         """
         Find port inteface from reference
         """

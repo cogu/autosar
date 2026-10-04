@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Union
+from typing import Union
 
 from autosar.xml.base import ARObject
 from autosar.xml.elements._base import NumericalValue
@@ -11,20 +11,57 @@ from autosar.xml.elements.documentation import (
     MultilanguageLongName,
     SingleLanguageUnitNames,
 )
-from autosar.xml.elements.data_type import ValueList
 import autosar.xml.enumeration as ar_enum
 from autosar.xml.reference import UnitRef
 
-if TYPE_CHECKING:
-    from autosar.xml.elements.constant import NumericalOrText
+
+class ValueList(ARObject):
+    """
+    Complex type AR:VALUE-LIST
+    Tag variants: 'SW-ARRAYSIZE'
+    """
+
+    def __init__(self,
+                 values: list[int | float | NumericalValue] | int | float | NumericalValue | None = None
+                 ) -> None:
+        self.values = []
+        if values is not None:
+            if isinstance(values, (int, float, NumericalValue)):
+                self.append(values)
+            else:
+                for value in values:
+                    self.append(value)
+
+    def append(self, value: int | float | NumericalValue) -> None:
+        """
+        Adds value to list of values
+        """
+        if isinstance(value, (int, float, NumericalValue)):
+            self.values.append(value)
+        else:
+            raise TypeError(f"Invalid type for value: {str(type(value))}")
 
 
-def _get_numerical_or_text_class():
-    from autosar.xml.elements.constant import NumericalOrText
-    return NumericalOrText
+class NumericalOrText(ARObject):
+    """
+    Complex type AR:NUMERICAL-OR-TEXT
+    Tag variants: 'VTF'
+    """
+
+    def __init__(self,
+                 vf: int | float | NumericalValue | None = None,
+                 vt: str | None = None
+                 ) -> None:
+        # .VF
+        self.vf: int | float | NumericalValue | None = None
+        # .VT
+        self.vt: str | None = None
+        # .VARIATION-POINT not supported
+        self._assign_optional_strict("vf", vf, (int, float, NumericalValue))
+        self._assign_optional_strict("vt", vt, str)
 
 
-SwValueElement = Union[int, float, str, NumericalValue, "ValueGroup", "NumericalOrText"]  # Type alias
+SwValueElement = Union[int, float, str, NumericalValue, "ValueGroup", NumericalOrText]  # Type alias
 
 
 class SwValues(ARObject):
@@ -37,7 +74,6 @@ class SwValues(ARObject):
                  values: list[SwValueElement] | SwValueElement | None = None) -> None:
         self.values = []
         if values is not None:
-            NumericalOrText = _get_numerical_or_text_class()
             if isinstance(values, (int, float, str, NumericalValue, ValueGroup, NumericalOrText)):
                 self.append(values)
             elif isinstance(values, list):
@@ -48,7 +84,6 @@ class SwValues(ARObject):
         """
         Appends value to list of values
         """
-        NumericalOrText = _get_numerical_or_text_class()
         if isinstance(value, (int, float, str, NumericalValue, ValueGroup, NumericalOrText)):
             self.values.append(value)
         else:
@@ -129,6 +164,8 @@ class SwValueCont(ARObject):
 
 
 __all__ = [
+    "ValueList",
+    "NumericalOrText",
     "SwValueElement",
     "SwValues",
     "ValueGroup",

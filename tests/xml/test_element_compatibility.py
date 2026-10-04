@@ -169,7 +169,7 @@ class TestElementImports(unittest.TestCase):
 
         if elements_dt is not None:
             for cls_name in ["BaseType", "SwBaseType", "ImplementationDataType",
-                             "ApplicationPrimitiveDataType", "DataTypeMappingSet", "ValueList"]:
+                             "ApplicationPrimitiveDataType", "DataTypeMappingSet"]:
                 self.assertIs(getattr(ar_element, cls_name), getattr(elements_dt, cls_name))
             self.assertIs(ar_element.alignment_type_re, elements_dt.alignment_type_re)
             self.assertIs(ar_element.display_format_str_re, elements_dt.display_format_str_re)
@@ -180,7 +180,7 @@ class TestElementImports(unittest.TestCase):
             elements_cd = None
 
         if elements_cd is not None:
-            for cls_name in ["SwValues", "ValueGroup", "SwAxisCont", "SwValueCont"]:
+            for cls_name in ["SwValues", "ValueGroup", "SwAxisCont", "SwValueCont", "ValueList", "NumericalOrText"]:
                 self.assertIs(getattr(ar_element, cls_name), getattr(elements_cd, cls_name))
 
         try:
@@ -190,7 +190,7 @@ class TestElementImports(unittest.TestCase):
 
         if elements_const is not None:
             for cls_name in ["ValueSpecification", "NumericalValueSpecification", "ConstantSpecification",
-                             "ConstantReference", "NumericalOrText", "ConstantSpecificationMapping"]:
+                             "ConstantReference", "ConstantSpecificationMapping"]:
                 self.assertIs(getattr(ar_element, cls_name), getattr(elements_const, cls_name))
 
         try:
@@ -249,6 +249,16 @@ class TestElementImports(unittest.TestCase):
             for cls_name in ["RoleBasedDataAssignment", "RoleBasedDataTypeAssignment", "RoleBasedPortAssignment",
                              "SymbolicNameProps", "ServiceDependency", "SwcServiceDependency"]:
                 self.assertIs(getattr(ar_element, cls_name), getattr(elements_sd, cls_name))
+
+        try:
+            elements_de = importlib.import_module("autosar.xml.elements.data_element")
+        except ModuleNotFoundError:
+            elements_de = None
+
+        if elements_de is not None:
+            for cls_name in ["ArVariableInImplementationDataInstanceRef", "VariableInAtomicSWCTypeInstanceRef",
+                             "AutosarVariableRef", "ParameterInAtomicSwcTypeInstanceRef", "AutosarParameterRef"]:
+                self.assertIs(getattr(ar_element, cls_name), getattr(elements_de, cls_name))
 
         try:
             elements_ib = importlib.import_module("autosar.xml.elements.internal_behavior")

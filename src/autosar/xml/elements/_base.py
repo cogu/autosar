@@ -8,20 +8,21 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any, NamedTuple, Union
 
 from autosar.xml.base import ARObject
+from autosar.xml.elements.documentation import (
+    Date,
+    DocumentationBlock,
+    LanguagePlainText,
+    MultiLanguageOverviewParagraph,
+    MultiLanguagePlainText,
+    MultilanguageLongName,
+    RevisionLabelString,
+    SingleLanguageText,
+)
 import autosar.xml.enumeration as ar_enum
 
 if TYPE_CHECKING:
-    from autosar.xml.elements.documentation import (
-        Date,
-        LanguagePlainText,
-        MultiLanguageOverviewParagraph,
-        MultiLanguagePlainText,
-        MultilanguageLongName,
-        RevisionLabelString,
-    )
+    # package.py depends on this module, see Referrable.root_collection()
     from autosar.xml.elements.package import PackageCollection
-
-SingleLanguageText = tuple[ar_enum.Language, str]
 
 
 # Helper classes
@@ -121,7 +122,7 @@ class Referrable(ARObject):
         elem = self
         while elem.parent is not None:
             elem = elem.parent
-        from autosar.xml.elements.package import PackageCollection
+        from autosar.xml.elements.package import PackageCollection  # pylint: disable=import-outside-toplevel
         if isinstance(elem, PackageCollection):
             return elem
         return None
@@ -136,7 +137,6 @@ class MultiLanguageReferrable(Referrable):
         super().__init__(name)
         self.long_name: MultilanguageLongName | None = None
         if long_name is not None:
-            from autosar.xml.elements.documentation import MultilanguageLongName
             if isinstance(long_name, MultilanguageLongName):
                 self.long_name = long_name
             else:
@@ -162,7 +162,6 @@ class Identifiable(MultiLanguageReferrable):
         self.uuid: str | None = None
         self.admin_data: AdminData | None = None
         if desc is not None:
-            from autosar.xml.elements.documentation import MultiLanguageOverviewParagraph
             if isinstance(desc, MultiLanguageOverviewParagraph):
                 self.desc = desc
             elif isinstance(desc, str):
@@ -384,7 +383,6 @@ class Modification(ARObject):
         self.reason: MultiLanguageOverviewParagraph | None = None
         expected_type = "MultiLanguageOverviewParagraph or tuple[enum Language, str]"
         if change is not None:
-            from autosar.xml.elements.documentation import MultiLanguageOverviewParagraph
             if isinstance(change, MultiLanguageOverviewParagraph):
                 self.change = change
             elif isinstance(change, tuple):
@@ -393,7 +391,6 @@ class Modification(ARObject):
                 actual_change_type = str(type(change))
                 raise TypeError(f"change: Expected type {expected_type}, got {actual_change_type}")
         if reason is not None:
-            from autosar.xml.elements.documentation import MultiLanguageOverviewParagraph
             if isinstance(reason, MultiLanguageOverviewParagraph):
                 self.reason = reason
             elif isinstance(reason, tuple):
@@ -441,7 +438,6 @@ class DocRevision(ARObject):
         self.modifications: list[Modification] = []
         revision_error = "{0}: Expected str or RevisionLabelString. Got {1}"
         if revision_label is not None:
-            from autosar.xml.elements.documentation import RevisionLabelString
             if isinstance(revision_label, RevisionLabelString):
                 self.revision_label = revision_label
             elif isinstance(revision_label, str):
@@ -449,7 +445,6 @@ class DocRevision(ARObject):
             else:
                 raise TypeError(revision_error.format("revision_label", str(type(revision_label))))
         if revision_label_p1 is not None:
-            from autosar.xml.elements.documentation import RevisionLabelString
             if isinstance(revision_label_p1, RevisionLabelString):
                 self.revision_label_p1 = revision_label_p1
             elif isinstance(revision_label_p1, str):
@@ -457,7 +452,6 @@ class DocRevision(ARObject):
             else:
                 raise TypeError(revision_error.format("revision_label_p1", str(type(revision_label_p1))))
         if revision_label_p2 is not None:
-            from autosar.xml.elements.documentation import RevisionLabelString
             if isinstance(revision_label_p2, RevisionLabelString):
                 self.revision_label_p2 = revision_label_p2
             elif isinstance(revision_label_p2, str):
@@ -467,7 +461,6 @@ class DocRevision(ARObject):
         self._assign_optional_strict("state", state, str)
         self._assign_optional_strict("issued_by", issued_by, str)
         if date is not None:
-            from autosar.xml.elements.documentation import Date
             if isinstance(date, Date):
                 self.date = date
             elif isinstance(date, (str, datetime.date, datetime.datetime)):
@@ -488,7 +481,6 @@ class DocRevision(ARObject):
         if isinstance(modification, Modification):
             self.modifications.append(modification)
         elif isinstance(modification, tuple) and len(modification) == 2:
-            from autosar.xml.elements.documentation import MultiLanguageOverviewParagraph
             self.modifications.append(Modification(change=MultiLanguageOverviewParagraph(modification)))
         else:
             expected_type = "tuple[enum 'Language', str] or Modification"
@@ -496,11 +488,11 @@ class DocRevision(ARObject):
             raise TypeError(f"modification: Expected {expected_type}. Got {actual_type}")
 
 
-UsedLanguageArgtype = Union["MultiLanguagePlainText",
+UsedLanguageArgtype = Union[MultiLanguagePlainText,
                             SingleLanguageText,
-                            "LanguagePlainText",
+                            LanguagePlainText,
                             list[SingleLanguageText],
-                            list["LanguagePlainText"],
+                            list[LanguagePlainText],
                             ar_enum.Language,
                             list[ar_enum.Language]]
 
@@ -537,8 +529,6 @@ class AdminData(ARObject):
 
         self._assign_optional("language", language, ar_enum.Language)
         if used_languages is not None:
-            from autosar.xml.elements.documentation import LanguagePlainText, MultiLanguagePlainText
-
             if isinstance(used_languages, MultiLanguagePlainText):
                 self.used_languages = used_languages
             elif isinstance(used_languages, (tuple, LanguagePlainText)):
@@ -591,6 +581,36 @@ class AdminData(ARObject):
             raise TypeError(f"sdg: Expected type SpecialDataGroup. Got {str(type(sdg))}")
 
 
+class Describable(ARObject):
+    """
+    Group AR:DESCRIBABLE
+    """
+
+    def __init__(self,
+                 desc: Union[MultiLanguageOverviewParagraph, tuple[ar_enum.Language, str], str, None] = None,
+                 category: str | None = None,
+                 introduction: DocumentationBlock | None = None,
+                 admin_data: AdminData | None = None
+                 ) -> None:
+        super().__init__()
+        self.desc: MultiLanguageOverviewParagraph | None = None  # .DESC
+        self.category: str | None = None  # .CATEGORY
+        self.introduction: DocumentationBlock | None = None  # .INTRODUCTION
+        self.admin_data: AdminData | None = None  # .ADMIN-DATA
+        if desc is not None:
+            if isinstance(desc, MultiLanguageOverviewParagraph):
+                self.desc = desc
+            elif isinstance(desc, str):
+                self.desc = MultiLanguageOverviewParagraph.make(ar_enum.Language.FOR_ALL, desc)
+            elif isinstance(desc, tuple) and len(desc) == 2:
+                self.desc = MultiLanguageOverviewParagraph.make(*desc)
+            else:
+                raise TypeError(f"Invalid type for argument 'desc': {str(type(desc))}")
+        self._assign_optional('category', category, str)
+        self._assign_optional_strict('introduction', introduction, DocumentationBlock)
+        self._assign_optional_strict('admin_data', admin_data, AdminData)
+
+
 __all__ = [
     "NumericalValue",
     "PositiveIntegerValue",
@@ -609,5 +629,5 @@ __all__ = [
     "DocRevision",
     "UsedLanguageArgtype",
     "AdminData",
-    "SingleLanguageText",
+    "Describable",
 ]

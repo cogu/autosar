@@ -4,16 +4,13 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 import re
-from typing import TYPE_CHECKING, Any, Union
+from typing import Any, Union
 
 from autosar.xml.base import ARObject
-from autosar.xml.elements._base import (
-    ARElement,
-    Identifiable,
-    NumericalValue,
-    Referrable,
-)
+from autosar.xml.elements._base import ARElement, Identifiable, Referrable
+from autosar.xml.elements.constant import ValueSpecification, ValueSpecificationElement
 from autosar.xml.elements.documentation import Annotation
+from autosar.xml.elements.mode_declaration import ModeRequestTypeMap
 import autosar.xml.enumeration as ar_enum
 from autosar.xml.reference import (
     AbstractImplementationDataTypeElementRef,
@@ -34,21 +31,6 @@ from autosar.xml.reference import (
     UnitRef,
     VariableDataPrototypeRef,
 )
-
-if TYPE_CHECKING:
-    from autosar.xml.elements.mode_declaration import ModeRequestTypeMap
-
-ValueSpecificationElement = Any
-
-
-def _get_value_specification_class():
-    from autosar.xml.elements.constant import ValueSpecification
-    return ValueSpecification
-
-
-def _get_mode_request_type_map_class():
-    from autosar.xml.elements.mode_declaration import ModeRequestTypeMap
-    return ModeRequestTypeMap
 
 
 alignment_type_re = re.compile(
@@ -550,7 +532,7 @@ class VariableDataPrototype(AutosarDataPrototype):
         self.init_value: ValueSpecificationElement | None = None  # .INIT-VALUE
         # .VARIATION-POINT not supported
         if init_value is not None:
-            self._assign_optional_strict("init_value", init_value, _get_value_specification_class())
+            self._assign_optional_strict("init_value", init_value, ValueSpecification)
 
     def ref(self) -> VariableDataPrototypeRef | None:
         """
@@ -584,7 +566,7 @@ class ParameterDataPrototype(AutosarDataPrototype):
         self.init_value: ValueSpecificationElement | None = None  # .INIT-VALUE
         # .VARIATION-POINT not supported
         if init_value is not None:
-            self._assign_optional_strict("init_value", init_value, _get_value_specification_class())
+            self._assign_optional_strict("init_value", init_value, ValueSpecification)
 
     def ref(self) -> ParameterDataPrototypeRef | None:
         """
@@ -849,8 +831,7 @@ class DataTypeMappingSet(ARElement):
                 raise TypeError(f'data_type_maps: Invalid type "{str(type(data_type_maps))}"')
 
         if mode_request_type_maps is not None:
-            mode_req_cls = _get_mode_request_type_map_class()
-            if isinstance(mode_request_type_maps, mode_req_cls):
+            if isinstance(mode_request_type_maps, ModeRequestTypeMap):
                 self.append(mode_request_type_maps)
             elif isinstance(mode_request_type_maps, Iterable):
                 for mode_request_type_map in mode_request_type_maps:
@@ -866,12 +847,10 @@ class DataTypeMappingSet(ARElement):
         """
         if isinstance(element, DataTypeMap):
             self.data_type_maps.append(element)
+        elif isinstance(element, ModeRequestTypeMap):
+            self.mode_request_type_maps.append(element)
         else:
-            mode_req_cls = _get_mode_request_type_map_class()
-            if isinstance(element, mode_req_cls):
-                self.mode_request_type_maps.append(element)
-            else:
-                raise TypeError(f'Unexpected type: "{str(type(element))}"')
+            raise TypeError(f'Unexpected type: "{str(type(element))}"')
 
     def ref(self) -> DataTypeMappingSetRef | None:
         """
@@ -882,33 +861,6 @@ class DataTypeMappingSet(ARElement):
         if ref_str is None:
             return None
         return DataTypeMappingSetRef(ref_str)
-
-
-class ValueList(ARObject):
-    """
-    Complex type AR:VALUE-LIST
-    Tag variants: 'SW-ARRAYSIZE'
-    """
-
-    def __init__(self,
-                 values: list[int | float | NumericalValue] | int | float | NumericalValue | None = None
-                 ) -> None:
-        self.values = []
-        if values is not None:
-            if isinstance(values, (int, float, NumericalValue)):
-                self.append(values)
-            else:
-                for value in values:
-                    self.append(value)
-
-    def append(self, value: int | float | NumericalValue) -> None:
-        """
-        Adds value to list of values
-        """
-        if isinstance(value, (int, float, NumericalValue)):
-            self.values.append(value)
-        else:
-            raise TypeError(f"Invalid type for value: {str(type(value))}")
 
 
 __all__ = [
@@ -941,5 +893,4 @@ __all__ = [
     "ApplicationRecordDataType",
     "DataTypeMap",
     "DataTypeMappingSet",
-    "ValueList",
 ]

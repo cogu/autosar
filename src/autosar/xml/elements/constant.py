@@ -7,8 +7,12 @@ from typing import Any, Union
 
 from autosar.xml.base import ARObject, convenience_function
 from autosar.xml.elements._base import ARElement, NumericalValue
-from autosar.xml.elements.data_type import ValueList
-from autosar.xml.elements.calibration_data import SwAxisCont, SwValueCont
+from autosar.xml.elements.calibration_data import (
+    NumericalOrText,
+    SwAxisCont,
+    SwValueCont,
+    ValueList,
+)
 import autosar.xml.enumeration as ar_enum
 import autosar.xml.exception as ar_except
 from autosar.xml.reference import (
@@ -366,26 +370,7 @@ class ConstantReference(ValueSpecification):
                 raise ar_except.AssignmentTypeError("constant_ref", ("ConstantRef", "str"), constant_ref)
 
 
-class NumericalOrText(ARObject):
-    """
-    Complex type AR:NUMERICAL-OR-TEXT
-    Tag variants: 'VTF'
-    """
-
-    def __init__(self,
-                 vf: int | float | NumericalValue | None = None,
-                 vt: str | None = None
-                 ) -> None:
-        # .VF
-        self.vf: int | float | NumericalValue | None = None
-        # .VT
-        self.vt: str | None = None
-        # .VARIATION-POINT not supported
-        self._assign_optional_strict("vf", vf, (int, float, NumericalValue))
-        self._assign_optional_strict("vt", vt, str)
-
-
-RuleArgumentElement = Union[int, float, str, NumericalValue, "NumericalOrText"]
+RuleArgumentElement = Union[int, float, str, NumericalValue, NumericalOrText]
 
 
 class RuleArguments(ARObject):
@@ -703,7 +688,6 @@ __all__ = [
     "ApplicationValueSpecification",
     "ConstantSpecification",
     "ConstantReference",
-    "NumericalOrText",
     "RuleArguments",
     "RuleBasedValueSpecification",
     "RuleBasedAxisCont",

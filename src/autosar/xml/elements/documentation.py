@@ -5,11 +5,12 @@ from __future__ import annotations
 from collections.abc import Iterable
 import datetime
 import re
-from typing import Any, Union
+from typing import Any
 
 from autosar.xml.base import ARObject, convenience_function
-from autosar.xml.elements._base import AdminData, SingleLanguageText
 import autosar.xml.enumeration as ar_enum
+
+SingleLanguageText = tuple[ar_enum.Language, str]
 
 date_re = re.compile(r"([0-9]{4}-[0-9]{2}-[0-9]{2})(T[0-9]{2}:[0-9]{2}:[0-9]{2}(Z|([+\-][0-9]{2}:[0-9]{2})))?")
 
@@ -657,36 +658,6 @@ class Annotation(GeneralAnnotation):
         super().__init__(label, origin, text)
 
 
-class Describable(ARObject):
-    """
-    Group AR:DESCRIBABLE
-    """
-
-    def __init__(self,
-                 desc: Union["MultiLanguageOverviewParagraph", tuple[ar_enum.Language, str], str, None] = None,
-                 category: str | None = None,
-                 introduction: DocumentationBlock | None = None,
-                 admin_data: AdminData | None = None
-                 ) -> None:
-        super().__init__()
-        self.desc: MultiLanguageOverviewParagraph | None = None  # .DESC
-        self.category: str | None = None  # .CATEGORY
-        self.introduction: DocumentationBlock | None = None  # .INTRODUCTION
-        self.admin_data: AdminData | None = None  # .ADMIN-DATA
-        if desc is not None:
-            if isinstance(desc, MultiLanguageOverviewParagraph):
-                self.desc = desc
-            elif isinstance(desc, str):
-                self.desc = MultiLanguageOverviewParagraph.make(ar_enum.Language.FOR_ALL, desc)
-            elif isinstance(desc, tuple) and len(desc) == 2:
-                self.desc = MultiLanguageOverviewParagraph.make(*desc)
-            else:
-                raise TypeError(f"Invalid type for argument 'desc': {str(type(desc))}")
-        self._assign_optional('category', category, str)
-        self._assign_optional_strict('introduction', introduction, DocumentationBlock)
-        self._assign_optional_strict('admin_data', admin_data, AdminData)
-
-
 class LanguagePlainText(LanguageSpecific):
     """
     Complex type AR:L-PLAIN-TEXT
@@ -737,6 +708,7 @@ class MultiLanguagePlainText(ARObject):
 
 
 __all__ = [
+    "SingleLanguageText",
     "date_re",
     "revision_label_string_re",
     "Break",
@@ -767,7 +739,6 @@ __all__ = [
     "DocumentationBlock",
     "GeneralAnnotation",
     "Annotation",
-    "Describable",
     "LanguagePlainText",
     "MultiLanguagePlainText",
     "LanguagePlainTextArgType",

@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from autosar.xml.base import ARObject, convenience_function
 from autosar.xml.elements._base import ARElement
+from autosar.xml.elements.documentation import MultiLanguageOverviewParagraph
 import autosar.xml.enumeration as ar_enum
 from autosar.xml.reference import CompuMethodRef, UnitRef
-
-if TYPE_CHECKING:
-    from autosar.xml.elements.documentation import MultiLanguageOverviewParagraph
 
 
 class CompuRational(ARObject):

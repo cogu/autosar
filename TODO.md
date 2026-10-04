@@ -28,6 +28,7 @@ src/autosar/xml/
             system_template.py
             software_component.py
             service_needs.py
+            data_element.py
             internal_behavior.py
             service_dependency.py
 ```
