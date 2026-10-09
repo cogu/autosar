@@ -230,9 +230,11 @@ class DiagnosticCapabilityElement(ServiceNeeds):
     def _append_audience(self, item: ar_enum.DiagnosticAudience | str) -> None:
         if isinstance(item, str):
             try:
-                item = ar_enum.xml_to_enum("DiagnosticAudience", item)
+                tmp = ar_enum.xml_to_enum("DiagnosticAudience", item)
             except KeyError as exc:
                 raise ar_except.ConversionError("audience", ar_enum.DiagnosticAudience, item) from exc
+            assert isinstance(tmp, ar_enum.DiagnosticAudience)
+            item = tmp
         if isinstance(item, ar_enum.DiagnosticAudience):
             self.audience.append(item)
         else:
@@ -361,7 +363,7 @@ class DiagnosticEventNeeds(DiagnosticCapabilityElement):
                                      diag_event_debounce_algorithm,
                                      (DiagEventDebounceCounterBased,
                                       DiagEventDebounceMonitorInternal,
-                                      DiagEventDebounceTimeBased))
+                                      DiagEventDebounceTimeBased))  # pyright: ignore[reportArgumentType]
         self._assign_optional("dtc_kind", dtc_kind, ar_enum.DtcKind)
         self._assign_optional_positive_int("dtc_number", dtc_number)
         self._assign_optional("inhibiting_fid_ref", inhibiting_fid_ref, FunctionInhibitionNeedsRef)

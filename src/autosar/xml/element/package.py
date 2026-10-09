@@ -248,7 +248,7 @@ class PackageCollection:
         Creates new package in collection
         """
         if name in self._package_dict:
-            return ValueError(f"Package with name '{name}' already exists")
+            raise ValueError(f"Package with name '{name}' already exists")
         package = Package(name, **kwargs)
         self.append(package)
         return package

@@ -311,7 +311,7 @@ class SpecialDataGroup(ARObject):
 
     def __init__(self,
                  gid: str | None = None,
-                 content: SpecialDataGroupContent | None = None,
+                 content: list[SpecialDataGroupContent] | SpecialDataGroupContent | None = None,
                  caption: str | None = None,) -> None:
         super().__init__()
         # GID attribute
@@ -319,7 +319,7 @@ class SpecialDataGroup(ARObject):
         # .SDG-CAPTION
         self.caption: str | None = None
         # SDG-CONTENTS
-        self.content: list[SpecialDataElement | SpecialDataGroup] = []
+        self.content: list[SpecialDataElement | SpecialDataGroup | SpecialDataValue] = []
         self._assign_optional("gid", gid, str)
         self._assign_optional("caption", caption, str)
         if content is not None:
@@ -536,8 +536,7 @@ class AdminData(ARObject):
             elif isinstance(used_languages, (tuple, LanguagePlainText)):
                 self.used_languages = MultiLanguagePlainText(used_languages)
             elif isinstance(used_languages, ar_enum.Language):
-                part = SingleLanguageText(used_languages)
-                self.used_languages = MultiLanguagePlainText(part)
+                self.used_languages = MultiLanguagePlainText(LanguagePlainText(used_languages))
             elif isinstance(used_languages, Iterable):
                 elements = []
                 for element in used_languages:
