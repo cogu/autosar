@@ -9,7 +9,27 @@ Non-collectable elements are various sub-elements to collectable elements.
 
 ### Changed
 
-* Split autosar.xml.element into smaller modules.
+* Split `autosar.xml.element` into smaller modules while preserving existing public imports.
+* Improved type annotations across XML element classes and software-component builder APIs,
+  including optional fields, parent relationships, reference types, and factory return values.
+
+### Fixed
+
+* Fixed `ModeTransition.parent` pointing to the transition itself instead of its containing
+  `ModeDeclarationGroup`.
+* `LimitObject.check_value` now raises `ValueError` when either constraint limit is unset,
+  rather than failing during comparison.
+* Fixed parameter access through interfaces with a single parameter in `RunnableEntity.create_port_access`.
+* Fixed internal triggering points being added through the external-triggering-point API.
+* Fixed reference generation for `ExclusiveAreaNestingOrder`.
+* Fixed port builders discarding a supplied single com-spec and failing to handle named com-specs for
+  interfaces with a single data element, operation, or mode group. Invalid com-spec inputs and missing
+  port interfaces now raise explicit errors.
+* Fixed required-port com-spec factories raising `TypeError` instead of reporting unknown data-element
+  or operation names with `ValueError`.
+* Fixed pass-through connector port ordering when the require-port is specified first. Connector
+  creation now validates incompatible pass-through port directions and unresolved component/port references.
+* Fixed `AdminData.used_languages` initialization from a single `Language` enum value.
 
 ## [v0.5.7] - 2026-09-07
 
