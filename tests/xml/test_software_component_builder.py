@@ -1225,5 +1225,266 @@ class TestExclusiveAreaAPI(unittest.TestCase):
         self.assertEqual(str(elem.exclusive_area), ref_str)
 
 
+class TestComSpecCreation(unittest.TestCase):
+
+    def setUp(self):
+        self.workspace = autosar.xml.Workspace()
+        self.package = self.workspace.create_package("Test")
+        self.interface = ar_element.SenderReceiverInterface("Data")
+        self.package.append(self.interface)
+        self.interface.create_data_element("Value")
+        self.component = ar_element.ApplicationSoftwareComponentType("Component")
+        self.package.append(self.component)
+
+    def test_preserve_single_com_spec(self):
+        for index, (method, spec_type) in enumerate([
+                (self.component.create_p_port, ar_element.NonqueuedSenderComSpec),
+                (self.component.create_provide_port, ar_element.NonqueuedSenderComSpec),
+                (self.component.create_r_port, ar_element.NonqueuedReceiverComSpec),
+                (self.component.create_require_port, ar_element.NonqueuedReceiverComSpec)]):
+            with self.subTest(method=method.__name__):
+                spec = spec_type()
+                port = method(f"Port{index}", self.interface, com_spec=spec)
+                self.assertEqual(port.com_spec, [spec])
+                self.assertIs(port.parent, self.component)
+
+    def test_single_element_named_com_spec(self):
+        for method in (self.component.create_p_port, self.component.create_r_port):
+            with self.subTest(method=method.__name__):
+                port = method(method.__name__, self.interface, com_spec=[("Value", {"init_value": 7})])
+                self.assertEqual(len(port.com_spec), 1)
+                xml = autosar.xml.Writer().write_str_elem(port)
+                self.assertIn('/Test/Data/Value', xml)
+                self.assertIn('<VALUE>7</VALUE>', xml)
+
+    def test_single_operation_named_com_spec(self):
+        interface = ar_element.ClientServerInterface("Calls")
+        self.package.append(interface)
+        interface.create_operation("Call")
+        for method in (self.component.create_p_port, self.component.create_r_port):
+            with self.subTest(method=method.__name__):
+                port = method(method.__name__, interface, com_spec=[("Call", {})])
+                self.assertEqual(len(port.com_spec), 1)
+                self.assertIn('/Test/Calls/Call', autosar.xml.Writer().write_str_elem(port))
+
+    def test_single_mode_group_named_com_spec(self):
+        group = ar_element.ModeDeclarationGroup("Modes", ["Off", "On"])
+        self.package.append(group)
+        interface = ar_element.ModeSwitchInterface("Mode")
+        interface.create_mode_group("mode", group.ref())
+        self.package.append(interface)
+        for method in (self.component.create_p_port, self.component.create_r_port):
+            with self.subTest(method=method.__name__):
+                port = method(method.__name__, interface, com_spec=[("mode", {})])
+                self.assertEqual(len(port.com_spec), 1)
+                self.assertIn('/Test/Mode/mode', autosar.xml.Writer().write_str_elem(port))
+
+    def test_mixed_iterable_com_specs(self):
+        self.interface.create_data_element("Other")
+        for method, spec_type in [
+                (self.component.create_p_port, ar_element.NonqueuedSenderComSpec),
+                (self.component.create_r_port, ar_element.NonqueuedReceiverComSpec)]:
+            with self.subTest(method=method.__name__):
+                spec = spec_type(data_element_ref=self.interface.data_elements[0].ref())
+                entries = iter([spec, ("Other", {"init_value": 9})])
+                port = method(method.__name__, self.interface, com_spec=entries)
+                self.assertEqual(len(port.com_spec), 2)
+                self.assertIs(port.com_spec[0], spec)
+                self.assertIn('/Test/Data/Other', autosar.xml.Writer().write_str_elem(port))
+
+    def test_factory_sender_receiver_output_shapes(self):
+        for factory, single_type, queued_type in [
+                (ar_element.ProvidePortComSpec, ar_element.NonqueuedSenderComSpec, ar_element.QueuedSenderComSpec),
+                (ar_element.RequirePortComSpec, ar_element.NonqueuedReceiverComSpec, ar_element.QueuedReceiverComSpec)]:
+            with self.subTest(factory=factory):
+                single = factory.make_from_port_interface(self.interface)
+                self.assertIsInstance(single, single_type)
+        props = ar_element.SwDataDefPropsConditional(impl_policy=ar_enum.SwImplPolicy.QUEUED)
+        self.interface.create_data_element("Queued", sw_data_def_props=props)
+        for factory, single_type, queued_type in [
+                (ar_element.ProvidePortComSpec, ar_element.NonqueuedSenderComSpec, ar_element.QueuedSenderComSpec),
+                (ar_element.RequirePortComSpec, ar_element.NonqueuedReceiverComSpec, ar_element.QueuedReceiverComSpec)]:
+            with self.subTest(factory=factory):
+                multiple = factory.make_from_port_interface(self.interface, Value={}, Queued={})
+                self.assertIsInstance(multiple, list)
+                assert isinstance(multiple, list)
+                self.assertEqual(len(multiple), 2)
+                self.assertIsInstance(multiple[0], single_type)
+                self.assertIsInstance(multiple[1], queued_type)
+                self.assertEqual(factory.make_from_port_interface(self.interface), [])
+
+    def test_factory_client_server_output_shapes(self):
+        interface = ar_element.ClientServerInterface("Calls")
+        self.package.append(interface)
+        interface.create_operation("First")
+        for factory, spec_type in [
+                (ar_element.ProvidePortComSpec, ar_element.ServerComSpec),
+                (ar_element.RequirePortComSpec, ar_element.ClientComSpec)]:
+            with self.subTest(factory=factory):
+                self.assertIsInstance(factory.make_from_port_interface(interface), spec_type)
+        interface.create_operation("Second")
+        for factory, spec_type in [
+                (ar_element.ProvidePortComSpec, ar_element.ServerComSpec),
+                (ar_element.RequirePortComSpec, ar_element.ClientComSpec)]:
+            with self.subTest(factory=factory):
+                multiple = factory.make_from_port_interface(interface, First={}, Second={})
+                self.assertIsInstance(multiple, list)
+                assert isinstance(multiple, list)
+                self.assertEqual(len(multiple), 2)
+                self.assertTrue(all(isinstance(spec, spec_type) for spec in multiple))
+
+    def test_unknown_required_com_spec_names(self):
+        self.interface.create_data_element("Other")
+        calls = ar_element.ClientServerInterface("Calls")
+        self.package.append(calls)
+        calls.create_operation("First")
+        calls.create_operation("Second")
+        for interface in (self.interface, calls):
+            with self.subTest(interface=interface.name):
+                with self.assertRaisesRegex(ValueError, "Missing"):
+                    ar_element.RequirePortComSpec.make_from_port_interface(interface, Missing={})
+
+    def test_unknown_single_element_names(self):
+        for method in (self.component.create_p_port, self.component.create_r_port):
+            with self.subTest(method=method.__name__):
+                with self.assertRaisesRegex(ValueError, "Com-spec names"):
+                    method("Port", self.interface, com_spec=[("Missing", {})])
+        self.assertEqual(self.component.ports, [])
+
+    def test_invalid_com_specs(self):
+        invalid_specs: list[Any] = [42, {42: {}}, [42], [("Value",)]]
+        for method in (self.component.create_p_port, self.component.create_r_port):
+            for spec in invalid_specs:
+                with self.subTest(method=method.__name__, spec=spec):
+                    with self.assertRaises((TypeError, NotImplementedError)):
+                        method("Port", self.interface, com_spec=spec)
+        self.assertEqual(self.component.ports, [])
+
+    def test_missing_port_interface(self):
+        for method in (self.component.create_p_port, self.component.create_pr_port):
+            with self.subTest(method=method.__name__):
+                with self.assertRaisesRegex(ValueError, "port_interface"):
+                    method("Port")
+        self.assertEqual(self.component.ports, [])
+
+    def test_pr_port_com_spec_dictionaries(self):
+        single = self.component.create_pr_port("Single", self.interface,
+                                               provided_com_spec={"init_value": 1},
+                                               required_com_spec={"init_value": 2})
+        self.assertEqual(len(single.provided_com_spec), 1)
+        self.assertEqual(len(single.required_com_spec), 1)
+        self.interface.create_data_element("Other")
+        multiple = self.component.create_pr_port("Multiple", self.interface,
+                                                 provided_com_spec={"Value": {}, "Other": {}},
+                                                 required_com_spec={"Value": {}, "Other": {}})
+        self.assertEqual(len(multiple.provided_com_spec), 2)
+        self.assertEqual(len(multiple.required_com_spec), 2)
+
+    def test_missing_port_interface_references(self):
+        port = ar_element.PRPortPrototype("Unbound")
+        self.component.append_port(port)
+        for method, args in [
+                (self.component.get_data_element_in_port, (port,)),
+                (self.component.get_operation_in_port, (port, None)),
+                (self.component.get_mode_declaration_group_in_port, (port,)),
+                (self.component.get_trigger_in_port, (port,))]:
+            with self.subTest(method=method.__name__):
+                with self.assertRaises(autosar.xml.exception.InvalidReferenceError):
+                    method(*args)
+
+    def test_missing_operation_returns_none(self):
+        interface = ar_element.ClientServerInterface("Calls")
+        self.package.append(interface)
+        operation = interface.create_operation("Call")
+        port = self.component.create_pr_port("Calls", interface)
+        self.assertIs(self.component.get_operation_in_port(port, None), operation)
+        self.assertIsNone(self.component.get_operation_in_port(port, "Missing"))
+
+
+class TestConnectorCreation(unittest.TestCase):
+
+    def setUp(self):
+        self.workspace = autosar.xml.Workspace()
+        package = self.workspace.create_package("Test")
+        interface = ar_element.SenderReceiverInterface("Data")
+        package.append(interface)
+        interface.create_data_element("Value")
+        self.composition = ar_element.CompositionSwComponentType("Composition")
+        package.append(self.composition)
+        self.composition.create_p_port("P", interface)
+        self.composition.create_r_port("R", interface)
+        provider = ar_element.ApplicationSoftwareComponentType("Provider")
+        requester = ar_element.ApplicationSoftwareComponentType("Requester")
+        package.append(provider)
+        package.append(requester)
+        provider.create_p_port("P", interface)
+        requester.create_r_port("R", interface)
+        self.composition.create_component_prototype(provider)
+        self.composition.create_component_prototype(requester)
+
+    def test_pass_through_port_order(self):
+        for refs in (("P", "R"), ("R", "P")):
+            with self.subTest(refs=refs):
+                self.composition.connectors.clear()
+                connector = self.composition.create_connector(*refs, self.workspace)
+                self.assertIsInstance(connector, ar_element.PassThroughSwConnector)
+                assert isinstance(connector, ar_element.PassThroughSwConnector)
+                self.assertEqual(str(connector.provide_port), "/Test/Composition/P")
+                self.assertEqual(str(connector.require_port), "/Test/Composition/R")
+                xml = autosar.xml.Writer().write_str_elem(connector)
+                restored = autosar.xml.Reader().read_str_elem(xml)
+                self.assertIsInstance(restored, ar_element.PassThroughSwConnector)
+                assert isinstance(restored, ar_element.PassThroughSwConnector)
+                self.assertEqual(str(restored.provide_port), str(connector.provide_port))
+                self.assertEqual(str(restored.require_port), str(connector.require_port))
+                assert restored.provide_port is not None and connector.provide_port is not None
+                assert restored.require_port is not None and connector.require_port is not None
+                self.assertEqual(restored.provide_port.dest, connector.provide_port.dest)
+                self.assertEqual(restored.require_port.dest, connector.require_port.dest)
+
+    def test_pass_through_rejects_matching_directions(self):
+        for refs in (("P", "P"), ("R", "R")):
+            with self.subTest(refs=refs):
+                with self.assertRaisesRegex(ValueError, "one provide-port and one require-port"):
+                    self.composition.create_connector(*refs, self.workspace)
+        self.assertEqual(self.composition.connectors, [])
+
+    def test_assembly_connector_return(self):
+        for refs in (("Provider/P", "Requester/R"), ("Requester/R", "Provider/P")):
+            with self.subTest(refs=refs):
+                self.composition.connectors.clear()
+                connector = self.composition.create_connector(*refs, self.workspace)
+                self.assertIsInstance(connector, ar_element.AssemblySwConnector)
+                self.assertIn(connector, self.composition.connectors)
+                self.assertEqual(connector.name, "Provider_P_Requester_R")
+
+    def test_delegation_connector_return(self):
+        for refs in (("Provider/P", "P"), ("P", "Provider/P"), ("Requester/R", "R"), ("R", "Requester/R")):
+            with self.subTest(refs=refs):
+                self.composition.connectors.clear()
+                connector = self.composition.create_connector(*refs, self.workspace)
+                self.assertIsInstance(connector, ar_element.DelegationSwConnector)
+                self.assertIn(connector, self.composition.connectors)
+
+    def test_invalid_port_references(self):
+        for ref in ("", "/", "Missing", "Missing/P", "Provider/Missing", "Provider/P/Extra"):
+            with self.subTest(ref=ref):
+                with self.assertRaises(ValueError):
+                    self.composition.create_connector(ref, "P", self.workspace)
+        self.assertEqual(self.composition.connectors, [])
+
+    def test_duplicate_connector(self):
+        self.composition.create_connector("P", "R", self.workspace)
+        with self.assertRaisesRegex(ValueError, "already exists"):
+            self.composition.create_connector("R", "P", self.workspace)
+        self.assertEqual(len(self.composition.connectors), 1)
+
+    def test_missing_delegation_port_reference(self):
+        connector = ar_element.DelegationSwConnector("Empty")
+        self.assertIsNone(connector.xml_tag)
+        connector.inner_port = ar_element.PortInCompositionTypeInstanceRef()
+        self.assertIsNone(connector.xml_tag)
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -39,6 +39,10 @@ class PortInterface(ARElement):
         self._assign_optional_strict("is_service", is_service, bool)
         self._assign_optional_strict("service_kind", service_kind, ar_enum.ServiceKind)
 
+    def ref(self) -> PortInterfaceRef | None:
+        """Return a reference using the concrete interface's destination type."""
+        raise NotImplementedError("Concrete port interfaces must implement ref")
+
 
 class DataInterface(PortInterface):
     """

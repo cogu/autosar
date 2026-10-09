@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Iterator
-from typing import TYPE_CHECKING, Union
+from typing import Any, TYPE_CHECKING, Union
 
 from autosar.base import Searchable, split_ref
 from autosar.xml.base import ARObject, convenience_function
@@ -119,10 +119,14 @@ class ProvidePortComSpec(ARObject):
 
     @convenience_function
     @classmethod
-    def make_from_port_interface(cls, port_interface: PortInterface, **kwargs) -> "ProvidePortComSpec":
+    def make_from_port_interface(cls,
+                                 port_interface: PortInterface,
+                                 **kwargs) -> ProvidePortComSpec | list[ProvidePortComSpec]:
         """
 
         Creates P-PORT com-spec from port interface
+
+        Returns one com-spec for a single-element interface, otherwise a list.
 
         For SenderReceiverInterface:
         If interface has a single element: kwargs is a dict with key-value pairs for one com-spec
@@ -150,7 +154,7 @@ class ProvidePortComSpec(ARObject):
                 else:
                     return cls.make_non_queued_sender_com_spec(data_element_ref=data_element.ref(), **kwargs)
             else:
-                com_spec_list = []
+                com_spec_list: list[ProvidePortComSpec] = []
                 unprocessed = set()
                 for element_name, value in kwargs.items():
                     unprocessed.add(element_name)
@@ -280,7 +284,7 @@ class ModeSwitchSenderComSpec(ProvidePortComSpec):
         self.mode_group_ref: ModeDeclarationGroupPrototypeRef | None = None  # .ENHANCED-MODE-API
         self.enhanced_mode_api: bool | None = None  # .MODE-GROUP-REF
         self.mode_switched_ack: ModeSwitchedAckRequest | None = None  # .MODE-SWITCHED-ACK
-        self.queue_length = None  # .QUEUE-LENGTH
+        self.queue_length: int | None = None  # .QUEUE-LENGTH
         self._assign_optional("mode_group_ref", mode_group_ref, ModeDeclarationGroupPrototypeRef)
         self._assign_optional("enhanced_mode_api", enhanced_mode_api, bool)
         if mode_switched_ack is not None:
@@ -430,10 +434,14 @@ class RequirePortComSpec(ARObject):
 
     @convenience_function
     @classmethod
-    def make_from_port_interface(cls, port_interface: PortInterface, **kwargs) -> "RequirePortComSpec":
+    def make_from_port_interface(cls,
+                                 port_interface: PortInterface,
+                                 **kwargs) -> RequirePortComSpec | list[RequirePortComSpec]:
         """
 
         Creates R-PORT com-spec from port-interface
+
+        Returns one com-spec for a single-element interface, otherwise a list.
 
         For SenderReceiverInterface:
         If interface has a single element: kwargs is a dict with key-value pairs for one com-spec
@@ -465,7 +473,7 @@ class RequirePortComSpec(ARObject):
                 else:
                     return cls.make_non_queued_receiver_com_spec(data_element_ref=data_element.ref(), **kwargs)
             else:
-                com_spec_list = []
+                com_spec_list: list[RequirePortComSpec] = []
                 unprocessed = set()
                 for element_name, value in kwargs.items():
                     unprocessed.add(element_name)
@@ -485,7 +493,7 @@ class RequirePortComSpec(ARObject):
                                                                              **com_spec_args)
                         com_spec_list.append(com_spec)
                 if len(unprocessed) > 0:
-                    element_names = ', '.join(list[unprocessed])
+                    element_names = ', '.join(list(unprocessed))
                     msg = f"{port_interface.name}: Data element(s) not found in port interface: '{element_names}'"
                     raise ValueError(msg)
                 return com_spec_list
@@ -508,7 +516,7 @@ class RequirePortComSpec(ARObject):
                         com_spec = ClientComSpec(operation_ref=operation.ref(), **com_spec_args)
                         com_spec_list.append(com_spec)
                 if len(unprocessed) > 0:
-                    operations = ', '.join(list[unprocessed])
+                    operations = ', '.join(list(unprocessed))
                     raise ValueError(f"{port_interface.name}: Operation(s) not found in port interface: '{operations}'")
                 return com_spec_list
         elif isinstance(port_interface, ModeSwitchInterface):
@@ -959,6 +967,10 @@ class SwComponentType(ARElement, Searchable):
                 msg_part_2 = " or a list of those types."
                 raise TypeError(msg_part_1 + msg_part_2 + f" Got {str(type(ports))}")
 
+    def ref(self) -> SwComponentTypeRef | None:
+        """Return a reference using the concrete component's destination type."""
+        raise NotImplementedError("Concrete software component types must implement ref")
+
     def append_port(self, port: PortPrototypeElement):
         """
         Adds port to internal list of ports
@@ -1011,18 +1023,23 @@ class SwComponentType(ARElement, Searchable):
     def create_p_port(self,
                       name: str,
                       port_interface: PortInterface | None = None,
-                      com_spec: dict | list[tuple[str, dict]] | ProvidePortComSpec | list[ProvidePortComSpec] | None = None,  # noqa E501 pylint: disable=C0301
+                      com_spec: dict[str, Any] | Iterable[tuple[str, dict[str, Any]] | ProvidePortComSpec] | ProvidePortComSpec | None = None,  # noqa E501 pylint: disable=C0301
                       **kwargs) -> ProvidePortPrototype:
         """
 
         Creates a new provide-port and adds it to the internal list of ports
         """
+        if port_interface is None:
+            raise ValueError("port_interface: A port interface is required")
+        port_com_spec: ProvidePortComSpec | list[ProvidePortComSpec] | None = None
         if com_spec is not None:
-            if isinstance(com_spec, dict):
-                com_spec = ProvidePortComSpec.make_from_port_interface(port_interface, **com_spec)
-                assert com_spec is not None
+            if isinstance(com_spec, ProvidePortComSpec):
+                port_com_spec = com_spec
+            elif isinstance(com_spec, dict):
+                args = self._check_com_spec_args(com_spec)
+                port_com_spec = ProvidePortComSpec.make_from_port_interface(port_interface, **args)
             elif isinstance(com_spec, Iterable):
-                processed = []
+                processed: list[ProvidePortComSpec] = []
                 unprocessed = {}
                 for elem in com_spec:
                     if isinstance(elem, ProvidePortComSpec):
@@ -1035,11 +1052,16 @@ class SwComponentType(ARElement, Searchable):
                     else:
                         raise TypeError(f"Unsupported type in com-spec element: {str(type(elem))}")
                 if len(unprocessed):
-                    processed.extend(ProvidePortComSpec.make_from_port_interface(port_interface, **unprocessed))
-                com_spec = processed
+                    args = self._com_spec_args_from_names(port_interface, unprocessed)
+                    created = ProvidePortComSpec.make_from_port_interface(port_interface, **args)
+                    if isinstance(created, list):
+                        processed.extend(created)
+                    else:
+                        processed.append(created)
+                port_com_spec = processed
             else:
-                com_spec = None  # Clear when not implemented
-        port = ProvidePortPrototype(name, port_interface.ref(), com_spec, **kwargs)
+                raise TypeError(f"com_spec: Unsupported type '{str(type(com_spec))}'")
+        port = ProvidePortPrototype(name, port_interface.ref(), port_com_spec, **kwargs)
         self.append_port(port)
         return port
 
@@ -1047,7 +1069,7 @@ class SwComponentType(ARElement, Searchable):
     def create_provide_port(self,
                             name: str,
                             port_interface: PortInterface | None = None,
-                            com_spec: dict | list[tuple[str, dict]] | ProvidePortComSpec | list[ProvidePortComSpec] | None = None,  # noqa E501 pylint: disable=C0301
+                            com_spec: dict[str, Any] | Iterable[tuple[str, dict[str, Any]] | ProvidePortComSpec] | ProvidePortComSpec | None = None,  # noqa E501 pylint: disable=C0301
                             **kwargs) -> ProvidePortPrototype:
         """
 
@@ -1059,19 +1081,22 @@ class SwComponentType(ARElement, Searchable):
     def create_r_port(self,
                       name: str,
                       port_interface: PortInterface,
-                      com_spec: dict | list[dict] | RequirePortComSpec | list[RequirePortComSpec] | None = None,
+                      com_spec: dict[str, Any] | Iterable[tuple[str, dict[str, Any]] | RequirePortComSpec] | RequirePortComSpec | None = None,  # noqa E501 pylint: disable=C0301
                       allow_unconnected: bool | None = None,
                       **kwargs) -> RequirePortPrototype:
         """
 
         Creates a new require-port and adds it to the internal list of ports
         """
+        port_com_spec: RequirePortComSpec | list[RequirePortComSpec] | None = None
         if com_spec is not None:
-            if isinstance(com_spec, dict):
-                com_spec = RequirePortComSpec.make_from_port_interface(port_interface, **com_spec)
-                assert com_spec is not None
+            if isinstance(com_spec, RequirePortComSpec):
+                port_com_spec = com_spec
+            elif isinstance(com_spec, dict):
+                args = self._check_com_spec_args(com_spec)
+                port_com_spec = RequirePortComSpec.make_from_port_interface(port_interface, **args)
             elif isinstance(com_spec, Iterable):
-                processed = []
+                processed: list[RequirePortComSpec] = []
                 unprocessed = {}
                 for elem in com_spec:
                     if isinstance(elem, RequirePortComSpec):
@@ -1084,11 +1109,16 @@ class SwComponentType(ARElement, Searchable):
                     else:
                         raise TypeError(f"Unsupported type in com-spec element: {str(type(elem))}")
                 if len(unprocessed):
-                    processed.extend(RequirePortComSpec.make_from_port_interface(port_interface, **unprocessed))
-                com_spec = processed
+                    args = self._com_spec_args_from_names(port_interface, unprocessed)
+                    created = RequirePortComSpec.make_from_port_interface(port_interface, **args)
+                    if isinstance(created, list):
+                        processed.extend(created)
+                    else:
+                        processed.append(created)
+                port_com_spec = processed
             else:
-                com_spec = None  # Clear when not implemented
-        port = RequirePortPrototype(name, port_interface.ref(), com_spec, allow_unconnected, **kwargs)
+                raise TypeError(f"com_spec: Unsupported type '{str(type(com_spec))}'")
+        port = RequirePortPrototype(name, port_interface.ref(), port_com_spec, allow_unconnected, **kwargs)
         self.append_port(port)
         return port
 
@@ -1096,7 +1126,7 @@ class SwComponentType(ARElement, Searchable):
     def create_require_port(self,
                             name: str,
                             port_interface: PortInterface,
-                            com_spec: dict | list[dict] | RequirePortComSpec | list[RequirePortComSpec] | None = None,
+                            com_spec: dict[str, Any] | Iterable[tuple[str, dict[str, Any]] | RequirePortComSpec] | RequirePortComSpec | None = None,  # noqa E501 pylint: disable=C0301
                             allow_unconnected: bool | None = None,
                             **kwargs) -> RequirePortPrototype:
         """
@@ -1105,17 +1135,47 @@ class SwComponentType(ARElement, Searchable):
         """
         return self.create_r_port(name, port_interface, com_spec, allow_unconnected, **kwargs)
 
+    @staticmethod
+    def _check_com_spec_args(com_spec: dict) -> dict[str, Any]:
+        """Validate keyword names before forwarding dynamic com-spec arguments."""
+        args: dict[str, Any] = {}
+        for name, value in com_spec.items():
+            if not isinstance(name, str):
+                raise TypeError("com_spec: Keyword argument names must be strings")
+            args[name] = value
+        return args
+
+    @staticmethod
+    def _com_spec_args_from_names(port_interface: PortInterface,
+                                  named_args: dict[str, dict[str, Any]]) -> dict[str, Any]:
+        """Convert named com-spec arguments to the factory's single-element format."""
+        if isinstance(port_interface, SenderReceiverInterface):
+            names = [element.name for element in port_interface.data_elements]
+        elif isinstance(port_interface, ClientServerInterface):
+            names = [operation.name for operation in port_interface.operations]
+        elif isinstance(port_interface, ModeSwitchInterface) and port_interface.mode_group is not None:
+            names = [port_interface.mode_group.name]
+        else:
+            return named_args
+        if len(names) == 1:
+            if set(named_args) != set(names):
+                raise ValueError(f"{port_interface.name}: Com-spec names must match '{names[0]}'")
+            return named_args[names[0]]
+        return named_args
+
     @convenience_function
     def create_pr_port(self,
                        name: str,
                        port_interface: PortInterface | None = None,
-                       provided_com_spec: ProvidePortComSpec | list[ProvidePortComSpec] | None = None,
-                       required_com_spec: RequirePortComSpec | list[RequirePortComSpec] | None = None,
+                       provided_com_spec: dict[str, Any] | ProvidePortComSpec | list[ProvidePortComSpec] | None = None,
+                       required_com_spec: dict[str, Any] | RequirePortComSpec | list[RequirePortComSpec] | None = None,
                        **kwargs) -> PRPortPrototype:
         """
 
         Creates a new pr-port and adds it to the internal list of ports
         """
+        if port_interface is None:
+            raise ValueError("port_interface: A port interface is required")
         if provided_com_spec is not None:
             if isinstance(provided_com_spec, dict):
                 provided_com_spec = ProvidePortComSpec.make_from_port_interface(port_interface, **provided_com_spec)
@@ -1155,6 +1215,8 @@ class SwComponentType(ARElement, Searchable):
         """
         workspace = port.root_collection()
         assert workspace is not None
+        if port.port_interface_ref is None:
+            raise ar_except.InvalidReferenceError(str(port.port_interface_ref))
         port_interface = workspace.find(port.port_interface_ref)
         if port_interface is None:
             raise ar_except.InvalidReferenceError(str(port.port_interface_ref))
@@ -1174,14 +1236,16 @@ class SwComponentType(ARElement, Searchable):
         return None
 
     def get_operation_in_port(self,
-                              port: PortPrototype,
+                              port: PortPrototypeElement,
                               operation_name: str | None
-                              ) -> ClientServerOperation:
+                              ) -> ClientServerOperation | None:
         """
         Finds client-server operation in given port
         """
         workspace = port.root_collection()
         assert workspace is not None
+        if port.port_interface_ref is None:
+            raise ar_except.InvalidReferenceError(str(port.port_interface_ref))
         port_interface = workspace.find(port.port_interface_ref)
         if port_interface is None:
             raise ar_except.InvalidReferenceError(str(port.port_interface_ref))
@@ -1201,13 +1265,15 @@ class SwComponentType(ARElement, Searchable):
         return None
 
     def get_mode_declaration_group_in_port(self,
-                                           port: PortPrototype,
+                                           port: PortPrototypeElement,
                                            ) -> ModeDeclarationGroupPrototype | None:
         """
         Finds mode declaration group in given port
         """
         workspace = port.root_collection()
         assert workspace is not None
+        if port.port_interface_ref is None:
+            raise ar_except.InvalidReferenceError(str(port.port_interface_ref))
         port_interface = workspace.find(port.port_interface_ref)
         if port_interface is None:
             raise ar_except.InvalidReferenceError(str(port.port_interface_ref))
@@ -1215,7 +1281,6 @@ class SwComponentType(ARElement, Searchable):
             return port_interface.mode_group
         else:
             raise TypeError(f"port: Expected a port referencing a ModeSwitchInterface, got {str(type(port_interface))}")
-        return None
 
     def get_trigger_in_port(self,
                             port: RequirePortPrototype | ProvidePortPrototype | PRPortPrototype,
@@ -1226,6 +1291,8 @@ class SwComponentType(ARElement, Searchable):
         """
         workspace = port.root_collection()
         assert workspace is not None
+        if port.port_interface_ref is None:
+            raise ar_except.InvalidReferenceError(str(port.port_interface_ref))
         port_interface = workspace.find(port.port_interface_ref)
         if port_interface is None:
             raise ar_except.InvalidReferenceError(str(port.port_interface_ref))
@@ -1280,7 +1347,7 @@ class AtomicSoftwareComponentType(SwComponentType):
             value.parent = self
 
     @convenience_function
-    def create_internal_behavior(self, name: str = None, **kwargs) -> SwcInternalBehavior:
+    def create_internal_behavior(self, name: str | None = None, **kwargs) -> SwcInternalBehavior:
         """
         Creates an empty internal behavior object and adds it to the component.
         If the name argument is left as None, a default name will be created based on the name of
@@ -1521,9 +1588,9 @@ class DelegationSwConnector(SwConnector):
     def xml_tag(self) -> str | None:
         """
         Returns a suitable XML-tag for inner_port_ref based on port reference type.
-        Raises exception is port reference isn't set or if port-reference contains invalid value
+        Returns None if the inner port reference is unset or isn't a provide/require port reference.
         """
-        if self.inner_port.port_ref is not None:
+        if self.inner_port is not None and self.inner_port.port_ref is not None:
             if self.inner_port.port_ref.is_provide_port_ref:
                 return "P-PORT-IN-COMPOSITION-INSTANCE-REF"
             if self.inner_port.port_ref.is_require_port_ref:
@@ -1559,7 +1626,7 @@ class CompositionSwComponentType(SwComponentType, Searchable):
     def __init__(self,
                  name: str,
                  components: SwComponentPrototype | list[SwComponentPrototype] | None = None,
-                 connectors: SwConnectorElement | list[SwConnectorElement] = None,
+                 connectors: SwConnectorElement | list[SwConnectorElement] | None = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
         self.components: list[SwComponentPrototype] = []  # .COMPONENTS
@@ -1630,7 +1697,7 @@ class CompositionSwComponentType(SwComponentType, Searchable):
     @convenience_function
     def create_component_prototype(self,
                                    component_type: SwComponentType,
-                                   name: str = None,
+                                   name: str | None = None,
                                    **kwargs) -> SwComponentPrototype:
         """
 
@@ -1649,7 +1716,7 @@ class CompositionSwComponentType(SwComponentType, Searchable):
     def create_connector(self,
                          port_ref1: str,
                          port_ref2: str,
-                         workspace: Searchable) -> None:
+                         workspace: Searchable) -> SwConnectorElement:
         """
 
         Creates a connector between two ports in the composition
@@ -1668,72 +1735,72 @@ class CompositionSwComponentType(SwComponentType, Searchable):
         port2, component2 = self._analyze_port_ref(workspace, port_ref2)
 
         if component1 is None and component2 is None:
-            return self._create_pass_through_connector(port1, port2)
-        elif component1 is None:
+            if isinstance(port1, ProvidePortPrototype) and isinstance(port2, RequirePortPrototype):
+                return self._create_pass_through_connector(port1, port2)
+            if isinstance(port2, ProvidePortPrototype) and isinstance(port1, RequirePortPrototype):
+                return self._create_pass_through_connector(port2, port1)
+            raise ValueError("Pass-through connector requires one provide-port and one require-port")
+        if component1 is None:
+            assert component2 is not None
             return self._create_delegation_connector(component2, port2, port1)
-        elif component2 is None:
+        if component2 is None:
             return self._create_delegation_connector(component1, port1, port2)
+        if isinstance(port1, RequirePortPrototype) and isinstance(port2, ProvidePortPrototype):
+            requester_component, provider_component = component1, component2
+            require_port, provide_port = port1, port2
+        elif isinstance(port1, ProvidePortPrototype) and isinstance(port2, RequirePortPrototype):
+            requester_component, provider_component = component2, component1
+            require_port, provide_port = port2, port1
+        elif isinstance(port1, RequirePortPrototype) and isinstance(port2, RequirePortPrototype):
+            raise ValueError('cannot create assembly connector between two require-ports')
         else:
-            requester_component: SwComponentPrototype = None
-            provider_component: SwComponentPrototype = None
-            provide_port: PortPrototype = None
-            require_port: PortPrototype = None
-            if isinstance(port1, RequirePortPrototype) and isinstance(port2, ProvidePortPrototype):
-                requester_component, provider_component = component1, component2
-                require_port, provide_port = port1, port2
-            elif isinstance(port1, ProvidePortPrototype) and isinstance(port2, RequirePortPrototype):
-                requester_component, provider_component = component2, component1
-                require_port, provide_port = port2, port1
-            elif isinstance(port1, RequirePortPrototype) and isinstance(port2, RequirePortPrototype):
-                raise ValueError('cannot create assembly connector between two require-ports')
-            else:
-                raise ValueError('cannot create assembly connector between two provide-ports')
-            return self._create_assembly_connector(provider_component, provide_port,
-                                                   requester_component, require_port)
+            raise ValueError('cannot create assembly connector between two provide-ports')
+        return self._create_assembly_connector(provider_component, provide_port,
+                                               requester_component, require_port)
 
     def _analyze_port_ref(self,
                           workspace: Searchable,
-                          port_ref: str) -> tuple[PortPrototype, Union[SwComponentPrototype, None]]:
+                          port_ref: str) -> tuple[PortPrototypeElement, SwComponentPrototype | None]:
         """
         Analyze port reference string and attempts to determine what component
         and port are referenced.
         """
-        port: PortPrototype | None = None
-        port_name: str | None = None
+        if not isinstance(port_ref, str):
+            raise TypeError("port_ref: Must be a string")
+        if not port_ref:
+            raise ValueError("port_ref: String cannot be empty")
         parts = split_ref(port_ref)
-        if len(parts) > 1:
-            if len(parts) == 2:  # Format is 'component_name/port_name'?
-                port_name = parts[1]
-                for elem in self.components:
-                    if elem.name == parts[0]:
-                        component = workspace.find(str(elem.type_ref))
-                        if component is None:
-                            raise ValueError(f"Invalid reference: {elem.type_ref}")
-                        if not isinstance(component, SwComponentType):
-                            msg = f"Reference is not a valid SwComponentType: {elem.type_ref}"
-                            raise ValueError(msg)
-                        port = component.find(port_name)
-                        if (port is None) or (not isinstance(port, PortPrototype)):
-                            msg = f"Component '{component.name}' does not seem to have a port with name '{port_name}'"
-                            raise ValueError(msg)
-                        return port, elem
-            else:
-                raise ValueError(f"Invalid format: '{port_ref}'")
-        else:  # Format is 'port_name'
-            # Leaving component as None here is a reminder to the caller to create a delegation or a
-            # pass-through connector
-            port_name = parts[0]
-            port = self.find(port_name)
-            if (port is None) or (not isinstance(port, PortPrototype)):
-                msg = f"Component '{self.name}' does not seem to have a port with name '{port_name}'"
-                raise ValueError(msg)
+        assert parts is not None
+        if len(parts) > 2:
+            raise ValueError(f"Invalid format: '{port_ref}'")
+        if len(parts) == 2:  # Format is 'component_name/port_name'?
+            port_name = parts[1]
+            for elem in self.components:
+                if elem.name == parts[0]:
+                    component = workspace.find(str(elem.type_ref))
+                    if component is None:
+                        raise ValueError(f"Invalid reference: {elem.type_ref}")
+                    if not isinstance(component, SwComponentType):
+                        msg = f"Reference is not a valid SwComponentType: {elem.type_ref}"
+                        raise ValueError(msg)
+                    port = component.find(port_name)
+                    if not isinstance(port, (ProvidePortPrototype, RequirePortPrototype, PRPortPrototype)):
+                        msg = f"Component '{component.name}' does not seem to have a port with name '{port_name}'"
+                        raise ValueError(msg)
+                    return port, elem
+            raise ValueError(f"Component '{self.name}' does not have a component with name '{parts[0]}'")
+        port_name = parts[0]
+        port = self.find(port_name)
+        if not isinstance(port, (ProvidePortPrototype, RequirePortPrototype, PRPortPrototype)):
+            msg = f"Component '{self.name}' does not seem to have a port with name '{port_name}'"
+            raise ValueError(msg)
         return port, None
 
     def _create_assembly_connector(self,
                                    provider_component: SwComponentPrototype,
-                                   provide_port: PortPrototype,
+                                   provide_port: PortPrototypeElement,
                                    requester_component: SwComponentPrototype,
-                                   require_port: PortPrototype) -> AssemblySwConnector:
+                                   require_port: PortPrototypeElement) -> AssemblySwConnector:
         """
         Internal helper function for creating assembly connector
         """
@@ -1751,8 +1818,8 @@ class CompositionSwComponentType(SwComponentType, Searchable):
 
     def _create_delegation_connector(self,
                                      inner_component: SwComponentPrototype,
-                                     inner_port: PortPrototype,
-                                     outer_port: PortPrototype) -> DelegationSwConnector:
+                                     inner_port: PortPrototypeElement,
+                                     outer_port: PortPrototypeElement) -> DelegationSwConnector:
         if isinstance(outer_port, ProvidePortPrototype):
             connector_name = '_'.join([inner_component.name, inner_port.name, outer_port.name])
         else:
