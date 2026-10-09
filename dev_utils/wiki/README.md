@@ -5,6 +5,7 @@ This directory contains automation tooling for generating the GitHub Wiki XML Ta
 ## Workflow
 
 ### 1. Refresh Implementation Cache (Automatic or Manual)
+
 The cache indexes all Python classes in the modules under `src/autosar/xml/element/`, extracting their XML Tag variants, Element Categories (from module names), package element status, and introduction release version:
 
 ```bash
@@ -12,6 +13,7 @@ python dev_utils/refresh_implementation.py
 ```
 
 ### 2. Generate the Wiki Page
+
 Generate [`xml_index.md`](xml_index.md) by extracting the cached tags and rendering the Jinja2 template ([`templates/xml_index.md.jinja2`](templates/xml_index.md.jinja2)):
 
 ```bash
@@ -19,6 +21,7 @@ python dev_utils/wiki/generate_wiki_page.py
 ```
 
 To refresh the cache and regenerate the page in one step:
+
 ```bash
 python dev_utils/wiki/generate_wiki_page.py --refresh
 ```
@@ -35,6 +38,7 @@ python dev_utils/wiki/generate_wiki_page.py --refresh --unreleased-version v0.5.
 ## Diagnostics
 
 * **`inspect_tags.py`**: Scans `autosar.xml.element` against `.implementation_cache.json` and git release history:
+
   ```bash
   python dev_utils/wiki/inspect_tags.py
   ```
