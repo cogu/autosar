@@ -50,7 +50,7 @@ python dev_utils/explore_subelement.py APPLICATION-ENDPOINT --include-deprecated
 
 ## 2. Implementation Cache Builder: `refresh_implementation.py`
 
-Uses Python's AST parser to scan [`src/autosar/xml/element.py`](../src/autosar/xml/element.py) and [`src/autosar/xml/enumeration.py`](../src/autosar/xml/enumeration.py), extracting docstring mappings (`Complex type AR:...`, `group AR:...`, `Tag Variants:...`) and constructor parameter wiring.
+Uses Python's AST parser to scan the modules in [`src/autosar/xml/element/`](../src/autosar/xml/element/) and [`src/autosar/xml/enumeration.py`](../src/autosar/xml/enumeration.py), extracting docstring mappings (`Complex type AR:...`, `group AR:...`, `Tag Variants:...`) and constructor parameter wiring.
 
 Saves cache to `dev_utils/.implementation_cache.json` (gitignored).
 
@@ -122,4 +122,3 @@ python dev_utils/wiki/generate_wiki_page.py --refresh
 # Run tag consistency diagnostic
 python dev_utils/wiki/inspect_tags.py
 ```
-

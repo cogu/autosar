@@ -6,8 +6,8 @@ from collections.abc import Iterable
 from typing import Any, Union
 
 from autosar.xml.base import ARObject, convenience_function
-from autosar.xml.elements._base import ARElement, NumericalValue
-from autosar.xml.elements.calibration_data import (
+from autosar.xml.element._base import ARElement, NumericalValue
+from autosar.xml.element.calibration_data import (
     NumericalOrText,
     SwAxisCont,
     SwValueCont,

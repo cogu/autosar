@@ -7,20 +7,20 @@ from typing import TYPE_CHECKING, Union
 
 from autosar.base import Searchable, split_ref
 from autosar.xml.base import ARObject, convenience_function
-from autosar.xml.elements._base import ARElement, Identifiable
-from autosar.xml.elements.common import DataFilter, Trigger
-from autosar.xml.elements.constant import (
+from autosar.xml.element._base import ARElement, Identifiable
+from autosar.xml.element.common import DataFilter, Trigger
+from autosar.xml.element.constant import (
     InitValueArgType,
     ValueSpecification,
     ValueSpecificationElement,
 )
-from autosar.xml.elements.data_type import (
+from autosar.xml.element.data_type import (
     SwDataDefProps,
     SymbolProps,
     VariableDataPrototype,
 )
-from autosar.xml.elements.mode_declaration import ModeDeclarationGroupPrototype
-from autosar.xml.elements.port_interface import (
+from autosar.xml.element.mode_declaration import ModeDeclarationGroupPrototype
+from autosar.xml.element.port_interface import (
     ClientServerInterface,
     ClientServerOperation,
     ModeSwitchInterface,
@@ -28,7 +28,7 @@ from autosar.xml.elements.port_interface import (
     SenderReceiverInterface,
     TriggerInterface,
 )
-from autosar.xml.elements.system_template import EndToEndTransformationComSpecProps
+from autosar.xml.element.system_template import EndToEndTransformationComSpecProps
 import autosar.xml.enumeration as ar_enum
 import autosar.xml.exception as ar_except
 from autosar.xml.reference import (
@@ -49,7 +49,7 @@ from autosar.xml.reference import (
 
 if TYPE_CHECKING:
     # internal_behavior.py depends on this module, see local imports below
-    from autosar.xml.elements.internal_behavior import SwcInternalBehavior, VariableAccess
+    from autosar.xml.element.internal_behavior import SwcInternalBehavior, VariableAccess
 
 
 PortPrototypeElement = Union[
@@ -585,7 +585,7 @@ class ReceiverComSpec(RequirePortComSpec):
         self._assign_optional_strict("network_representation", network_representation, SwDataDefProps)
         self._assign_optional_strict("reception_props", reception_props, ReceptionComSpecProps)
         if replace_with is not None:
-            from autosar.xml.elements.internal_behavior import VariableAccess  # pylint: disable=import-outside-toplevel
+            from autosar.xml.element.internal_behavior import VariableAccess  # pylint: disable=import-outside-toplevel
             self._assign_optional_strict("replace_with", replace_with, VariableAccess)
         self._assign_optional_positive_int("sync_counter_init", sync_counter_init)
         self._assign_optional("uses_end_to_end_protection", uses_end_to_end_protection, bool)
@@ -1259,7 +1259,7 @@ class AtomicSoftwareComponentType(SwComponentType):
         self._internal_behavior: SwcInternalBehavior | None = None
         self.symbol_props: SymbolProps | None = None  # AR:SYMBOL-PROPS
         if internal_behavior is not None:
-            from autosar.xml.elements.internal_behavior import SwcInternalBehavior  # pylint: disable=C0415
+            from autosar.xml.element.internal_behavior import SwcInternalBehavior  # pylint: disable=C0415
             self._assign_optional_strict("_internal_behavior", internal_behavior, SwcInternalBehavior)
         self._assign_optional_strict("symbol_props", symbol_props, SymbolProps)
 
@@ -1286,7 +1286,7 @@ class AtomicSoftwareComponentType(SwComponentType):
         If the name argument is left as None, a default name will be created based on the name of
         the software component
         """
-        from autosar.xml.elements.internal_behavior import SwcInternalBehavior  # pylint: disable=C0415
+        from autosar.xml.element.internal_behavior import SwcInternalBehavior  # pylint: disable=C0415
         if name is None:
             name = self.name + "_InternalBehavior"
         self.internal_behavior = SwcInternalBehavior(name, **kwargs)

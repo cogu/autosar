@@ -5,7 +5,7 @@ This directory contains automation tooling for generating the GitHub Wiki XML Ta
 ## Workflow
 
 ### 1. Refresh Implementation Cache (Automatic or Manual)
-The cache indexes all Python classes in `src/autosar/xml/element.py`, extracting their XML Tag variants, Element Categories (from grouping comments `# ---`), package element status, and introduction release version:
+The cache indexes all Python classes in the modules under `src/autosar/xml/element/`, extracting their XML Tag variants, Element Categories (from module names), package element status, and introduction release version:
 
 ```bash
 python dev_utils/refresh_implementation.py

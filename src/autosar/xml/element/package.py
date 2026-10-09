@@ -7,8 +7,8 @@ import re
 from typing import Any
 
 from autosar.xml.base import BaseRef
-from autosar.xml.elements._base import ARElement, CollectableElement
-from autosar.xml.elements.port_interface import PortInterface
+from autosar.xml.element._base import ARElement, CollectableElement
+from autosar.xml.element.port_interface import PortInterface
 import autosar.xml.exception as ar_except
 from autosar.xml.reference import PackageRef
 

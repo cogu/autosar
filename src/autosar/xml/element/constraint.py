@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from autosar.xml.base import ARObject, convenience_function
-from autosar.xml.elements._base import ARElement
-from autosar.xml.elements.documentation import MultiLanguageOverviewParagraph
+from autosar.xml.element._base import ARElement
+from autosar.xml.element.documentation import MultiLanguageOverviewParagraph
 import autosar.xml.enumeration as ar_enum
 from autosar.xml.reference import DataConstraintRef, UnitRef
 

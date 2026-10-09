@@ -5,8 +5,8 @@ from __future__ import annotations
 from typing import Union
 
 from autosar.xml.base import ARObject
-from autosar.xml.elements._base import NumericalValue
-from autosar.xml.elements.documentation import (
+from autosar.xml.element._base import NumericalValue
+from autosar.xml.element.documentation import (
     LanguageLongName,
     MultilanguageLongName,
     SingleLanguageUnitNames,

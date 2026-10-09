@@ -4,7 +4,7 @@
 This utility helps track what classes need to be implemented in Python for a given
 AUTOSAR complex type sub-element in Classic Platform (CP). It traverses child
 complex types in the XSD, detects dependencies, checks docstring implementation
-status from `element.py`, extracts canonical class names from schema `mmt.qualifiedName`
+status from `autosar.xml.element`, extracts canonical class names from schema `mmt.qualifiedName`
 tags, tracks schema deprecation/status tags (`atp.Status`), filters out Adaptive
 Platform (AP) only elements, and computes a bottom-up implementation order (leaves first).
 

@@ -3,7 +3,7 @@ Classes related to AUTOSAR XML Elements
 """
 
 from autosar.xml.base import ARObject, BaseRef  # noqa: F401
-from autosar.xml.elements._base import (  # noqa: F401
+from autosar.xml.element._base import (  # noqa: F401
     AdminData,
     ARElement,
     CollectableElement,
@@ -23,8 +23,8 @@ from autosar.xml.elements._base import (  # noqa: F401
     SpecialDataValue,
     UsedLanguageArgtype,
 )
-from autosar.xml.elements.unit import Unit  # noqa: F401
-from autosar.xml.elements.constraint import (  # noqa: F401
+from autosar.xml.element.unit import Unit  # noqa: F401
+from autosar.xml.element.constraint import (  # noqa: F401
     ConstraintBase,
     DataConstraint,
     DataConstraintRule,
@@ -33,22 +33,22 @@ from autosar.xml.elements.constraint import (  # noqa: F401
     PhysicalConstraint,
     ScaleConstraint,
 )
-from autosar.xml.elements.computation_method import (  # noqa: F401
+from autosar.xml.element.computation_method import (  # noqa: F401
     CompuConst,
     CompuMethod,
     CompuRational,
     CompuScale,
     Computation,
 )
-from autosar.xml.elements.auxiliary import SwAddrMethod  # noqa: F401
-from autosar.xml.elements.data_element import (  # noqa: F401
+from autosar.xml.element.auxiliary import SwAddrMethod  # noqa: F401
+from autosar.xml.element.data_element import (  # noqa: F401
     ArVariableInImplementationDataInstanceRef,
     AutosarParameterRef,
     AutosarVariableRef,
     ParameterInAtomicSwcTypeInstanceRef,
     VariableInAtomicSWCTypeInstanceRef,
 )
-from autosar.xml.elements.service_dependency import (  # noqa: F401
+from autosar.xml.element.service_dependency import (  # noqa: F401
     RoleBasedDataAssignment,
     RoleBasedDataTypeAssignment,
     RoleBasedPortAssignment,
@@ -56,7 +56,7 @@ from autosar.xml.elements.service_dependency import (  # noqa: F401
     SwcServiceDependency,
     SymbolicNameProps,
 )
-from autosar.xml.elements.internal_behavior import (  # noqa: F401
+from autosar.xml.element.internal_behavior import (  # noqa: F401
     AbstractAccessPoint,
     ActivationReasonArgumentType,
     AsyncServerCallResultPointArgumentType,
@@ -120,7 +120,7 @@ from autosar.xml.elements.internal_behavior import (  # noqa: F401
     VariableAccess,
     WaitPoint,
 )
-from autosar.xml.elements.software_component import (  # noqa: F401
+from autosar.xml.element.software_component import (  # noqa: F401
     ApplicationSoftwareComponentType,
     AssemblySwConnector,
     AtomicSoftwareComponentType,
@@ -174,11 +174,11 @@ from autosar.xml.elements.software_component import (  # noqa: F401
     TransmissionAcknowledgementRequest,
     TransmissionComSpecProps,
 )
-from autosar.xml.elements.system_template import (  # noqa: F401
+from autosar.xml.element.system_template import (  # noqa: F401
     E2EProfileCompatibilityProps,
     EndToEndTransformationComSpecProps,
 )
-from autosar.xml.elements.port_interface import (  # noqa: F401
+from autosar.xml.element.port_interface import (  # noqa: F401
     ApplicationError,
     ClientServerInterface,
     ClientServerOperation,
@@ -192,7 +192,7 @@ from autosar.xml.elements.port_interface import (  # noqa: F401
     SenderReceiverInterface,
     TriggerInterface,
 )
-from autosar.xml.elements.mode_declaration import (  # noqa: F401
+from autosar.xml.element.mode_declaration import (  # noqa: F401
     ModeDeclaration,
     ModeDeclarationGroup,
     ModeDeclarationGroupPrototype,
@@ -201,12 +201,12 @@ from autosar.xml.elements.mode_declaration import (  # noqa: F401
     ModeRequestTypeMap,
     ModeTransition,
 )
-from autosar.xml.elements.package import (  # noqa: F401
+from autosar.xml.element.package import (  # noqa: F401
     BehaviorSettings,
     Package,
     PackageCollection,
 )
-from autosar.xml.elements.constant import (  # noqa: F401
+from autosar.xml.element.constant import (  # noqa: F401
     ApplicationRuleBasedValueSpecification,
     ApplicationValueSpecification,
     ArrayValueSpecification,
@@ -231,7 +231,7 @@ from autosar.xml.elements.constant import (  # noqa: F401
     ValueSpecification,
     ValueSpecificationElement,
 )
-from autosar.xml.elements.calibration_data import (  # noqa: F401
+from autosar.xml.element.calibration_data import (  # noqa: F401
     NumericalOrText,
     SwAxisCont,
     SwValueCont,
@@ -240,7 +240,7 @@ from autosar.xml.elements.calibration_data import (  # noqa: F401
     ValueGroup,
     ValueList,
 )
-from autosar.xml.elements.data_type import (  # noqa: F401
+from autosar.xml.element.data_type import (  # noqa: F401
     ApplicationArrayDataType,
     ApplicationArrayElement,
     ApplicationCompositeDataType,
@@ -271,7 +271,7 @@ from autosar.xml.elements.data_type import (  # noqa: F401
     alignment_type_re,
     display_format_str_re,
 )
-from autosar.xml.elements.common import (  # noqa: F401
+from autosar.xml.element.common import (  # noqa: F401
     AutosarEngineeringObject,
     Code,
     DataFilter,
@@ -280,7 +280,7 @@ from autosar.xml.elements.common import (  # noqa: F401
     MultidimensionalTime,
     Trigger,
 )
-from autosar.xml.elements.documentation import (  # noqa: F401
+from autosar.xml.element.documentation import (  # noqa: F401
     Annotation,
     Break,
     Date,
@@ -316,7 +316,7 @@ from autosar.xml.elements.documentation import (  # noqa: F401
     date_re,
     revision_label_string_re,
 )
-from autosar.xml.elements.service_needs import (  # noqa: F401
+from autosar.xml.element.service_needs import (  # noqa: F401
     BswMgrNeeds,
     ComMgrUserNeeds,
     CryptoCertificateKeySlotNeeds,
@@ -457,46 +457,6 @@ from autosar.xml.reference import (SwBaseTypeRef,  # noqa F401
 # Type aliases
 
 BaseReference = BaseRef  # This line is here to suppress an unused import warning
-
-
-# --- Generic structure elements
-
-
-# --- Common structure elements (moved to autosar.xml.elements.common)
-
-
-# --- Documentation elements (moved to autosar.xml.elements.documentation)
-
-
-# --- Data type elements (moved to autosar.xml.elements.data_type)
-
-
-# --- Calibration data elements (moved to autosar.xml.elements.calibration_data)
-
-
-# --- Constant elements (moved to autosar.xml.elements.constant)
-
-
-# --- Package elements (moved to autosar.xml.elements.package)
-
-
-# --- Mode declaration elements (moved to autosar.xml.elements.mode_declaration)
-
-
-# --- Port interface elements (moved to autosar.xml.elements.port_interface)
-
-
-# --- System template elements (moved to autosar.xml.elements.system_template)
-
-
-# --- Software component elements (moved to autosar.xml.elements.software_component)
-
-
-# --- Service needs elements (moved to autosar.xml.elements.service_needs)
-
-
-# --- Internal behavior elements (moved to autosar.xml.elements.internal_behavior)
-# --- Service dependency elements (moved to autosar.xml.elements.service_dependency)
 
 
 __all__ = [

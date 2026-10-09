@@ -7,10 +7,10 @@ import re
 from typing import Any, Union
 
 from autosar.xml.base import ARObject
-from autosar.xml.elements._base import ARElement, Identifiable, Referrable
-from autosar.xml.elements.constant import ValueSpecification, ValueSpecificationElement
-from autosar.xml.elements.documentation import Annotation
-from autosar.xml.elements.mode_declaration import ModeRequestTypeMap
+from autosar.xml.element._base import ARElement, Identifiable, Referrable
+from autosar.xml.element.constant import ValueSpecification, ValueSpecificationElement
+from autosar.xml.element.documentation import Annotation
+from autosar.xml.element.mode_declaration import ModeRequestTypeMap
 import autosar.xml.enumeration as ar_enum
 from autosar.xml.reference import (
     AbstractImplementationDataTypeElementRef,

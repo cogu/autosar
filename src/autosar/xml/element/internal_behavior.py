@@ -10,33 +10,33 @@ from typing import Any, Union
 
 from autosar.base import split_ref_strict
 from autosar.xml.base import ARObject, convenience_function
-from autosar.xml.elements._base import (
+from autosar.xml.element._base import (
     Identifiable,
     Referrable,
     make_unique_name_in_list,
 )
-from autosar.xml.elements.common import Code, Implementation, Trigger
-from autosar.xml.elements.constant import ValueSpecification, ValueSpecificationElement
-from autosar.xml.elements.data_element import (
+from autosar.xml.element.common import Code, Implementation, Trigger
+from autosar.xml.element.constant import ValueSpecification, ValueSpecificationElement
+from autosar.xml.element.data_element import (
     AutosarParameterRef,
     AutosarVariableRef,
     ParameterInAtomicSwcTypeInstanceRef,
     VariableInAtomicSWCTypeInstanceRef,
 )
-from autosar.xml.elements.data_type import (
+from autosar.xml.element.data_type import (
     ImplementationProps,
     ParameterDataPrototype,
     SwDataDefProps,
     SwDataDefPropsConditional,
     VariableDataPrototype,
 )
-from autosar.xml.elements.mode_declaration import (
+from autosar.xml.element.mode_declaration import (
     ModeDeclaration,
     ModeDeclarationGroup,
     ModeDeclarationGroupPrototype,
 )
-from autosar.xml.elements.package import BehaviorSettings, PackageCollection
-from autosar.xml.elements.port_interface import (
+from autosar.xml.element.package import BehaviorSettings, PackageCollection
+from autosar.xml.element.port_interface import (
     ClientServerInterface,
     ModeSwitchInterface,
     NvDataInterface,
@@ -45,13 +45,13 @@ from autosar.xml.elements.port_interface import (
     SenderReceiverInterface,
     TriggerInterface,
 )
-from autosar.xml.elements.service_dependency import (
+from autosar.xml.element.service_dependency import (
     RoleBasedDataAssignment,
     RoleBasedPortAssignment,
     SwcServiceDependency,
 )
-from autosar.xml.elements.service_needs import ServiceNeeds
-from autosar.xml.elements.software_component import (
+from autosar.xml.element.service_needs import ServiceNeeds
+from autosar.xml.element.software_component import (
     AtomicSoftwareComponentType,
     ModeGroupInAtomicSwcInstanceRef,
     PModeGroupInAtomicSwcInstanceRef,

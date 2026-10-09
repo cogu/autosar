@@ -8,7 +8,7 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any, NamedTuple, Union
 
 from autosar.xml.base import ARObject
-from autosar.xml.elements.documentation import (
+from autosar.xml.element.documentation import (
     Date,
     DocumentationBlock,
     LanguagePlainText,
@@ -22,7 +22,7 @@ import autosar.xml.enumeration as ar_enum
 
 if TYPE_CHECKING:
     # package.py depends on this module, see Referrable.root_collection()
-    from autosar.xml.elements.package import PackageCollection
+    from autosar.xml.element.package import PackageCollection
 
 
 # Helper classes
@@ -122,7 +122,7 @@ class Referrable(ARObject):
         elem = self
         while elem.parent is not None:
             elem = elem.parent
-        from autosar.xml.elements.package import PackageCollection  # pylint: disable=import-outside-toplevel
+        from autosar.xml.element.package import PackageCollection  # pylint: disable=import-outside-toplevel
         if isinstance(elem, PackageCollection):
             return elem
         return None

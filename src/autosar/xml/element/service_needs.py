@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from autosar.xml.base import ARObject
-from autosar.xml.elements._base import Identifiable
+from autosar.xml.element._base import Identifiable
 import autosar.xml.enumeration as ar_enum
 import autosar.xml.exception as ar_except
 from autosar.xml.reference import (

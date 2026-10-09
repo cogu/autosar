@@ -104,7 +104,7 @@ def _get_git_class_versions(repo_root: str) -> Tuple[Dict[str, Set[str]], List[s
 
         try:
             tree_output = subprocess.check_output(
-                ['git', 'ls-tree', '-r', '--name-only', t, 'src/autosar/xml/elements'],
+                ['git', 'ls-tree', '-r', '--name-only', t, 'src/autosar/xml/element', 'src/autosar/xml/elements'],
                 cwd=repo_root,
                 encoding='utf-8',
                 errors='ignore'
@@ -234,11 +234,11 @@ ADMIN_DATA_CLASSES = {
 def parse_element_file(filepath: str,
                        repo_root: Optional[str] = None,
                        unreleased_version: Optional[str] = None) -> Dict[str, Any]:
-    """Parse src/autosar/xml/element.py and elements/ package, extracting class definitions and docstring mappings."""
+    """Parse the element package, extracting class definitions and docstring mappings."""
     if repo_root is None:
-        repo_root = os.path.abspath(os.path.join(os.path.dirname(filepath), "..", "..", ".."))
+        repo_root = os.path.abspath(os.path.join(os.path.dirname(filepath), "..", "..", "..", ".."))
 
-    elements_dir = os.path.join(os.path.dirname(filepath), "elements")
+    elements_dir = os.path.dirname(filepath)
     files_to_parse: List[str] = []
     if os.path.isdir(elements_dir):
         for entry in sorted(os.listdir(elements_dir)):
@@ -477,12 +477,12 @@ def refresh_cache(repo_root: Optional[str] = None,
         script_dir = os.path.dirname(os.path.abspath(__file__))
         repo_root = os.path.abspath(os.path.join(script_dir, ".."))
 
-    element_py = os.path.join(repo_root, "src", "autosar", "xml", "element.py")
+    element_py = os.path.join(repo_root, "src", "autosar", "xml", "element", "__init__.py")
     enum_py = os.path.join(repo_root, "src", "autosar", "xml", "enumeration.py")
     ref_py = os.path.join(repo_root, "src", "autosar", "xml", "reference.py")
 
     if not os.path.exists(element_py):
-        raise FileNotFoundError(f"Cannot find element.py at {element_py}")
+        raise FileNotFoundError(f"Cannot find element package at {element_py}")
 
     print(f"Scanning element definitions ({element_py})...")
     elem_data = parse_element_file(element_py,

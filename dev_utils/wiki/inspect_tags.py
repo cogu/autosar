@@ -10,14 +10,15 @@ import inspect
 import json
 from pathlib import Path
 import re
-import subprocess
 import sys
 
 # Ensure src is on path
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src"))
+sys.path.insert(0, str(REPO_ROOT / "dev_utils"))
 
 import autosar.xml.element as element  # noqa: E402 # pylint: disable=wrong-import-position
+import refresh_implementation  # noqa: E402 # pylint: disable=wrong-import-position
 
 
 def main() -> None:
@@ -53,34 +54,9 @@ def main() -> None:
         print(f"Loaded {len(wiki_rows)} tag rows from {wiki_path.name}.")
 
     # 2. Get git release tags
-    git_tags = ["v0.5.0", "v0.5.1", "v0.5.2", "v0.5.3", "v0.5.4", "v0.5.5", "v0.5.6"]
-    try:
-        raw_tags = subprocess.check_output(
-            ["git", "tag", "-l", "v0.5.*"],
-            cwd=str(REPO_ROOT),
-            encoding="utf-8",
-            errors="ignore"
-        ).splitlines()
-        if raw_tags:
-            git_tags = [t.strip() for t in raw_tags if t.strip()]
-    except Exception:
-        pass
+    _, git_tags = refresh_implementation._get_git_class_versions(str(REPO_ROOT))  # pylint: disable=protected-access
 
-    tag_classes = {}
-    for t in git_tags:
-        try:
-            content = subprocess.check_output(
-                ["git", "show", f"{t}:src/autosar/xml/element.py"],
-                cwd=str(REPO_ROOT),
-                encoding="utf-8",
-                errors="ignore"
-            )
-            classes = set(re.findall(r"^class\s+([A-Za-z0-9_]+)", content, flags=re.MULTILINE))
-            tag_classes[t] = classes
-        except Exception:
-            continue
-
-    # 3. Read cache or inspect element.py
+    # 3. Read cache or inspect the element package
     classes_dict = {}
     if cache_path.exists():
         with open(cache_path, "r", encoding="utf-8") as f:
@@ -89,7 +65,7 @@ def main() -> None:
 
     all_element_classes = [
         cls for name, cls in inspect.getmembers(element, inspect.isclass)
-        if cls.__module__ == "autosar.xml.element"
+        if cls.__module__ == "autosar.xml.element" or cls.__module__.startswith("autosar.xml.element.")
     ]
 
     total_with_tags = 0

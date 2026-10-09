@@ -5,9 +5,9 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 from autosar.xml.base import ARObject
-from autosar.xml.elements._base import Identifiable, Referrable
-from autosar.xml.elements.data_element import AutosarParameterRef, AutosarVariableRef
-from autosar.xml.elements.service_needs import ServiceNeeds
+from autosar.xml.element._base import Identifiable, Referrable
+from autosar.xml.element.data_element import AutosarParameterRef, AutosarVariableRef
+from autosar.xml.element.service_needs import ServiceNeeds
 import autosar.xml.enumeration as ar_enum
 import autosar.xml.exception as ar_except
 from autosar.xml.reference import (

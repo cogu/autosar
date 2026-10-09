@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from autosar.xml.elements._base import ARElement
-from autosar.xml.elements.documentation import SingleLanguageUnitNames
+from autosar.xml.element._base import ARElement
+from autosar.xml.element.documentation import SingleLanguageUnitNames
 from autosar.xml.reference import PhysicalDimensionRef, UnitRef
 
 

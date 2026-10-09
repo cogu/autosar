@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from autosar.xml.base import ARObject
-from autosar.xml.elements._base import ARElement, Identifiable
+from autosar.xml.element._base import ARElement, Identifiable
 import autosar.xml.enumeration as ar_enum
 from autosar.xml.reference import TriggerRef
 

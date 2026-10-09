@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 from autosar.xml.base import ARObject, convenience_function
-from autosar.xml.elements._base import ARElement, Identifiable
-from autosar.xml.elements.common import Trigger
-from autosar.xml.elements.constant import ValueSpecificationElement
-from autosar.xml.elements.data_type import (
+from autosar.xml.element._base import ARElement, Identifiable
+from autosar.xml.element.common import Trigger
+from autosar.xml.element.constant import ValueSpecificationElement
+from autosar.xml.element.data_type import (
     ArgumentDataPrototype,
     ParameterDataPrototype,
     VariableDataPrototype,
 )
-from autosar.xml.elements.mode_declaration import ModeDeclarationGroupPrototype
+from autosar.xml.element.mode_declaration import ModeDeclarationGroupPrototype
 import autosar.xml.enumeration as ar_enum
 from autosar.xml.reference import (
     ApplicationErrorRef,
