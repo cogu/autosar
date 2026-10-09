@@ -101,12 +101,15 @@ class PositiveIntegerValue:
 
 
 class Referrable(ARObject):
-    """Group AR:REFERRABLE."""
+    """Group AR:REFERRABLE.
+
+    A parent can be another named element or the root package collection.
+    """
 
     def __init__(self, name: str) -> None:
         super().__init__()
         self.name: str = name  # .SHORT-NAME
-        self.parent: Union[CollectableElement, PackageCollection, None] = None
+        self.parent: Union[Referrable, PackageCollection, None] = None
 
     @property
     def short_name(self) -> str:
@@ -126,6 +129,27 @@ class Referrable(ARObject):
         if isinstance(elem, PackageCollection):
             return elem
         return None
+
+    def update_ref_parts(self, ref_parts: list[str | None]) -> None:
+        """Utility method used for generating reference strings."""
+        ref_parts.append(self.name)
+        if self.parent is None:
+            ref_parts.append(None)
+        else:
+            self.parent.update_ref_parts(ref_parts)
+
+    def _calc_ref_string(self) -> str | None:
+        """Calculate a reference string, returning None if a parent is missing."""
+        if self.parent is None:
+            return None
+        ref_parts: list[str | None] = [self.name]
+        self.parent.update_ref_parts(ref_parts)
+        parts: list[str] = []
+        for part in reversed(ref_parts):
+            if part is None:
+                return None
+            parts.append(part)
+        return '/'.join(parts)
 
 
 class MultiLanguageReferrable(Referrable):
@@ -182,28 +206,6 @@ class Identifiable(MultiLanguageReferrable):
                 actual_type = str(type(admin_data))
                 raise TypeError(f"admin_data: Expected type {expected_type}. Got {actual_type}")
 
-    def update_ref_parts(self, ref_parts: list[str]):
-        """Utility method used for generating reference strings."""
-        ref_parts.append(self.name)
-        if self.parent is None:
-            ref_parts.append(None)
-        else:
-            self.parent.update_ref_parts(ref_parts)
-
-    def _calc_ref_string(self) -> str | None:
-        """Calculate reference string based on parent tree.
-
-        If a missing parent is detected during tree-traversal
-        the function as a whole will returns None.
-        """
-        if self.parent is None:
-            return None
-        ref_parts: list[str] = [self.name]
-        self.parent.update_ref_parts(ref_parts)
-        if ref_parts[-1] is None:
-            return None
-        return '/'.join(reversed(ref_parts))
-
 
 class CollectableElement(Identifiable):
     """Group AR:COLLECTABLE-ELEMENT.
@@ -225,10 +227,10 @@ class ARElement(CollectableElement):
 # Utility functions
 
 
-def make_unique_name_in_list(elements: list[Referrable], base_name: str):
-    """Attempt to find a unique name in the list of elements.
+def make_unique_name_in_list(elements: Iterable[Referrable], base_name: str) -> str:
+    """Attempt to find a unique name among the supplied elements.
 
-    This function can modify names in the given list.
+    This function can modify the names of the supplied elements.
     If an element with the name base_name already exists in the list it will
     append "_0" to the existing element and any newly added element will have
     its suffix automatically increased by 1.

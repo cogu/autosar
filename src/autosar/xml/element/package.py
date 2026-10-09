@@ -237,7 +237,7 @@ class PackageCollection:
             return package.find(parts[2])
         return package
 
-    def update_ref_parts(self, ref_parts: list[str]):
+    def update_ref_parts(self, ref_parts: list[str | None]) -> None:
         """
         Utility method used generating XML references
         """

@@ -9,6 +9,7 @@ from autosar.xml.reference import (
     AbstractImplementationDataTypeElementRef,
     ApplicationCompositeElementDataPrototypeRef,
     DataPrototypeRef,
+    ParameterDataPrototypeRef,
     PortPrototypeRef,
     VariableDataPrototypeRef,
 )
@@ -76,7 +77,7 @@ class VariableInAtomicSWCTypeInstanceRef(ARObject):
                  port_prototype_ref: PortPrototypeRef | None = None,
                  root_variable_data_prototype_ref: VariableDataPrototypeRef | None = None,
                  context_data_prototype_refs: ContextDataPrototypeArgType | None = None,
-                 target_data_prototype_ref: DataPrototypeRef | None = None,
+                 target_data_prototype_ref: DataPrototypeRef | VariableDataPrototypeRef | None = None,
                  ) -> None:
         super().__init__()
         # .PORT-PROTOTYPE-REF
@@ -150,7 +151,7 @@ class ParameterInAtomicSwcTypeInstanceRef(ARObject):
                  port_prototype: PortPrototypeRef | None = None,
                  root_parameter_data_prototype: DataPrototypeRef | None = None,
                  context_data_prototype: ApplicationCompositeElementDataPrototypeRef | None = None,
-                 target_data_prototype: DataPrototypeRef | None = None
+                 target_data_prototype: DataPrototypeRef | ParameterDataPrototypeRef | None = None
                  ) -> None:
         super().__init__()
         # .PORT-PROTOTYPE-REF

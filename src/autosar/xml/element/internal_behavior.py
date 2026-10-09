@@ -52,7 +52,6 @@ from autosar.xml.element.service_dependency import (
 )
 from autosar.xml.element.service_needs import ServiceNeeds
 from autosar.xml.element.software_component import (
-    AtomicSoftwareComponentType,
     ModeGroupInAtomicSwcInstanceRef,
     PModeGroupInAtomicSwcInstanceRef,
     POperationInAtomicSwcInstanceRef,
@@ -128,8 +127,8 @@ class VariableAccess(Identifiable):
     @classmethod
     def make_from_port(cls,
                        name: str,
-                       port_prototype_ref: PortPrototypeRef,
-                       target_data_prototype_ref: DataPrototypeRef,
+                       port_prototype_ref: PortPrototypeRef | None,
+                       target_data_prototype_ref: DataPrototypeRef | VariableDataPrototypeRef | None,
                        **kwargs) -> "VariableAccess":
         """
 
@@ -144,8 +143,8 @@ class VariableAccess(Identifiable):
     @classmethod
     def make_from_port_with_args(cls,
                                  name: str,
-                                 port_prototype_ref: PortPrototypeRef,
-                                 target_data_prototype_ref: DataPrototypeRef,
+                                 port_prototype_ref: PortPrototypeRef | None,
+                                 target_data_prototype_ref: DataPrototypeRef | VariableDataPrototypeRef | None,
                                  args: dict[str, Any] | None) -> "VariableAccess":
         """
 
@@ -843,7 +842,7 @@ class RunnableEntity(ExecutableEntity):
 
     @convenience_function
     def create_port_access(self,
-                           elements: str | list[str] | tuple[str, dict] | list[tuple[str, dict]]
+                           elements: str | tuple[str, dict[str, Any]] | list[str | tuple[str, dict[str, Any]]]
                            ) -> None:
         """
 
@@ -897,13 +896,12 @@ class RunnableEntity(ExecutableEntity):
         """
         behavior = self.get_valid_parent()
         swc = behavior.get_valid_parent()
-        workspace: PackageCollection = swc.root_collection()
+        workspace: PackageCollection | None = swc.root_collection()
         if workspace is None:
             raise ValueError("Runnable doesn't seem to belong to a root collection")
         settings = workspace.get_valid_behavior_settings()
-        if isinstance(elements, (str, tuple)):
-            elements = [elements]
-        for elem in elements:
+        entries = [elements] if isinstance(elements, (str, tuple)) else elements
+        for elem in entries:
             if isinstance(elem, tuple):
                 text, access_point_args = elem
             else:
@@ -917,9 +915,11 @@ class RunnableEntity(ExecutableEntity):
                 port_arg = parts[0]
             ref = port_arg.partition("/")
             port_name = ref[0]
-            port: PortPrototypeElement = swc.find(port_name)
-            if port is None:
+            port = swc.find(port_name)
+            if not isinstance(port, (RequirePortPrototype, ProvidePortPrototype, PRPortPrototype)):
                 raise ValueError(f"Invalid port name: {port_name}")
+            if port.port_interface_ref is None:
+                raise ar_except.InvalidReferenceError(str(port.port_interface_ref))
             port_interface = workspace.get_port_interface(port.port_interface_ref)
             self._create_port_access_internal(port, port_interface, ref[2], settings, options, access_point_args)
 
@@ -1060,13 +1060,8 @@ class RunnableEntity(ExecutableEntity):
             For ModeAccess it's used as additional arguments for the internal ModeAccessPointIdent object.
             For ModeSwitchPoint it's used as additional arguments for the ModeSwitchPoint object.
         """
-        mode_group = None
-        if len(mode_group_name) != 0:
-            if mode_group_name == port_interface.mode_group.name:
-                mode_group = port_interface.mode_group
-        else:
-            mode_group = port_interface.mode_group
-        if mode_group is None:
+        mode_group = port_interface.mode_group
+        if mode_group is None or (len(mode_group_name) != 0 and mode_group_name != mode_group.name):
             raise builtins.RuntimeError(f"Unable to find a ModeDeclarationGroupPrototype named '{mode_group_name}' "
                                         f"in port interface '{port_interface.name}'")
         name: str | None = None
@@ -1115,7 +1110,7 @@ class RunnableEntity(ExecutableEntity):
         target_data = None
         if len(parameter_name) == 0:
             if len(port_interface.parameters) == 1:
-                target_data = port_interface.parameter[0]
+                target_data = port_interface.parameters[0]
         else:
             for element in port_interface.parameters:
                 if element.name == parameter_name:
@@ -1207,12 +1202,12 @@ class RunnableEntity(ExecutableEntity):
             raise builtins.RuntimeError(f"Unable to find a matching trigger '{trigger_name}' "
                                         f"in port interface '{port_interface.name}'")
         if isinstance(port, (ProvidePortPrototype, PRPortPrototype)):
-            triggering_point = None
             if trigger_point_type == ar_enum.TriggerPoint.EXTERNAL:
                 triggering_point = self._create_external_triggering_point(port, trigger, settings, access_point_args)
+                self.append_external_triggering_point(triggering_point)
             else:
                 triggering_point = self._create_internal_triggering_point(port, trigger, settings, access_point_args)
-            self.append_external_triggering_point(triggering_point)
+                self.append_internal_triggering_point(triggering_point)
 
     def _create_external_triggering_point(self,
                                           port: PortPrototypeElement,
@@ -1449,7 +1444,7 @@ class RteEvent(Identifiable):
 
     def __init__(self,
                  name: str,
-                 start_on_event: RunnableEntityRef | None = None,
+                 start_on_event: RunnableEntityRef | str | None = None,
                  disabled_modes: RModeInAtomicSwcInstanceRef | list[RModeInAtomicSwcInstanceRef] | None = None,
                  **kwargs) -> None:
         super().__init__(name, **kwargs)
@@ -1542,7 +1537,7 @@ class DataReceiveErrorEvent(RteEvent):
     def make(cls,
              name: str,
              start_on_event: RunnableEntityRef | str | None = None,
-             context_port: AbstractRequiredPortPrototypeRef | None = None,
+             context_port: AbstractRequiredPortPrototypeRef | PortPrototypeRef | None = None,
              target_data_element: VariableDataPrototypeRef | str | None = None,
              **kwargs) -> "DataReceiveErrorEvent":
         """
@@ -1585,7 +1580,7 @@ class DataReceivedEvent(RteEvent):
     def make(cls,
              name: str,
              start_on_event: RunnableEntityRef | str | None = None,
-             context_port: AbstractRequiredPortPrototypeRef | None = None,
+             context_port: AbstractRequiredPortPrototypeRef | PortPrototypeRef | None = None,
              target_data_element: VariableDataPrototypeRef | str | None = None,
              **kwargs) -> "DataReceivedEvent":
         """
@@ -1682,7 +1677,7 @@ class ExternalTriggerOccurredEvent(RteEvent):
     def make(cls,
              name: str,
              start_on_event: RunnableEntityRef | str | None = None,
-             context_port: AbstractRequiredPortPrototypeRef | None = None,
+             context_port: AbstractRequiredPortPrototypeRef | PortPrototypeRef | None = None,
              target_trigger: TriggerRef | str | None = None,
              **kwargs) -> "ExternalTriggerOccurredEvent":
         """
@@ -1796,7 +1791,7 @@ class OperationInvokedEvent(RteEvent):
     def make(cls,
              name: str,
              start_on_event: RunnableEntityRef | str | None = None,
-             context_port: AbstractProvidedPortPrototypeRef | None = None,
+             context_port: AbstractProvidedPortPrototypeRef | PortPrototypeRef | None = None,
              target_provided_operation: ClientServerOperationRef | str | None = None,
              **kwargs) -> "OperationInvokedEvent":
         """
@@ -1863,7 +1858,7 @@ class SwcModeManagerErrorEvent(RteEvent):
     def make(cls,
              name: str,
              start_on_event: RunnableEntityRef | str | None = None,
-             context_port: AbstractProvidedPortPrototypeRef | None = None,
+             context_port: AbstractProvidedPortPrototypeRef | PortPrototypeRef | None = None,
              context_mode_declaration_group_prototype: ModeDeclarationGroupPrototypeRef | str | None = None,
              **kwargs) -> "SwcModeManagerErrorEvent":
         """
@@ -1924,7 +1919,7 @@ class SwcModeSwitchEvent(RteEvent):
              name: str,
              start_on_event: RunnableEntityRef | str | None = None,
              activation: ar_enum.ModeActivationKind | None = None,
-             context_port: AbstractRequiredPortPrototypeRef | None = None,
+             context_port: AbstractRequiredPortPrototypeRef | PortPrototypeRef | None = None,
              context_mode_declaration_group_prototype: ModeDeclarationGroupPrototypeRef | None = None,
              target_mode_declaration: ModeDeclarationRef | None = None,
              **kwargs) -> "SwcModeSwitchEvent":
@@ -2050,7 +2045,7 @@ class CommunicationBufferLocking(SwcSupportedFeature):
                  support_buffer_locking: ar_enum.SupportBufferLocking | None = None) -> None:
         super().__init__()
         # .SUPPORT-BUFFER-LOCKING
-        self.support_buffer_locking: ar_enum.SupportBufferLocking = None
+        self.support_buffer_locking: ar_enum.SupportBufferLocking | None = None
 
         self._assign_optional("support_buffer_locking", support_buffer_locking, ar_enum.SupportBufferLocking)
 
@@ -2541,7 +2536,9 @@ class InternalBehavior(Identifiable):
             raise ar_except.ElementTypeError("item", ExclusiveAreaNestingOrder, item)
 
 
-ModeSwitchEventArgsReturnType = tuple[RequirePortPrototype, ModeDeclarationGroupPrototype, ModeDeclaration]
+ModeSwitchEventArgsReturnType = tuple[
+    RequirePortPrototype | PRPortPrototype, ModeDeclarationGroupPrototype, ModeDeclaration
+]
 
 
 # pylint: disable=too-many-public-methods
@@ -2605,7 +2602,7 @@ class SwcInternalBehavior(InternalBehavior):
         # .PER-INSTANCE-PARAMETERS
         self.per_instance_parameter: list[ParameterDataPrototype] = []
         # .PORT-API-OPTIONS
-        self.port_api_option: OrderedDict[PortApiOption] = OrderedDict()
+        self.port_api_option: OrderedDict[str, PortApiOption] = OrderedDict()
         # .RUNNABLES
         self.runnable: list[RunnableEntity] = []
         # .SERVICE-DEPENDENCYS
@@ -3079,11 +3076,14 @@ class SwcInternalBehavior(InternalBehavior):
                     if isinstance(elem, str):
                         names[elem] = False
             if names:
-                exclusive_area_refs: ExclusiveAreaRef = []
+                exclusive_area_refs: list[ExclusiveAreaRef] = []
                 for area in self.exclusive_area:
                     if area.name in names:
                         names[area.name] = True  # Marks it as handled
-                        exclusive_area_refs.append(area.ref())
+                        ref = area.ref()
+                        if ref is None:
+                            raise ar_except.InvalidReferenceError(area.name)
+                        exclusive_area_refs.append(ref)
                 for key, value in names.items():
                     if not value:
                         raise ValueError(f"can_enter_leave: '{key}' does not name an exclusive area in "
@@ -3593,7 +3593,7 @@ class SwcInternalBehavior(InternalBehavior):
 
     def _get_swc_mode_switch_event_args(self,
                                         workspace: PackageCollection,
-                                        swc: AtomicSoftwareComponentType,
+                                        swc: SwComponentType,
                                         mode_ref: str
                                         ) -> ModeSwitchEventArgsReturnType:
         """
@@ -3610,12 +3610,14 @@ class SwcInternalBehavior(InternalBehavior):
         if context_mode_declaration_group is None:
             msg = f"mode_ref: '{mode_ref}' does not name a valid ModeDeclarationGroupPrototype in port interface"
             raise ValueError(msg)
+        if context_mode_declaration_group.type_ref is None:
+            raise ar_except.InvalidReferenceError(str(context_mode_declaration_group.type_ref))
         target_mode_declaration_group: ModeDeclarationGroup | None
         target_mode_declaration_group = workspace.find(context_mode_declaration_group.type_ref)
         if target_mode_declaration_group is None:
             raise ar_except.InvalidReferenceError(str(context_mode_declaration_group.type_ref))
-        target_mode_declaration: ModeDeclaration | None = target_mode_declaration_group.find(mode_declaration_name)
-        if target_mode_declaration is None:
+        target_mode_declaration = target_mode_declaration_group.find(mode_declaration_name)
+        if not isinstance(target_mode_declaration, ModeDeclaration):
             raise ValueError(f"mode_ref: '{mode_ref}' does not name a valid mode declaration in ModeDeclarationGroup")
         return context_port, context_mode_declaration_group, target_mode_declaration
 

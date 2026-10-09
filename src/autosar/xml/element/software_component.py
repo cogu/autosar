@@ -1147,7 +1147,7 @@ class SwComponentType(ARElement, Searchable):
         return None
 
     def get_data_element_in_port(self,
-                                 port: RequirePortPrototype | ProvidePortPrototype,
+                                 port: RequirePortPrototype | ProvidePortPrototype | PRPortPrototype,
                                  data_element_name: str | None = None,
                                  ) -> VariableDataPrototype | None:
         """
@@ -1175,7 +1175,7 @@ class SwComponentType(ARElement, Searchable):
 
     def get_operation_in_port(self,
                               port: PortPrototype,
-                              operation_name: str
+                              operation_name: str | None
                               ) -> ClientServerOperation:
         """
         Finds client-server operation in given port
@@ -1218,7 +1218,7 @@ class SwComponentType(ARElement, Searchable):
         return None
 
     def get_trigger_in_port(self,
-                            port: RequirePortPrototype | ProvidePortPrototype,
+                            port: RequirePortPrototype | ProvidePortPrototype | PRPortPrototype,
                             trigger_name: str | None = None,
                             ) -> Trigger | None:
         """
@@ -1789,7 +1789,7 @@ class POperationInAtomicSwcInstanceRef(ARObject):
     """
 
     def __init__(self,
-                 context_port: AbstractProvidedPortPrototypeRef | None = None,
+                 context_port: AbstractProvidedPortPrototypeRef | PortPrototypeRef | None = None,
                  target_provided_operation: ClientServerOperationRef | str | None = None,
                  ) -> None:
         # .CONTEXT-P-PORT-REF (Keep name consistent in similar classes)
@@ -1808,7 +1808,7 @@ class PModeGroupInAtomicSwcInstanceRef(ModeGroupInAtomicSwcInstanceRef):
     """
 
     def __init__(self,
-                 context_port: AbstractProvidedPortPrototypeRef | None = None,
+                 context_port: AbstractProvidedPortPrototypeRef | PortPrototypeRef | None = None,
                  target_mode_group: ModeDeclarationGroupPrototypeRef | str | None = None,
                  ) -> None:
         # .CONTEXT-P-PORT-REF
@@ -1830,7 +1830,7 @@ class PTriggerInAtomicSwcTypeInstanceRef(ARObject):
     """
 
     def __init__(self,
-                 context_port: AbstractProvidedPortPrototypeRef | None = None,
+                 context_port: AbstractProvidedPortPrototypeRef | PortPrototypeRef | None = None,
                  target_trigger: TriggerRef | str | None = None,
                  ) -> None:
         # .CONTEXT-P-PORT-REF (Keep name consistent in similar classes)
@@ -1849,7 +1849,7 @@ class ROperationInAtomicSwcInstanceRef(ARObject):
     """
 
     def __init__(self,
-                 context_port: AbstractRequiredPortPrototypeRef | None = None,
+                 context_port: AbstractRequiredPortPrototypeRef | PortPrototypeRef | None = None,
                  target_required_operation: ClientServerOperationRef | str | None = None,
                  ) -> None:
         # .CONTEXT-R-PORT-REF (Keep name consistent in similar classes)
@@ -1867,7 +1867,7 @@ class RModeInAtomicSwcInstanceRef(ARObject):
     """
 
     def __init__(self,
-                 context_port: AbstractRequiredPortPrototypeRef | None = None,
+                 context_port: AbstractRequiredPortPrototypeRef | PortPrototypeRef | None = None,
                  context_mode_declaration_group_prototype: ModeDeclarationGroupPrototypeRef | None = None,
                  target_mode_declaration: ModeDeclarationRef | None = None,
                  ) -> None:
@@ -1891,7 +1891,7 @@ class RModeGroupInAtomicSwcInstanceRef(ModeGroupInAtomicSwcInstanceRef):
     """
 
     def __init__(self,
-                 context_port: AbstractRequiredPortPrototypeRef | None = None,
+                 context_port: AbstractRequiredPortPrototypeRef | PortPrototypeRef | None = None,
                  target_mode_group: ModeDeclarationGroupPrototypeRef | str | None = None,
                  ) -> None:
         # .CONTEXT-R-PORT-REF
@@ -1910,7 +1910,7 @@ class RVariableInAtomicSwcInstanceRef(ARObject):
     """
 
     def __init__(self,
-                 context_port: AbstractRequiredPortPrototypeRef | None = None,
+                 context_port: AbstractRequiredPortPrototypeRef | PortPrototypeRef | None = None,
                  target_data_element: VariableDataPrototypeRef | str | None = None,
                  ) -> None:
         # .CONTEXT-R-PORT-REF (Keep name consistent in similar classes)
@@ -1929,7 +1929,7 @@ class RTriggerInAtomicSwcInstanceRef(ARObject):
     """
 
     def __init__(self,
-                 context_port: AbstractRequiredPortPrototypeRef | None = None,
+                 context_port: AbstractRequiredPortPrototypeRef | PortPrototypeRef | None = None,
                  target_trigger: TriggerRef | str | None = None,
                  ) -> None:
         # .CONTEXT-R-PORT-REF (Keep name consistent in similar classes)

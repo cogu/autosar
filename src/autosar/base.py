@@ -13,8 +13,8 @@ def split_ref(ref: str) -> list[str] | None:
     return None
 
 
-def split_ref_strict(ref: str) -> list[str] | None:
-    """Splits a strings separated with slashes but throws an error if the string starts with a slash"""
+def split_ref_strict(ref: str) -> list[str]:
+    """Return slash-separated parts, rejecting empty strings and leading slashes."""
     sep = "/"
     if not isinstance(ref, str):
         raise TypeError("ref: Must be a string")

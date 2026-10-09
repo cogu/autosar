@@ -299,6 +299,10 @@ class TestExclusiveArea(unittest.TestCase):
 
 class TestExclusiveAreaNestingOrder(unittest.TestCase):
 
+    def test_ref_without_parent(self):
+        element = ar_element.ExclusiveAreaNestingOrder("Order")
+        self.assertIsNone(element.ref())
+
     def test_read_write_empty(self):
         element = ar_element.ExclusiveAreaNestingOrder("Order1")
         writer = autosar.xml.Writer()
@@ -1360,6 +1364,179 @@ class TestExecutableEntity(unittest.TestCase):
         ref = element.sw_addr_method
         self.assertEqual(ref.value, '/SwAddrMethods/DEFAULT')
         self.assertEqual(ref.dest, ar_enum.IdentifiableSubTypes.SW_ADDR_METHOD)
+
+
+class TestRunnablePortAccess(unittest.TestCase):
+
+    def setUp(self):
+        self.workspace = autosar.xml.Workspace()
+        self.settings = ar_element.BehaviorSettings()
+        self.settings.parameter_access_prefix = "Param"
+        self.workspace.behavior_settings = self.settings
+        self.package = self.workspace.create_package("Test")
+        self.component = ar_element.ApplicationSoftwareComponentType("Component")
+        self.package.append(self.component)
+        self.behavior = self.component.create_internal_behavior("Behavior")
+        self.runnable = self.behavior.create_runnable("Run")
+
+    def test_single_parameter_port_and_mixed_access_arguments(self):
+        interface = ar_element.ParameterInterface("Parameters", parameters=ar_element.ParameterDataPrototype("Value"))
+        self.package.append(interface)
+        self.component.append_port(ar_element.RequirePortPrototype("Parameters", interface.ref()))
+        self.runnable.create_port_access(["Parameters", ("Parameters/Value", {"name": "Explicit"})])
+        self.assertEqual([item.name for item in self.runnable.parameter_access],
+                         ["Param_Parameters_Value", "Explicit"])
+        for item in self.runnable.parameter_access:
+            self.assertIs(item.parent, self.runnable)
+        xml = autosar.xml.Writer().write_str_elem(self.runnable)
+        self.assertIn('DEST="PARAMETER-DATA-PROTOTYPE"', xml)
+        restored = autosar.xml.Reader().read_str_elem(xml)
+        self.assertEqual(len(restored.parameter_access), 2)
+
+    def test_internal_trigger_port_access(self):
+        interface = ar_element.TriggerInterface("Triggers", triggers=ar_element.Trigger("Trigger"))
+        self.package.append(interface)
+        port = ar_element.ProvidePortPrototype("Triggers", interface.ref())
+        self.component.append_port(port)
+        self.runnable._create_trigger_port_access(
+            port, interface, "", self.settings, ar_enum.TriggerPoint.INTERNAL, {"name": "Internal"})
+        self.assertEqual(len(self.runnable.internal_triggering_point), 1)
+        self.assertEqual(len(self.runnable.external_triggering_point), 0)
+        point = self.runnable.internal_triggering_point[0]
+        self.assertIs(point.parent, self.runnable)
+        self.assertEqual(str(point.ref()), "/Test/Component/Behavior/Run/Internal")
+
+    def test_external_trigger_port_access(self):
+        interface = ar_element.TriggerInterface("Triggers", triggers=ar_element.Trigger("Trigger"))
+        self.package.append(interface)
+        port = ar_element.ProvidePortPrototype("Triggers", interface.ref())
+        self.component.append_port(port)
+        self.runnable.create_port_access(("EXTERNAL:Triggers", {"name": "External"}))
+        self.assertEqual(len(self.runnable.external_triggering_point), 1)
+        self.assertEqual(len(self.runnable.internal_triggering_point), 0)
+        ident = self.runnable.external_triggering_point[0].ident
+        assert ident is not None
+        self.assertEqual(ident.name, "External")
+
+    def test_missing_mode_group(self):
+        interface = ar_element.ModeSwitchInterface("Modes")
+        self.package.append(interface)
+        self.component.append_port(ar_element.RequirePortPrototype("Modes", interface.ref()))
+        with self.assertRaisesRegex(RuntimeError, "Unable to find a ModeDeclarationGroupPrototype"):
+            self.runnable.create_port_access("Modes/Missing")
+
+    def test_missing_port_interface_reference(self):
+        self.component.append_port(ar_element.RequirePortPrototype("NoInterface"))
+        with self.assertRaises(ar_except.InvalidReferenceError):
+            self.runnable.create_port_access("NoInterface")
+
+    def test_unknown_port(self):
+        with self.assertRaisesRegex(ValueError, "Invalid port name"):
+            self.runnable.create_port_access("Missing")
+
+    def test_nested_reference_and_root_collection(self):
+        order = self.behavior.create_exclusive_area_nesting_order("Order")
+        self.assertEqual(str(order.ref()), "/Test/Component/Behavior/Order")
+        self.assertIs(order.root_collection(), self.workspace)
+        self.assertEqual(str(self.runnable.ref()), "/Test/Component/Behavior/Run")
+
+    def test_incomplete_parent_tree(self):
+        behavior = ar_element.SwcInternalBehavior("Unattached")
+        order = behavior.create_exclusive_area_nesting_order("Order")
+        self.assertIsNone(order.ref())
+        self.assertIsNone(order.root_collection())
+
+    def test_exclusive_area_reference_by_name(self):
+        self.behavior.create_exclusive_area("Area")
+        runnable = self.behavior.create_runnable("WithArea", can_enter_leave="Area")
+        self.assertEqual([str(item.exclusive_area) for item in runnable.can_enter_leave],
+                         ["/Test/Component/Behavior/Area"])
+
+    def test_unattached_exclusive_area_reference(self):
+        behavior = ar_element.SwcInternalBehavior("Unattached", exclusive_area=ar_element.ExclusiveArea("Area"))
+        with self.assertRaises(ar_except.InvalidReferenceError):
+            behavior.create_runnable("Run", can_enter_leave="Area")
+
+    def test_data_received_event_with_pr_port(self):
+        interface = ar_element.SenderReceiverInterface("Data", data_elements=ar_element.VariableDataPrototype("Value"))
+        self.package.append(interface)
+        self.component.append_port(ar_element.PRPortPrototype("Data", interface.ref()))
+        event = self.behavior.create_data_received_event("Run", "Data", event_name="Received")
+        assert event.data is not None
+        assert event.data.context_port is not None
+        self.assertEqual(str(event.data.target_data_element), "/Test/Data/Value")
+        self.assertEqual(event.data.context_port.dest, ar_enum.IdentifiableSubTypes.PR_PORT_PROTOTYPE)
+
+    def test_operation_invoked_event_with_port_only(self):
+        interface = ar_element.ClientServerInterface("Operations", operations=ar_element.ClientServerOperation("Read"))
+        self.package.append(interface)
+        self.component.append_port(ar_element.ProvidePortPrototype("Operations", interface.ref()))
+        event = self.behavior.create_operation_invoked_event("Run", "Operations", event_name="Invoked")
+        assert event.operation is not None
+        self.assertEqual(str(event.operation.target_provided_operation), "/Test/Operations/Read")
+
+    def _create_mode_port(self):
+        group = ar_element.ModeDeclarationGroup("ModeGroup", mode_declarations=["Off"])
+        self.package.append(group)
+        interface = ar_element.ModeSwitchInterface("Modes")
+        interface.create_mode_group("Group", group.ref())
+        self.package.append(interface)
+        self.component.append_port(ar_element.PRPortPrototype("Modes", interface.ref()))
+        return group
+
+    def test_mode_switch_event_with_pr_port(self):
+        self._create_mode_port()
+        event = self.behavior.create_swc_mode_mode_switch_event(
+            "Run", "Modes/Off", ar_enum.ModeActivationKind.ON_ENTRY, "Switch")
+        assert isinstance(event.mode, ar_element.RModeInAtomicSwcInstanceRef)
+        assert event.mode.context_port is not None
+        self.assertEqual(event.mode.context_port.dest, ar_enum.IdentifiableSubTypes.PR_PORT_PROTOTYPE)
+        self.assertEqual(str(event.mode.target_mode_declaration), "/Test/ModeGroup/Off")
+
+    def test_mode_transition_is_not_a_mode_declaration(self):
+        group = self._create_mode_port()
+        group.append_mode_transition(ar_element.ModeTransition("Transition"))
+        with self.assertRaisesRegex(ValueError, "does not name a valid mode declaration"):
+            self.behavior.create_swc_mode_mode_switch_event("Run", "Modes/Transition", event_name="Invalid")
+
+    def test_missing_mode_group_type_reference(self):
+        interface = ar_element.ModeSwitchInterface("Modes")
+        interface.create_mode_group("Group")
+        self.package.append(interface)
+        self.component.append_port(ar_element.RequirePortPrototype("Modes", interface.ref()))
+        with self.assertRaises(ar_except.InvalidReferenceError):
+            self.behavior.create_swc_mode_mode_switch_event("Run", "Modes/Off", event_name="Invalid")
+
+    def test_event_string_reference(self):
+        event = ar_element.InitEvent("Event", start_on_event="/Test/Component/Behavior/Run")
+        self.assertIsInstance(event.start_on_event, ar_element.RunnableEntityRef)
+        self.assertEqual(str(event.start_on_event), "/Test/Component/Behavior/Run")
+
+    def test_unique_names_accept_an_iterable(self):
+        element = ar_element.Referrable("Name")
+        self.assertEqual(ar_element.make_unique_name_in_list(iter([element]), "Name"), "Name_1")
+        self.assertEqual(element.name, "Name_0")
+
+    def test_port_reference_conversion_preserves_destination_validation(self):
+        provided = [ar_element.POperationInAtomicSwcInstanceRef, ar_element.PModeGroupInAtomicSwcInstanceRef,
+                    ar_element.PTriggerInAtomicSwcTypeInstanceRef]
+        required = [ar_element.ROperationInAtomicSwcInstanceRef, ar_element.RModeInAtomicSwcInstanceRef,
+                    ar_element.RModeGroupInAtomicSwcInstanceRef, ar_element.RVariableInAtomicSwcInstanceRef,
+                    ar_element.RTriggerInAtomicSwcInstanceRef]
+        p_port = ar_enum.IdentifiableSubTypes.P_PORT_PROTOTYPE
+        r_port = ar_enum.IdentifiableSubTypes.R_PORT_PROTOTYPE
+        for classes, valid_dest, invalid_dest in [(provided, p_port, r_port), (required, r_port, p_port)]:
+            for reference_type in classes:
+                for dest in [valid_dest, ar_enum.IdentifiableSubTypes.PR_PORT_PROTOTYPE]:
+                    with self.subTest(reference_type=reference_type, dest=dest):
+                        instance = reference_type(ar_element.PortPrototypeRef("/Test/Port", dest))
+                        self.assertIsNotNone(instance.context_port)
+                        if instance.context_port is not None:
+                            self.assertEqual(instance.context_port.dest, dest)
+                            self.assertEqual(str(instance.context_port), "/Test/Port")
+                with self.subTest(reference_type=reference_type, invalid_dest=invalid_dest):
+                    with self.assertRaises(TypeError):
+                        reference_type(ar_element.PortPrototypeRef("/Test/Port", invalid_dest))
 
 
 class TestRunnableEntity(unittest.TestCase):
