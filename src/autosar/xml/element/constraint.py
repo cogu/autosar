@@ -29,7 +29,12 @@ class LimitObject(ARObject):
         return self.is_empty_with_ignore({"lower_limit_type", "upper_limit_type"})
 
     def check_value(self, value: int | float) -> bool:
-        """Check if given value is inside the constraint limits."""
+        """Check if given value is inside the constraint limits.
+
+        :raises ValueError: If either limit is None.
+        """
+        if self.lower_limit is None or self.upper_limit is None:
+            raise ValueError("Both lower_limit and upper_limit must be set before checking a value")
         if self.lower_limit_type == ar_enum.IntervalType.CLOSED:
             if value < self.lower_limit:
                 return False
@@ -158,7 +163,7 @@ class DataConstraint(ARElement):
 
     def __init__(self, name: str,
                  rules: list[DataConstraintRule] | None = None,
-                 **kwargs: dict) -> None:
+                 **kwargs) -> None:
         super().__init__(name, **kwargs)
         self.rules = []
         if rules is not None:
@@ -166,7 +171,7 @@ class DataConstraint(ARElement):
                 assert isinstance(rule, DataConstraintRule)
             self.rules.extend(rules)
 
-    def ref(self) -> DataConstraintRef:
+    def ref(self) -> DataConstraintRef | None:
         """Return reference to this element or None if not yet part of a package."""
         ref_str = self._calc_ref_string()
         return None if ref_str is None else DataConstraintRef(ref_str)

@@ -229,7 +229,7 @@ class ArrayValueSpecification(ValueSpecification):
 
     def __init__(self,
                  label: str | None = None,
-                 elements: list[ValueSpecificationElement] | None = None
+                 elements: list[ValueSpecificationElement] | ValueSpecificationElement | None = None
                  ) -> None:
         super().__init__(label)
         self.elements: list[ValueSpecificationElement] = []
@@ -257,7 +257,7 @@ class RecordValueSpecification(ValueSpecification):
 
     def __init__(self,
                  label: str | None = None,
-                 fields: list[ValueSpecificationElement] | None = None
+                 fields: list[ValueSpecificationElement] | ValueSpecificationElement | None = None
                  ) -> None:
         super().__init__(label)
         self.fields: list[ValueSpecificationElement] = []
@@ -290,9 +290,9 @@ class ApplicationValueSpecification(ValueSpecification):
                  sw_value_cont: SwValueCont | None = None
                  ) -> None:
         super().__init__(label)
-        self.category: str = None
+        self.category: str | None = None
         self.sw_axis_conts: list[SwAxisCont] = []
-        self.sw_value_cont: SwValueCont = None
+        self.sw_value_cont: SwValueCont | None = None
         self._assign_optional_strict("category", category, str)
         self._assign_optional_strict("sw_value_cont", sw_value_cont, SwValueCont)
         if sw_axis_conts is not None:
@@ -318,7 +318,7 @@ class ConstantSpecification(ARElement):
 
     def __init__(self, name: str, value: ValueSpecificationElement | None = None, **kwargs) -> None:
         super().__init__(name, **kwargs)
-        self.value: ValueSpecificationElement = None  # .VALUE-SPEC
+        self.value: ValueSpecificationElement | None = None  # .VALUE-SPEC
         if value is not None:
             if isinstance(value, ValueSpecification):
                 self.value = value
@@ -359,7 +359,7 @@ class ConstantReference(ValueSpecification):
     def __init__(self,
                  constant_ref: ConstantRef | str | None = None,
                  label: str | None = None) -> None:
-        self.constant_ref: ConstantRef = None
+        self.constant_ref: ConstantRef | None = None
         super().__init__(label)
         if constant_ref is not None:
             if isinstance(constant_ref, str):
@@ -639,7 +639,7 @@ class ConstantSpecificationMappingSet(ARElement):
     def __init__(self,
                  name: str,
                  mappings: ConstantSpecificationMapping | list[ConstantSpecificationMapping] | None = None,
-                 **kwargs: dict) -> None:
+                 **kwargs) -> None:
         super().__init__(name, **kwargs)
         # .MAPPINGS
         self.mappings: list[ConstantSpecificationMapping] = []

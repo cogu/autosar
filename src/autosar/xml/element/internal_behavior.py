@@ -396,7 +396,7 @@ class AsynchronousServerCallPoint(ServerCallPoint):
     Use constructor from base class
     """
 
-    def ref(self) -> AsynchronousServerCallPointRef:
+    def ref(self) -> AsynchronousServerCallPointRef | None:
         """
         Returns a reference to this element or
         None if the element is not yet part of a package
@@ -421,7 +421,7 @@ class AsynchronousServerCallResultPoint(AbstractAccessPoint):
 
         self._assign_optional("async_server_call_point", async_server_call_point, AsynchronousServerCallPointRef)
 
-    def ref(self) -> AsynchronousServerCallResultPointRef:
+    def ref(self) -> AsynchronousServerCallResultPointRef | None:
         """
         Returns a reference to this element or
         None if the element is not yet part of a package
@@ -573,7 +573,7 @@ class ModeSwitchPoint(AbstractAccessPoint):
 
         self._assign_optional_strict("mode_group", mode_group, PModeGroupInAtomicSwcInstanceRef)
 
-    def ref(self) -> ModeSwitchPointRef:
+    def ref(self) -> ModeSwitchPointRef | None:
         """
         Returns a reference to this element or
         None if the element is not yet part of a package
@@ -2156,7 +2156,7 @@ class ExclusiveAreaNestingOrder(Referrable):
                  name: str,
                  exclusive_area: (ExclusiveAreaRef | list[ExclusiveAreaRef] |
                                   str | list[str] | None) = None,
-                 **kwargs: dict) -> None:
+                 **kwargs) -> None:
         super().__init__(name, **kwargs)
         # .EXCLUSIVE-AREA-REFS
         self.exclusive_area: list[ExclusiveAreaRef] = []

@@ -18,7 +18,7 @@ class Unit(ARElement):
                  factor: float | None = None,
                  offset: float | None = None,
                  physical_dimension_ref: str | PhysicalDimensionRef | None = None,
-                 **kwargs: dict) -> None:
+                 **kwargs) -> None:
         super().__init__(name, **kwargs)
         self.display_name: SingleLanguageUnitNames | None = None  # .DISPLAY-NAME
         self.physical_dimension_ref: PhysicalDimensionRef | None = None  # .PHYSICAL-DIMENSION-REF
@@ -41,7 +41,7 @@ class Unit(ARElement):
         self._assign_optional('factor', factor, float)
         self._assign_optional('offset', offset, float)
 
-    def ref(self) -> UnitRef:
+    def ref(self) -> UnitRef | None:
         """Return reference to this element or None if not yet part of a package."""
         ref_str = self._calc_ref_string()
         return None if ref_str is None else UnitRef(ref_str)

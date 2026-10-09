@@ -119,6 +119,21 @@ class TestModeTransition(unittest.TestCase):
 
 class TestModeDeclarationGroup(unittest.TestCase):
 
+    def test_append_mode_transition_parent(self):
+        element = ar_element.ModeDeclarationGroup("DeclarationGroupName")
+        mode_transition = ar_element.ModeTransition("Transition")
+        element.append_mode_transition(mode_transition)
+        self.assertEqual(element.mode_transitions, [mode_transition])
+        self.assertIs(mode_transition.parent, element)
+
+    def test_mode_transition_list_parents(self):
+        mode_transitions = [ar_element.ModeTransition("First"), ar_element.ModeTransition("Second")]
+        element = ar_element.ModeDeclarationGroup("DeclarationGroupName", mode_transitions=mode_transitions)
+        self.assertEqual(element.mode_transitions, mode_transitions)
+        for mode_transition in mode_transitions:
+            with self.subTest(name=mode_transition.name):
+                self.assertIs(mode_transition.parent, element)
+
     def test_name_only(self):
         element = ar_element.ModeDeclarationGroup("DeclarationGroupName")
         writer = autosar.xml.Writer()
@@ -275,6 +290,7 @@ class TestModeDeclarationGroup(unittest.TestCase):
                                                     entered_mode_ref,
                                                     exited_mode_ref)
         element = ar_element.ModeDeclarationGroup("DeclarationGroupName", mode_transitions=mode_transition)
+        self.assertIs(mode_transition.parent, element)
         writer = autosar.xml.Writer()
         xml = f'''<MODE-DECLARATION-GROUP>
   <SHORT-NAME>DeclarationGroupName</SHORT-NAME>
@@ -294,6 +310,7 @@ class TestModeDeclarationGroup(unittest.TestCase):
         mode_transition = elem.mode_transitions[0]
         self.assertEqual(str(mode_transition.entered_mode_ref), entered_mode_ref)
         self.assertEqual(str(mode_transition.exited_mode_ref), exited_mode_ref)
+        self.assertIs(mode_transition.parent, elem)
 
     def test_on_transition_value(self):
         element = ar_element.ModeDeclarationGroup("DeclarationGroupName",

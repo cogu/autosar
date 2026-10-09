@@ -1,4 +1,4 @@
-"""Common structure elements."""
+"""Common and generic structure elements."""
 
 from __future__ import annotations
 

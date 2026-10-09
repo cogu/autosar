@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Sequence
 
 from autosar.xml.base import ARObject, convenience_function
 from autosar.xml.element._base import ARElement
@@ -18,8 +18,8 @@ class CompuRational(ARObject):
     """
 
     def __init__(self,
-                 numerator: tuple[int | float] | list[int | float] | None,
-                 denominator: tuple[int | float] | list[int | float] | None = None) -> None:
+                 numerator: tuple[int | float] | Sequence[int | float] | None,
+                 denominator: tuple[int | float] | Sequence[int | float] | None = None) -> None:
         super().__init__()
         if numerator is not None:
             if not isinstance(numerator, (tuple, list)):

@@ -57,7 +57,7 @@ class NumericalOrText(ARObject):
         # .VT
         self.vt: str | None = None
         # .VARIATION-POINT not supported
-        self._assign_optional_strict("vf", vf, (int, float, NumericalValue))
+        self._assign_optional_strict("vf", vf, (int, float, NumericalValue))  # pyright: ignore[reportArgumentType]
         self._assign_optional_strict("vt", vt, str)
 
 
@@ -98,7 +98,7 @@ class ValueGroup(SwValues):
 
     def __init__(self,
                  label: str | MultilanguageLongName | tuple[ar_enum.Language, str] | LanguageLongName | None = None,
-                 values: SwValues | None = None) -> None:
+                 values: list[SwValueElement] | SwValueElement | None = None) -> None:
         self.label: MultilanguageLongName | None = None
         super().__init__(values)
         if label is not None:
@@ -123,12 +123,12 @@ class SwAxisCont(ARObject):
                  sw_axis_index: int | str | None = None,
                  sw_array_size: ValueList | None = None,
                  sw_values_phys: SwValues | None = None) -> None:
-        self.category: ar_enum.CalibrationAxisCategory = None  # .CATEGORY
-        self.unit_ref: UnitRef = None  # .UNIT-REF
-        self.unit_display_name: SingleLanguageUnitNames = None  # .UNIT-DISPLAY_NAME
-        self.sw_axis_index: int | str = None  # .SW-AXIS-INDEX
-        self.sw_array_size: ValueList = None  # .SW-ARRAYSIZE
-        self.sw_values_phys: SwValues = None  # .SW-VALUES-PHYS
+        self.category: ar_enum.CalibrationAxisCategory | None = None  # .CATEGORY
+        self.unit_ref: UnitRef | None = None  # .UNIT-REF
+        self.unit_display_name: SingleLanguageUnitNames | None = None  # .UNIT-DISPLAY_NAME
+        self.sw_axis_index: int | str | None = None  # .SW-AXIS-INDEX
+        self.sw_array_size: ValueList | None = None  # .SW-ARRAYSIZE
+        self.sw_values_phys: SwValues | None = None  # .SW-VALUES-PHYS
         self._assign_optional('category', category, ar_enum.CalibrationAxisCategory)
         self._assign_optional_strict('unit_ref', unit_ref, UnitRef)
         self._assign_optional_strict('unit_display_name', unit_display_name, SingleLanguageUnitNames)
@@ -153,10 +153,10 @@ class SwValueCont(ARObject):
                  unit_display_name: SingleLanguageUnitNames | None = None,
                  sw_array_size: ValueList | None = None,
                  sw_values_phys: SwValues | None = None) -> None:
-        self.unit_ref: UnitRef = None  # .UNIT-REF
-        self.unit_display_name: SingleLanguageUnitNames = None  # .UNIT-DISPLAY_NAME
-        self.sw_array_size: ValueList = None  # .SW-ARRAYSIZE
-        self.sw_values_phys: SwValues = None  # .SW-VALUES-PHYS
+        self.unit_ref: UnitRef | None = None  # .UNIT-REF
+        self.unit_display_name: SingleLanguageUnitNames | None = None  # .UNIT-DISPLAY_NAME
+        self.sw_array_size: ValueList | None = None  # .SW-ARRAYSIZE
+        self.sw_values_phys: SwValues | None = None  # .SW-VALUES-PHYS
         self._assign_optional_strict('unit_ref', unit_ref, UnitRef)
         self._assign_optional_strict('unit_display_name', unit_display_name, SingleLanguageUnitNames)
         self._assign_optional_strict('sw_array_size', sw_array_size, ValueList)

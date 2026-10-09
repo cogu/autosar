@@ -46,7 +46,7 @@ class BaseType(ARElement):
     Merge of Groups AR:BASE-TYPE, AR:BASE-TYPE-DEFINITION, and AR:BASE-TYPE-DIRECT-DEFINITION
     """
 
-    def __init__(self, name: str, **kwargs: dict) -> None:
+    def __init__(self, name: str, **kwargs) -> None:
         super().__init__(name, **kwargs)
         # .BASE-TYPE-SIZE
         self.size: int | None = None
@@ -171,7 +171,7 @@ class SwDataDefPropsConditional(ARObject):
                  data_constraint_ref: str | DataConstraintRef | None = None,
                  impl_data_type_ref: str | ImplementationDataTypeRef | None = None,
                  unit_ref: str | UnitRef | None = None,
-                 alignment: int | float | None = None,
+                 alignment: int | str | None = None,
                  bit_representation: SwBitRepresentation | None = None,
                  calibration_access: ar_enum.SwCalibrationAccess | None = None,
                  text_props: SwTextProps | None = None,
@@ -328,7 +328,7 @@ class AutosarDataType(ARElement):
     def __init__(self,
                  name: str,
                  sw_data_def_props: SwDataDefProps | SwDataDefPropsConditional | None = None,
-                 **kwargs: dict) -> None:
+                 **kwargs) -> None:
         super().__init__(name, **kwargs)
         self.sw_data_def_props: SwDataDefProps | None = None
         if sw_data_def_props is not None:
@@ -375,16 +375,16 @@ class ImplementationDataTypeElement(Identifiable):
                  array_impl_policy: ar_enum.ArrayImplPolicy | None = None,
                  array_size_handling: ar_enum.ArraySizeHandling | None = None,
                  array_size_semantics: ar_enum.ArraySizeSemantics | None = None,
-                 sub_elements: list["ImplementationDataTypeElement"] | None = None,
+                 sub_elements: list["ImplementationDataTypeElement"] | ImplementationDataTypeElement | None = None,
                  is_optional: bool | None = None,
-                 **kwargs: dict) -> None:
+                 **kwargs) -> None:
         super().__init__(name, **kwargs)
         self.array_size: int | None = None                                      # .ARRAY-SIZE
         self.array_impl_policy: ar_enum.ArrayImplPolicy | None = None           # .ARRAY-IMPL-POLICY
         self.array_size_handling: ar_enum.ArraySizeHandling | None = None       # .ARRAY-SIZE-HANDLING
         self.array_size_semantics: ar_enum.ArraySizeSemantics | None = None     # .ARRAY-SIZE-SEMANTICS
         self.is_optional: bool | None = None                                    # .IS-OPTIONAL
-        self.sub_elements: list["ImplementationDataTypeElement"] | None = []    # .SUB-ELEMENTS
+        self.sub_elements: list["ImplementationDataTypeElement"] = []           # .SUB-ELEMENTS
         self.sw_data_def_props: SwDataDefProps | None = None                    # .SW-DATA-DEF-PROPS
         self._assign_optional_positive_int("array_size", array_size)
         self._assign_optional("array_impl_policy", array_impl_policy, ar_enum.ArrayImplPolicy)
@@ -392,8 +392,11 @@ class ImplementationDataTypeElement(Identifiable):
         self._assign_optional("array_size_semantics", array_size_semantics, ar_enum.ArraySizeSemantics)
         self._assign_optional("is_optional", is_optional, bool)
         if sub_elements is not None:
-            for elem in sub_elements:
-                self.append(elem)
+            if isinstance(sub_elements, ImplementationDataTypeElement):
+                self.append(sub_elements)
+            else:
+                for elem in sub_elements:
+                    self.append(elem)
         if sw_data_def_props is not None:
             if isinstance(sw_data_def_props, SwDataDefProps):
                 self.sw_data_def_props = sw_data_def_props
@@ -439,7 +442,7 @@ class ImplementationDataType(AutosarDataType):
                  sub_elements: list[ImplementationDataTypeElement] | None = None,
                  symbol_props: SymbolProps | None = None,
                  type_emitter: str | None = None,
-                 **kwargs: dict) -> None:
+                 **kwargs) -> None:
         super().__init__(name, **kwargs)
         self.dynamic_array_size_profile: str | None = None                  # .DYNAMIC-ARRAY-SIZE-PROFILE
         self.is_struct_with_optional_element: bool | None = None            # .IS-STRUCT-WITH-OPTIONAL-ELEMENT
@@ -491,7 +494,7 @@ class DataPrototype(Identifiable):
     def __init__(self,
                  name: str,
                  sw_data_def_props: SwDataDefProps | SwDataDefPropsConditional | None = None,
-                 **kwargs: dict) -> None:
+                 **kwargs) -> None:
         super().__init__(name, **kwargs)
         self.sw_data_def_props: SwDataDefProps | None = None  # .SW-DATA-DEF-PROPS
         if sw_data_def_props is not None:
@@ -511,7 +514,7 @@ class AutosarDataPrototype(DataPrototype):
     def __init__(self,
                  name: str,
                  type_ref: AutosarDataTypeRef | None = None,
-                 **kwargs: dict) -> None:
+                 **kwargs) -> None:
         super().__init__(name, **kwargs)
         self.type_ref: AutosarDataTypeRef | None = None  # .TYPE-TREF
         if type_ref is not None:
@@ -652,7 +655,7 @@ class ApplicationCompositeElementDataPrototype(DataPrototype):
     def __init__(self,
                  name: str,
                  type_ref: ApplicationDataTypeRef | None = None,
-                 **kwargs: dict) -> None:
+                 **kwargs) -> None:
         super().__init__(name, **kwargs)
         self.type_ref: ApplicationDataTypeRef | None = None  # .TYPE-TREF
         self._assign_optional_strict('type_ref', type_ref, ApplicationDataTypeRef)
@@ -670,7 +673,7 @@ class ApplicationArrayElement(ApplicationCompositeElementDataPrototype):
                  array_size_handling: ar_enum.ArraySizeHandling | None = None,
                  array_size_semantics: ar_enum.ArraySizeSemantics | None = None,
                  index_data_type_ref: IndexDataTypeRef | None = None,
-                 **kwargs: dict) -> None:
+                 **kwargs) -> None:
         super().__init__(name, **kwargs)
         self.array_size_handling: ar_enum.ArraySizeHandling | None = None     # .ARRAY-SIZE-HANDLING
         self.array_size_semantics: ar_enum.ArraySizeSemantics | None = None   # .ARRAY-SIZE-SEMANTICS
@@ -702,7 +705,7 @@ class ApplicationArrayDataType(ApplicationCompositeDataType):
                  name: str,
                  dynamic_array_size_profile: str | None = None,
                  element: ApplicationArrayElement | None = None,
-                 **kwargs: dict) -> None:
+                 **kwargs) -> None:
         super().__init__(name, **kwargs)
         self.dynamic_array_size_profile: str | None = None                  # .DYNAMIC-ARRAY-SIZE-PROFILE
         self.element: ApplicationArrayElement | None = None                 # .ELEMENT
@@ -729,7 +732,7 @@ class ApplicationRecordElement(ApplicationCompositeElementDataPrototype):
     def __init__(self,
                  name: str,
                  is_optional: bool | None = None,
-                 **kwargs: dict) -> None:
+                 **kwargs) -> None:
         super().__init__(name, **kwargs)
         self.is_optional: bool | None = None  # .IS-OPTIONAL
         self._assign_optional('is_optional', is_optional, bool)
@@ -814,7 +817,7 @@ class DataTypeMappingSet(ARElement):
                  name: str,
                  data_type_maps: DataTypeMap | list[DataTypeMap] | None = None,
                  mode_request_type_maps: ModeRequestTypeMap | list[ModeRequestTypeMap] | None = None,
-                 **kwargs: dict) -> None:
+                 **kwargs) -> None:
         super().__init__(name, **kwargs)
         # .DATA-TYPE-MAPS
         self.data_type_maps: list[DataTypeMap] = []

@@ -167,11 +167,9 @@ class ModeDeclarationGroup(ARElement):
         return mode_declaration
 
     def append_mode_transition(self, mode_transition: ModeTransition) -> None:
-        """
-        Appends mode transition to internal list of transitions
-        """
+        """Append a mode transition and set its parent to this group."""
         if isinstance(mode_transition, ModeTransition):
-            mode_transition.parent = mode_transition
+            mode_transition.parent = self
             self.mode_transitions.append(mode_transition)
         else:
             msg = f"mode_transition: Invalid type '{str(type(mode_transition))}'"

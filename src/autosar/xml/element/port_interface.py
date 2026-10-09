@@ -31,7 +31,7 @@ class PortInterface(ARElement):
                  name: str,
                  is_service: bool | None = None,
                  service_kind: ar_enum.ServiceKind | None = None,
-                 **kwargs: dict) -> None:
+                 **kwargs) -> None:
         super().__init__(name, **kwargs)
         self.is_service: bool | None = None  # .IS-SERVICE
         # .NAMESPACES not supported
@@ -346,7 +346,11 @@ class ClientServerOperation(Identifiable):
                 self.append_possible_error_ref(ApplicationErrorRef(possible_error_refs))
             elif isinstance(possible_error_refs, list):
                 for possible_error_ref in possible_error_refs:
-                    self.append_possible_error_ref(possible_error_ref)
+                    if isinstance(possible_error_ref, str):
+                        elem = ApplicationErrorRef(possible_error_ref)
+                    else:
+                        elem = possible_error_ref
+                    self.append_possible_error_ref(elem)
             else:
                 msg = f"possible_error_refs: Invalid type '{str(type(possible_error_refs))}'"
                 raise TypeError(msg + ". Expected 'ApplicationErrorRef' or list[ApplicationErrorRef]")
@@ -472,7 +476,7 @@ class ClientServerInterface(PortInterface):
 
         if possible_errors is not None:
             if isinstance(possible_errors, ApplicationError):
-                self.append_operation(possible_errors)
+                self.append_possible_errors(possible_errors)
             elif isinstance(possible_errors, list):
                 for possible_error in possible_errors:
                     self.append_possible_errors(possible_error)

@@ -96,9 +96,9 @@ class EmphasisText(ARObject):
 
     def __init__(self,
                  elements: None | list | str = None,
-                 color: str = None,
-                 font: ar_enum.EmphasisFont = None,
-                 type: ar_enum.EmphasisType = None) -> None:  # pylint: disable=redefined-builtin
+                 color: str | None = None,
+                 font: ar_enum.EmphasisFont | None = None,
+                 type: ar_enum.EmphasisType | None = None) -> None:  # pylint: disable=redefined-builtin
         self.elements = []
         self.color = color  # Attribute @COLOR
         self.font = font  # Attribute @FONT
@@ -135,8 +135,8 @@ class TechnicalTerm(ARObject):
 
     def __init__(self,
                  text: str,
-                 tex_render: str = None,
-                 type: str = None) -> None:  # pylint: disable=redefined-builtin
+                 tex_render: str | None = None,
+                 type: str | None = None) -> None:  # pylint: disable=redefined-builtin
         self.tex_render = tex_render  # attribute @TEX-RENDER
         self.type = type  # attribute @TYPE
         self.text = text  # Text content

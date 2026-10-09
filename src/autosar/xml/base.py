@@ -20,7 +20,7 @@ def convenience_function(func: F) -> F:
         setattr(func.__func__, "_is_convenience", True)
     else:
         setattr(func, "_is_convenience", True)
-    return func
+    return func  # pyright: ignore[reportReturnType]
 
 
 class ARObject:
@@ -111,7 +111,7 @@ class ARObject:
         if value is not None:
             self._set_attr_with_strict_type(attr_name, value, type_name)
 
-    def _assign_optional_positive_int(self, attr_name, value: int) -> None:
+    def _assign_optional_positive_int(self, attr_name, value: int | None) -> None:
         """
         Checks that the optional value is a positive integer before assignment
         """
@@ -131,7 +131,7 @@ class ARObject:
         """
         Checks reference type compatibility and on success updates the value
         """
-        accepted_sub_types: set = ref_type.accepted_sub_types()
+        accepted_sub_types = ref_type.accepted_sub_types()
         if (len(accepted_sub_types) == 0) or not isinstance(accepted_sub_types, set):
             msg = f"Error in reference type '{str(type(ref_type))}', it doesn't seem to have a valid set of sub-types."
             raise RuntimeError(msg)
@@ -189,9 +189,9 @@ class BaseRef(ARObject, abc.ABC):
 
     def __init__(self,
                  value: str,
-                 dest: ar_enum.IdentifiableSubTypes = None) -> None:
+                 dest: ar_enum.IdentifiableSubTypes | None = None) -> None:
         self.value = value
-        self.dest: ar_enum.IdentifiableSubTypes = None
+        self.dest: ar_enum.IdentifiableSubTypes | None = None
         if dest is None:
             if len(self.accepted_sub_types()) == 1:
                 dest = list(self.accepted_sub_types())[0]

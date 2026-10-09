@@ -9,6 +9,43 @@ import autosar.xml.enumeration as ar_enum # noqa E402
 import autosar.xml.element as ar_element # noqa E402
 import autosar # noqa E402
 
+
+class TestLimitObject(unittest.TestCase):
+
+    def test_check_value_requires_both_limits(self):
+        for lower_limit, upper_limit in [(None, None), (None, 0), (0, None)]:
+            for value in [-1, 0, 1]:
+                with self.subTest(lower_limit=lower_limit, upper_limit=upper_limit, value=value):
+                    element = ar_element.LimitObject(lower_limit, upper_limit)
+                    with self.assertRaisesRegex(ValueError, "Both lower_limit and upper_limit must be set"):
+                        element.check_value(value)
+
+    def test_check_value_open_and_closed_limits(self):
+        for constraint_type in [ar_element.LimitObject, ar_element.ScaleConstraint,
+                                ar_element.InternalConstraint, ar_element.PhysicalConstraint]:
+            for lower_type in ar_enum.IntervalType:
+                for upper_type in ar_enum.IntervalType:
+                    element = constraint_type(lower_limit=0, upper_limit=1,
+                                              lower_limit_type=lower_type, upper_limit_type=upper_type)
+                    cases = [(-1, False), (0, lower_type == ar_enum.IntervalType.CLOSED), (0.5, True),
+                             (1, upper_type == ar_enum.IntervalType.CLOSED), (2, False)]
+                    for value, expected in cases:
+                        with self.subTest(constraint_type=constraint_type, lower_type=lower_type,
+                                          upper_type=upper_type, value=value):
+                            self.assertEqual(element.check_value(value), expected)
+
+    def test_check_value_float_limits(self):
+        element = ar_element.LimitObject(lower_limit=-0.5, upper_limit=0.5)
+        for value, expected in [(-1, False), (-0.5, True), (0, True), (0.5, True), (1, False)]:
+            with self.subTest(value=value):
+                self.assertEqual(element.check_value(value), expected)
+
+    def test_check_value_zero_limits(self):
+        element = ar_element.LimitObject(lower_limit=0, upper_limit=0)
+        self.assertTrue(element.check_value(0))
+        self.assertFalse(element.check_value(-1))
+        self.assertFalse(element.check_value(1))
+
 class TestScaleConstraint(unittest.TestCase): # noqa D101
 
     def test_write_read_empty(self): # noqa D102

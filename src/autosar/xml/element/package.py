@@ -19,7 +19,7 @@ class Package(CollectableElement):
     Tag variants: 'AR-PACKAGE'
     """
 
-    def __init__(self, name: str, **kwargs: dict) -> None:
+    def __init__(self, name: str, **kwargs) -> None:
         super().__init__(name, **kwargs)
         self.elements: list[ARElement] = []
         self.packages: list[Package] = []
@@ -70,7 +70,7 @@ class Package(CollectableElement):
         Creates new sub-package
         """
         if name in self._collection_map:
-            return ValueError(f"Package with name '{name}' already exists")
+            raise ValueError(f"Package with name '{name}' already exists")
         package = Package(name, **kwargs)
         self._collection_map[name] = package
         self.packages.append(package)
@@ -103,7 +103,7 @@ class Package(CollectableElement):
         """
         Yields all elements whose short-name matches the given regex pattern
         """
-        regex: re.Pattern = None
+        regex: re.Pattern | None = None
         if isinstance(pattern, str):
             regex = re.compile(pattern)
         elif isinstance(pattern, re.Pattern):
@@ -114,7 +114,7 @@ class Package(CollectableElement):
             if regex.match(elem.name):
                 yield elem
 
-    def ref(self) -> PackageRef:
+    def ref(self) -> PackageRef | None:
         """
         Returns a reference to this package or
         None if the package is not a sub-package or a root package
