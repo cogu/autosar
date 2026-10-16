@@ -15,7 +15,7 @@ from autosar.xml.element._base import (
     Referrable,
     make_unique_name_in_list,
 )
-from autosar.xml.element.common import Code, Implementation, Trigger
+from autosar.xml.element.common import Code, Implementation, ImplementationProps, Trigger
 from autosar.xml.element.constant import ValueSpecification, ValueSpecificationElement
 from autosar.xml.element.data_element import (
     AutosarParameterRef,
@@ -24,7 +24,6 @@ from autosar.xml.element.data_element import (
     VariableInAtomicSWCTypeInstanceRef,
 )
 from autosar.xml.element.data_type import (
-    ImplementationProps,
     ParameterDataPrototype,
     SwDataDefProps,
     SwDataDefPropsConditional,

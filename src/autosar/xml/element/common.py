@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from autosar.xml.base import ARObject
-from autosar.xml.element._base import ARElement, Identifiable
+from autosar.xml.element._base import ARElement, Identifiable, Referrable
 import autosar.xml.enumeration as ar_enum
 from autosar.xml.reference import TriggerRef
 
@@ -134,6 +134,19 @@ class Implementation(ARElement):
             self.code_descriptors.append(code_descriptors)
         else:
             raise TypeError("code_descriptors must be of type Code")
+
+
+class ImplementationProps(Referrable):
+    """
+    Group AR:IMPLEMENTATION-PROPS
+    """
+
+    def __init__(self,
+                 name: str,
+                 symbol: str | None = None) -> None:
+        super().__init__(name)
+        self.symbol: str | None = None
+        self._assign_optional('symbol', symbol, str)
 
 
 class MultidimensionalTime(ARObject):

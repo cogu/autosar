@@ -7,7 +7,8 @@ import re
 from typing import Any, Union
 
 from autosar.xml.base import ARObject
-from autosar.xml.element._base import ARElement, Identifiable, Referrable
+from autosar.xml.element._base import ARElement, Identifiable
+from autosar.xml.element.common import ImplementationProps
 from autosar.xml.element.constant import ValueSpecification, ValueSpecificationElement
 from autosar.xml.element.documentation import Annotation
 from autosar.xml.element.mode_declaration import ModeRequestTypeMap
@@ -338,19 +339,6 @@ class AutosarDataType(ARElement):
                 self.sw_data_def_props = SwDataDefProps(sw_data_def_props)
             else:
                 raise TypeError("'sw_data_def_props' must be one of (SwDataDefProps, SwDataDefPropsConditional)")
-
-
-class ImplementationProps(Referrable):
-    """
-    Group AR:IMPLEMENTATION-PROPS
-    """
-
-    def __init__(self,
-                 name: str,
-                 symbol: str | None = None) -> None:
-        super().__init__(name)
-        self.symbol: str | None = None
-        self._assign_optional('symbol', symbol, str)
 
 
 class SymbolProps(ImplementationProps):
