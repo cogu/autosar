@@ -316,7 +316,7 @@ from autosar.xml.element.documentation import (  # noqa: F401
     date_re,
     revision_label_string_re,
 )
-from autosar.xml.element.service_needs import (  # noqa: F401
+from autosar.xml.element.service_needs import (  # noqa: F401 pylint: disable=redefined-builtin
     BswMgrNeeds,
     ComMgrUserNeeds,
     CryptoCertificateKeySlotNeeds,

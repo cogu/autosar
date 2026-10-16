@@ -1,7 +1,7 @@
 """Port interface elements"""
 
 from __future__ import annotations
-
+from abc import ABC, abstractmethod
 from autosar.xml.base import ARObject, convenience_function
 from autosar.xml.element._base import ARElement, Identifiable
 from autosar.xml.element.common import Trigger
@@ -22,7 +22,7 @@ from autosar.xml.reference import (
 )
 
 
-class PortInterface(ARElement):
+class PortInterface(ARElement, ABC):
     """
     Group AR:PORT-INTERFACE
     """
@@ -39,6 +39,7 @@ class PortInterface(ARElement):
         self._assign_optional_strict("is_service", is_service, bool)
         self._assign_optional_strict("service_kind", service_kind, ar_enum.ServiceKind)
 
+    @abstractmethod
     def ref(self) -> PortInterfaceRef | None:
         """Return a reference using the concrete interface's destination type."""
         raise NotImplementedError("Concrete port interfaces must implement ref")
