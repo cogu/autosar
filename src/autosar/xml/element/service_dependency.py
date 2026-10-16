@@ -1,4 +1,4 @@
-"""Service dependency elements."""
+"""Service dependency elements"""
 
 from __future__ import annotations
 

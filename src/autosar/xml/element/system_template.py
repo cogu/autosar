@@ -1,4 +1,4 @@
-"""System template elements."""
+"""System template elements"""
 
 from __future__ import annotations
 

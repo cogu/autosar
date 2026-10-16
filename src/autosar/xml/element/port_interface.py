@@ -1,4 +1,4 @@
-"""Port interface elements."""
+"""Port interface elements"""
 
 from __future__ import annotations
 

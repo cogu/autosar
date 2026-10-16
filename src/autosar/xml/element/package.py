@@ -1,4 +1,4 @@
-"""Package elements."""
+"""AUTOSAR packages, package collections, and behavior-builder settings"""
 
 from __future__ import annotations
 

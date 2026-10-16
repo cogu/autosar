@@ -1,4 +1,4 @@
-"""Constraint elements."""
+"""Constraint elements"""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Mode declaration elements."""
+"""Mode declaration elements"""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Internal behavior elements."""
+"""SWC internal behaviors, executable entities, RTE events, and implementations"""
 
 from __future__ import annotations
 

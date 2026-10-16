@@ -1,4 +1,4 @@
-"""Documentation elements."""
+"""Documentation elements"""
 
 from __future__ import annotations
 

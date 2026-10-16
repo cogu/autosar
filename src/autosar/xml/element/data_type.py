@@ -1,4 +1,4 @@
-"""Data type elements."""
+"""Data types, data prototypes, and implementation properties"""
 
 from __future__ import annotations
 

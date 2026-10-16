@@ -1,4 +1,4 @@
-"""References to AUTOSAR variables and parameters."""
+"""References to AUTOSAR variables and parameters"""
 
 from __future__ import annotations
 

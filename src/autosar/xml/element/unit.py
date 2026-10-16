@@ -1,4 +1,4 @@
-"""Unit elements."""
+"""Unit elements"""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Constant elements."""
+"""Constant elements"""
 
 from __future__ import annotations
 

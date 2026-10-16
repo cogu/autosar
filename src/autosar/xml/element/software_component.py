@@ -1,4 +1,4 @@
-"""Software component elements."""
+"""Software component elements"""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Service needs elements."""
+"""Service needs elements"""
 
 from __future__ import annotations
 

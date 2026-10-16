@@ -1,5 +1,5 @@
 """
-Classes related to AUTOSAR XML Elements
+AUTOSAR XML Elements
 """
 
 from autosar.xml.base import ARObject, BaseRef  # noqa: F401
