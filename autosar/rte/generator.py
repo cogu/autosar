@@ -54,7 +54,7 @@ class TypeGenerator:
          unusedDefaultTypes = self._findUnusedDefaultTypes(ws, basicTypes)
 
          first=True
-         for ref in sorted(basicTypes)+sorted(complexTypes):
+         for ref in sorted(basicTypes)+complexTypes:
             dataType = ws.find(ref)
             if dataType is not None:
                typedef = None

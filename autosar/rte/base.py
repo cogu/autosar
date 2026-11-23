@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import autosar.datatype
 import copy
 import cfile as C
@@ -200,7 +201,7 @@ class RequirePort(Port):
 class RteTypeManager:
 
    def __init__(self):
-      self.typeMap = {}
+      self.typeMap = OrderedDict()
 
    def processType(self, ws, dataType):
       if dataType.ref not in self.typeMap:
@@ -221,18 +222,19 @@ class RteTypeManager:
             self.typeMap[dataType.ref]=dataType
 
    def getTypes(self):
+      """Return type references by category, with complex dependencies first."""
       basicTypes=set()
-      complexTypes=set()
+      complexTypes=[]
       modeTypes=set()
 
       for dataType in self.typeMap.values():
          if isinstance(dataType, autosar.datatype.RecordDataType) or isinstance(dataType, autosar.datatype.ArrayDataType):
-            complexTypes.add(dataType.ref)
+            complexTypes.append(dataType.ref)
          elif isinstance(dataType, autosar.mode.ModeDeclarationGroup):
             modeTypes.add(dataType.ref)
          else:
             basicTypes.add(dataType.ref)
-      return list(basicTypes),list(complexTypes),list(modeTypes)
+      return list(basicTypes),complexTypes,list(modeTypes)
 
 
 class PortFunction:
